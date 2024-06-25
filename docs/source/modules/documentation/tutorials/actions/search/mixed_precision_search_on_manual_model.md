@@ -1,12 +1,22 @@
-# Mixed-precision search on Manual model
+# Mixed-Precision Search on Manual model
 
 This tutorial shows how to search for mixed-precision quantization strategy for OPT model on Wikitext2 dataset.
 
 > **Note**: Manual model refers to the model named as `<model_arch>_quantized` at `mase-tools/machop/chop/models/manual`. Usually these are models that cannot be directly converted to MASE Graph.
 
-## Search for mixed-precision quantization strategy
+## Search for Mixed-Precision Quantization Scheme
 
-We load the HuggingFace checkpoint "facebook/opt-125m" and search for fixed-point precision on Wikitext2 dataset.
+What is included in this search:
+- The checkpoint "facebook/opt-125m" is loaded from HuggingFace.
+- A search space is built for OPT-125M, where each matmul/linear layer operand may have a distinct precision.
+- The search is launched. In each trial:
+    - A quantization config (`q_config`) is sampled from the search space.
+    - The pretrained OPT-125M is quantized with `q_config`
+    - Software runner evaluates the quantized OPT and return some metrics. In this example, the perplexity on WikiText2 is returned.
+    - Hardware runner evaluates the quantized OPT and return some metrics. In this example, the average bitwidth is returned.
+    - The trial objective is calculated.
+
+ and search for fixed-point precision on Wikitext2 dataset.
 
 ### Search config
 
@@ -36,6 +46,8 @@ bias_frac_width = [2, 4, 6]
 name = "optuna"
 eval_mode = true
 
+# software (sw) runner and hardware (hw) runner evaluates the quantized model to guide the search
+# here we evaluate the perplexity and average bitwidth of the quantized model
 [search.strategy.sw_runner.basic_evaluation]
 data_loader = "val_dataloader"
 num_samples = 512
@@ -44,14 +56,15 @@ num_samples = 512
 compare_to = 32 # compare to FP32
 
 [search.strategy.setup]
-# Optuna supports a range of search algorithms, including Random, TPE, Genetic, etc.
+# evaluating perplexity requires GPUs so we only launch 1 job.
 n_jobs = 1
+# we run 10 trials in total for demostration.
 n_trials = 10
 timeout = 20000
+# Optuna supports a range of search algorithms, including Random, TPE, Genetic, etc.
 sampler = "TPE"
 model_parallel = false
-runner_style = "lm"
-sum_scaled_metrics = false
+sum_scaled_metrics = false # false for multi-objective, true for single objecive
 
 [search.strategy.metrics]
 perplexity.scale = 1.0
@@ -60,29 +73,32 @@ average_bitwidth.scale = 1.0
 average_bitwidth.direction = "minimize"
 ```
 
+### Launch the Precision Search
+
 Run the search:
 ```bash
 cd machop
 ./ch search --config ../configs/examples/search_opt_quantized_tpe_search.toml
 ```
 
-When the search is done, the best quantization config will be printed out:
+When the search is done, the best quantization config will be printed out. Since we run multi-objective search. There may be multiple best trials found by Optuna.
 ```txt
 Best trial(s):
-|    |   number | software_metrics                        | hardware_metrics                                     | scaled_metrics |
-|----+----------+-----------------------------------------+------------------------------------------------------+----------------|
-|  0 |        4 | {'loss': 8.633, 'perplexity': 1011.627} | {'average_bitwidth': 5.194, 'memory_density': 6.16}  | ...            |
-|  1 |        5 | {'loss': 8.578, 'perplexity': 1088.06}  | {'average_bitwidth': 5.139, 'memory_density': 6.227} | ...            |
-|  2 |        6 | {'loss': 9.341, 'perplexity': 409.964}  | {'average_bitwidth': 5.958, 'memory_density': 5.371} | ...            |
-|  3 |        8 | {'loss': 9.527, 'perplexity': 191.928}  | {'average_bitwidth': 6.514, 'memory_density': 4.913} | ...            |
-|  4 |        9 | {'loss': 9.426, 'perplexity': 214.558}  | {'average_bitwidth': 6.333, 'memory_density': 5.053} | ...            |
+|    |   number | software_metrics                     | hardware_metrics                                     | scaled_metrics                                  |
+|----+----------+--------------------------------------+------------------------------------------------------+-------------------------------------------------|
+|  0 |        0 | {'loss': 12.43, 'perplexity': 6.13}  | {'average_bitwidth': 7.194, 'memory_density': 4.448} | {'average_bitwidth': 7.194, 'perplexity': 6.13} |
+|  1 |        2 | {'loss': 11.0, 'perplexity': 21.102} | {'average_bitwidth': 6.0, 'memory_density': 5.333}   | {'average_bitwidth': 6.0, 'perplexity': 21.102} |
 ```
 
 Usually the TPE can optimize the average bitwidth and perplexity trade-off.
 
+### Search Logs
+
 The complete search results will be saved in `mase/mase_output/opt_quantized_wikitext2/software/search_ckpts/log.json`.
 
-Here is part of the `log.json`
+Here is part of the `log.json` recording all search details.
+
+For example, `log["0"]["user_attrs_sampled_config"]` is the sampled quantization config of trial 0. Expand it and you will set the precision of each matmul/linear layer's operands.
 
 ```json
 {
