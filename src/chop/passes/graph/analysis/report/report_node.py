@@ -118,7 +118,7 @@ def report_node_hardware_type_analysis_pass(graph, pass_args: dict = {}):
     return graph, {}
 
 
-def report_node_meta_param_analysis_pass(graph, pass_args: dict = None):
+def report_node_meta_param_analysis_pass(graph, pass_args: dict = {}):
     """
     Perform meta parameter analysis on the nodes in the graph and generate a report.
 

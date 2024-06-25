@@ -357,7 +357,19 @@ def transform_graph(
                 graph, _ = PASSES[pass_name](graph, pass_args=pass_save_dir)
             case "save_node_meta_param":
                 pass_save_path = pass_config.get(
-                    "save_path", save_dir / "saved_node_meta_param"
+                    "save_path",
+                    save_dir / "save_node_meta_param" / "node_meta_param.toml",
+                )
+                # TODO: fix me
+                # to save the meta parameters of the nodes,
+                # we have to run this cast,
+                # because current meta parameters contains tensors
+                # but this cast is not inveritble
+                # if there are other passes after "save_node_meta_param"
+                # relying on the tensor/numpy values in the meta parameters
+                # the transform/analysis will fail
+                graph, _ = metadata_value_type_cast_transform_pass(
+                    graph, pass_args={"fn": to_numpy_if_tensor}
                 )
                 graph, _ = PASSES[pass_name](graph, pass_args=pass_save_path)
             case "prune":
