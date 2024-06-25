@@ -9,13 +9,16 @@ We will be obtaining the maximums and medians.
 
 Train using the following command
 
-`./ch train --config configs/quantized_ops/toy_ternary_collect_stats.toml`
+`./ch train --config ../configs/quantized_ops/toy_ternary_collect_stats.toml`
 
 `toy_ternary_collect_stats.toml`:
 ```toml
 # basics
 model = "toy"
-dataset = "toy-tiny"
+dataset = "toy_tiny"
+
+[transform]
+    style="graph"
 
 [passes.profile_statistics]
 by = "type"
@@ -417,11 +420,14 @@ We will be using `toy_ternary_scaled.toml` as a base. This means that the values
 
 It is necessary to have a separate quantisation config for each block as the stats are different for each block, and this was identified as the simplest way to get the appropriate stats to the quantise function.
 
-`toy_ternary_scaled.toml`:
+`toy_ternary_base.toml`:
 ```toml
 # basics
 model = "toy"
-dataset = "toy-tiny"
+dataset = "toy_tiny"
+
+[transform]
+    style="graph"
 
 [passes.quantize]
 by = "name"
@@ -453,7 +459,10 @@ The written file is:
 `toy_ternary_scaled.toml`:
 ```toml
 model = "toy"
-dataset = "toy-tiny"
+dataset = "toy_tiny"
+
+[transform]
+    style="graph"
 
 [passes.quantize]
 by = "name"
