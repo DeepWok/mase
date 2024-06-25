@@ -11,7 +11,6 @@ All passes, no matter analysis or transform, take a standard form:
   # info a a dict
   return mg, info
 
-.. test-results:: ../../test/report.xml
 
 
 MaseGraph Analysis Passes
@@ -60,10 +59,15 @@ MaseGraph Analysis Passes
   * - :py:meth:`~chop.passes.graph.analysis.pruning.calculate_natural_sparsity.add_natural_sparsity_metadata_analysis_pass`
     - `test_calculate_natural_sparsity https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/pruning/test_calculate_natural_sparsity.py`_
     - Add natural sparsity metadata analysis pass to the given MaseGraph.
-..   * - :py:meth:`~chop.passes.graph.analysis.pruning.hook_inspector.hook_inspection_analysis_pass`
-..     - Remove and provide hook information of the modules
-..   * - :py:meth:`~chop.passes.graph.analysis.runtime.runtime_analysis.runtime_analysis_pass`
-..     - Perform runtime analysis on the given graph (MaseGraph, TensorRT, ONNX models)
+  * - :py:meth:`~chop.passes.graph.analysis.pruning.calculate_sparsity.add_pruning_metadata_analysis_pass`
+    - `test_prune https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/prune/test_prune.py`_
+    - This pass computes weight and activation sparsity based on pruning masks
+  * - :py:meth:`~chop.passes.graph.analysis.pruning.hook_inspector.hook_inspection_analysis_pass`
+    - `test_hook_inspection_analysis_pass https://github.com/DeepWok/mase/blob/main/test/passes/graph/anlysis/pruning/test_hook_inspector.py`_
+    - Provide hook information of the modules
+  * - :py:meth:`~chop.passes.graph.analysis.runtime.runtime_analysis.runtime_analysis_pass`
+    - tbd
+    - Perform runtime analysis on the given graph (MaseGraph, TensorRT, ONNX models)
 
 .. toctree::
         :maxdepth: 2
@@ -78,17 +82,19 @@ MaseGraph Analysis Passes
         analysis/runtime
 
 
-.. MaseGraph Transform Passes
-.. --------------------------
+MaseGraph Transform Passes
+--------------------------
 
-.. .. list-table:: A summary of all MaseGraph transform passes 
-..   :widths: 25 75
-..   :header-rows: 1
+.. list-table:: A summary of all MaseGraph transform passes 
+  :widths: 20 40 40
+  :header-rows: 1
 
-..   * - Pass Name
-..     - Summary
-..   * - :py:meth:`~chop.passes.graph.transforms.pruning.prune.prune_transform_pass`
-..     - Apply pruning transformation to the given graph
+  * - Pass Name
+    - Usage Example
+    - Summary
+  * - :py:meth:`~chop.passes.graph.transforms.pruning.prune.prune_transform_pass`
+    - Prune the given graph
+    - `test_prune https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/prune/test_prune.py`_
 ..   * - :py:meth:`~chop.passes.graph.transforms.pruning.prune_detach_hook.prune_detach_hook_transform_pass`
 ..     - Apply a transformation to the given graph to remove all pruning hooks
 ..   * - :py:meth:`~chop.passes.graph.transforms.quantize.quantize_transform_pass`
@@ -158,3 +164,5 @@ MaseGraph Analysis Passes
 ..         interface/tensorrt
 ..         interface/onnxrt
 
+
+.. test-results:: ../../test/report.xml
