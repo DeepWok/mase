@@ -1,6 +1,6 @@
 # Mixed-precision search on Manual model
 
-This tutorial shows how to search for mixed-precision quantization strategy for OPT_quantized model on Wikitext2 dataset.
+This tutorial shows how to search for mixed-precision quantization strategy for OPT model on Wikitext2 dataset.
 
 > **Note**: Manual model refers to the model named as `<model_arch>_quantized` at `mase-tools/machop/chop/models/manual`. Usually these are models that cannot be directly converted to MASE Graph.
 
@@ -18,13 +18,13 @@ Here is the search part in `configs/examples/search_opt_quantized_tpe_search.tom
 name = "module/manual_hf/quantize/llm_mixed_precision_ptq"
 
 [search.search_space.setup]
-# disable model parallel since we are using a small model
 model_parallel = false
 
 [search.search_space.seed.default]
 # Since we are doing mixed-precision search.
-# Only one "name" is supported (len(name) == 1)
+# Only one "name" is allowed (len(name) == 1)
 name = ["integer"]
+# precision search space is specified using the following lists
 data_in_width = [2, 4, 8, 10]
 data_in_frac_width = [2, 4, 6]
 weight_width = [2, 4, 8, 10]
@@ -33,15 +33,18 @@ bias_width = [2, 4, 8, 10]
 bias_frac_width = [2, 4, 6]
 
 [search.strategy]
-# Optuna supports a range of search algorithms, including Random, TPE, Genetic, etc.
 name = "optuna"
-sw_runner = "basic_evaluation" # sw_runner specifies the estimator for sw metrics
-hw_runner = "average_bitwidth" # hw_runner specifies the estimator for hw metrics
 eval_mode = true
+
+[search.strategy.sw_runner.basic_evaluation]
 data_loader = "val_dataloader"
-num_samples = 16
+num_samples = 512
+
+[search.strategy.hw_runner.average_bitwidth]
+compare_to = 32 # compare to FP32
 
 [search.strategy.setup]
+# Optuna supports a range of search algorithms, including Random, TPE, Genetic, etc.
 n_jobs = 1
 n_trials = 10
 timeout = 20000
@@ -53,27 +56,31 @@ sum_scaled_metrics = false
 [search.strategy.metrics]
 perplexity.scale = 1.0
 perplexity.direction = "minimize"
-# we set `average_bitwidth.scale = 0.0` to disable the hw metric,
-# since currently (commit bb44d2cf255fae54ecb6697b0fe23c595197babf) the bitwidth estimation only profiles linear layers
-average_bitwidth.scale = 0.0
+average_bitwidth.scale = 1.0
 average_bitwidth.direction = "minimize"
 ```
 
 Run the search:
 ```bash
 cd machop
-./ch search --config configs/examples/search_opt_quantized_tpe_search.toml
+./ch search --config ../configs/examples/search_opt_quantized_tpe_search.toml
 ```
 
 When the search is done, the best quantization config will be printed out:
 ```txt
 Best trial(s):
-|    |   number | software_metrics                     | hardware_metrics            | scaled_metrics                                   |
-|----+----------+--------------------------------------+-----------------------------+--------------------------------------------------|
-|  0 |        9 | {'loss': 9.6, 'perplexity': 144.111} | {'average_bitwidth': 5.556} | {'average_bitwidth': 0.0, 'perplexity': 144.111} |
+|    |   number | software_metrics                        | hardware_metrics                                     | scaled_metrics |
+|----+----------+-----------------------------------------+------------------------------------------------------+----------------|
+|  0 |        4 | {'loss': 8.633, 'perplexity': 1011.627} | {'average_bitwidth': 5.194, 'memory_density': 6.16}  | ...            |
+|  1 |        5 | {'loss': 8.578, 'perplexity': 1088.06}  | {'average_bitwidth': 5.139, 'memory_density': 6.227} | ...            |
+|  2 |        6 | {'loss': 9.341, 'perplexity': 409.964}  | {'average_bitwidth': 5.958, 'memory_density': 5.371} | ...            |
+|  3 |        8 | {'loss': 9.527, 'perplexity': 191.928}  | {'average_bitwidth': 6.514, 'memory_density': 4.913} | ...            |
+|  4 |        9 | {'loss': 9.426, 'perplexity': 214.558}  | {'average_bitwidth': 6.333, 'memory_density': 5.053} | ...            |
 ```
 
-The complete search results will be saved in `mase_tools/mase_output/opt_quantized_wikitext2/software/search_ckpts/log.json`.
+Usually the TPE can optimize the average bitwidth and perplexity trade-off.
+
+The complete search results will be saved in `mase/mase_output/opt_quantized_wikitext2/software/search_ckpts/log.json`.
 
 Here is part of the `log.json`
 
