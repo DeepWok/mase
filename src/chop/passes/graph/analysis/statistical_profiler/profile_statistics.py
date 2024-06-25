@@ -1,6 +1,7 @@
 import logging
 import math
 from typing import Any
+import itertools
 
 import numpy as np
 import toml
@@ -215,6 +216,28 @@ class ActProfiler(Interpreter):
 
                 for tensor_arg, stat in zip(numeric_args, act_stats):
                     stat.update(tensor_arg)
+
+            device = None
+            if isinstance(n.meta["mase"].module, torch.nn.Module):
+                try:
+                    device = next(
+                        itertools.chain(
+                            n.meta["mase"].module.parameters(),
+                            n.meta["mase"].module.buffers(),
+                        )
+                    ).device
+                except StopIteration:
+                    pass
+
+            if device is not None:
+                args = tuple(
+                    arg.to(device=device) if isinstance(arg, torch.Tensor) else arg
+                    for arg in args
+                )
+                kwargs = {
+                    k: v.to(device=device) if isinstance(v, torch.Tensor) else v
+                    for k, v in kwargs.items()
+                }
 
             output = getattr(self, n.op)(n.target, args, kwargs)
 
