@@ -311,6 +311,25 @@ def profile_statistics_analysis_pass(graph, pass_args: dict):
     :param pass_args: The arguments for the analysis pass.
     :type pass_args: dict
 
+    .. code-block:: python
+    
+            pass_args = {
+                "by": "type", # pick from ["name", "type"]
+                "target_weight_nodes": "linear", # ["conv2d", "linear" ...],
+                "target_activation_nodes": "relu", # ["relu", "sigmoid" ...],
+                "weight_statistics": {
+                    "variance_precise": {
+                        "device": "cpu", 
+                        "dims": "all"
+                    },
+                },
+                "activation_statistics": {
+                    "variance_precise": {"device": "cpu", "dims": "all"},
+                },
+                "input_generator": input_generator,
+                "num_samples": 1,
+                "profile_output_activation": False,
+
     :return: The modified graph and an empty dictionary.
     :rtype: tuple(MaseGraph, dict)
     """

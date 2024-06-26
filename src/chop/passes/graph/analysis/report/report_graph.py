@@ -8,10 +8,15 @@ def report_graph_analysis_pass(graph, pass_args={"file_name": None}):
     """
     Generates a report for the graph analysis
     and prints out an overview of the model in a table.
+
     :param graph: a MaseGraph
     :type graph: MaseGraph
+
     :param pass_args: this pass can take a string argument named "file_name", defaults to None
     :type pass_args: dict, optional
+
+    pass_args is normally None for this pass
+
     :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)
     :rtype: tuple(MaseGraph, dict)
     """

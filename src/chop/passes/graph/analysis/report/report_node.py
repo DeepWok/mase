@@ -38,8 +38,12 @@ def report_node_type_analysis_pass(graph, pass_args: dict = {}):
 
     :param graph: The graph to analyze.
     :type graph: MaseGraph
+
     :param pass_args: Additional arguments for the analysis pass (optional).
     :type pass_args: dict
+
+    pass_args should be None for this pass.
+
     :return: The analyzed graph and an empty dictionary.
     :rtype: tuple(MaseGraph, dict)
     """
@@ -74,8 +78,12 @@ def report_node_shape_analysis_pass(graph, pass_args: dict = {}):
 
     :param graph: The input graph to analyze.
     :type graph: MaseGraph
+
     :param pass_args: Additional arguments for the analysis pass (optional).
     :type pass_args: dict
+
+    pass_args should be None for this pass.
+
     :return: The analyzed graph and an empty dictionary.
     :rtype: tuple(MaseGraph, Dict)
     """
@@ -109,8 +117,12 @@ def report_node_hardware_type_analysis_pass(graph, pass_args: dict = {}):
 
     :param graph: The graph to perform the analysis on.
     :type graph: MaseGraph
+
     :param pass_args: Optional arguments for the analysis pass.
     :type pass_args: dict, optional
+
+    pass_args should be None for this pass.
+
     :return: The analyzed graph and an empty dictionary.
     :rtype: tuple(MaseGraph, dict)
     """
@@ -124,9 +136,18 @@ def report_node_meta_param_analysis_pass(graph, pass_args: dict = {}):
 
     :param graph: The graph to analyze.
     :type graph: MaseGraph
+
     :param pass_args: Optional arguments for the analysis pass, a dict of arguments for this pass, including
         - "which": str, and a list of options in ["all", "common", "hardware", "software"], default ["all"]
         - "save_path": str, a str of path to save the table, default None
+
+    .. code-block:: python
+
+        pass_args = {
+            "which": "all", # pick from ["all", "common", "hardware", "software"],
+            "save_path": "path/to/save/table.txt" # default None, a str of path to save the table
+        }
+
     :type pass_args: dict, default None
     :return: The analyzed graph and an empty dictionary.
     :rtype: tuple(MaseGraph, dict)

@@ -63,7 +63,7 @@ MaseGraph Analysis Passes
     - `test_prune <https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/prune/test_prune.py>`_
     - This pass computes weight and activation sparsity based on pruning masks
   * - :py:meth:`~chop.passes.graph.analysis.pruning.hook_inspector.hook_inspection_analysis_pass`
-    - `test_hook_inspection_analysis_pass <https://github.com/DeepWok/mase/blob/main/test/passes/graph/anlysis/pruning/test_hook_inspector.py>`_
+    - `test_hook_inspection_analysis_pass <https://github.com/DeepWok/mase/blob/main/test/passes/graph/anlysis/pruning/test_hook_inspect.py>`_
     - Provide hook information of the modules
   * - :py:meth:`~chop.passes.graph.analysis.runtime.runtime_analysis.runtime_analysis_pass`
     - tbd
