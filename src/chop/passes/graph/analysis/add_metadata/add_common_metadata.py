@@ -292,8 +292,26 @@ def add_common_metadata_analysis_pass(
 
     :param graph: a MaseGraph
     :type graph: MaseGraph
+
     :param pass_args: this pass does not need any arguments, defaults to None
     :type pass_args: _type_, optional, "add_value" controls whether tensor values would be added to the meta data, defaults to True
+
+    pass_args can take 
+
+    - dummy_in: a dictionary of dummy inputs to the graph
+
+    - add_value: a boolean to control whether tensor values would be added to the meta data in the "value" field
+
+    - force_device_meta: a boolean to force everything to be on device="meta"
+
+    .. code-block:: python
+
+        {
+            "dummy_in": dummy_in, # this would be a dictionary of dummy inputs (actual tensors)
+            "add_value": True, # if True, real values of tensors would be added to the metadata "value" field
+            "force_device_meta": False # if True, everything would be forced to be on device="meta" for a symbolic run
+        }
+
     :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)
     :rtype: tuple(MaseGraph, Dict)
 
@@ -304,23 +322,38 @@ def add_common_metadata_analysis_pass(
 
     - common
         - mase_op -> str : the mase op of the node, e.g. placeholder, linear, relu
+
         - mase_type -> str : the mase type of the node, e.g. module, builtin_func, module_related_func
+
         - args -> {}
-             - $name : name of the arg
-               (if the arg is a tensor)
-                 - type -> type of the arg, e.g. fixed point or float
-                 - precision -> format of the type, e.g. (10, 5)
-                 - shape -> shape of the arg
-               (if the arg is not a tensor)
-                 - value of the arg
+            - $name : name of the arg
+
+                (if the arg is a tensor)
+
+                - type -> type of the arg, e.g. fixed point or float
+
+                - precision -> format of the type, e.g. (10, 5)
+
+                - shape -> shape of the arg
+
+                (if the arg is not a tensor)
+
+                - value of the arg
+
         - results -> {}
-             - $name : name of the result
-               (if the result is a tensor)
-                 - type -> type of the result, e.g. fixed point or float
-                 - precision -> format of the type, e.g. (10, 5)
-                 - shape -> shape of the result
-               (if the result is not a tensor)
-                 - value of the result
+            - $name : name of the result
+
+                (if the result is a tensor)
+
+                - type -> type of the result, e.g. fixed point or float
+
+                - precision -> format of the type, e.g. (10, 5)
+
+                - shape -> shape of the result
+
+                (if the result is not a tensor)
+
+                - value of the result
 
     Examples:
 
@@ -333,7 +366,7 @@ def add_common_metadata_analysis_pass(
 
     A linear layer after this pass:
 
-    .. code-block:: JSON
+    .. code-block:: python
 
         {
             "common": {
@@ -372,7 +405,7 @@ def add_common_metadata_analysis_pass(
 
     A relu layer after this pass:
 
-    .. code-block:: JSON
+    .. code-block:: python
 
         {
             "common": {
@@ -411,7 +444,7 @@ def add_common_metadata_analysis_pass(
     A flatten op after this pass:
 
 
-    .. code-block:: JSON
+    .. code-block:: python
 
         {
             "common": {

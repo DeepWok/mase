@@ -53,6 +53,7 @@ Advanced Topics
 
     :caption: Advanced Topics
     tutorials/Add-model-to-machop
+    tutorials/stat_to_ternary_q_config
     tutorials/doc_writing
     tutorials/passes/interface/masert/tensorrt/tensorRT_quantization_tutorial
     tutorials/passes/interface/masert/onnxrt/onnxrt_quantization_tutorial

@@ -560,4 +560,6 @@ bias_max = 0.4969978332519531
 
 ## Finally, the Quantisation can be Performed in the Usual Way
 
-`./ch transform --config configs/quantized_ops/toy_ternary_scaled.toml --load ../mase_output/toy_classification_toy-tiny_2023-07-27/software/training_ckpts/best.ckpt  --load-type pl`
+```bash
+`./ch transform --config configs/quantized_ops/toy_ternary_scaled.toml --load ../mase_output/toy_classification_toy-tiny_2023-07-27/software/training_ckpts/best.ckpt  --load-type pl
+```

@@ -16,7 +16,7 @@ All passes, no matter analysis or transform, take a standard form:
 MaseGraph Analysis Passes
 -------------------------
 
-.. list-table:: A summary of all MaseGraph analysis passes 
+.. list-table:: MaseGraph graph analysis passes 
   :widths: 20 40 40
   :header-rows: 1
 
@@ -54,16 +54,16 @@ MaseGraph Analysis Passes
     - `test_profile_statistics <https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/statistic_profiler/test_statistic_profiler.py>`_
     - Perform profile statistics analysis on the given graph
   * - :py:meth:`~chop.passes.graph.analysis.quantization.calculate_avg_bits.calculate_avg_bits_mg_analysis_pass`
-    - `calculate_avg_bits_mg_analysis_pass https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/quantization/calculate_avg_bits_mg_analysis_pass.py`_
-    -  Calculate, on average, how many bits are spent on weights and activations
+    - `calculate_avg_bits_mg_analysis_pass <https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/quantization/calculate_avg_bits_mg_analysis_pass.py>`_
+    - Calculate, on average, how many bits are spent on weights and activations
   * - :py:meth:`~chop.passes.graph.analysis.pruning.calculate_natural_sparsity.add_natural_sparsity_metadata_analysis_pass`
-    - `test_calculate_natural_sparsity https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/pruning/test_calculate_natural_sparsity.py`_
+    - `test_calculate_natural_sparsity <https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/pruning/test_calculate_natural_sparsity.py>`_
     - Add natural sparsity metadata analysis pass to the given MaseGraph.
   * - :py:meth:`~chop.passes.graph.analysis.pruning.calculate_sparsity.add_pruning_metadata_analysis_pass`
-    - `test_prune https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/prune/test_prune.py`_
+    - `test_prune <https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/prune/test_prune.py>`_
     - This pass computes weight and activation sparsity based on pruning masks
   * - :py:meth:`~chop.passes.graph.analysis.pruning.hook_inspector.hook_inspection_analysis_pass`
-    - `test_hook_inspection_analysis_pass https://github.com/DeepWok/mase/blob/main/test/passes/graph/anlysis/pruning/test_hook_inspector.py`_
+    - `test_hook_inspection_analysis_pass <https://github.com/DeepWok/mase/blob/main/test/passes/graph/anlysis/pruning/test_hook_inspector.py>`_
     - Provide hook information of the modules
   * - :py:meth:`~chop.passes.graph.analysis.runtime.runtime_analysis.runtime_analysis_pass`
     - tbd
@@ -85,7 +85,7 @@ MaseGraph Analysis Passes
 MaseGraph Transform Passes
 --------------------------
 
-.. list-table:: A summary of all MaseGraph transform passes 
+.. list-table:: MaseGraph graph transform passes 
   :widths: 20 40 40
   :header-rows: 1
 
@@ -95,44 +95,58 @@ MaseGraph Transform Passes
   * - :py:meth:`~chop.passes.graph.transforms.pruning.prune.prune_transform_pass`
     - Prune the given graph
     - `test_prune https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/prune/test_prune.py`_
-..   * - :py:meth:`~chop.passes.graph.transforms.pruning.prune_detach_hook.prune_detach_hook_transform_pass`
-..     - Apply a transformation to the given graph to remove all pruning hooks
-..   * - :py:meth:`~chop.passes.graph.transforms.quantize.quantize_transform_pass`
-..     - Apply quantization transformation to the given graph
-..   * - :py:meth:`~chop.passes.graph.transforms.quantize.summarize_quantization_analysis_pass`
-..     - fille me
-..   * - :py:meth:`~chop.passes.graph.transforms.utils.conv_bn_fusion_transform_pass`
-..     - fill me
-..   * - :py:meth:`~chop.passes.graph.transforms.utils.logicnets_fusion_transform_pass`
-..     - fill me
-..   * - :py:meth:`~chop.passes.graph.transforms.utils.onnx_annotate_transform_pass`
-..     - fill me
-..   * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_verilog_top_transform_pass`
-..     - Emit the top-level model design in Verilog
-..   * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_tb.emit_verilog_tb_transform_pass`
-..     - Emit test bench and related files for simulation
-..   * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_bram.emit_bram_transform_pass`
-..     - Enumerate input parameters of the node and emit a ROM block with handshake interface for each parameter
-..   * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_mlir_hls_transform_pass`
-..     - fill me
-..   * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_internal_rtl_transform_pass`
-..     - fill me
-..   * - :py:meth:`~chop.passes.graph.transforms.tensorrt.quantize.calibrate.tensorrt_fake_quantize_transform_pass`
-..     - Apply TensorRT fake quantization to the given graph for INT8 quantization calibration
-..   * - :py:meth:`~chop.passes.graph.transforms.tensorrt.quantize.calibrate.tensorrt_calibrate_transform_pass`
-..     - Apply TensorRT calibration to the given graph for INT8 quantization
-..   * - :py:meth:`~chop.passes.graph.transforms.tensorrt.quantize.fine_tune.tensorrt_fine_tune_transform_pass`
-..     - Apply TensorRT fine tune to the given graph for quantization aware training
+  * - :py:meth:`~chop.passes.graph.transforms.pruning.prune_detach_hook.prune_detach_hook_transform_pass`
+    - Remove all pruning hooks
+    - `test_prune_detach_hook https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/prune/test_prune_detach_hook.py`_
+  * - :py:meth:`~chop.passes.graph.transforms.quantize.quantize_transform_pass`
+    - Apply quantization transformation to the given graph
+    - tbd
+  * - :py:meth:`~chop.passes.graph.transforms.quantize.summarize_quantization_analysis_pass`
+    - fille me
+    - fille me
+  * - :py:meth:`~chop.passes.graph.transforms.utils.conv_bn_fusion_transform_pass`
+    - fill me
+    - fille me
+  * - :py:meth:`~chop.passes.graph.transforms.utils.logicnets_fusion_transform_pass`
+    - fill me
+    - fille me
+  * - :py:meth:`~chop.passes.graph.transforms.utils.onnx_annotate_transform_pass`
+    - fill me
+    - fille me
+  * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_verilog_top_transform_pass`
+    - Emit the top-level model design in Verilog
+    - fille me
+  * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_tb.emit_verilog_tb_transform_pass`
+    - Emit test bench and related files for simulation
+    - fille me
+  * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_bram.emit_bram_transform_pass`
+    - Enumerate input parameters of the node and emit a ROM block with handshake interface for each parameter
+    - fille me
+  * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_mlir_hls_transform_pass`
+    - fill me
+    - fille me
+  * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_internal_rtl_transform_pass`
+    - fill me
+    - fille me
+  * - :py:meth:`~chop.passes.graph.transforms.tensorrt.quantize.calibrate.tensorrt_fake_quantize_transform_pass`
+    - Apply TensorRT fake quantization to the given graph for INT8 quantization calibration
+    - fille me
+  * - :py:meth:`~chop.passes.graph.transforms.tensorrt.quantize.calibrate.tensorrt_calibrate_transform_pass`
+    - Apply TensorRT calibration to the given graph for INT8 quantization
+    - fille me
+  * - :py:meth:`~chop.passes.graph.transforms.tensorrt.quantize.fine_tune.tensorrt_fine_tune_transform_pass`
+    - Apply TensorRT fine tune to the given graph for quantization aware training
+    - fille me
 
 
-.. .. toctree::
-..       :maxdepth: 2
+.. toctree::
+      :maxdepth: 2
 
-..       transform/pruning
-..       transform/quantize
-..       transform/verilog
-..       transform/utils
-..       transform/tensorrt
+      transform/pruning
+      transform/quantize
+      transform/verilog
+      transform/utils
+      transform/tensorrt
 
 
 .. MaseGraph Interface Passes

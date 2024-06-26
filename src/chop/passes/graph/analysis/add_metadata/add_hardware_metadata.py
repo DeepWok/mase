@@ -145,8 +145,10 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
 
     :param graph: a MaseGraph
     :type graph: MaseGraph
+
     :param pass_args: this pass does not need any arguments, defaults to None
     :type pass_args: _type_, optional
+
     :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)
     :rtype: tuple(MaseGraph, Dict)
 

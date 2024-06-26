@@ -167,6 +167,23 @@ def prune_transform_pass(graph, pass_args: dict = {}):
     :param pass_args: Optional arguments for the pruning transformation.
     :type pass_args: dict
 
+    pass_args should take the following form:
+    .. code-block:: python
+
+        pass_config = {
+            "weight" : {
+                "scope": "local", # ["local, "global"] are available
+                "granularity": "element", # ["element"] are available
+                "method": "l1", # ["l1", "random"] are available
+                "sparsity": 0.5, # a float between 0.0 and 1.0
+            }
+            "activation" : {
+                "scope": "local", # ["local, "global"] are available
+                "granularity": "element", # ["element"] are available
+                "method": "l1", # ["l1", "random"] are available
+                "sparsity": 0.5, # a float between 0.0 and 1.0
+        }
+
     :return: The pruned graph and an empty dictionary.
     :rtype: tuple
     """

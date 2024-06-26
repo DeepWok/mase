@@ -1,4 +1,4 @@
-# Mixed-Precision Search on Manual model
+# Mixed-precision search on manual model
 
 This tutorial shows how to search for mixed-precision quantization strategy for OPT model on Wikitext2 dataset.
 
