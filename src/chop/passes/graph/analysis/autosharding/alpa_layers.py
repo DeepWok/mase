@@ -1,5 +1,5 @@
 import itertools
-import numpy as np
+import operator
 
 import torch
 import torch.nn as nn
@@ -19,6 +19,7 @@ from .ops.matrix_ops import (
 )
 
 from .ops.view_ops import get_reshape_strategy
+from .ops.pointwise_ops import linear_pointwise_strategy
 
 logger = get_logger(__name__)
 
@@ -28,6 +29,8 @@ ALPA_FUNCTIONS = {
     torch.addmm: addmm_strategy,
     torch.bmm: bmm_strategy,
     torch.baddbmm: baddmm_strategy,
+    torch.add: linear_pointwise_strategy,
+    operator.add: linear_pointwise_strategy
 }
 
 ALPA_METHODS = {

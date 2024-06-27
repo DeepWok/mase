@@ -100,6 +100,20 @@ def placeholder_or_getattr_strategy(meta, mesh):
         ))
     return OpStrategy(shardings)
 
+def fully_replicated_strategy(meta, mesh):
+    """
+    Output of ops like size, getitem etc are always fully replicated
+    """
+    sharding = [Replicate(), Replicate()]
+    spec = DTensorSpec(mesh, sharding)
+    shardings = [
+        PlacementStrategy(
+            input_specs=spec,
+            output_specs=spec
+        )
+    ]
+    return OpStrategy(shardings)
+
 def alpa_intra_op_sharding_pass(mg, mesh, debug=False):
     """
     Intra-operator auto parallelization pass.
@@ -111,12 +125,21 @@ def alpa_intra_op_sharding_pass(mg, mesh, debug=False):
     expr = 0
     constr = []
 
-    # Write cost vectors into metadata for each operator
-    # This will later be used to solve the ILP optimization
+    # Find sharding strategies for each operator in the graph
     for node in mg.fx_graph.nodes:
 
         if (node.op == "call_function" and node.target in IGNORE_FUNCS) or (node.op == "call_method" and node.target in IGNORE_METHODS):
-            logger.debug(f"Ignoring {node.op} node {node.name} with target {node.target}")
+            logger.debug(f"Implicit {node.op} node {node.name} was assigned fully replicated sharding.")
+
+            op_strategy = fully_replicated_strategy(node.meta["mase"], mesh.mesh_shape)
+
+            # Opt var is None since no decision needs to be taken
+            node.meta["mase"]["software"]["autosharding"] = {
+                "op_strategy": op_strategy,
+                "opt_var": None
+            }
+
+            breakpoint()
             continue
 
         # Obtain strategy according to node op
@@ -143,8 +166,8 @@ def alpa_intra_op_sharding_pass(mg, mesh, debug=False):
 
         else:
             logger.warning(f"Unknown node {node.name} with op {node.op}")
-            continue
             breakpoint()
+            continue
 
         # Formulate optimization variable and consider compute/communication cost
         opt_var = cp.Variable(len(op_strategy.strategies), boolean=True)

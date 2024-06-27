@@ -589,7 +589,6 @@ def get_reshape_strategy(op):
 
     # def reshape_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> StrategyType:
     def reshape_strategy(meta, mesh):
-        breakpoint()
         assert meta.node.op == "call_method", "Node should have call_method op."
         args_schema = [meta["common"]["self"]] + [i for i in meta["common"]["args"].values()]
         rules = dim_map(*args_schema)

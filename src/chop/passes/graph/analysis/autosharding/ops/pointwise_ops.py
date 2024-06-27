@@ -1,0 +1,145 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates
+from typing import List, Sequence, Tuple
+
+import torch
+from torch.distributed._tensor._op_schema import (
+    _is_inplace_op,
+    _is_out_variant_op,
+    OpSchema,
+    OpStrategy,
+    PlacementStrategy,
+    RuntimeSchemaInfo,
+    StrategyType,
+    TupleStrategy,
+)
+from torch.distributed._tensor.ops.utils import (
+    generate_redistribute_costs,
+    infer_broadcast_dims_map,
+    map_placements_after_broadcast,
+    normalize_dim,
+    register_op_strategy,
+)
+from torch.distributed._tensor.placement_types import (
+    DTensorSpec,
+    Partial,
+    Placement,
+    Replicate,
+    Shard,
+)
+from torch.distributed.device_mesh import DeviceMesh
+
+
+aten = torch.ops.aten
+
+def pointwise_strategy(
+    meta, mesh, linearity = False
+):
+    max_shards_strategy_index = -1
+    max_shards = -1
+    followed_strategy = None
+
+    # if _is_inplace_op(op_schema.op):
+    #     # inplace op should follow the first arg strategy
+    #     followed_strategy = op_schema.args_schema[0]
+    # elif _is_out_variant_op(op_schema.op):
+    #     # out variant op should follow the out kwarg strategy
+    #     followed_strategy = op_schema.kwargs_schema["out"]
+    # else:
+    
+    # normal pointwise op, we choose to follow the arg with
+    # the max shards in case operands needs reshard
+    for idx, arg in enumerate(meta.node.args):
+        if not isinstance(arg, torch.fx.Node):
+            continue
+        arg_strategy = arg.meta["mase"]["software"]["autosharding"]["op_strategy"]
+
+
+        arg_max_shards = arg_strategy.max_num_shards()
+        if arg_max_shards > max_shards:
+            max_shards_strategy_index = idx
+            max_shards = arg_max_shards
+            followed_strategy = arg_strategy
+
+    assert isinstance(
+        followed_strategy, OpStrategy
+    ), f"no strategy to follow for {op_schema}!"
+
+    return common_pointwise_strategy(
+        meta, mesh, followed_strategy, linearity
+    )
+
+
+def common_pointwise_strategy(
+    meta,
+    mesh,
+    followed_strategy,
+    linearity
+):
+    breakpoint()
+    # handle broadcasting
+    common_shape = torch.broadcast_shapes(
+        *[arg.shape for arg in args_schema if isinstance(arg, OpStrategy)]
+    )
+    pointwise_strategy = OpStrategy([])
+
+    for placement_strategy in followed_strategy.strategies:
+        spec_to_follow = placement_strategy.output_spec
+        out_placements: List[Placement] = []
+        for placement in spec_to_follow.placements:
+            if isinstance(placement, Shard):
+                shard_dim = normalize_dim(placement.dim, len(spec_to_follow.shape))
+                common_ndim = len(common_shape)
+                new_shard_dim = common_ndim - len(spec_to_follow.shape) + shard_dim
+                out_placements.append(Shard(new_shard_dim))
+            elif isinstance(placement, Partial) and not linearity:
+                # clear the partial placemnet if op does not support linearity
+                # by default we just replicate the partial, need to see if this
+                # is optimal for all cases
+                out_placements.append(Replicate())
+            else:
+                out_placements.append(placement)
+
+        input_specs: List[DTensorSpec] = []
+        redistribute_costs: List[List[float]] = []
+        for idx, input_arg in enumerate(args_schema):
+            if isinstance(input_arg, OpStrategy):
+                # every arg follow the out_placements, but need to handle broadcasting
+                input_arg_spec = input_arg.strategies[0].output_spec
+                input_arg_dims_map = infer_broadcast_dims_map(
+                    common_shape, input_arg_spec.shape
+                )
+                input_target_placements = map_placements_after_broadcast(
+                    tuple(out_placements),
+                    common_shape,
+                    input_arg_dims_map,
+                )
+                input_arg_target_spec = DTensorSpec(
+                    mesh=mesh,
+                    placements=input_target_placements,
+                    tensor_meta=input_arg_spec.tensor_meta,
+                )
+                input_specs.append(input_arg_target_spec)
+                redistribute_costs.append(
+                    generate_redistribute_costs(input_arg, input_arg_target_spec)
+                )
+
+        pointwise_strategy.strategies.append(
+            PlacementStrategy(
+                output_specs=DTensorSpec(
+                    mesh=mesh,
+                    placements=tuple(out_placements),
+                ),
+                input_specs=input_specs,
+                redistribute_cost=redistribute_costs,
+            )
+        )
+    return pointwise_strategy
+
+
+def linear_pointwise_strategy(meta, mesh):
+    """
+    Linear pointwise operators can propagate pending reductions.
+    For example, c = add(a, b); if a is pending sum, then c will be
+    pending sum as well without any communication overhead.
+    """
+    return pointwise_strategy(meta, mesh, linearity=True)
