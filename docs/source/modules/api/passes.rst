@@ -69,17 +69,17 @@ MaseGraph Analysis Passes
     - tbd
     - Perform runtime analysis on the given graph (MaseGraph, TensorRT, ONNX models)
 
-.. toctree::
-        :maxdepth: 2
+.. .. toctree::
+..         :maxdepth: 2
 
-        analysis/add_metadata
-        analysis/init_metadata
-        analysis/report
-        analysis/statistical_profiler
-        analysis/verify
-        analysis/quantization
-        analysis/pruning
-        analysis/runtime
+..         analysis/add_metadata
+..         analysis/init_metadata
+..         analysis/report
+..         analysis/statistical_profiler
+..         analysis/verify
+..         analysis/quantization
+..         analysis/pruning
+..         analysis/runtime
 
 
 MaseGraph Transform Passes
@@ -94,13 +94,13 @@ MaseGraph Transform Passes
     - Summary
   * - :py:meth:`~chop.passes.graph.transforms.pruning.prune.prune_transform_pass`
     - Prune the given graph
-    - `test_prune https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/prune/test_prune.py`_
+    - `test_prune <https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/prune/test_prune.py>`_
   * - :py:meth:`~chop.passes.graph.transforms.pruning.prune_detach_hook.prune_detach_hook_transform_pass`
     - Remove all pruning hooks
-    - `test_prune_detach_hook https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/prune/test_prune_detach_hook.py`_
+    - `test_prune_detach_hook <https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/prune/test_prune_detach_hook.py>`_
   * - :py:meth:`~chop.passes.graph.transforms.quantize.quantize_transform_pass`
-    - Apply quantization transformation to the given graph
-    - tbd
+    - Apply quantization, check `quantization documentation <>` 
+    - `test_quantize <https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/quantize/test_quantize.py>`_
   * - :py:meth:`~chop.passes.graph.transforms.quantize.summarize_quantization_analysis_pass`
     - fille me
     - fille me
@@ -138,15 +138,19 @@ MaseGraph Transform Passes
     - Apply TensorRT fine tune to the given graph for quantization aware training
     - fille me
 
-
 .. toctree::
-      :maxdepth: 2
+	:maxdepth: 1
 
-      transform/pruning
-      transform/quantize
-      transform/verilog
-      transform/utils
-      transform/tensorrt
+	transform/quantize_further_doc
+
+.. .. toctree::
+..   :maxdepth: 2
+
+..   transform/pruning
+..   transform/quantize
+..   transform/verilog
+..   transform/utils
+..   transform/tensorrt
 
 
 .. MaseGraph Interface Passes
