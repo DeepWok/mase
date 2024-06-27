@@ -138,8 +138,6 @@ def alpa_intra_op_sharding_pass(mg, mesh, debug=False):
                 "op_strategy": op_strategy,
                 "opt_var": None
             }
-
-            breakpoint()
             continue
 
         # Obtain strategy according to node op

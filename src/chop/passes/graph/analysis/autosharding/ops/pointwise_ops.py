@@ -75,10 +75,20 @@ def common_pointwise_strategy(
     followed_strategy,
     linearity
 ):
-    breakpoint()
     # handle broadcasting
+    parsed_args = []
+    for arg in meta["common"]["args"].values():
+        if isinstance(arg, torch.Size):
+            parsed_args.append(torch.Tensor(list(arg)))
+        elif isinstance(arg, (tuple, list)):
+            parsed_args.append(torch.Tensor(arg))
+        elif isinstance(arg, torch.Tensor):
+            parsed_args.append(arg)
+        else:
+            raise ValueError("Unrecognized arg type")
+
     common_shape = torch.broadcast_shapes(
-        *[arg.shape for arg in args_schema if isinstance(arg, OpStrategy)]
+        *[arg.shape for arg in parsed_args]
     )
     pointwise_strategy = OpStrategy([])
 
@@ -101,12 +111,15 @@ def common_pointwise_strategy(
 
         input_specs: List[DTensorSpec] = []
         redistribute_costs: List[List[float]] = []
-        for idx, input_arg in enumerate(args_schema):
+        for arg_node in meta.node.args:
+            if not isinstance(arg_node, torch.fx.Node):
+                continue
+            input_arg = arg_node.meta["mase"]["software"]["autosharding"]["op_strategy"]
             if isinstance(input_arg, OpStrategy):
                 # every arg follow the out_placements, but need to handle broadcasting
                 input_arg_spec = input_arg.strategies[0].output_spec
                 input_arg_dims_map = infer_broadcast_dims_map(
-                    common_shape, input_arg_spec.shape
+                    common_shape, arg_node.meta["mase"]["common"]["results"]["data_out_0"]["shape"]
                 )
                 input_target_placements = map_placements_after_broadcast(
                     tuple(out_placements),
