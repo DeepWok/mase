@@ -7,18 +7,11 @@ import cvxpy as cp
 
 from chop.tools import get_logger
 
-from .common import SpmdShard
-from .alpa_layers import ALPA_FUNCTIONS, ALPA_METHODS
+from .layers import ALPA_FUNCTIONS, ALPA_METHODS, IMPLICIT_FUNCS, IMPLICIT_METHODS, placeholder_or_getattr_strategy, fully_replicated_strategy
 from .alpa_cost_modelling import get_resharding_matrix
 
 logger = get_logger(__name__)
 logger.setLevel("DEBUG")
-
-import operator
-IGNORE_FUNCS = [operator.getitem]
-IGNORE_METHODS = [
-    "size"
-]
 
 def deepgetattr(obj, attr, default=None):
     """Recurses through an attribute chain to get the ultimate value."""
@@ -33,17 +26,6 @@ def get_node_target(node):
         return deepgetattr(node.meta["mase"].model, node.target, None)
     else:
         return node.target
-
-
-def assign_default_sharding(node):
-    rank = len(node.meta["mase"]["common"]["results"]["data_out_0"]["shape"])
-    node.meta["mase"]["software"]["autosharding"] = {
-        "valid_input_shardings": [{"data_in_0": (SpmdShard.R,) * rank}],
-        "valid_output_shardings": [(SpmdShard.R,) * rank],
-        "compute_cost_vector": [0],
-        "communication_cost_vector": [0],
-        "opt_var": np.array([1]),
-    }
 
 
 def mark_choices(mg):
@@ -84,36 +66,6 @@ def mark_choices(mg):
 
     return mg
 
-from torch.distributed._tensor._op_schema import OpStrategy, PlacementStrategy
-from torch.distributed._tensor.placement_types import Replicate, Shard, DTensorSpec
-import itertools
-
-def placeholder_or_getattr_strategy(meta, mesh):
-    ndims = len(meta["common"]["results"]["data_out_0"]["shape"])
-    opts = [Replicate()] + [Shard(dim) for dim in range(ndims)]
-    shardings = []
-    for sharding in itertools.product(opts, repeat=2):
-        spec = DTensorSpec(mesh, sharding)
-        shardings.append(PlacementStrategy(
-            input_specs=spec,
-            output_specs=spec
-        ))
-    return OpStrategy(shardings)
-
-def fully_replicated_strategy(meta, mesh):
-    """
-    Output of ops like size, getitem etc are always fully replicated
-    """
-    sharding = [Replicate(), Replicate()]
-    spec = DTensorSpec(mesh, sharding)
-    shardings = [
-        PlacementStrategy(
-            input_specs=spec,
-            output_specs=spec
-        )
-    ]
-    return OpStrategy(shardings)
-
 def alpa_intra_op_sharding_pass(mg, mesh, debug=False):
     """
     Intra-operator auto parallelization pass.
@@ -128,10 +80,10 @@ def alpa_intra_op_sharding_pass(mg, mesh, debug=False):
     # Find sharding strategies for each operator in the graph
     for node in mg.fx_graph.nodes:
 
-        if (node.op == "call_function" and node.target in IGNORE_FUNCS) or (node.op == "call_method" and node.target in IGNORE_METHODS):
+        if (node.op == "call_function" and node.target in IMPLICIT_FUNCS) or (node.op == "call_method" and node.target in IMPLICIT_METHODS):
             logger.debug(f"Implicit {node.op} node {node.name} was assigned fully replicated sharding.")
 
-            op_strategy = fully_replicated_strategy(node.meta["mase"], mesh.mesh_shape)
+            op_strategy = fully_replicated_strategy(node.meta["mase"], mesh)
 
             # Opt var is None since no decision needs to be taken
             node.meta["mase"]["software"]["autosharding"] = {
@@ -145,22 +97,15 @@ def alpa_intra_op_sharding_pass(mg, mesh, debug=False):
 
         if node.op in ["placeholder", "get_attr"]:
             logger.debug(f"Node {node} with op {node.op} will be assigned all permutations of Shard(dims) and Replicate()")
-            op_strategy = placeholder_or_getattr_strategy(node.meta["mase"], mesh.mesh_shape)
+            op_strategy = placeholder_or_getattr_strategy(node.meta["mase"], mesh)
 
         elif node.op == "call_method" and node.target in ALPA_METHODS.keys():
             logger.debug(f"Obtaining strategy for node {node.name}")
-            op_strategy = ALPA_METHODS[node.target](node.meta["mase"], mesh.mesh_shape)
+            op_strategy = ALPA_METHODS[node.target](node.meta["mase"], mesh)
 
         elif node.op == "call_function" and node.target in ALPA_FUNCTIONS.keys():
-            # Enumerate shardings and costs for this operator
-            # (
-            #     input_shardings,
-            #     output_shardings,
-            #     compute_cost_vector,
-            #     communication_cost_vector,
-            # ) = ALPA_FUNCTIONS[node.target](node.meta, mesh)
             logger.debug(f"Obtaining strategy for node {node.name}")
-            op_strategy = ALPA_FUNCTIONS[node.target](node.meta["mase"], mesh.mesh_shape)
+            op_strategy = ALPA_FUNCTIONS[node.target](node.meta["mase"], mesh)
 
         else:
             logger.warning(f"Unknown node {node.name} with op {node.op}")

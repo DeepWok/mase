@@ -606,7 +606,7 @@ def get_reshape_strategy(op):
                 input_src_spec.placements,
                 tuple(global_in_shape),
                 rules,
-                mesh,
+                mesh.mesh_shape,
             )
 
             # TODO: optimize this. we shouldn't simply blindly replicate

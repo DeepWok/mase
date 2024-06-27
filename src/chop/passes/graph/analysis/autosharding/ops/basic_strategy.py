@@ -98,7 +98,7 @@ def gen_einsum_strategies(
     all_mesh_dim_strategies = []
 
     # generate strategies for each mesh dim
-    for mesh_dim in range(len(mesh)):
+    for mesh_dim in range(len(mesh.mesh_shape)):
         mesh_dim_strategies = []
 
         # placement list stores placements of [output, input1, input2, ...]

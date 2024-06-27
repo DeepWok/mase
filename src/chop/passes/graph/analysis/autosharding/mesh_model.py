@@ -12,6 +12,15 @@ class MeshModel():
         self.mesh_alpha = [0] * 2 if mesh_alpha is None else mesh_alpha
         self.mesh_beta = [None] * 2 if mesh_beta is None else mesh_beta
 
+    def __getitem__(self, key):
+        return self.mesh_shape[key]
+
+    def size(self, dim: None):
+        if dim is None:
+            return np.prod(self.mesh_shape)
+        else:
+            return self.mesh_shape[dim]
+
     def set_cost_model_parameters(self, intra_node_bandwidth: int, inter_node_bandwidth:int, backend:str = "default"):
         # Assign differently depending if backend is NVLink, Infiniband, etc
         if (backend == "default"):

@@ -53,7 +53,6 @@ def pointwise_strategy(
             continue
         arg_strategy = arg.meta["mase"]["software"]["autosharding"]["op_strategy"]
 
-
         arg_max_shards = arg_strategy.max_num_shards()
         if arg_max_shards > max_shards:
             max_shards_strategy_index = idx
@@ -78,13 +77,18 @@ def common_pointwise_strategy(
     # handle broadcasting
     parsed_args = []
     for arg in meta["common"]["args"].values():
-        if isinstance(arg, torch.Size):
+        if isinstance(arg, dict):
+            parsed_args.append(torch.zeros(arg["shape"]))
+        elif isinstance(arg, torch.Size):
             parsed_args.append(torch.Tensor(list(arg)))
         elif isinstance(arg, (tuple, list)):
             parsed_args.append(torch.Tensor(arg))
         elif isinstance(arg, torch.Tensor):
             parsed_args.append(arg)
+        elif isinstance(arg, float):
+            parsed_args.append(torch.Tensor([arg]))
         else:
+            breakpoint()
             raise ValueError("Unrecognized arg type")
 
     common_shape = torch.broadcast_shapes(
@@ -110,7 +114,7 @@ def common_pointwise_strategy(
                 out_placements.append(placement)
 
         input_specs: List[DTensorSpec] = []
-        redistribute_costs: List[List[float]] = []
+        # redistribute_costs: List[List[float]] = []
         for arg_node in meta.node.args:
             if not isinstance(arg_node, torch.fx.Node):
                 continue
@@ -132,9 +136,9 @@ def common_pointwise_strategy(
                     tensor_meta=input_arg_spec.tensor_meta,
                 )
                 input_specs.append(input_arg_target_spec)
-                redistribute_costs.append(
-                    generate_redistribute_costs(input_arg, input_arg_target_spec)
-                )
+                # redistribute_costs.append(
+                #     generate_redistribute_costs(input_arg, input_arg_target_spec)
+                # )
 
         pointwise_strategy.strategies.append(
             PlacementStrategy(
@@ -143,7 +147,7 @@ def common_pointwise_strategy(
                     placements=tuple(out_placements),
                 ),
                 input_specs=input_specs,
-                redistribute_cost=redistribute_costs,
+                # redistribute_cost=redistribute_costs,
             )
         )
     return pointwise_strategy
