@@ -25,16 +25,16 @@ MaseGraph Analysis Passes
     - Summary
   * - :py:meth:`~chop.passes.graph.analysis.init_metadata.init_metadata_analysis_pass`
     - `test_add_common_metadata <https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/add_metadata/test_add_common_metadata.py>`_
-    - Initialize each node with the MaseMetadata, this nees to run first before adding any metadata
+    - Initialize each node with the MaseMetadata, this needs to run first before adding any metadata
   * - :py:meth:`~chop.passes.graph.analysis.add_metadata.add_common_metadata.add_common_metadata_analysis_pass`
     - `test_add_common_metadata <https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/add_metadata/test_add_common_metadata.py>`_
-    - Add metadata used for both software and hardware, this nees to run first before calling to add_software_metadata or add_hardware_metadata
+    - Add metadata used for both software and hardware, this needs to run first before calling to add_software_metadata or add_hardware_metadata
   * - :py:meth:`~chop.passes.graph.analysis.add_metadata.add_software_metadata.add_software_metadata_analysis_pass`
     - `test_add_software_metadata <https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/add_metadata/test_add_software_metadata.py>`_
-    - Add hardware-specific metadata
+    - Add hardware-specific metadata, such as which hardware IPs to map and hardware parameters. Details see the pass page
   * - :py:meth:`~chop.passes.graph.analysis.add_metadata.add_hardware_metadata.add_hardware_metadata_analysis_pass`
     - `test_add_hardware_metadata <https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/add_metadata/test_add_hardware_metadata.py>`_
-    - Add software-specific metadata
+    - Add software-specific metadata, such as sparsity. Details see the pass page
   * - :py:meth:`~chop.passes.graph.analysis.report.report_graph.report_graph_analysis_pass`
     - `test_report_graph <https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/report/test_report_graph_analysis_pass.py>`_
     - Generates a report for the graph analysis and prints out an over the model in a table.
@@ -105,7 +105,7 @@ MaseGraph Transform Passes
     - fille me
     - fille me
   * - :py:meth:`~chop.passes.graph.transforms.utils.conv_bn_fusion_transform_pass`
-    - fill me
+    - Fuse the consecutive Conv2D and BatchNorm layers into a single Conv2D layer with updated parameters. 
     - fille me
   * - :py:meth:`~chop.passes.graph.transforms.utils.logicnets_fusion_transform_pass`
     - fill me
@@ -114,19 +114,19 @@ MaseGraph Transform Passes
     - fill me
     - fille me
   * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_verilog_top_transform_pass`
-    - Emit the top-level model design in Verilog
+    - Emit the top-level model design in Verilog.
     - fille me
   * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_tb.emit_verilog_tb_transform_pass`
-    - Emit test bench and related files for simulation
+    - Emit test bench and related files for simulation.
     - fille me
   * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_bram.emit_bram_transform_pass`
     - Enumerate input parameters of the node and emit a ROM block with handshake interface for each parameter
     - fille me
   * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_mlir_hls_transform_pass`
-    - fill me
+    - Emit the hardware components that generated from MLIR-HLS tools. 
     - fille me
   * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_internal_rtl_transform_pass`
-    - fill me
+    - Emit the hardware components that pre-defined in the mase internal library.
     - fille me
   * - :py:meth:`~chop.passes.graph.transforms.tensorrt.quantize.calibrate.tensorrt_fake_quantize_transform_pass`
     - Apply TensorRT fake quantization to the given graph for INT8 quantization calibration
