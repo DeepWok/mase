@@ -205,6 +205,8 @@ func_data = {
         "bias": "data_in",
         "eps": "config",
     },
+    # https://pytorch.org/docs/stable/generated/torch.transpose.html
+    "transpose": {"input": "data_in", "dim_0": "config", "dim_1": "config"},
 }
 
 module_data = {

@@ -257,6 +257,11 @@ def graph_iterator_for_metadata(
         )
         env[node.name] = result
 
+        # For call_method nodes, the input tensor is not kept in meta["common"]["args"]
+        # so we keep a copy under the "self" key. This is used in autosharding spec propagation.
+        if add_value and node.op == "call_method":
+            node.meta["mase"]["common"]["self"] = self_obj
+
     return graph
 
 

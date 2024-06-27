@@ -4,7 +4,7 @@ import itertools
 from typing import List, Optional
 
 import torch
-from torch.distributed._tensor.op_schema import OpStrategy, PlacementStrategy
+from torch.distributed._tensor._op_schema import OpStrategy, PlacementStrategy
 from .basic_strategy import gen_einsum_strategies
 from torch.distributed._tensor.ops.utils import (
     infer_broadcast_dims_map,
@@ -27,7 +27,9 @@ aten = torch.ops.aten
 
 
 def transpose_strategy(meta: MaseMetadata, mesh: tuple) -> OpStrategy:
-    self_strategy = op_schema.args_schema[0]
+    
+    parent_node = meta.node.args[0]
+    self_strategy = parent_node.meta["mase"]["software"]["autosharding"]["op_strategy"]
     assert isinstance(self_strategy, OpStrategy)
 
     transpose_strategies = []
