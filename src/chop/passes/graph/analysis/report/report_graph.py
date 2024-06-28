@@ -20,6 +20,8 @@ def report_graph_analysis_pass(graph, pass_args={"file_name": None}):
     :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)
     :rtype: tuple(MaseGraph, dict)
     """
+    if pass_args is None:
+        pass_args = {"file_name": None}
     file_name = pass_args.get("file_name")
     buff = """
 Graph Analysis Report

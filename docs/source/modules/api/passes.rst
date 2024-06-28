@@ -69,17 +69,17 @@ MaseGraph Analysis Passes
     - tbd
     - Perform runtime analysis on the given graph (MaseGraph, TensorRT, ONNX models)
 
-.. .. toctree::
-..         :maxdepth: 2
+.. toctree::
+  :maxdepth: 2
 
-..         analysis/add_metadata
-..         analysis/init_metadata
-..         analysis/report
-..         analysis/statistical_profiler
-..         analysis/verify
-..         analysis/quantization
-..         analysis/pruning
-..         analysis/runtime
+  analysis/add_metadata
+  analysis/init_metadata
+  analysis/report
+  analysis/statistical_profiler
+  analysis/verify
+  analysis/quantization
+  analysis/pruning
+  analysis/runtime
 
 
 MaseGraph Transform Passes
@@ -93,17 +93,17 @@ MaseGraph Transform Passes
     - Usage Example
     - Summary
   * - :py:meth:`~chop.passes.graph.transforms.pruning.prune.prune_transform_pass`
-    - Prune the given graph
     - `test_prune <https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/prune/test_prune.py>`_
+    - Prune the given graph
   * - :py:meth:`~chop.passes.graph.transforms.pruning.prune_detach_hook.prune_detach_hook_transform_pass`
-    - Remove all pruning hooks
     - `test_prune_detach_hook <https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/prune/test_prune_detach_hook.py>`_
+    - Remove all pruning hooks
   * - :py:meth:`~chop.passes.graph.transforms.quantize.quantize_transform_pass`
-    - Apply quantization, check `quantization documentation <>` 
     - `test_quantize <https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/quantize/test_quantize.py>`_
+    - Apply quantization, check the further documentation below
   * - :py:meth:`~chop.passes.graph.transforms.quantize.summarize_quantization_analysis_pass`
-    - fille me
-    - fille me
+    - `test_quantize <https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/quantize/test_quantize.py>`_
+    - Summarizes the quantization with respect to the original graph
   * - :py:meth:`~chop.passes.graph.transforms.utils.conv_bn_fusion_transform_pass`
     - fill me
     - fille me
@@ -143,14 +143,14 @@ MaseGraph Transform Passes
 
 	transform/quantize_further_doc
 
-.. .. toctree::
-..   :maxdepth: 2
+.. toctree::
+  :maxdepth: 2
 
-..   transform/pruning
-..   transform/quantize
-..   transform/verilog
-..   transform/utils
-..   transform/tensorrt
+  transform/pruning
+  transform/quantize
+  transform/verilog
+  transform/utils
+  transform/tensorrt
 
 
 .. MaseGraph Interface Passes
@@ -175,12 +175,12 @@ MaseGraph Transform Passes
 ..   * - :py:meth:`~chop.passes.graph.interface.onnxrt.onnx_runtime.onnx_runtime_interface_pass`
 ..     - Converts the given graph to a ONNXRuntime model
 
-.. .. toctree::
-..         :maxdepth: 2
+.. toctree::
+  :maxdepth: 2
 
-..         interface/save_and_load
-..         interface/tensorrt
-..         interface/onnxrt
+  interface/save_and_load
+  interface/tensorrt
+  interface/onnxrt
 
 
 .. test-results:: ../../test/report.xml
