@@ -469,6 +469,7 @@ dim_maps: Dict[Callable[..., torch.Tensor], Callable[..., DimMap]] = {
     ),
     torch.ravel: lambda tensor: dim_flatten(tensor.ndim),
     Tensor.repeat: lambda self, *sizes: dim_repeat(self.ndim, sizes),
+    Tensor.reshape: lambda self, *shape: view_groups(self.shape, shape),
     torch.reshape: lambda input, shape: view_groups(input.shape, shape),
     torch.squeeze: lambda input, dim=None: dim_squeeze(input.shape, dim),
     torch.tile: lambda input, dims: dim_tile(input.ndim, dims),

@@ -88,7 +88,9 @@ def alpa_intra_op_sharding_pass(mg, mesh, debug=False):
             # Opt var is None since no decision needs to be taken
             node.meta["mase"]["software"]["autosharding"] = {
                 "op_strategy": op_strategy,
-                "opt_var": None
+                "opt_var": None,
+                "input": None,
+                "output": None,
             }
             continue
 
@@ -98,6 +100,16 @@ def alpa_intra_op_sharding_pass(mg, mesh, debug=False):
         if node.op in ["placeholder", "get_attr"]:
             logger.debug(f"Node {node} with op {node.op} will be assigned all permutations of Shard(dims) and Replicate()")
             op_strategy = placeholder_or_getattr_strategy(node.meta["mase"], mesh)
+
+        elif node.op == "output":
+            logger.debug(f"Op strategy from node {node.args[0]} is propagated to {node} node.")
+            node.meta["mase"]["software"]["autosharding"] = {
+                "op_strategy": node.args[0].meta["mase"]["software"]["autosharding"]["op_strategy"],
+                "opt_var": None,
+                "input": None,
+                "output": None,
+            }
+            continue
 
         elif node.op == "call_method" and node.target in ALPA_METHODS.keys():
             logger.debug(f"Obtaining strategy for node {node.name}")
@@ -109,6 +121,12 @@ def alpa_intra_op_sharding_pass(mg, mesh, debug=False):
 
         else:
             logger.warning(f"Unknown node {node.name} with op {node.op}")
+            node.meta["mase"]["software"]["autosharding"] = {
+                "op_strategy": fully_replicated_strategy(node.meta["mase"], mesh),
+                "opt_var": None,
+                "input": None,
+                "output": None,
+            }
             breakpoint()
             continue
 
@@ -123,6 +141,8 @@ def alpa_intra_op_sharding_pass(mg, mesh, debug=False):
         node.meta["mase"]["software"]["autosharding"] = {
             "op_strategy": op_strategy,
             "opt_var": opt_var,
+            "input": None,
+            "output": None,
         }
 
         # Consider resharding cost

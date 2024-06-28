@@ -23,6 +23,7 @@ from .ops.matrix_ops import (
 from .ops.view_ops import get_reshape_strategy
 from .ops.pointwise_ops import pointwise_strategy, linear_pointwise_strategy
 
+from .ops.math_ops import softmax_strategy, layer_norm_strategy
 
 logger = get_logger(__name__)
 
@@ -35,11 +36,16 @@ ALPA_FUNCTIONS = {
     torch.add: linear_pointwise_strategy,
     operator.add: linear_pointwise_strategy,
     operator.truediv: pointwise_strategy,
-    torch.matmul: bmm_strategy
+    F.gelu: pointwise_strategy,
+    torch.matmul: bmm_strategy,
+    torch.softmax: softmax_strategy,
+    F.softmax: softmax_strategy,
+    F.layer_norm: layer_norm_strategy
 }
 
 ALPA_METHODS = {
     "view": get_reshape_strategy(torch.Tensor.view),
+    "reshape": get_reshape_strategy(torch.Tensor.reshape),
     "expand": get_reshape_strategy(torch.Tensor.expand),
     "permute": get_reshape_strategy(torch.permute),
     "transpose": get_reshape_strategy(torch.transpose)

@@ -268,6 +268,13 @@ method_data = {
         "shape_2": "data_in",
         "shape_3": "data_in",
     },
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.reshape.html#torch.Tensor.reshape
+    "reshape": {
+        "shape_0": "data_in",
+        "shape_1": "data_in",
+        "shape_2": "data_in",
+        "shape_3": "data_in",
+    },
     # https://pytorch.org/docs/stable/generated/torch.Tensor.addmm.html#torch.Tensor.addmm
     "addm": {"mat1": "data_in", "mat2": "data_in", "beta": "config", "alpha": "config"},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.size.html#torch.Tensor.size
