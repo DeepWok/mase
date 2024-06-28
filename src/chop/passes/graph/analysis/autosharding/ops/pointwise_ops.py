@@ -64,7 +64,7 @@ def pointwise_strategy(
     ), f"no strategy to follow for {op_schema}!"
 
     return common_pointwise_strategy(
-        meta, mesh, followed_strategy, linearity
+        meta, mesh, followed_strategy, linearity, max_shards_strategy_index
     )
 
 
@@ -72,7 +72,8 @@ def common_pointwise_strategy(
     meta,
     mesh,
     followed_strategy,
-    linearity
+    linearity,
+    followed_strategy_index = 0
 ):
     # handle broadcasting
     parsed_args = []
@@ -94,16 +95,20 @@ def common_pointwise_strategy(
     common_shape = torch.broadcast_shapes(
         *[arg.shape for arg in parsed_args]
     )
-    pointwise_strategy = OpStrategy([])
+    
+    # Extract followed argument shape
+    followed_shape = parsed_args[followed_strategy_index].shape
 
+    # Iterate through followed argument's strategies to cast output shardings
+    pointwise_strategy = OpStrategy([])
     for placement_strategy in followed_strategy.strategies:
         spec_to_follow = placement_strategy.output_spec
         out_placements: List[Placement] = []
         for placement in spec_to_follow.placements:
             if isinstance(placement, Shard):
-                shard_dim = normalize_dim(placement.dim, len(spec_to_follow.shape))
+                shard_dim = normalize_dim(placement.dim, len(followed_shape))
                 common_ndim = len(common_shape)
-                new_shard_dim = common_ndim - len(spec_to_follow.shape) + shard_dim
+                new_shard_dim = common_ndim - len(followed_shape) + shard_dim
                 out_placements.append(Shard(new_shard_dim))
             elif isinstance(placement, Partial) and not linearity:
                 # clear the partial placemnet if op does not support linearity
