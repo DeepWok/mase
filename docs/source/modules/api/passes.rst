@@ -106,12 +106,12 @@ MaseGraph Transform Passes
     - Summarizes the quantization with respect to the original graph
   * - :py:meth:`~chop.passes.graph.transforms.utils.conv_bn_fusion_transform_pass`
     - `test_conv_bn_fusion <https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/utils/test_conv_bn_fusion.py>`_
-    - Perform Conv-BN fusion on the given graph
+    - Perform Conv-BN fusion on the given graph 
   * - :py:meth:`~chop.passes.graph.transforms.utils.logicnets_fusion_transform_pass`
-    - `test_logicnets_fusion <https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/utils/test_conv_bn_fusion.py>`_
+    - `test_logicnets_fusion <https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/utils/test_conv_bn_fusion.py>`_ (DEV, Disabled) 
     - Perform LogicNets fusion on the given graph (DEV, Disabled) 
   * - :py:meth:`~chop.passes.graph.transforms.utils.onnx_annotate_transform_pass`
-    - NA
+    - NA (DEV, Disabled) 
     - Convert MaseGraph to ONNX and annotate the relevant layers with sparsity information (DEV, Disabled) 
   * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_verilog_top_transform_pass`
     - Emit the top-level model design in Verilog

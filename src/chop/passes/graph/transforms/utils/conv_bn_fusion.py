@@ -27,7 +27,6 @@ def conv_bn_fusion_transform_pass(graph, pass_args={}):
     :param pass_args: this pass can take a string argument named "file_name", defaults to None
     :type pass_args: dict, optional
 
-
     :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)
     :rtype: tuple(MaseGraph, dict)
     """
