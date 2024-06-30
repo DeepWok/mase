@@ -13,11 +13,12 @@ def calculate_avg_bits_module_analysis_pass(
 
     :param module: The module to analyze.
     :type module: torch.nn.Module
+
     :param pass_args: Additional arguments for the analysis pass. (default: {})
     :type pass_args: dict
 
     :return: A tuple containing the modified module and a dictionary with the analysis results.
-    :rtype: tuple(MaseGraph, dict)
+    :rtype: tuple(torch.nn.Module, dict)
     """
 
     assert isinstance(module, torch.nn.Module), "module must be a nn.Module instance"

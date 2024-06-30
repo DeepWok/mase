@@ -1,7 +1,7 @@
 import torch
 
 from chop.nn.quantized.modules import quantized_module_map
-from ..module_modify_helper import replace_by_name, instantiate_module
+from ...module_modify_helper import replace_by_name, instantiate_module
 
 
 def get_config(config: dict, name: str):
@@ -77,4 +77,4 @@ def quantize_module_transform_pass(network, pass_args):
             network = quantize_by_name(network, pass_args)
         case _:
             raise ValueError(f'Unsupported quantize "by": {by}')
-    return network
+    return network, {}

@@ -9,13 +9,16 @@ from .analysis import (
     report_node_meta_param_analysis_pass,
     report_node_shape_analysis_pass,
     report_node_type_analysis_pass,
-    verify_common_metadata_analysis_pass,
     run_cosim_analysis_pass,
     get_synthesis_results,
     calculate_avg_bits_mg_analysis_pass,
     add_pruning_metadata_analysis_pass,
     add_natural_sparsity_metadata_analysis_pass,
     hook_inspection_analysis_pass,
+    verify_common_metadata_analysis_pass,
+    verify_hardware_metadata_analysis_pass,
+    verify_metadata_analysis_pass,
+    verify_software_metadata_analysis_pass,
 )
 from .transforms import (
     prune_transform_pass,
@@ -60,6 +63,10 @@ ANALYSIS_PASSES = [
     "add_pruning_metadata",
     "add_natural_sparsity",
     "hook_inspection",
+    "verify_common_metadata",
+    "verify_metadata",
+    "verify_software_metadata",
+    "verify_hardware_metadata",
 ]
 
 TRANSFORM_PASSES = [
@@ -82,7 +89,6 @@ PASSES = {
     # analysis
     "init_metadata": init_metadata_analysis_pass,
     "add_common_metadata": add_common_metadata_analysis_pass,
-    "verify_common_metadata": verify_common_metadata_analysis_pass,
     "add_hardware_metadata": add_hardware_metadata_analysis_pass,
     "add_software_metadata": add_software_metadata_analysis_pass,
     "profile_statistics": profile_statistics_analysis_pass,
@@ -97,6 +103,11 @@ PASSES = {
     "add_pruning_metadata": add_pruning_metadata_analysis_pass,
     "add_natural_sparsity": add_natural_sparsity_metadata_analysis_pass,
     "hook_inspection": hook_inspection_analysis_pass,
+    "verify_common_metadata": verify_common_metadata_analysis_pass,
+    "verify_hardware_metadata": verify_hardware_metadata_analysis_pass,
+    "verify_metadata": verify_metadata_analysis_pass,
+    "verify_software_metadata": verify_software_metadata_analysis_pass,
+
     # interface
     "load_mase_graph": load_mase_graph_interface_pass,
     "load_node_meta_param": load_node_meta_param_interface_pass,
