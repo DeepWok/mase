@@ -53,24 +53,16 @@ nix-shell
 
 	Using other `clang` variants, especially the llvm-backed `nix` `clang` will cause installation or running issues with `cocotb` and `verilator` because of the confusion in `std` library paths.
 
-2. `g++` or `glibc` problem on WSL, Ubuntu-24.04 system
+2. `g++` or `glibc` problem on WSL (Ubuntu-24.04 system)
 
-	While using verilator in the nix shell, some of the generated files were compiled by g++(or gcc), you might encounter issues about g++ can not find or glibc-xxx cannot find, etc.
+	While using `verilator` in the nix shell, some of the generated files were compiled by `g++` (or `gcc`), you might encounter issues about `g++ can not find` or `glibc-xxx cannot find`, etc.
 	
-	This is because the nix shell does not include any `g++` or `glibc` in the shell environment. When compiling files, it automatically calls the related libraries in the local environment.
+	This is because the nix shell does not include any `g++` or `glibc` in the environment. When compiling files, it automatically calls the related libraries in your local environment.
 
-	When facing this kind of problem, you need to configure the local environment to match nix shell requirment.
-	
-	For instance, install or update the related package as the version below would work.
+	When facing this kind of problem, you need to configure the local environment to match nix shell requirement.
+	For instance, install or update the related packages to the `verilator` required version would work:
 
 	```
 	(.venv) cx922@DESKTOP-UAFT8QR:~/mase$ ldd --version 
 	ldd (Ubuntu GLIBC 2.39-0ubuntu8.2) 2.39
 	...
-
-	(.venv) cx922@DESKTOP-UAFT8QR:~/mase$ ldd --version
-	ldd (Ubuntu GLIBC 2.39-0ubuntu8.2) 2.39
-	...
-
-	```
-	

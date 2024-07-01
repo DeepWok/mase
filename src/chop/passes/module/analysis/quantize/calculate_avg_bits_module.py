@@ -9,7 +9,7 @@ def calculate_avg_bits_module_analysis_pass(
     module: torch.nn.Module, pass_args: dict = {}
 ) -> tuple:
     """
-    Analyzes the averaged bitwidth of a given module.
+    Analyzes the averaged weight bitwidth of a given module. Considering only Linear and Conv2d layers.
 
     :param module: The module to analyze.
     :type module: torch.nn.Module
@@ -19,6 +19,18 @@ def calculate_avg_bits_module_analysis_pass(
 
     :return: A tuple containing the modified module and a dictionary with the analysis results.
     :rtype: tuple(torch.nn.Module, dict)
+
+    analysis results is a dictionary with the following keys:
+        - 'average_bitwidth' (float): The average number of bits per value for weight.
+    
+    Examples output:
+
+    .. code-block:: python
+
+        info = {
+            # this means on average each weight value is represented by 16 bits
+            'average_bitwidth': 16.0}
+
     """
 
     assert isinstance(module, torch.nn.Module), "module must be a nn.Module instance"
