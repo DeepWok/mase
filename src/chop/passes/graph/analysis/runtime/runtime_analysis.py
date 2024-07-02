@@ -17,6 +17,7 @@ import tensorrt as trt
 from cuda import cudart
 
 
+
 def runtime_analysis_pass(model, pass_args=None):
     """
     Evaluates the performance of a model by analyzing its inference speed, accuracy, and other relevant metrics.

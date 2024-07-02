@@ -1,7 +1,7 @@
 import torch
 
 from chop.nn.quantized.modules import quantized_module_map
-from ..module_modify_helper import replace_by_name, instantiate_module
+from ...module_modify_helper import replace_by_name, instantiate_module
 
 
 def get_config(config: dict, name: str):
@@ -61,13 +61,33 @@ def quantize_module_transform_pass(network, pass_args):
     :param pass_args: Additional arguments for the transformation.
     :type pass_args: dict, optional
 
+    Examples pass_args:
+
+    .. code-block:: python
+
+        pass_args = {
+            "by": "type", # quantize by type, name, or regex_name
+            "default": {"config": {"name": None}}, # default config, this would be used for any node that does not have a specific config
+            "linear": {
+                "config": {
+                    "name": "integer",  # quantization scheme name supported are ["integer", "fixed" (equivalent to integer), "lutnet" (dev mode), "logicnets" (dev mode), "binary", "binary_residual", "ternary", "minifloat_ieee", "minifloat_denorm", "log", "block_fp", "block_minifloat", "block_log"]
+                    # data
+                    "data_in_width": 8,
+                    "data_in_frac_width": 4,
+                    # weight
+                    "weight_width": 8,
+                    "weight_frac_width": 4,
+                    # bias
+                    "bias_width": 8,
+                    "bias_frac_width": 4,
+                }
+            },
+        }
+
     :return: The transformed torch.nn.Module.
     :rtype: tuple
     :raises ValueError: If the quantize "by" argument is unsupported.
 
-
-    - pass_args
-        - by -> str : different quantization schemes choose from ["type", "name", "regx_name"]
     """
     by = pass_args.pop("by")
     match by:
@@ -77,4 +97,4 @@ def quantize_module_transform_pass(network, pass_args):
             network = quantize_by_name(network, pass_args)
         case _:
             raise ValueError(f'Unsupported quantize "by": {by}')
-    return network
+    return network, {}

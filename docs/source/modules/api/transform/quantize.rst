@@ -10,3 +10,5 @@ summarize\_quantization\_analysis\_pass
 ---------------------------------------
 
 .. autofunction:: chop.passes.graph.transforms.quantize.summarize_quantization_analysis_pass
+
+

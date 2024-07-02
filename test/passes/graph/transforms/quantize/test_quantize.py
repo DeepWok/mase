@@ -90,4 +90,10 @@ def test_quantize():
     ori_mg = deepcopy_mase_graph(mg)
     mg, _ = quantize_transform_pass(mg, quan_args)
 
-    summarize_quantization_analysis_pass(ori_mg, mg, save_dir="quantize_summary")
+    pass_args = {
+        "original_graph": ori_mg,
+        "save_dir": "quantize_summary",
+    }
+    summarize_quantization_analysis_pass(mg, pass_args)
+
+test_quantize()

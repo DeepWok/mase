@@ -168,6 +168,7 @@ def prune_transform_pass(graph, pass_args: dict = {}):
     :type pass_args: dict
 
     pass_args should take the following form:
+
     .. code-block:: python
 
         pass_config = {
