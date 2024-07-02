@@ -56,6 +56,7 @@ MaseGraph Analysis Passes
         :maxdepth: 2
 
         analysis/add_metadata
+        analysis/autosharding
         analysis/init_metadata
         analysis/report
         analysis/statistical_profiler

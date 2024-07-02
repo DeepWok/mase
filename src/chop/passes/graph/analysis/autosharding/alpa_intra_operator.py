@@ -19,6 +19,8 @@ from .layers import (
 logger = get_logger(__name__)
 logger.setLevel("DEBUG")
 
+from .mesh_model import MeshModel
+
 
 def _extract_ilp(mg, mesh, pass_args={}):
     """
@@ -190,8 +192,16 @@ def _mark_sharding(mg):
 
 
 def alpa_intra_op_sharding_pass(mg, mesh, pass_args={}, debug=False):
-    """
-    Intra-operator auto parallelization pass.
+    """Intra-operator auto parallelization pass from the Alpa paper: https://arxiv.org/abs/2201.12023
+
+    Args:
+        mg (MaseGraph): Input MaseGraph.
+        mesh (MeshModel): mesh description.
+        pass_args (dict, optional): pass arguments. Defaults to {}.
+        debug (bool, optional): enable debug. Defaults to False.
+
+    Returns:
+        MaseGraph: annotated MaseGraph.
     """
 
     module_map = {}

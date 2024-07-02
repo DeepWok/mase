@@ -12,8 +12,26 @@ logger.setLevel("DEBUG")
 
 
 def autosharding_analysis_pass(mg, pass_args: dict = {}):
-    """
-    A lightweight implementation of the core algorithm from the Alpa paper: https://arxiv.org/abs/2201.12023
+    """Annotate the metadata of each operator in the graph with a parallelization strategy.
+
+    Args:
+        mg (MaseGraph): input mase graph.
+        pass_args (dict, optional): pass arguments. Defaults to {}.
+
+    Returns:
+        MaseGraph: annotated mase graph.
+
+    The pass_args dictionary expects the following elements.
+
+    - algo (optional) -> str : Sharding algorithm to use. Default is "alpa".
+    - mesh_shape -> tuple : Shape of the device cluster. Should be a 2-dimensional tuple.
+    - inter_node_bandwidth -> int : Inter-node bandwidth, i.e. between GPU nodes.
+    - intra_node_bandwidth -> int : Intra-node bandwidth, i.e. between GPU devices in each node.
+
+    Additionally, the following elements can be passed.
+
+    - communications_backend (optional) -> str : Communications backend to use, e.g. "nccl" or "gloo". Default is "nccl".
+    - skip_fully_replicated (optional) -> bool : If set to true, do not consider fully replicated sharding as an option for any operator.
     """
 
     assert (
