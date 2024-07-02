@@ -61,7 +61,7 @@ IMPLICIT_FUNCS = [operator.getitem]
 IMPLICIT_METHODS = ["size"]
 
 
-def placeholder_or_getattr_strategy(meta, mesh):
+def placeholder_or_getattr_strategy(meta, mesh, skip_fully_replicated=False):
     ndims = len(meta["common"]["results"]["data_out_0"]["shape"])
     opts = [Replicate()] + [Shard(dim) for dim in range(ndims)]
 
@@ -73,6 +73,8 @@ def placeholder_or_getattr_strategy(meta, mesh):
 
     shardings = []
     for sharding in itertools.product(opts, repeat=2):
+        if skip_fully_replicated and sharding == (Replicate(), Replicate()):
+            continue
         spec = DTensorSpec(mesh=mesh, placements=sharding, tensor_meta=tensor_meta)
         shardings.append(PlacementStrategy(input_specs=spec, output_specs=spec))
     return OpStrategy(shardings)

@@ -5,6 +5,7 @@ from .alpa_intra_operator import alpa_intra_op_sharding_pass
 logger = get_logger(__name__)
 logger.setLevel("DEBUG")
 
+
 def deepgetattr(obj, attr, default=None):
     """Recurses through an attribute chain to get the ultimate value."""
     try:
@@ -59,6 +60,6 @@ def mark_choices(mg):
     return mg
 
 
-def alpa_autosharding_pass(mg, mesh):
-    mg, module_map = alpa_intra_op_sharding_pass(mg, mesh)
+def alpa_autosharding_pass(mg, mesh, pass_args={}):
+    mg, module_map = alpa_intra_op_sharding_pass(mg, mesh, pass_args=pass_args)
     return mg, module_map

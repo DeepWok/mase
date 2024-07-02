@@ -20,7 +20,7 @@ logger = get_logger(__name__)
 logger.setLevel("DEBUG")
 
 
-def _enumerate_sharding_strategies(mg, mesh):
+def _extract_ilp(mg, mesh, pass_args={}):
     """
     For each node in the graph, assign an OpStrategy object which contains all possible
     sharding algorithms. Also assign opt_var instance which is one-hot vector used to
@@ -62,7 +62,11 @@ def _enumerate_sharding_strategies(mg, mesh):
             logger.debug(
                 f"Node {node} with op {node.op} will be assigned all permutations of Shard(dims) and Replicate()"
             )
-            op_strategy = placeholder_or_getattr_strategy(node.meta["mase"], mesh)
+            op_strategy = placeholder_or_getattr_strategy(
+                node.meta["mase"],
+                mesh,
+                skip_fully_replicated=pass_args.get("skip_fully_replicated", False),
+            )
 
         elif node.op == "output":
             logger.debug(
@@ -172,18 +176,33 @@ def _enumerate_sharding_strategies(mg, mesh):
 
     # Solve the ILP problem
     prob = cp.Problem(cp.Minimize(expr), constr)
-    prob.solve()
-
-    return mg, {}
+    return mg, prob
 
 
-def alpa_intra_op_sharding_pass(mg, mesh, debug=False):
+def _mark_sharding(mg):
+    for node in mg.fx_graph.nodes:
+        opt_var = node.meta["mase"]["software"]["autosharding"]["opt_var"]
+
+        if opt_var is None:
+            continue
+
+        idx = np.where(opt_var.value == 1)
+
+
+def alpa_intra_op_sharding_pass(mg, mesh, pass_args={}, debug=False):
     """
     Intra-operator auto parallelization pass.
     """
 
     module_map = {}
 
-    mg, _ = _enumerate_sharding_strategies(mg, mesh)
+    # Formulate and solve the ILP
+    logger.info(f"Formulating the ILP...")
+    mg, problem = _extract_ilp(mg, mesh, pass_args)
+
+    logger.info(f"Solving the ILP...")
+    problem.solve()
+
+    mg, _ = _mark_sharding(mg)
 
     return mg, module_map
