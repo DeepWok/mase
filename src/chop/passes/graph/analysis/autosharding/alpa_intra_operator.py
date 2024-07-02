@@ -145,9 +145,11 @@ def _enumerate_sharding_strategies(mg, mesh):
             resharding_costs = np.zeros((len(node_in_specs), len(arg_out_specs)))
             for dest_idx, dest_spec in enumerate(node_in_specs):
                 for src_idx, src_spec in enumerate(arg_out_specs):
-                    resharding_costs[dest_idx, src_idx] = redistribute_cost(
-                        src_spec, dest_spec
+                    cost = redistribute_cost(src_spec, dest_spec)
+                    resharding_costs[dest_idx, src_idx] = (
+                        1000000 if cost == float("inf") else cost
                     )
+
             resharding_costs = resharding_costs.flatten()
 
             # Formulate linearized variable for resharding cost
@@ -169,7 +171,6 @@ def _enumerate_sharding_strategies(mg, mesh):
                 ]
 
     # Solve the ILP problem
-    breakpoint()
     prob = cp.Problem(cp.Minimize(expr), constr)
     prob.solve()
 
@@ -184,49 +185,5 @@ def alpa_intra_op_sharding_pass(mg, mesh, debug=False):
     module_map = {}
 
     mg, _ = _enumerate_sharding_strategies(mg, mesh)
-
-    # Consider resharding cost
-    # for in_node in node.all_input_nodes:
-    #     in_opt_var = in_node.meta["mase"]["software"]["autosharding"]["opt_var"]
-
-    #     resharding_costs = get_resharding_matrix(
-    #         mesh,
-    #         src_shardings=in_node.meta["mase"]["software"]["autosharding"][
-    #             "valid_output_shardings"
-    #         ],
-    #         dest_shardings=[
-    #             sharding["data_in_0"]
-    #             for sharding in node.meta["mase"]["software"]["autosharding"][
-    #                 "valid_input_shardings"
-    #             ]
-    #         ],
-    #         dest_node_meta=node.meta["mase"],
-    #     ).flatten()
-
-    #     # Formulate resharding cost term with linearized variable
-    #     e_var = cp.Variable(
-    #         opt_var.shape[0] * in_opt_var.shape[0], boolean=True
-    #     )
-    #     expr += e_var.T @ resharding_costs
-    #     constr += [
-    #         cp.sum(e_var) == 1,
-    #     ]
-
-    #     # Scalar construction of the inequality constraints for the linearized variable
-    #     for i in range(e_var.shape[0]):
-    #         constr += [
-    #             e_var[i] <= opt_var[i // in_opt_var.shape[0]],
-    #             e_var[i] <= in_opt_var[i % in_opt_var.shape[0]],
-    #             e_var[i]
-    #             >= opt_var[i // in_opt_var.shape[0]]
-    #             + in_opt_var[i % in_opt_var.shape[0]]
-    #             - 1,
-    #         ]
-
-    # Solve the ILP problem
-    # prob = cp.Problem(cp.Minimize(expr), constr)
-    # prob.solve()
-
-    # mg = mark_choices(mg)
 
     return mg, module_map
