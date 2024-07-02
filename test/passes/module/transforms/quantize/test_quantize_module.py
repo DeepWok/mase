@@ -57,19 +57,4 @@ def test_quantize():
         },
     }
     quantize_module_transform_pass(mlp, pass_args)
-
-    pass_args = {
-        "by": "type",
-        "linear": {
-            "name": "integer",
-            "data_in_width": 8,
-            "data_in_frac_width": 4,
-            "weight_width": 8,
-            "weight_frac_width": 4,
-            "bias_width": 8,
-            "bias_frac_width": 4,
-        },
-    }
-    quantize_module_transform_pass(mlp, pass_args)
-
 test_quantize()

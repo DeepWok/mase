@@ -1,18 +1,6 @@
-# MaseGraph and Mase Passes
+# MaseGraph and MaseGraph Passes
 
-One specific feature of MASE is its capability to transform DL models to a computation graph and apply analysis or transformation passes on the graph.
-
-In MASE, we support two granularities on these passes, namely `module` level and `graph` level:
-
-- `module` level passes: this only provides coarse-grained control over any `torch.nn.Module` in the model. We refer this as Module Passes.
-
-- `graph` level passes: this provides fine-grained control over the computation graph of the model using the [torch.fx](<https://pytorch.org/docs/stable/fx.html>) framework. This also nessitates the use of `torch.fx` to represent the computation graph.  We provide a set of APIs to convert a model to a `MASEGraph`, starting from the [Notebook](https://github.com/DeepWok/mase/blob/main/docs/labs/lab2_transform_no_CLI.ipynb).
-
-## Module Passes
-
-## MaseGraph and Graph Passes
-
-### MASE OPs and MASE Types
+## MASE OPs and MASE Types
 
 MASE is designed to be an intermediate representation (IR), this is very different from the classic [LLVM IR](https://llvm.org/docs/LangRef.html) that you might be familiar with.
 
@@ -27,7 +15,9 @@ The following MASE Types are available:
 
 You may find more clue in the [this source code file](https://github.com/DeepWok/mase/blob/main/src/chop/passes/__init__.py).
 
-When you transform the model to a MASEGraph:
+## MASEGraph Passes
+
+These passes can only be applied when you transform the model to a MASEGraph:
 
 ```python
 mg = MaseGraph(model=model)
