@@ -1,7 +1,6 @@
-import sys, pdb, traceback
-import functools
-
-import torch.nn as nn
+import torch
+import torch.fx as fx
+from torch.distributed._tensor._collective_utils import redistribute_cost
 import numpy as np
 import cvxpy as cp
 
@@ -15,7 +14,7 @@ from .layers import (
     placeholder_or_getattr_strategy,
     fully_replicated_strategy,
 )
-from .alpa_cost_modelling import get_resharding_matrix
+
 
 logger = get_logger(__name__)
 logger.setLevel("DEBUG")
@@ -33,6 +32,7 @@ def _enumerate_sharding_strategies(mg, mesh):
 
     # Setup for the ILP optimization
     constr = []
+    expr = 0
 
     # Find sharding strategies for each operator in the graph
     for node in mg.fx_graph.nodes:
@@ -98,7 +98,7 @@ def _enumerate_sharding_strategies(mg, mesh):
             }
             continue
 
-        # Formulate optimization variable and consider compute/communication cost
+        # Formulate optimization variable
         opt_var = cp.Variable(len(op_strategy.strategies), boolean=True)
         constr += [
             cp.sum(opt_var) == 1,
@@ -112,41 +112,68 @@ def _enumerate_sharding_strategies(mg, mesh):
             "output": None,
         }
 
-        import torch
-        import torch.fx as fx
-        from torch.distributed._tensor._collective_utils import redistribute_cost
-
+        # Consider resharding cost for each of the node's arguments
         for arg_idx, in_node in enumerate(node.all_input_nodes):
+
+            # Skip constant nodes
             if not isinstance(in_node, fx.Node) or not isinstance(
                 in_node.meta["mase"]["common"]["results"]["data_out_0"]["value"],
                 torch.Tensor,
             ):
                 continue
-            print(f"Parsing arg {in_node} of node {node}")
+            logger.debug(f"Parsing arg {in_node} of node {node}")
 
+            # Fetch this node's input specs
             node_op_strategy = node.meta["mase"]["software"]["autosharding"][
                 "op_strategy"
-            ]
-            arg_op_strategy = in_node.meta["mase"]["software"]["autosharding"][
-                "op_strategy"
-            ]
-
-            arg_out_specs = [
-                strategy.output_specs for strategy in arg_op_strategy.strategies
             ]
             node_in_specs = [
                 strategy.input_specs[arg_idx]
                 for strategy in node_op_strategy.strategies
             ]
 
-            for out_spec in arg_out_specs:
-                for in_spec in node_in_specs:
-                    cost = redistribute_cost(out_spec, in_spec)
-                    # print(
-                    #     f"Cost for {out_spec} -> {in_spec}: {cost}"
-                    # )
+            # Fetch the argument node's output specs
+            in_opt_var = in_node.meta["mase"]["software"]["autosharding"]["opt_var"]
+            arg_op_strategy = in_node.meta["mase"]["software"]["autosharding"][
+                "op_strategy"
+            ]
+            arg_out_specs = [
+                strategy.output_specs for strategy in arg_op_strategy.strategies
+            ]
 
-    return mg, constr
+            # Formulate resharding cost matrix
+            resharding_costs = np.zeros((len(node_in_specs), len(arg_out_specs)))
+            for dest_idx, dest_spec in enumerate(node_in_specs):
+                for src_idx, src_spec in enumerate(arg_out_specs):
+                    resharding_costs[dest_idx, src_idx] = redistribute_cost(
+                        src_spec, dest_spec
+                    )
+            resharding_costs = resharding_costs.flatten()
+
+            # Formulate linearized variable for resharding cost
+            e_var = cp.Variable(resharding_costs.shape[0], boolean=True)
+            expr += e_var.T @ resharding_costs
+            constr += [
+                cp.sum(e_var) == 1,
+            ]
+
+            # Scalar construction of the inequality constraints for the linearized variable
+            for i in range(e_var.shape[0]):
+                constr += [
+                    e_var[i] <= opt_var[i // in_opt_var.shape[0]],
+                    e_var[i] <= in_opt_var[i % in_opt_var.shape[0]],
+                    e_var[i]
+                    >= opt_var[i // in_opt_var.shape[0]]
+                    + in_opt_var[i % in_opt_var.shape[0]]
+                    - 1,
+                ]
+
+    # Solve the ILP problem
+    breakpoint()
+    prob = cp.Problem(cp.Minimize(expr), constr)
+    prob.solve()
+
+    return mg, {}
 
 
 def alpa_intra_op_sharding_pass(mg, mesh, debug=False):
@@ -156,7 +183,7 @@ def alpa_intra_op_sharding_pass(mg, mesh, debug=False):
 
     module_map = {}
 
-    mg, constr = _enumerate_sharding_strategies(mg, mesh)
+    mg, _ = _enumerate_sharding_strategies(mg, mesh)
 
     # Consider resharding cost
     # for in_node in node.all_input_nodes:
