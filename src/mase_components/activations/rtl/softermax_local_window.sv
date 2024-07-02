@@ -18,7 +18,7 @@ module softermax_local_window #(
     parameter IN_WIDTH = 8,
     parameter IN_FRAC_WIDTH = 4,
     parameter OUT_WIDTH = 8,
-    parameter OUT_FRAC_WIDTH = 7,
+    parameter OUT_FRAC_WIDTH = 4,
 
     // Derived params
     localparam MAX_WIDTH = IN_WIDTH - IN_FRAC_WIDTH

@@ -141,8 +141,8 @@ module softermax_lpw_reciprocal #(
 
     // Output cast
     res_shifted = res * (2.0 ** SLOPE_FRAC_WIDTH);
-    return_val = logic'(res_shifted);
-    return return_val;
+    //return_val = logic'(res_shifted);
+    return res_shifted;
   endfunction
 
   // Function to intercept variable (c)
@@ -158,8 +158,8 @@ module softermax_lpw_reciprocal #(
 
     // Output cast
     res_shifted = res * (2.0 ** INTERCEPT_FRAC_WIDTH);
-    return_val = logic'(res_shifted);
-    return return_val;
+    //return_val = logic'(res_shifted);
+    return res_shifted;
   endfunction
 
 

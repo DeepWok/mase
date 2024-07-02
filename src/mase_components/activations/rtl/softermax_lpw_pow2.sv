@@ -93,8 +93,7 @@ module softermax_lpw_pow2 #(
 
     // Output cast
     res_shifted = res * (2.0 ** SLOPE_FRAC_WIDTH);
-    return_val = logic'(res_shifted);
-    return return_val;
+    return res_shifted;
   endfunction
 
   // Function to intercept variable (c)
@@ -108,8 +107,7 @@ module softermax_lpw_pow2 #(
 
     // Output cast
     res_shifted = res * (2 ** INTERCEPT_FRAC_WIDTH);
-    return_val = logic'(res_shifted);
-    return return_val;
+    return res_shifted;
   endfunction
 
   // -----
@@ -167,15 +165,20 @@ module softermax_lpw_pow2 #(
       logic lpw_out_valid, lpw_out_ready;
 
       logic [OUT_WIDTH:0] lpw_cast_out;
+      logic [SLOPE_WIDTH-1:0] slope_temp;
 
       always_comb begin
         // Multiplication Stage
         case (frac_top_in)
-          2'b00: mult_in = in_data_frac * slope(0.00, 0.25);
-          2'b01: mult_in = in_data_frac * slope(0.25, 0.50);
-          2'b10: mult_in = in_data_frac * slope(0.50, 0.75);
-          2'b11: mult_in = in_data_frac * slope(0.75, 1.00);
+          2'b00: slope_temp = slope(0.00, 0.25);
+          2'b01: slope_temp = slope(0.25, 0.50);
+          2'b10: slope_temp = slope(0.50, 0.75);
+          2'b11: slope_temp = slope(0.75, 1.00);
         endcase
+      end
+
+      always_comb begin
+        mult_in = in_data_frac * slope_temp;
       end
 
       // Buffer multiplication, top frac bits, and int part
