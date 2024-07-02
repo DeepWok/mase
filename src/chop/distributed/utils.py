@@ -1,12 +1,12 @@
-
 from torch.distributed._tensor import (
     Replicate,
     Shard,
 )
 
-from chop.passes.graph.analysis.autosharding.common import SpmdShard
+from chop.passes.graph.analysis.autosharding.deprecated.common import SpmdShard
 
 import torch
+
 
 def placement_from_sharding_config(sharding_config):
     """
@@ -22,7 +22,8 @@ def placement_from_sharding_config(sharding_config):
             placement[shard_type.value] = Shard(idx)
 
     return tuple(placement)
-        
+
+
 def rlog(logger, rank, msg, level="info"):
     """
     Only log on rank 0 to avoid repeated messages.
