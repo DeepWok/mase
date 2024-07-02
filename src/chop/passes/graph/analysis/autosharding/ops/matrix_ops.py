@@ -16,6 +16,7 @@ from torch.distributed._tensor.placement_types import (
     Placement,
     Replicate,
     Shard,
+    TensorMeta
 )
 from torch.distributed.device_mesh import DeviceMesh
 
@@ -30,6 +31,7 @@ def transpose_strategy(meta: MaseMetadata, mesh: tuple) -> OpStrategy:
     
     parent_node = meta.node.args[0]
     self_strategy = parent_node.meta["mase"]["software"]["autosharding"]["op_strategy"]
+    
     assert isinstance(self_strategy, OpStrategy)
 
     transpose_strategies = []
@@ -44,6 +46,11 @@ def transpose_strategy(meta: MaseMetadata, mesh: tuple) -> OpStrategy:
             output_specs=DTensorSpec(
                 mesh=input_strategy.output_spec.mesh,
                 placements=tuple(output_placements),
+                tensor_meta= TensorMeta(
+                    shape = meta["common"]["results"]["data_out_0"]["shape"],
+                    stride = None,
+                    dtype = meta["common"]["results"]["data_out_0"]["torch_dtype"]
+                )
             ),
             input_specs=(input_strategy.output_spec,),
         )

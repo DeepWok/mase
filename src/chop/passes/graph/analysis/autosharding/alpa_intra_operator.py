@@ -7,7 +7,7 @@ import cvxpy as cp
 
 from chop.tools import get_logger
 
-from .layers import ALPA_FUNCTIONS, ALPA_METHODS, IMPLICIT_FUNCS, IMPLICIT_METHODS, placeholder_or_getattr_strategy, fully_replicated_strategy
+from .layers import AUTOSHARDING_FUNCTIONS, AUTOSHARDING_METHODS, IMPLICIT_FUNCS, IMPLICIT_METHODS, placeholder_or_getattr_strategy, fully_replicated_strategy
 from .alpa_cost_modelling import get_resharding_matrix
 
 logger = get_logger(__name__)
@@ -60,13 +60,13 @@ def _enumerate_sharding_strategies(mg, mesh):
             }
             continue
 
-        elif node.op == "call_method" and node.target in ALPA_METHODS.keys():
+        elif node.op == "call_method" and node.target in AUTOSHARDING_METHODS.keys():
             logger.debug(f"Obtaining strategy for node {node.name}")
-            op_strategy = ALPA_METHODS[node.target](node.meta["mase"], mesh)
+            op_strategy = AUTOSHARDING_METHODS[node.target](node.meta["mase"], mesh)
 
-        elif node.op == "call_function" and node.target in ALPA_FUNCTIONS.keys():
+        elif node.op == "call_function" and node.target in AUTOSHARDING_FUNCTIONS.keys():
             logger.debug(f"Obtaining strategy for node {node.name}")
-            op_strategy = ALPA_FUNCTIONS[node.target](node.meta["mase"], mesh)
+            op_strategy = AUTOSHARDING_FUNCTIONS[node.target](node.meta["mase"], mesh)
 
         else:
             logger.warning(f"Unknown node {node.name} with op {node.op}")
