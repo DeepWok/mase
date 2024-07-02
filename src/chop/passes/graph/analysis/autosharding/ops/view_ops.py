@@ -30,7 +30,12 @@ from torch.distributed._tensor.ops.utils import (
     normalize_dims,
     prod,
 )
-from torch.distributed._tensor.placement_types import DTensorSpec, Placement, Replicate
+from torch.distributed._tensor.placement_types import (
+    DTensorSpec,
+    Placement,
+    Replicate,
+    TensorMeta,
+)
 from torch.distributed.device_mesh import DeviceMesh
 
 
@@ -572,9 +577,11 @@ def propagate_shape_and_sharding(
             shard_dim_map[in_dim.input_dim] = dim
 
     input_tgt_placements = [
-        Replicate()
-        if isinstance(p, Shard) and not shardable_dims[p.dim][mesh_dim]
-        else p
+        (
+            Replicate()
+            if isinstance(p, Shard) and not shardable_dims[p.dim][mesh_dim]
+            else p
+        )
         for mesh_dim, p in enumerate(input_src_placements)
     ]
     output_placements = [
@@ -591,11 +598,15 @@ def get_reshape_strategy(op):
     # def reshape_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> StrategyType:
     def reshape_strategy(meta, mesh):
         assert meta.node.op == "call_method", "Node should have call_method op."
-        args_schema = [meta["common"]["self"]] + [i for i in meta["common"]["args"].values()]
+        args_schema = [meta["common"]["self"]] + [
+            i for i in meta["common"]["args"].values()
+        ]
         rules = dim_map(*args_schema)
         parent_node = meta.node.args[0]
         # input_strategy = cast(OpStrategy, op_schema.args_schema[0])
-        input_strategy = parent_node.meta["mase"]["software"]["autosharding"]["op_strategy"]
+        input_strategy = parent_node.meta["mase"]["software"]["autosharding"][
+            "op_strategy"
+        ]
         global_in_shape = meta["common"]["self"].shape
         assert global_in_shape is not None, "Shape required."
 
@@ -620,7 +631,15 @@ def get_reshape_strategy(op):
                 tensor_meta=input_src_spec.tensor_meta,
             )
 
-            output_spec = DTensorSpec(mesh=mesh, placements=tuple(output_placements))
+            output_spec = DTensorSpec(
+                mesh=mesh,
+                placements=tuple(output_placements),
+                tensor_meta=TensorMeta(
+                    shape=meta["common"]["results"]["data_out_0"]["shape"],
+                    stride=None,
+                    dtype=meta["common"]["results"]["data_out_0"]["torch_dtype"],
+                ),
+            )
             output_strategy.strategies.append(
                 PlacementStrategy(
                     output_specs=output_spec,

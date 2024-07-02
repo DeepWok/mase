@@ -16,7 +16,7 @@ from torch.distributed._tensor.placement_types import (
     Placement,
     Replicate,
     Shard,
-    TensorMeta
+    TensorMeta,
 )
 from torch.distributed.device_mesh import DeviceMesh
 
@@ -28,10 +28,10 @@ aten = torch.ops.aten
 
 
 def transpose_strategy(meta: MaseMetadata, mesh: tuple) -> OpStrategy:
-    
+
     parent_node = meta.node.args[0]
     self_strategy = parent_node.meta["mase"]["software"]["autosharding"]["op_strategy"]
-    
+
     assert isinstance(self_strategy, OpStrategy)
 
     transpose_strategies = []
@@ -46,11 +46,11 @@ def transpose_strategy(meta: MaseMetadata, mesh: tuple) -> OpStrategy:
             output_specs=DTensorSpec(
                 mesh=input_strategy.output_spec.mesh,
                 placements=tuple(output_placements),
-                tensor_meta= TensorMeta(
-                    shape = meta["common"]["results"]["data_out_0"]["shape"],
-                    stride = None,
-                    dtype = meta["common"]["results"]["data_out_0"]["torch_dtype"]
-                )
+                tensor_meta=TensorMeta(
+                    shape=meta["common"]["results"]["data_out_0"]["shape"],
+                    stride=None,
+                    dtype=meta["common"]["results"]["data_out_0"]["torch_dtype"],
+                ),
             ),
             input_specs=(input_strategy.output_spec,),
         )
@@ -70,6 +70,23 @@ def _mm_like_strategy(mm_equation: str, meta: MaseMetadata, mesh: tuple) -> OpSt
         assert strtg.input_specs is not None
         self_spec = strtg.input_specs[0]
         mat2_spec = strtg.input_specs[1]
+
+        self_spec.tensor_meta = TensorMeta(
+            shape=self_shape,
+            stride=None,
+            dtype=meta["common"]["args"]["data_in_0"]["torch_dtype"],
+        )
+        mat2_spec.tensor_meta = TensorMeta(
+            shape=mat2_shape,
+            stride=None,
+            dtype=meta["common"]["args"]["data_in_1"]["torch_dtype"],
+        )
+        strtg.output_spec.tensor_meta = TensorMeta(
+            shape=meta["common"]["results"]["data_out_0"]["shape"],
+            stride=None,
+            dtype=meta["common"]["results"]["data_out_0"]["torch_dtype"],
+        )
+
         if is_tensor_shardable(self_shape, self_spec) and is_tensor_shardable(
             mat2_shape, mat2_spec
         ):
@@ -113,6 +130,27 @@ def _addmm_like_strategy(
             out_spec.placements, mm_out_shape, broadcast_dims_map
         )
         self_spec = DTensorSpec(mesh=mesh, placements=self_placements)
+
+        self_spec.tensor_meta = TensorMeta(
+            shape=self_shape,
+            stride=None,
+            dtype=meta["common"]["args"]["data_in_0"]["torch_dtype"],
+        )
+        mat1_spec.tensor_meta = TensorMeta(
+            shape=mat1_shape,
+            stride=None,
+            dtype=meta["common"]["args"]["data_in_1"]["torch_dtype"],
+        )
+        mat2_spec.tensor_meta = TensorMeta(
+            shape=mat2_shape,
+            stride=None,
+            dtype=meta["common"]["args"]["data_in_2"]["torch_dtype"],
+        )
+        strtg.output_spec.tensor_meta = TensorMeta(
+            shape=meta["common"]["results"]["data_out_0"]["shape"],
+            stride=None,
+            dtype=meta["common"]["results"]["data_out_0"]["torch_dtype"],
+        )
 
         if is_tensor_shardable(mat1_shape, mat1_spec) and is_tensor_shardable(
             mat2_shape, mat2_spec

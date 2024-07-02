@@ -25,15 +25,15 @@ from torch.distributed._tensor.placement_types import (
     Placement,
     Replicate,
     Shard,
+    TensorMeta,
 )
 from torch.distributed.device_mesh import DeviceMesh
 
 
 aten = torch.ops.aten
 
-def pointwise_strategy(
-    meta, mesh, linearity = False
-):
+
+def pointwise_strategy(meta, mesh, linearity=False):
     max_shards_strategy_index = -1
     max_shards = -1
     followed_strategy = None
@@ -45,7 +45,7 @@ def pointwise_strategy(
     #     # out variant op should follow the out kwarg strategy
     #     followed_strategy = op_schema.kwargs_schema["out"]
     # else:
-    
+
     # normal pointwise op, we choose to follow the arg with
     # the max shards in case operands needs reshard
     for idx, arg in enumerate(meta.node.args):
@@ -59,9 +59,7 @@ def pointwise_strategy(
             max_shards = arg_max_shards
             followed_strategy = arg_strategy
 
-    assert isinstance(
-        followed_strategy, OpStrategy
-    ), f"no strategy to follow for {op_schema}!"
+    assert isinstance(followed_strategy, OpStrategy), f"no strategy to follow!"
 
     return common_pointwise_strategy(
         meta, mesh, followed_strategy, linearity, max_shards_strategy_index
@@ -69,11 +67,7 @@ def pointwise_strategy(
 
 
 def common_pointwise_strategy(
-    meta,
-    mesh,
-    followed_strategy,
-    linearity,
-    followed_strategy_index = 0
+    meta, mesh, followed_strategy, linearity, followed_strategy_index=0
 ):
     # handle broadcasting
     parsed_args = []
@@ -92,10 +86,8 @@ def common_pointwise_strategy(
             breakpoint()
             raise ValueError("Unrecognized arg type")
 
-    common_shape = torch.broadcast_shapes(
-        *[arg.shape for arg in parsed_args]
-    )
-    
+    common_shape = torch.broadcast_shapes(*[arg.shape for arg in parsed_args])
+
     # Extract followed argument shape
     followed_shape = parsed_args[followed_strategy_index].shape
 
@@ -128,7 +120,8 @@ def common_pointwise_strategy(
                 # every arg follow the out_placements, but need to handle broadcasting
                 input_arg_spec = input_arg.strategies[0].output_spec
                 input_arg_dims_map = infer_broadcast_dims_map(
-                    common_shape, arg_node.meta["mase"]["common"]["results"]["data_out_0"]["shape"]
+                    common_shape,
+                    arg_node.meta["mase"]["common"]["results"]["data_out_0"]["shape"],
                 )
                 input_target_placements = map_placements_after_broadcast(
                     tuple(out_placements),
@@ -145,11 +138,19 @@ def common_pointwise_strategy(
                 #     generate_redistribute_costs(input_arg, input_arg_target_spec)
                 # )
 
+        dtype = meta["common"]["results"]["data_out_0"].get(
+            "torch_dtype", torch.float32
+        )
         pointwise_strategy.strategies.append(
             PlacementStrategy(
                 output_specs=DTensorSpec(
                     mesh=mesh,
                     placements=tuple(out_placements),
+                    tensor_meta=TensorMeta(
+                        shape=meta["common"]["results"]["data_out_0"]["shape"],
+                        stride=None,
+                        dtype=dtype,
+                    ),
                 ),
                 input_specs=input_specs,
                 # redistribute_cost=redistribute_costs,
