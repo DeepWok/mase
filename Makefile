@@ -65,7 +65,7 @@ build-docker:
 		if [ ! -d Docker ]; then \
     			git clone git@github.com:jianyicheng/mase-docker.git Docker; \
 		fi; \
-		docker build --build-arg VHLS_PATH=$(vhls) --build-arg VHLS_VERSION=$(vhls_version) -f Docker/Dockerfile-$(target) --tag mase-ubuntu2204 Docker; \
+		docker build --build-arg VHLS_PATH=$(vhls) --build-arg VHLS_VERSION=$(vhls_version) -f Docker/Dockerfile-$(PLATFORM) --tag mase-ubuntu2204 Docker; \
 	else \
 		docker pull $(img); \
 	fi
