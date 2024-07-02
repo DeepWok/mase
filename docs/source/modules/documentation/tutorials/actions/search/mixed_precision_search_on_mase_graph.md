@@ -1,74 +1,127 @@
 # Mixed-precision search on MASE Graph
 
-This tutorial shows how to search for mixed-precision quantization strategy for Toy model on ToyTiny dataset.
+This tutorial shows how to search for mixed-precision quantization strategy for JSC model (a small toy model).
 
-## Train a Toy model on ToyTiny dataset
+## Commands
 
-First we train a Toy model on ToyTiny dataset. After training for 5 epochs, we get a Toy model with around 0.997 validation accuracy. The checkpoint is saved at `mase_tools/toy_on_toy_tiny/software/training_ckpts/best.ckpt`
+First we train a model on the dataset. After training for some epochs, we get a model with some validation accuracy. The checkpoint is saved at an auto-created location. You can refer to [Run the train action with the CLI](../train/simple_train_flow.md) for more detailed explanation.
+
+The reason why we need a pre-trained model is because we would like to do a post-training-quantization (PTQ) search. This means the quantization happens on a pre-trained model. We then use the PTQ accuracy as a proxy signal for our search.
 
 
 ```bash
-cd machop
-./ch train --config configs/examples/search_toy_tpe.toml
+cd src 
+./ch train jsc-tiny jsc --max-epochs 3 --batch-size 256 --accelerator cpu --project tmp --debug --cpu 0
 ```
 
-## Search for mixed-precision quantization strategy
+- For the interest of time, we do not train this to convergence, apparently one can adjust `--max-epochs` for longer training epochs.
+- We choose to train on `cpu` and `--cpu 0` avoids multiprocessing dataloader issues.
 
-We load the trained Toy and search for fixed-point precision.
+```bash
+# search command
+./ch search --config ../configs/examples/jsc_toy_by_type.toml --task cls --accelerator=cpu --load ../mase_output/tmp/software/training_ckpts/best.ckpt --load-type pl --cpu 0
+```
 
-### Search Config
+- The line above issues the search with a configuration file, we discuss the configuration in later sections.
 
-Here is the search part in `configs/examples/search_toy_tpe.toml` looks like the following.
+```bash
+# train searched network
+./ch train jsc-tiny jsc --max-epochs 3 --batch-size 256 --accelerator cpu --project tmp --debug --load ../mase_output/jsc-tiny/software/transform/transformed_ckpt/graph_module.mz --load-type mz
+
+# view searched results
+cat ../mase_output/jsc-tiny/software/search_ckpts/best.json
+```
+
+
+
+
+## Search Config
+
+Here is the search part in `configs/examples/jsc_toy_by_type.toml` looks like the following.
 
 ```toml
+# basics
+model = "jsc-tiny"
+dataset = "jsc"
+task = "cls"
+
+max_epochs = 5
+batch_size = 512
+learning_rate = 1e-2
+accelerator = "gpu"
+project = "jsc-tiny"
+seed = 42
+log_every_n_steps = 5
+
+[passes.quantize]
+by = "type"
+[passes.quantize.default.config]
+name = "NA"
+[passes.quantize.linear.config]
+name = "integer"
+"data_in_width" = 8
+"data_in_frac_width" = 4
+"weight_width" = 8
+"weight_frac_width" = 4
+"bias_width" = 8
+"bias_frac_width" = 4
+
+[transform]
+style = "graph"
+
+
 [search.search_space]
-# the search space name defined in mase
-# this `name="graph/quantize/mixed_precision_ptq"` will create a mixed-precision post-training-quantization search space
 name = "graph/quantize/mixed_precision_ptq"
 
 [search.search_space.setup]
-# the config for MixedPrecisionSearchSpace
-# this `by="name"` will quantize the model by node/layer name when rebuilding the model
 by = "name"
 
 [search.search_space.seed.default.config]
-# the default quantization config the node/layer
+# the only choice "NA" is used to indicate that layers are not quantized by default
+name = ["NA"]
+
+[search.search_space.seed.linear.config]
+# if search.search_space.setup.by = "type", this seed will be used to quantize all torch.nn.Linear/ F.linear
 name = ["integer"]
 data_in_width = [4, 8]
-data_in_frac_width = [3, 4, 5, 6, 7, 8, 9]
+data_in_frac_width = ["NA"] # "NA" means data_in_frac_width = data_in_width // 2
 weight_width = [2, 4, 8]
-weight_frac_width = [3, 4, 5, 6, 7, 8, 9]
+weight_frac_width = ["NA"]
 bias_width = [2, 4, 8]
-bias_frac_width = [3, 4, 5, 6, 7, 8, 9]
+bias_frac_width = ["NA"]
+
+[search.search_space.seed.seq_blocks_2.config]
+# if search.search_space.setup.by = "name", this seed will be used to quantize the mase graph node with name "seq_blocks_2"
+name = ["integer"]
+data_in_width = [4, 8]
+data_in_frac_width = ["NA"]
+weight_width = [2, 4, 8]
+weight_frac_width = ["NA"]
+bias_width = [2, 4, 8]
+bias_frac_width = ["NA"]
 
 [search.strategy]
-# the search strategy name "optuna" specifies the search algorithm
 name = "optuna"
-eval_mode = true # set the model in eval mode since we are doing post-training quantization
+eval_mode = true
+
+[search.strategy.sw_runner.basic_evaluation]
+data_loader = "val_dataloader"
+num_samples = 512
+
+[search.strategy.hw_runner.average_bitwidth]
+compare_to = 32 # compare to FP32
 
 [search.strategy.setup]
-# the config for SearchStrategyOptuna
 n_jobs = 1
-n_trials = 20
+n_trials = 5
 timeout = 20000
 sampler = "tpe"
 # sum_scaled_metrics = true # single objective
 # direction = "maximize"
 sum_scaled_metrics = false # multi objective
 
-# hw_runner specifies the estimator for hw metrics
-[search.strategy.sw_runner.basic_evaluation]
-data_loader = "val_dataloader"
-num_samples = 512
-
-# hw_runner specifies the estimator for hw metrics
-[search.strategy.hw_runner.average_bitwidth]
-compare_to = 32 # compare to FP32
-
 [search.strategy.metrics]
-# the sw + hw metrics to be evaluated
-# since the loss is commented out, the search objective will not include this term
-# loss.scale = 0.0
+# loss.scale = 1.0
 # loss.direction = "minimize"
 accuracy.scale = 1.0
 accuracy.direction = "maximize"
@@ -76,13 +129,7 @@ average_bitwidth.scale = 0.2
 average_bitwidth.direction = "minimize"
 ```
 
-### Run the search
-
-Run the following command to start the search. We search for 20 trials and save the results in `mase_tools/toy_toy_tiny/software/search_results`.
-
-```bash
-./ch search --config configs/examples/search_toy_tpe.toml --load "../mase_output/toy_toy_tiny/software/training_ckpts/best.ckpt" --load-type pl
-```
+## Run the search
 
 When the search is completed, we will see the Pareto frontier trials (`sum_scaled_metrics = false`) or the best trials (`sum_scaled_metrics = true`) printed in the terminal.
 
@@ -100,7 +147,7 @@ Best trial(s):
 
 ```
 
-The entire searching log is saved in `mase_tools/mase_output/toy_toy_tiny/software/search_ckpts/log.json`.
+The entire searching log is saved in `../mase_output/jsc-tiny/software/search_ckpts/log.json`.
 
 Here is part of the `log.json`
 

@@ -62,8 +62,12 @@ def verify_common_metadata_analysis_pass(graph, pass_args: dict = {}):
 
     :param graph: The input graph to analyze.
     :type graph: MaseGraph
+
     :param pass_args: Additional arguments for the analysis pass (optional).
     :type pass_args: dict
+
+    pass_args is not used in this pass, defaults to {}.
+
     :return: The analyzed graph and an empty dictionary.
     :rtype: tuple(MaseGraph, Dict)
     """
@@ -111,8 +115,12 @@ def verify_software_metadata_analysis_pass(graph, pass_args: dict = {}):
 
     :param graph: The input graph to analyze.
     :type graph: MaseGraph
+
     :param pass_args: Additional arguments for the analysis pass (optional).
     :type pass_args: dict
+
+    pass_args is not used in this pass, defaults to {}.
+
     :return: The analyzed graph and an empty dictionary.
     :rtype: tuple(MaseGraph, Dict)
 
@@ -145,8 +153,12 @@ def verify_hardware_metadata_analysis_pass(graph, pass_args: dict = {}):
 
     :param graph: The input graph to analyze.
     :type graph: MaseGraph
+
     :param pass_args: Additional arguments for the analysis pass (optional).
     :type pass_args: dict
+
+    pass_args is not used in this pass, defaults to {}.
+
     :return: The analyzed graph and an empty dictionary.
     :rtype: tuple(MaseGraph, Dict)
     """
@@ -222,8 +234,12 @@ def verify_metadata_analysis_pass(graph, pass_args: dict = {}):
 
     :param graph: The input graph to analyze.
     :type graph: MaseGraph
+
     :param pass_args: Additional arguments for the analysis pass (optional).
     :type pass_args: dict
+
+    pass_args is not used in this pass, defaults to {}.
+
     :return: The analyzed graph and an empty dictionary.
     :rtype: tuple(MaseGraph, Dict)
     """

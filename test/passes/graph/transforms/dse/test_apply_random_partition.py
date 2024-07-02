@@ -50,14 +50,14 @@ def test_apply_random_partition():
     x = torch.randn((batch_size, 28, 28))
     pass_args = {"dummy_in": {"x": x}}
 
-    mg, _ = passes.add_common_metadata_analysis_pass(mg, pass_args)
+    mg, _ = passes.add_common_metadata_analysis_pass(mg, pass_args=pass_args)
 
     # add metadata for hardware in each mase node of graph
-    mg, _ = passes.add_hardware_metadata_analysis_pass(mg)
+    mg, _ = passes.add_hardware_metadata_analysis_pass(mg, pass_args=pass_args)
 
-    mg, _ = passes.partition_to_multi_device_transform_pass(mg)
+    mg, _ = passes.partition_to_multi_device_transform_pass(mg, pass_args={"cluster_config": None, "device_count": 1, "mode": "naive"})
 
-    mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
+    mg, _ = passes.report_node_hardware_type_analysis_pass(mg, pass_args=pass_args)  # pretty print
 
 
 if __name__ == "__main__":

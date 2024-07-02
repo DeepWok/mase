@@ -9,14 +9,15 @@ VIVADO_AVAILABLE := $(shell command -v vivado 2> /dev/null)
 ifeq ($(GPU_AVAILABLE),)
     PLATFORM := cpu
 else
-    PLATFORM := cuda
+    PLATFORM := gpu
 endif
 
 # * Mount Vivado HLS path only if Vivado is available (to avoid path not found errors)
+# Include shared folder containing board files etc
 ifeq ($(VIVADO_AVAILABLE),)
     DOCKER_RUN_EXTRA_ARGS=
 else
-    DOCKER_RUN_EXTRA_ARGS=-v $(vhls):$(vhls)
+    DOCKER_RUN_EXTRA_ARGS= -v /mnt/applications/:/mnt/applications -v $(vhls):$(vhls) -v /$(USER_PREFIX)/$(shell whoami)/shared:/root/shared
 endif
 
 # * Set docker image according to local flag
@@ -42,6 +43,11 @@ hw_test_dir = src/mase_components/
 
 NUM_WORKERS ?= 1
 
+sw_test_dir = machop/test/
+hw_test_dir = machop/mase_components/
+
+NUM_WORKERS ?= 1
+
 # Make sure the repo is up to date
 sync:
 	git submodule sync
@@ -59,7 +65,7 @@ build-docker:
 		if [ ! -d Docker ]; then \
     			git clone git@github.com:jianyicheng/mase-docker.git Docker; \
 		fi; \
-		docker build --build-arg VHLS_PATH=$(vhls) --build-arg VHLS_VERSION=$(vhls_version) -f Docker/Dockerfile-$(target) --tag mase-ubuntu2204 Docker; \
+		docker build --build-arg VHLS_PATH=$(vhls) --build-arg VHLS_VERSION=$(vhls_version) -f Docker/Dockerfile-$(PLATFORM) --tag mase-ubuntu2204 Docker; \
 	else \
 		docker pull $(img); \
 	fi
@@ -70,8 +76,8 @@ shell:
         -w /workspace \
         -v /$(USER_PREFIX)/$(shell whoami)/.gitconfig:/root/.gitconfig \
         -v /$(USER_PREFIX)/$(shell whoami)/.ssh:/root/.ssh \
-        -v /$(USER_PREFIX)/$(shell whoami)/.mase:/root/.mase:z \
-        -v $(shell pwd):/workspace:z \
+        -v /$(USER_PREFIX)/$(shell whoami)/.mase:/root/.mase \
+        -v $(shell pwd):/workspace \
         $(DOCKER_RUN_EXTRA_ARGS) \
         $(img) /bin/bash
 

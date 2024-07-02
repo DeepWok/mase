@@ -39,6 +39,8 @@ def hook_inspection_analysis_pass(graph, pass_args: dict = {}):
     :param pass_args: Additional arguments for the pruning metadata analysis pass. This pass does not need any values, so an empty dictionary is fine
     :type pass_args: dict
 
+    pass_args can be None or an empty dictionary.
+
     :return: The updated graph and sparsity information. The returned dict contains {'module_name': (hook_id, hook_fn)}
     :rtype: tuple(MaseGraph, dict)
 

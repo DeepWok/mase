@@ -33,6 +33,13 @@ module fixed_vector_mult #(
 
   // pv[i] = data_in[i] * w[i]
   logic [PRODUCT_WIDTH-1:0] product_vector[IN_SIZE-1:0];
+  logic product_data_in_valid;
+  logic product_data_in_ready;
+  logic product_data_out_valid;
+  logic product_data_out_ready;
+  logic [$bits(product_vector)-1:0] product_data_in;
+  logic [$bits(product_vector)-1:0] product_data_out;
+
   for (genvar i = 0; i < IN_SIZE; i = i + 1) begin : parallel_mult
     fixed_mult #(
         .IN_A_WIDTH(IN_WIDTH),
@@ -44,12 +51,7 @@ module fixed_vector_mult #(
     );
   end
 
-  logic product_data_in_valid;
-  logic product_data_in_ready;
-  logic product_data_out_valid;
-  logic product_data_out_ready;
-  logic [$bits(product_vector)-1:0] product_data_in;
-  logic [$bits(product_vector)-1:0] product_data_out;
+
 
   join2 #() join_inst (
       .data_in_ready ({weight_ready, data_in_ready}),

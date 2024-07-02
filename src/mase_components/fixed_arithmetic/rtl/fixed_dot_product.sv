@@ -33,9 +33,14 @@ module fixed_dot_product #(
   localparam PRODUCT_WIDTH = IN_WIDTH + WEIGHT_WIDTH;
 
 
-  logic [PRODUCT_WIDTH-1:0] pv       [IN_SIZE-1:0];
+  logic [PRODUCT_WIDTH-1:0] pv        [IN_SIZE-1:0];
   logic                     pv_valid;
   logic                     pv_ready;
+
+  logic [    OUT_WIDTH-1:0] sum;
+  logic                     sum_valid;
+  logic                     sum_ready;
+
   fixed_vector_mult #(
       .IN_WIDTH(IN_WIDTH),
       .WEIGHT_WIDTH(WEIGHT_WIDTH),
@@ -56,9 +61,6 @@ module fixed_dot_product #(
 
 
   // sum the products
-  logic [OUT_WIDTH-1:0] sum;
-  logic                 sum_valid;
-  logic                 sum_ready;
   // sum = sum(pv)
   fixed_adder_tree #(
       .IN_SIZE (IN_SIZE),

@@ -22,6 +22,7 @@ from chop.nn.quantizers import (
 class _GELUBase(torch.nn.GELU):
     def __init__(self, inplace: bool = False):
         super().__init__(inplace)
+        self.inplace = inplace
         self.bypass = False
         self.x_quantizer = None
 
@@ -30,7 +31,7 @@ class _GELUBase(torch.nn.GELU):
             return F.gelu(x)
         else:
             x = self.x_quantizer(x)
-            return F.gelu(x, self.inplace)
+            return F.gelu(x)
 
     def get_quantized_output(self, x: Tensor) -> Tensor:
         x = self.x_quantizer(x)
@@ -43,6 +44,7 @@ class GELUInteger(_GELUBase):
     def __init__(self, inplace: bool = False, config: dict = None):
         super().__init__(inplace)
         assert config is not None, "config is None!"
+
         self.config = config
         self.bypass = config.get("bypass", False)
         if self.bypass:

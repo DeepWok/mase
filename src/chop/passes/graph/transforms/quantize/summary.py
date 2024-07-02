@@ -98,16 +98,30 @@ def graph_iterator_node_histogram(ori_graph, graph, save_path: str = None):
 
 
 def summarize_quantization_analysis_pass(
-    ori_graph, graph, save_dir: str = None
+    graph, pass_args={"save_dir": None, "ori_graph": None}
 ) -> None:
     """
     Summarizes the quantization analysis pass.
+    Apply quantization transformation to the given graph.
 
-    Args:
-        ori_graph: The original graph.
-        graph: The modified graph.
-        save_dir (optional): The directory to save the summary files. Defaults to None.
+    :param graph: The input graph to be transformed.
+    :type graph: MaseGraph
+
+    :param pass_args: Additional arguments for the transformation.
+    :type pass_args: dict, optional
+
+    .. code-block: python
+
+        pass_args = {
+            "save_dir": "quantize_summary",
+            "ori_graph": ori_mg, # original graph, type should be MaseGraph
+        }
+
+    :return: The transformed MaseGraph.
+    :rtype: tuple
     """
+
+    save_dir, ori_graph = pass_args["save_dir"], pass_args["original_graph"]
     if save_dir is not None:
         os.makedirs(save_dir, exist_ok=True)
     table_path = os.path.join(save_dir, "quantize_table.csv") if save_dir else None
@@ -116,3 +130,5 @@ def summarize_quantization_analysis_pass(
     )
     graph_iterator_compare_nodes(ori_graph, graph, save_path=table_path, silent=False)
     graph_iterator_node_histogram(ori_graph, graph, save_path=histogram_path)
+
+    return graph, {}

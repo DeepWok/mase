@@ -40,8 +40,8 @@ module matrix_fifo #(
   );
 
   fifo #(
-      .SIZE(FIFO_SIZE),
-      .DATA_WIDTH(FLAT_DATA_WIDTH)
+      .DATA_WIDTH(FLAT_DATA_WIDTH),
+      .DEPTH(FIFO_SIZE)
   ) input_fifo_inst (
       .clk(clk),
       .rst(rst),

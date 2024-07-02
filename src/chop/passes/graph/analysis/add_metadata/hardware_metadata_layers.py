@@ -45,6 +45,7 @@ INTERNAL_COMP = {
                 "fixed_arithmetic/rtl/fixed_adder_tree.sv",
                 "fixed_arithmetic/rtl/fixed_adder_tree_layer.sv",
                 "fixed_arithmetic/rtl/fixed_mult.sv",
+                "common/rtl/unpacked_repeat_circular_buffer.sv",
                 "common/rtl/register_slice.sv",
                 "common/rtl/join2.sv",
                 "common/rtl/skid_buffer.sv",
@@ -147,7 +148,7 @@ INTERNAL_COMP = {
             "name": "fixed_gelu",
             "dependence_files": [
                 "activations/rtl/fixed_gelu.sv",
-                "arithmetic/rtl/fixed_mult.sv",
+                "activations/rtl/gelu_lut.sv",
             ],
         },
     ],
@@ -156,7 +157,7 @@ INTERNAL_COMP = {
             "name": "fixed_softsign",
             "dependence_files": [
                 "activations/rtl/fixed_softsign.sv",
-                "arithmetic/rtl/fixed_mult.sv",
+                "fixed_arithmetic/rtl/fixed_mult.sv",
             ],
         },
     ],
@@ -167,5 +168,35 @@ INTERNAL_COMP = {
                 "activations/rtl/fixed_softplus.sv",
             ],
         },
+    ],
+    "add": [
+        {
+            "name": "fixed_adder",
+            "dependence_files": [
+                "fixed_arithmetic/rtl/fixed_adder.sv",
+            ],
+        }
+    ],
+    "mul": [
+        {
+            "name": "fixed_elementwise_multiplier",
+            "dependence_files": [
+                "fixed_arithmetic/rtl/fixed_elementwise_multiplier.sv",
+            ],
+        }
+    ],
+    "df_split": [
+        {
+            "name": "df_split",
+            "dependence_files": ["common/rtl/df_split.sv", "common/rtl/split2.sv"],
+        }
+    ],
+    "getitem": [
+        {
+            "name": "buffer",
+            "dependence_files": [
+                "common/rtl/buffer.sv",
+            ],
+        }
     ],
 }

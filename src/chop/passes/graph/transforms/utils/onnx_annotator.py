@@ -15,20 +15,34 @@ logger = logging.getLogger(__file__)
 # logger.propagate = False  # Avoid duplicate logs
 
 
-def onnx_annotate_transform_pass(graph, **kwargs):
+def onnx_annotate_transform_pass(graph, pass_args):
+    """
+    Convert MaseGraph to ONNX and annotate the relevant layers with sparsity information.
+    The code here is derived from Zhewen's SparseCNN codebase:
+    https://github.com/Yu-Zhewen/sparseCNN/blob/main/onnx_sparsity_attribute.py
+
+    :param graph: a MaseGraph
+    :type graph: MaseGraph
+
+    :param pass_args: this pass can take a string argument named "file_name", defaults to None
+    :type pass_args: dict, optional
+
+    :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)
+    :rtype: tuple(MaseGraph, dict)
+    """
     # Export the model to ONNX
-    path = kwargs["save_path"] / "dense.onnx"
+    path = pass_args["save_path"] / "dense.onnx"
     _torch_onnx_exporter(graph.model, torch.randn(1, 3, 224, 224), path)
 
     # Load the model back and annotate the relevant layers with sparsity attributes
     onnx_model = onnx.load(path)
-    data_path = kwargs["data_path"]
+    data_path = pass_args["data_path"]
     # NOTE: For now, these are hard-coded. Later we may want to make these configurable.
     # ww = weight width, dw = data width, aw = accumulator width
     _annotate_quantisation(onnx_model, ww=16, dw=16, aw=32, bfp=False)
     assert data_path.endswith(".toml"), "Only TOML files are supported for now"
     _annotate_sparsity_from_toml(onnx_model, data_path)
-    onnx.save(onnx_model, kwargs["save_path"] / "sparse.onnx")
+    onnx.save(onnx_model, pass_args["save_path"] / "sparse.onnx")
 
     return graph
 

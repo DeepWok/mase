@@ -50,7 +50,7 @@ configs = [
 ]
 
 
-def test_prune():
+def test_hook_inspection_analysis_pass():
     for c in configs:
         run_with_config(c)
 
@@ -142,10 +142,12 @@ def run_with_config(config_file):
     # graph, sparsity_info = add_pruning_metadata_analysis_pass(
     #     graph, {"dummy_in": dummy_input, "add_value": False})
     graph, hook_info = hook_inspection_analysis_pass(graph, {})
+    print("pre detach")
     pp.pprint(hook_info)
     graph, _ = prune_detach_hook_transform_pass(graph, {})
     graph, hook_info = hook_inspection_analysis_pass(graph, {})
+    print("after detach")
     pp.pprint(hook_info)
 
 
-test_prune()
+test_hook_inspection_analysis_pass()

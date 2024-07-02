@@ -6,6 +6,7 @@ from typing import Tuple
 
 import torch
 from pathlib import Path
+from functools import reduce
 
 
 def check_func_type(node, my_func):
@@ -156,3 +157,25 @@ def init_project(project_dir):
     Path(hardware_dir / "test" / "mase_top_tb").mkdir(parents=True, exist_ok=True)
     Path(hardware_dir / "test").mkdir(parents=True, exist_ok=True)
     Path(hardware_dir / "hls").mkdir(parents=True, exist_ok=True)
+
+
+def sign_extend(value: int, bits: int):
+    sign_bit = 1 << (bits - 1)
+    return (value & (sign_bit - 1)) - (value & sign_bit)
+
+
+def deepgetattr(obj, attr):
+    """Recurses through an attribute chain to get the ultimate value."""
+    return reduce(getattr, attr.split("."), obj)
+
+
+def deepsetattr(obj, attr_str, value):
+    """Recurses through an attribute chain to set the ultimate value."""
+    attrs = attr_str.split(".")
+    if len(attrs) == 1:
+        setattr(obj, attrs[0], value)
+    else:
+        first_attr = attrs.pop(0)
+        if not hasattr(obj, first_attr):
+            setattr(obj, first_attr, {})
+        deepsetattr(getattr(obj, first_attr), ".".join(attrs), value)

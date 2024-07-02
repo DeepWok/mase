@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def calculate_avg_bits_mg_analysis_pass(graph, pass_args: dict):
+def calculate_avg_bits_mg_analysis_pass(graph, pass_args: dict = None):
     """
     Calculate, on average, how many bits are spent on weights and activations, this is an analysis on the given graph.
     This is useful when mixed-precision is happening, we may want to know on-average how many bits are we spending on weights and activations
@@ -11,8 +11,11 @@ def calculate_avg_bits_mg_analysis_pass(graph, pass_args: dict):
     :param pass_args: Additional arguments for the analysis pass.
     :type pass_args: dict
 
+    pass_args can be an empty dictionary or None.
+
     :return: A tuple containing the analyzed graph and a dictionary with the average bit values for data and weights.
     :rtype: tuple
+
     :return graph: The analyzed graph.
     :rtype graph: MaseGraph
     :return dict: A dictionary with the following keys:

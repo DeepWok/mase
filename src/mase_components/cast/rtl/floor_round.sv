@@ -22,11 +22,11 @@ module floor_round #(
   end
 
   generate
-    if (OUT_FRAC_WIDTH > IN_FRAC_WIDTH) begin
+    if (OUT_FRAC_WIDTH > IN_FRAC_WIDTH) begin : gen_out_frac_larger
       assign out_data = in_data <<< (OUT_FRAC_WIDTH - IN_FRAC_WIDTH);
-    end else if (OUT_FRAC_WIDTH == IN_FRAC_WIDTH) begin
+    end else if (OUT_FRAC_WIDTH == IN_FRAC_WIDTH) begin : gen_out_frac_same
       assign out_data = in_data;
-    end else begin  // OUT_FRAC_WIDTH < IN_FRAC_WIDTH
+    end else begin : gen_out_frac_smaller  // OUT_FRAC_WIDTH < IN_FRAC_WIDTH
       assign out_data = in_data >>> (IN_FRAC_WIDTH - OUT_FRAC_WIDTH);
     end
   endgenerate

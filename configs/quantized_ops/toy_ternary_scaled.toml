@@ -1,95 +1,98 @@
-model = "toy"
-dataset = "toy-tiny"
+model="toy"
+dataset="toy_tiny"
+
+[transform]
+    style="graph"
 
 [passes.quantize]
-by = "name"
-report = true
+    by="name"
+    report=true
 
-[passes.quantize.default.config]
-name = "ternary"
-data_in_scaling_factor = true
-data_in_width = 2
-weight_scaling_factor = true
-weight_width = 2
-bias_scaling_factor = true
-bias_width = 2
-data_in_mean = "NA"
-data_in_median = 0.0833507776260376
-data_in_max = 4.985265731811523
-weight_mean = "NA"
-weight_median = -0.0033772289752960205
-weight_max = 0.4998381733894348
-bias_mean = "NA"
-bias_median = 0.021730512380599976
-bias_max = 0.4969978332519531
+    [passes.quantize.default.config]
+        name="ternary"
+        data_in_scaling_factor=true
+        data_in_width=2
+        weight_scaling_factor=true
+        weight_width=2
+        bias_scaling_factor=true
+        bias_width=2
+        data_in_mean="NA"
+        data_in_median=0.0833507776260376
+        data_in_max=4.985265731811523
+        weight_mean="NA"
+        weight_median=-0.0033772289752960205
+        weight_max=0.4998381733894348
+        bias_mean="NA"
+        bias_median=0.021730512380599976
+        bias_max=0.4969978332519531
 
-[passes.quantize.seq_blocks_1.config]
-name = "ternary"
-data_in_scaling_factor = true
-data_in_width = 2
-data_in_frac_width = 0
-data_in_mean = "NA"
-data_in_median = -0.009714938700199127
-data_in_max = 6.568027019500732
+    [passes.quantize.seq_blocks_1.config]
+        name="ternary"
+        data_in_scaling_factor=true
+        data_in_width=2
+        data_in_frac_width=0
+        data_in_mean="NA"
+        data_in_median=-0.009714938700199127
+        data_in_max=6.568027019500732
 
-[passes.quantize.seq_blocks_0.config]
-name = "ternary"
-data_in_scaling_factor = true
-data_in_width = 2
-weight_scaling_factor = true
-weight_width = 2
-bias_scaling_factor = true
-bias_width = 2
-data_in_mean = "NA"
-data_in_median = 0.0833507776260376
-data_in_max = 4.985265731811523
-weight_mean = "NA"
-weight_median = -0.0033772289752960205
-weight_max = 0.4998381733894348
-bias_mean = "NA"
-bias_median = 0.021730512380599976
-bias_max = 0.4969978332519531
+    [passes.quantize.seq_blocks_0.config]
+        name="ternary"
+        data_in_scaling_factor=true
+        data_in_width=2
+        weight_scaling_factor=true
+        weight_width=2
+        bias_scaling_factor=true
+        bias_width=2
+        data_in_mean="NA"
+        data_in_median=0.0833507776260376
+        data_in_max=4.985265731811523
+        weight_mean="NA"
+        weight_median=-0.0033772289752960205
+        weight_max=0.4998381733894348
+        bias_mean="NA"
+        bias_median=0.021730512380599976
+        bias_max=0.4969978332519531
 
-[passes.quantize.seq_blocks_2.config]
-name = "ternary"
-data_in_scaling_factor = true
-data_in_width = 2
-weight_scaling_factor = true
-weight_width = 2
-bias_scaling_factor = true
-bias_width = 2
-data_in_mean = "NA"
-data_in_median = 0.0833507776260376
-data_in_max = 4.985265731811523
-weight_mean = "NA"
-weight_median = -0.0033772289752960205
-weight_max = 0.4998381733894348
-bias_mean = "NA"
-bias_median = 0.021730512380599976
-bias_max = 0.4969978332519531
+    [passes.quantize.seq_blocks_2.config]
+        name="ternary"
+        data_in_scaling_factor=true
+        data_in_width=2
+        weight_scaling_factor=true
+        weight_width=2
+        bias_scaling_factor=true
+        bias_width=2
+        data_in_mean="NA"
+        data_in_median=0.0833507776260376
+        data_in_max=4.985265731811523
+        weight_mean="NA"
+        weight_median=-0.0033772289752960205
+        weight_max=0.4998381733894348
+        bias_mean="NA"
+        bias_median=0.021730512380599976
+        bias_max=0.4969978332519531
 
-[passes.quantize.seq_blocks_3.config]
-name = "ternary"
-data_in_scaling_factor = true
-data_in_width = 2
-data_in_mean = "NA"
-data_in_median = 0.03673841804265976
-data_in_max = 2.9003794193267822
+    [passes.quantize.seq_blocks_3.config]
+        name="ternary"
+        data_in_scaling_factor=true
+        data_in_width=2
+        data_in_mean="NA"
+        data_in_median=0.03673841804265976
+        data_in_max=2.9003794193267822
 
-[passes.quantize.seq_blocks_4.config]
-name = "ternary"
-data_in_scaling_factor = true
-data_in_width = 2
-weight_scaling_factor = true
-weight_width = 2
-bias_scaling_factor = true
-bias_width = 2
-data_in_mean = "NA"
-data_in_median = 0.0833507776260376
-data_in_max = 4.985265731811523
-weight_mean = "NA"
-weight_median = -0.0033772289752960205
-weight_max = 0.4998381733894348
-bias_mean = "NA"
-bias_median = 0.021730512380599976
-bias_max = 0.4969978332519531
+    [passes.quantize.seq_blocks_4.config]
+        name="ternary"
+        data_in_scaling_factor=true
+        data_in_width=2
+        weight_scaling_factor=true
+        weight_width=2
+        bias_scaling_factor=true
+        bias_width=2
+        data_in_mean="NA"
+        data_in_median=0.0833507776260376
+        data_in_max=4.985265731811523
+        weight_mean="NA"
+        weight_median=-0.0033772289752960205
+        weight_max=0.4998381733894348
+        bias_mean="NA"
+        bias_median=0.021730512380599976
+        bias_max=0.4969978332519531

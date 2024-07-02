@@ -25,6 +25,5 @@ Note that search_space is search space + model, and search_strategy is search al
     - Register the new software metrics at `SOFTWARE_RUNNER_MAP` at `mase-tools/machop/chop/actions/search/runners/software/__init__.py`.
 
 
-# How to extend search_strategy?
 
 🚧 under construction 🚧

@@ -80,6 +80,7 @@ coverage.xml
 
 # Hardware tests
 build/
+obj_dir/
 
 # Translations
 *.mo
@@ -142,6 +143,16 @@ venv.bak/
 
 # Data files for hardware simulation
 *.dat
+
+# Vivado
+*.xpr
+*.jou
+*.cache
+*.runs
+*.srcs
+*.hw
+vivado_pid*
+synth/
 
 # Generated SV LUT files
 *_lut.sv

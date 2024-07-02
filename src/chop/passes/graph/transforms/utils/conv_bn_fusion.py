@@ -14,11 +14,22 @@ from torch.fx.experimental.optimization import (
 
 
 # Housekeeping -------------------------------------------------------------------------
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 # logger.propagate = False  # Avoid duplicate logs
 
 
-def conv_bn_fusion_transform_pass(graph, **_):
+def conv_bn_fusion_transform_pass(graph, pass_args={}):
+    """Perform Conv-BN fusion on the given graph.
+
+    :param graph: a MaseGraph
+    :type graph: MaseGraph
+
+    :param pass_args: this pass can take a string argument named "file_name", defaults to None
+    :type pass_args: dict, optional
+
+    :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)
+    :rtype: tuple(MaseGraph, dict)
+    """
     PATTERNS = [
         (nn.Conv1d, nn.BatchNorm1d),
         (nn.Conv2d, nn.BatchNorm2d),
@@ -73,4 +84,4 @@ def conv_bn_fusion_transform_pass(graph, **_):
 
     modules = dict(graph.model.named_modules())
     logger.debug(f"Found {len(modules)} modules in the model:\n{list(modules.keys())}")
-    return graph
+    return graph, {}

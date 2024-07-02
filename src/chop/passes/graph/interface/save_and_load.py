@@ -103,7 +103,7 @@ def save_node_meta_param_interface_pass(graph, pass_args: str):
     """
     node_n_meta_param = collect_n_meta_param(graph)
     save_n_meta_param(node_n_meta_param, pass_args)
-    return graph
+    return graph, {}
 
 
 def load_node_meta_param_interface_pass(graph, pass_args: str):
@@ -112,7 +112,7 @@ def load_node_meta_param_interface_pass(graph, pass_args: str):
     """
     node_n_meta_param = load_n_meta_param(pass_args)
     graph = graph_iterator_add_n_meta_param(graph, node_n_meta_param)
-    return graph
+    return graph, {}
 
 
 def save_mase_graph_interface_pass(graph, pass_args: dict = {}):

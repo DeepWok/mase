@@ -15,6 +15,7 @@ class Monitor:
         self.exp_queue = Queue()
         self.check = check
         self.name = name
+        self.in_flight = False
 
         if not hasattr(self, "log"):
             self.log = SimLog(
@@ -42,12 +43,22 @@ class Monitor:
                 self.recv_queue.put(tr)
 
                 if self.exp_queue.empty():
-                    raise TestFailure(
-                        "\nGot \n%s,\nbut we did not expect anything."
-                        % self.recv_queue.get()
+                    assert False, (
+                        "Got %s but we did not expect anything." % self.recv_queue.get()
                     )
 
                 self._check(self.recv_queue.get(), self.exp_queue.get())
+
+                # * If the monitor is in-flight (expectation queue has been populated)
+                # * and the expectation queue is now empty (after running the check),
+                # * the test is finished
+                if (
+                    self.in_flight == True
+                    and self.recv_queue.empty()
+                    and self.exp_queue.empty()
+                ):
+                    self.in_flight = False
+                    self.log.info(f"Monitor has been drained.")
 
     def _trigger(self):
         raise NotImplementedError()

@@ -35,7 +35,7 @@ logger = logging.getLogger("chop.test")
 set_logging_verbosity("debug")
 
 
-def test_add_mase_ops():
+def test_add_software_metadata_analysis_pass():
     mlp = ToyCustomFnNet(image_size=(1, 28, 28), num_classes=10)
     mg = MaseGraph(model=mlp)
 
@@ -56,4 +56,4 @@ def test_add_mase_ops():
 # --------------------------------------------------
 #   Execution
 # --------------------------------------------------
-test_add_mase_ops()
+test_add_software_metadata_analysis_pass()

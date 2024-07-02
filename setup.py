@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+import sys
 
 
 def is_cuda_available():
@@ -9,6 +10,9 @@ def is_cuda_available():
     except:
         return False
 
+def get_system():
+    return sys.platform
+
 
 requirements = [
     "torch",
@@ -18,7 +22,7 @@ requirements = [
     "py-cpuinfo",
     "psutil",
     "lightning",
-    "transformers",
+    "transformers==4.41.2",
     "diffusers",
     "accelerate",
     "toml",
@@ -49,7 +53,7 @@ requirements = [
     "tabulate",
     "tensorboard",
     "optuna",
-    "stable-baselines3",
+    "stable-baselines3[extra]",
     "scikit-learn",
     "h5py",
     "pyyaml",
@@ -63,6 +67,9 @@ requirements = [
     "einops",
     "sphinx",
     "sphinx-rtd-theme",
+    "sphinx-test-reports",
+    "sphinxcontrib-plantuml",
+    "sphinx-needs",
     "numpy",
     "absl-py",
     "scipy",
@@ -71,6 +78,8 @@ requirements = [
     "pyyaml",
     "pynvml",
     "bitstring>=4.2",
+    "myst_parser",
+    "cvxpy"
 ]
 
 if is_cuda_available():
@@ -80,8 +89,12 @@ if is_cuda_available():
         "torch-tensorRT; platform_system == 'Linux'",
         "tensorRT; platform_system == 'Linux'",
         "cuda-python; platform_system == 'Linux'",
-        "pytorch-quantization; platform_system == 'Linux'",
+        "pytorch-quantization @ https://pypi.nvidia.com/pytorch-quantization/pytorch_quantization-2.1.2-py3-none-any.whl ",
     ]
+
+if not (get_system() == "darwin"):
+    requirements += ["nni"]
+
 
 setup(
     name="mase-tools",

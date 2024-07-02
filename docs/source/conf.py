@@ -41,6 +41,9 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
     "myst_parser",
+    'sphinx_needs',
+    'sphinxcontrib.test_reports',
+    'sphinxcontrib.plantuml'
 ]
 
 myst_enable_extensions = [

@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module fixed_relu #(
     /* verilator lint_off UNUSEDPARAM */
     parameter DATA_IN_0_PRECISION_0 = 8,
