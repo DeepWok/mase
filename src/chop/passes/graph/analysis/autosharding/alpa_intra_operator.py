@@ -176,9 +176,54 @@ def _extract_ilp(mg, mesh, pass_args={}):
                     - 1,
                 ]
 
+            # Below speeds up compilation but the number of constraints is the same?
+
+            # # Reshape e_var to match the dimensions of opt_var and in_opt_var
+            # e_var_reshaped = cp.reshape(e_var, (opt_var.shape[0], in_opt_var.shape[0]))
+
+            # # Create broadcasted versions of opt_var and in_opt_var
+            # opt_var_broadcast = cp.reshape(opt_var, (opt_var.shape[0], 1))
+            # in_opt_var_broadcast = cp.reshape(in_opt_var, (1, in_opt_var.shape[0]))
+
+            # # Define the vectorized constraints
+            # constr += [
+            #     e_var_reshaped <= opt_var_broadcast,
+            #     e_var_reshaped <= in_opt_var_broadcast,
+            #     e_var_reshaped >= opt_var_broadcast + in_opt_var_broadcast - 1,
+            # ]
+
     # Solve the ILP problem
     prob = cp.Problem(cp.Minimize(expr), constr)
     return mg, prob
+
+
+def _export_solution(mg):
+
+    nodes = [node for node in mg.fx_graph.nodes]
+    node_names = [node.name for node in nodes]
+    opt_vars = [
+        node.meta["mase"]["software"]["autosharding"]["opt_var"] for node in nodes
+    ]
+    opt_vals = [i.value if i is not None else None for i in opt_vars]
+    choices = [np.argmax(i) for i in opt_vals]
+
+    strategies = [
+        i.meta["mase"]["software"]["autosharding"]["op_strategy"].strategies
+        for i in nodes
+    ]
+    shardings = [strat[choices[idx]] for idx, strat in enumerate(strategies)]
+    map = [
+        {
+            "node": nodes[idx].name,
+            "input_specs": strat.input_specs,
+            "output_specs": strat.output_specs,
+        }
+        for idx, strat in enumerate(shardings)
+    ]
+
+    breakpoint()
+
+    return mg, {}
 
 
 def _mark_sharding(mg):
@@ -189,6 +234,8 @@ def _mark_sharding(mg):
             continue
 
         idx = np.where(opt_var.value == 1)
+
+    return mg, {}
 
 
 def alpa_intra_op_sharding_pass(mg, mesh, pass_args={}, debug=False):
@@ -211,8 +258,9 @@ def alpa_intra_op_sharding_pass(mg, mesh, pass_args={}, debug=False):
     mg, problem = _extract_ilp(mg, mesh, pass_args)
 
     logger.info(f"Solving the ILP...")
-    problem.solve()
+    problem.solve(verbose=True, scipy_options={"disp": True})
 
+    mg, _ = _export_solution(mg)
     mg, _ = _mark_sharding(mg)
 
     return mg, module_map
