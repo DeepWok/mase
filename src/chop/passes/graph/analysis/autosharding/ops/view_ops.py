@@ -1,5 +1,3 @@
-# mypy: allow-untyped-defs
-# Copyright (c) Meta Platforms, Inc. and affiliates
 from dataclasses import dataclass
 from typing import (
     Callable,
@@ -17,11 +15,8 @@ from typing import (
 import torch
 from torch import Tensor
 from torch.distributed._tensor._op_schema import (
-    OpSchema,
     OpStrategy,
     PlacementStrategy,
-    RuntimeSchemaInfo,
-    StrategyType,
 )
 from torch.distributed._tensor.api import Shard
 from torch.distributed._tensor.ops.utils import (
@@ -36,10 +31,6 @@ from torch.distributed._tensor.placement_types import (
     Replicate,
     TensorMeta,
 )
-from torch.distributed.device_mesh import DeviceMesh
-
-
-aten = torch.ops.aten
 
 Shape = Tuple[int, ...]
 
@@ -437,26 +428,6 @@ def dim_view_as_real(shape: Shape) -> DimMap:
     results.append(Split(InputDim(ndim - 1), (shape[-1], 2), 0))
     results.append(Split(InputDim(ndim - 1), (shape[-1], 2), 1))
     return tuple(results)
-
-
-def dim_reduction(
-    ndim: int, dim_or_dims: Optional[Union[int, Sequence[int]]], keepdim: bool
-) -> DimMap:
-    """
-    General fallback for reduction ops where Partial() does not apply.
-
-    This will cause incoming tensor to be replicated on the reducing dimensions.
-    """
-    if dim_or_dims is None:
-        dim_or_dims = tuple(range(ndim))
-    if isinstance(dim_or_dims, int):
-        dim_or_dims = (dim_or_dims,)
-    dim_or_dims = tuple(d if d >= 0 else d + ndim for d in dim_or_dims)
-    return tuple(
-        InputDim(i) if i not in dim_or_dims else Singleton()
-        for i in range(ndim)
-        if i not in dim_or_dims or keepdim
-    )
 
 
 dim_maps: Dict[Callable[..., torch.Tensor], Callable[..., DimMap]] = {

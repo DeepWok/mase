@@ -1,30 +1,21 @@
 # Adapted from https://github.com/pytorch/pytorch/blob/main/torch/distributed/_tensor/ops/matrix_ops.py
 
-import itertools
-from typing import List, Optional
-
 import torch
 from torch.distributed._tensor._op_schema import OpStrategy, PlacementStrategy
 from .basic_strategy import gen_einsum_strategies
 from torch.distributed._tensor.ops.utils import (
     infer_broadcast_dims_map,
     map_placements_after_broadcast,
-    register_op_strategy,
 )
 from torch.distributed._tensor.placement_types import (
     DTensorSpec,
-    Placement,
-    Replicate,
     Shard,
     TensorMeta,
 )
-from torch.distributed.device_mesh import DeviceMesh
 
 from ..utils import is_tensor_shardable
 
 from chop.ir.graph import MaseMetadata
-
-aten = torch.ops.aten
 
 
 def transpose_strategy(meta: MaseMetadata, mesh: tuple) -> OpStrategy:

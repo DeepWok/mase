@@ -1,39 +1,22 @@
-# mypy: allow-untyped-defs
-# Copyright (c) Meta Platforms, Inc. and affiliates
-import math
-from dataclasses import dataclass
-from enum import Enum
 from typing import cast, List, Optional, Sequence, Tuple, Union
 
 import torch
 from torch.distributed._tensor._op_schema import (
-    OpSchema,
     OpStrategy,
     PlacementStrategy,
-    RuntimeSchemaInfo,
-    TupleStrategy,
 )
 from torch.distributed._tensor.ops.utils import (
-    as_list,
-    expand_to_full_mesh_op_strategy,
     generate_redistribute_costs,
-    is_tensor_evenly_shardable,
     normalize_dim,
-    normalize_dims,
     normalize_to_torch_size,
-    register_op_strategy,
 )
 from torch.distributed._tensor.placement_types import (
     DTensorSpec,
-    Partial,
     Placement,
     Replicate,
     Shard,
 )
-from torch.distributed.device_mesh import DeviceMesh
 
-
-aten = torch.ops.aten
 
 def _replicate_dims_start_at(
     placements: Sequence[Placement], start_dim: int = 0
@@ -104,17 +87,23 @@ def softmax_strategy(meta, mesh):
 
 
 def layer_norm_strategy(meta, mesh):
-    
+
     # args must be: input, normalized_shape, weight, bias, eps
     # for None weight and bias, their corresponding objects will
     # be None as well. layer_norm_strategy returns one OpStrategy
     # for the triple return values (out, mean, rstd).
     assert len(meta["common"]["args"].keys()) == 5
 
-    input_strategy = meta.node.args[0].meta["mase"]["software"]["autosharding"]["op_strategy"]
+    input_strategy = meta.node.args[0].meta["mase"]["software"]["autosharding"][
+        "op_strategy"
+    ]
     normalized_shape = meta["common"]["args"]["normalized_shape"]
-    weight_strategy = meta.node.kwargs["weight"].meta["mase"]["software"]["autosharding"]["op_strategy"]
-    bias_strategy = meta.node.kwargs["bias"].meta["mase"]["software"]["autosharding"]["op_strategy"]
+    weight_strategy = meta.node.kwargs["weight"].meta["mase"]["software"][
+        "autosharding"
+    ]["op_strategy"]
+    bias_strategy = meta.node.kwargs["bias"].meta["mase"]["software"]["autosharding"][
+        "op_strategy"
+    ]
 
     # the current layer norm implementation requires that all
     # input DTensor's sharding must be in form of OpStrategy
@@ -148,14 +137,11 @@ def layer_norm_strategy(meta, mesh):
 
         if weight_strategy is not None:
             assert isinstance(weight_strategy, OpStrategy)
-            try:
-                # patching: weight and bias sharding strategy is currently always replicate
-                # So just take strategy at index 0
-                # TO DO: when sharding decomposed layer norm, cross product weight strategies
-                # with input/bias strategies for final OpStrategy
-                weight_src_spec = weight_strategy.strategies[0].output_spec
-            except:
-                breakpoint()
+            # patching: weight and bias sharding strategy is currently always replicate
+            # So just take strategy at index 0
+            # TO DO: when sharding decomposed layer norm, cross product weight strategies
+            # with input/bias strategies for final OpStrategy
+            weight_src_spec = weight_strategy.strategies[0].output_spec
 
             # for the weight tensor, we replicate it on all dims if necessary
             # TODO: we can avoid forcing the redistribution once we figure out
