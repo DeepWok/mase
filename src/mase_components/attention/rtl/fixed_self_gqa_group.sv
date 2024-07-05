@@ -42,7 +42,7 @@ module fixed_self_gqa_group #(
     parameter SOFTERMAX_OUT_WIDTH      = 16,
     parameter SOFTERMAX_OUT_FRAC_WIDTH = 4,
 
-    localparam TOTAL_HEAD_DIM = TOTAL_EMBEDDING_DIM / GROUP_SIZE,
+    localparam TOTAL_HEAD_DIM   = TOTAL_EMBEDDING_DIM / GROUP_SIZE,
     localparam COMPUTE_HEAD_DIM = COMPUTE_EMBEDDING_DIM / GROUP_SIZE
 ) (
     input logic clk,

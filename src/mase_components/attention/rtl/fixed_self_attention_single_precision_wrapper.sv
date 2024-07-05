@@ -7,7 +7,7 @@
  */
 
 module fixed_self_attention_single_precision_wrapper #(
-    parameter NUM_HEADS  = 12,
+    parameter NUM_HEADS = 12,
     parameter ACTIVATION = 0,
     parameter CHOSEN_PRECISION = "QUERY",
     parameter OUTPUT_ATTENTIONS = 0,
@@ -136,74 +136,74 @@ module fixed_self_attention_single_precision_wrapper #(
     input logic data_out_0_ready
 );
 
-fixed_self_attention #(
-    .NUM_HEADS  (NUM_HEADS),
-    .ACTIVATION (ACTIVATION),
+  fixed_self_attention #(
+      .NUM_HEADS (NUM_HEADS),
+      .ACTIVATION(ACTIVATION),
 
-    .DATA_IN_0_TENSOR_SIZE_DIM_0    (DATA_IN_0_TENSOR_SIZE_DIM_0),
-    .DATA_IN_0_TENSOR_SIZE_DIM_1    (DATA_IN_0_TENSOR_SIZE_DIM_1),
-    .DATA_IN_0_PARALLELISM_DIM_0    (DATA_IN_0_PARALLELISM_DIM_0),
-    .DATA_IN_0_PARALLELISM_DIM_1    (DATA_IN_0_PARALLELISM_DIM_1),
-    .DATA_IN_0_PRECISION_0  (DATA_IN_0_PRECISION_0),
-    .DATA_IN_0_PRECISION_1  (DATA_IN_0_PRECISION_1),
+      .DATA_IN_0_TENSOR_SIZE_DIM_0(DATA_IN_0_TENSOR_SIZE_DIM_0),
+      .DATA_IN_0_TENSOR_SIZE_DIM_1(DATA_IN_0_TENSOR_SIZE_DIM_1),
+      .DATA_IN_0_PARALLELISM_DIM_0(DATA_IN_0_PARALLELISM_DIM_0),
+      .DATA_IN_0_PARALLELISM_DIM_1(DATA_IN_0_PARALLELISM_DIM_1),
+      .DATA_IN_0_PRECISION_0      (DATA_IN_0_PRECISION_0),
+      .DATA_IN_0_PRECISION_1      (DATA_IN_0_PRECISION_1),
 
-    .WEIGHTS_PRE_TRANSPOSED (CHOSEN_WEIGHTS_PRE_TRANSPOSED),
-    .WEIGHT_TENSOR_SIZE_DIM_0  (CHOSEN_WEIGHT_TENSOR_SIZE_DIM_0),
-    .WEIGHT_TENSOR_SIZE_DIM_1  (CHOSEN_WEIGHT_TENSOR_SIZE_DIM_1),
-    .WEIGHT_PARALLELISM_DIM_0  (CHOSEN_WEIGHT_PARALLELISM_DIM_0),
-    .WEIGHT_PARALLELISM_DIM_1  (CHOSEN_WEIGHT_PARALLELISM_DIM_1),
-    .WEIGHT_PRECISION_0 (CHOSEN_WEIGHT_PRECISION_0),
-    .WEIGHT_PRECISION_1 (CHOSEN_WEIGHT_PRECISION_1),
+      .WEIGHTS_PRE_TRANSPOSED(CHOSEN_WEIGHTS_PRE_TRANSPOSED),
+      .WEIGHT_TENSOR_SIZE_DIM_0(CHOSEN_WEIGHT_TENSOR_SIZE_DIM_0),
+      .WEIGHT_TENSOR_SIZE_DIM_1(CHOSEN_WEIGHT_TENSOR_SIZE_DIM_1),
+      .WEIGHT_PARALLELISM_DIM_0(CHOSEN_WEIGHT_PARALLELISM_DIM_0),
+      .WEIGHT_PARALLELISM_DIM_1(CHOSEN_WEIGHT_PARALLELISM_DIM_1),
+      .WEIGHT_PRECISION_0(CHOSEN_WEIGHT_PRECISION_0),
+      .WEIGHT_PRECISION_1(CHOSEN_WEIGHT_PRECISION_1),
 
-    .HAS_BIAS   (CHOSEN_HAS_BIAS),
-    .BIAS_TENSOR_SIZE_DIM_0 (CHOSEN_BIAS_TENSOR_SIZE_DIM_0),
-    .BIAS_TENSOR_SIZE_DIM_1 (CHOSEN_BIAS_TENSOR_SIZE_DIM_1),
-    .BIAS_PARALLELISM_DIM_0 (CHOSEN_BIAS_PARALLELISM_DIM_0),
-    .BIAS_PARALLELISM_DIM_1 (CHOSEN_BIAS_PARALLELISM_DIM_1),
-    .BIAS_PRECISION_0   (CHOSEN_BIAS_PRECISION_0),
-    .BIAS_PRECISION_1   (CHOSEN_BIAS_PRECISION_1),
+      .HAS_BIAS   (CHOSEN_HAS_BIAS),
+      .BIAS_TENSOR_SIZE_DIM_0 (CHOSEN_BIAS_TENSOR_SIZE_DIM_0),
+      .BIAS_TENSOR_SIZE_DIM_1 (CHOSEN_BIAS_TENSOR_SIZE_DIM_1),
+      .BIAS_PARALLELISM_DIM_0 (CHOSEN_BIAS_PARALLELISM_DIM_0),
+      .BIAS_PARALLELISM_DIM_1 (CHOSEN_BIAS_PARALLELISM_DIM_1),
+      .BIAS_PRECISION_0   (CHOSEN_BIAS_PRECISION_0),
+      .BIAS_PRECISION_1   (CHOSEN_BIAS_PRECISION_1),
 
-    .DATA_OUT_0_TENSOR_SIZE_DIM_0   (DATA_OUT_0_TENSOR_SIZE_DIM_0),
-    .DATA_OUT_0_TENSOR_SIZE_DIM_1   (DATA_OUT_0_TENSOR_SIZE_DIM_1),
-    .DATA_OUT_0_PARALLELISM_DIM_0   (DATA_OUT_0_PARALLELISM_DIM_0),
-    .DATA_OUT_0_PARALLELISM_DIM_1   (DATA_OUT_0_PARALLELISM_DIM_1),
-    .DATA_OUT_0_PRECISION_0 (DATA_OUT_0_PRECISION_0),
-    .DATA_OUT_0_PRECISION_1 (DATA_OUT_0_PRECISION_1)
-) encoder_layer_0_attention_self_inst (
-    .clk(clk),
-    .rst(rst),
+      .DATA_OUT_0_TENSOR_SIZE_DIM_0   (DATA_OUT_0_TENSOR_SIZE_DIM_0),
+      .DATA_OUT_0_TENSOR_SIZE_DIM_1   (DATA_OUT_0_TENSOR_SIZE_DIM_1),
+      .DATA_OUT_0_PARALLELISM_DIM_0   (DATA_OUT_0_PARALLELISM_DIM_0),
+      .DATA_OUT_0_PARALLELISM_DIM_1   (DATA_OUT_0_PARALLELISM_DIM_1),
+      .DATA_OUT_0_PRECISION_0 (DATA_OUT_0_PRECISION_0),
+      .DATA_OUT_0_PRECISION_1 (DATA_OUT_0_PRECISION_1)
+  ) encoder_layer_0_attention_self_inst (
+      .clk(clk),
+      .rst(rst),
 
-    .data_in_0             (data_in_0),
-    .data_in_0_valid       (data_in_0_valid),
-    .data_in_0_ready       (data_in_0_ready),
+      .data_in_0      (data_in_0),
+      .data_in_0_valid(data_in_0_valid),
+      .data_in_0_ready(data_in_0_ready),
 
-    .weight_query          (query_weight),
-    .weight_query_valid    (query_weight_valid),
-    .weight_query_ready    (query_weight_ready),
+      .weight_query      (query_weight),
+      .weight_query_valid(query_weight_valid),
+      .weight_query_ready(query_weight_ready),
 
-    .bias_query            (query_bias),
-    .bias_query_valid      (query_bias_valid),
-    .bias_query_ready      (query_bias_ready),
+      .bias_query      (query_bias),
+      .bias_query_valid(query_bias_valid),
+      .bias_query_ready(query_bias_ready),
 
-    .weight_key            (key_weight),
-    .weight_key_valid      (key_weight_valid),
-    .weight_key_ready      (key_weight_ready),
+      .weight_key      (key_weight),
+      .weight_key_valid(key_weight_valid),
+      .weight_key_ready(key_weight_ready),
 
-    .bias_key              (key_bias),
-    .bias_key_valid        (key_bias_valid),
-    .bias_key_ready        (key_bias_ready),
+      .bias_key      (key_bias),
+      .bias_key_valid(key_bias_valid),
+      .bias_key_ready(key_bias_ready),
 
-    .weight_value          (value_weight),
-    .weight_value_valid    (value_weight_valid),
-    .weight_value_ready    (value_weight_ready),
+      .weight_value      (value_weight),
+      .weight_value_valid(value_weight_valid),
+      .weight_value_ready(value_weight_ready),
 
-    .bias_value            (value_bias),
-    .bias_value_valid      (value_bias_valid),
-    .bias_value_ready      (value_bias_ready),
+      .bias_value      (value_bias),
+      .bias_value_valid(value_bias_valid),
+      .bias_value_ready(value_bias_ready),
 
-    .data_out_0            (data_out_0),
-    .data_out_0_valid      (data_out_0_valid),
-    .data_out_0_ready      (data_out_0_ready)
-);
+      .data_out_0      (data_out_0),
+      .data_out_0_valid(data_out_0_valid),
+      .data_out_0_ready(data_out_0_ready)
+  );
 
 endmodule

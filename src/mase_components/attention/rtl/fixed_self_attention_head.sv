@@ -269,11 +269,11 @@ module fixed_self_attention_head #(
       .clk(clk),
       .rst(rst),
 
-      .data_in (out_casted),
+      .data_in(out_casted),
       .data_in_valid(out_cast_valid),
       .data_in_ready(out_cast_ready),
 
-      .data_out (out),
+      .data_out(out),
       .data_out_valid(out_valid),
       .data_out_ready(out_ready)
   );

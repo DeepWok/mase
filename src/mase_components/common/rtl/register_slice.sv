@@ -40,10 +40,10 @@ module register_slice #(
 
   always_comb begin
     // empty buffer or no back pressure
-    data_in_ready  = (~shift_reg) | data_out_ready;
+    data_in_ready = (~shift_reg) | data_out_ready;
     // dummy data_iniring
     data_out_valid = shift_reg;
-    data_out  = buffer;
+    data_out = buffer;
   end
 
 endmodule

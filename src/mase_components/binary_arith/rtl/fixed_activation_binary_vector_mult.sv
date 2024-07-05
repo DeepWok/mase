@@ -67,10 +67,10 @@ module fixed_activation_binary_vector_mult #(
       .rst           (rst),
       .data_in_valid (product_data_in_valid),
       .data_in_ready (product_data_in_ready),
-      .data_in  (product_data_in),
+      .data_in       (product_data_in),
       .data_out_valid(product_data_out_valid),
       .data_out_ready(product_data_out_ready),
-      .data_out (product_data_out)
+      .data_out      (product_data_out)
   );
 
   // Casting array for product vector 

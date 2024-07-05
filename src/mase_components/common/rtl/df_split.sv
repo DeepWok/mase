@@ -50,18 +50,18 @@ module df_split #(
     input logic data_out_1_ready
 );
 
-split2 split_i (
-    .data_in_valid  (data_in_0_valid),
-    .data_in_ready  (data_in_0_ready),
-    .data_out_valid ({data_out_0_valid, data_out_1_valid}),
-    .data_out_ready ({data_out_0_ready, data_out_1_ready})
-);
+  split2 split_i (
+      .data_in_valid (data_in_0_valid),
+      .data_in_ready (data_in_0_ready),
+      .data_out_valid({data_out_0_valid, data_out_1_valid}),
+      .data_out_ready({data_out_0_ready, data_out_1_ready})
+  );
 
-for (genvar i=0; i<DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1; i++) begin
+  for (genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1; i++) begin
     always_comb begin
-        data_out_0[i] = data_in_0[i];
-        data_out_1[i] = data_in_0[i];
+      data_out_0[i] = data_in_0[i];
+      data_out_1[i] = data_in_0[i];
     end
-end
+  end
 
 endmodule

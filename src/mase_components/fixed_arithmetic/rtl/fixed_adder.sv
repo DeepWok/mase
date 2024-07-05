@@ -49,67 +49,67 @@ module fixed_adder #(
     input logic data_out_0_ready
 );
 
-localparam MAX_PRECISION_0 = DATA_IN_0_PRECISION_0 > DATA_IN_1_PRECISION_0 ? DATA_IN_0_PRECISION_0 : DATA_IN_1_PRECISION_0;
+  localparam MAX_PRECISION_0 = DATA_IN_0_PRECISION_0 > DATA_IN_1_PRECISION_0 ? DATA_IN_0_PRECISION_0 : DATA_IN_1_PRECISION_0;
 
-localparam SUM_PRECISION_0 = MAX_PRECISION_0 + 1;
+  localparam SUM_PRECISION_0 = MAX_PRECISION_0 + 1;
 
-// ! TO DO: check if this is correct
-localparam SUM_PRECISION_1 = DATA_IN_0_PRECISION_1;
+  // ! TO DO: check if this is correct
+  localparam SUM_PRECISION_1 = DATA_IN_0_PRECISION_1;
 
-// * Declarations
-// * ---------------------------------------------------------------------------------------------------
+  // * Declarations
+  // * ---------------------------------------------------------------------------------------------------
 
-logic joined_input_valid;
-logic joined_input_ready;
-logic [SUM_PRECISION_0-1:0] add_result [DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0];
-logic [DATA_OUT_0_PRECISION_0-1:0] cast_out [DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0];
+  logic joined_input_valid;
+  logic joined_input_ready;
+  logic [SUM_PRECISION_0-1:0] add_result [DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0];
+  logic [DATA_OUT_0_PRECISION_0-1:0] cast_out [DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0];
 
-// * Instances
-// * ---------------------------------------------------------------------------------------------------
+  // * Instances
+  // * ---------------------------------------------------------------------------------------------------
 
-// * Wait until both inputs are available
-join2 join_inst (
-    .data_in_valid ({data_in_0_valid, data_in_1_valid}),
-    .data_in_ready ({data_in_0_ready, data_in_1_ready}),
-    .data_out_valid(joined_input_valid),
-    .data_out_ready(joined_input_ready)
-);
+  // * Wait until both inputs are available
+  join2 join_inst (
+      .data_in_valid ({data_in_0_valid, data_in_1_valid}),
+      .data_in_ready ({data_in_0_ready, data_in_1_ready}),
+      .data_out_valid(joined_input_valid),
+      .data_out_ready(joined_input_ready)
+  );
 
-// * Cast the sum to the requested output precision
-fixed_cast #(
-    .IN_SIZE       (DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1),
-    .IN_WIDTH      (SUM_PRECISION_0),
-    .IN_FRAC_WIDTH (SUM_PRECISION_1),
-    .OUT_WIDTH     (DATA_OUT_0_PRECISION_0),
-    .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1)
-) bias_cast_i (
-    .data_in (add_result),
-    .data_out(cast_out)
-);
+  // * Cast the sum to the requested output precision
+  fixed_cast #(
+      .IN_SIZE       (DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1),
+      .IN_WIDTH      (SUM_PRECISION_0),
+      .IN_FRAC_WIDTH (SUM_PRECISION_1),
+      .OUT_WIDTH     (DATA_OUT_0_PRECISION_0),
+      .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1)
+  ) bias_cast_i (
+      .data_in (add_result),
+      .data_out(cast_out)
+  );
 
-// * Register the output
-unpacked_register_slice #(
-    .DATA_WIDTH(DATA_OUT_0_PRECISION_0),
-    .IN_SIZE   (DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1)
-) register_slice_i (
-    .clk(clk),
-    .rst(rst),
+  // * Register the output
+  unpacked_register_slice #(
+      .DATA_WIDTH(DATA_OUT_0_PRECISION_0),
+      .IN_SIZE   (DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1)
+  ) register_slice_i (
+      .clk(clk),
+      .rst(rst),
 
-    .data_in (cast_out),
-    .data_in_valid(joined_input_valid),
-    .data_in_ready(joined_input_ready),
+      .data_in(cast_out),
+      .data_in_valid(joined_input_valid),
+      .data_in_ready(joined_input_ready),
 
-    .data_out (data_out_0),
-    .data_out_valid(data_out_0_valid),
-    .data_out_ready(data_out_0_ready)
-);
+      .data_out(data_out_0),
+      .data_out_valid(data_out_0_valid),
+      .data_out_ready(data_out_0_ready)
+  );
 
-// * Logic
-// * ---------------------------------------------------------------------------------------------------
+  // * Logic
+  // * ---------------------------------------------------------------------------------------------------
 
-// * Do the sum
-for (genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1; i++) begin
+  // * Do the sum
+  for (genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1; i++) begin
     assign add_result[i] = data_in_0[i] + data_in_1[i];
-end
+  end
 
 endmodule

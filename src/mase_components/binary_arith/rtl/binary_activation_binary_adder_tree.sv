@@ -85,10 +85,10 @@ module binary_activation_binary_adder_tree #(
         .rst           (rst),
         .data_in_valid (vars[i].valid),
         .data_in_ready (vars[i].ready),
-        .data_in  (cast_sum),
+        .data_in       (cast_sum),
         .data_out_valid(vars[i+1].valid),
         .data_out_ready(vars[i+1].ready),
-        .data_out (cast_data)
+        .data_out      (cast_data)
     );
 
     // Casting array for vars[i+1].data 

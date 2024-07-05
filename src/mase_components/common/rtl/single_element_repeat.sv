@@ -42,7 +42,7 @@ module single_element_repeat #(
     // Counters
     logic [CTR_WIDTH-1:0] count;
   } SELF_T;
-  
+
   SELF_T self, next_self;
 
 

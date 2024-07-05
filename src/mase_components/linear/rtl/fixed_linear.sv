@@ -180,23 +180,23 @@ module fixed_linear #(
     );
 
     unpacked_repeat_circular_buffer #(
-        .DATA_WIDTH (BIAS_PRECISION_0),
-        .IN_NUM     (BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1),
-        .REPEAT     (IN_0_DEPTH_DIM_1),
-        .SIZE       (BIAS_DEPTH_DIM_0)
+        .DATA_WIDTH(BIAS_PRECISION_0),
+        .IN_NUM    (BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1),
+        .REPEAT    (IN_0_DEPTH_DIM_1),
+        .SIZE      (BIAS_DEPTH_DIM_0)
     ) bias_buffer_inst (
         .clk,
         .rst,
-    
+
         // Input streaming port
-        .in_data    (bias),
-        .in_valid   (bias_valid),
-        .in_ready   (bias_ready),
-    
+        .in_data (bias),
+        .in_valid(bias_valid),
+        .in_ready(bias_ready),
+
         // Output streaming port
-        .out_data   (bias_buffered),
-        .out_valid  (bias_buffered_valid),
-        .out_ready  (bias_buffered_ready)
+        .out_data (bias_buffered),
+        .out_valid(bias_buffered_valid),
+        .out_ready(bias_buffered_ready)
     );
 
     unpacked_register_slice #(
@@ -206,11 +206,11 @@ module fixed_linear #(
         .clk(clk),
         .rst(rst),
 
-        .data_in (add_bias_in),
+        .data_in(add_bias_in),
         .data_in_valid(add_bias_in_valid),
         .data_in_ready(add_bias_in_ready),
 
-        .data_out (data_out_0),
+        .data_out(data_out_0),
         .data_out_valid(data_out_0_valid),
         .data_out_ready(data_out_0_ready)
     );
@@ -243,9 +243,13 @@ module fixed_linear #(
         .data_out(bias_casted)
     );
 
-    for (genvar i_0 = 0; i_0 < DATA_OUT_0_PARALLELISM_DIM_0 ; i_0++) begin
-      for (genvar i_1 = 0; i_1 < DATA_OUT_0_PARALLELISM_DIM_1 ; i_1++) begin
-        assign add_bias_in [i_1 * DATA_OUT_0_PARALLELISM_DIM_0 + i_0] = $signed(matmul_out[i_1 * DATA_OUT_0_PARALLELISM_DIM_0 + i_0])  + $signed(bias_casted[i_0]);
+    for (genvar i_0 = 0; i_0 < DATA_OUT_0_PARALLELISM_DIM_0; i_0++) begin
+      for (genvar i_1 = 0; i_1 < DATA_OUT_0_PARALLELISM_DIM_1; i_1++) begin
+        assign add_bias_in[i_1*DATA_OUT_0_PARALLELISM_DIM_0+i_0] = $signed(
+            matmul_out[i_1*DATA_OUT_0_PARALLELISM_DIM_0+i_0]
+        ) + $signed(
+            bias_casted[i_0]
+        );
       end
     end
 
