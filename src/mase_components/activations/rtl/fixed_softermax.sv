@@ -64,13 +64,13 @@ module fixed_softermax #(
     assign in_data_unflattened [i] = data_in_0 [(i + 1) * DATA_IN_0_PARALLELISM_DIM_0 - 1 : i * DATA_IN_0_PARALLELISM_DIM_0];
 
     fixed_softermax_1d #(
-        .TOTAL_DIM      (DATA_IN_0_TENSOR_SIZE_DIM_0),
-        .PARALLELISM    (DATA_IN_0_PARALLELISM_DIM_0),
-        .IN_WIDTH       (DATA_IN_0_PRECISION_0),
-        .IN_FRAC_WIDTH  (DATA_IN_0_PRECISION_1),
-        .POW2_WIDTH     (DATA_OUT_0_PRECISION_0),
-        .OUT_WIDTH      (DATA_OUT_0_PRECISION_0),
-        .OUT_FRAC_WIDTH (DATA_OUT_0_PRECISION_1)
+        .TOTAL_DIM     (DATA_IN_0_TENSOR_SIZE_DIM_0),
+        .PARALLELISM   (DATA_IN_0_PARALLELISM_DIM_0),
+        .IN_WIDTH      (DATA_IN_0_PRECISION_0),
+        .IN_FRAC_WIDTH (DATA_IN_0_PRECISION_1),
+        .POW2_WIDTH    (DATA_OUT_0_PRECISION_0),
+        .OUT_WIDTH     (DATA_OUT_0_PRECISION_0),
+        .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1)
     ) fixed_softermax_1d_i (
         .clk,
         .rst,
