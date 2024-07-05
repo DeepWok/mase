@@ -200,8 +200,7 @@ def transform_graph(
 
                 # Summarize to show what has been quantized
                 PASSES["summarize_quantization"](
-                    graph, 
-                    {"save_dir": pass_save_dir, "original_graph": ori_graph}
+                    graph, {"save_dir": pass_save_dir, "original_graph": ori_graph}
                 )
 
                 # Then calibrate the model using the fake quantization to set AMAXs
