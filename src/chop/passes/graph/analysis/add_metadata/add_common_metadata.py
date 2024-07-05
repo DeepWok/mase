@@ -296,7 +296,7 @@ def add_common_metadata_analysis_pass(
     :param pass_args: this pass does not need any arguments, defaults to None
     :type pass_args: _type_, optional, "add_value" controls whether tensor values would be added to the meta data, defaults to True
 
-    pass_args can take 
+    pass_args can take
 
     - dummy_in: a dictionary of dummy inputs to the graph
 

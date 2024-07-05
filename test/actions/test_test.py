@@ -62,7 +62,6 @@ def test_test():
         model_name=model,
     )
 
-
     params = {
         "model": model,
         "model_info": model_info,

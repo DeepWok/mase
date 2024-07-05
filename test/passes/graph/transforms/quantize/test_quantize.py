@@ -96,4 +96,5 @@ def test_quantize():
     }
     summarize_quantization_analysis_pass(mg, pass_args)
 
+
 test_quantize()

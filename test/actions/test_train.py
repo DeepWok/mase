@@ -62,7 +62,6 @@ def test_train():
         model_name=model,
     )
 
-
     train_params = {
         "model": model,
         "model_info": model_info,

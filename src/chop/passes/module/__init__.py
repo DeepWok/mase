@@ -11,6 +11,6 @@ TRANSFORM_PASSES = [
 PASSES = {
     # analysis
     "calculate_avg_bits": calculate_avg_bits_module_analysis_pass,
-    # transform 
+    # transform
     "quantize": quantize_module_transform_pass,
 }

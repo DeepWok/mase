@@ -10,6 +10,7 @@ def is_cuda_available():
     except:
         return False
 
+
 def get_system():
     return sys.platform
 
@@ -79,7 +80,7 @@ requirements = [
     "pynvml",
     "bitstring>=4.2",
     "myst_parser",
-    "cvxpy"
+    "cvxpy",
 ]
 
 if is_cuda_available():

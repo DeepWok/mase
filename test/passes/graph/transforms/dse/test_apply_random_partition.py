@@ -55,9 +55,13 @@ def test_apply_random_partition():
     # add metadata for hardware in each mase node of graph
     mg, _ = passes.add_hardware_metadata_analysis_pass(mg, pass_args=pass_args)
 
-    mg, _ = passes.partition_to_multi_device_transform_pass(mg, pass_args={"cluster_config": None, "device_count": 1, "mode": "naive"})
+    mg, _ = passes.partition_to_multi_device_transform_pass(
+        mg, pass_args={"cluster_config": None, "device_count": 1, "mode": "naive"}
+    )
 
-    mg, _ = passes.report_node_hardware_type_analysis_pass(mg, pass_args=pass_args)  # pretty print
+    mg, _ = passes.report_node_hardware_type_analysis_pass(
+        mg, pass_args=pass_args
+    )  # pretty print
 
 
 if __name__ == "__main__":

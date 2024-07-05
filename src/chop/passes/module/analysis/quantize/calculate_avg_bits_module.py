@@ -22,7 +22,7 @@ def calculate_avg_bits_module_analysis_pass(
 
     analysis results is a dictionary with the following keys:
         - 'average_bitwidth' (float): The average number of bits per value for weight.
-    
+
     Examples output:
 
     .. code-block:: python

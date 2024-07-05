@@ -4,7 +4,6 @@ import torch
 from torch.autograd import Variable
 
 
-
 import pytorch_quantization.calib as calib
 import pytorch_quantization.nn as qnn
 import tensorrt as trt
@@ -13,6 +12,7 @@ from pytorch_quantization import quant_modules
 from pytorch_quantization.tensor_quant import QuantDescriptor
 
 from .utils import FakeQuantizer, check_for_value_in_dict, get_calibrator_dataloader
+
 
 def tensorrt_fake_quantize_transform_pass(graph, pass_args=None):
     """
@@ -53,6 +53,7 @@ def tensorrt_fake_quantize_transform_pass(graph, pass_args=None):
 
     return graph, {}
 
+
 def tensorrt_calibrate_transform_pass(graph, pass_args=None):
     """
     Performs calibration on a model graph by deciding the best maximum absolute values (amax) for activations using specified calibrators.
@@ -84,6 +85,7 @@ def tensorrt_calibrate_transform_pass(graph, pass_args=None):
     graph = calibrator.calibrate_model(graph)
     graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
     return graph, {}
+
 
 class Calibrator:
     def __init__(self, config):
@@ -197,9 +199,7 @@ class Calibrator:
                             )
                             # perform an analysis pass if required
                             if self.config["post_calibration_analysis"]:
-                                self.eval_calibration(
-                                    graph, f"{calib}_{percentile}"
-                                )
+                                self.eval_calibration(graph, f"{calib}_{percentile}")
                         continue
                     case "mse":
                         self.compute_amax(graph.model, method=calib)

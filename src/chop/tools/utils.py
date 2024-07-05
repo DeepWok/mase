@@ -266,14 +266,16 @@ def set_excepthook():
         pdb.post_mortem(exc_traceback)
 
     sys.excepthook = excepthook
-    
+
+
 def deepsetattr(obj, attr, value):
     """Recurses through an attribute chain to set the ultimate value."""
     attrs = attr.split(".")
     if len(attrs) > 1:
-        deepsetattr(getattr(obj, attrs[0]), '.'.join(attrs[1:]), value)
+        deepsetattr(getattr(obj, attrs[0]), ".".join(attrs[1:]), value)
     else:
         setattr(obj, attr, value)
+
 
 def deepgetattr(obj, attr, default=None):
     """Recurses through an attribute chain to get the ultimate value."""

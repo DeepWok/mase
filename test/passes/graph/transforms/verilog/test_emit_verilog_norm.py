@@ -198,7 +198,9 @@ def emit_verilog_norm(net, x):
     )
 
     # Add hardware metadata
-    mg, _ = add_hardware_metadata_analysis_pass(mg, pass_args={"max_parallelism": [2]*4})
+    mg, _ = add_hardware_metadata_analysis_pass(
+        mg, pass_args={"max_parallelism": [2] * 4}
+    )
 
     # Emit top level file
     emit_cfg = {

@@ -4,7 +4,7 @@ from importlib.util import find_spec
 logger = logging.getLogger(__name__)
 
 
-def check_deps_tensorRT_pass(silent: bool=True):
+def check_deps_tensorRT_pass(silent: bool = True):
     dependencies = ["pytorch_quantization", "tensorrt", "pynvml", "pycuda", "cuda"]
 
     availabilities = [find_spec(dep) is not None for dep in dependencies]

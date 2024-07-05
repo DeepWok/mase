@@ -24,7 +24,9 @@ sys.path.append(
 
 
 from chop.passes.graph.interface import (
-    load_node_meta_param_interface_pass, save_node_meta_param_interface_pass)
+    load_node_meta_param_interface_pass,
+    save_node_meta_param_interface_pass,
+)
 
 from chop.passes.graph.analysis import (
     add_common_metadata_analysis_pass,

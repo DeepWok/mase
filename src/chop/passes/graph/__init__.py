@@ -44,7 +44,6 @@ from .interface import (
 from .transforms.quantize.quant_parsers import parse_node_config
 
 
-
 ANALYSIS_PASSES = [
     "init_metadata",
     "add_common_metadata",
@@ -107,7 +106,6 @@ PASSES = {
     "verify_hardware_metadata": verify_hardware_metadata_analysis_pass,
     "verify_metadata": verify_metadata_analysis_pass,
     "verify_software_metadata": verify_software_metadata_analysis_pass,
-
     # interface
     "load_mase_graph": load_mase_graph_interface_pass,
     "load_node_meta_param": load_node_meta_param_interface_pass,
@@ -131,10 +129,12 @@ from chop.tools.check_dependency import check_deps_tensorRT_pass
 
 # add tensorrt passes if dependencies are correctly installed
 if check_deps_tensorRT_pass(silent=True):
-    from chop.passes.graph.analysis.runtime.runtime_analysis import runtime_analysis_pass
+    from chop.passes.graph.analysis.runtime.runtime_analysis import (
+        runtime_analysis_pass,
+    )
+
     ANALYSIS_PASSES.append("runtime_analysis_pass")
     PASSES["runtime_analysis_pass"] = runtime_analysis_pass
-
 
     from .interface import tensorrt_engine_interface_pass
 
@@ -153,4 +153,6 @@ if check_deps_tensorRT_pass(silent=True):
 
     PASSES["tensorrt_calibrate_transform_pass"] = tensorrt_calibrate_transform_pass
     PASSES["tensorrt_fine_tune_transform_pass"] = tensorrt_fine_tune_transform_pass
-    PASSES["tensorrt_fake_quantize_transform_pass"] = tensorrt_fake_quantize_transform_pass
+    PASSES["tensorrt_fake_quantize_transform_pass"] = (
+        tensorrt_fake_quantize_transform_pass
+    )

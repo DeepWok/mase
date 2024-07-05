@@ -40,6 +40,7 @@ QUANTIZEABLE_OP = {
     "maxPool3d": qnn.QuantMaxPool3d,
 }
 
+
 class FakeQuantizer:
     def __init__(self, config):
         self.config = config
@@ -241,9 +242,7 @@ class FakeQuantizer:
         """Retrieve specific configuration from the instance's config dictionary or return default."""
         try:
             config = self.config.get(name) or self.config.get("default")
-            config["input"] = config.get(
-                "input", self.config["default"].get("input")
-            )
+            config["input"] = config.get("input", self.config["default"].get("input"))
             config["weight"] = config.get(
                 "weight", self.config["default"].get("weight")
             )
@@ -337,6 +336,7 @@ class FakeQuantizer:
         self.logger.info("Fake quantization applied to PyTorch model.")
         return graph
 
+
 class Int8Calibrator(trt.IInt8EntropyCalibrator2):
     def __init__(self, nCalibration, input_generator, cache_file_path):
         trt.IInt8EntropyCalibrator2.__init__(self)
@@ -379,6 +379,7 @@ class Int8Calibrator(trt.IInt8EntropyCalibrator2):
         print("Succeed saving int8 cache!")
         return
 
+
 class PowerMonitor(threading.Thread):
     def __init__(self, config):
         super().__init__()  # Call the initializer of the base class, threading.Thread
@@ -400,27 +401,23 @@ class PowerMonitor(threading.Thread):
     def stop(self):
         self.running = False  # Stop the monitoring loop
 
+
 def prepare_save_path(config, method: str, suffix: str):
     """Creates and returns a save path for the model."""
     root = Path(__file__).resolve().parents[7]
     current_date = datetime.now().strftime("%Y-%m-%d")
-    model_dir = (
-        f'{config["model"]}_{config["task"]}_{config["dataset"]}_{current_date}'
-    )
-    save_dir = (
-        root / f"mase_output/tensorrt/quantization/{model_dir}" / current_date
-    )
+    model_dir = f'{config["model"]}_{config["task"]}_{config["dataset"]}_{current_date}'
+    save_dir = root / f"mase_output/tensorrt/quantization/{model_dir}" / current_date
     save_dir.mkdir(parents=True, exist_ok=True)
 
     existing_versions = len(os.listdir(save_dir))
-    version = (
-        "version_0" if existing_versions == 0 else f"version_{existing_versions}"
-    )
+    version = "version_0" if existing_versions == 0 else f"version_{existing_versions}"
 
     save_dir = save_dir / version
     save_dir.mkdir(parents=True, exist_ok=True)
 
     return save_dir / f"model.{suffix}"
+
 
 def check_for_value_in_dict(d, value):
     """Checks if a value is in a hierarchical dictionary."""
@@ -438,6 +435,7 @@ def check_for_value_in_dict(d, value):
             if check_for_value_in_dict(item, value):  # Recurse for each item
                 return True
     return False
+
 
 def get_calibrator_dataloader(original_dataloader, num_batches=200):
     # Get the batch size from the original DataLoader

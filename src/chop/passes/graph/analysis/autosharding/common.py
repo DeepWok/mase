@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class SpmdShard(Enum):
     S_0 = 0
     S_1 = 1

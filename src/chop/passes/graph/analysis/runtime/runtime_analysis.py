@@ -17,7 +17,6 @@ import tensorrt as trt
 from cuda import cudart
 
 
-
 def runtime_analysis_pass(model, pass_args=None):
     """
     Evaluates the performance of a model by analyzing its inference speed, accuracy, and other relevant metrics.
@@ -91,8 +90,7 @@ class RuntimeAnalysis:
                         self.runtime = trt.Runtime(TRT_LOGGER)
                         self.num_io = self.engine.num_io_tensors
                         self.lTensorName = [
-                            self.engine.get_tensor_name(i)
-                            for i in range(self.num_io)
+                            self.engine.get_tensor_name(i) for i in range(self.num_io)
                         ]
                         self.n_Input = [
                             self.engine.get_tensor_mode(self.lTensorName[i])
@@ -155,9 +153,7 @@ class RuntimeAnalysis:
 
         existing_versions = len(os.listdir(save_dir))
         version = (
-            "version_0"
-            if existing_versions == 0
-            else f"version_{existing_versions}"
+            "version_0" if existing_versions == 0 else f"version_{existing_versions}"
         )
 
         save_dir = save_dir / version
@@ -193,9 +189,7 @@ class RuntimeAnalysis:
 
         # Join all IO information into a single string and log it
         io_info_str = "\n".join(io_info_lines)
-        self.logger.info(
-            f"\nTensorRT Engine Input/Output Information:\n{io_info_str}"
-        )
+        self.logger.info(f"\nTensorRT Engine Input/Output Information:\n{io_info_str}")
 
     def infer_mg_cpu(self, model, input_data):
         # Ensure model and input data are on CPU
@@ -249,9 +243,7 @@ class RuntimeAnalysis:
             bufferH.append(
                 np.empty(
                     self.context.get_tensor_shape(self.lTensorName[i]),
-                    dtype=trt.nptype(
-                        self.engine.get_tensor_dtype(self.lTensorName[i])
-                    ),
+                    dtype=trt.nptype(self.engine.get_tensor_dtype(self.lTensorName[i])),
                 )
             )
         bufferD = []
@@ -463,8 +455,7 @@ class RuntimeAnalysis:
             latencies.append(latency)
 
             avg_power = (
-                sum(power_monitor.power_readings)
-                / len(power_monitor.power_readings)
+                sum(power_monitor.power_readings) / len(power_monitor.power_readings)
                 if power_monitor.power_readings
                 else 0
             )
@@ -490,13 +481,9 @@ class RuntimeAnalysis:
 
         # Convert metrics to float if they are tensors
         avg_precision = (
-            avg_precision.item()
-            if torch.is_tensor(avg_precision)
-            else avg_precision
+            avg_precision.item() if torch.is_tensor(avg_precision) else avg_precision
         )
-        avg_recall = (
-            avg_recall.item() if torch.is_tensor(avg_recall) else avg_recall
-        )
+        avg_recall = avg_recall.item() if torch.is_tensor(avg_recall) else avg_recall
         avg_f1 = avg_f1.item() if torch.is_tensor(avg_f1) else avg_f1
 
         # Reset metrics for the next configuration
@@ -510,9 +497,7 @@ class RuntimeAnalysis:
         recorded_accs.append(acc_avg)
         avg_latency = sum(latencies) / len(latencies)
         avg_gpu_power_usage = sum(gpu_power_usages) / len(gpu_power_usages)
-        avg_gpu_energy_usage = (avg_gpu_power_usage * 1000) * (
-            avg_latency / 3600000
-        )
+        avg_gpu_energy_usage = (avg_gpu_power_usage * 1000) * (avg_latency / 3600000)
 
         metrics = [
             ["Average " + dataset + " Accuracy", f"{acc_avg:.5g}"],

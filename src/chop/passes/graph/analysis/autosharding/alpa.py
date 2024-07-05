@@ -1,4 +1,3 @@
-
 import functools
 
 import torch.nn as nn
@@ -14,13 +13,16 @@ from .alpa_cost_modelling import get_resharding_matrix
 logger = get_logger(__name__)
 import sys, pdb, traceback
 
+
 def excepthook(exc_type, exc_value, exc_traceback):
     traceback.print_exception(exc_type, exc_value, exc_traceback)
     print("\nEntering debugger...")
     pdb.post_mortem(exc_traceback)
 
+
 # Set the custom exception hook
 sys.excepthook = excepthook
+
 
 def deepgetattr(obj, attr, default=None):
     """Recurses through an attribute chain to get the ultimate value."""
@@ -29,11 +31,13 @@ def deepgetattr(obj, attr, default=None):
     except AttributeError:
         return default
 
+
 def get_node_target(node):
     if isinstance(node.target, str):
         return deepgetattr(node.meta["mase"].model, node.target, None)
     else:
         return node.target
+
 
 def assign_default_sharding(node):
     rank = len(node.meta["mase"]["common"]["results"]["data_out_0"]["shape"])
@@ -44,6 +48,7 @@ def assign_default_sharding(node):
         "communication_cost_vector": [0],
         "opt_var": np.array([1]),
     }
+
 
 def alpa_intra_op_sharding_pass(mg, mesh):
     """
@@ -62,7 +67,11 @@ def alpa_intra_op_sharding_pass(mg, mesh):
 
         target = get_node_target(node)
         target_cls = type(target)
-        num_params = len([i for i in target.parameters()]) if isinstance(target, nn.Module) else 0
+        num_params = (
+            len([i for i in target.parameters()])
+            if isinstance(target, nn.Module)
+            else 0
+        )
 
         if node.op != "call_module" or num_params == 0:
             assign_default_sharding(node)
@@ -98,13 +107,22 @@ def alpa_intra_op_sharding_pass(mg, mesh):
 
                 resharding_costs = get_resharding_matrix(
                     mesh,
-                    src_shardings = in_node.meta["mase"]["software"]["autosharding"]["valid_output_shardings"], 
-                    dest_shardings = [sharding["data_in_0"] for sharding in node.meta["mase"]["software"]["autosharding"]["valid_input_shardings"]],
-                    dest_node_meta = node.meta["mase"]
+                    src_shardings=in_node.meta["mase"]["software"]["autosharding"][
+                        "valid_output_shardings"
+                    ],
+                    dest_shardings=[
+                        sharding["data_in_0"]
+                        for sharding in node.meta["mase"]["software"]["autosharding"][
+                            "valid_input_shardings"
+                        ]
+                    ],
+                    dest_node_meta=node.meta["mase"],
                 ).flatten()
 
                 # Formulate resharding cost term with linearized variable
-                e_var = cp.Variable(opt_var.shape[0] * in_opt_var.shape[0], boolean=True)
+                e_var = cp.Variable(
+                    opt_var.shape[0] * in_opt_var.shape[0], boolean=True
+                )
                 expr += e_var.T @ resharding_costs
                 constr += [
                     cp.sum(e_var) == 1,
@@ -115,14 +133,21 @@ def alpa_intra_op_sharding_pass(mg, mesh):
                     constr += [
                         e_var[i] <= opt_var[i // in_opt_var.shape[0]],
                         e_var[i] <= in_opt_var[i % in_opt_var.shape[0]],
-                        e_var[i] >= opt_var[i // in_opt_var.shape[0]] + in_opt_var[i % in_opt_var.shape[0]] - 1
+                        e_var[i]
+                        >= opt_var[i // in_opt_var.shape[0]]
+                        + in_opt_var[i % in_opt_var.shape[0]]
+                        - 1,
                     ]
 
         # No sharding algorithm found for this operator, but this has parameter attributes
         # (i.e. not an elementwise or implicit function)
-        elif (len([i for i in target.parameters()]) > 0):
-            logger.warning(f"No sharding algorithm found for operator: {target_cls}, but the parameter count is non-zero.")
-            logger.warning(f"    MaseLauncher will fully replicate the parameters of this module.")
+        elif len([i for i in target.parameters()]) > 0:
+            logger.warning(
+                f"No sharding algorithm found for operator: {target_cls}, but the parameter count is non-zero."
+            )
+            logger.warning(
+                f"    MaseLauncher will fully replicate the parameters of this module."
+            )
 
         else:
             logger.debug(f"Skipping implicit/elementwise operator: {target_cls}")
@@ -132,19 +157,39 @@ def alpa_intra_op_sharding_pass(mg, mesh):
     prob.solve()
 
     for node in mg.fx_graph.nodes:
-        chosen_idx = 0 if isinstance(node.meta["mase"]["software"]["autosharding"]["opt_var"], np.ndarray) else np.where(node.meta["mase"]["software"]["autosharding"]["opt_var"].value == 1)[0][0]
-        node.meta["mase"]["software"]["autosharding"]["input_sharding"] = node.meta["mase"]["software"]["autosharding"]["valid_input_shardings"][chosen_idx]
-        node.meta["mase"]["software"]["autosharding"]["output_sharding"] = node.meta["mase"]["software"]["autosharding"]["valid_output_shardings"][chosen_idx]
-        
+        chosen_idx = (
+            0
+            if isinstance(
+                node.meta["mase"]["software"]["autosharding"]["opt_var"], np.ndarray
+            )
+            else np.where(
+                node.meta["mase"]["software"]["autosharding"]["opt_var"].value == 1
+            )[0][0]
+        )
+        node.meta["mase"]["software"]["autosharding"]["input_sharding"] = node.meta[
+            "mase"
+        ]["software"]["autosharding"]["valid_input_shardings"][chosen_idx]
+        node.meta["mase"]["software"]["autosharding"]["output_sharding"] = node.meta[
+            "mase"
+        ]["software"]["autosharding"]["valid_output_shardings"][chosen_idx]
+
         # Write into module map (used by distributed launcher)
         target = get_node_target(node)
         if node.op == "call_module" and target is not None:
             module_map[target] = {
-                key: node.meta["mase"]["software"]["autosharding"]["input_sharding"][key] for key in node.meta["mase"]["software"]["autosharding"]["input_sharding"].keys()
+                key: node.meta["mase"]["software"]["autosharding"]["input_sharding"][
+                    key
+                ]
+                for key in node.meta["mase"]["software"]["autosharding"][
+                    "input_sharding"
+                ].keys()
             }
-            module_map[target]["output"] = node.meta["mase"]["software"]["autosharding"]["output_sharding"]
+            module_map[target]["output"] = node.meta["mase"]["software"][
+                "autosharding"
+            ]["output_sharding"]
 
     return mg, module_map
+
 
 def alpa_autosharding_pass(mg, mesh):
     mg, module_map = alpa_intra_op_sharding_pass(mg, mesh)

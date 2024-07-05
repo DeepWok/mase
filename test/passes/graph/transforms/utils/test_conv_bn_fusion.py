@@ -59,10 +59,12 @@ def test_conv_bn_fusion():
     # NOTE: Both functions have pass arguments that are not used in this example
     graph, _ = init_metadata_analysis_pass(graph, None)
     graph, _ = add_common_metadata_analysis_pass(
-        graph, {'dummy_in': dummy_input,  "add_value": False, "force_device_meta": True})
+        graph, {"dummy_in": dummy_input, "add_value": False, "force_device_meta": True}
+    )
     graph, _ = add_software_metadata_analysis_pass(graph, None)
     # The default save directory is specified as the current working directory
     graph, _ = conv_bn_fusion_transform_pass(graph)
     graph, _ = report_graph_analysis_pass(graph, None)
+
 
 test_conv_bn_fusion()

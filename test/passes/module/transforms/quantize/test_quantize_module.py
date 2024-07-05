@@ -57,4 +57,6 @@ def test_quantize():
         },
     }
     quantize_module_transform_pass(mlp, pass_args)
+
+
 test_quantize()

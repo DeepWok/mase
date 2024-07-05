@@ -91,7 +91,7 @@ def add_natural_sparsity_metadata_analysis_pass(graph, pass_args: dict = {}):
     :type pass_args: dict
 
     .. code-block:: python
-    
+
             pass_args = {
                 'dummy_in': torch.tensor(...),
                 'add_meta': True # bool value whether to add the natural sparsity to the metadata

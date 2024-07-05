@@ -1,10 +1,11 @@
 import torch
 import numpy as np
 
-class MeshModel():
-    def __init__(self, mesh_shape, mesh_alpha = None, mesh_beta = None):
+
+class MeshModel:
+    def __init__(self, mesh_shape, mesh_alpha=None, mesh_beta=None):
         self.mesh_shape = mesh_shape
-        
+
         num_devices = np.prod(mesh_shape)
         self.id_mesh = torch.arange(0, num_devices).reshape(mesh_shape)
 
@@ -12,22 +13,27 @@ class MeshModel():
         self.mesh_alpha = [0] * 2 if mesh_alpha is None else mesh_alpha
         self.mesh_beta = [None] * 2 if mesh_beta is None else mesh_beta
 
-    def set_cost_model_parameters(self, intra_node_bandwidth: int, inter_node_bandwidth:int, backend:str = "default"):
+    def set_cost_model_parameters(
+        self,
+        intra_node_bandwidth: int,
+        inter_node_bandwidth: int,
+        backend: str = "default",
+    ):
         # Assign differently depending if backend is NVLink, Infiniband, etc
-        if (backend == "default"):
+        if backend == "default":
             # Assuming a setup with ethernet-connected nodes and devices connected through
             # PCIe within each node
-            self.mesh_beta = [
-                1 / inter_node_bandwidth,
-                1 / intra_node_bandwidth
-            ]
+            self.mesh_beta = [1 / inter_node_bandwidth, 1 / intra_node_bandwidth]
 
     def all_gather_cost(self, num_bytes, mesh_dim):
         num_devices = self.id_mesh.shape[mesh_dim]
-        return (self.mesh_alpha[mesh_dim] + self.mesh_beta[mesh_dim] *
-                (num_devices - 1) / num_devices * num_bytes + 0.1)
+        return (
+            self.mesh_alpha[mesh_dim]
+            + self.mesh_beta[mesh_dim] * (num_devices - 1) / num_devices * num_bytes
+            + 0.1
+        )
 
-    def all_reduce_cost(self, num_bytes, mesh_dim, num_devices = None):
+    def all_reduce_cost(self, num_bytes, mesh_dim, num_devices=None):
         """
         The term multiplied by beta represents the total number of bytes
         transferred over the full transaction. For the ring implementation
@@ -37,17 +43,30 @@ class MeshModel():
         """
         if num_devices is None:
             num_devices = self.id_mesh.shape[mesh_dim]
-        return (self.mesh_alpha[mesh_dim] + self.mesh_beta[mesh_dim] * 2 *
-                (num_devices - 1) / num_devices * num_bytes + 0.01)
+        return (
+            self.mesh_alpha[mesh_dim]
+            + self.mesh_beta[mesh_dim] * 2 * (num_devices - 1) / num_devices * num_bytes
+            + 0.01
+        )
 
     def reduce_scatter_cost(self, num_bytes, mesh_dim):
         num_devices = self.id_mesh.shape[mesh_dim]
-        return (self.mesh_alpha[mesh_dim] + self.mesh_beta[mesh_dim] *
-                (num_devices - 1) / num_devices * num_bytes + 0.001)
+        return (
+            self.mesh_alpha[mesh_dim]
+            + self.mesh_beta[mesh_dim] * (num_devices - 1) / num_devices * num_bytes
+            + 0.001
+        )
 
     def all_to_all_cost(self, num_bytes, mesh_dim):
         num_devices = self.id_mesh.shape[mesh_dim]
         penalty_factor = num_devices / 2.0
-        return (self.mesh_alpha[mesh_dim] + self.mesh_beta[mesh_dim] *
-                (num_devices - 1) / num_devices / num_devices * num_bytes *
-                penalty_factor + 0.001)
+        return (
+            self.mesh_alpha[mesh_dim]
+            + self.mesh_beta[mesh_dim]
+            * (num_devices - 1)
+            / num_devices
+            / num_devices
+            * num_bytes
+            * penalty_factor
+            + 0.001
+        )

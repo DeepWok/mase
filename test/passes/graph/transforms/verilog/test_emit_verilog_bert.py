@@ -140,7 +140,12 @@ def bert_update_metadata(mg, q_config):
 
 
 def emit_verilog_bert(
-    config, q_config, config_sequence_length, wait_count=15, wait_unit="ms", max_parallelism=4
+    config,
+    q_config,
+    config_sequence_length,
+    wait_count=15,
+    wait_unit="ms",
+    max_parallelism=4,
 ):
     # * Get model and quantize self attention, linear and layer norm layers
     model = BertModel(config)
@@ -201,10 +206,14 @@ def emit_verilog_bert(
 
     # check questa
     if os.system("questa") != 0:
-        logger.info("Questa is required for this test, but the system does not have it, so later part this test is skipped.")
+        logger.info(
+            "Questa is required for this test, but the system does not have it, so later part this test is skipped."
+        )
         return
 
-    actions.simulate(skip_build=False, skip_test=False, gui=False, waves=False, simulator="questa")
+    actions.simulate(
+        skip_build=False, skip_test=False, gui=False, waves=False, simulator="questa"
+    )
 
 
 def get_default_qconfig():
@@ -227,7 +236,9 @@ def test_emit_verilog_bert_smoke():
     config.intermediate_size = 384
     config_sequence_length = 4
     q_config = get_default_qconfig()
-    emit_verilog_bert(config, q_config, config_sequence_length, wait_count=10, max_parallelism=2)
+    emit_verilog_bert(
+        config, q_config, config_sequence_length, wait_count=10, max_parallelism=2
+    )
 
 
 def test_emit_verilog_bert_regression():
@@ -237,7 +248,9 @@ def test_emit_verilog_bert_regression():
     config.intermediate_size = 1536
     config_sequence_length = 128
     q_config = get_default_qconfig()
-    emit_verilog_bert(config, q_config, config_sequence_length, wait_count=15, max_parallelism=16)
+    emit_verilog_bert(
+        config, q_config, config_sequence_length, wait_count=15, max_parallelism=16
+    )
 
 
 if __name__ == "__main__":

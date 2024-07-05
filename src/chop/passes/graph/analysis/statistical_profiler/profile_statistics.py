@@ -312,14 +312,14 @@ def profile_statistics_analysis_pass(graph, pass_args: dict):
     :type pass_args: dict
 
     .. code-block:: python
-    
+
             pass_args = {
                 "by": "type", # pick from ["name", "type"]
                 "target_weight_nodes": "linear", # ["conv2d", "linear" ...],
                 "target_activation_nodes": "relu", # ["relu", "sigmoid" ...],
                 "weight_statistics": {
                     "variance_precise": {
-                        "device": "cpu", 
+                        "device": "cpu",
                         "dims": "all"
                     },
                 },
