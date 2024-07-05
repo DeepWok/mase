@@ -24,13 +24,13 @@ module fixed_gelu #(
     /* verilator lint_off UNUSEDSIGNAL */
     input clk,
     input rst,
-    
-    input  logic data_in_0_valid,
+
+    input logic data_in_0_valid,
     output logic data_in_0_ready,
     input logic [DATA_IN_0_PRECISION_0-1:0] data_in_0[DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0],
 
     output logic data_out_0_valid,
-    input  logic data_out_0_ready,
+    input logic data_out_0_ready,
     output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_0[DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0]
 );
 
