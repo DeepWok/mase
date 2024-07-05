@@ -126,10 +126,13 @@ def test_complex_quantize():
                 quan_args = toml.load(f)["passes"]["quantize"]
             mg, _ = quantize_transform_pass(mg, quan_args)
             summarize_quantization_analysis_pass(
-                ori_mg, mg, save_dir="quantize_summary"
+                mg, 
+                pass_args={"save_dir": "quantize_summary", "original_graph": ori_mg}
             )
         except Exception:
             print(f"Quantisation with {config_file} config file failed!")
             raise Exception
         else:
             print(f"Quantisation with {config_file} config file successful")
+
+test_complex_quantize()

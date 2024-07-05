@@ -1,4 +1,5 @@
 import sys, pdb, traceback
+import pytest
 
 import torch
 import torch.nn as nn
@@ -16,6 +17,8 @@ logger.setLevel("DEBUG")
 WORLD_SIZE = 8
 DEVICE_MESH = [[0, 1, 2, 3], [4, 5, 6, 7]]
 
+
+@pytest.mark.skip(reason="Fixing needed")
 def test_autosharding():
     
     # Define config

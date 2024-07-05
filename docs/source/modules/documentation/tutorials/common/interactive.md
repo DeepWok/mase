@@ -14,7 +14,7 @@ You can then test the installation by
 python -c"import chop; print(chop)"
 ```
 
-- Transforming torch.Module
+## Transforming torch.Module
 
 `chop.passes` offers a range of different passes that offer the capability to replace certain components for in the original neural network for various purposes. Some of these passes are Module Passes, that can directly operate on native `torch.nn.Module`, which basically means any arbitrary networks.
 

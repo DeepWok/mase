@@ -96,6 +96,7 @@ test-sw:
 		--html=report.html --self-contained-html \
 		--profile --profile-svg \
 		$(sw_test_dir)
+		--junitxml=test/report.xml
 
 test-all: test-hw test-sw
 	mkdir -p ./tmp

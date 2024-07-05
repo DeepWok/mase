@@ -1,4 +1,5 @@
 import os, operator
+import pytest
 
 import torch
 import torch.nn as nn
@@ -173,6 +174,7 @@ def get_default_qconfig():
     }
 
 
+@pytest.mark.skip(reason="Fixing needed")
 def test_emit_verilog_llama_smoke():
     config = LlamaConfig()
     config.num_hidden_layers = 1

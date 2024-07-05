@@ -98,7 +98,7 @@ def graph_iterator_node_histogram(ori_graph, graph, save_path: str = None):
 
 
 def summarize_quantization_analysis_pass(
-    graph, pass_args={"save_dir": None, "ori_graph": None}
+    graph, pass_args={"save_dir": None, "original_graph": None}
 ) -> None:
     """
     Summarizes the quantization analysis pass.
@@ -114,7 +114,7 @@ def summarize_quantization_analysis_pass(
 
         pass_args = {
             "save_dir": "quantize_summary",
-            "ori_graph": ori_mg, # original graph, type should be MaseGraph
+            "original_graph": ori_mg, # original graph, type should be MaseGraph
         }
 
     :return: The transformed MaseGraph.

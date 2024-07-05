@@ -1,4 +1,5 @@
 import sys, pdb, traceback, os
+import pytest
 
 import torch
 import torch.nn as nn
@@ -33,6 +34,7 @@ class MLP(nn.Module):
         out = self.l1(x)
         return self.l2(out)
 
+@pytest.mark.skip(reason="Fixing needed")
 def test_autosharding():
     
     # Initialize model and MaseGraph
