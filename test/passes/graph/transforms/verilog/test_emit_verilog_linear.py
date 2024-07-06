@@ -40,7 +40,7 @@ class MLP(torch.nn.Module):
     def __init__(self) -> None:
         super().__init__()
 
-        self.fc1 = nn.Linear(768, 768, bias=True)
+        self.fc1 = nn.Linear(10, 10, bias=True)
 
     def forward(self, x):
         x = torch.nn.functional.relu(self.fc1(x))
@@ -52,8 +52,8 @@ def test_emit_verilog_linear():
     mg = chop.MaseGraph(model=mlp)
 
     # Provide a dummy input for the graph so it can use for tracing
-    batch_size = 20
-    x = torch.randn((batch_size, 768))
+    batch_size = 2
+    x = torch.randn((batch_size, 10))
     dummy_in = {"x": x}
 
     mg, _ = passes.init_metadata_analysis_pass(mg, None)
