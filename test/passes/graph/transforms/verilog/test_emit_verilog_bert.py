@@ -229,7 +229,7 @@ def get_default_qconfig():
     }
 
 
-@pytest.mark.skip(reason="This test is not working and requires fixing")
+@pytest.mark.large
 def test_emit_verilog_bert_smoke():
     config = BertConfig()
     config.num_hidden_layers = 3
@@ -242,7 +242,7 @@ def test_emit_verilog_bert_smoke():
     )
 
 
-@pytest.mark.skip(reason="This test is not working and requires fixing")
+@pytest.mark.large
 def test_emit_verilog_bert_regression():
     config = BertConfig()
     config.num_hidden_layers = 3
