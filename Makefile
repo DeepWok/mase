@@ -43,11 +43,6 @@ hw_test_dir = src/mase_components/
 
 NUM_WORKERS ?= 1
 
-sw_test_dir = machop/test/
-hw_test_dir = machop/mase_components/
-
-NUM_WORKERS ?= 1
-
 # Make sure the repo is up to date
 sync:
 	git submodule sync
