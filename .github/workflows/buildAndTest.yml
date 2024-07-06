@@ -197,3 +197,30 @@ jobs:
         run: 
           export PYTHONPATH=$PYTHONPATH:$PWD/src;
           make test-sw
+
+      # -----------
+      # Build doc pages when the software tests passes 
+      # -----------
+
+      - name: Build sphinx html
+        run: |
+          export PYTHONPATH="${PATH}:$(pwd):$(pwd)/src"
+          cd docs
+          make html 2>&1 | tee html.log
+          ! grep -rn html.log -e "Error" || exit 1
+          cd ../..
+
+      # -----------
+      # Only deployed on the main branch 
+      # -----------
+
+      - name: Run ghp-import
+        run: |
+          if [ "${{ secrets.MASE_DOCKER_CRED }}" != "" ]; then
+            ghp-import -n -p -f docs/build/html
+            echo "MASE Doc deployed."
+          else
+            echo "Skipped MASE Doc deployment."
+          fi
+
+
