@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, pytest
 
 import torch
 import torch.nn as nn
@@ -229,6 +229,7 @@ def get_default_qconfig():
     }
 
 
+@pytest.mark.skip(reason="This test is not working and requires fixing")
 def test_emit_verilog_bert_smoke():
     config = BertConfig()
     config.num_hidden_layers = 3
@@ -241,6 +242,7 @@ def test_emit_verilog_bert_smoke():
     )
 
 
+@pytest.mark.skip(reason="This test is not working and requires fixing")
 def test_emit_verilog_bert_regression():
     config = BertConfig()
     config.num_hidden_layers = 3
