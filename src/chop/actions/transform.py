@@ -313,7 +313,7 @@ def transform_graph(
                 ori_graph = deepcopy_mase_graph(graph)
                 graph, _ = PASSES["quantize"](graph, pass_args=pass_config)
                 PASSES["summarize_quantization"](
-                    ori_graph, graph, save_dir=pass_save_dir
+                    graph, {"save_dir": pass_save_dir, "original_graph": ori_graph}
                 )
             case "profile_statistics":
                 input_generator = InputGenerator(
