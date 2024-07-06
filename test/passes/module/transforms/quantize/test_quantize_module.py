@@ -40,23 +40,25 @@ class MLP(torch.nn.Module):
         return x
 
 
-def test_quantize():
+def test_quantize_module_transform_pass():
     mlp = MLP()
     # Sanity check and report
     # mg = verify_common_metadata_analysis_pass(mg)
     pass_args = {
         "by": "name",
         "fc1": {
-            "name": "integer",
-            "data_in_width": 8,
-            "data_in_frac_width": 4,
-            "weight_width": 8,
-            "weight_frac_width": 4,
-            "bias_width": 8,
-            "bias_frac_width": 4,
+            "config": {
+                "name": "integer",
+                "data_in_width": 8,
+                "data_in_frac_width": 4,
+                "weight_width": 8,
+                "weight_frac_width": 4,
+                "bias_width": 8,
+                "bias_frac_width": 4,
+            }
         },
     }
     quantize_module_transform_pass(mlp, pass_args)
 
 
-test_quantize()
+test_quantize_module_transform_pass()

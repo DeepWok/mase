@@ -23,7 +23,7 @@ def quantize_by_type(network, pass_args):
             module = torch.nn.Conv2d
         else:
             raise ValueError(f"{type_name} is not supported!")
-        # config = config["config"]
+        config = config["config"]
         postfix = config.pop("name")
         for n, m in n_m.items():
             if isinstance(m, module):
@@ -42,6 +42,8 @@ def quantize_by_name(network, pass_args):
     for n, m in n_m.items():
         if n in quantize_names:
             quan_config = pass_args[n]
+
+            quan_config = quan_config["config"]
             postfix = quan_config.pop("name")
 
             new_m = instantiate_module(

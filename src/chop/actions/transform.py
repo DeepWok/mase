@@ -112,7 +112,7 @@ def transform_module(
         match pass_name:
             case _:
                 my_pass = MODULE_PASSES[pass_name]
-                model = my_pass(model, pass_args=pass_config)
+                model, _ = my_pass(model, pass_args=pass_config)
 
     if save_dir is not None:
         transformed_ckpt = save_dir / "transformed_ckpt"
