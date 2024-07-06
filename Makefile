@@ -94,9 +94,9 @@ test-sw:
 		-n $(NUM_WORKERS) \
 		--cov=src/chop/ --cov-report=html \
 		--html=report.html --self-contained-html \
+		--junitxml=test/report.xml \
 		--profile --profile-svg \
 		$(sw_test_dir)
-		--junitxml=test/report.xml
 
 test-all: test-hw test-sw
 	mkdir -p ./tmp
