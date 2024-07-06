@@ -3,10 +3,16 @@ import pytest
 
 def pytest_addoption(parser):
     parser.addoption(
-        "--runvivado", action="store_true", default=False, help="run tests that require vivado"
+        "--runvivado",
+        action="store_true",
+        default=False,
+        help="run tests that require vivado",
     )
     parser.addoption(
-        "--runlarge", action="store_true", default=False, help="run tests that require large compute, these are not run by default in our CI"
+        "--runlarge",
+        action="store_true",
+        default=False,
+        help="run tests that require large compute, these are not run by default in our CI",
     )
 
 
