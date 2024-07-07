@@ -215,6 +215,27 @@ def quantize_transform_pass(graph, pass_args=None):
     :param pass_args: Additional arguments for the transformation.
     :type pass_args: dict, optional
 
+    .. code-block: python
+
+        quan_args = {
+            "by": "type", # quantize by type, name, or regex_name
+            "default": {"config": {"name": None}}, # default config, this would be used for any node that does not have a specific config
+            "linear": {
+                "config": {
+                    "name": "integer",  # quantization scheme name supported are ["integer", "fixed" (equivalent to integer), "lutnet" (dev mode), "logicnets" (dev mode), "binary", "binary_residual", "ternary", "minifloat_ieee", "minifloat_denorm", "log", "block_fp", "block_minifloat", "block_log"]
+                    # data
+                    "data_in_width": 8,
+                    "data_in_frac_width": 4,
+                    # weight
+                    "weight_width": 8,
+                    "weight_frac_width": 4,
+                    # bias
+                    "bias_width": 8,
+                    "bias_frac_width": 4,
+                }
+            },
+        }
+
     :return: The transformed graph.
     :rtype: tuple
     :raises ValueError: If the quantize "by" argument is unsupported.

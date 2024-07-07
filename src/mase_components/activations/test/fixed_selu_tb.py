@@ -3,6 +3,7 @@ import numpy as np
 import cocotb
 from cocotb.triggers import Timer
 from mase_cocotb.runner import mase_runner
+import pytest
 
 import torch
 from torch import nn
@@ -65,6 +66,7 @@ async def cocotb_test_fixed_selu(dut):
         ), "Randomised test failed "
 
 
+@pytest.mark.dev
 def test_fixed_selu():
     mase_runner(
         trace=True,

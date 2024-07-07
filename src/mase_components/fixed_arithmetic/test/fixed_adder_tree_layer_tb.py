@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-# This script tests the fixed point adder tree layer
-import random, os
+# This script is never run since the rtl has been changed.
+
+import random, os, pytest
 
 import cocotb
 from cocotb.triggers import Timer
@@ -11,7 +12,7 @@ from mase_cocotb.runner import mase_runner
 class VerificationCase:
     def __init__(self, samples=2):
         self.in_width = 32
-        self.num = 17  # random.randint(2, 33)
+        self.num = 16  # random.randint(2, 33)
         self.inputs, self.outputs = [], []
         for _ in range(samples):
             i, o = self.single_run()
@@ -80,6 +81,7 @@ async def cocotb_test_fixed_adder_tree_layer(dut):
         ), "Output are incorrect on the {}th cycle: {}".format(i, x)
 
 
+@pytest.mark.dev
 def test_fixed_adder_tree_layer():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])

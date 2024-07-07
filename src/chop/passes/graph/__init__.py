@@ -9,14 +9,16 @@ from .analysis import (
     report_node_meta_param_analysis_pass,
     report_node_shape_analysis_pass,
     report_node_type_analysis_pass,
-    verify_common_metadata_analysis_pass,
     run_cosim_analysis_pass,
     get_synthesis_results,
     calculate_avg_bits_mg_analysis_pass,
     add_pruning_metadata_analysis_pass,
     add_natural_sparsity_metadata_analysis_pass,
     hook_inspection_analysis_pass,
-    runtime_analysis_pass,
+    verify_common_metadata_analysis_pass,
+    verify_hardware_metadata_analysis_pass,
+    verify_metadata_analysis_pass,
+    verify_software_metadata_analysis_pass,
 )
 from .transforms import (
     prune_transform_pass,
@@ -36,16 +38,11 @@ from .interface import (
     save_mase_graph_interface_pass,
     save_node_meta_param_interface_pass,
     load_node_meta_param_interface_pass,
-    tensorrt_engine_interface_pass,
     onnx_runtime_interface_pass,
 )
 
 from .transforms.quantize.quant_parsers import parse_node_config
-from .transforms.tensorrt import (
-    tensorrt_calibrate_transform_pass,
-    tensorrt_fine_tune_transform_pass,
-    tensorrt_fake_quantize_transform_pass,
-)
+
 
 ANALYSIS_PASSES = [
     "init_metadata",
@@ -65,7 +62,10 @@ ANALYSIS_PASSES = [
     "add_pruning_metadata",
     "add_natural_sparsity",
     "hook_inspection",
-    "runtime_analysis",
+    "verify_common_metadata",
+    "verify_metadata",
+    "verify_software_metadata",
+    "verify_hardware_metadata",
 ]
 
 TRANSFORM_PASSES = [
@@ -74,9 +74,6 @@ TRANSFORM_PASSES = [
     "prune",
     "prune_detach_hook" "conv_bn_fusion",
     "logicnets_fusion",
-    "tensorrt_fake_quantize",
-    "tensorrt_calibrate",
-    "tensorrt_fine_tune",
 ]
 
 INTERFACE_PASSES = [
@@ -84,7 +81,6 @@ INTERFACE_PASSES = [
     "load_node_meta_param",
     "save_mase_graph",
     "save_node_meta_param",
-    "tensorrt",
     "onnxruntime",
 ]
 
@@ -92,7 +88,6 @@ PASSES = {
     # analysis
     "init_metadata": init_metadata_analysis_pass,
     "add_common_metadata": add_common_metadata_analysis_pass,
-    "verify_common_metadata": verify_common_metadata_analysis_pass,
     "add_hardware_metadata": add_hardware_metadata_analysis_pass,
     "add_software_metadata": add_software_metadata_analysis_pass,
     "profile_statistics": profile_statistics_analysis_pass,
@@ -107,19 +102,18 @@ PASSES = {
     "add_pruning_metadata": add_pruning_metadata_analysis_pass,
     "add_natural_sparsity": add_natural_sparsity_metadata_analysis_pass,
     "hook_inspection": hook_inspection_analysis_pass,
-    "runtime_analysis": runtime_analysis_pass,
+    "verify_common_metadata": verify_common_metadata_analysis_pass,
+    "verify_hardware_metadata": verify_hardware_metadata_analysis_pass,
+    "verify_metadata": verify_metadata_analysis_pass,
+    "verify_software_metadata": verify_software_metadata_analysis_pass,
     # interface
     "load_mase_graph": load_mase_graph_interface_pass,
     "load_node_meta_param": load_node_meta_param_interface_pass,
     "save_mase_graph": save_mase_graph_interface_pass,
     "save_node_meta_param": save_node_meta_param_interface_pass,
-    "tensorrt": tensorrt_engine_interface_pass,
     "onnxruntime": onnx_runtime_interface_pass,
     # transform
     "quantize": quantize_transform_pass,
-    "tensorrt_calibrate": tensorrt_calibrate_transform_pass,
-    "tensorrt_fake_quantize": tensorrt_fake_quantize_transform_pass,
-    "tensorrt_fine_tune": tensorrt_fine_tune_transform_pass,
     "summarize_quantization": summarize_quantization_analysis_pass,
     "prune": prune_transform_pass,
     "prune_detach_hook": prune_detach_hook_transform_pass,
@@ -128,3 +122,37 @@ PASSES = {
     "logicnets_fusion": logicnets_fusion_transform_pass,
     "onnx_annotate": onnx_annotate_transform_pass,
 }
+
+
+from chop.tools.check_dependency import check_deps_tensorRT_pass
+
+
+# add tensorrt passes if dependencies are correctly installed
+if check_deps_tensorRT_pass(silent=True):
+    from chop.passes.graph.analysis.runtime.runtime_analysis import (
+        runtime_analysis_pass,
+    )
+
+    ANALYSIS_PASSES.append("runtime_analysis_pass")
+    PASSES["runtime_analysis_pass"] = runtime_analysis_pass
+
+    from .interface import tensorrt_engine_interface_pass
+
+    from .transforms.tensorrt import (
+        tensorrt_calibrate_transform_pass,
+        tensorrt_fine_tune_transform_pass,
+        tensorrt_fake_quantize_transform_pass,
+    )
+
+    INTERFACE_PASSES.append("tensorrt_engine_interface_pass")
+    PASSES["tensorrt_engine_interface_pass"] = tensorrt_engine_interface_pass
+
+    TRANSFORM_PASSES.append("tensorrt_calibrate_transform_pass")
+    TRANSFORM_PASSES.append("tensorrt_fine_tune_transform_pass")
+    TRANSFORM_PASSES.append("tensorrt_fake_quantize_transform_pass")
+
+    PASSES["tensorrt_calibrate_transform_pass"] = tensorrt_calibrate_transform_pass
+    PASSES["tensorrt_fine_tune_transform_pass"] = tensorrt_fine_tune_transform_pass
+    PASSES["tensorrt_fake_quantize_transform_pass"] = (
+        tensorrt_fake_quantize_transform_pass
+    )

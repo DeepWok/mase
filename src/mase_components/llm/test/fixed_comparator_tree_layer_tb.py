@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # This script tests the fixed_comparator_tree_layer
-import random, os
+import random, os, pytest
 
 # Manually add user-specific mase_cocotb path
 # this should be ignored on the standard mase-docker env
@@ -78,6 +78,7 @@ async def cocotb_test_fixed_comparator_tree_layer(dut):
         # ), "Output are incorrect on the {}th cycle: {}".format(i, x)
 
 
+@pytest.mark.dev
 def test_fixed_comparator_tree_layer():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])

@@ -33,21 +33,19 @@ from mase_cocotb.utils import (
     verilator_str_param,
 )
 
-from chop.passes.graph.transforms.quantize.quantized_modules import (
-    BatchNorm2dInteger,
-)
-from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
+from chop.nn.quantized.modules import BatchNorm2dInteger
+from chop.nn.quantizers import integer_floor_quantizer, integer_quantizer
+from chop.nn.quantizers.quantizers_for_hw import (
     integer_floor_quantizer_for_hw,
     integer_quantizer_for_hw,
 )
-from chop.passes.graph.transforms.quantize.quantizers.integer import (
-    integer_floor_quantizer,
-    integer_quantizer,
-)
+
 
 from mase_components.cast.test.fixed_signed_cast_tb import _fixed_signed_cast_model
 from mase_components.fixed_math.test.isqrt_sw import lut_parameter_dict
 from mase_components.common.test.lut_tb import write_memb, read_memb
+
+import pytest
 
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.INFO)

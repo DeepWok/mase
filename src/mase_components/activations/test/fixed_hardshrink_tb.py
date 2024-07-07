@@ -4,9 +4,10 @@
 import os, logging
 import pdb
 import cocotb
+import pytest
 from functools import partial
 from cocotb.triggers import *
-from chop.passes.graph.transforms.quantize.quantizers import *
+from chop.nn.quantizers import integer_quantizer
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 from mase_cocotb.z_qlayers import quantize_to_int
@@ -102,6 +103,7 @@ async def cocotb_test(dut):
     assert tb.data_out_0_monitor.exp_queue.empty()
 
 
+@pytest.mark.dev
 def test_fixed_hardshrink():
     mase_runner(
         module_param_list=[

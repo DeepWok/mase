@@ -1,5 +1,6 @@
 import logging
 import random
+import pytest
 
 import cocotb
 from cocotb.triggers import *
@@ -143,6 +144,7 @@ def generate_random_params():
     }
 
 
+@pytest.mark.dev
 def test_repeat_circular_buffer():
     mase_runner(
         module_param_list=[
@@ -156,7 +158,9 @@ def test_repeat_circular_buffer():
             {"DATA_WIDTH": 32, "REPEAT": 2, "SIZE": 7},
             # Purely random params
             *[generate_random_params() for _ in range(5)],
-        ]
+        ],
+        trace=True,
+        jobs=8,
     )
 
 

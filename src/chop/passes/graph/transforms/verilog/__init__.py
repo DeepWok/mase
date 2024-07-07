@@ -4,3 +4,4 @@ from .emit_bram import emit_bram_transform_pass
 from .emit_hls import emit_mlir_hls_transform_pass
 from .emit_internal import emit_internal_rtl_transform_pass
 from .emit_logicnets import emit_logicnets_transform_pass
+from .emit_vivado_project import emit_vivado_project_transform_pass

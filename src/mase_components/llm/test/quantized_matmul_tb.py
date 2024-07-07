@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # This script tests the quantized_matmul module
-import os, math, logging
+import os, math, logging, pytest
 import sys
 
 # Manually add user-specific mase_cocotb path
@@ -226,6 +226,7 @@ async def cocotb_test_fixed_matmul_core_quantized(dut):
     analyse_results_signed(test_case.outputs.data, test_case.ref, 10)
 
 
+@pytest.mark.dev
 def test_quantized_matmul():
     tb = VerificationCase()
     mase_runner(

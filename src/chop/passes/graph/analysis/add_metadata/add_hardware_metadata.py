@@ -8,7 +8,7 @@ from chop.passes.graph.analysis.utils import (
     get_input_nodes,
     get_output_nodes,
 )
-from chop.passes.graph.utils import get_mase_op
+from chop.passes.graph.utils import get_mase_op, deepgetattr
 
 from torch import nn
 
@@ -34,7 +34,18 @@ def add_component_source(node):
     node.meta["mase"]["hardware"]["interface"] = {}
 
     mase_op = node.meta["mase"]["common"]["mase_op"]
-    if mase_op in INTERNAL_COMP.keys():
+    if mase_op == "user_defined_module":
+        for custom_op, op_info in node.meta["mase"].model.custom_ops["modules"].items():
+            if isinstance(
+                deepgetattr(node.meta["mase"].model, node.target),
+                custom_op,
+            ):
+                node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_RTL"
+                node.meta["mase"]["hardware"]["module"] = op_info["module"]
+                node.meta["mase"]["hardware"]["dependence_files"] = op_info[
+                    "dependence_files"
+                ]
+    elif mase_op in INTERNAL_COMP.keys():
         node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_RTL"
         # take the first ip in the component list by default
         node.meta["mase"]["hardware"]["module"] = INTERNAL_COMP[mase_op][0]["name"]
@@ -134,8 +145,10 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
 
     :param graph: a MaseGraph
     :type graph: MaseGraph
+
     :param pass_args: this pass does not need any arguments, defaults to None
     :type pass_args: _type_, optional
+
     :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)
     :rtype: tuple(MaseGraph, Dict)
 
@@ -380,7 +393,9 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
     # * Fix max parallelism to small value to enable verilator simulation
     # ! TO DO: enable this to be overriden by user
     for node in graph.nodes:
-        node.meta["mase"]["hardware"]["max_parallelism"] = [4, 4, 4, 4]
+        node.meta["mase"]["hardware"]["max_parallelism"] = pass_args.get(
+            "max_parallelism", [4] * 4
+        )
 
     # Add hardware parameters
     for node in graph.nodes:

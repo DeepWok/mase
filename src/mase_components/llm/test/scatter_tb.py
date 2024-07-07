@@ -5,7 +5,7 @@
 
 # Manually add user-specific mase_cocotb path
 # this should be ignored on the standard mase-docker env
-import sys
+import sys, pytest
 
 p = "/home/ic/MYWORKSPACE/Mase-DeepWok/machop"
 sys.path.append(p)
@@ -176,6 +176,7 @@ async def cocotb_test_scatter(dut):
     check_results_signed(test_case.outputs.data, test_case.ref)
 
 
+@pytest.mark.dev
 def test_scatter():
     tb = VerificationCase()
     mase_runner(

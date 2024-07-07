@@ -17,9 +17,11 @@ in pkgs.mkShellNoCC {
     # dropping into the shell
     # TODO: consider use setuptoolsBuildHook, as documented in https://nixos.org/manual/nixpkgs/stable/#python
     pythonPackages.venvShellHook
-    # pythonPackages.torch-bin
 
     # houskeeping 
+    wget
+    just
+    sphinx
     git
     neovim
     glib
@@ -27,18 +29,17 @@ in pkgs.mkShellNoCC {
     mesa
     cmake
     zsh
+    verilator
 
     # hardware
     # verible is only supported on Linux (x86_64-linux, i686-linux and aarch64-linux)
     # https://search.nixos.org/packages?channel=23.11&show=verible&from=0&size=50&sort=relevance&type=packages&query=verible
-    # verible
-    verilator
     svls
   ]
   ++ (pkgs.lib.optionals pkgs.stdenv.isLinux [ verible ]);
   postShellHook = ''
     # install mase as a package
-    python3 -m pip install -e .
+    sudo -H python3 -m pip install -e .
     # add env variables 
     source scripts/init-nix.sh
   '';

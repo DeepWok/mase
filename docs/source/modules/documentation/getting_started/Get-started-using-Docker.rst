@@ -1,4 +1,4 @@
-Getting Started using Docker
+Getting Started using Docker (Suggested)
 =============================
 
 Install Conda (for the first time)

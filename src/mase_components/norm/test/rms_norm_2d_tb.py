@@ -33,12 +33,9 @@ from mase_cocotb.utils import (
     verilator_str_param,
 )
 
-from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
-    integer_quantizer_for_hw,
-)
-from chop.passes.graph.transforms.quantize.quantized_modules.rms_norm import (
-    RMSNormInteger,
-)
+from chop.nn.quantized.modules import RMSNormInteger
+from chop.nn.quantizers.quantizers_for_hw import integer_floor_quantizer_for_hw
+
 
 from mase_components.fixed_math.test.isqrt_sw import make_lut
 from mase_components.common.test.lut_tb import write_memb

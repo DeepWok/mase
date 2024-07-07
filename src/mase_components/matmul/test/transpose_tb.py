@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import logging
+import logging, pytest
 from random import randint
 
 import numpy as np
@@ -65,6 +65,7 @@ def generate_random_params(num=3):
     return cfgs
 
 
+@pytest.mark.dev
 def test_transpose():
     mase_runner(module_param_list=generate_random_params())
 

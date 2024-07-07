@@ -10,11 +10,9 @@ from mase_cocotb.testbench import Testbench
 from mase_cocotb.runner import mase_runner
 from mase_cocotb.utils import sign_extend_t, signed_to_unsigned
 
-from chop.passes.graph.transforms.quantize.quantizers.utils import (
-    my_floor,
-    my_round,
-    my_clamp,
-)
+from chop.nn.quantizers.utils import my_clamp, my_floor, my_round
+
+import pytest
 
 
 def _fixed_signed_cast_model(
@@ -102,6 +100,7 @@ async def cocotb_test_exhaustive(dut):
         assert got_y == exp_output[i], f"Output did not match! Got {got_y}, Exp {exp_y}"
 
 
+@pytest.mark.dev
 def test_fixed_signed_cast():
     DEFAULT_CONFIG = {
         "IN_WIDTH": 8,

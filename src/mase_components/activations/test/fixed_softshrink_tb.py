@@ -7,7 +7,7 @@ from bitstring import BitArray
 import cocotb
 from functools import partial
 from cocotb.triggers import *
-from chop.passes.graph.transforms.quantize.quantizers import *
+from chop.nn.quantizers import integer_quantizer
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import (
     StreamDriver,
@@ -18,6 +18,8 @@ from mase_cocotb.z_qlayers import quantize_to_int
 from mase_cocotb.runner import mase_runner
 from mase_cocotb.utils import bit_driver, sign_extend_t
 from math import ceil
+
+import pytest
 
 # from chop.passes.graph.transforms.quantize.quantized_modules import LinearInteger
 
@@ -210,6 +212,7 @@ dut_params = {
 torch.manual_seed(1)
 
 
+@pytest.mark.dev
 def test_fixed_softshrink():
     # generate_memory.generate_sv_lut("exp", dut_params["DATA_IN_0_PRECISION_0"], dut_params["DATA_IN_0_PRECISION_1"])
     mase_runner(module_param_list=[dut_params])

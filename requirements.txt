@@ -49,12 +49,15 @@ einops
 sphinx
 sphinx-rtd-theme
 myst-parser
+bitstring
 absl-py
 scipy
 sphinx-glpi-theme
 prettytable
 pyyaml
 bitstring
+# rl
+stable-baselines3[extra]
 
 # CUDA required
 # onnxruntime-gpu

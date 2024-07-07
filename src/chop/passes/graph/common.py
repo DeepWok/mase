@@ -31,7 +31,6 @@ MASE_IMPLICIT_FUNCS = [
     "where",
     "_assert",
     "getattr",
-    "getitem",
     "long",
     "type_as",
     "clamp",
@@ -48,6 +47,8 @@ MASE_IMPLICIT_FUNCS = [
     "full",
     "ones",
     "dim",
+    "finfo",
+    "masked_fill",
 ]
 
 MASE_MODULE_RELATED_FUNCS = [
@@ -115,6 +116,8 @@ MASE_BUILTIN_FUNCS = [
     "log",
     "range",
     "gelu",
+    "df_split",
+    "getitem",
 ]
 
 

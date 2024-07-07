@@ -20,7 +20,7 @@ module unpacked_fifo #(
     assign data_in_flatten[i*DATA_WIDTH+DATA_WIDTH-1:i*DATA_WIDTH] = data_in[i];
   end
   fifo #(
-      .SIZE(DEPTH),
+      .DEPTH(DEPTH),
       .DATA_WIDTH(DATA_WIDTH * IN_NUM)
   ) ff_inst (
       .clk(clk),

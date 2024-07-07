@@ -9,7 +9,7 @@ import torch.nn.functional as F
 __all__ = ["get_pvt_quant"]
 
 from chop.models.manual.quant_utils import get_quantized_cls, get_quantized_func
-from chop.passes.graph.transforms.quantize.quantizers.integer import _integer_quantize
+from chop.nn.quantizers import integer_quantizer as _integer_quantize
 from .ha_softmax import QHashSoftmax
 
 logger = getLogger(__name__)

@@ -6,7 +6,7 @@ import pdb
 import cocotb
 from functools import partial
 from cocotb.triggers import *
-from chop.passes.graph.transforms.quantize.quantizers import *
+from chop.nn.quantizers import integer_quantizer
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 from mase_cocotb.z_qlayers import quantize_to_int
@@ -63,7 +63,6 @@ class Hardswishtb(Testbench):
         tmp3 = tmp2 * inputs
         unsignedout = torch.where(tmp3 < 0, torch.tensor(tmp3 % (2**self.width)), tmp3)
         # return unsignedout.tolist()
-        pdb.set_trace()
         return unsignedout
 
     def generate_inputs(self, w, fracw):

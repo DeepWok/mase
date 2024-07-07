@@ -52,7 +52,7 @@ module fixed_hardswish #(
         tmp_0[i] = 3 <<< DATA_IN_0_PRECISION_1;  // 3 in the same fx
         tmp_1[i] = data_in_0[i] + tmp_0[i];  // x + 3
         tmp_2[i] = (tmp_1[i] >>> 3) + (tmp_1[i] >>> 4);  // tmp/8 + tmp/16 ~ tmp/6
-        assign data_out_0[i] = tmp_3[i];  // dout = x(x+3) * 3/16 [Original HardSwish is x(x+3)/6]
+        data_out_0[i] = tmp_3[i];  // dout = x(x+3) * 3/16 [Original HardSwish is x(x+3)/6]
       end
     end
 

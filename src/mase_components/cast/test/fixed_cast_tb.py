@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # This script tests the fixed point castiplier
-import random, logging
+import random, logging, pytest
 
 import cocotb
 from cocotb.triggers import Timer
@@ -106,6 +106,7 @@ async def cocotb_test_fixed_adder_tree_layer(dut):
         )
 
 
+@pytest.mark.dev
 def test_fixed_cast():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])

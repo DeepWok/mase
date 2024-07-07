@@ -169,16 +169,16 @@ module binary_activation_binary_linear #(
       /* verilator lint_off UNUSEDSIGNAL */
       logic dout_valid;
       register_slice #(
-          .IN_WIDTH(OUT_WIDTH)
+          .DATA_WIDTH(OUT_WIDTH)
       ) register_slice (
           .clk           (clk),
           .rst           (rst),
           .data_in_valid (acc_join_valid),
           .data_in_ready (reg_ready[i]),
-          .data_in_data  (add),
+          .data_in       (add),
           .data_out_valid(dout_valid),
           .data_out_ready(data_out_ready),
-          .data_out_data (data_out[i])
+          .data_out      (data_out[i])
       );
     end
     assign data_out_valid = add_bias[0].dout_valid;

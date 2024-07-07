@@ -5,6 +5,7 @@
 
 # Manually add user-specific mase_cocotb path
 # this should be ignored on the standard mase-docker env
+import pytest
 import sys
 
 p = "/home/ic/MYWORKSPACE/Mase-DeepWok/machop"
@@ -203,6 +204,7 @@ async def cocotb_test_quantizer_top(dut):
     )  # TODO: allow error
 
 
+@pytest.mark.dev
 def test_quantizer_top():
     tb = VerificationCase()
     mase_runner(
