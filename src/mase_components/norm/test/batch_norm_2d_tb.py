@@ -45,6 +45,8 @@ from mase_components.cast.test.fixed_signed_cast_tb import _fixed_signed_cast_mo
 from mase_components.fixed_math.test.isqrt_sw import lut_parameter_dict
 from mase_components.common.test.lut_tb import write_memb, read_memb
 
+import pytest
+
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.INFO)
 

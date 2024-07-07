@@ -12,7 +12,7 @@ from mase_cocotb.utils import sign_extend_t, signed_to_unsigned
 
 from chop.nn.quantizers.utils import my_clamp, my_floor, my_round
 
-import test
+import pytest
 
 
 def _fixed_signed_cast_model(

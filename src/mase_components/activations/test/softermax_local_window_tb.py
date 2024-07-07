@@ -18,6 +18,8 @@ from mase_components.cast.test.fixed_signed_cast_tb import _fixed_signed_cast_mo
 import cocotb
 from cocotb.triggers import *
 
+import pytest
+
 logger = logging.getLogger("testbench")
 logger.setLevel("INFO")
 
