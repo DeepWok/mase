@@ -18,7 +18,7 @@ from mase_cocotb.runner import mase_runner
 
 # from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner
 from chop.nn.quantized import BertSelfAttentionHeadInteger
-from chop.passes.graph.transforms.quantize.quantizers import integer_quantizer
+from chop.nn.quantizers import integer_quantizer
 
 from mase_components.activations.test import generate_memory
 

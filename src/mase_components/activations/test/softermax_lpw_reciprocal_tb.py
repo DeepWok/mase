@@ -19,7 +19,6 @@ import cocotb
 from cocotb.triggers import *
 
 import pandas as pd
-import altair as alt
 
 logger = logging.getLogger("testbench")
 logger.setLevel("DEBUG")
@@ -123,69 +122,69 @@ async def sweep(dut):
     data["sw_error"] = (data["software"] - data["reference"]).abs()
     data["model_error"] = (data["hardware"] - data["software"]).abs()
 
-    curve_data = data.melt(
-        id_vars="x",
-        value_vars=["reference", "software", "hardware"],
-        value_name="Value",
-        var_name="Type",
-    )
-    curve = (
-        alt.Chart(curve_data)
-        .mark_line()
-        .encode(
-            x="x",
-            y=alt.Y("Value").title("Curves"),
-            color="Type",
-        )
-        .properties(
-            width=600,
-            height=300,
-        )
-    )
+    # curve_data = data.melt(
+    #     id_vars="x",
+    #     value_vars=["reference", "software", "hardware"],
+    #     value_name="Value",
+    #     var_name="Type",
+    # )
+    # curve = (
+    #     alt.Chart(curve_data)
+    #     .mark_line()
+    #     .encode(
+    #         x="x",
+    #         y=alt.Y("Value").title("Curves"),
+    #         color="Type",
+    #     )
+    #     .properties(
+    #         width=600,
+    #         height=300,
+    #     )
+    # )
 
-    error_data = data.melt(
-        id_vars="x",
-        value_vars=["hw_error", "sw_error"],
-        value_name="Value",
-        var_name="Type",
-    )
-    error = (
-        alt.Chart(error_data)
-        .mark_line()
-        .encode(
-            x="x",
-            y=alt.Y("Value").title("Error vs. Perfect Reference"),
-            color="Type",
-        )
-        .properties(
-            width=600,
-            height=100,
-        )
-    )
+    # error_data = data.melt(
+    #     id_vars="x",
+    #     value_vars=["hw_error", "sw_error"],
+    #     value_name="Value",
+    #     var_name="Type",
+    # )
+    # error = (
+    #     alt.Chart(error_data)
+    #     .mark_line()
+    #     .encode(
+    #         x="x",
+    #         y=alt.Y("Value").title("Error vs. Perfect Reference"),
+    #         color="Type",
+    #     )
+    #     .properties(
+    #         width=600,
+    #         height=100,
+    #     )
+    # )
 
-    model_error_data = data.melt(
-        id_vars="x", value_vars=["model_error"], value_name="Value", var_name="Type"
-    )
-    model_error = (
-        alt.Chart(model_error_data)
-        .mark_line()
-        .encode(
-            x="x",
-            y=alt.Y("Value").title("Bit error vs software model"),
-            color="Type",
-        )
-        .properties(
-            width=600,
-            height=100,
-        )
-    )
+    # model_error_data = data.melt(
+    #     id_vars="x", value_vars=["model_error"], value_name="Value", var_name="Type"
+    # )
+    # model_error = (
+    #     alt.Chart(model_error_data)
+    #     .mark_line()
+    #     .encode(
+    #         x="x",
+    #         y=alt.Y("Value").title("Bit error vs software model"),
+    #         color="Type",
+    #     )
+    #     .properties(
+    #         width=600,
+    #         height=100,
+    #     )
+    # )
 
-    graph_id = f"{tb.ENTRIES}e_{tb.IN_WIDTH}_{tb.IN_FRAC_WIDTH}_to_{tb.OUT_WIDTH}_{tb.OUT_FRAC_WIDTH}"
-    (curve & error & model_error).save(
-        Path(__file__).parent
-        / f"build/softermax_lpw_reciprocal/error_graph_{graph_id}.png",
-        scale_factor=3,
-    )
+    # graph_id = f"{tb.ENTRIES}e_{tb.IN_WIDTH}_{tb.IN_FRAC_WIDTH}_to_{tb.OUT_WIDTH}_{tb.OUT_FRAC_WIDTH}"
+    # (curve & error & model_error).save(
+    #     Path(__file__).parent
+    #     / f"build/softermax_lpw_reciprocal/error_graph_{graph_id}.png",
+    #     scale_factor=3,
+    # )
 
     tb._final_check()
 

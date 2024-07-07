@@ -1,7 +1,7 @@
 import torch
 
 from torch import Tensor
-from chop.passes.graph.transforms.quantize.quantizers.integer import _integer_quantize
+from chop.nn.quantizers import integer_quantizer as _integer_quantize
 
 
 def quantize_to_int(x: Tensor, width: int, frac_width: int):

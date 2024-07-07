@@ -5,7 +5,7 @@ import os, logging
 
 from mase_cocotb.random_test import RandomSource, RandomSink, check_results
 from mase_cocotb.runner import mase_runner
-from chop.passes.graph.transforms.quantize.quantized_modules import Conv2dInteger
+from chop.nn.quantized.modules import Conv2dInteger
 
 from .Qconv import QuantizedConvolution
 import torch

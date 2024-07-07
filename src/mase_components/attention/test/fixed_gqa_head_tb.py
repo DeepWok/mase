@@ -21,10 +21,10 @@ from cocotb.triggers import *
 
 from chop.nn.quantized.functional import fixed_softermax
 
-from chop.passes.graph.transforms.quantize.quantizers.integer import (
+from chop.nn.quantizers.integer import (
     integer_floor_quantizer,
 )
-from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
+from chop.nn.quantizers.quantizers_for_hw import (
     unsigned_integer_quantizer_for_hw,
 )
 

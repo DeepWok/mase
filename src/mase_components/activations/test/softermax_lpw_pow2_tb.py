@@ -18,7 +18,6 @@ import cocotb
 from cocotb.triggers import *
 
 import pandas as pd
-import altair as alt
 
 logger = logging.getLogger("testbench")
 logger.setLevel("DEBUG")
@@ -119,18 +118,18 @@ async def sweep(dut):
         var_name="Type",
     )
 
-    graph_id = f"{tb.IN_WIDTH}_{tb.IN_FRAC_WIDTH}_to_{tb.OUT_WIDTH}_{tb.OUT_FRAC_WIDTH}"
-    alt.Chart(data).mark_line().encode(
-        x="x",
-        y="Value",
-        color="Type",
-    ).properties(
-        width=600,
-        height=300,
-    ).save(
-        Path(__file__).parent / f"build/softermax_lpw_pow2/error_graph_{graph_id}.png",
-        scale_factor=3,
-    )
+    # graph_id = f"{tb.IN_WIDTH}_{tb.IN_FRAC_WIDTH}_to_{tb.OUT_WIDTH}_{tb.OUT_FRAC_WIDTH}"
+    # alt.Chart(data).mark_line().encode(
+    #     x="x",
+    #     y="Value",
+    #     color="Type",
+    # ).properties(
+    #     width=600,
+    #     height=300,
+    # ).save(
+    #     Path(__file__).parent / f"build/softermax_lpw_pow2/error_graph_{graph_id}.png",
+    #     scale_factor=3,
+    # )
 
     tb._final_check()
 

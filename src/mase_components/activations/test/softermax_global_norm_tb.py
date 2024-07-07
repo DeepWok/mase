@@ -14,12 +14,8 @@ from mase_cocotb.interfaces.streaming import StreamDriver, ErrorThresholdStreamM
 import cocotb
 from cocotb.triggers import *
 
-from chop.passes.graph.transforms.quantize.quantizers.integer import (
-    integer_floor_quantizer,
-)
-from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
-    unsigned_integer_quantizer_for_hw,
-)
+from chop.nn.quantizers import integer_floor_quantizer
+from chop.nn.quantizers.quantizers_for_hw import unsigned_integer_quantizer_for_hw
 
 logger = logging.getLogger("testbench")
 logger.setLevel("INFO")

@@ -242,6 +242,7 @@ def simulate_pass(
     SIM = getenv("SIM", "verilator")
 
     runner = get_runner(SIM)
+    print("hi")
     runner.build(
         verilog_sources=[rtl_dir / "top.sv"],
         includes=[rtl_dir],

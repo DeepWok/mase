@@ -18,7 +18,6 @@ from mase_cocotb.runner import mase_runner
 
 # from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner
 from chop.nn.quantized import BertSelfAttentionInteger, fixed_softermax
-from chop.passes.graph.transforms.quantize.quantized_funcs import matmul_integer
 
 from mase_cocotb.utils import fixed_preprocess_tensor
 

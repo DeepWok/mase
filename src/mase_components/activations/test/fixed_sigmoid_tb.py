@@ -7,7 +7,7 @@ from bitstring import BitArray
 import cocotb
 from functools import partial
 from cocotb.triggers import *
-from chop.passes.graph.transforms.quantize.quantizers import *
+from chop.nn.quantizers import integer_quantizer
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import (
     StreamDriver,

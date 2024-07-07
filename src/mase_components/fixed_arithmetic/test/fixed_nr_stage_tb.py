@@ -53,7 +53,7 @@ class VerificationCase(Testbench):
 
 
 @cocotb.test()
-async def test_fixed_nr_stage(dut):
+async def cocotb_test_fixed_nr_stage(dut):
     """Test for the Newton Raphson stage for isqrt"""
     testcase = VerificationCase(dut)
     lut_pow = 5

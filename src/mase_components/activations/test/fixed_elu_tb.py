@@ -172,7 +172,7 @@ def generate_elu(
     return lut
 
 
-def testlookup(lut):
+def checklookup(lut):
     d = lut["data_width"]
     f = lut["f_width"]
     func = lut["func"]
