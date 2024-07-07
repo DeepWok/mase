@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import pytest
 
 import torch
 import logging
@@ -125,6 +126,7 @@ def get_fixed_softermax_config(kwargs={}):
     return config
 
 
+@pytest.mark.dev
 def test_fixed_softermax_smoke():
     """
     Some quick tests to check if the module is working.

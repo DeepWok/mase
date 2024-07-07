@@ -2,7 +2,7 @@
 
 # This script is never run since the rtl has been changed.
 
-import random, os
+import random, os, pytest
 
 import cocotb
 from cocotb.triggers import Timer
@@ -81,6 +81,7 @@ async def cocotb_test_fixed_adder_tree_layer(dut):
         ), "Output are incorrect on the {}th cycle: {}".format(i, x)
 
 
+@pytest.mark.dev
 def test_fixed_adder_tree_layer():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])
