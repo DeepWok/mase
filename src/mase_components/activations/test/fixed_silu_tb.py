@@ -19,6 +19,8 @@ from mase_cocotb.runner import mase_runner
 from mase_cocotb.utils import bit_driver, sign_extend_t
 from math import ceil
 
+import pytest
+
 # from chop.passes.graph.transforms.quantize.quantized_modules import LinearInteger
 
 import torch
@@ -214,6 +216,7 @@ dut_params = {
 torch.manual_seed(1)
 
 
+@pytest.mark.dev
 def test_fixed_silu():
     generate_memory.generate_sv_lut(
         "silu",

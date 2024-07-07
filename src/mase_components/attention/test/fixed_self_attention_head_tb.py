@@ -22,6 +22,8 @@ from chop.nn.quantizers import integer_quantizer
 
 from mase_components.activations.test import generate_memory
 
+import pytest
+
 
 class FixedSelfAttentionHeadTB(Testbench):
     def __init__(self, dut) -> None:
@@ -187,6 +189,10 @@ def get_fixed_self_attention_head_config(kwargs={}):
     return config
 
 
+<<<<<<< HEAD
+=======
+@pytest.mark.dev
+>>>>>>> main
 def test_fixed_self_attention_head_smoke():
     """
     Some quick tests to check if the module is working.
