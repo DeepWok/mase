@@ -18,6 +18,7 @@ You can directly import MASE as a package using `import mase` after installation
     :maxdepth: 1
 
     tutorials/common/interactive
+    tutorials/common/interactive_quantize
 
 The MASE Command Line System
 ----------------------------
