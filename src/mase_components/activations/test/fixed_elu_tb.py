@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import pytest
 import os, logging
 import pdb
 from bitstring import BitArray
@@ -515,6 +516,7 @@ dut_params = {
 torch.manual_seed(1)
 
 
+@pytest.mark.dev
 def test_fixed_elu():
     # generate_memory.generate_sv_lut("exp", dut_params["DATA_IN_0_PRECISION_0"], dut_params["DATA_IN_0_PRECISION_1"])
     generate_sv_lut(

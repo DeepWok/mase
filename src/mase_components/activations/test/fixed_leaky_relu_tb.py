@@ -6,7 +6,7 @@ import pdb
 import cocotb
 from functools import partial
 from cocotb.triggers import *
-from chop.passes.graph.transforms.quantize.quantizers import *
+from chop.nn.quantizers import integer_quantizer
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 from mase_cocotb.z_qlayers import quantize_to_int
@@ -123,7 +123,6 @@ class HardswishTB(Testbench):
             min=-(2 ** (self.w - fracw - 1)), max=2 ** (self.w - fracw - 1) - 1
         )
         print(intinp)
-        pdb.set_trace()
         return intinp
 
 

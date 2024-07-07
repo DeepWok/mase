@@ -29,6 +29,7 @@ in pkgs.mkShellNoCC {
     mesa
     cmake
     zsh
+    verilator
 
     # hardware
     # verible is only supported on Linux (x86_64-linux, i686-linux and aarch64-linux)
