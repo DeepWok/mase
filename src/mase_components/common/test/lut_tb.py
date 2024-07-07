@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, logging
+import os, logging, pytest
 from random import randint
 from pathlib import Path
 
@@ -71,6 +71,7 @@ def read_memb(file: Path, width):
     return [int(line.strip(), 2) for line in lines]
 
 
+@pytest.mark.dev
 def test_lut():
     DATA_WIDTH = 8
     SIZE = 13

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os
+import os, pytest
 
 import torch
 import logging
@@ -213,6 +213,7 @@ def get_fixed_linear_config(kwargs={}):
     return config
 
 
+@pytest.mark.dev
 def test_fixed_linear_smoke():
     """
     Some quick tests to check if the module is working.
@@ -228,6 +229,7 @@ def test_fixed_linear_smoke():
     )
 
 
+@pytest.mark.dev
 def test_fixed_linear_regression():
     """
     More extensive tests to check realistic parameter sizes.

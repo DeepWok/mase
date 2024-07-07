@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # This script tests the fixed point multiplier
-import random, os
+import random, os, pytest
 
 import cocotb
 from cocotb.triggers import Timer
@@ -35,6 +35,7 @@ async def cocotb_test_fixed_mult(dut):
         )
 
 
+@pytest.mark.dev
 def test_fixed_mult():
     mase_runner()
 

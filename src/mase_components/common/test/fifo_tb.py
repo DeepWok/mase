@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, logging
+import os, logging, pytest
 from random import randint
 
 from mase_cocotb.runner import mase_runner
@@ -117,6 +117,7 @@ async def cocotb_test_soak(dut):
     assert tb.output_monitor.exp_queue.empty()
 
 
+@pytest.mark.dev
 def test_fifo():
     mase_runner(
         module_param_list=[

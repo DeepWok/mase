@@ -5,7 +5,7 @@
 
 # Manually add user-specific mase_cocotb path
 # this should be ignored on the standard mase-docker env
-import sys
+import sys, pytest
 
 p = "/home/ic/MYWORKSPACE/Mase-DeepWok/machop"
 sys.path.append(p)
@@ -199,6 +199,7 @@ async def cocotb_test_find_max(dut):
     )  # TODO: allow error
 
 
+@pytest.mark.dev
 def test_find_max():
     tb = VerificationCase()
     mase_runner(

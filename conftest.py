@@ -36,4 +36,3 @@ def pytest_collection_modifyitems(config, items):
             item.add_marker(skip_large)
         if "dev" in item.keywords:
             item.add_marker(skip_dev)
-

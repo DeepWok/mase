@@ -2,6 +2,7 @@
 
 import logging
 import torch
+import pytest
 
 from random import randint
 import math
@@ -247,6 +248,7 @@ def generate_random_widths():
     return {**widths, **frac_widths}
 
 
+@pytest.mark.dev
 def test_simple_matmul():
     # Run tests with different params
     mase_runner(

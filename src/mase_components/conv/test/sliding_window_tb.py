@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, logging
+import os, logging, pytest
 
 from mase_cocotb.random_test import RandomSource, RandomSink, check_results
 from mase_cocotb.runner import mase_runner
@@ -263,6 +263,7 @@ def wave_check(dut):
     )
 
 
+@pytest.mark.dev
 def test_sliding_window():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])

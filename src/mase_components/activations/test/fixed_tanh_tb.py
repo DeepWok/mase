@@ -1,4 +1,4 @@
-import random, os
+import random, os, pytest
 import numpy as np
 import cocotb
 from cocotb.triggers import Timer
@@ -65,6 +65,7 @@ async def cocotb_test_fixed_tanh(dut):
         ), "Randomised test failed "
 
 
+@pytest.mark.dev
 def test_fixed_tanh():
     mase_runner(
         trace=True,

@@ -329,6 +329,7 @@ def generate_sv_lut(
             path_with_dtype=path_with_dtype,
         )
 
+
 def split_and_flatten_2d_tensor(input_tensor, row_block_size, col_block_size):
     rows, cols = input_tensor.size()
 
@@ -490,9 +491,7 @@ async def cocotb_test(dut):
     in_frac_width = dut_params["DATA_IN_0_PRECISION_1"]
     out_data_width = dut_params["DATA_OUT_0_PRECISION_0"]
     out_frac_width = dut_params["DATA_OUT_0_PRECISION_1"]
-    generate_sv_lut(
-        "elu", in_data_width, in_frac_width, out_data_width, out_frac_width
-    )
+    generate_sv_lut("elu", in_data_width, in_frac_width, out_data_width, out_frac_width)
     print("Generated memory")
     tb = fixed_elu_tb(torch.nn.ELU(), dut, dut_params, float_test=False)
     await tb.run_test()

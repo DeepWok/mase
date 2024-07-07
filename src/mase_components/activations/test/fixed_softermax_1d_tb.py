@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import pytest
 import os
 from random import randint, choice
 
@@ -180,6 +181,7 @@ def get_random_softermax_config():
     return config
 
 
+@pytest.mark.dev
 def test_fixed_softermax_1d_smoke():
     """
     Some quick tests to check if the module is working.

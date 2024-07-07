@@ -1,5 +1,6 @@
 import logging
 import random
+import pytest
 
 import cocotb
 from cocotb.triggers import *
@@ -143,6 +144,7 @@ def generate_random_params():
     }
 
 
+@pytest.mark.dev
 def test_repeat_circular_buffer():
     mase_runner(
         module_param_list=[

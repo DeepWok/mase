@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # This script tests the fixed point accumulator
-import math, logging
+import math, logging, pytest
 
 from mase_cocotb.random_test import RandomSource, RandomSink, check_results
 from mase_cocotb.runner import mase_runner
@@ -122,6 +122,7 @@ async def cocotb_test_fixed_accumulator(dut):
     check_results(test_case.outputs.data, test_case.ref)
 
 
+@pytest.mark.dev
 def test_fixed_accumulator():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])

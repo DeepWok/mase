@@ -1,3 +1,4 @@
+import pytest
 import random, os
 import numpy as np
 import cocotb
@@ -65,6 +66,7 @@ async def cocotb_test_fixed_softplus(dut):
         ), "Randomised test failed "
 
 
+@pytest.mark.dev
 def test_fixed_softplus():
     mase_runner(
         trace=True,

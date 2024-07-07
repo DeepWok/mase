@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import logging
+import logging, pytest
 from random import randint
 
 import cocotb
@@ -177,9 +177,7 @@ def generate_random_dimension_cfg(cfg_list, multiple=3):
     return new_cfgs
 
 
-import pytest
-
-
+@pytest.mark.dev
 def test_matmul():
     # Default is a square matrix mult
     # 4x4 4x4 matrix multiplication done using 2x2 window
