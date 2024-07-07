@@ -149,5 +149,5 @@ quan_args = {
 ori_mg = deepcopy_mase_graph(mg)
 mg, _ = quantize_transform_pass(mg, quan_args)
 
-summarize_quantization_analysis_pass(ori_mg, mg, save_dir="quantize_summary")
+summarize_quantization_analysis_pass(mg, pass_args={"save_dir": "quantize_summary", "original_mg": ori_mg})
 ```
