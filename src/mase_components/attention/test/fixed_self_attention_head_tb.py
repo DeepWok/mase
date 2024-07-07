@@ -189,10 +189,7 @@ def get_fixed_self_attention_head_config(kwargs={}):
     return config
 
 
-<<<<<<< HEAD
-=======
 @pytest.mark.dev
->>>>>>> main
 def test_fixed_self_attention_head_smoke():
     """
     Some quick tests to check if the module is working.
