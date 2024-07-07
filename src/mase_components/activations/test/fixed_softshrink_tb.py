@@ -19,6 +19,8 @@ from mase_cocotb.runner import mase_runner
 from mase_cocotb.utils import bit_driver, sign_extend_t
 from math import ceil
 
+import pytest
+
 # from chop.passes.graph.transforms.quantize.quantized_modules import LinearInteger
 
 import torch
@@ -210,6 +212,7 @@ dut_params = {
 torch.manual_seed(1)
 
 
+@pytest.mark.dev
 def test_fixed_softshrink():
     # generate_memory.generate_sv_lut("exp", dut_params["DATA_IN_0_PRECISION_0"], dut_params["DATA_IN_0_PRECISION_1"])
     mase_runner(module_param_list=[dut_params])
