@@ -118,7 +118,6 @@ async def cocotb_test_fixed_relu(dut):
 import pytest
 
 
-@pytest.mark.skip(reason="Needs to be fixed.")
 def test_fixed_relu():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])

@@ -66,7 +66,6 @@ async def cocotb_test_fixed_gelu(dut):
         ), "Randomised test failed "
 
 
-@pytest.mark.dev
 def test_fixed_gelu():
     mase_runner(
         trace=True,
