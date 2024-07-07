@@ -90,7 +90,7 @@ class VerificationCase:
         outputs = self.outputs[i]
         shifted_integers = self.convert_to_fixed(outputs)
         return shifted_integers
-    
+
     def convert_to_fixed(self, x):
         return (x * (2**self.bias)).int().numpy().tolist()
 
