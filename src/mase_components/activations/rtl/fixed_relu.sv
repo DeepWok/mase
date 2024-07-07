@@ -14,7 +14,7 @@ module fixed_relu #(
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = 8,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = 1,
     parameter DATA_OUT_0_PARALLELISM_DIM_0 = 1,
-    parameter DATA_OUT_0_PARALLELISM_DIM_1 = 0,
+    parameter DATA_OUT_0_PARALLELISM_DIM_1 = 1,
 
     parameter INPLACE = 0
 ) (

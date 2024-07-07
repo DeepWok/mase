@@ -9,6 +9,7 @@ from cocotb.triggers import Timer
 
 import pytest
 import cocotb
+import numpy as np
 
 from mase_cocotb.runner import mase_runner
 
@@ -87,8 +88,11 @@ class VerificationCase:
 
     def get_dut_output(self, i):
         outputs = self.outputs[i]
-        shifted_integers = (outputs * (2**self.bias)).int()
-        return shifted_integers.numpy().tolist()
+        shifted_integers = self.convert_to_fixed(outputs)
+        return shifted_integers
+    
+    def convert_to_fixed(self, x):
+        return (x * (2**self.bias)).int().numpy().tolist()
 
 
 @cocotb.test()
@@ -103,6 +107,11 @@ async def cocotb_test_fixed_relu(dut):
 
         dut.data_in_0.value = x
         await Timer(2, units="ns")
+        dut_out = dut.data_out_0.value
+        dut_out = [x.integer for x in dut.data_out_0.value]
+        dut_out = np.array(dut_out)
+        print(dut_out)
+        print(y)
         assert dut.data_out_0.value == y, f"output q was incorrect on the {i}th cycle"
 
 
