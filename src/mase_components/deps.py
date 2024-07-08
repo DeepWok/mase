@@ -49,6 +49,16 @@ MASE_HW_DEPS = {
         "linear",
         "matmul",
     ],
+    "attention/fixed_swin_attention": [
+        "attention",
+        "activations",
+        "arbiters",
+        "cast",
+        "common",
+        "fixed_arithmetic",
+        "linear",
+        "matmul",
+    ],
     "attention/fixed_self_attention_head": [
         "attention",
         "cast",

@@ -77,7 +77,7 @@ shell:
         -v /$(USER_PREFIX)/$(shell whoami)/.gitconfig:/root/.gitconfig \
         -v /$(USER_PREFIX)/$(shell whoami)/.ssh:/root/.ssh \
         -v /$(USER_PREFIX)/$(shell whoami)/.mase:/root/.mase \
-        -v $(shell pwd):/workspace \
+        -v $(shell pwd):/workspace:z \
         $(DOCKER_RUN_EXTRA_ARGS) \
         $(img) /bin/bash
 

@@ -158,6 +158,7 @@ class BertSelfAttentionInteger(_BertSelfAttentionBase):
         )
 
 
+
 class LlamaSdpaAttentionInteger(_LlamaSdpaAttentionBase):
     def __init__(
         self,

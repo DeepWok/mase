@@ -18,7 +18,7 @@ from mase_cocotb.runner import mase_runner
 
 # from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner
 from chop.nn.quantized import BertSelfAttentionInteger, fixed_softermax
-from chop.passes.graph.transforms.quantize.quantized_funcs import matmul_integer
+#from chop.passes.graph.transforms.quantize.quantized_funcs import matmul_integer
 
 from mase_cocotb.utils import fixed_preprocess_tensor
 
@@ -79,6 +79,8 @@ class FixedSelfAttentionTB(Testbench):
             "weight_frac_width": self.get_parameter("WEIGHT_PRECISION_1"),
             "bias_width": self.get_parameter("BIAS_PRECISION_0"),
             "bias_frac_width": self.get_parameter("BIAS_PRECISION_1"),
+            "data_out_width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
+            "data_out_frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
         }
         self.out_q_config = {
             "data_out_width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
@@ -128,6 +130,7 @@ class FixedSelfAttentionTB(Testbench):
 
         inputs = self.generate_inputs()
         exp_out = self.model(inputs)[0]
+
 
         # * Load the inputs driver
         self.log.info(f"Processing inputs: {inputs}")
@@ -198,7 +201,11 @@ class FixedSelfAttentionTB(Testbench):
         )
         self.data_out_0_monitor.load_monitor(outs)
 
+
+
         await Timer(1, units="ms")
+
+        print(exp_out)
         assert self.data_out_0_monitor.exp_queue.empty()
 
 
@@ -247,7 +254,7 @@ def test_fixed_linear_smoke():
     """
     Some quick tests to check if the module is working.
     """
-    mase_runner(trace=True, module_param_list=[get_config()], skip_build=True)
+    mase_runner(trace=True, module_param_list=[get_config()], skip_build=False)
 
 
 if __name__ == "__main__":

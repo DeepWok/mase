@@ -73,6 +73,7 @@ def _single_test(
             build_dir=test_work_dir,
         )
     try:
+        print(test_work_dir)
         runner.test(
             hdl_toplevel=module,
             hdl_toplevel_lang="verilog",

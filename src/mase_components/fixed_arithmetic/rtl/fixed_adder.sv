@@ -36,15 +36,15 @@ module fixed_adder #(
     input clk,
     input rst,
 
-    input logic [DATA_IN_0_PRECISION_0-1:0] data_in_0 [DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0],
+    input logic signed [DATA_IN_0_PRECISION_0-1:0] data_in_0 [DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0],
     input logic data_in_0_valid,
     output logic data_in_0_ready,
 
-    input logic [DATA_IN_1_PRECISION_0-1:0] data_in_1 [DATA_IN_1_PARALLELISM_DIM_0*DATA_IN_1_PARALLELISM_DIM_1-1:0],
+    input logic signed [DATA_IN_1_PRECISION_0-1:0] data_in_1 [DATA_IN_1_PARALLELISM_DIM_0*DATA_IN_1_PARALLELISM_DIM_1-1:0],
     input logic data_in_1_valid,
     output logic data_in_1_ready,
 
-    output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_0 [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0],
+    output logic signed [DATA_OUT_0_PRECISION_0-1:0] data_out_0 [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0],
     output logic data_out_0_valid,
     input logic data_out_0_ready
 );
