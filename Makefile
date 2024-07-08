@@ -9,15 +9,14 @@ VIVADO_AVAILABLE := $(shell command -v vivado 2> /dev/null)
 ifeq ($(GPU_AVAILABLE),)
     PLATFORM := cpu
 else
-    PLATFORM := gpu
+    PLATFORM := cuda
 endif
 
 # * Mount Vivado HLS path only if Vivado is available (to avoid path not found errors)
-# Include shared folder containing board files etc
 ifeq ($(VIVADO_AVAILABLE),)
     DOCKER_RUN_EXTRA_ARGS=
 else
-    DOCKER_RUN_EXTRA_ARGS= -v /mnt/applications/:/mnt/applications -v $(vhls):$(vhls) -v /$(USER_PREFIX)/$(shell whoami)/shared:/root/shared
+    DOCKER_RUN_EXTRA_ARGS=-v $(vhls):$(vhls)
 endif
 
 # * Set docker image according to local flag
@@ -40,11 +39,6 @@ coverage=test/
 
 sw_test_dir = test/
 hw_test_dir = src/mase_components/
-
-NUM_WORKERS ?= 1
-
-sw_test_dir = machop/test/
-hw_test_dir = machop/mase_components/
 
 NUM_WORKERS ?= 1
 
@@ -77,7 +71,7 @@ shell:
         -v /$(USER_PREFIX)/$(shell whoami)/.gitconfig:/root/.gitconfig \
         -v /$(USER_PREFIX)/$(shell whoami)/.ssh:/root/.ssh \
         -v /$(USER_PREFIX)/$(shell whoami)/.mase:/root/.mase \
-        -v $(shell pwd):/workspace \
+        -v $(shell pwd):/workspace:z \
         $(DOCKER_RUN_EXTRA_ARGS) \
         $(img) /bin/bash
 

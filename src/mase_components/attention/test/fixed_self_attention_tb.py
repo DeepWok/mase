@@ -10,15 +10,16 @@ import cocotb
 from cocotb.log import SimLog
 from cocotb.triggers import Timer
 
-from transformers.models.bert.configuration_bert import BertConfig
+from transformers.models.vit.configuration_vit import ViTConfig
 
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 from mase_cocotb.runner import mase_runner
 
 # from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner
-from chop.nn.quantized import BertSelfAttentionInteger, fixed_softermax
-from chop.passes.graph.transforms.quantize.quantized_funcs import matmul_integer
+from chop.nn.quantized.modules import ViTSelfAttentionInteger
+from chop.nn.quantized import fixed_softermax
+from chop.nn.quantized.functional.matmul import matmul_integer
 
 from mase_cocotb.utils import fixed_preprocess_tensor
 
@@ -69,7 +70,7 @@ class FixedSelfAttentionTB(Testbench):
         )
 
         # Model
-        self.config = BertConfig()
+        self.config = ViTConfig()
         self.config.hidden_size = self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0")
         self.config.num_attention_heads = self.get_parameter("NUM_HEADS")
         self.q_config = {
@@ -84,7 +85,7 @@ class FixedSelfAttentionTB(Testbench):
             "data_out_width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
             "data_out_frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
         }
-        self.model = BertSelfAttentionInteger(
+        self.model = ViTSelfAttentionInteger(
             config=self.config,
             q_config=self.q_config,
             out_q_config=self.out_q_config,
@@ -197,7 +198,7 @@ class FixedSelfAttentionTB(Testbench):
             ],
         )
         self.data_out_0_monitor.load_monitor(outs)
-
+        breakpoint()
         await Timer(1, units="ms")
         assert self.data_out_0_monitor.exp_queue.empty()
 
@@ -247,7 +248,7 @@ def test_fixed_linear_smoke():
     """
     Some quick tests to check if the module is working.
     """
-    mase_runner(trace=True, module_param_list=[get_config()], skip_build=True)
+    mase_runner(trace=True, module_param_list=[get_config()])
 
 
 if __name__ == "__main__":

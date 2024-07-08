@@ -104,6 +104,7 @@ class MatmulTB(Testbench):
         await self.reset()
         for _ in range(batches):
             A_inputs, B_inputs = self.generate_inputs()
+            breakpoint()
             exp_out = self.model(A_inputs, B_inputs)
             # Setup drivers and monitors
             self.a_driver.load_driver(A_inputs)

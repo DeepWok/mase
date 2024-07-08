@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
 import os, logging
-from . import generate_memory
+from generate_memory import generate_sv_lut
 import pdb
 from bitstring import BitArray
 import cocotb
 from functools import partial
 from cocotb.triggers import *
-from chop.passes.graph.transforms.quantize.quantizers import *
+from chop.nn.quantizers import *
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import (
     StreamDriver,
@@ -203,7 +203,7 @@ torch.manual_seed(1)
 
 def test_fixed_softmax():
     # generate_memory.generate_sv_lut("exp", dut_params["DATA_IN_0_PRECISION_0"], dut_params["DATA_IN_0_PRECISION_1"])
-    generate_memory.generate_sv_lut(
+    generate_sv_lut(
         "exp",
         dut_params["DATA_IN_0_PRECISION_0"],
         dut_params["DATA_IN_0_PRECISION_1"],
