@@ -57,11 +57,12 @@ def autosharding_analysis_pass(mg, pass_args: dict = {}):
 
     # Run intra-operator pass
     if algo == "alpa":
-        mg, module_map = alpa_autosharding_pass(mg, mesh, pass_args)
+        mg, pass_outs = alpa_autosharding_pass(mg, mesh, pass_args)
 
     end_time = time()
+    time_taken = end_time - start_time
     logger.info(
-        f"Autosharding pass complete. Time taken: {end_time - start_time} seconds."
+        f"Autosharding pass complete. Time taken: {time_taken} seconds. Solution: {pass_outs['solution']}"
     )
 
-    return mg, module_map
+    return mg, {"autosharding_time": time_taken, **pass_outs}

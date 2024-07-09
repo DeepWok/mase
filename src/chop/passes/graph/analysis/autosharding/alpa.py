@@ -72,5 +72,5 @@ def alpa_autosharding_pass(mg, mesh, pass_args={}):
     Returns:
         MaseGraph: MaseGraph with sharding strategy annotated for each operator.
     """
-    mg, module_map = alpa_intra_op_sharding_pass(mg, mesh, pass_args=pass_args)
-    return mg, module_map
+    mg, pass_outs = alpa_intra_op_sharding_pass(mg, mesh, pass_args=pass_args)
+    return mg, pass_outs
