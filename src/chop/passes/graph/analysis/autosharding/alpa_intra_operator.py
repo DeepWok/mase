@@ -1,6 +1,7 @@
 import torch
 import torch.fx as fx
 from torch.distributed._tensor._collective_utils import redistribute_cost
+from torch.distributed._tensor._op_schema import DTensorSpec
 import numpy as np
 import cvxpy as cp
 
@@ -119,6 +120,7 @@ def _extract_ilp(mg, mesh, pass_args={}):
         }
 
         # Consider resharding cost for each of the node's arguments
+        e_var_checks = []
         for arg_idx, in_node in enumerate(node.all_input_nodes):
 
             # Skip constant nodes
@@ -165,6 +167,10 @@ def _extract_ilp(mg, mesh, pass_args={}):
                 cp.sum(e_var) == 1,
             ]
 
+            # After solving the ILP, verify constraints were correctly formulated
+            if pass_args.get("run_checks", False):
+                e_var_checks.append((opt_var, in_opt_var, e_var))
+
             # Constraints s.t. e_var = outer(opt_var, in_opt_var)
             indices = np.arange(e_var.shape[0])
             opt_indices, in_opt_indices = np.divmod(indices, in_opt_var.shape[0])
@@ -173,6 +179,9 @@ def _extract_ilp(mg, mesh, pass_args={}):
                 e_var <= in_opt_var[in_opt_indices],
                 e_var >= opt_var[opt_indices] + in_opt_var[in_opt_indices] - 1,
             ]
+
+        if pass_args.get("run_checks", False):
+            node.meta["mase"]["software"]["autosharding"]["e_var_checks"] = e_var_checks
 
     # Solve the ILP problem
     prob = cp.Problem(cp.Minimize(expr), constr)
@@ -206,14 +215,53 @@ def _export_solution(mg):
     return mg, {}
 
 
-def _mark_sharding(mg):
+def _run_checks(mg, pass_args):
+    for node in mg.fx_graph.nodes:
+        check_list = node.meta["mase"]["software"]["autosharding"].get(
+            "e_var_checks", []
+        )
+
+        # Check that the constraints on the linearised variable for resharding cost
+        # are correctly formulated
+        for opt_var, in_opt_var, e_var in check_list:
+            idx1 = np.where(opt_var.value == 1)[0][0]
+            idx2 = np.where(in_opt_var.value == 1)[0][0]
+            idx3 = np.where(e_var.value == 1)[0][0]
+            assert (
+                idx3 == idx1 * in_opt_var.shape[0] + idx2
+            ), f"Linearized variable for resharding cost is not consistent for node {node}."
+
+
+def _mark_sharding(mg, pass_args):
     for node in mg.fx_graph.nodes:
         opt_var = node.meta["mase"]["software"]["autosharding"]["opt_var"]
 
         if opt_var is None:
             continue
 
-        idx = np.where(opt_var.value == 1)
+        idx = np.where(opt_var.value == 1)[0][0]
+        chosen_strategy = node.meta["mase"]["software"]["autosharding"][
+            "op_strategy"
+        ].strategies[idx]
+
+        arg_specs = chosen_strategy.input_specs
+        out_specs = chosen_strategy.output_specs
+
+        if isinstance(arg_specs, DTensorSpec):
+            arg_specs = (arg_specs,)
+
+        # Annotate arg metadata with chosen strategy
+        if node.op not in ["placeholder", "get_attr", "output"]:
+            arg_list = [i for i in node.meta["mase"]["common"]["args"].keys()]
+
+            for arg_idx, arg_spec in enumerate(arg_specs):
+                arg_meta = node.meta["mase"]["common"]["args"][arg_list[arg_idx]]
+                if not isinstance(arg_meta, dict):
+                    continue
+                arg_meta["dtensor_spec"] = arg_spec
+
+        # Annotate output metadata with chosen strategy
+        node.meta["mase"]["common"]["results"]["data_out_0"]["dtensor_spec"] = out_specs
 
     return mg, {}
 
@@ -247,7 +295,9 @@ def alpa_intra_op_sharding_pass(mg, mesh, pass_args={}, debug=False):
         },
     )
 
-    mg, _ = _export_solution(mg)
-    mg, _ = _mark_sharding(mg)
+    if pass_args.get("run_checks", False):
+        _run_checks(mg, pass_args)
+
+    mg, _ = _mark_sharding(mg, pass_args)
 
     return mg, {"module_map": module_map, "solution": problem.value}
