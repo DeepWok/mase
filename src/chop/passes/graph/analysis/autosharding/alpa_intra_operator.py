@@ -232,7 +232,18 @@ def _run_checks(mg, pass_args):
             ), f"Linearized variable for resharding cost is not consistent for node {node}."
 
 
+def deepgetattr(obj, attr, default=None):
+    """Recurses through an attribute chain to get the ultimate value."""
+    import functools
+
+    try:
+        return functools.reduce(getattr, attr.split("."), obj)
+    except AttributeError:
+        return default
+
+
 def _mark_sharding(mg, pass_args):
+    tensor_sharding_map = {}
     for node in mg.fx_graph.nodes:
         opt_var = node.meta["mase"]["software"]["autosharding"]["opt_var"]
 
@@ -246,6 +257,21 @@ def _mark_sharding(mg, pass_args):
 
         arg_specs = chosen_strategy.input_specs
         out_specs = chosen_strategy.output_specs
+
+        if node.op == "get_attr":
+            module_str = ".".join(node.target.split(".")[:-1])
+            attr = node.target.split(".")[-1]
+            module = deepgetattr(node.meta["mase"].model, module_str)
+
+            if module not in tensor_sharding_map:
+                tensor_sharding_map[module] = {
+                    "node": node.name,
+                    "sharding": {
+                        attr: out_specs,
+                    },
+                }
+            else:
+                tensor_sharding_map[module]["sharding"][attr] = out_specs
 
         if isinstance(arg_specs, DTensorSpec):
             arg_specs = (arg_specs,)
@@ -263,7 +289,7 @@ def _mark_sharding(mg, pass_args):
         # Annotate output metadata with chosen strategy
         node.meta["mase"]["common"]["results"]["data_out_0"]["dtensor_spec"] = out_specs
 
-    return mg, {}
+    return mg, tensor_sharding_map
 
 
 def alpa_intra_op_sharding_pass(mg, mesh, pass_args={}, debug=False):
@@ -278,8 +304,6 @@ def alpa_intra_op_sharding_pass(mg, mesh, pass_args={}, debug=False):
     Returns:
         MaseGraph: annotated MaseGraph.
     """
-
-    module_map = {}
 
     # Formulate and solve the ILP
     logger.info(f"Formulating the ILP...")
@@ -298,6 +322,6 @@ def alpa_intra_op_sharding_pass(mg, mesh, pass_args={}, debug=False):
     if pass_args.get("run_checks", False):
         _run_checks(mg, pass_args)
 
-    mg, _ = _mark_sharding(mg, pass_args)
+    mg, tensor_sharding_map = _mark_sharding(mg, pass_args)
 
-    return mg, {"module_map": module_map, "solution": problem.value}
+    return mg, {"tensor_sharding_map": tensor_sharding_map, "solution": problem.value}
