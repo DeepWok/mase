@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os, logging
-from . import generate_memory
 import pdb
 from bitstring import BitArray
 import cocotb
@@ -18,6 +17,7 @@ from mase_cocotb.z_qlayers import quantize_to_int
 from mase_cocotb.runner import mase_runner
 from mase_cocotb.utils import bit_driver, sign_extend_t
 from math import ceil
+from mase_components.helper import generate_memory
 
 import pytest
 
@@ -190,10 +190,6 @@ async def cocotb_test(dut):
     in_frac_width = dut_params["DATA_IN_0_PRECISION_1"]
     out_data_width = dut_params["DATA_OUT_0_PRECISION_0"]
     out_frac_width = dut_params["DATA_OUT_0_PRECISION_1"]
-    generate_memory.generate_sv_lut(
-        "silu", in_data_width, in_frac_width, out_data_width, out_frac_width
-    )
-    print("Generated memory")
     tb = fixed_silu_tb(torch.nn.SiLU(), dut, dut_params, float_test=False)
     await tb.run_test()
 
@@ -224,6 +220,7 @@ def test_fixed_silu():
         dut_params["DATA_IN_0_PRECISION_1"],
         dut_params["DATA_OUT_0_PRECISION_0"],
         dut_params["DATA_OUT_0_PRECISION_1"],
+        path="src/mase_components/activations/rtl",
     )
     print("Generated memory")
     mase_runner(module_param_list=[dut_params])
