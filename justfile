@@ -1,5 +1,6 @@
 alias ts := test-sw
 alias th := test-hw
+alias r := reformat
 
 test-sw:
 	bash scripts/test-machop.sh
@@ -19,3 +20,8 @@ test-hw:
 	# dev mode
 	# python src/mase_components/activations/test/fixed_hardswish_tb.py
 	python src/mase_components/activations/test/fixed_leaky_relu_tb.py
+
+reformat:
+	# format python files
+	black src/chop
+	black src/mase_components

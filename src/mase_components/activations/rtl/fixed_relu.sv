@@ -31,8 +31,10 @@ module fixed_relu #(
 );
 
   initial begin
-    assert (DATA_IN_0_PRECISION_0 == DATA_OUT_0_PRECISION_0) else $error("ReLU: DATA_IN_0_PRECISION_0 must be equal to DATA_OUT_0_PRECISION_0");
-    assert (DATA_IN_0_PRECISION_1 == DATA_OUT_0_PRECISION_1) else $error("ReLU: DATA_IN_0_PRECISION_1 must be equal to DATA_OUT_0_PRECISION_1");
+    assert (DATA_IN_0_PRECISION_0 == DATA_OUT_0_PRECISION_0)
+    else $error("ReLU: DATA_IN_0_PRECISION_0 must be equal to DATA_OUT_0_PRECISION_0");
+    assert (DATA_IN_0_PRECISION_1 == DATA_OUT_0_PRECISION_1)
+    else $error("ReLU: DATA_IN_0_PRECISION_1 must be equal to DATA_OUT_0_PRECISION_1");
   end
 
 
