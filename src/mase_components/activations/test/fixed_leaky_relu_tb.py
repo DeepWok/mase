@@ -23,13 +23,14 @@ from chop.nn.quantizers import integer_quantizer
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.INFO)
 
+
 def get_in_and_out(x, fn, width, frac_width):
     ins = integer_quantizer(x, width=width, frac_width=frac_width)
     y = fn(x)
     outs = integer_quantizer(y, width=width, frac_width=frac_width)
-    outs = outs * 2 ** frac_width 
+    outs = outs * 2**frac_width
     outs = outs.int()
-    ins = ins * 2 ** frac_width
+    ins = ins * 2**frac_width
     ins = ins.int()
     return (ins, outs)
 
@@ -64,8 +65,7 @@ class LeakyReLUTB(Testbench):
     def generate_inputs_outputs(self, width, frac_width, negative_slope):
         inputs = torch.tensor([10, 10, -4, -4]).float()
         fn = torch.nn.LeakyReLU(negative_slope=negative_slope)
-        ins, outs = get_in_and_out(
-            inputs, fn, width, frac_width)
+        ins, outs = get_in_and_out(inputs, fn, width, frac_width)
         print(ins, outs)
         return ins, outs
 
@@ -100,14 +100,12 @@ def test_fixed_leaky_relu():
                 "DATA_IN_0_PARALLELISM_DIM_1": 1,
                 "DATA_IN_0_PRECISION_0": 16,
                 "DATA_IN_0_PRECISION_1": 4,
-
                 "DATA_OUT_0_TENSOR_SIZE_DIM_0": 4,
                 "DATA_OUT_0_TENSOR_SIZE_DIM_1": 1,
                 "DATA_OUT_0_PARALLELISM_DIM_0": 4,
                 "DATA_OUT_0_PARALLELISM_DIM_1": 1,
                 "DATA_OUT_0_PRECISION_0": 16,
                 "DATA_OUT_0_PRECISION_1": 4,
-
                 "NEGATIVE_SLOPE_PRECISION_0": 16,
                 "NEGATIVE_SLOPE_PRECISION_1": 4,
                 "NEGATIVE_SLOPE_VALUE": 1,
