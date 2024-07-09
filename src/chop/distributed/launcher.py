@@ -115,8 +115,7 @@ def device_fn(
         distribute_tensor(in_tensor, mesh, [Replicate(), Replicate()])
         for in_tensor in inputs
     ]
-    # out, time_taken = distributed_timing(model, *inputs)
-    time_taken = 0
+    out, time_taken = distributed_timing(model, *inputs)
     rlog(logger, rank, f"Forward pass finished. Time taken: {time_taken}", level="info")
 
     dist.destroy_process_group()
