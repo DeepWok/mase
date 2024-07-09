@@ -13,15 +13,17 @@ test-sw:
 		test/
 
 test-hw:
-	python src/mase_components/activations/test/fixed_gelu_tb.py
-	python src/mase_components/activations/test/fixed_relu_tb.py
+	python3 src/mase_components/activations/test/fixed_gelu_tb.py
+	python3 src/mase_components/activations/test/fixed_relu_tb.py
 	# dev mode
-	# python src/mase_components/activations/test/fixed_hardshrink_tb.py
+	# python3 src/mase_components/activations/test/fixed_hardshrink_tb.py
 	# dev mode
-	# python src/mase_components/activations/test/fixed_hardswish_tb.py
-	python src/mase_components/activations/test/fixed_leaky_relu_tb.py
+	# python3 src/mase_components/activations/test/fixed_hardswish_tb.py
+	python3 src/mase_components/activations/test/fixed_leaky_relu_tb.py
 
 reformat:
 	# format python files
 	black src/chop
 	black src/mase_components
+	# format verilog
+	# find src/mase_components -name '*.sv' -exec verible-verilog-format --inplace {} +;
