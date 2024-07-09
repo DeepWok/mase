@@ -35,17 +35,30 @@ module fixed_leaky_relu #(
     input  logic data_out_0_ready
 );
 
+  initial begin
+    assert (DATA_IN_0_PRECISION_0 == DATA_OUT_0_PRECISION_0) else $error("Leaky ReLU: DATA_IN_0_PRECISION_0 must be equal to DATA_OUT_0_PRECISION_0");
+    assert (DATA_IN_0_PRECISION_0 == NEGATIVE_SLOPE_PRECISION_0) else $error("Leaky ReLU: DATA_IN_0_PRECISION_0 must be equal to NEGATIVE_SLOPE_PRECISION_0");
+    assert (DATA_IN_0_PRECISION_1 == DATA_OUT_0_PRECISION_1) else $error("Leaky ReLU: DATA_IN_0_PRECISION_1 must be equal to DATA_OUT_0_PRECISION_1");
+    assert (DATA_IN_0_PRECISION_1 == NEGATIVE_SLOPE_PRECISION_1) else $error("Leaky ReLU: DATA_IN_0_PRECISION_1 must be equal to NEGATIVE_SLOPE_PRECISION_1");
+  end
+
+
 
   for (genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_0; i++) begin : ReLU
     always_comb begin
       // negative value, put to zero
       if ($signed(data_in_0[i]) < 0)
-        data_out_0[i] = NEGATIVE_SLOPE_VALUE*(data_in_0[i] << DATA_OUT_0_PRECISION_1)>>NEGATIVE_SLOPE_PRECISION_1;
-      else data_out_0[i] = data_in_0[i] << DATA_OUT_0_PRECISION_1;
+        // check vivado behaviour
+        // The behavior of leaky relu may not exactly match the behavior of the torch leaky relu.
+        // This is becase of the multiplication with the negative slope is floored in system verilog instead of rounded.
+    
+        data_out_0[i] = ($signed(NEGATIVE_SLOPE_VALUE)*$signed(data_in_0[i])) >>> NEGATIVE_SLOPE_PRECISION_1;
+      else data_out_0[i] = data_in_0[i];
     end
   end
 
   assign data_out_0_valid = data_in_0_valid;
   assign data_in_0_ready  = data_out_0_ready;
+
 
 endmodule
