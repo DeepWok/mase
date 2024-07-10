@@ -194,7 +194,7 @@ jobs:
       # -----------
       
       - name: Mase regression test 
-        run: 
+        run: |
           export PYTHONPATH=$PYTHONPATH:$PWD/src
           make test-sw
 
