@@ -290,8 +290,7 @@ def generate_sv_lut(
         end = ""
 
     if path is None:
-        # p = Path(__file__).parents[1] / "rtl"
-        p = Path(__file__).parents[1] / "activations" / "rtl"
+        p = Path(__file__).parents[1] / "rtl"
         lookup_to_sv_file(
             in_data_width,
             in_f_width,
