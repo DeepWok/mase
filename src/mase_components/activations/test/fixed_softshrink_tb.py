@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os, logging
-from . import generate_memory
 import pdb
 from bitstring import BitArray
 import cocotb

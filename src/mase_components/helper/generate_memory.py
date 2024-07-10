@@ -277,7 +277,7 @@ def generate_sv_lut(
     in_f_width,
     data_width,
     f_width,
-    dir=None,
+    path=None,
     path_with_dtype=False,
 ):
     assert (
@@ -288,7 +288,8 @@ def generate_sv_lut(
         end = f"_{data_width}_{f_width}"
     else:
         end = ""
-    if dir is None:
+
+    if path is None:
         p = Path(__file__).parents[1] / "rtl"
         lookup_to_sv_file(
             in_data_width,
@@ -306,7 +307,7 @@ def generate_sv_lut(
             data_width,
             f_width,
             function_name,
-            f"{dir}/{function_name}_lut{end}.sv",
+            f"{path}/{function_name}_lut{end}.sv",
             path_with_dtype=path_with_dtype,
         )
 

@@ -77,9 +77,9 @@ shell:
         $(img) /bin/bash
 
 test-hw:
-	python3 scripts/build-components.py
 	pytest --log-level=DEBUG --verbose \
 		-n $(NUM_WORKERS) \
+		--junitxml=hardware_report.xml \
 		--html=report.html --self-contained-html \
 		$(hw_test_dir)
 
@@ -89,7 +89,7 @@ test-sw:
 		-n $(NUM_WORKERS) \
 		--cov=src/chop/ --cov-report=html \
 		--html=report.html --self-contained-html \
-		--junitxml=test/report.xml \
+		--junitxml=software_report.xml \
 		--profile --profile-svg \
 		$(sw_test_dir)
 

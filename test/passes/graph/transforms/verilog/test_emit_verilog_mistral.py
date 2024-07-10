@@ -17,7 +17,7 @@ from chop.passes.graph.utils import deepsetattr
 from chop.tools import get_logger, set_excepthook
 
 from mase_components import get_module_dependencies
-from mase_components.activations.test.generate_memory import generate_sv_lut
+from mase_components.helper.generate_memory import generate_sv_lut
 
 import operator
 from functools import partial

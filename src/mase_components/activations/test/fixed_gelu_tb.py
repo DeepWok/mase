@@ -2,11 +2,17 @@ import pytest
 import random, os
 import numpy as np
 import cocotb
+import torch
+from torch import nn
+from pathlib import Path
 from cocotb.triggers import Timer
 from mase_cocotb.runner import mase_runner
 
-import torch
-from torch import nn
+
+from mase_components.helper.generate_memory import (
+    generate_sv_lut,
+)
+
 
 DATA_IN_0_PRECISION_1 = 8
 DATA_OUT_0_PRECISION_1 = 8
@@ -66,8 +72,17 @@ async def cocotb_test_fixed_gelu(dut):
         ), "Randomised test failed "
 
 
-@pytest.mark.dev
 def test_fixed_gelu():
+
+    generate_sv_lut(
+        "gelu",
+        DATA_IN_0_PRECISION_1 * 2,
+        DATA_IN_0_PRECISION_1,
+        data_width=DATA_OUT_0_PRECISION_1 * 2,
+        f_width=DATA_OUT_0_PRECISION_1,
+        path=Path(__file__).parents[1] / "rtl",
+    )
+
     mase_runner(
         trace=True,
         module_param_list=[

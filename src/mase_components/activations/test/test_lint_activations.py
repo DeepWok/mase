@@ -1,7 +1,7 @@
 import pytest
 from mase_components.linter import run_lint
 
-from .generate_memory import generate_sv_lut, FUNCTION_TABLE
+from mase_components.helper.generate_memory import generate_sv_lut, FUNCTION_TABLE
 
 
 @pytest.mark.dev

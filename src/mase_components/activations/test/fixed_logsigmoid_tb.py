@@ -2,7 +2,6 @@
 
 import pytest
 import os, logging
-from . import generate_memory
 import pdb
 from bitstring import BitArray
 import cocotb
@@ -19,6 +18,7 @@ from mase_cocotb.z_qlayers import quantize_to_int
 from mase_cocotb.runner import mase_runner
 from mase_cocotb.utils import bit_driver, sign_extend_t
 from math import ceil
+from mase_components.helper import generate_memory
 
 # from chop.passes.graph.transforms.quantize.quantized_modules import LinearInteger
 
@@ -189,10 +189,13 @@ async def cocotb_test(dut):
     in_frac_width = dut_params["DATA_IN_0_PRECISION_1"]
     out_data_width = dut_params["DATA_OUT_0_PRECISION_0"]
     out_frac_width = dut_params["DATA_OUT_0_PRECISION_1"]
-    generate_memory.generate_sv_lut(
-        "logsigmoid", in_data_width, in_frac_width, out_data_width, out_frac_width
-    )
-    print("Generated memory")
+    # generate_memory.generate_sv_lut(
+    #     "logsigmoid",
+    #     in_data_width, in_frac_width,
+    #     out_data_width, out_frac_width,
+    #     path="src/mase_components/activations/rtl"
+    # )
+    # print("Generated memory")
     tb = fixed_logsigmoid_tb(torch.nn.LogSigmoid(), dut, dut_params, float_test=False)
     await tb.run_test()
 
@@ -217,13 +220,13 @@ torch.manual_seed(1)
 
 @pytest.mark.dev
 def test_fixed_logsigmoid():
-    # generate_memory.generate_sv_lut("exp", dut_params["DATA_IN_0_PRECISION_0"], dut_params["DATA_IN_0_PRECISION_1"])
     generate_memory.generate_sv_lut(
         "logsigmoid",
         dut_params["DATA_IN_0_PRECISION_0"],
         dut_params["DATA_IN_0_PRECISION_1"],
         dut_params["DATA_OUT_0_PRECISION_0"],
         dut_params["DATA_OUT_0_PRECISION_1"],
+        path="src/mase_components/activations/rtl",
     )
     print("Generated memory")
     mase_runner(module_param_list=[dut_params])

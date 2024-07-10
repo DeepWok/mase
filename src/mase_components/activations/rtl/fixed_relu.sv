@@ -14,7 +14,7 @@ module fixed_relu #(
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = 8,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = 1,
     parameter DATA_OUT_0_PARALLELISM_DIM_0 = 1,
-    parameter DATA_OUT_0_PARALLELISM_DIM_1 = 0,
+    parameter DATA_OUT_0_PARALLELISM_DIM_1 = 1,
 
     parameter INPLACE = 0
 ) (
@@ -29,6 +29,14 @@ module fixed_relu #(
     output logic data_out_0_valid,
     input  logic data_out_0_ready
 );
+
+  initial begin
+    assert (DATA_IN_0_PRECISION_0 == DATA_OUT_0_PRECISION_0)
+    else $error("ReLU: DATA_IN_0_PRECISION_0 must be equal to DATA_OUT_0_PRECISION_0");
+    assert (DATA_IN_0_PRECISION_1 == DATA_OUT_0_PRECISION_1)
+    else $error("ReLU: DATA_IN_0_PRECISION_1 must be equal to DATA_OUT_0_PRECISION_1");
+  end
+
 
   /* verilator lint_off SELRANGE */
   for (
