@@ -131,7 +131,7 @@ jobs:
       # Upload the format patches to an artifact (zip'd) associated
       # with the workflow run. Only run this on a failure.
       - name: Upload format patches
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         continue-on-error: true
         if: ${{ failure() }}
         with:
@@ -174,7 +174,7 @@ jobs:
       # Upload the tidy patches to an artifact (zip'd) associated
       # with the workflow run. Only run this on a failure.
       - name: Upload tidy patches
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         continue-on-error: true
         if: ${{ failure() }}
         with:
@@ -356,12 +356,12 @@ jobs:
       - name: Download software test report 
         uses: actions/download-artifact@v4
         with:
-          name: software_test 
+          name: software_report 
 
       # - name: Download hardware test report
       #   uses: actions/download-artifact@v4
       #   with:
-      #     name: hardware_test 
+      #     name: hardware_report 
 
       # -----------
       # Build doc pages when the software tests passes 
