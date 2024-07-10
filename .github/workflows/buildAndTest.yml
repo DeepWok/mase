@@ -301,7 +301,7 @@ jobs:
           retention-days: 1
 
   build-doc:
-    needs: software-test hardware-test
+    needs: [software-test, hardware-test]
     runs-on: ubuntu-latest
     container:
       image: deepwok/mase-docker-cpu:latest
