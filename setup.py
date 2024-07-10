@@ -81,6 +81,7 @@ requirements = [
     "bitstring>=4.2",
     "myst_parser",
     "cvxpy",
+    "Pillow",
 ]
 
 if is_cuda_available():
