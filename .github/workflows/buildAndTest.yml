@@ -197,6 +197,11 @@ jobs:
         run: |
           export PYTHONPATH=$PYTHONPATH:$PWD/src
           make test-sw
+          if [ ! -f software_report.html ]; then
+            echo "software_report.html not found!"
+            ls
+            exit 1
+          fi
 
       # -----------
       # Upload software regression test artifacts 
@@ -206,7 +211,6 @@ jobs:
         with:
           name: software_report 
           path: software_report.html
-          retention-days: 1
           if-no-files-found: error 
           overwrite: true 
 
@@ -306,7 +310,6 @@ jobs:
       #   with:
       #     name: hardware_report 
       #     path: hardware_report.html
-      #     retention-days: 1
       #     if-no-files-found: error 
       #     overwrite: true 
 
