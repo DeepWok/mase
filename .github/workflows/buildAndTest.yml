@@ -197,7 +197,7 @@ jobs:
         run: |
           export PYTHONPATH=$PYTHONPATH:$PWD/src
           make test-sw
-          if [ ! -f software_report.html ]; then
+          if [ ! -f software_report.xml ]; then
             echo "software_report.xml not found!"
             ls
             exit 1
@@ -301,7 +301,7 @@ jobs:
             echo "PYTHONPATH is ${PYTHONPATH}"
             export PYTHONPATH=$PYTHONPATH:$PWD/src
             just test-hw
-            # if [ ! -f hardware_report.html ]; then
+            # if [ ! -f hardware_report.xml ]; then
             #   echo "hardware_report.xml not found!"
             #   ls
             #   exit 1
