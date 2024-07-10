@@ -20,8 +20,6 @@ from .layers import (
 logger = get_logger(__name__)
 logger.setLevel("DEBUG")
 
-from .mesh_model import MeshModel
-
 
 def _extract_ilp(mg, mesh, pass_args={}):
     """
@@ -31,6 +29,15 @@ def _extract_ilp(mg, mesh, pass_args={}):
 
     Return list of constraints associated with ILP. The constraints at this stage only
     enforce that each optimizer variable is a one-hot boolean vector.
+
+    Args:
+        mg (MaseGraph): input mase graph.
+        mesh (MeshModel): mesh model.
+        pass_args (dict, optional): pass arguments. Defaults to {}.
+
+    Returns:
+        MaseGraph: input mase graph.
+        cp.Problem: optimization problem.
     """
 
     # Setup for the ILP optimization
@@ -188,34 +195,18 @@ def _extract_ilp(mg, mesh, pass_args={}):
     return mg, prob
 
 
-def _export_solution(mg):
-
-    nodes = [node for node in mg.fx_graph.nodes]
-    node_names = [node.name for node in nodes]
-    opt_vars = [
-        node.meta["mase"]["software"]["autosharding"]["opt_var"] for node in nodes
-    ]
-    opt_vals = [i.value if i is not None else None for i in opt_vars]
-    choices = [np.argmax(i) for i in opt_vals]
-
-    strategies = [
-        i.meta["mase"]["software"]["autosharding"]["op_strategy"].strategies
-        for i in nodes
-    ]
-    shardings = [strat[choices[idx]] for idx, strat in enumerate(strategies)]
-    map = [
-        {
-            "node": nodes[idx].name,
-            "input_specs": strat.input_specs,
-            "output_specs": strat.output_specs,
-        }
-        for idx, strat in enumerate(shardings)
-    ]
-
-    return mg, {}
-
-
 def _run_checks(mg, pass_args):
+    """
+    Run checks on the ILP solution to ensure that the constraints were correctly formulated.
+
+    Args:
+        mg (MaseGraph): input mase graph.
+        pass_args (dict): pass arguments.
+
+    Returns:
+        None
+    """
+
     for node in mg.fx_graph.nodes:
         check_list = node.meta["mase"]["software"]["autosharding"].get(
             "e_var_checks", []
@@ -232,18 +223,20 @@ def _run_checks(mg, pass_args):
             ), f"Linearized variable for resharding cost is not consistent for node {node}."
 
 
-def deepgetattr(obj, attr, default=None):
-    """Recurses through an attribute chain to get the ultimate value."""
-    import functools
-
-    try:
-        return functools.reduce(getattr, attr.split("."), obj)
-    except AttributeError:
-        return default
-
-
 def _mark_sharding(mg, pass_args):
-    tensor_sharding_map = {}
+    """
+    After solving the ILP, annotate the metadata of each operator in the graph with the chosen
+    parallelization strategy.
+
+    Args:
+        mg (MaseGraph): input mase graph.
+        pass_args (dict): pass arguments.
+
+    Returns:
+        MaseGraph: input mase graph.
+        dict: tensor sharding map.
+    """
+
     for node in mg.fx_graph.nodes:
         opt_var = node.meta["mase"]["software"]["autosharding"]["opt_var"]
 
@@ -255,23 +248,13 @@ def _mark_sharding(mg, pass_args):
             "op_strategy"
         ].strategies[idx]
 
+        # Annotate chosen placement strategy
+        node.meta["mase"]["software"]["autosharding"][
+            "placement_strategy"
+        ] = chosen_strategy
+
         arg_specs = chosen_strategy.input_specs
         out_specs = chosen_strategy.output_specs
-
-        if node.op == "get_attr":
-            module_str = ".".join(node.target.split(".")[:-1])
-            attr = node.target.split(".")[-1]
-            module = deepgetattr(node.meta["mase"].model, module_str)
-
-            if module not in tensor_sharding_map:
-                tensor_sharding_map[module] = {
-                    "node": node.name,
-                    "sharding": {
-                        attr: out_specs,
-                    },
-                }
-            else:
-                tensor_sharding_map[module]["sharding"][attr] = out_specs
 
         if isinstance(arg_specs, DTensorSpec):
             arg_specs = (arg_specs,)
@@ -289,7 +272,7 @@ def _mark_sharding(mg, pass_args):
         # Annotate output metadata with chosen strategy
         node.meta["mase"]["common"]["results"]["data_out_0"]["dtensor_spec"] = out_specs
 
-    return mg, tensor_sharding_map
+    return mg, {}
 
 
 def alpa_intra_op_sharding_pass(mg, mesh, pass_args={}, debug=False):
@@ -322,6 +305,6 @@ def alpa_intra_op_sharding_pass(mg, mesh, pass_args={}, debug=False):
     if pass_args.get("run_checks", False):
         _run_checks(mg, pass_args)
 
-    mg, tensor_sharding_map = _mark_sharding(mg, pass_args)
+    mg, _ = _mark_sharding(mg, pass_args)
 
-    return mg, {"tensor_sharding_map": tensor_sharding_map, "solution": problem.value}
+    return mg, {"solution": problem.value}
