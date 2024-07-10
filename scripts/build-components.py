@@ -1,4 +1,4 @@
-from mase_components.activations.test.generate_memory import (
+from mase_components.helper.generate_memory import (
     generate_sv_lut,
     FUNCTION_TABLE,
 )

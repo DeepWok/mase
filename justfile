@@ -13,6 +13,7 @@ test-sw:
 		test/
 
 test-hw:
+	# python3 scripts/build-components.py
 	python3 src/mase_components/activations/test/fixed_gelu_tb.py
 	python3 src/mase_components/activations/test/fixed_leaky_relu_tb.py
 	python3 src/mase_components/activations/test/fixed_relu_tb.py
