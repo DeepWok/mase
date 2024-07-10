@@ -14,6 +14,7 @@ MASE_IMPLICIT_FUNCS = [
     "view",
     # Memory ops and tensor reshapes
     "to",
+    "bool",
     "flatten",
     "squeeze",
     "unsqueeze",
@@ -23,6 +24,7 @@ MASE_IMPLICIT_FUNCS = [
     "contiguous",
     "dropout",
     "eq",
+    "ne",
     "gemm",
     "ge",
     "where",
@@ -47,6 +49,7 @@ MASE_IMPLICIT_FUNCS = [
     "dim",
     "finfo",
     "masked_fill",
+    "masked_fill_",
 ]
 
 MASE_MODULE_RELATED_FUNCS = [
@@ -110,6 +113,7 @@ MASE_BUILTIN_FUNCS = [
     "gt",
     "less",
     "le",  # less or equal
+    "lt",
     "sigmoid",
     "not",
     "min",
@@ -119,6 +123,7 @@ MASE_BUILTIN_FUNCS = [
     "range",
     "gelu",
     "scaled_dot_product_attention",
+    "embedding",
 ]
 
 

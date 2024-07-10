@@ -70,11 +70,10 @@ def common_pointwise_strategy(
             parsed_args.append(torch.Tensor(arg))
         elif isinstance(arg, torch.Tensor):
             parsed_args.append(arg)
-        elif isinstance(arg, float):
+        elif isinstance(arg, (float, int)):
             parsed_args.append(torch.Tensor([arg]))
         else:
-            breakpoint()
-            raise ValueError("Unrecognized arg type")
+            raise ValueError(f"Unrecognized arg type: {type(arg)}")
 
     common_shape = torch.broadcast_shapes(*[arg.shape for arg in parsed_args])
 

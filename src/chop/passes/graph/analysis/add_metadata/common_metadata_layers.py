@@ -150,6 +150,8 @@ func_data = {
     "tile": {"input": "data_in", "dims": "config"},
     # https://pytorch.org/docs/stable/generated/torch.lt.html#torch.lt
     "less": {"input": "data_in", "other": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.lt.html#torch.lt
+    "lt": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.le.html
     "lessorequal": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.le.html
@@ -176,6 +178,8 @@ func_data = {
     "where": {"condition": "config", "input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.equal.html
     "eq": {"input": "data_in", "other": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.ne.html
+    "ne": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.cumsum.html
     "cumsum": {"input": "data_in", "dim": "config"},
     # onnx_gemm (custom implementation)
@@ -189,7 +193,7 @@ func_data = {
         "transB": "config",
     },
     # https://pytorch.org/docs/stable/generated/torch.full.html
-    "full": {"size": "config", "fill_value": "data_in"},
+    "full": {"size": "config", "fill_value": "data_in", "device": "config"},
     # get item
     "getitem": {"a": "data_in", "b": "data_in"},
     # getattr
@@ -207,6 +211,16 @@ func_data = {
     },
     # https://pytorch.org/docs/stable/generated/torch.transpose.html
     "transpose": {"input": "data_in", "dim_0": "config", "dim_1": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.functional.embedding.html
+    "embedding": {
+        "input": "data_in",
+        "weight": "data_in",
+        "padding_idx": "config",
+        "max_norm": "config",
+        "norm_type": "config",
+        "scale_grad_by_freq": "config",
+        "sparse": "config",
+    },
 }
 
 module_data = {
@@ -303,11 +317,20 @@ method_data = {
     "transpose": {"dim_0": "config", "dim_1": "config"},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.contiguous.html#torch.Tensor.contiguous
     "contiguous": {},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.masked_fill.html#torch.Tensor.masked_fill
     "masked_fill": {"mask": "data_in", "value": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.masked_fill_.html#torch.Tensor.masked_fill_
+    "masked_fill_": {"mask": "data_in", "value": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.unsqueeze.html#torch.Tensor.unsqueeze
     "unsqueeze": {"input": "data_in", "dim": "config"},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.split.html#torch.Tensor.split
     "split": {"input": "data_in", "split_size_or_sections": "config", "dim": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.bool.html
+    "bool": {"memory_format": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.long.html
+    "long": {"memory_format": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.type_as.html
+    "type_as": {"tensor": "data_in"},
 }
 
 
@@ -478,7 +501,10 @@ def analyse_common_parameters_module(meta, result, args, kwargs, add_value=True)
 def analyse_common_parameters_method(meta, result, args, kwargs, add_value=True):
     mase_op = meta.parameters["common"]["mase_op"]
     meta = analyse_result(meta, result, add_value)
+    # try:
     meta = match_args_and_kwargs(meta, args, kwargs, method_data[mase_op], add_value)
+    # except:
+    #     breakpoint()
     return meta
 
 
