@@ -24,7 +24,10 @@ jobs:
       image: deepwok/mase-docker-cpu:latest
     steps:
 
+      # -----------
       # Clone the MASE repo and its submodules.
+      # -----------
+
       - name: Get MASE
         uses: actions/checkout@v3
         with:
@@ -67,6 +70,7 @@ jobs:
       # upon which we be diff'ing. The last step set the ref name in the
       # $DIFF_COMMIT_NAME environment variable. When running the fetch, resolve
       # it to the commit hash and pass that hash along to subsequent steps.
+
       - name: git fetch base commit
         continue-on-error: true
         run: |
@@ -79,6 +83,7 @@ jobs:
           echo "DIFF_COMMIT=$DIFF_COMMIT_SHA" >> $GITHUB_ENV
       
       # Run black to check Python formatting.
+
       - name: python-format
         if: ${{ always() }}
         shell: bash
@@ -206,6 +211,7 @@ jobs:
       # -----------
       # Upload software regression test artifacts 
       # -----------
+
       - name: Upload software test report
         uses: actions/upload-artifact@v4
         with:
@@ -220,7 +226,10 @@ jobs:
       image: deepwok/mase-docker-cpu:latest
     steps:
 
+      # -----------
       # Clone the MASE repo and its submodules.
+      # -----------
+
       - name: Get MASE
         uses: actions/checkout@v3
         with:
@@ -235,6 +244,7 @@ jobs:
       # have to determine if the pull request target branch is set (which it
       # will only be on the PR triggered flow). If it's not, then compare
       # against the last commit.
+
       - name: choose-commit
         if: ${{ always() }}
         env:
@@ -253,6 +263,7 @@ jobs:
       # upon which we be diff'ing. The last step set the ref name in the
       # $DIFF_COMMIT_NAME environment variable. When running the fetch, resolve
       # it to the commit hash and pass that hash along to subsequent steps.
+
       - name: git fetch base commit
         continue-on-error: true
         run: |
@@ -324,6 +335,19 @@ jobs:
     container:
       image: deepwok/mase-docker-cpu:latest
     steps:
+
+      # -----------
+      # Clone the MASE repo and its submodules.
+      # -----------
+
+      - name: Get MASE
+        uses: actions/checkout@v3
+        with:
+            submodules: "true"
+
+      - name: Set git safe
+        run: |
+          git config --global --add safe.directory $PWD
 
       # -----------
       # Fetch regression test artifacts 
