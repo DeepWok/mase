@@ -198,6 +198,13 @@ jobs:
           export PYTHONPATH=$PYTHONPATH:$PWD/src
           make test-sw
 
+      - name: Upload software test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: software_report 
+          path: software_report.html
+          retention-days: 1
+
   hardware-test:
     runs-on: ubuntu-latest
     container:
@@ -286,12 +293,34 @@ jobs:
             export PYTHONPATH=$PYTHONPATH:$PWD/src
             just test-hw
 
+      - name: Upload hardware test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: hardware_report 
+          path: hardware_report.html
+          retention-days: 1
+
   build-doc:
     needs: software-test hardware-test
     runs-on: ubuntu-latest
     container:
       image: deepwok/mase-docker-cpu:latest
     steps:
+
+      # -----------
+      # Fetch regression test artifacts 
+      # -----------
+
+      - name: Download software test report 
+        uses: actions/download-artifact@v4
+        with:
+          name: software_test 
+
+      - name: Download hardware test report
+        uses: actions/download-artifact@v4
+        with:
+          name: hardware_test 
+
       # -----------
       # Build doc pages when the software tests passes 
       # -----------
