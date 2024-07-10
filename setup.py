@@ -86,7 +86,7 @@ requirements = [
     "py-cpuinfo",
     "pandas",
     "psutil",
-    "Pillow",
+    "Pillow==10.4.0",
     "mpmath==1.3.0",
 ]
 
