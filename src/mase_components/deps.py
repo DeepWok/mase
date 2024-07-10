@@ -9,39 +9,51 @@ Entry format:
 
 MASE_HW_DEPS = {
     # Activations
-    "activations/fixed_relu": [],
-    "activations/fixed_leaky_relu": [],
-    "activations/fixed_tanh": ["cast"],
-    "activations/fixed_selu": ["cast", "activations", "fixed_math", "activations"],
-    "activations/fixed_gelu": ["fixed_arithmetic", "common", "activations"],
-    "activations/fixed_softsign": ["fixed_arithmetic", "common", "activations"],
-    "activations/fixed_softplus": ["activations"],
-    "activations/fixed_hardshrink": ["common", "cast"],
-    "activations/fixed_hardswish": ["common", "fixed_arithmetic"],
-    "activations/fixed_silu": ["common", "cast", "activations"],
-    "activations/fixed_elu": ["common", "cast", "activations"],
-    "activations/fixed_sigmoid": ["common", "cast", "activations"],
-    "activations/fixed_softshrink": ["common", "cast"],
-    "activations/fixed_logsigmoid": ["common", "cast", "activations"],
-    "activations/fixed_softmax": [
+    "activation_layers/fixed_relu": [],
+    "activation_layers/fixed_leaky_relu": [],
+    "activation_layers/fixed_tanh": ["cast"],
+    "activation_layers/fixed_selu": [
+        "cast",
+        "activation_layers",
+        "scalar_operators/fixed",
+    ],
+    "activation_layers/fixed_gelu": [
+        "common",
+        "memory",
+        "activation_layers",
+    ],
+    "activation_layers/fixed_softsign": [
+        "old",
+        "common",
+        "activation_layers",
+    ],
+    "activation_layers/fixed_softplus": ["activation_layers"],
+    "activation_layers/fixed_hardshrink": ["common", "cast"],
+    "activation_layers/fixed_hardswish": ["common", "fixed_arithmetic"],
+    "activation_layers/fixed_silu": ["common", "cast", "activation_layers"],
+    "activation_layers/fixed_elu": ["common", "cast", "activation_layers"],
+    "activation_layers/fixed_sigmoid": ["common", "cast", "activation_layers"],
+    "activation_layers/fixed_softshrink": ["common", "cast"],
+    "activation_layers/fixed_logsigmoid": ["common", "cast", "activation_layers"],
+    "activation_layers/fixed_softmax": [
         "common",
         "cast",
         "fixed_arithmetic",
         "conv",
-        "activations",
+        "activation_layers",
     ],
-    "activations/fixed_softermax": [
+    "activation_layers/fixed_softermax": [
         "common",
         "cast",
         "fixed_arithmetic",
         "conv",
         "matmul",
-        "activations",
+        "activation_layers",
     ],
     # Attention
     "attention/fixed_self_attention": [
         "attention",
-        "activations",
+        "activation_layers",
         "arbiters",
         "cast",
         "common",
@@ -56,11 +68,11 @@ MASE_HW_DEPS = {
         "fixed_arithmetic",
         "linear",
         "matmul",
-        "activations",
+        "activation_layers",
     ],
     "attention/fixed_self_attention_single_precision_wrapper": [
         "attention",
-        "activations",
+        "activation_layers",
         "arbiters",
         "cast",
         "common",
@@ -70,14 +82,26 @@ MASE_HW_DEPS = {
     ],
     "arithmetic/mac": ["fixed_arithmetic", "float_arithmetic"],
     # Binary arithmetic
-    "binary_arith/binary_activation_binary_mult": [],
-    "binary_arith/binary_activation_binary_vector_mult": ["binary_arith", "common"],
-    "binary_arith/binary_activation_binary_adder_tree_layer": [],
-    "binary_arith/binary_activation_binary_adder_tree": ["binary_arith", "common"],
-    "binary_arith/binary_activation_binary_dot_product": ["binary_arith", "common"],
-    "binary_arith/fixed_activation_binary_mult": [],
-    "binary_arith/fixed_activation_binary_vector_mult": ["binary_arith", "common"],
-    "binary_arith/fixed_activation_binary_dot_product": [
+    "binary_arith/binary_activation_layer_binary_mult": [],
+    "binary_arith/binary_activation_layer_binary_vector_mult": [
+        "binary_arith",
+        "common",
+    ],
+    "binary_arith/binary_activation_layer_binary_adder_tree_layer": [],
+    "binary_arith/binary_activation_layer_binary_adder_tree": [
+        "binary_arith",
+        "common",
+    ],
+    "binary_arith/binary_activation_layer_binary_dot_product": [
+        "binary_arith",
+        "common",
+    ],
+    "binary_arith/fixed_activation_layer_binary_mult": [],
+    "binary_arith/fixed_activation_layer_binary_vector_mult": [
+        "binary_arith",
+        "common",
+    ],
+    "binary_arith/fixed_activation_layer_binary_dot_product": [
         "binary_arith",
         "fixed_arithmetic",
         "common",
@@ -85,14 +109,14 @@ MASE_HW_DEPS = {
     "buffers/hybrid_buffer": ["buffers"],
     # Linear
     "linear/fixed_linear": ["matmul", "cast", "common", "fixed_arithmetic"],
-    "linear/binary_activation_binary_linear": [
+    "linear/binary_activation_layer_binary_linear": [
         "cast",
         "linear",
         "fixed_arithmetic",
         "binary_arith",
         "common",
     ],
-    "linear/fixed_activation_binary_linear": [
+    "linear/fixed_activation_layer_binary_linear": [
         "cast",
         "linear",
         "fixed_arithmetic",
@@ -141,8 +165,8 @@ MASE_HW_DEPS = {
     "common/ram_block": [],
     "common/join2": [],
     "common/register_slice": ["common"],
-    "common/unpacked_fifo": ["common"],
-    "common/unpacked_skid_buffer": ["common"],
+    "memory/unpacked_fifo": ["common"],
+    "memory/unpacked_skid_buffer": ["common"],
     # Convolution
     "conv/convolution": [
         "cast",
@@ -152,7 +176,7 @@ MASE_HW_DEPS = {
         "fixed_arithmetic",
         "matmul",
     ],
-    "conv/binary_activation_binary_convolution": [
+    "conv/binary_activation_layer_binary_convolution": [
         "cast",
         "conv",
         "linear",
