@@ -106,6 +106,8 @@ jobs:
         run: |
             pip3 --version 
             python3 --version
+            echo $PYTHONPATH
+            export PYTHONPATH=$PYTHONPATH:$PWD/src
             just test-hw
 
 
