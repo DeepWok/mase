@@ -23,6 +23,7 @@ from torch.distributed._tensor.placement_types import (
     Placement,
     Replicate,
     Shard,
+    TensorMeta,
 )
 from torch.distributed.device_mesh import DeviceMesh
 
@@ -185,7 +186,17 @@ def expand_to_full_mesh_op_strategy(
     for strategy_comb in strategy_combs:
         spec_list = []
         for specs in zip(*strategy_comb):
-            spec_list.append(DTensorSpec(mesh, tuple(specs)))
+            spec_list.append(
+                DTensorSpec(
+                    mesh,
+                    tuple(specs),
+                    tensor_meta=TensorMeta(
+                        shape=meta["common"]["results"]["data_out_0"]["shape"],
+                        stride=None,
+                        dtype=meta["common"]["results"]["data_out_0"]["torch_dtype"],
+                    ),
+                )
+            )
 
         input_specs = spec_list[input_index:]
         # input_args_strategy = op_schema.args_strategy

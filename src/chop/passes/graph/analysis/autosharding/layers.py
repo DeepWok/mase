@@ -123,6 +123,7 @@ AUTOSHARDING_FUNCTIONS = {
     torch.full: fully_replicated_strategy,
     getattr: fully_replicated_strategy,
     F.embedding: embedding_strategy,
+    torch.finfo: fully_replicated_strategy,
 }
 
 AUTOSHARDING_METHODS = {

@@ -143,7 +143,11 @@ def _extract_ilp(mg, mesh, pass_args={}):
                 "op_strategy"
             ]
             node_in_specs = [
-                strategy.input_specs[arg_idx]
+                (
+                    [strategy.input_specs][arg_idx]
+                    if isinstance(strategy.input_specs, DTensorSpec)
+                    else strategy.input_specs[arg_idx]
+                )
                 for strategy in node_op_strategy.strategies
             ]
 
