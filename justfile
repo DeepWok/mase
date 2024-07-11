@@ -47,5 +47,6 @@ reformat:
 	# format python files
 	black src/chop
 	black src/mase_components
+	black src/mase_cocotb
 	# format verilog
 	# find src/mase_components -name '*.sv' -exec verible-verilog-format --inplace {} +;

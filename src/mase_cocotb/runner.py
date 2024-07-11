@@ -110,7 +110,9 @@ def mase_runner(
 
     matches = re.search(r"mase_components/(\w*)/test/(\w*)_tb\.py", test_filepath)
     if matches is None:
-        matches = re.search(r"mase_components/(\w*)/(\w*)/test/(\w*)_tb\.py", test_filepath)
+        matches = re.search(
+            r"mase_components/(\w*)/(\w*)/test/(\w*)_tb\.py", test_filepath
+        )
 
     assert (
         matches != None
@@ -143,11 +145,12 @@ def mase_runner(
 
         # Try to find RTL file:
         # components/<group>/<subgroup>/rtl/<module>.py
-        module_path = group_path.joinpath(sub_group).joinpath("rtl").joinpath(f"{module}.sv")
+        module_path = (
+            group_path.joinpath(sub_group).joinpath("rtl").joinpath(f"{module}.sv")
+        )
         deps_key = f"{group}/{sub_group}/{module}"
     else:
         raise ValueError(f"Unexpected directory structure: {test_filepath}")
-
 
     assert path.exists(module_path), f"{module_path} does not exist."
 
