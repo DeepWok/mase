@@ -199,5 +199,9 @@ def test_emit_verilog_llama_smoke():
 
 
 if __name__ == "__main__":
-    generate_sv_lut("silu", 8, 3, data_width=8, f_width=3, path_with_dtype=False)
+    generate_sv_lut(
+        "silu", 8, 3, 
+        data_width=8, f_width=3, 
+        path="./src/mase_components/activation_layers/rtl", 
+        path_with_dtype=False)
     test_emit_verilog_llama_smoke()

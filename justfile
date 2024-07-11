@@ -13,14 +13,14 @@ test-sw:
 		test/
 
 test-hw:
+	# activation_layers
 	# python3 scripts/build-components.py
 	python3 src/mase_components/activation_layers/test/fixed_gelu_tb.py
 	python3 src/mase_components/activation_layers/test/fixed_leaky_relu_tb.py
 	python3 src/mase_components/activation_layers/test/fixed_relu_tb.py
 	python3 src/mase_components/activation_layers/test/fixed_selu_tb.py
-	# DEBUG needs debugging
+	# DEBUG
 	# python3 src/mase_components/activation_layers/test/fixed_sigmoid_tb.py
-	# DEBUG softmax based, needs debugging
 	# python3 src/mase_components/activation_layers/test/fixed_softermax_1d_tb.py
 	# python3 src/mase_components/activation_layers/test/fixed_softermax_tb.py
 	# python3 src/mase_components/activation_layers/test/fixed_softmax_tb.py
@@ -34,14 +34,16 @@ test-hw:
 	# python3 src/mase_components/activation_layers/test/softermax_lpw_reciprocal_tb.py
 	# python3 src/mase_components/activation_layers/test/test_lint_activation_layers.py
 	# python3 src/mase_components/activation_layers/test/test_synth_activation_layers.py
-
-	# dev mode
+	# activation_layers DEV mode
 	# python3 src/mase_components/activation_layers/test/fixed_elu_tb.py
 	# python3 src/mase_components/activation_layers/test/fixed_hardshrink_tb.py
 	# python3 src/mase_components/activation_layers/test/fixed_hardswish_tb.py
 	# python3 src/mase_components/activation_layers/test/fixed_logsigmoid_tb.py
 	# python3 src/mase_components/activation_layers/test/fixed_silu_tb.py
 	# python3 src/mase_components/activation_layers/test/fixed_softshrink_tb.py
+	# fixed-linear layers
+	# DEBUG: use bias causes crash
+	python3 src/mase_components/fixed_linear_layers/test/fixed_linear_tb.py
 
 reformat:
 	# format python files
