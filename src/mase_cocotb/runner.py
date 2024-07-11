@@ -106,26 +106,52 @@ def mase_runner(
     start_time = time()
 
     # Get file which called this function
-    # Should be of form components/<group>/test/<module>_tb.py
     test_filepath = inspect.stack()[1].filename
+
     matches = re.search(r"mase_components/(\w*)/test/(\w*)_tb\.py", test_filepath)
+    if matches is None:
+        matches = re.search(r"mase_components/(\w*)/(\w*)/test/(\w*)_tb\.py", test_filepath)
+
     assert (
         matches != None
     ), "Did not find file that matches <module>_tb.py in the test folder!"
-    group, module = matches.groups()
 
-    # Group path is components/<group>
-    group_path = Path(test_filepath).parent.parent
+    # Should be of form components/<group>/test/<module>_tb.py
+    if len(matches.groups()) == 2:
+        group, module = matches.groups()
 
-    # Components path is components/
-    comp_path = group_path.parent
+        # Group path is components/<group>
+        group_path = Path(test_filepath).parent.parent
 
-    # Try to find RTL file:
-    # components/<group>/rtl/<module>.py
-    module_path = group_path.joinpath("rtl").joinpath(f"{module}.sv")
+        # Components path is components/
+        comp_path = group_path.parent
+
+        # Try to find RTL file:
+        # components/<group>/rtl/<module>.py
+        module_path = group_path.joinpath("rtl").joinpath(f"{module}.sv")
+        deps_key = f"{group}/{module}"
+
+    # Should be of form components/<group>/<subgroup>/test/<module>_tb.py
+    elif len(matches.groups()) == 3:
+        group, sub_group, module = matches.groups()
+
+        # Group path is components/<group>
+        group_path = Path(test_filepath).parent.parent.parent
+
+        # Components path is components/
+        comp_path = group_path.parent
+
+        # Try to find RTL file:
+        # components/<group>/<subgroup>/rtl/<module>.py
+        module_path = group_path.joinpath(sub_group).joinpath("rtl").joinpath(f"{module}.sv")
+        deps_key = f"{group}/{sub_group}/{module}"
+    else:
+        raise ValueError(f"Unexpected directory structure: {test_filepath}")
+
+
     assert path.exists(module_path), f"{module_path} does not exist."
 
-    deps = MASE_HW_DEPS[f"{group}/{module}"]
+    deps = MASE_HW_DEPS[deps_key]
 
     total_tests = 0
     total_fail = 0

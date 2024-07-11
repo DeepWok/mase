@@ -108,15 +108,22 @@ MASE_HW_DEPS = {
     ],
     "buffers/hybrid_buffer": ["buffers"],
     # Linear
-    "linear/fixed_linear": ["matmul", "cast", "common", "fixed_arithmetic"],
-    "linear/binary_activation_layer_binary_linear": [
+    "linear_layers/fixed_linear_layer/fixed_linear": [
+        "cast", 
+        "common", 
+        "memory", 
+        "matmul",
+        "linear_layers/matmul",
+        "linear_layers/fixed_operators",
+        "scalar_operators/fixed"],
+    "linear_layers/binary_activation_layer_binary_linear": [
         "cast",
         "linear",
         "fixed_arithmetic",
         "binary_arith",
         "common",
     ],
-    "linear/fixed_activation_layer_binary_linear": [
+    "linear_layers/fixed_activation_layer_binary_linear": [
         "cast",
         "linear",
         "fixed_arithmetic",
