@@ -43,7 +43,7 @@ test-hw:
 	# python3 src/mase_components/activation_layers/test/fixed_softshrink_tb.py
 	# fixed-linear layers
 	# DEBUG: use bias causes crash
-	python3 src/mase_components/fixed_linear_layers/test/fixed_linear_tb.py
+	python3	src/mase_components/linear_layers/fixed_linear_layer/test/fixed_linear_tb.py
 
 reformat:
 	# format python files
