@@ -2,7 +2,6 @@ import itertools
 import operator
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributed._tensor._op_schema import OpStrategy, PlacementStrategy
 from torch.distributed._tensor.placement_types import (
@@ -13,9 +12,6 @@ from torch.distributed._tensor.placement_types import (
 )
 
 from chop.tools import get_logger
-from chop.models.patched.bert.modeling_bert import BertSelfAttention
-
-from .deprecated.alpa_cost_modelling import get_communication_cost
 
 from .ops.matrix_ops import (
     transpose_strategy,
@@ -24,41 +20,12 @@ from .ops.matrix_ops import (
     bmm_strategy,
     baddmm_strategy,
 )
-
 from .ops.view_ops import get_reshape_strategy
 from .ops.pointwise_ops import pointwise_strategy, linear_pointwise_strategy
-
 from .ops.math_ops import softmax_strategy, layer_norm_strategy
+from .ops.embedding_ops import embedding_strategy
 
 logger = get_logger(__name__)
-
-AUTOSHARDING_FUNCTIONS = {
-    torch.transpose: transpose_strategy,
-    torch.mm: mm_strategy,
-    torch.addmm: addmm_strategy,
-    torch.bmm: bmm_strategy,
-    torch.baddbmm: baddmm_strategy,
-    torch.add: linear_pointwise_strategy,
-    operator.add: linear_pointwise_strategy,
-    operator.truediv: pointwise_strategy,
-    F.gelu: pointwise_strategy,
-    torch.matmul: bmm_strategy,
-    torch.softmax: softmax_strategy,
-    F.softmax: softmax_strategy,
-    F.layer_norm: layer_norm_strategy,
-}
-
-AUTOSHARDING_METHODS = {
-    "view": get_reshape_strategy(torch.Tensor.view),
-    "reshape": get_reshape_strategy(torch.Tensor.reshape),
-    "expand": get_reshape_strategy(torch.Tensor.expand),
-    "permute": get_reshape_strategy(torch.permute),
-    "transpose": get_reshape_strategy(torch.transpose),
-}
-
-IMPLICIT_FUNCS = [operator.getitem]
-
-IMPLICIT_METHODS = ["size"]
 
 
 def placeholder_or_getattr_strategy(meta, mesh, skip_fully_replicated=False):
@@ -132,3 +99,40 @@ def fully_replicated_strategy(meta, mesh):
     shardings = [PlacementStrategy(input_specs=in_spec, output_specs=out_spec)]
 
     return OpStrategy(shardings)
+
+
+AUTOSHARDING_FUNCTIONS = {
+    torch.transpose: transpose_strategy,
+    torch.mm: mm_strategy,
+    torch.addmm: addmm_strategy,
+    torch.bmm: bmm_strategy,
+    torch.baddbmm: baddmm_strategy,
+    torch.add: linear_pointwise_strategy,
+    operator.add: linear_pointwise_strategy,
+    operator.truediv: pointwise_strategy,
+    F.gelu: pointwise_strategy,
+    torch.sub: pointwise_strategy,
+    torch.gt: pointwise_strategy,
+    operator.gt: pointwise_strategy,
+    operator.sub: pointwise_strategy,
+    torch.matmul: bmm_strategy,
+    torch.softmax: softmax_strategy,
+    F.softmax: softmax_strategy,
+    F.layer_norm: layer_norm_strategy,
+    torch.ones: fully_replicated_strategy,
+    torch.full: fully_replicated_strategy,
+    getattr: fully_replicated_strategy,
+    F.embedding: embedding_strategy,
+}
+
+AUTOSHARDING_METHODS = {
+    "view": get_reshape_strategy(torch.Tensor.view),
+    "reshape": get_reshape_strategy(torch.Tensor.reshape),
+    "expand": get_reshape_strategy(torch.Tensor.expand),
+    "permute": get_reshape_strategy(torch.permute),
+    "transpose": get_reshape_strategy(torch.transpose),
+}
+
+IMPLICIT_FUNCS = [operator.getitem]
+
+IMPLICIT_METHODS = ["size"]
