@@ -50,5 +50,6 @@ reformat:
 	black src/chop
 	black src/mase_components
 	black src/mase_cocotb
+	black test
 	# format verilog
 	# find src/mase_components -name '*.sv' -exec verible-verilog-format --inplace {} +;
