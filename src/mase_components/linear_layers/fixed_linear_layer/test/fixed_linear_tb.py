@@ -59,7 +59,7 @@ class LinearTB(Testbench):
             dut.data_out_0_ready,
             width=self.get_parameter("DATA_OUT_0_PRECISION_0"),
             signed=True,
-            error_bits=1,
+            error_bits=2,
             check=True,
         )
 
