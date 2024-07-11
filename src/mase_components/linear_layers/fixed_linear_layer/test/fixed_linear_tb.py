@@ -263,7 +263,7 @@ def test_fixed_linear_regression():
                     "BIAS_PARALLELISM_DIM_0": 32,
                 }
             ),
-        ]
+        ],
     )
 
 

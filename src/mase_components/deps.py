@@ -23,9 +23,9 @@ MASE_HW_DEPS = {
         "activation_layers",
     ],
     "activation_layers/fixed_softsign": [
-        "old",
         "common",
         "activation_layers",
+        "linear_layers/fixed_operators",
     ],
     "activation_layers/fixed_softplus": ["activation_layers"],
     "activation_layers/fixed_hardshrink": ["common", "cast"],
@@ -109,13 +109,14 @@ MASE_HW_DEPS = {
     "buffers/hybrid_buffer": ["buffers"],
     # Linear
     "linear_layers/fixed_linear_layer/fixed_linear": [
-        "cast", 
-        "common", 
-        "memory", 
+        "cast",
+        "common",
+        "memory",
         "matmul",
         "linear_layers/matmul",
         "linear_layers/fixed_operators",
-        "scalar_operators/fixed"],
+        "scalar_operators/fixed",
+    ],
     "linear_layers/binary_activation_layer_binary_linear": [
         "cast",
         "linear",
