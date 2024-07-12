@@ -13,7 +13,7 @@ test-sw:
 		test/
 
 test-hw:
-	# activation_layers
+	# Activation_layers
 	# python3 scripts/build-components.py
 	python3 src/mase_components/activation_layers/test/fixed_gelu_tb.py
 	python3 src/mase_components/activation_layers/test/fixed_leaky_relu_tb.py
@@ -41,9 +41,17 @@ test-hw:
 	# python3 src/mase_components/activation_layers/test/fixed_logsigmoid_tb.py
 	# python3 src/mase_components/activation_layers/test/fixed_silu_tb.py
 	# python3 src/mase_components/activation_layers/test/fixed_softshrink_tb.py
-	# fixed-linear layers
+	# Fixed-linear layers
 	# DEBUG: use bias causes crash
 	python3	src/mase_components/linear_layers/fixed_linear_layer/test/fixed_linear_tb.py
+	# Memory
+	python3 src/mase_components/memory/test/fifo_tb.py
+	python3 src/mase_components/memory/test/input_buffer_tb.py
+	python3 src/mase_components/memory/test/skid_buffer_tb.py
+	# fix needed
+	# python3 src/mase_components/memory/test/unpacked_fifo_tb.py
+	# python3 src/mase_components/memory/test/repeat_circular_buffer_tb.py
+	# python3 src/mase_components/memory/test/test_lint_memory.py
 
 reformat:
 	# format python files

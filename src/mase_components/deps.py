@@ -164,16 +164,17 @@ MASE_HW_DEPS = {
     # Common
     "common/cut_data": ["common"],
     "common/wrap_data": ["common"],
-    "common/skid_buffer": [],
-    "common/fifo": ["common"],
-    "common/input_buffer": ["common"],
-    "common/repeat_circular_buffer": ["common"],
     "common/lut": [],
-    "common/ram_block": [],
     "common/join2": [],
     "common/register_slice": ["common"],
-    "memory/unpacked_fifo": ["common"],
-    "memory/unpacked_skid_buffer": ["common"],
+    # Memory
+    "memory/skid_buffer": [],
+    "memory/fifo": ["memory"],
+    "memory/input_buffer": ["memory"],
+    "memory/repeat_circular_buffer": ["memory"],
+    "memory/ram_block": [],
+    "memory/unpacked_fifo": ["memory"],
+    "memory/unpacked_skid_buffer": ["memory"],
     # Convolution
     "conv/convolution": [
         "cast",
