@@ -58,7 +58,7 @@ class ConvArithTB(Testbench):
         #     dut.data_out_0_ready,
         #     width=self.get_parameter("DATA_OUT_0_PRECISION_0"),
         #     signed=True,
-        #     error_bits=1,   
+        #     error_bits=1,
         #     check=True,
         # )
 
@@ -77,32 +77,41 @@ class ConvArithTB(Testbench):
         ocd = self.get_parameter("OUT_CHANNELS_DEPTH")
         has_bias = self.get_parameter("HAS_BIAS")
         oc = ocd * ocp
-        x = torch.randn((self.number_of_examples,weight_repeats, icd*roll_in_num))
-        weight = torch.randn((self.number_of_examples,1, oc , icd*roll_in_num)).repeat(1, weight_repeats, 1, 1)
+        x = torch.randn((self.number_of_examples, weight_repeats, icd * roll_in_num))
+        weight = torch.randn(
+            (self.number_of_examples, 1, oc, icd * roll_in_num)
+        ).repeat(1, weight_repeats, 1, 1)
         bias = torch.randn(self.number_of_examples, 1, oc).repeat(1, weight_repeats, 1)
         qx = integer_quantizer(x, config["x_width"], config["x_frac_width"])
         qw = integer_quantizer(weight, config["w_width"], config["w_frac_width"])
         qb = integer_quantizer(bias, config["b_width"], config["b_frac_width"])
         out = torch.sum(qx.unsqueeze(2) * qw, dim=-1)
-        
+
         out = out + qb if has_bias else out
-        
+
         qx_tensor = (qx * 2 ** config["x_frac_width"]).int()
         qw_tensor = (qw * 2 ** config["w_frac_width"]).int()
         qb_tensor = (qb * 2 ** config["b_frac_width"]).int()
-        
+
         self.log.info(f"Processing inputs: {qx_tensor}")
         self.log.info(f"Processing weights: {qw_tensor}")
         self.log.info(f"Processing bias: {qb_tensor}")
         block_qx = qx_tensor.reshape(-1, roll_out_num).tolist()
-        block_qw = qw_tensor.reshape(self.number_of_examples*ocd*weight_repeats, ocp, -1, roll_out_num).permute(0,2,1,3).reshape(-1, ocp * roll_out_num).tolist()
+        block_qw = (
+            qw_tensor.reshape(
+                self.number_of_examples * ocd * weight_repeats, ocp, -1, roll_out_num
+            )
+            .permute(0, 2, 1, 3)
+            .reshape(-1, ocp * roll_out_num)
+            .tolist()
+        )
         block_qb = qb_tensor.reshape(-1, ocp).tolist()
 
         # qout = integer_floor_quantizer(out, config["out_width"], config["out_frac_width"])
         qout_tensor = (out * 2 ** config["out_frac_width"]).int()
         self.log.info(f"Processing outs: {qout_tensor}")
         block_outs = qout_tensor.reshape(-1, ocp).tolist()
-        
+
         return block_qx, block_qw, block_qb, block_outs
 
     def preprocess_tensor(self, tensor, config, parallelism):
@@ -134,18 +143,18 @@ class ConvArithTB(Testbench):
         self.log.info(f"Reset finished")
         self.data_out_0_monitor.ready.value = 1
 
-        x,w,b,o = self.generate_data(
+        x, w, b, o = self.generate_data(
             {
-            "x_width":self.get_parameter("DATA_IN_0_PRECISION_0"),
-            "x_frac_width":self.get_parameter("DATA_IN_0_PRECISION_1"),
-            "w_width":self.get_parameter("WEIGHT_PRECISION_0"),
-            "w_frac_width":self.get_parameter("WEIGHT_PRECISION_1"),
-            "b_width":self.get_parameter("BIAS_PRECISION_0"),
-            "b_frac_width":self.get_parameter("BIAS_PRECISION_1"),
-            "out_width":self.get_parameter("DATA_OUT_0_PRECISION_0"),
-            "out_frac_width":self.get_parameter("DATA_OUT_0_PRECISION_1"),
-        }
-            )
+                "x_width": self.get_parameter("DATA_IN_0_PRECISION_0"),
+                "x_frac_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
+                "w_width": self.get_parameter("WEIGHT_PRECISION_0"),
+                "w_frac_width": self.get_parameter("WEIGHT_PRECISION_1"),
+                "b_width": self.get_parameter("BIAS_PRECISION_0"),
+                "b_frac_width": self.get_parameter("BIAS_PRECISION_1"),
+                "out_width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
+                "out_frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
+            }
+        )
         # * Load the inputs driver
         self.log.info(f"Processing inputs: {x}")
         self.data_in_0_driver.load_driver(x)
@@ -203,6 +212,7 @@ def test_fixed_linear_smoke():
         ],
     )
 
+
 def test_fixed_linear_regression():
     """
     More extensive tests to check realistic parameter sizes.
@@ -213,11 +223,11 @@ def test_fixed_linear_regression():
             get_fixed_linear_config(
                 {
                     "HAS_BIAS": 1,
-                    "ROLL_IN_NUM": 3*16*16,
+                    "ROLL_IN_NUM": 3 * 16 * 16,
                     "ROLL_OUT_NUM": 4,
                     "IN_CHANNELS_DEPTH": 1,
                     "OUT_CHANNELS_PARALLELISM": 4,
-                    "WEIGHT_REPEATS": 14*14,
+                    "WEIGHT_REPEATS": 14 * 14,
                     "OUT_CHANNELS_DEPTH": 96,
                 }
             ),

@@ -41,7 +41,7 @@ module roller #(
   for (genvar i = 0; i < NUM - ROLL_NUM; i++) assign shift_reg_next[i+ROLL_NUM] = shift_reg[i];
   for (genvar i = 0; i < ROLL_NUM; i++) begin
     assign shift_reg_next[i] = 0;
-    assign data_out[i] = shift_reg[NUM- ROLL_NUM+i];
+    assign data_out[i] = shift_reg[NUM-ROLL_NUM+i];
   end
   for (genvar i = 0; i < NUM; i++) assign zeros[i] = 0;
 

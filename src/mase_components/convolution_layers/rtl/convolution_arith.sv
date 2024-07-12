@@ -47,18 +47,18 @@ module convolution_arith #(
   logic [DATA_IN_0_PRECISION_0 - 1:0] buffered_data_in_0[ROLL_OUT_NUM - 1 : 0];
   logic buffered_data_in_0_valid, buffered_data_in_0_ready;
   input_buffer #(
-      .DATA_WIDTH(DATA_IN_0_PRECISION_0),
+      .DATA_WIDTH (DATA_IN_0_PRECISION_0),
       // Repeat for number of rows in matrix A
-      .REPEAT    (OUT_CHANNELS_DEPTH),
-      .BUFFER_SIZE      (FLATTENED_KNEREL_SIZE / ROLL_OUT_NUM),
-      .IN_NUM    (ROLL_OUT_NUM)
+      .REPEAT     (OUT_CHANNELS_DEPTH),
+      .BUFFER_SIZE(FLATTENED_KNEREL_SIZE / ROLL_OUT_NUM),
+      .IN_NUM     (ROLL_OUT_NUM)
   ) data_in_0_buffer (
-      .clk      (clk),
-      .rst      (rst),
-      .data_in  (data_in_0),
+      .clk           (clk),
+      .rst           (rst),
+      .data_in       (data_in_0),
       .data_in_valid (data_in_0_valid),
       .data_in_ready (data_in_0_ready),
-      .data_out (buffered_data_in_0),
+      .data_out      (buffered_data_in_0),
       .data_out_valid(buffered_data_in_0_valid),
       .data_out_ready(buffered_data_in_0_ready)
   );
@@ -96,16 +96,16 @@ module convolution_arith #(
       .data_out_0_valid(data_out_0_valid),
       .data_out_0_ready(data_out_0_ready)
   );
-//   for (genvar i = 0; i < OUT_CHANNELS_PARALLELISM; i++) begin : round_parallism
-//     fixed_round #(
-//         .IN_WIDTH      (ARITH_OUT_PRECISION_0),
-//         .IN_FRAC_WIDTH (ARITH_OUT_PRECISION_1),
-//         .OUT_WIDTH     (DATA_OUT_0_PRECISION_0),
-//         .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1)
-//     ) round_inst (
-//         .data_in (arith_out[i]),
-//         .data_out(data_out_0[i])
-//     );end
+  //   for (genvar i = 0; i < OUT_CHANNELS_PARALLELISM; i++) begin : round_parallism
+  //     fixed_round #(
+  //         .IN_WIDTH      (ARITH_OUT_PRECISION_0),
+  //         .IN_FRAC_WIDTH (ARITH_OUT_PRECISION_1),
+  //         .OUT_WIDTH     (DATA_OUT_0_PRECISION_0),
+  //         .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1)
+  //     ) round_inst (
+  //         .data_in (arith_out[i]),
+  //         .data_out(data_out_0[i])
+  //     );end
 endmodule
 
 module simple_convolution_arith #(

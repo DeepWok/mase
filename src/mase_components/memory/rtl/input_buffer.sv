@@ -86,8 +86,8 @@ module input_buffer #(
   //array reshape
   for (genvar i = 0; i < IN_NUM; i++) begin
     blk_mem_gen_0 #(
-      .DATA_WIDTH(DATA_WIDTH),
-      .MEM_SIZE(BUFFER_SIZE)
+        .DATA_WIDTH(DATA_WIDTH),
+        .MEM_SIZE  (BUFFER_SIZE)
     ) bram (
         .clka (clk),
         .ena  (ce0),

@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 module blk_mem_gen_0 #(
-  parameter DATA_WIDTH = 8,
-  parameter MEM_SIZE = 1
+    parameter DATA_WIDTH = 8,
+    parameter MEM_SIZE   = 1
 ) (
     clka,
     ena,
