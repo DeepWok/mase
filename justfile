@@ -44,6 +44,8 @@ test-hw:
 	# fixed-linear layers
 	# DEBUG: use bias causes crash
 	python3	src/mase_components/linear_layers/fixed_linear_layer/test/fixed_linear_tb.py
+	# convolution_layers
+	python3	src/mase_components/convolution_layers/test/convolution_tb.py
 
 reformat:
 	# format python files

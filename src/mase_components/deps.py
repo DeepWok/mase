@@ -175,15 +175,16 @@ MASE_HW_DEPS = {
     "memory/unpacked_fifo": ["common"],
     "memory/unpacked_skid_buffer": ["common"],
     # Convolution
-    "conv/convolution": [
+    "convolution_layers/convolution": [
         "cast",
-        "conv",
-        "linear",
+        "convolution_layers",
         "common",
-        "fixed_arithmetic",
-        "matmul",
+        "memory",
+        "linear_layers/fixed_linear_layer",
+        "linear_layers/fixed_operators",
+        "linear_layers/matmul",
     ],
-    "conv/binary_activation_layer_binary_convolution": [
+    "convolution_layers/binary_activation_layer_binary_convolution": [
         "cast",
         "conv",
         "linear",

@@ -143,7 +143,7 @@ module sliding_window_buffer #(
   for (genvar j = 0; j < KERNEL_HEIGHT; j++) begin : line
     for (genvar i = 0; i < KERNEL_WIDTH; i++) begin : word
       always_comb begin
-        data_out[j*KERNEL_WIDTH+i] = shift_reg[j*LINE_WIDTH+i*CHANNELS];
+        data_out[KERNEL_HEIGHT*KERNEL_WIDTH - 1 - (j*KERNEL_WIDTH+i)] = shift_reg[j*LINE_WIDTH+i*CHANNELS];
         $display(j * LINE_WIDTH + i * CHANNELS);
       end
     end
