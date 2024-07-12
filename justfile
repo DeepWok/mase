@@ -52,6 +52,8 @@ test-hw:
 	# python3 src/mase_components/memory/test/unpacked_fifo_tb.py
 	# python3 src/mase_components/memory/test/repeat_circular_buffer_tb.py
 	# python3 src/mase_components/memory/test/test_lint_memory.py
+	# convolution_layers
+	python3	src/mase_components/convolution_layers/test/convolution_tb.py
 
 reformat:
 	# format python files

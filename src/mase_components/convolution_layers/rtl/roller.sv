@@ -37,11 +37,11 @@ module roller #(
 
   // We can take in value if we know shift_reg will be free next cycle.
   assign data_in_ready_next = counter_next == 0;
-  // shift_reg_next = {shift_reg[NUM - ROLL_NUM : NUM - 1], 0}
-  for (genvar i = 0; i < NUM - ROLL_NUM; i++) assign shift_reg_next[i] = shift_reg[i+ROLL_NUM];
-  for (genvar i = NUM - ROLL_NUM; i < NUM; i++) begin
+  // shift_reg_next = {shift_reg[NUM - ROLL_NUM - 1 : 0], 0}
+  for (genvar i = 0; i < NUM - ROLL_NUM; i++) assign shift_reg_next[i+ROLL_NUM] = shift_reg[i];
+  for (genvar i = 0; i < ROLL_NUM; i++) begin
     assign shift_reg_next[i] = 0;
-    assign data_out[i-(NUM-ROLL_NUM)] = shift_reg[i-(NUM-ROLL_NUM)];
+    assign data_out[i] = shift_reg[NUM- ROLL_NUM+i];
   end
   for (genvar i = 0; i < NUM; i++) assign zeros[i] = 0;
 

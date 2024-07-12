@@ -1,5 +1,8 @@
 `timescale 1ns / 1ps
-module blk_mem_gen_0 (
+module blk_mem_gen_0 #(
+  parameter DATA_WIDTH = 8,
+  parameter MEM_SIZE = 1
+) (
     clka,
     ena,
     wea,
@@ -12,13 +15,13 @@ module blk_mem_gen_0 (
   input logic clka  /* synthesis syn_isclock = 1 */;
   input logic ena;
   input logic [0:0] wea;
-  input logic [9:0] addra;
-  input logic [7:0] dina;
-  output logic [7:0] douta;
+  input logic [$clog2(MEM_SIZE):0] addra;
+  input logic [DATA_WIDTH - 1:0] dina;
+  output logic [DATA_WIDTH - 1:0] douta;
 
-  logic [7:0] ram[0:1023];
-  logic [7:0] douta_t1;
-  logic [7:0] douta_t0;
+  logic [DATA_WIDTH - 1:0] ram[0:MEM_SIZE-1];
+  logic [DATA_WIDTH - 1:0] douta_t1;
+  logic [DATA_WIDTH - 1:0] douta_t0;
   assign douta = douta_t1;
 
   /* verilator lint_off WIDTH */

@@ -1,196 +1,166 @@
 #!/usr/bin/env python3
 
-# This script tests the fixed point linear
-import os, logging
+import os
 
-from mase_cocotb.random_test import RandomSource, RandomSink, check_results
-from mase_cocotb.runner import mase_runner
-from chop.nn.quantized.modules import Conv2dInteger
-
-from .Qconv import QuantizedConvolution
 import torch
+import logging
+from functools import partial
 
 import cocotb
-from cocotb.triggers import Timer
-from cocotb.triggers import FallingEdge
-from cocotb.clock import Clock
+from cocotb.log import SimLog
+from cocotb.triggers import Timer,RisingEdge
+from cocotb.decorators import coroutine
 
+from mase_cocotb.testbench import Testbench
+from mase_cocotb.interfaces.streaming import (
+    StreamDriver,
+    StreamMonitor,
+    ErrorThresholdStreamMonitor,
+)
+from mase_cocotb.runner import mase_runner
+from math import ceil
+# from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner
+from chop.nn.quantized.modules.conv2d import Conv2dInteger
+from chop.nn.quantizers import integer_quantizer
 from mase_cocotb.z_qlayers import quantize_to_int as q2i
 
-from math import ceil
-
-debug = True
-
-logger = logging.getLogger("tb_signals")
-if debug:
-    logger.setLevel(logging.DEBUG)
-
-
-# DUT test specifications
-class VerificationCase:
-    def __init__(self, samples=1):
-        self.w_config = {
-            "data_in_width": 8,
-            "data_in_frac_width": 3,
-            "weight_width": 8,
-            "weight_frac_width": 3,
-            "bias_width": 8,
-            "bias_frac_width": 3,
-        }
-        self.data_out_width = 6
-        self.data_out_frac_width = 2
-
-        self.in_c = 2
-        self.in_y = 4
-        self.in_x = 3
-
-        self.out_channels = 4
-        self.kernel_y = 3
-        self.kernel_x = 2
-
-        self.unroll_in_c = 2
-        self.unroll_kernel_out = 4
-
-        self.unroll_out_c = 2
-
-        self.stride = 2
-        self.padding_height = 2
-        self.padding_width = 1
-
-        self.out_height = ceil(
-            (self.in_y - self.kernel_y + 2 * self.padding_height + 1) / self.stride
-        )
-        self.out_width = ceil(
-            (self.in_x - self.kernel_x + 2 * self.padding_width + 1) / self.stride
-        )
-
-        self.sliding_num = self.out_width * self.out_height
-
+import torch.nn.functional as F
+class ConvArithTB(Testbench):
+    def __init__(self, dut, samples=1) -> None:
+        super().__init__(dut, dut.clk, dut.rst)
         self.samples = samples
-        self.data_generate()
 
-        self.data_in = RandomSource(
-            name="data_in",
-            samples=int(samples * self.in_x * self.in_y * self.in_c / self.unroll_in_c),
-            num=self.unroll_in_c,
-            max_stalls=2 * samples,
-            debug=debug,
-            data_specify=self.hw_x,
-        )
-        self.weight_partition_depth = int(
-            self.kernel_y
-            * self.kernel_x
-            * self.in_c
-            * self.out_channels
-            / self.unroll_kernel_out
-            / self.unroll_out_c
-        )
-        self.weight = RandomSource(
-            name="weight",
-            samples=samples * self.weight_partition_depth,
-            num=self.unroll_kernel_out * self.unroll_out_c,
-            max_stalls=2 * samples * self.weight_partition_depth,
-            data_specify=self.hw_w,
-            debug=debug,
-        )
-        self.bias = RandomSource(
-            name="bias",
-            samples=samples * int(self.out_channels / self.unroll_out_c),
-            num=self.unroll_out_c,
-            max_stalls=2 * samples * int(self.out_channels / self.unroll_out_c),
-            data_specify=self.hw_b,
-            debug=debug,
-        )
-        self.outputs = RandomSink(
-            samples=samples
-            * int(self.out_channels / self.unroll_out_c)
-            * self.sliding_num,
-            max_stalls=2 * samples,
-            debug=debug,
-        )
-        self.ref = self.sw_compute()
+        if not hasattr(self, "log"):
+            self.log = SimLog("%s" % (type(self).__qualname__))
+            self.log.setLevel(logging.DEBUG)
 
-    def get_dut_parameters(self):
-        return {
-            "DATA_WIDTH": self.w_config["data_in_width"],
-            "DATA_FRAC_WIDTH": self.w_config["data_in_frac_width"],
-            "W_WIDTH": self.w_config["weight_width"],
-            "W_FRAC_WIDTH": self.w_config["weight_frac_width"],
-            "BIAS_WIDTH": self.w_config["bias_width"],
-            "BIAS_FRAC_WIDTH": self.w_config["bias_frac_width"],
-            "OUT_WIDTH": self.data_out_width,
-            "OUT_FRAC_WIDTH": self.data_out_frac_width,
-            "IN_X": self.in_x,
-            "IN_Y": self.in_y,
-            "IN_C": self.in_c,
-            "KERNEL_X": self.kernel_x,
-            "KERNEL_Y": self.kernel_y,
-            "OUT_C": self.out_channels,
-            "UNROLL_OUT_C": self.unroll_out_c,
-            "UNROLL_IN_C": self.unroll_in_c,
-            "UNROLL_KERNEL_OUT": self.unroll_kernel_out,
-            "SLIDING_NUM": self.sliding_num,
-            "STRIDE": self.stride,
-            "PADDING_Y": self.padding_height,
-            "PADDING_X": self.padding_width,
-        }
+        self.data_in_0_driver = StreamDriver(
+            dut.clk, dut.data_in_0, dut.data_in_0_valid, dut.data_in_0_ready
+        )
+        self.weight_driver = StreamDriver(
+            dut.clk, dut.weight, dut.weight_valid, dut.weight_ready
+        )
 
-    def data_generate(self):
+        self.bias_driver = StreamDriver(
+            dut.clk, dut.bias, dut.bias_valid, dut.bias_ready
+        )
+
+        self.data_out_0_monitor = ErrorThresholdStreamMonitor(
+            dut.clk,
+            dut.data_out_0,
+            dut.data_out_0_valid,
+            dut.data_out_0_ready,
+            width=self.get_parameter("DATA_OUT_0_PRECISION_0"),
+            signed=True,
+            error_bits=1,
+            check=True,
+        )
+        # Set verbosity of driver and monitor loggers to debug
+        self.data_in_0_driver.log.setLevel(logging.DEBUG)
+        self.weight_driver.log.setLevel(logging.DEBUG)
+        self.data_out_0_monitor.log.setLevel(logging.DEBUG)
+        self.bias_driver.log.setLevel(logging.DEBUG)
         torch.manual_seed(0)
-        self.int_conv_layer = Conv2dInteger(
-            in_channels=self.in_c,
-            out_channels=self.out_channels,
-            kernel_size=(self.kernel_y, self.kernel_x),
-            stride=self.stride,
-            padding=(self.padding_height, self.padding_width),
-            config=self.w_config,
+        self.model = Conv2dInteger(
+            in_channels=self.get_parameter("IN_C"),
+            out_channels=self.get_parameter("OUT_C"),
+            kernel_size=(self.get_parameter("KERNEL_Y"), self.get_parameter("KERNEL_X")),
+            stride=self.get_parameter("STRIDE"),
+            padding=(self.get_parameter("PADDING_Y"), self.get_parameter("PADDING_X")),
+            bias=True if self.get_parameter("HAS_BIAS") == 1 else False,
+            config={
+                "data_in_width": self.get_parameter("DATA_IN_0_PRECISION_0"),
+                "data_in_frac_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
+                "weight_width": self.get_parameter("WEIGHT_PRECISION_0"),
+                "weight_frac_width": self.get_parameter("WEIGHT_PRECISION_1"),
+                "bias_width": self.get_parameter("BIAS_PRECISION_0"),
+                "bias_frac_width": self.get_parameter("BIAS_PRECISION_1"),
+                "data_out_width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
+                "data_out_frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
+            },
         )
+        
 
+    def generate_data(self, config):
+        torch.manual_seed(0)
+        def get_manual_result(x,w,b, stride, samples, kernel_y, kernel_x, in_y, in_x, padding_y, padding_x, roll_in_num, oc):
+            input_unf = F.unfold(x, (kernel_x, kernel_y), stride=stride)
+            input_unf = input_unf.view(samples, ic, kernel_x, kernel_y, -1)
+            input_unf = input_unf.permute(0, 4, 1, 2, 3)  # (N, L, C, KH, KW)
+            out_height = ceil(
+                (in_y - kernel_y + 2 * padding_y + 1) / stride
+            )
+            out_width = ceil(
+                (in_x - kernel_x + 2 * padding_x + 1) / stride
+            )
+
+            sliding_num = out_width * out_height
+            
+            qx = input_unf.reshape(samples,sliding_num, roll_in_num)
+            qw = w.reshape(1,1,oc,roll_in_num).repeat(samples, sliding_num, 1, 1)
+            qb = b.reshape(1, 1, oc).repeat(samples, sliding_num, 1)
+            out2 = torch.sum(qx.unsqueeze(2) * qw, dim=-1) + qb
+            return out2
+
+        samples=self.samples
+        ic = self.get_parameter("IN_C")
+        iy = self.get_parameter("IN_Y")
+        ix = self.get_parameter("IN_X")
         # get parameters with integer format
-        self.sw_x = 5 * torch.randn(self.samples, self.in_c, self.in_y, self.in_x)
-
-        self.sw_w = self.int_conv_layer.weight
-        self.sw_b = self.int_conv_layer.bias
+        x = 5 * torch.randn(samples, ic, iy, ix)
+        
+        _dict = self.model.get_quantized_weights_with_inputs(x)
+        x,w,b,out = _dict["x"], _dict["w"], _dict["bias"], _dict["y"]
+        # out2 = get_manual_result(x, w, b, 2,1,2,2,4,4,0,0,12,4)
         # data_in_pack
+        
         x = q2i(
-            self.sw_x,
-            self.w_config["data_in_width"],
-            self.w_config["data_in_frac_width"],
+            x,
+            config["data_in_width"],
+            config["data_in_frac_width"],
         )
-        print("x = ", x)
+        
+        self.log.info(f"x = {x}")
         # from (samples, c, h, w) to (samples*h*w*c/unroll_in_c, unroll_in_c)
-        # flip from convinient debug
-        reshape_x = (
-            x.permute(0, 2, 3, 1).reshape(-1).flip(0).reshape(-1, self.unroll_in_c)
-        )
-        self.hw_x = reshape_x.type(torch.int).tolist()
+        unroll_ic = self.get_parameter("UNROLL_IN_C")
+        hw_x = (
+            x.permute(0, 2, 3, 1).reshape(-1).reshape(-1, unroll_ic)
+        ).tolist()
         # parameters packs
-        self.hw_w, self.hw_b = self.conv_pack(
-            weight=self.sw_w,
-            bias=self.sw_b,
-            in_channels=self.in_c,
-            kernel_size=[self.kernel_y, self.kernel_x],
-            out_channels=self.out_channels,
-            unroll_in_channels=self.unroll_in_c,
-            unroll_kernel_out=self.unroll_kernel_out,
-            unroll_out_channels=self.unroll_out_c,
+        
+        self.log.info(f"weight = {w}")
+        self.log.info(f"bias = {b}")
+        w = q2i(
+            w,
+            config["weight_width"],
+            config["weight_frac_width"],
         )
-
-    def sw_compute(self):
-        """
-        The output of this module should follow channel first output model
-        Software level output dimension should be [oc, oh, ow] first
-        it should be reshaped to [oh,ow,oc/u_oc,,u_oc]
-        then for the purpose of mapping hardware index, should flip the last dimension
-        """
-        sw_data_out = self.int_conv_layer(self.sw_x)
-        print(q2i(sw_data_out, self.data_out_width, self.data_out_frac_width))
-        data_out_temp = q2i(sw_data_out, self.data_out_width, self.data_out_frac_width)
-        data_out_temp = data_out_temp.permute(0, 2, 3, 1)
-        data_out_temp = data_out_temp.reshape(-1, self.unroll_out_c)
-        hw_data_out = data_out_temp.flip(-1).tolist()
-        return hw_data_out
-
+        b = q2i(
+            b,
+            config["bias_width"],
+            config["bias_frac_width"],
+        )
+        self.log.info(f"weight = {w}")
+        self.log.info(f"bias = {b}")
+        hw_w, hw_b = self.conv_pack(
+            weight=w,
+            bias=b,
+            in_channels=ic,  
+            kernel_size=[self.get_parameter("KERNEL_X"), self.get_parameter("KERNEL_Y")], 
+            out_channels=self.get_parameter("OUT_C"),
+            unroll_in_channels=self.get_parameter("UNROLL_IN_C"),
+            unroll_kernel_out=self.get_parameter("UNROLL_KERNEL_OUT"),
+            unroll_out_channels=self.get_parameter("UNROLL_OUT_C"),
+        )
+        exp_out = q2i(
+            out,
+            config["out_width"],
+            config["out_frac_width"],
+        )
+        exp_out = exp_out.reshape(-1, self.get_parameter("OUT_C"), self.get_parameter("SLIDING_NUM")).permute(0,2,1).reshape(-1,self.get_parameter("UNROLL_OUT_C")).tolist()
+        self.log.info(f"Processing outs: {exp_out}")
+        return hw_x, hw_w, hw_b, exp_out
+    
     def conv_pack(
         self,
         weight,
@@ -202,21 +172,7 @@ class VerificationCase:
         unroll_kernel_out,
         unroll_out_channels,
     ):
-        print("weight = ", weight)
-        print("bias = ", bias)
-        weight = q2i(
-            weight,
-            self.w_config["weight_width"],
-            self.w_config["weight_frac_width"],
-        )
-        print("weight = ", weight)
-        bias = q2i(
-            bias,
-            self.w_config["bias_width"],
-            self.w_config["bias_frac_width"],
-        )
-        print("bias = ", bias)
-        samples = self.samples
+        samples = self.samples * self.get_parameter("SLIDING_NUM")
         # requires input as a quantized int format
         # weight_pack
         # from (oc,ic/u_ic,u_ic,h,w) to (ic/u_ic,h*w,u_ic,oc)
@@ -244,9 +200,7 @@ class VerificationCase:
         ).permute(0, 3, 1, 4, 2)
 
         w_tensor = (
-            w_tensor.reshape(-1)
-            .flip(0)
-            .reshape(
+            w_tensor.reshape(
                 -1,
                 unroll_out_channels * unroll_kernel_out,
             )
@@ -254,191 +208,150 @@ class VerificationCase:
         w_in = w_tensor.type(torch.int).tolist()
         # bias_pack
         bias_tensor = (
-            bias.repeat(samples, 1).reshape(-1).flip(0).reshape(-1, unroll_out_channels)
+            bias.repeat(samples, 1).reshape(-1).reshape(-1, unroll_out_channels)
         )
         b_in = bias_tensor.type(torch.int).tolist()
         return w_in, b_in
+        
+    async def run_test(self):
+        await self.reset()
+        self.log.info(f"Reset finished")
+        self.data_out_0_monitor.ready.value = 1
 
+        x,w,b,o = self.generate_data(
+            {
+            "data_in_width":self.get_parameter("DATA_IN_0_PRECISION_0"),
+            "data_in_frac_width":self.get_parameter("DATA_IN_0_PRECISION_1"),
+            "weight_width":self.get_parameter("WEIGHT_PRECISION_0"),
+            "weight_frac_width":self.get_parameter("WEIGHT_PRECISION_1"),
+            "bias_width":self.get_parameter("BIAS_PRECISION_0"),
+            "bias_frac_width":self.get_parameter("BIAS_PRECISION_1"),
+            "out_width":self.get_parameter("DATA_OUT_0_PRECISION_0"),
+            "out_frac_width":self.get_parameter("DATA_OUT_0_PRECISION_1"),
+        }
+            )
+        # * Load the inputs driver
+        self.log.info(f"Processing inputs: {x}")
+        self.data_in_0_driver.load_driver(x)
 
-# Check if an is_impossible state is reached
-def is_impossible_state(
-    weight_ready,
-    weight_valid,
-    data_in_ready,
-    data_in_valid,
-    data_out_ready,
-    data_out_valid,
-):
-    return False
+        # * Load the weights driver
+        self.log.info(f"Processing weights: {w}")
+        self.weight_driver.load_driver(w)
 
+        # * Load the bias driver
+        self.log.info(f"Processing bias: {b}")
+        self.bias_driver.load_driver(b)
 
-def debug_state(dut, state):
-    logger.debug(
-        "{} State: (bias_ready,bias_valid,weight_ready,weight_valid,data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{},{},{},{},{})".format(
-            state,
-            dut.bias_ready.value,
-            dut.bias_valid.value,
-            dut.weight_ready.value,
-            dut.weight_valid.value,
-            dut.data_in_0_ready.value,
-            dut.data_in_0_valid.value,
-            dut.data_out_0_ready.value,
-            dut.data_out_0_valid.value,
-        )
-    )
+        # * Load the output monitor
+        self.log.info(f"Processing outputs: {o}")
+        self.data_out_0_monitor.load_monitor(o)
+        
+        # cocotb.start_soon(check_signal(self.dut, self.log))
+        await Timer(100, units="us")
+        assert self.data_out_0_monitor.exp_queue.empty()
 
 
 @cocotb.test()
-async def cocotb_test_fixed_linear(dut):
-    """Test integer based vector mult"""
-    samples = 20
-    test_case = VerificationCase(samples=samples)
-    # Reset cycle
-    await Timer(20, units="ns")
-    dut.rst.value = 1
-    await Timer(100, units="ns")
-    dut.rst.value = 0
+async def cocotb_test(dut):
+    tb = ConvArithTB(dut, 10)
+    await tb.run_test()
 
-    # Create a 10ns-period clock on port clk
-    clock = Clock(dut.clk, 10, units="ns")
-    # Start the clock
-    cocotb.start_soon(clock.start())
-    await Timer(500, units="ns")
+async def check_signal(dut, log):
+    while True:
+        await RisingEdge(dut.clk)
+        handshake_signal_check(dut.kernel_valid, dut.kernel_ready, dut.kernel, log)
+        # handshake_signal_check(dut.rolled_k_valid, dut.rolled_k_ready, dut.rolled_k, log)
+        # handshake_signal_check(dut.bias_valid, 
+        #                        dut.bias_ready, 
+        #                        dut.bias, log)
 
-    # Synchronize with the clock
-    dut.weight_valid.value = 0
-    dut.bias_valid.value = 0
-    dut.data_in_0_valid.value = 0
-    dut.data_out_0_ready.value = 1
-    debug_state(dut, "Pre-clk")
-    await FallingEdge(dut.clk)
-    debug_state(dut, "Post-clk")
-    debug_state(dut, "Pre-clk")
-    await FallingEdge(dut.clk)
-    debug_state(dut, "Post-clk")
-
-    done = False
-    # Set a timeout to avoid deadlock
-    count1 = 0
-    count2 = 0
-    count3 = 0
-    count4 = 0
-    for i in range(samples * 100):
-        await FallingEdge(dut.clk)
-        debug_state(dut, "Post-clk")
-        dut.weight_valid.value = test_case.weight.pre_compute()
-        dut.bias_valid.value = test_case.bias.pre_compute()
-        dut.data_in_0_valid.value = test_case.data_in.pre_compute()
-        await Timer(1, units="ns")
-        dut.data_out_0_ready.value = test_case.outputs.pre_compute(
-            dut.data_out_0_valid.value
-        )
-        await Timer(1, units="ns")
-        debug_state(dut, "Post-clk")
-
-        dut.bias_valid.value, dut.bias.value = test_case.bias.compute(
-            dut.bias_ready.value
-        )
-        dut.weight_valid.value, dut.weight.value = test_case.weight.compute(
-            dut.weight_ready.value
-        )
-        dut.data_in_0_valid.value, dut.data_in_0.value = test_case.data_in.compute(
-            dut.data_in_0_ready.value
-        )
-        await Timer(1, units="ns")
-        dut.data_out_0_ready.value = test_case.outputs.compute(
-            dut.data_out_0_valid.value, dut.data_out_0.value
-        )
-        await Timer(1, units="ns")
-        debug_state(dut, "Pre-clk")
-        wave_check(dut)
-        if dut.ib_weight_valid.value == 1 and dut.ib_weight_ready.value == 1:
-            count1 += 1
-        if dut.ib_bias_valid.value == 1 and dut.ib_bias_ready.value == 1:
-            count2 += 1
-        if dut.data_out_0_valid.value == 1 and dut.data_out_0_ready.value == 1:
-            count3 += 1
-        if dut.ib_rolled_k_valid.value == 1 and dut.ib_rolled_k_ready.value == 1:
-            count4 += 1
-        print(
-            "count:\n\
-              c_weight = {}\n\
-              c_bias = {}\n\
-              c_data_out = {}\n\
-              c_linear_in = {}".format(
-                count1, count2, count3, count4
-            )
-        )
-        if (
-            (test_case.bias.is_empty())
-            and test_case.weight.is_empty()
-            and test_case.data_in.is_empty()
-            and test_case.outputs.is_full()
-        ):
-            done = True
-            break
-    assert (
-        done
-    ), "Deadlock detected or the simulation reaches the maximum cycle limit (fixed it by adjusting the loop trip count)"
-
-    check_results(test_case.outputs.data, test_case.ref)
-
-
-def wave_check(dut):
-    logger.debug(
-        "wave of linear:\n\
-            {},{},data_in = {}\n\
-            {},{},weight = {}\n\
-            {},{},bias = {}\n\
-            ".format(
-            dut.fl_instance.data_in_0_valid.value,
-            dut.fl_instance.data_in_0_ready.value,
-            [int(i) for i in dut.fl_instance.data_in_0.value],
-            dut.fl_instance.weight_valid.value,
-            dut.fl_instance.weight_ready.value,
-            [int(i) for i in dut.fl_instance.weight.value],
-            dut.fl_instance.bias_valid.value,
-            dut.fl_instance.bias_ready.value,
-            [int(i) for i in dut.fl_instance.bias.value],
-        )
+def handshake_signal_check(valid,ready,signal, log):
+    svalue = [i.signed_integer for i in signal.value]
+    if valid.value & ready.value:
+        log.debug(f"handshake {signal} = {svalue}")
+    
+def get_fixed_conv_config(kwargs={}):
+    config = {
+        "IN_C":3,
+        "UNROLL_IN_C": 3,
+        "IN_X":3,
+        "IN_Y":3,
+        "KERNEL_X": 3,
+        "KERNEL_Y": 2,
+        "UNROLL_KERNEL_OUT": 3,
+        "OUT_C": 4,
+        "UNROLL_OUT_C": 2,
+        "STRIDE": 2,
+        "PADDING_Y": 1,
+        "PADDING_X": 2,
+        "HAS_BIAS": 1,
+    }
+    in_y = config["IN_Y"]
+    in_x = config["IN_X"]
+    kernel_y = config["KERNEL_Y"]
+    kernel_x = config["KERNEL_X"]
+    padding_y = config["PADDING_Y"]
+    padding_x = config["PADDING_X"]
+    stride = config["STRIDE"]
+    out_height = ceil(
+        (in_y - kernel_y + 2 * padding_y + 1) / stride
     )
-    logger.debug(
-        "wave of interface:\n\
-            {},{} data_in = {}  \n\
-            {},{} kernel = {}  \n\
-            {},{} rolled_k = {}   \n\
-            {},{} data_out = {}  \n\
-            padding_x = {} \n\
-            padding_y = {} \n\
-            padding_c = {} \n\
-            ".format(
-            dut.data_in_0_valid.value,
-            dut.data_in_0_ready.value,
-            [int(i) for i in dut.data_in_0.value],
-            dut.kernel_valid.value,
-            dut.kernel_ready.value,
-            [int(i) for i in dut.kernel.value],
-            dut.rolled_k_valid.value,
-            dut.rolled_k_ready.value,
-            [int(i) for i in dut.rolled_k.value],
-            dut.data_out_0_valid.value,
-            dut.data_out_0_ready.value,
-            [int(i) for i in dut.data_out_0.value],
-            int(dut.sw_inst.padding_inst.count_x.value),
-            int(dut.sw_inst.padding_inst.count_y.value),
-            int(dut.sw_inst.padding_inst.count_c.value),
-        )
+    out_width = ceil(
+        (in_x - kernel_x + 2 * padding_x + 1) / stride
     )
 
+    sliding_num = out_width * out_height
+    config['SLIDING_NUM'] = sliding_num
+    config.update(kwargs)
+    return config
 
-import pytest
+def test_fixed_linear_smoke():
+    """
+    Some quick tests to check if the module is working.
+    """
+    mase_runner(
+        trace=True,
+        module_param_list=[
+            get_fixed_conv_config(),
+        ],
+    )
 
-
-@pytest.mark.skip(reason="Needs to be fixed.")
-def test_convolution():
-    tb = VerificationCase()
-    mase_runner(module_param_list=[tb.get_dut_parameters()])
+def test_fixed_linear_regression():
+    """
+    More extensive tests to check realistic parameter sizes.
+    """
+    mase_runner(
+        trace=True,
+        module_param_list=[
+            get_fixed_conv_config(
+                {
+                    "HAS_BIAS": 1,
+                    "ROLL_IN_NUM": 3*16*16,
+                    "ROLL_OUT_NUM": 4,
+                    "IN_CHANNELS_DEPTH": 1,
+                    "OUT_CHANNELS_PARALLELISM": 4,
+                    "WEIGHT_REPEATS": 14*14,
+                    "OUT_CHANNELS_DEPTH": 96,
+                }
+            ),
+            # get_fixed_linear_config(
+            #     {
+            #         "HAS_BIAS": 1,
+            #         "WEIGHTS_PRE_TRANSPOSED": 0,
+            #         "DATA_IN_0_TENSOR_SIZE_DIM_0": 768,
+            #         "DATA_IN_0_PARALLELISM_DIM_0": 32,
+            #         "WEIGHT_TENSOR_SIZE_DIM_0": 768,
+            #         "WEIGHT_TENSOR_SIZE_DIM_1": 768,
+            #         "WEIGHT_PARALLELISM_DIM_0": 32,
+            #         "WEIGHT_PARALLELISM_DIM_1": 32,
+            #         "BIAS_TENSOR_SIZE_DIM_0": 768,
+            #         "BIAS_PARALLELISM_DIM_0": 32,
+            #     }
+            # ),
+        ],
+    )
 
 
 if __name__ == "__main__":
-    test_convolution()
+    test_fixed_linear_smoke()
+    # test_fixed_linear_regression()
