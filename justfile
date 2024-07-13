@@ -58,8 +58,19 @@ test-hw:
 	# convolution_layers
 	python3	src/mase_components/convolution_layers/test/convolution_tb.py
 
-	# Common
+	# cast
+ 	python3 src/mase_components/cast/test/fixed_cast_tb.py
+ 	python3 src/mase_components/cast/test/fixed_rounding_tb.py
+ 	python3 src/mase_components/cast/test/fixed_signed_cast_tb.py
+ 	# python3 src/mase_components/cast/test/fixed_unsigned_cast_tb.py
+
+	# common
+	python3 src/mase_components/common/test/comparator_accumulator_tb.py
+	python3 src/mase_components/common/test/cut_data_tb.py
+	python3 src/mase_components/common/test/lut_tb.py
+	python3 src/mase_components/common/test/wrap_data_tb.py
 	python3 src/mase_components/common/test/register_slice_tb.py
+	python3 src/mase_components/common/test/test_lint_common.py
 
 reformat:
 	# format python files
