@@ -59,11 +59,7 @@ module register_slice #(
   end
 
   // output 
-  assign to_output = shift_reg && data_out_ready;
-  always_ff @(posedge clk) begin
-    if (rst) data_out <= 0;
-    else if (to_load) data_out <= buffer;
-  end
+  assign data_out = buffer;
 
 
   // control logic
@@ -88,7 +84,7 @@ module register_slice #(
   // |              1 |        1 |         1 |        1 |         1 |
   // +----------------+----------+-----------+----------+-----------+
 
-  assign data_in_ready  = (!shift_reg) || (!data_in_valid) || data_out_ready;
+  assign data_in_ready = (!shift_reg) || (!data_in_valid) || data_out_ready;
   assign data_out_valid = shift_reg;
 
 endmodule

@@ -43,14 +43,26 @@ class VerificationCase:
 
 def in_out_wave(dut, name):
     logger.debug(
-        "{}  State: (data_in,data_in_valid,data_in_ready,data_out,data_out_valid,data_out_ready) = ({},{},{},{},{},{})".format(
+        "{}  State: (data_in,data_in_valid,data_in_ready) = ({},{},{})".format(
             name,
             int(dut.data_in.value),
             int(dut.data_in_valid.value),
             int(dut.data_in_ready.value),
+        )
+    )
+    logger.debug(
+        "{}  State: (data_out,data_out_valid,data_out_ready) = ({},{},{})".format(
+            name,
             int(dut.data_out.value),
             int(dut.data_out_valid.value),
             int(dut.data_out_ready.value),
+        )
+    )
+    logger.debug(
+        "{}  State: (shift_reg, buffer) = ({},{})".format(
+            name,
+            int(dut.shift_reg.value),
+            int(dut.buffer.value),
         )
     )
 
@@ -88,14 +100,19 @@ async def cocotb_test_register_slice(dut):
     test_limit = 100
     i = 0
     while not done and i < test_limit:
+
         await FallingEdge(dut.clk)
         in_out_wave(dut, "Post-clk")
 
         ## Pre_compute
         dut.data_in_valid.value = test_case.inputs.pre_compute()
         await Timer(1, units="ns")
-        dut.data_out_ready.value = test_case.outputs.pre_compute(dut.data_out.value)
+        dut.data_out_ready.value = test_case.outputs.pre_compute(
+            dut.data_out_valid.value
+        )
         await Timer(1, units="ns")
+
+        in_out_wave(dut, "pre-comput")
 
         ## Compute
         dut.data_in_valid.value, dut.data_in.value = test_case.inputs.compute(
@@ -103,14 +120,18 @@ async def cocotb_test_register_slice(dut):
         )
         await Timer(1, units="ns")
         dut.data_out_ready.value = test_case.outputs.compute(
-            dut.data_out.value, dut.data_out.value
+            dut.data_out_valid.value, dut.data_out.value
         )
+        await Timer(1, units="ns")
+
         in_out_wave(dut, "Pre-clk")
         logger.debug("\n")
-        # breakpoint()
+
         done = test_case.inputs.is_empty() and test_case.outputs.is_full()
         i += 1
 
+    print([int(k) for k in test_case.outputs.data])
+    print(test_case.ref)
     check_results(test_case.outputs.data, test_case.ref)
 
 
