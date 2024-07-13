@@ -19,6 +19,7 @@ module register_slice #(
   logic [DATA_WIDTH-1:0] buffer;
   // The shift register stores the validity of the data in the buffer
   logic shift_reg;
+  logic to_load;
 
 
   // There are eight cases:
