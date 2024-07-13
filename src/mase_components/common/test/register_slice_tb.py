@@ -11,7 +11,7 @@ from cocotb.triggers import Timer
 from cocotb.triggers import FallingEdge
 from cocotb.clock import Clock
 
-debug = False
+debug = True
 logger = logging.getLogger("tb_signals")
 if debug:
     logger.setLevel(logging.DEBUG)
@@ -22,9 +22,9 @@ class VerificationCase:
     def __init__(self, samples=10):
         self.data_width = 32
         self.inputs = RandomSource(
-            samples=samples, max_stalls=2 * samples, is_data_vector=False, debug=debug
+            samples=samples, max_stalls=samples / 2, is_data_vector=False, debug=debug
         )
-        self.outputs = RandomSink(samples=samples, max_stalls=2 * samples, debug=debug)
+        self.outputs = RandomSink(samples=samples, max_stalls=samples / 2, debug=debug)
         self.samples = samples
         self.ref = self.sw_compute()
 
@@ -43,12 +43,14 @@ class VerificationCase:
 
 def in_out_wave(dut, name):
     logger.debug(
-        "{}  State: (in_valid,in_ready,out_valid,out_ready) = ({},{},{},{})".format(
+        "{}  State: (data_in,data_in_valid,data_in_ready,data_out,data_out_valid,data_out_ready) = ({},{},{},{},{},{})".format(
             name,
-            dut.in_ready.value,
-            dut.in_valid.value,
-            dut.out_ready.value,
-            dut.out_data.value,
+            int(dut.data_in.value),
+            int(dut.data_in_valid.value),
+            int(dut.data_in_ready.value),
+            int(dut.data_out.value),
+            int(dut.data_out_valid.value),
+            int(dut.data_out_ready.value),
         )
     )
 
@@ -72,8 +74,8 @@ async def cocotb_test_register_slice(dut):
     await Timer(500, units="ns")
 
     # Synchronize with the clock
-    dut.in_valid.value = 0
-    dut.out_ready.value = 1
+    dut.data_in_valid.value = 0
+    dut.data_out_ready.value = 1
     in_out_wave(dut, "Pre-clk")
     await FallingEdge(dut.clk)
     in_out_wave(dut, "Post-clk")
@@ -83,28 +85,31 @@ async def cocotb_test_register_slice(dut):
     in_out_wave(dut, "Post-clk")
 
     done = False
-    while not done:
+    test_limit = 100
+    i = 0
+    while not done and i < test_limit:
         await FallingEdge(dut.clk)
         in_out_wave(dut, "Post-clk")
 
         ## Pre_compute
-        dut.in_valid.value = test_case.inputs.pre_compute()
+        dut.data_in_valid.value = test_case.inputs.pre_compute()
         await Timer(1, units="ns")
-        dut.out_ready.value = test_case.outputs.pre_compute(dut.out_data.value)
+        dut.data_out_ready.value = test_case.outputs.pre_compute(dut.data_out.value)
         await Timer(1, units="ns")
 
         ## Compute
-        dut.in_valid.value, dut.in_data.value = test_case.inputs.compute(
-            dut.in_ready.value
+        dut.data_in_valid.value, dut.data_in.value = test_case.inputs.compute(
+            dut.data_in_ready.value
         )
         await Timer(1, units="ns")
-        dut.out_ready.value = test_case.outputs.compute(
-            dut.out_data.value, dut.out_data.value
+        dut.data_out_ready.value = test_case.outputs.compute(
+            dut.data_out.value, dut.data_out.value
         )
         in_out_wave(dut, "Pre-clk")
         logger.debug("\n")
         # breakpoint()
         done = test_case.inputs.is_empty() and test_case.outputs.is_full()
+        i += 1
 
     check_results(test_case.outputs.data, test_case.ref)
 

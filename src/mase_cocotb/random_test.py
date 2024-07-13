@@ -30,12 +30,14 @@ class RandomSource:
             logger_level = logging.DEBUG
         else:
             logger_level = logging.INFO
+
         self.logger.setLevel(logger_level)
         self.name = name
         self.num = num
         self.samples = samples
         self.max_stalls = max_stalls
         self.is_data_vector = is_data_vector
+
         if arithmetic in ["binary"]:
             self.rand_gen = lambda: binary_encode(random.choice([-1, 1]))
         elif arithmetic in ["ternary"]:
@@ -86,8 +88,11 @@ class RandomSource:
         to_feed = (not self.is_empty()) and next_ready
         if self.is_empty():
             data = self.dummy
+            self.logger.debug("source {} is empty.".format(self.name))
+            return 0, data
         else:
             data = self.data[-1]
+
         if not to_feed:
             self.logger.debug(
                 "source {} cannot feed any token because of back pressure.".format(

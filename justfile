@@ -41,9 +41,11 @@ test-hw:
 	# python3 src/mase_components/activation_layers/test/fixed_logsigmoid_tb.py
 	# python3 src/mase_components/activation_layers/test/fixed_silu_tb.py
 	# python3 src/mase_components/activation_layers/test/fixed_softshrink_tb.py
+
 	# Fixed-linear layers
 	# DEBUG: use bias causes crash
 	python3	src/mase_components/linear_layers/fixed_linear_layer/test/fixed_linear_tb.py
+
 	# Memory
 	python3 src/mase_components/memory/test/fifo_tb.py
 	python3 src/mase_components/memory/test/input_buffer_tb.py
@@ -52,8 +54,12 @@ test-hw:
 	# python3 src/mase_components/memory/test/unpacked_fifo_tb.py
 	# python3 src/mase_components/memory/test/repeat_circular_buffer_tb.py
 	# python3 src/mase_components/memory/test/test_lint_memory.py
+
 	# convolution_layers
 	python3	src/mase_components/convolution_layers/test/convolution_tb.py
+
+	# Common
+	python3 src/mase_components/common/test/register_slice_tb.py
 
 reformat:
 	# format python files
