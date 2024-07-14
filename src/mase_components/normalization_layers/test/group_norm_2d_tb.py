@@ -36,7 +36,7 @@ from chop.nn.quantized.modules import GroupNormInteger
 from chop.nn.quantizers.quantizers_for_hw import integer_floor_quantizer_for_hw
 
 
-from mase_components.fixed_math.test.isqrt_sw import make_lut
+from mase_components.scalar_operators.fixed.test.isqrt_sw import make_lut
 from mase_components.common.test.lut_tb import write_memb
 
 logger = logging.getLogger("testbench")

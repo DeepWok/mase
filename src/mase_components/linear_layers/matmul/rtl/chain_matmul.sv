@@ -14,7 +14,7 @@ Description : This module should not be instantiated!
 
 `timescale 1ns / 1ps
 
-module test_chain_matmul #(
+module chain_matmul #(
     parameter N = 4,
     parameter M = 4,
     parameter K = 2,

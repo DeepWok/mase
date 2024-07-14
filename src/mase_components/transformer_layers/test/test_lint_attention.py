@@ -5,7 +5,7 @@ import pytest
 
 @pytest.mark.dev
 def test_lint_attention():
-    run_lint("attention")
+    run_lint("transformer_layers")
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ import cocotb
 from cocotb.triggers import Timer
 from cocotb.triggers import FallingEdge
 from cocotb.clock import Clock
-from cocotb.runner import get_runner
+from mase_cocotb.runner import mase_runner
 
 
 class VerificationCase:
@@ -93,17 +93,10 @@ def runner():
     extra_args = []
     for k, v in test_case.get_dut_parameters().items():
         extra_args.append(f"-G{k}={v}")
-    print(extra_args)
-    runner = get_runner(sim)
-    runner.build(
-        verilog_sources=verilog_sources,
-        hdl_toplevel="binary_activation_binary_adder_tree_layer",
-        build_args=extra_args,
-    )
 
-    runner.test(
-        hdl_toplevel="binary_activation_binary_adder_tree_layer",
-        test_module="binary_activation_binary_adder_tree_layer_tb",
+    mase_runner(
+        trace=True,
+        module_param_list=[test_case.get_dut_parameters()],
     )
 
 

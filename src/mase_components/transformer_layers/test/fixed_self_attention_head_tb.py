@@ -9,6 +9,7 @@ from functools import partial
 import cocotb
 from cocotb.log import SimLog
 from cocotb.triggers import Timer
+from pathlib import Path
 
 from transformers.models.bert.configuration_bert import BertConfig
 
@@ -20,7 +21,7 @@ from mase_cocotb.runner import mase_runner
 from chop.nn.quantized import BertSelfAttentionHeadInteger
 from chop.nn.quantizers import integer_quantizer
 
-from mase_components.activations.test import generate_memory
+from mase_components.helper import generate_memory
 
 import pytest
 
@@ -202,6 +203,7 @@ def test_fixed_self_attention_head_smoke():
         3,
         16,
         3,
+        path=Path(__file__).parents[1] / "rtl",
     )
     mase_runner(
         trace=True,

@@ -42,7 +42,7 @@ from chop.nn.quantizers.quantizers_for_hw import (
 
 
 from mase_components.cast.test.fixed_signed_cast_tb import _fixed_signed_cast_model
-from mase_components.fixed_math.test.isqrt_sw import lut_parameter_dict
+from mase_components.scalar_operators.fixed.test.isqrt_sw import lut_parameter_dict
 from mase_components.common.test.lut_tb import write_memb, read_memb
 
 import pytest

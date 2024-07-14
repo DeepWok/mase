@@ -5,7 +5,7 @@ import pytest
 
 @pytest.mark.skip(reason="Needs to be fixed.")
 def test_lint_norm():
-    run_lint("norm")
+    run_lint("normalization_layers")
 
 
 if __name__ == "__main__":

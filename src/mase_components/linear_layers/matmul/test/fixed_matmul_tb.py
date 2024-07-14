@@ -15,6 +15,7 @@ from einops import rearrange
 import torch
 from mase_cocotb.z_qlayers import quantize_to_int as q2i
 from chop.models.manual.quant_utils import get_quantized_func
+from mase_cocotb.runner import mase_runner
 
 debug = True
 
@@ -390,7 +391,8 @@ import pytest
 
 @pytest.mark.skip(reason="Needs to be fixed.")
 def test_fixed_matmul():
-    runner()
+    test_case = VerificationCase()
+    mase_runner(module_param_list=[test_case.get_dut_parameters()])
 
 
 if __name__ == "__main__":

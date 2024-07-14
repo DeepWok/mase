@@ -8,7 +8,10 @@ from mase_cocotb.testbench import Testbench
 from cocotb.triggers import Timer
 from mase_cocotb.runner import mase_runner
 import math
-from mase_components.fixed_math.test.isqrt_sw import range_reduction_sw, int_to_float
+from mase_components.scalar_operators.fixed.test.isqrt_sw import (
+    range_reduction_sw,
+    int_to_float,
+)
 
 
 class VerificationCase(Testbench):

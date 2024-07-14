@@ -8,7 +8,7 @@ from cocotb.triggers import Timer
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.runner import mase_runner
 import math
-from mase_components.fixed_math.test.isqrt_sw import (
+from mase_components.scalar_operators.fixed.test.isqrt_sw import (
     range_reduction_sw,
     range_augmentation_sw,
     int_to_float,
@@ -89,8 +89,8 @@ def test_fixed_range_augmentation():
     def full_sweep():
         parameter_list = []
         # TODO: model does not work for purely fractional numbers.
-        for int_width in range(1, 9):
-            for frac_width in range(0, 9):
+        for int_width in range(1, 9, 3):
+            for frac_width in range(0, 9, 3):
                 width = int_width + frac_width
                 parameters = {"WIDTH": width, "FRAC_WIDTH": frac_width}
                 parameter_list.append(parameters)

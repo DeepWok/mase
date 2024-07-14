@@ -12,7 +12,7 @@ import math
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.utils import verilator_str_param, bit_driver
 from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
-from mase_components.fixed_math.test.isqrt_sw import (
+from mase_components.scalar_operators.fixed.test.isqrt_sw import (
     isqrt_sw2,
     int_to_float,
     make_lut,

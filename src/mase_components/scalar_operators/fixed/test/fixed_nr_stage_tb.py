@@ -8,7 +8,7 @@ from cocotb.triggers import Timer
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.runner import mase_runner
 import math
-from .isqrt_sw import (
+from mase_components.scalar_operators.fixed.test.isqrt_sw import (
     nr_stage_sw,
     float_to_int,
     int_to_float,
