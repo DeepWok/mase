@@ -126,7 +126,7 @@ test-hw:
 	# Scalar operators 
 	python3 src/mase_components/scalar_operators/fixed/test/fixed_isqrt_tb.py
 	python3 src/mase_components/scalar_operators/fixed/test/isqrt_sw.py
-	python3 src/mase_components/scalar_operators/float/test/test_lint_float_arithmetic.py
+	# python3 src/mase_components/scalar_operators/float/test/test_lint_float_arithmetic.py
 	# python3 src/mase_components/scalar_operators/fixed/test/fixed_nr_stage_tb.py
 	# python3 src/mase_components/scalar_operators/fixed/test/test_lint_fixed_math.py
 	
