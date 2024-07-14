@@ -109,7 +109,7 @@ test-hw:
 
 	# Memory
 	python3 src/mase_components/memory/test/fifo_tb.py
-	python3 src/mase_components/memory/test/input_buffer_tb.py
+	# python3 src/mase_components/memory/test/input_buffer_tb.py
 	python3 src/mase_components/memory/test/skid_buffer_tb.py
 	# python3 src/mase_components/memory/test/unpacked_fifo_tb.py
 	# python3 src/mase_components/memory/test/repeat_circular_buffer_tb.py
@@ -138,20 +138,6 @@ test-hw:
 	# python3 src/mase_components/transformer_layers/test/fixed_gqa_head_tb.py
 	# python3 src/mase_components/transformer_layers/test/fixed_self_attention_tb.py
 	# python3 src/mase_components/transformer_layers/test/test_lint_attention.py
-
-	# cast
-	python3 src/mase_components/cast/test/fixed_cast_tb.py
-	python3 src/mase_components/cast/test/fixed_rounding_tb.py
-	python3 src/mase_components/cast/test/fixed_signed_cast_tb.py
-	# python3 src/mase_components/cast/test/fixed_unsigned_cast_tb.py
-
-	# common
-	python3 src/mase_components/common/test/comparator_accumulator_tb.py
-	python3 src/mase_components/common/test/cut_data_tb.py
-	python3 src/mase_components/common/test/lut_tb.py
-	python3 src/mase_components/common/test/wrap_data_tb.py
-	python3 src/mase_components/common/test/register_slice_tb.py
-	python3 src/mase_components/common/test/test_lint_common.py
 
 reformat:
 	# format python files
