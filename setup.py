@@ -8,9 +8,9 @@ def is_cuda_available():
 
         return torch.cuda.is_available()
     except:
-        assert (
-            False
-        ), "You need to install PyTorch before installing MASE: https://pytorch.org/get-started/locally/."
+        print(
+            "You need to install PyTorch before installing MASE: https://pytorch.org/get-started/locally/."
+        )
         return False
 
 
