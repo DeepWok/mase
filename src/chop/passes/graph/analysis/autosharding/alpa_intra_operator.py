@@ -56,10 +56,15 @@ def _extract_ilp(mg, mesh, pass_args={}):
 
             op_strategy = fully_replicated_strategy(node.meta["mase"], mesh)
 
+            opt_var = cp.Variable(1, boolean=True)
+            constr += [
+                cp.sum(opt_var) == 1,
+            ]
+
             # Opt var is None since no decision needs to be taken
             node.meta["mase"]["software"]["autosharding"] = {
                 "op_strategy": op_strategy,
-                "opt_var": None,
+                "opt_var": opt_var,
                 "input": None,
                 "output": None,
             }
@@ -80,12 +85,12 @@ def _extract_ilp(mg, mesh, pass_args={}):
 
         elif node.op == "output":
             logger.debug(
-                f"Op strategy from node {node.args[0]} is propagated to {node} node."
+                f"Op strategy from node {node.all_input_nodes[0]} is propagated to {node} node."
             )
             node.meta["mase"]["software"]["autosharding"] = {
-                "op_strategy": node.args[0].meta["mase"]["software"]["autosharding"][
-                    "op_strategy"
-                ],
+                "op_strategy": node.all_input_nodes[0].meta["mase"]["software"][
+                    "autosharding"
+                ]["op_strategy"],
                 "opt_var": None,
                 "input": None,
                 "output": None,
@@ -104,9 +109,14 @@ def _extract_ilp(mg, mesh, pass_args={}):
 
         else:
             logger.warning(f"Unknown node {node.name} with op {node.op}")
+            op_strategy = fully_replicated_strategy(node.meta["mase"], mesh)
+            opt_var = cp.Variable(1, boolean=True)
+            constr += [
+                cp.sum(opt_var) == 1,
+            ]
             node.meta["mase"]["software"]["autosharding"] = {
                 "op_strategy": fully_replicated_strategy(node.meta["mase"], mesh),
-                "opt_var": None,
+                "opt_var": opt_var,
                 "input": None,
                 "output": None,
             }
@@ -162,6 +172,7 @@ def _extract_ilp(mg, mesh, pass_args={}):
 
             # Formulate resharding cost matrix
             resharding_costs = np.zeros((opt_var.shape[0], in_opt_var.shape[0]))
+
             for dest_idx, dest_spec in enumerate(node_in_specs):
                 for src_idx, src_spec in enumerate(arg_out_specs):
                     cost = redistribute_cost(src_spec, dest_spec)
@@ -258,13 +269,17 @@ def _mark_sharding(mg, pass_args):
         ] = chosen_strategy
 
         arg_specs = chosen_strategy.input_specs
-        out_specs = chosen_strategy.output_specs
+        out_spec = chosen_strategy.output_specs
 
         if isinstance(arg_specs, DTensorSpec):
             arg_specs = (arg_specs,)
 
         # Annotate arg metadata with chosen strategy
-        if node.op not in ["placeholder", "get_attr", "output"]:
+        if node.op in ["placeholder", "get_attr", "call_method", "output"]:
+            pass
+
+        # call_function nodes
+        else:
             arg_list = [i for i in node.meta["mase"]["common"]["args"].keys()]
 
             for arg_idx, arg_spec in enumerate(arg_specs):
@@ -274,7 +289,7 @@ def _mark_sharding(mg, pass_args):
                 arg_meta["dtensor_spec"] = arg_spec
 
         # Annotate output metadata with chosen strategy
-        node.meta["mase"]["common"]["results"]["data_out_0"]["dtensor_spec"] = out_specs
+        node.meta["mase"]["common"]["results"]["data_out_0"]["dtensor_spec"] = out_spec
 
     return mg, {}
 

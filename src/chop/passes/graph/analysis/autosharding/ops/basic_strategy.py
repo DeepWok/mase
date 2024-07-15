@@ -1,3 +1,6 @@
+# Adapted from Pytorch Distributed DTensor API.
+# https://github.com/pytorch/pytorch/blob/main/torch/distributed/_tensor/ops/basic_strategy.py
+
 import itertools
 from dataclasses import dataclass
 from typing import List, Set, Tuple

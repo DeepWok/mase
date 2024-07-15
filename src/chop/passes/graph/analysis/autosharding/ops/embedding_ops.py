@@ -1,6 +1,6 @@
-# mypy: allow-untyped-defs
-# Copyright (c) Meta Platforms, Inc. and affiliates
-# implement matrix related ops for distributed tensor
+# Adapted from Pytorch Distributed DTensor API.
+# https://github.com/pytorch/pytorch/blob/main/torch/distributed/_tensor/ops/embedding_ops.py
+
 from dataclasses import dataclass, field
 from typing import cast, List, Optional
 import itertools

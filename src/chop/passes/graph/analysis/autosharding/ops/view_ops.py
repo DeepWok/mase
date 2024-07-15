@@ -1,3 +1,6 @@
+# Adapted from Pytorch Distributed DTensor API.
+# https://github.com/pytorch/pytorch/blob/main/torch/distributed/_tensor/ops/view_ops.py
+
 from dataclasses import dataclass
 from typing import (
     Callable,
@@ -435,7 +438,6 @@ dim_maps: Dict[Callable[..., torch.Tensor], Callable[..., DimMap]] = {
     torch.atleast_2d: lambda x: dim_pad_left(x.ndim, 2),
     torch.atleast_3d: lambda x: dim_atleast_3d(x.ndim),
     torch.broadcast_to: lambda input, shape: expand(input.shape, shape),
-    Tensor.expand: lambda self, *sizes: expand(self.shape, normalize_sizes(sizes)),
     torch.flatten: lambda tensor: dim_flatten(tensor.ndim),
     torch.movedim: lambda input, source, destination: dim_movedim(
         input.ndim, source, destination
@@ -444,16 +446,23 @@ dim_maps: Dict[Callable[..., torch.Tensor], Callable[..., DimMap]] = {
         InputDim(i) for i in normalize_dims(tuple(dims), input.ndim)
     ),
     torch.ravel: lambda tensor: dim_flatten(tensor.ndim),
-    Tensor.repeat: lambda self, *sizes: dim_repeat(self.ndim, sizes),
-    Tensor.reshape: lambda self, *shape: view_groups(self.shape, shape),
     torch.reshape: lambda input, shape: view_groups(input.shape, shape),
     torch.squeeze: lambda input, dim=None: dim_squeeze(input.shape, dim),
     torch.tile: lambda input, dims: dim_tile(input.ndim, dims),
     torch.transpose: lambda input, dim0, dim1: dim_transpose(input.ndim, dim0, dim1),
     torch.unsqueeze: lambda input, dim: dim_unsqueeze(input.ndim, dim),
-    Tensor.view: lambda input, *shape: view_groups(input.shape, shape),
     torch.view_as_complex: lambda input: dim_flatten(input.ndim, input.ndim - 2),
     torch.view_as_real: lambda input: dim_view_as_real(input.shape),
+    Tensor.expand: lambda self, *sizes: expand(self.shape, normalize_sizes(sizes)),
+    Tensor.repeat: lambda self, *sizes: dim_repeat(self.ndim, sizes),
+    Tensor.reshape: lambda self, *shape: view_groups(self.shape, shape),
+    Tensor.view: lambda input, *shape: view_groups(input.shape, shape),
+    # here
+    Tensor.permute: lambda input, *dims: tuple(
+        InputDim(i) for i in normalize_dims(tuple(dims), input.ndim)
+    ),
+    Tensor.transpose: lambda input, dim0, dim1: dim_transpose(input.ndim, dim0, dim1),
+    Tensor.view: lambda input, *shape: view_groups(input.shape, shape),
 }
 
 

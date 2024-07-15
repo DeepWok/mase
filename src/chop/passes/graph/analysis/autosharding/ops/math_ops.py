@@ -1,3 +1,6 @@
+# Adapted from Pytorch Distributed DTensor API.
+# https://github.com/pytorch/pytorch/blob/main/torch/distributed/_tensor/ops/math_ops.py
+
 from typing import cast, List, Optional, Sequence, Tuple, Union
 
 import torch

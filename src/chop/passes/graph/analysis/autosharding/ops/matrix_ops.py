@@ -1,4 +1,5 @@
-# Adapted from https://github.com/pytorch/pytorch/blob/main/torch/distributed/_tensor/ops/matrix_ops.py
+# Adapted from Pytorch Distributed DTensor API.
+# https://github.com/pytorch/pytorch/blob/main/torch/distributed/_tensor/ops/matrix_ops.py
 
 import torch
 from torch.distributed._tensor._op_schema import OpStrategy, PlacementStrategy
