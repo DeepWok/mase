@@ -59,8 +59,7 @@ def _integer_quantize(
 
 
 def quantize_to_int(x: Tensor, width: int, frac_width: int):
-    x = _integer_quantize(x, width, frac_width) * (2**frac_width)
-    x = x.int() & (2**width - 1)
+    x = (_integer_quantize(x, width, frac_width) * (2**frac_width)).int()
     return x
 
 
