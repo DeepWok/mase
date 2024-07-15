@@ -19,6 +19,8 @@ def get_system():
 
 
 requirements = [
+    "torch",
+    "torchvision",
     "onnx",
     "black",
     "toml",

@@ -97,3 +97,16 @@ nix-shell
 			PYTHON_BIN ?= $(shell cocotb-config --python-bin)
 	endif
 	```
+
+4. GPU-enabled `torch` install
+	It is possible that the `torch` package is not installed correctly with GPU support in the `nix-shell`. 
+	You should have noticed that we have created a virtual environment in the `nix-shell` and installed the `torch` package in it. However, the `torch` package may not be installed with GPU support becuase of operating system compatibility issues. In these cases, you may choose to install the `torch` package yourself using `pip` 
+
+	```shell
+	# check your python
+	# it should point you to the python3 in the nix-shell
+	# ../mase/.venv/bin/python3
+	which python3
+	python3 -m pip install torch torchvision torchaudio
+	```
+	
