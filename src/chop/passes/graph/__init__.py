@@ -140,7 +140,6 @@ if check_deps_tensorRT_pass(silent=True):
 
     from .transforms.tensorrt import (
         tensorrt_calibrate_transform_pass,
-        tensorrt_fine_tune_transform_pass,
         tensorrt_fake_quantize_transform_pass,
     )
 
@@ -148,11 +147,9 @@ if check_deps_tensorRT_pass(silent=True):
     PASSES["tensorrt_engine_interface_pass"] = tensorrt_engine_interface_pass
 
     TRANSFORM_PASSES.append("tensorrt_calibrate_transform_pass")
-    TRANSFORM_PASSES.append("tensorrt_fine_tune_transform_pass")
     TRANSFORM_PASSES.append("tensorrt_fake_quantize_transform_pass")
 
     PASSES["tensorrt_calibrate_transform_pass"] = tensorrt_calibrate_transform_pass
-    PASSES["tensorrt_fine_tune_transform_pass"] = tensorrt_fine_tune_transform_pass
     PASSES["tensorrt_fake_quantize_transform_pass"] = (
         tensorrt_fake_quantize_transform_pass
     )

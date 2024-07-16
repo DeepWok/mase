@@ -44,8 +44,6 @@ python3 -m pip install -e . -vvv
 
 1. After all dependencies are installed, you can do an editable pip install. This makes the mase packages available within any python session in your environment, this command was included in the previous step. You have to understand what is meant by `editable` mode. This means that the package is installed in a way that any changes you make to the source code will be reflected in the package. This is useful for development and testing purposes. For stable installations, you can remove the `-e` flag.
 
-```shell
-
 ```bash
 python3 -m pip install -e . -vvv
 ```
@@ -57,6 +55,7 @@ python -c "import chop"
 ```
 
 3. (Optional but suggested) You can also run the Machop test stack to ensure the codebase is running correctly by running the following command.
+
 ```bash
 pytest machop/test
 ```

@@ -1,4 +1,4 @@
-# Getting Started using Nix (Suggested)
+# Getting Started using Nix (Suggested, includes Common Troubleshooting)
 
 ## Install Nix (for the first time)
 
@@ -109,4 +109,34 @@ nix-shell
 	which python3
 	python3 -m pip install torch torchvision torchaudio
 	```
-	
+
+  5. `CUDA_HOME` problem with `deepspeed` on `cuda` enabled systems 
+
+		When installing `deepspeed` on `cuda` enabled systems, you might encounter the following error:	
+		```bash
+			× python setup.py egg_info did not run successfully.
+			│ exit code: 1
+			╰─> [9 lines of output]
+					Traceback (most recent call last):
+						File "<string>", line 2, in <module>
+						File "<pip-setuptools-caller>", line 34, in <module>
+						File "/tmp/pip-install-lmczkuc5/deepspeed_2de5ecce4b1e495ea5546f4a526749f4/setup.py", line 101, in <module>
+							cuda_major_ver, cuda_minor_ver = installed_cuda_version()
+																							^^^^^^^^^^^^^^^^^^^^^^^^
+						File "/tmp/pip-install-lmczkuc5/deepspeed_2de5ecce4b1e495ea5546f4a526749f4/op_builder/builder.py", line 50, in installed_cuda_version
+							raise MissingCUDAException("CUDA_HOME does not exist, unable to compile CUDA op(s)")
+					op_builder.builder.MissingCUDAException: CUDA_HOME does not exist, unable to compile CUDA op(s)
+					[end of output]
+			note: This error originates from a subprocess, and is likely not a problem with pip.
+		error: metadata-generation-failed
+		× Encountered error while generating package metadata.
+		╰─> See above for output.
+		```
+
+		This normally means that the cuda toolkit is missing or not installed properly, which you can chek by running the following command:
+		```bash
+		nvcc --version
+		which nvcc
+		```
+
+		If there is an error, this is an indication to reinstall the cuda toolkit. You might need to run `sudo apt-get install cuda-toolkit` on Ubuntu systems. You may, in fact, need to install normal build tools for `deepspeedd` and `pycuda` too, these can be `gcc`, `g++`, `make`, `cmake`, etc. The `tensorrt` installation may also trigger an independent install if you are on `wsl`.
