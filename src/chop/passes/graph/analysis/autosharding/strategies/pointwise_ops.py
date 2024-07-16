@@ -25,6 +25,12 @@ from torch.distributed._tensor.placement_types import (
     TensorMeta,
 )
 
+from chop.tools import get_logger
+
+from .common import fully_replicated_strategy
+
+logger = get_logger(__name__)
+
 
 def pointwise_strategy(meta, mesh, linearity=False):
     max_shards_strategy_index = -1
@@ -76,7 +82,10 @@ def common_pointwise_strategy(
         elif isinstance(arg, (float, int)):
             parsed_args.append(torch.Tensor([arg]))
         else:
-            raise ValueError(f"Unrecognized arg type: {type(arg)}")
+            logger.warning(
+                f"Unrecognized arg type: {type(arg)}, defaulting to fully replicated strategy."
+            )
+            return fully_replicated_strategy(meta, mesh)
 
     common_shape = torch.broadcast_shapes(*[arg.shape for arg in parsed_args])
 

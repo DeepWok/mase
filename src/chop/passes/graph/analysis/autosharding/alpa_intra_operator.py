@@ -6,14 +6,18 @@ import numpy as np
 import cvxpy as cp
 
 from chop.tools import get_logger
+from chop.tools.utils import deepgetattr
 
 from .layers import (
+    AUTOSHARDING_MODULES,
     AUTOSHARDING_FUNCTIONS,
     AUTOSHARDING_METHODS,
     IMPLICIT_FUNCS,
     IMPLICIT_METHODS,
-    placeholder_or_getattr_strategy,
+)
+from .strategies.common import (
     fully_replicated_strategy,
+    placeholder_or_getattr_strategy,
 )
 
 
@@ -96,6 +100,13 @@ def _extract_ilp(mg, mesh, pass_args={}):
                 "output": None,
             }
             continue
+
+        elif node.op == "call_module" and isinstance(
+            deepgetattr(mg.model, node.target), tuple(AUTOSHARDING_MODULES.keys())
+        ):
+            logger.debug(f"Obtaining strategy for node {node.name}")
+            module_cls = type(deepgetattr(mg.model, node.target))
+            op_strategy = AUTOSHARDING_MODULES[module_cls](node.meta["mase"], mesh)
 
         elif node.op == "call_method" and node.target in AUTOSHARDING_METHODS.keys():
             logger.debug(f"Obtaining strategy for node {node.name}")
