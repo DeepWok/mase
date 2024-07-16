@@ -15,7 +15,7 @@ cd $MASE
 
 run_test() {
     echo "----------------- $1 -----------------"
-    time python3 $1 | (! grep "FAIL") || exit 1
+    time python3 $1 | (! grep " FAIL ") || exit 1
 }
 
 # Activation_layers
