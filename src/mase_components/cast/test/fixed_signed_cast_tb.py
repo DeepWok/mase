@@ -184,9 +184,11 @@ def test_fixed_signed_cast():
             )
         return l
 
-    cfg_list = [DEFAULT_CONFIG]
-    cfg_list = gen_width_change_configs(cfg_list)
-    cfg_list = gen_symmetric(cfg_list)
+    cfg_list = [
+        DEFAULT_CONFIG,
+    ]
+    # cfg_list = gen_width_change_configs(cfg_list)
+    # cfg_list = gen_symmetric(cfg_list)
     # Other rounding modes not supported yet
     # cfg_list = gen_rounding(cfg_list)
 

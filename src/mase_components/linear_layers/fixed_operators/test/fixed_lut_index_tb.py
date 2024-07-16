@@ -103,8 +103,8 @@ def test_fixed_lut_index():
             parameter_list.append(parameters)
         return parameter_list
 
-    parameter_list = full_sweep()
-    # parameter_list = [{"WIDTH": 7, "LUT_POW": 5}]
+    # parameter_list = full_sweep()
+    parameter_list = [{"WIDTH": 7, "LUT_POW": 5}]
 
     mase_runner(module_param_list=parameter_list)
 

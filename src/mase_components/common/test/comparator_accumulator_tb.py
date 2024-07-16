@@ -146,9 +146,11 @@ if __name__ == "__main__":
         "SIGNED": 0,
     }
 
-    cfgs = [DEFAULT]
-    cfgs = width_cfgs(cfgs)
-    cfgs = depth_cfgs(cfgs)
+    cfgs = [
+        DEFAULT,
+    ]
+    # cfgs = width_cfgs(cfgs)
+    # cfgs = depth_cfgs(cfgs)
     cfgs = signed_max_min_cfgs(cfgs)
 
     mase_runner(

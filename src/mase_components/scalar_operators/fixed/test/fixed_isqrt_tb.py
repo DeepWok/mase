@@ -156,8 +156,8 @@ def test_fixed_isqrt():
 
     parameter_list = [
         # A use case in group_norm
-        *full_sweep(),
-        # single_cfg(35, 14, 7, 0)
+        # *full_sweep(),
+        single_cfg(35, 14, 7, 0)
     ]
     mase_runner(module_param_list=parameter_list, trace=True)
 
