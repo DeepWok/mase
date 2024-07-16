@@ -16,7 +16,9 @@ def repeat_kv(hidden_states: torch.Tensor, n_rep: int) -> torch.Tensor:
     batch, num_key_value_heads, slen, head_dim = hidden_states.shape
     if n_rep == 1:
         return hidden_states
-    hidden_states = hidden_states[:, :, None, :, :].expand(batch, num_key_value_heads, n_rep, slen, head_dim)
+    hidden_states = hidden_states[:, :, None, :, :].expand(
+        batch, num_key_value_heads, n_rep, slen, head_dim
+    )
     return hidden_states.reshape(batch, num_key_value_heads * n_rep, slen, head_dim)
 
 
@@ -90,29 +92,34 @@ class GroupedQueryAttention(nn.Module):
         self.qk_matmul_func = torch.matmul
         self.v_matmul_func = torch.matmul
 
-
     def _assert_gqa_config(self):
-        assert self.group_size * self.num_kv_heads == self.num_heads, (
-            "Number of heads must be divisible by number of KV heads!"
-        )
-        assert self.group_size * self.kv_dim == self.embed_dim, (
-            "Embedding dimension must be divisible by number of KV heads!"
-        )
-        assert self.num_heads * self.head_dim == self.embed_dim, (
-            "Embedding dimension must be divisible by number of heads!"
-        )
+        assert (
+            self.group_size * self.num_kv_heads == self.num_heads
+        ), "Number of heads must be divisible by number of KV heads!"
+        assert (
+            self.group_size * self.kv_dim == self.embed_dim
+        ), "Embedding dimension must be divisible by number of KV heads!"
+        assert (
+            self.num_heads * self.head_dim == self.embed_dim
+        ), "Embedding dimension must be divisible by number of heads!"
 
     def _qkv_states(self, x: Tensor, batch_size: int, seq_len: int):
 
-        query = self.q_projection(x).view(
-            batch_size, seq_len, self.num_heads, self.head_dim
-        ).transpose(1, 2)
-        key = self.k_projection(x).view(
-            batch_size, seq_len, self.num_kv_heads, self.head_dim
-        ).transpose(1, 2)
-        value = self.v_projection(x).view(
-            batch_size, seq_len, self.num_kv_heads, self.head_dim
-        ).transpose(1, 2)
+        query = (
+            self.q_projection(x)
+            .view(batch_size, seq_len, self.num_heads, self.head_dim)
+            .transpose(1, 2)
+        )
+        key = (
+            self.k_projection(x)
+            .view(batch_size, seq_len, self.num_kv_heads, self.head_dim)
+            .transpose(1, 2)
+        )
+        value = (
+            self.v_projection(x)
+            .view(batch_size, seq_len, self.num_kv_heads, self.head_dim)
+            .transpose(1, 2)
+        )
 
         return query, key, value
 
@@ -132,7 +139,9 @@ class GroupedQueryAttention(nn.Module):
         key = repeat_kv(key, n_rep=self.group_size)
         value = repeat_kv(value, n_rep=self.group_size)
 
-        attn_weights = self.qk_matmul_func(query, key.transpose(2, 3) / math.sqrt(self.head_dim))
+        attn_weights = self.qk_matmul_func(
+            query, key.transpose(2, 3) / math.sqrt(self.head_dim)
+        )
         attn_weights = self.softmax_func(attn_weights)
         attn_output = self.v_matmul_func(attn_weights, value)
 
@@ -149,9 +158,7 @@ class GroupedQueryAttention(nn.Module):
 
         # TODO: Missing rotary embeddings to Llama
 
-        out = self._attention_mechanism(
-            query, key, value, batch_size, seq_len
-        )
+        out = self._attention_mechanism(query, key, value, batch_size, seq_len)
 
         return out
 

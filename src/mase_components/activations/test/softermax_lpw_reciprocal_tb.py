@@ -140,26 +140,39 @@ async def sweep(dut):
         value_name="Value",
         var_name="Type",
     )
-    curve_fig = alt.Chart(curve_data).mark_line().encode(
-        x=alt.X("x").title(f"x (Q{tb.IN_WIDTH}.{tb.IN_FRAC_WIDTH} Fixed-point)"),
-        y=alt.Y("Value").title(f"y (Q{tb.OUT_WIDTH}.{tb.OUT_FRAC_WIDTH} Fixed-point)"),
-        color=alt.Color("Type"),
-    ).properties(
-        width=600,
-        height=300,
+    curve_fig = (
+        alt.Chart(curve_data)
+        .mark_line()
+        .encode(
+            x=alt.X("x").title(f"x (Q{tb.IN_WIDTH}.{tb.IN_FRAC_WIDTH} Fixed-point)"),
+            y=alt.Y("Value").title(
+                f"y (Q{tb.OUT_WIDTH}.{tb.OUT_FRAC_WIDTH} Fixed-point)"
+            ),
+            color=alt.Color("Type"),
+        )
+        .properties(
+            width=600,
+            height=300,
+        )
     )
 
     error_data = data[["x", "hardware error"]]
-    error_fig = alt.Chart(error_data).mark_line().encode(
-        x=alt.X("x").title(f"x (Q{tb.IN_WIDTH}.{tb.IN_FRAC_WIDTH} Fixed-point)"),
-        y=alt.Y("hardware error").title(f"Error"),
-    ).properties(
-        width=600,
-        height=100,
+    error_fig = (
+        alt.Chart(error_data)
+        .mark_line()
+        .encode(
+            x=alt.X("x").title(f"x (Q{tb.IN_WIDTH}.{tb.IN_FRAC_WIDTH} Fixed-point)"),
+            y=alt.Y("hardware error").title(f"Error"),
+        )
+        .properties(
+            width=600,
+            height=100,
+        )
     )
 
     (curve_fig & error_fig).save(
-        Path(__file__).parent / f"build/softermax_lpw_reciprocal/curve_error_{graph_id}.png",
+        Path(__file__).parent
+        / f"build/softermax_lpw_reciprocal/curve_error_{graph_id}.png",
         scale_factor=3,
     )
 
@@ -175,7 +188,7 @@ async def sweep(dut):
         "avg_err": average_err,
     }
     filename = f"{graph_id}.json"
-    with open(Path(__file__).parent / "results" / "recip" / filename, 'w') as f:
+    with open(Path(__file__).parent / "results" / "recip" / filename, "w") as f:
         json.dump(record, f, indent=4)
 
     tb._final_check()
@@ -206,7 +219,7 @@ async def valid_backpressure(dut):
 
 def width_cfgs():
     cfgs = []
-    for width in range(2, 16+1):
+    for width in range(2, 16 + 1):
         frac_width = width // 2
         if frac_width < 3:
             entries = 2**frac_width
@@ -264,6 +277,7 @@ def test_smoke():
             }
         ],
     )
+
 
 if __name__ == "__main__":
     # test_width_cfgs()

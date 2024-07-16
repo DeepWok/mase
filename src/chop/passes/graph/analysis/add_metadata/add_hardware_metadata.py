@@ -156,10 +156,18 @@ def add_extra_verilog_param(node, graph: MaseGraph):
             vp["HAS_BIAS"] = 1 if module.bias else 0
 
             # Also fix up weight parallelism
-            vp["Q_PROJECTION_WEIGHT_PARALLELISM_DIM_1"] = vp["Q_PROJECTION_WEIGHT_PARALLELISM_DIM_0"]
-            vp["K_PROJECTION_WEIGHT_PARALLELISM_DIM_1"] = vp["K_PROJECTION_WEIGHT_PARALLELISM_DIM_0"]
-            vp["V_PROJECTION_WEIGHT_PARALLELISM_DIM_1"] = vp["V_PROJECTION_WEIGHT_PARALLELISM_DIM_0"]
-            vp["O_PROJECTION_WEIGHT_PARALLELISM_DIM_1"] = vp["O_PROJECTION_WEIGHT_PARALLELISM_DIM_0"]
+            vp["Q_PROJECTION_WEIGHT_PARALLELISM_DIM_1"] = vp[
+                "Q_PROJECTION_WEIGHT_PARALLELISM_DIM_0"
+            ]
+            vp["K_PROJECTION_WEIGHT_PARALLELISM_DIM_1"] = vp[
+                "K_PROJECTION_WEIGHT_PARALLELISM_DIM_0"
+            ]
+            vp["V_PROJECTION_WEIGHT_PARALLELISM_DIM_1"] = vp[
+                "V_PROJECTION_WEIGHT_PARALLELISM_DIM_0"
+            ]
+            vp["O_PROJECTION_WEIGHT_PARALLELISM_DIM_1"] = vp[
+                "O_PROJECTION_WEIGHT_PARALLELISM_DIM_0"
+            ]
 
 
 def add_hardware_metadata_analysis_pass(graph, pass_args=None):
@@ -413,7 +421,9 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
     # * Fix max parallelism to small value to enable verilator simulation
     # ! TO DO: enable this to be overriden by user
     for node in graph.nodes:
-        node.meta["mase"]["hardware"]["max_parallelism"] = pass_args.get("max_parallelism", [4] * 4)
+        node.meta["mase"]["hardware"]["max_parallelism"] = pass_args.get(
+            "max_parallelism", [4] * 4
+        )
 
     # Add hardware parameters
     for node in graph.nodes:

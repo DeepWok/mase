@@ -10,6 +10,7 @@ from cocotb.triggers import *
 from mase_cocotb.driver import Driver
 from mase_cocotb.monitor import Monitor
 
+
 def _sign_extend(value: int, bits: int):
     sign_bit = 1 << (bits - 1)
     return (value & (sign_bit - 1)) - (value & sign_bit)
@@ -36,7 +37,6 @@ class StreamDriver(Driver):
         self.num_beats = 0 if record_num_beats else None
         self.load_fn = load_fn
         self.load_max_iters = load_max_iters
-
 
     def set_valid_prob(self, prob):
         assert prob >= 0.0 and prob <= 1.0

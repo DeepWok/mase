@@ -37,7 +37,7 @@ class LPW_Pow2TB(Testbench):
         self.in_driver = StreamDriver(dut.clk, dut.in_data, dut.in_valid, dut.in_ready)
 
         # 0.1% bit error
-        self.error_threshold_bits = ceil((2 ** self.IN_WIDTH) * 0.001)
+        self.error_threshold_bits = ceil((2**self.IN_WIDTH) * 0.001)
 
         self.output_monitor = ErrorThresholdStreamMonitor(
             dut.clk,
@@ -63,22 +63,24 @@ class LPW_Pow2TB(Testbench):
     def generate_inputs(self, batches=1):
         half = batches // 2
         negative_nums, zero_to_one_nums = half, batches - half
-        inputs = torch.concat([
-            # Negative Numbers
-            torch.randint(
-                low=2**(self.IN_WIDTH-1),
-                high=2**self.IN_WIDTH,
-                size=(negative_nums,),
-                dtype=torch.int32,
-            ),
-            # Numbers between 0 and 1
-            torch.randint(
-                low=0,
-                high=2**self.IN_FRAC_WIDTH,
-                size=(zero_to_one_nums,),
-                dtype=torch.int32,
-            )
-        ])
+        inputs = torch.concat(
+            [
+                # Negative Numbers
+                torch.randint(
+                    low=2 ** (self.IN_WIDTH - 1),
+                    high=2**self.IN_WIDTH,
+                    size=(negative_nums,),
+                    dtype=torch.int32,
+                ),
+                # Numbers between 0 and 1
+                torch.randint(
+                    low=0,
+                    high=2**self.IN_FRAC_WIDTH,
+                    size=(zero_to_one_nums,),
+                    dtype=torch.int32,
+                ),
+            ]
+        )
         return inputs.tolist()
 
     def model(self, inputs):
@@ -126,7 +128,7 @@ async def sweep(dut):
     tb.in_driver.load_driver(inputs)
     tb.output_monitor.load_monitor(exp_out)
 
-    ns = ((2 ** tb.IN_WIDTH) * 1000) // 5
+    ns = ((2**tb.IN_WIDTH) * 1000) // 5
     logger.info("Waiting %d ns..." % ns)
     await Timer(ns, "ns")
     assert tb.output_monitor.exp_queue.empty()
@@ -144,12 +146,14 @@ async def sweep(dut):
     software_res = [x / (2**tb.OUT_FRAC_WIDTH) for x in exp_out]
     hardware_res = [x / (2**tb.OUT_FRAC_WIDTH) for x in recv_log]
 
-    data = pd.DataFrame({
-        "x": x.tolist(),
-        "software float32": software_ref.tolist(),
-        "software fixed-point": software_res,
-        "hardware fixed-point": hardware_res,
-    })
+    data = pd.DataFrame(
+        {
+            "x": x.tolist(),
+            "software float32": software_ref.tolist(),
+            "software fixed-point": software_res,
+            "hardware fixed-point": hardware_res,
+        }
+    )
     data["hardware error"] = data["software float32"] - data["hardware fixed-point"]
 
     graph_id = f"{tb.IN_WIDTH}_{tb.IN_FRAC_WIDTH}_to_{tb.OUT_WIDTH}_{tb.OUT_FRAC_WIDTH}"
@@ -160,29 +164,40 @@ async def sweep(dut):
         value_name="Value",
         var_name="Type",
     )
-    curve_fig = alt.Chart(curve_data).mark_line().encode(
-        x=alt.X("x").title(f"x (Q{tb.IN_WIDTH}.{tb.IN_FRAC_WIDTH} Fixed-point)"),
-        y=alt.Y("Value").title(f"y (Q{tb.OUT_WIDTH}.{tb.OUT_FRAC_WIDTH} Fixed-point)"),
-        color=alt.Color("Type"),
-    ).properties(
-        width=600,
-        height=220,
+    curve_fig = (
+        alt.Chart(curve_data)
+        .mark_line()
+        .encode(
+            x=alt.X("x").title(f"x (Q{tb.IN_WIDTH}.{tb.IN_FRAC_WIDTH} Fixed-point)"),
+            y=alt.Y("Value").title(
+                f"y (Q{tb.OUT_WIDTH}.{tb.OUT_FRAC_WIDTH} Fixed-point)"
+            ),
+            color=alt.Color("Type"),
+        )
+        .properties(
+            width=600,
+            height=220,
+        )
     )
 
     error_data = data[["x", "hardware error"]]
-    error_fig = alt.Chart(error_data).mark_line().encode(
-        x=alt.X("x").title(f"x (Q{tb.IN_WIDTH}.{tb.IN_FRAC_WIDTH} Fixed-point)"),
-        y=alt.Y("hardware error").title(f"Error"),
-    ).properties(
-        width=600,
-        height=100,
+    error_fig = (
+        alt.Chart(error_data)
+        .mark_line()
+        .encode(
+            x=alt.X("x").title(f"x (Q{tb.IN_WIDTH}.{tb.IN_FRAC_WIDTH} Fixed-point)"),
+            y=alt.Y("hardware error").title(f"Error"),
+        )
+        .properties(
+            width=600,
+            height=100,
+        )
     )
 
     (curve_fig & error_fig).save(
         Path(__file__).parent / f"build/softermax_lpw_pow2/curve_error_{graph_id}.png",
         scale_factor=3,
     )
-
 
     max_bit_err = max(tb.output_monitor.error_log)
     average_err = sum(tb.output_monitor.error_log) / len(software_res)
@@ -196,7 +211,7 @@ async def sweep(dut):
         "avg_err": average_err,
     }
     filename = f"{graph_id}.json"
-    with open(Path(__file__).parent / "results" / "pow2" / filename, 'w') as f:
+    with open(Path(__file__).parent / "results" / "pow2" / filename, "w") as f:
         json.dump(record, f, indent=4)
 
     tb._final_check()
@@ -245,7 +260,7 @@ def width_cfgs():
 
 def common_widths():
     cfgs = []
-    for width in range(2, 16+1):
+    for width in range(2, 16 + 1):
         frac_width = width // 2
         cfgs.append(
             {
@@ -266,10 +281,10 @@ def test_width_configs():
         # jobs=12,
     )
 
+
 def test_common_widths():
-    mase_runner(
-        module_param_list=common_widths()
-    )
+    mase_runner(module_param_list=common_widths())
+
 
 def test_high_width():
     mase_runner(
@@ -283,6 +298,7 @@ def test_high_width():
         ]
     )
 
+
 def test_smoke():
     mase_runner(
         module_param_list=[
@@ -294,6 +310,7 @@ def test_smoke():
             }
         ]
     )
+
 
 if __name__ == "__main__":
     # test_common_widths()

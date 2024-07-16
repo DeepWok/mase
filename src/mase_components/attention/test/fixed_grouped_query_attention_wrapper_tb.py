@@ -20,7 +20,11 @@ from cocotb.triggers import Timer
 from chop.nn.modules.gqa import repeat_kv
 from chop.nn.quantized.modules import GroupedQueryAttentionInteger
 from mase_cocotb.testbench import Testbench
-from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor, ErrorThresholdStreamMonitor
+from mase_cocotb.interfaces.streaming import (
+    StreamDriver,
+    StreamMonitor,
+    ErrorThresholdStreamMonitor,
+)
 from mase_cocotb.runner import mase_runner
 
 from mase_cocotb.utils import fixed_preprocess_tensor
@@ -43,7 +47,7 @@ class HardwareGQA(GroupedQueryAttentionInteger):
         softermax_out_q_config: dict = None,
         qk_matmul_out_q_config: dict = None,
         v_matmul_out_q_config: dict = None,
-        floor=False
+        floor=False,
     ) -> None:
         super().__init__(
             embed_dim,
@@ -57,9 +61,8 @@ class HardwareGQA(GroupedQueryAttentionInteger):
             softermax_out_q_config,
             qk_matmul_out_q_config,
             v_matmul_out_q_config,
-            floor
+            floor,
         )
-
 
     def forward(self, x: Tensor):
         batch_size, seq_len, _ = x.shape
@@ -80,10 +83,7 @@ class HardwareGQA(GroupedQueryAttentionInteger):
         key_rep = repeat_kv(key_heads, n_rep=self.group_size)
         value_rep = repeat_kv(value_heads, n_rep=self.group_size)
 
-        qk_result = self.qk_matmul_func(
-            query_heads,
-            key_rep.transpose(2, 3)
-        )
+        qk_result = self.qk_matmul_func(query_heads, key_rep.transpose(2, 3))
         attn_weights = self.softmax_func(qk_result)
         heads_out = self.v_matmul_func(attn_weights, value_rep)
 
@@ -111,43 +111,45 @@ class FixedGroupedQueryAttentionTB(Testbench):
         # global monitor check switch
         self.check = False
 
-        self.assign_self_params([
-            "NUM_HEADS",
-            "NUM_GROUPS",
-            "GROUP_SIZE",
-            "DATA_IN_0_TENSOR_SIZE_DIM_0",
-            "DATA_IN_0_TENSOR_SIZE_DIM_1",
-            "DATA_IN_0_PARALLELISM_DIM_0",
-            "DATA_IN_0_PARALLELISM_DIM_1",
-            "DATA_IN_0_PRECISION_0",
-            "DATA_IN_0_PRECISION_1",
-            "WEIGHTS_PRE_TRANSPOSED",
-            "WEIGHT_TENSOR_SIZE_DIM_0",
-            "WEIGHT_TENSOR_SIZE_DIM_1",
-            "WEIGHT_PARALLELISM_DIM_0",
-            "WEIGHT_PARALLELISM_DIM_1",
-            "WEIGHT_PRECISION_0",
-            "WEIGHT_PRECISION_1",
-            "GROUPED_WEIGHT_TENSOR_SIZE_DIM_0",
-            "GROUPED_WEIGHT_TENSOR_SIZE_DIM_1",
-            "GROUPED_WEIGHT_PARALLELISM_DIM_0",
-            "GROUPED_WEIGHT_PARALLELISM_DIM_1",
-            "GROUPED_WEIGHT_PRECISION_0",
-            "GROUPED_WEIGHT_PRECISION_1",
-            "HAS_BIAS",
-            "BIAS_TENSOR_SIZE_DIM_0",
-            "BIAS_TENSOR_SIZE_DIM_1",
-            "BIAS_PARALLELISM_DIM_0",
-            "BIAS_PARALLELISM_DIM_1",
-            "BIAS_PRECISION_0",
-            "BIAS_PRECISION_1",
-            "DATA_OUT_0_TENSOR_SIZE_DIM_0",
-            "DATA_OUT_0_TENSOR_SIZE_DIM_1",
-            "DATA_OUT_0_PARALLELISM_DIM_0",
-            "DATA_OUT_0_PARALLELISM_DIM_1",
-            "DATA_OUT_0_PRECISION_0",
-            "DATA_OUT_0_PRECISION_1",
-        ])
+        self.assign_self_params(
+            [
+                "NUM_HEADS",
+                "NUM_GROUPS",
+                "GROUP_SIZE",
+                "DATA_IN_0_TENSOR_SIZE_DIM_0",
+                "DATA_IN_0_TENSOR_SIZE_DIM_1",
+                "DATA_IN_0_PARALLELISM_DIM_0",
+                "DATA_IN_0_PARALLELISM_DIM_1",
+                "DATA_IN_0_PRECISION_0",
+                "DATA_IN_0_PRECISION_1",
+                "WEIGHTS_PRE_TRANSPOSED",
+                "WEIGHT_TENSOR_SIZE_DIM_0",
+                "WEIGHT_TENSOR_SIZE_DIM_1",
+                "WEIGHT_PARALLELISM_DIM_0",
+                "WEIGHT_PARALLELISM_DIM_1",
+                "WEIGHT_PRECISION_0",
+                "WEIGHT_PRECISION_1",
+                "GROUPED_WEIGHT_TENSOR_SIZE_DIM_0",
+                "GROUPED_WEIGHT_TENSOR_SIZE_DIM_1",
+                "GROUPED_WEIGHT_PARALLELISM_DIM_0",
+                "GROUPED_WEIGHT_PARALLELISM_DIM_1",
+                "GROUPED_WEIGHT_PRECISION_0",
+                "GROUPED_WEIGHT_PRECISION_1",
+                "HAS_BIAS",
+                "BIAS_TENSOR_SIZE_DIM_0",
+                "BIAS_TENSOR_SIZE_DIM_1",
+                "BIAS_PARALLELISM_DIM_0",
+                "BIAS_PARALLELISM_DIM_1",
+                "BIAS_PRECISION_0",
+                "BIAS_PRECISION_1",
+                "DATA_OUT_0_TENSOR_SIZE_DIM_0",
+                "DATA_OUT_0_TENSOR_SIZE_DIM_1",
+                "DATA_OUT_0_PARALLELISM_DIM_0",
+                "DATA_OUT_0_PARALLELISM_DIM_1",
+                "DATA_OUT_0_PRECISION_0",
+                "DATA_OUT_0_PRECISION_1",
+            ]
+        )
 
         if not hasattr(self, "log"):
             self.log = SimLog("%s" % (type(self).__qualname__))
@@ -288,7 +290,6 @@ class FixedGroupedQueryAttentionTB(Testbench):
         #     self.bias_v_driver.log.setLevel(logging.DEBUG)
         #     self.bias_o_driver.log.setLevel(logging.DEBUG)
 
-
     def generate_inputs(self, batches=1):
 
         def _shift_dist(x):
@@ -296,7 +297,9 @@ class FixedGroupedQueryAttentionTB(Testbench):
             Shifts distribution standard normal input range so that 2 sigma is
             where the MAX_INT & MIN_INT is.
             """
-            single_tail_range = 2**(self.DATA_IN_0_PRECISION_0 - self.DATA_IN_0_PRECISION_1 - 1)
+            single_tail_range = 2 ** (
+                self.DATA_IN_0_PRECISION_0 - self.DATA_IN_0_PRECISION_1 - 1
+            )
             half = single_tail_range / 2
             return x * half
 
@@ -318,7 +321,6 @@ class FixedGroupedQueryAttentionTB(Testbench):
                 "Test failed due to high approximation error. Got %d bits of error!"
                 % max_bit_err
             )
-
 
     def _load_inputs_and_weights(self, inputs):
         # * Load the inputs driver
@@ -362,7 +364,9 @@ class FixedGroupedQueryAttentionTB(Testbench):
                     self.WEIGHT_PARALLELISM_DIM_0,
                 ],
             )
-            self.log.info(f"Loading {len(weights)} beats into weight_{projection}_driver.")
+            self.log.info(
+                f"Loading {len(weights)} beats into weight_{projection}_driver."
+            )
             getattr(self, f"weight_{projection}_driver").load_driver(weights)
 
             # * Load the bias driver
@@ -382,7 +386,6 @@ class FixedGroupedQueryAttentionTB(Testbench):
                 )
                 getattr(self, f"bias_{projection}_driver").load_driver(bias)
 
-
     def _load_outputs(self, exp_out):
         self.log.info(f"Processing outputs: {exp_out.shape}")
         outs = fixed_preprocess_tensor(
@@ -398,7 +401,6 @@ class FixedGroupedQueryAttentionTB(Testbench):
         )
         self.log.info(f"Loading {len(outs)} beats into data_out_0_monitor.")
         self.data_out_0_monitor.load_monitor(outs)
-
 
     async def run_test(self):
         await self.reset()
@@ -428,30 +430,35 @@ class FixedGroupedQueryAttentionTB(Testbench):
 
         all_errors = np.concatenate(self.data_out_0_monitor.error_log)
         max_bit_err = np.max(all_errors)
-        total_out_size = self.DATA_OUT_0_TENSOR_SIZE_DIM_0 * self.DATA_OUT_0_TENSOR_SIZE_DIM_1
+        total_out_size = (
+            self.DATA_OUT_0_TENSOR_SIZE_DIM_0 * self.DATA_OUT_0_TENSOR_SIZE_DIM_1
+        )
         average_err = np.sum(all_errors) / total_out_size
 
         timestamp = datetime.now().strftime("%y-%m-%d-%H-%M-%S")
         filename = Path(__file__).parent / f"results/simulation/{timestamp}.json"
-        with open(filename, 'w') as f:
-            json.dump({
-                "seq_len": self.DATA_IN_0_TENSOR_SIZE_DIM_1,
-                "embedding_len": self.DATA_IN_0_TENSOR_SIZE_DIM_0,
-                "seq_paralellism": self.DATA_IN_0_PARALLELISM_DIM_1,
-                "embedding_paralellism": self.DATA_IN_0_PARALLELISM_DIM_0,
-                "num_heads": self.NUM_HEADS,
-                "num_kv_heads": self.NUM_GROUPS,
-                "width": self.DATA_IN_0_PRECISION_0,
-                "frac_width": self.DATA_IN_0_PRECISION_1,
-                "max_err": max_bit_err.item(),
-                "avg_err": average_err.item(),
-                "latency_us": (nanosec / 1000),
-                "clock_cycles": (picosec / clock_period_picosec),
-                "clock_period_ns": (clock_period_picosec / 1000),
-            }, f, indent=4)
+        with open(filename, "w") as f:
+            json.dump(
+                {
+                    "seq_len": self.DATA_IN_0_TENSOR_SIZE_DIM_1,
+                    "embedding_len": self.DATA_IN_0_TENSOR_SIZE_DIM_0,
+                    "seq_paralellism": self.DATA_IN_0_PARALLELISM_DIM_1,
+                    "embedding_paralellism": self.DATA_IN_0_PARALLELISM_DIM_0,
+                    "num_heads": self.NUM_HEADS,
+                    "num_kv_heads": self.NUM_GROUPS,
+                    "width": self.DATA_IN_0_PRECISION_0,
+                    "frac_width": self.DATA_IN_0_PRECISION_1,
+                    "max_err": max_bit_err.item(),
+                    "avg_err": average_err.item(),
+                    "latency_us": (nanosec / 1000),
+                    "clock_cycles": (picosec / clock_period_picosec),
+                    "clock_period_ns": (clock_period_picosec / 1000),
+                },
+                f,
+                indent=4,
+            )
 
         self._final_check()
-
 
     async def run_memory_bandwidth_test(self, us: int = 500):
         await self.reset()
@@ -476,11 +483,11 @@ class FixedGroupedQueryAttentionTB(Testbench):
         num_v_weight_beats_sent = self.weight_v_driver.num_beats
         num_o_weight_beats_sent = self.weight_o_driver.num_beats
 
-        input_beats_per_sec = num_input_beats_sent / (nanosec * (10 ** -9))
-        num_q_beats_per_sec = num_q_weight_beats_sent / (nanosec * (10 ** -9))
-        num_k_beats_per_sec = num_k_weight_beats_sent / (nanosec * (10 ** -9))
-        num_v_beats_per_sec = num_v_weight_beats_sent / (nanosec * (10 ** -9))
-        num_o_beats_per_sec = num_o_weight_beats_sent / (nanosec * (10 ** -9))
+        input_beats_per_sec = num_input_beats_sent / (nanosec * (10**-9))
+        num_q_beats_per_sec = num_q_weight_beats_sent / (nanosec * (10**-9))
+        num_k_beats_per_sec = num_k_weight_beats_sent / (nanosec * (10**-9))
+        num_v_beats_per_sec = num_v_weight_beats_sent / (nanosec * (10**-9))
+        num_o_beats_per_sec = num_o_weight_beats_sent / (nanosec * (10**-9))
 
         self.log.info("Test length (ns): %.4f" % nanosec)
 
@@ -498,32 +505,40 @@ class FixedGroupedQueryAttentionTB(Testbench):
 
         all_errors = np.concatenate(self.data_out_0_monitor.error_log)
         max_bit_err = np.max(all_errors)
-        total_out_size = iters * self.DATA_OUT_0_TENSOR_SIZE_DIM_0 * self.DATA_OUT_0_TENSOR_SIZE_DIM_1
+        total_out_size = (
+            iters
+            * self.DATA_OUT_0_TENSOR_SIZE_DIM_0
+            * self.DATA_OUT_0_TENSOR_SIZE_DIM_1
+        )
         average_err = np.sum(all_errors) / total_out_size
 
         timestamp = datetime.now().strftime("%y-%m-%d-%H-%M-%S")
         filename = Path(__file__).parent / f"results/simulation/{timestamp}.json"
-        with open(filename, 'w') as f:
-            json.dump({
-                "seq_len": self.DATA_IN_0_TENSOR_SIZE_DIM_1,
-                "embedding_len": self.DATA_IN_0_TENSOR_SIZE_DIM_0,
-                "seq_paralellism": self.DATA_IN_0_PARALLELISM_DIM_1,
-                "embedding_paralellism": self.DATA_IN_0_PARALLELISM_DIM_0,
-                "num_heads": self.NUM_HEADS,
-                "num_kv_heads": self.NUM_GROUPS,
-                "width": self.DATA_IN_0_PRECISION_0,
-                "frac_width": self.DATA_IN_0_PRECISION_1,
-                "max_err": max_bit_err.item(),
-                "avg_err": average_err.item(),
-                "test_length_us": (nanosec / 1000),
-                "clock_cycles": (picosec / clock_period_picosec),
-                "clock_period_ns": (clock_period_picosec / 1000),
-                "num_input_beats_sent": num_input_beats_sent,
-                "num_q_weight_beats_sent": num_q_weight_beats_sent,
-                "num_k_weight_beats_sent": num_k_weight_beats_sent,
-                "num_v_weight_beats_sent": num_v_weight_beats_sent,
-                "num_o_weight_beats_sent": num_o_weight_beats_sent,
-            }, f, indent=4)
+        with open(filename, "w") as f:
+            json.dump(
+                {
+                    "seq_len": self.DATA_IN_0_TENSOR_SIZE_DIM_1,
+                    "embedding_len": self.DATA_IN_0_TENSOR_SIZE_DIM_0,
+                    "seq_paralellism": self.DATA_IN_0_PARALLELISM_DIM_1,
+                    "embedding_paralellism": self.DATA_IN_0_PARALLELISM_DIM_0,
+                    "num_heads": self.NUM_HEADS,
+                    "num_kv_heads": self.NUM_GROUPS,
+                    "width": self.DATA_IN_0_PRECISION_0,
+                    "frac_width": self.DATA_IN_0_PRECISION_1,
+                    "max_err": max_bit_err.item(),
+                    "avg_err": average_err.item(),
+                    "test_length_us": (nanosec / 1000),
+                    "clock_cycles": (picosec / clock_period_picosec),
+                    "clock_period_ns": (clock_period_picosec / 1000),
+                    "num_input_beats_sent": num_input_beats_sent,
+                    "num_q_weight_beats_sent": num_q_weight_beats_sent,
+                    "num_k_weight_beats_sent": num_k_weight_beats_sent,
+                    "num_v_weight_beats_sent": num_v_weight_beats_sent,
+                    "num_o_weight_beats_sent": num_o_weight_beats_sent,
+                },
+                f,
+                indent=4,
+            )
 
 
 @cocotb.test(skip=True)
@@ -581,13 +596,10 @@ def test_fixed_linear_smoke():
     cfgs = [
         # 4 Groups of 2 heads
         get_config(16, 128, 8, 4, 16, 1),
-
         # Normal Multi-head Attention 8 QKV heads
         # get_config(10, 128, 8, 8, 2, 2),
-
         # Multi-Query Attnetion (single head)
         # get_config(10, 128, 8, 1, 2, 2),
-
         # Mistral-7B (2-bit)
         # get_config(4096, 4096, 32, 8, 4, 4, width=2, frac_width=1),
     ]
@@ -612,6 +624,7 @@ def test_parallelism_sweep():
         template=True,
     )
 
+
 def test_small_parallelism():
     # Parallelism Sweep
     cfgs = []
@@ -625,6 +638,7 @@ def test_small_parallelism():
         template=True,
     )
 
+
 def test_heads_sweep():
     cfgs = []
     for kv_heads in [1, 2, 4, 8, 16]:
@@ -636,16 +650,20 @@ def test_heads_sweep():
         template=True,
     )
 
+
 def test_bitwidth_sweep():
     cfgs = []
     for bitwidth in range(2, 16 + 1):
-        cfgs.append(get_config(16, 128, 8, 4, 16, 1, width=bitwidth, frac_width=bitwidth//2))
+        cfgs.append(
+            get_config(16, 128, 8, 4, 16, 1, width=bitwidth, frac_width=bitwidth // 2)
+        )
 
     mase_runner(
         module_param_list=cfgs,
         hierarchical=True,
         template=True,
     )
+
 
 def more_realistic():
     cfgs = [
@@ -660,9 +678,10 @@ def more_realistic():
         module_param_list=cfgs,
         hierarchical=True,
         template=True,
-        extra_build_args=["--unroll-count", "10000"]
+        extra_build_args=["--unroll-count", "10000"],
         # trace=True,
     )
+
 
 def mistral():
     # not possible, verilator will crash
@@ -672,8 +691,9 @@ def mistral():
         hierarchical=True,
         template=True,
         # Needed for large generate loops
-        extra_build_args=["--unroll-count", "10000"]
+        extra_build_args=["--unroll-count", "10000"],
     )
+
 
 def llama_160m():
     cfgs = []

@@ -16,9 +16,7 @@ class _GroupedQueryAttentionBase(GroupedQueryAttention):
         device=None,
         dtype=None,
     ) -> None:
-        super().__init__(
-            embed_dim, num_heads, num_kv_heads, bias, device, dtype
-        )
+        super().__init__(embed_dim, num_heads, num_kv_heads, bias, device, dtype)
         self.bypass = False
 
 
@@ -35,9 +33,7 @@ class GroupedQueryAttentionInteger(_GroupedQueryAttentionBase):
         out_config=None,
         floor=False,
     ) -> None:
-        super().__init__(
-            embed_dim, num_heads, num_kv_heads, bias, device, dtype
-        )
+        super().__init__(embed_dim, num_heads, num_kv_heads, bias, device, dtype)
         assert config is not None, "config is None!"
         self.config = config
 

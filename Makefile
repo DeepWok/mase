@@ -71,13 +71,14 @@ build-docker:
 	fi
 
 shell:
+	mkdir -p /$(USER_PREFIX)/$(shell whoami)/.mase
 	docker run -it --shm-size 256m \
         --hostname mase-ubuntu2204 \
         -w /workspace \
         -v /$(USER_PREFIX)/$(shell whoami)/.gitconfig:/root/.gitconfig \
         -v /$(USER_PREFIX)/$(shell whoami)/.ssh:/root/.ssh \
         -v /$(USER_PREFIX)/$(shell whoami)/.mase:/root/.mase \
-        -v $(shell pwd):/workspace \
+	-v $(shell pwd):/workspace:z \
         $(DOCKER_RUN_EXTRA_ARGS) \
         $(img) /bin/bash
 
