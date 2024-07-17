@@ -26,26 +26,47 @@ def deepgetattr(obj, attr, default=None):
         return default
 
 
-def _import_solution(mg, solution: dict, mesh: MeshModel):
+def _import_solution(
+    mg,
+    solution: dict,
+    mesh: MeshModel,
+    extrapolate_sharding: bool = True,
+):
     """Import an autosharding solution into the metadata of the MaseGraph.
 
     Args:
         mg (MaseGraph): input mase graph.
         solution (dict): autosharding solution.
+        extrapolate (bool): extrapolate solution from the 1st layer to the rest.
 
     Returns:
         MaseGraph: input mase graph.
         dict: empty dictionary.
     """
     for node in mg.fx_graph.nodes:
-        if node.name not in solution.keys():
-            continue
+        logger.debug(f"Importing solution for node: {node.name}: {solution[node.name]}")
 
+        if node.name not in solution.keys() and extrapolate_sharding:
+            layer_num = int([i for i in node.name.split("_") if i.isdigit()][0])
+            extrapolate_node = node.name.replace(f"_{layer_num}_", "_0_")
+            if "decoder_layers" in node.name and extrapolate_node in solution.keys():
+                logger.warning(
+                    f"Node: {node.name} not found in solution. Extrapolating from solution for: {extrapolate_node}"
+                )
+                solution[node.name] = solution[extrapolate_node]
+            else:
+                logger.debug(
+                    f"Node: {node.name} not found in solution, and cannot extrapolate."
+                )
+                continue
+
+        # Annotate the metadata for each argument
         for arg, arg_spec in solution[node.name].get("args", {}).items():
             node.meta["mase"]["common"]["args"][arg]["dtensor_spec"] = DTensorSpec(
                 mesh=mesh, placements=arg_spec
             )
 
+        # Annotate the metadata for each result
         for result, result_spec in solution[node.name].get("results", {}).items():
             node.meta["mase"]["common"]["results"][result]["dtensor_spec"] = (
                 DTensorSpec(mesh=mesh, placements=result_spec)
@@ -54,12 +75,12 @@ def _import_solution(mg, solution: dict, mesh: MeshModel):
     return mg, {}
 
 
-def _export_solution(mg, export_file: str = "ilp_solution.csv"):
-    """Export the ILP solution to a csv file.
+def _export_solution(mg, export_file: str = "ilp_solution.pkl"):
+    """Export the ILP solution to a pickle file.
 
     Args:
         mg (MaseGraph): input mase graph.
-        export_file (str, optional): output file name. Defaults to "ilp_solution.csv".
+        export_file (str, optional): output file name. Defaults to "ilp_solution.pkl".
 
     Returns:
         MaseGraph: input mase graph.
@@ -116,6 +137,8 @@ def _get_sharding_map(mg):
     }
     """
 
+    logger.info(f"Exporting tensor sharding map from MaseGraph for MaseLauncher.")
+
     tensor_sharding_map = {}
     for node in mg.fx_graph.nodes:
         if node.op == "get_attr":
@@ -126,6 +149,10 @@ def _get_sharding_map(mg):
             out_specs = node.meta["mase"]["common"]["results"]["data_out_0"][
                 "dtensor_spec"
             ]
+
+            logger.debug(
+                f"Exporting sharding map for {node.name} with spec: {out_specs}"
+            )
 
             if module not in tensor_sharding_map:
                 tensor_sharding_map[module] = {

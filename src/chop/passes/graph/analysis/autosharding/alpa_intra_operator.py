@@ -269,7 +269,11 @@ def _mark_sharding(mg, pass_args):
         if opt_var is None:
             continue
 
-        idx = np.where(opt_var.value == 1)[0][0]
+        try:
+            idx = np.where(opt_var.value == 1)[0][0]
+        except:
+            idx = np.argmax(opt_var.value)
+
         chosen_strategy = node.meta["mase"]["software"]["autosharding"][
             "op_strategy"
         ].strategies[idx]
