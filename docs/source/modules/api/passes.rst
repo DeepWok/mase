@@ -1,4 +1,4 @@
-Chop Passes
+chop.passes
 ============================
 
 All passes, no matter analysis or transform, take a standard form:

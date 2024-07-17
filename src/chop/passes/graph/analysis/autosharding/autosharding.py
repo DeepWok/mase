@@ -44,7 +44,7 @@ def _import_solution(
         dict: empty dictionary.
     """
     for node in mg.fx_graph.nodes:
-        logger.debug(f"Importing solution for node: {node.name}: {solution[node.name]}")
+        logger.debug(f"Importing solution for node: {node.name}")
 
         if node.name not in solution.keys() and extrapolate_sharding:
             layer_num = int([i for i in node.name.split("_") if i.isdigit()][0])

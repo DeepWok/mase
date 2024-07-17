@@ -36,8 +36,14 @@ For more, you can watch this
    :caption: Machop API
 
    modules/api/actions
-   modules/api/passes
+   modules/api/datasets
+   modules/api/distributed
    modules/api/ir
+   modules/api/models
+   modules/api/nn
+   modules/api/passes
+   modules/api/pipelines
+   modules/api/tools
 
 .. toctree::
    :maxdepth: 1
