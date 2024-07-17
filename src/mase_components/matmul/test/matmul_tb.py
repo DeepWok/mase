@@ -241,6 +241,7 @@ def test_matmul():
         ],
         trace=True,
         jobs=12,
+        skip_build = False
     )
 
 

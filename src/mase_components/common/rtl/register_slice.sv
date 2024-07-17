@@ -25,8 +25,7 @@ module register_slice #(
     if (rst) shift_reg <= 1'b0;
     else begin
       // no backpressure or buffer empty
-      if (data_out_ready || !shift_reg) shift_reg <= data_in_valid;
-      else shift_reg <= shift_reg;
+      shift_reg <= ((data_in_valid)&&(data_out_ready||shift_reg))||(shift_reg && !data_in_valid && !data_out_ready);
     end
   end
 
@@ -34,13 +33,13 @@ module register_slice #(
   always_ff @(posedge clk) begin
     if (rst) buffer <= 0;
     // backpressure && valid output
-    if (!data_in_valid && data_out_ready) buffer <= buffer;
-    else buffer <= data_in;
+    if (data_in_valid && data_out_ready) buffer <= data_in;
+    else buffer <= buffer;
   end
 
   always_comb begin
     // empty buffer or no back pressure
-    data_in_ready  = (~shift_reg) | data_out_ready;
+    data_in_ready  = data_out_ready;
     // dummy data_iniring
     data_out_valid = shift_reg;
     data_out  = buffer;

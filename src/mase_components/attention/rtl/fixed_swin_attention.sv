@@ -51,6 +51,16 @@ module fixed_swin_attention #(
     input logic bias_query_valid,
     output logic bias_query_ready,
 
+    // Content bias
+    input logic [BIAS_PRECISION_0-1:0] bias_con [BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1 -1:0],
+    input logic bias_con_valid,
+    output logic bias_con_ready,
+
+    // Positional bias
+    input logic [BIAS_PRECISION_0-1:0] bias_pos [BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1 -1:0],
+    input logic bias_pos_valid,
+    output logic bias_pos_ready,
+
     // Key weights
     input logic [WEIGHT_PRECISION_0-1:0] weight_key [WEIGHT_PARALLELISM_DIM_0 * WEIGHT_PARALLELISM_DIM_1-1:0],
     input logic weight_key_valid,
@@ -71,15 +81,9 @@ module fixed_swin_attention #(
     input logic bias_value_valid,
     output logic bias_value_ready,
 
-    // Content bias
-    input logic [BIAS_PRECISION_0-1:0] bias_content [BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1 -1:0],
-    input logic bias_content_valid,
-    output logic bias_content_ready,
-
-    // Position bias
-    input logic [BIAS_PRECISION_0-1:0] bias_position [BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1 -1:0],
-    input logic bias_position_valid,
-    output logic bias_position_ready,
+    input logic [WEIGHT_PRECISION_0-1:0] pos_embed [WEIGHT_PARALLELISM_DIM_0 * WEIGHT_PARALLELISM_DIM_1-1:0],
+    input logic pos_embed_valid,
+    output logic pos_embed_ready,
     
 
     output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_0 [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0],
@@ -112,13 +116,20 @@ module fixed_swin_attention #(
 
   // Qpos output
   logic [DATA_OUT_0_PRECISION_0-1:0] query_pos [DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1-1:0];
-  logic [NUM_HEADS-1:0] query_pos_valid;
-  logic [NUM_HEADS-1:0] query_pos_ready;
+  logic query_pos_valid, query_pos_ready;
+  logic [NUM_HEADS-1:0] split_query_pos_valid, split_query_pos_ready;
 
   // Qcon output
-  logic [DATA_OUT_0_PRECISION_0-1:0] query_con_out [NUM_HEADS-1:0] [DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1-1:0];
-  logic [NUM_HEADS-1:0] query_con_valid;
-  logic [NUM_HEADS-1:0] query_con_ready;
+  logic [DATA_OUT_0_PRECISION_0-1:0] query_con [DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1-1:0];
+  logic query_con_valid, query_con_ready;
+  logic [NUM_HEADS-1:0] split_query_con_valid, split_query_con_ready;
+
+  logic [NUM_HEADS-1:0] split_pos_embed_valid, split_pos_embed_ready;
+
+  // Qcon output
+  //logic [DATA_OUT_0_PRECISION_0-1:0] query_con_out [NUM_HEADS-1:0] [DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1-1:0];
+  //logic [NUM_HEADS-1:0] query_con_valid;
+  //logic [NUM_HEADS-1:0] query_con_ready;
 
 
 
@@ -223,7 +234,7 @@ module fixed_swin_attention #(
 
     .DATA_OUT_0_PRECISION_0 (DATA_OUT_0_PRECISION_0),
     .DATA_OUT_0_PRECISION_1 (DATA_OUT_0_PRECISION_1)
-  ) adder_i_1(
+  ) adder_i_con(
       .clk(clk),
       .rst(rst),
 
@@ -231,9 +242,47 @@ module fixed_swin_attention #(
       .data_in_0_valid(joint_query_valid),
       .data_in_0_ready(joint_query_ready),
 
-      .data_in_1(bias_content),
-      .data_in_1_valid(bias_content_valid),
-      .data_in_1_ready(bias_content_ready),
+      .data_in_1(bias_con),
+      .data_in_1_valid(bias_con_valid),
+      .data_in_1_ready(bias_con_ready),
+
+      .data_out_0(query_con),
+      .data_out_0_valid(query_con_valid),
+      .data_out_0_ready(query_con_ready)
+  );
+
+    fixed_adder #(
+    .DATA_IN_0_PRECISION_0 (DATA_IN_0_PRECISION_0),
+    .DATA_IN_0_PRECISION_1 (DATA_IN_0_PRECISION_1),
+    .DATA_IN_0_TENSOR_SIZE_DIM_0 (DATA_IN_0_TENSOR_SIZE_DIM_0),
+    .DATA_IN_0_TENSOR_SIZE_DIM_1 (DATA_IN_0_TENSOR_SIZE_DIM_1),
+    .DATA_IN_0_TENSOR_SIZE_DIM_2 (0),
+    .DATA_IN_0_PARALLELISM_DIM_0 (DATA_IN_0_PARALLELISM_DIM_0),
+    .DATA_IN_0_PARALLELISM_DIM_1 (DATA_IN_0_PARALLELISM_DIM_1),
+    .DATA_IN_0_PARALLELISM_DIM_2 (0),
+
+    .DATA_IN_1_PRECISION_0 (DATA_IN_0_PRECISION_0),
+    .DATA_IN_1_PRECISION_1 (DATA_IN_0_PRECISION_1),
+    .DATA_IN_1_TENSOR_SIZE_DIM_0 (DATA_IN_0_TENSOR_SIZE_DIM_0),
+    .DATA_IN_1_TENSOR_SIZE_DIM_1 (DATA_IN_0_TENSOR_SIZE_DIM_1),
+    .DATA_IN_1_TENSOR_SIZE_DIM_2 (0),
+    .DATA_IN_1_PARALLELISM_DIM_0 (DATA_IN_0_PARALLELISM_DIM_0),
+    .DATA_IN_1_PARALLELISM_DIM_1 (DATA_IN_0_PARALLELISM_DIM_1),
+    .DATA_IN_1_PARALLELISM_DIM_2 (0),
+
+    .DATA_OUT_0_PRECISION_0 (DATA_OUT_0_PRECISION_0),
+    .DATA_OUT_0_PRECISION_1 (DATA_OUT_0_PRECISION_1)
+    ) adder_i_pos(
+      .clk(clk),
+      .rst(rst),
+
+      .data_in_0(query),
+      .data_in_0_valid(joint_query_valid),
+      .data_in_0_ready(joint_query_ready),
+
+      .data_in_1(bias_pos),
+      .data_in_1_valid(bias_pos_valid),
+      .data_in_1_ready(bias_pos_ready),
 
       .data_out_0(query_pos),
       .data_out_0_valid(query_pos_valid),
@@ -242,7 +291,7 @@ module fixed_swin_attention #(
 
   // * Scatter query, key, value
 
-  self_attention_head_scatter #(
+  swin_attention_head_scatter #(
       .NUM_HEADS(NUM_HEADS),
 
       .IN_DATA_TENSOR_SIZE_DIM_0(DATA_IN_0_TENSOR_SIZE_DIM_0),
@@ -254,8 +303,11 @@ module fixed_swin_attention #(
       .clk,
       .rst,
 
-      .query_valid(query_pos_valid),
-      .query_ready(query_pos_ready),
+      .query_con_valid(query_con_valid),
+      .query_con_ready(query_con_ready),
+
+      .query_pos_valid(query_pos_valid),
+      .query_pos_ready(query_pos_ready),
 
       .key_valid(joint_key_valid),
       .key_ready(joint_key_ready),
@@ -263,21 +315,30 @@ module fixed_swin_attention #(
       .value_valid(joint_value_valid),
       .value_ready(joint_value_ready),
 
-      .split_query_valid(split_query_valid),
-      .split_query_ready(split_query_ready),
+      .pos_embed_valid(pos_embed_valid),
+      .pos_embed_ready(pos_embed_ready),
+
+      .split_query_con_valid(split_query_con_valid),
+      .split_query_con_ready(split_query_con_ready),
+
+      .split_query_pos_valid(split_query_pos_valid),
+      .split_query_pos_ready(split_query_pos_ready),
 
       .split_key_valid(split_key_valid),
       .split_key_ready(split_key_ready),
 
       .split_value_valid(split_value_valid),
-      .split_value_ready(split_value_ready)
+      .split_value_ready(split_value_ready),
+
+      .split_pos_embed_valid(split_pos_embed_valid),
+      .split_pos_embed_ready(split_pos_embed_ready)
   );
 
   // * Heads
 
   for (genvar head = 0; head < NUM_HEADS; head++) begin
 
-    fixed_self_attention_head #(
+    fixed_swin_attention_head #(
         .IN_DATA_TENSOR_SIZE_DIM_0(DATA_IN_0_TENSOR_SIZE_DIM_0 / NUM_HEADS),
         .IN_DATA_TENSOR_SIZE_DIM_1(DATA_IN_0_TENSOR_SIZE_DIM_1),
         .IN_DATA_PARALLELISM_DIM_0(DATA_IN_0_PARALLELISM_DIM_0),
@@ -296,9 +357,13 @@ module fixed_swin_attention #(
         .clk,
         .rst,
 
-        .query      (query),
-        .query_valid(split_query_valid[head]),
-        .query_ready(split_query_ready[head]),
+        .query_con      (query_con),
+        .query_con_valid(split_query_con_valid[head]),
+        .query_con_ready(split_query_con_ready[head]),
+
+        .query_pos      (query_pos),
+        .query_pos_valid(split_query_pos_valid[head]),
+        .query_pos_ready(split_query_pos_ready[head]),
 
         .key      (key),
         .key_valid(split_key_valid[head]),
@@ -307,6 +372,10 @@ module fixed_swin_attention #(
         .value      (value),
         .value_valid(split_value_valid[head]),
         .value_ready(split_value_ready[head]),
+
+        .pos_embed     (pos_embed),
+        .pos_embed_valid (split_pos_embed_valid[head]),
+        .pos_embed_ready (split_pos_embed_ready[head]),
 
         .out      (head_out[head]),
         .out_valid(head_out_valid[head]),
