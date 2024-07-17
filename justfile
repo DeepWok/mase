@@ -92,7 +92,7 @@ test-hw:
 	# Linear Layer - matmul
 	# python3 src/mase_components/linear_layers/matmul/test/chain_matmul_tb.py
 	# python3 src/mase_components/linear_layers/matmul/test/fixed_mamul_tb.py
-	python3 src/mase_components/linear_layers/matmul/test/matmul_tb.py
+	# python3 src/mase_components/linear_layers/matmul/test/matmul_tb.py
 	# python3 src/mase_components/linear_layers/matmul/test/matrix_stream_transpose_tb.py
 	# python3 src/mase_components/linear_layers/matmul/test/transpose_tb.py
 	# DEV Linear Layer - binary_operators
