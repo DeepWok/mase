@@ -38,9 +38,10 @@ MASE_HW_DEPS = {
     "activation_layers/fixed_softmax": [
         "common",
         "cast",
-        "fixed_arithmetic",
-        "conv",
         "activation_layers",
+        "convolution_layers",
+        "memory",
+        "linear_layers/fixed_operators",
     ],
     "activation_layers/fixed_softermax": [
         "common",

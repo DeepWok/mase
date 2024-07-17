@@ -2,7 +2,7 @@
 
 import pytest
 import os, logging
-from . import generate_memory
+from src.mase_components.helper import generate_memory
 import pdb
 from bitstring import BitArray
 import cocotb
@@ -19,13 +19,14 @@ from mase_cocotb.z_qlayers import quantize_to_int
 from mase_cocotb.runner import mase_runner
 from mase_cocotb.utils import bit_driver, sign_extend_t
 from math import ceil
+from pathlib import Path
 
 # from chop.passes.graph.transforms.quantize.quantized_modules import LinearInteger
 
 import torch
 
 logger = logging.getLogger("testbench")
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 def split_and_flatten_2d_tensor(input_tensor, row_block_size, col_block_size):
@@ -43,20 +44,25 @@ def split_and_flatten_2d_tensor(input_tensor, row_block_size, col_block_size):
 
 
 class fixed_softmax_tb(Testbench):
-    def __init__(self, module, dut, dut_params, float_test=False) -> None:
+    def __init__(self, module, dut, float_test=False) -> None:
         super().__init__(dut, dut.clk, dut.rst)
+        if not hasattr(self, "log"):
+            self.log = SimLog("%s" % (type(self).__qualname__))
+            self.log.setLevel(logging.DEBUG)
+        self.data_width = self.get_parameter("DATA_IN_0_PRECISION_0")
+        self.frac_width = self.get_parameter("DATA_IN_0_PRECISION_1")
+        
+        self.exp_data_width = self.get_parameter("DATA_INTERMEDIATE_0_PRECISION_0")
+        self.exp_frac_width = self.get_parameter("DATA_INTERMEDIATE_0_PRECISION_1")
 
-        self.data_width = dut_params["DATA_IN_0_PRECISION_0"]
-        self.frac_width = dut_params["DATA_IN_0_PRECISION_1"]
+        self.outputwidth = self.get_parameter("DATA_OUT_0_PRECISION_0")
+        self.outputfracw = self.get_parameter("DATA_OUT_0_PRECISION_1")
 
-        self.outputwidth = dut_params["DATA_OUT_0_PRECISION_0"]
-        self.outputfracw = dut_params["DATA_OUT_0_PRECISION_1"]
+        self.num_in_features = self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0")
+        self.num_in_batches = self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_1")
 
-        self.num_in_features = dut_params["DATA_IN_0_TENSOR_SIZE_DIM_0"]
-        self.num_in_batches = dut_params["DATA_IN_0_TENSOR_SIZE_DIM_1"]
-
-        self.size_in_feature_blocks = dut_params["DATA_IN_0_PARALLELISM_DIM_0"]
-        self.size_in_batch_blocks = dut_params["DATA_IN_0_PARALLELISM_DIM_1"]
+        self.size_in_feature_blocks = self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0")
+        self.size_in_batch_blocks = self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1")
 
         self.num_in_feature_splits = int(
             ceil(self.num_in_features / self.size_in_feature_blocks)
@@ -65,11 +71,11 @@ class fixed_softmax_tb(Testbench):
             ceil(self.num_in_batches / self.size_in_batch_blocks)
         )
 
-        self.num_out_features = dut_params["DATA_OUT_0_TENSOR_SIZE_DIM_0"]
-        self.num_out_batches = dut_params["DATA_OUT_0_TENSOR_SIZE_DIM_1"]
+        self.num_out_features = self.get_parameter("DATA_OUT_0_TENSOR_SIZE_DIM_0")
+        self.num_out_batches = self.get_parameter("DATA_OUT_0_TENSOR_SIZE_DIM_1")
 
-        self.size_out_feature_blocks = dut_params["DATA_OUT_0_PARALLELISM_DIM_0"]
-        self.size_out_batch_blocks = dut_params["DATA_OUT_0_PARALLELISM_DIM_1"]
+        self.size_out_feature_blocks = self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0")
+        self.size_out_batch_blocks = self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_1")
 
         self.num_out_feature_splits = int(
             ceil(self.num_out_features / self.size_out_feature_blocks)
@@ -96,6 +102,8 @@ class fixed_softmax_tb(Testbench):
                 dut.clk, dut.data_out_0, dut.data_out_0_valid, dut.data_out_0_ready
             )
 
+        self.data_in_0_driver.log.setLevel(logging.DEBUG)
+        self.data_out_0_monitor.log.setLevel(logging.DEBUG)
         self.in_dquantizer = partial(
             integer_quantizer,
             width=self.data_width,
@@ -103,6 +111,13 @@ class fixed_softmax_tb(Testbench):
             is_signed=True,
         )
 
+        self.exp_dquantizer = partial(
+            integer_quantizer,
+            width=self.exp_data_width,
+            frac_width=self.exp_frac_width,
+            is_signed=True,
+        )
+        
         self.out_dquantizer = partial(
             integer_quantizer,
             width=self.outputwidth,
@@ -112,12 +127,6 @@ class fixed_softmax_tb(Testbench):
 
         self.model = module
 
-        self.real_in_tensor = torch.randn(self.num_in_batches, self.num_in_features)
-        self.quant_in_tensor = self.in_dquantizer(self.real_in_tensor)
-        self.real_out_tensor = self.model(self.quant_in_tensor)
-
-        logger.info(f"REAL IN TENSOR: \n{self.real_in_tensor}")
-        logger.info(f"REAL OUT TENSOR: \n{self.real_out_tensor}")
 
     def exp(self):
         # Run the model with the provided inputs and return the expected integer outputs in the format expected by the monitor
@@ -126,8 +135,9 @@ class fixed_softmax_tb(Testbench):
             self.size_out_batch_blocks,
             self.size_out_feature_blocks,
         )  # match output
-        logger.info(f"EXP - FLOAT OUTPUT: \n{m}")
+        logger.debug(f"EXP - FLOAT OUTPUT: \n{m}")
         m = self.out_dquantizer(m)
+        logger.debug(f"m_after_dquantizer: \n{m}")
         m2 = (m * 2**self.outputfracw).to(torch.int64)
         m2 = m2.clone().detach() % (2**self.outputwidth)
 
@@ -135,6 +145,18 @@ class fixed_softmax_tb(Testbench):
 
     def generate_inputs(self):
         # Generate the integer inputs for the DUT in the format expected by the driver
+        
+        self.real_in_tensor = torch.randn(self.num_in_batches, self.num_in_features)
+        self.quant_in_tensor = self.in_dquantizer(self.real_in_tensor)
+        self.exp_tensor = self.exp_dquantizer(self.quant_in_tensor.exp())
+        self.exp_sum = self.exp_tensor.sum(dim=-1)
+        self.extended_quotient_tensor = ((self.exp_tensor*(2**self.exp_frac_width)) // self.exp_sum.expand(self.num_in_features, self.num_in_batches).permute(1,0))
+        logger.info(self.extended_quotient_tensor)
+        self.real_out_tensor = self.extended_quotient_tensor/(2**self.exp_frac_width)
+        self.real_out_tensor_hw = self.real_out_tensor*(2**self.get_parameter("DATA_INTERMEDIATE_0_PRECISION_1"))
+        logger.info(f"REAL IN TENSOR: \n{self.real_in_tensor}")
+        logger.info(f"REAL OUT TENSOR: \n{self.real_out_tensor}")
+        logger.info(f"REAL OUT TENSOR HW: \n{self.real_out_tensor_hw}")
         inputs = split_and_flatten_2d_tensor(
             self.real_in_tensor, self.size_in_batch_blocks, self.size_in_feature_blocks
         )
@@ -153,7 +175,7 @@ class fixed_softmax_tb(Testbench):
         await self.reset()
         logger.info(f"Reset finished")
         self.data_out_0_monitor.ready.value = 1
-        for i in range(1):
+        for i in range(10):
             inputs, real_tensor = self.generate_inputs()
             exp_out = self.exp()
             inputs = inputs.tolist()
@@ -164,39 +186,26 @@ class fixed_softmax_tb(Testbench):
             self.data_in_0_driver.load_driver(inputs)
             self.data_out_0_monitor.load_monitor(exp_out)
 
-        await Timer(1000, units="us")
+        await Timer(10, units="us")
         assert self.data_out_0_monitor.exp_queue.empty()
 
 
 @cocotb.test()
 async def cocotb_test(dut):
-    in_data_width = dut_params["DATA_IN_0_PRECISION_0"]
-    in_frac_width = dut_params["DATA_IN_0_PRECISION_1"]
-    out_data_width = dut_params["DATA_OUT_0_PRECISION_0"]
-    out_frac_width = dut_params["DATA_OUT_0_PRECISION_1"]
-    inter_data_width = dut_params["DATA_INTERMEDIATE_0_PRECISION_0"]
-    inter_frac_width = dut_params["DATA_INTERMEDIATE_0_PRECISION_1"]
-    # generate_memory.generate_sv_lut("exp", in_data_width, in_frac_width, inter_data_width, inter_frac_width)
-    # print("Generated memory")
-    tb = fixed_softmax_tb(torch.nn.Softmax(), dut, dut_params, float_test=True)
+    tb = fixed_softmax_tb(torch.nn.Softmax(), dut, float_test=False)
     await tb.run_test()
-
 
 dut_params = {
     "DATA_IN_0_TENSOR_SIZE_DIM_0": 12,
     "DATA_IN_0_TENSOR_SIZE_DIM_1": 4,
-    "DATA_IN_0_PARALLELISM_DIM_0": 6,
+    "DATA_IN_0_PARALLELISM_DIM_0": 3,
     "DATA_IN_0_PARALLELISM_DIM_1": 2,
     "DATA_IN_0_PRECISION_0": 8,
-    "DATA_IN_0_PRECISION_1": 4,
-    "DATA_OUT_0_PRECISION_0": 8,
-    "DATA_OUT_0_PRECISION_1": 4,
-    "DATA_OUT_0_TENSOR_SIZE_DIM_0": 12,
-    "DATA_OUT_0_TENSOR_SIZE_DIM_1": 4,
-    "DATA_OUT_0_PARALLELISM_DIM_0": 6,
-    "DATA_OUT_0_PARALLELISM_DIM_1": 2,
+    "DATA_IN_0_PRECISION_1": 6,
     "DATA_INTERMEDIATE_0_PRECISION_0": 12,
     "DATA_INTERMEDIATE_0_PRECISION_1": 8,
+    "DATA_OUT_0_PRECISION_0": 8,
+    "DATA_OUT_0_PRECISION_1": 7,
 }
 
 torch.manual_seed(1)
@@ -204,16 +213,18 @@ torch.manual_seed(1)
 
 @pytest.mark.dev
 def test_fixed_softmax():
-    # generate_memory.generate_sv_lut("exp", dut_params["DATA_IN_0_PRECISION_0"], dut_params["DATA_IN_0_PRECISION_1"])
+    path = Path(__file__).parents[1] / "rtl"
     generate_memory.generate_sv_lut(
         "exp",
         dut_params["DATA_IN_0_PRECISION_0"],
         dut_params["DATA_IN_0_PRECISION_1"],
         dut_params["DATA_INTERMEDIATE_0_PRECISION_0"],
         dut_params["DATA_INTERMEDIATE_0_PRECISION_1"],
+        path=path
     )
     print("Generated memory")
-    mase_runner(module_param_list=[dut_params])
+    mase_runner(
+        trace=True,module_param_list=[dut_params])
 
 
 if __name__ == "__main__":
