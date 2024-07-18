@@ -122,7 +122,18 @@ def device_fn(
 
 
 class MaseLauncher:
+    """
+    MaseLauncher launches an optimized model on multiple GPUs using torch.distributed.
+    """
+
     def __init__(self, mase_graph, world_size=None, device_mesh=None):
+        """Initialize the MaseLauncher.
+
+        Args:
+            mase_graph (MaseGraph): The MaseGraph object containing the model.
+            world_size (int, optional): Number of GPUs to use. Defaults to None.
+            device_mesh (list, optional): List of GPUs to use. Defaults to None.
+        """
         self.mg = mase_graph
         self.model = mase_graph.model
         self.world_size = world_size
