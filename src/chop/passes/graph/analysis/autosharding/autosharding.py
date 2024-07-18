@@ -11,9 +11,10 @@ from chop.tools import get_logger
 
 from .mesh_model import MeshModel
 from .alpa import alpa_autosharding_pass
+from .megatron import megatron_autosharding_pass
 
 logger = get_logger(__name__)
-logger.setLevel("DEBUG")
+logger.setLevel("INFO")
 
 
 def deepgetattr(obj, attr, default=None):
@@ -44,7 +45,7 @@ def _import_solution(
         dict: empty dictionary.
     """
     for node in mg.fx_graph.nodes:
-        logger.debug(f"Importing solution for node: {node.name}: {solution[node.name]}")
+        logger.debug(f"Importing solution for node: {node.name}")
 
         if node.name not in solution.keys() and extrapolate_sharding:
             layer_num = int([i for i in node.name.split("_") if i.isdigit()][0])
@@ -218,7 +219,7 @@ def autosharding_analysis_pass(mg, pass_args: dict = {}):
     # Run autosharding pass
     else:
         # Define autosharding backend
-        algo = pass_args.get("sharding_algo", "alpa")
+        algo = pass_args.get("algo", "alpa")
 
         # Communication cost model depends
         mesh.set_cost_model_parameters(
@@ -231,6 +232,10 @@ def autosharding_analysis_pass(mg, pass_args: dict = {}):
         start_time = time()
         if algo == "alpa":
             mg, pass_outs = alpa_autosharding_pass(mg, mesh, pass_args)
+        elif algo == "megatron":
+            mg, pass_outs = megatron_autosharding_pass(mg, mesh, pass_args)
+        else:
+            raise ValueError(f"Autosharding algorithm {algo} not recognized")
 
         end_time = time()
         autosharding_time = end_time - start_time
