@@ -19,16 +19,30 @@ from chop.distributed.utils import rlog
 from ..tools import get_logger
 
 logger = get_logger(__name__)
-logger.setLevel("DEBUG")
+logger.setLevel("INFO")
 
 
 def distributed_timing(fn, *args, **kwargs):
-    dist.barrier()
+    dist.barrier(async_op=True)
     start = time()
     result = fn(*args, **kwargs)
-    dist.barrier()
+    dist.barrier(async_op=True)
     end = time()
+
     return result, (end - start)
+
+
+def distributed_average_timing(fn, repeat, args):
+    times = []
+    for _ in range(repeat):
+        dist.barrier(async_op=True)
+        start = time()
+        result = fn(*args)
+        dist.barrier(async_op=True)
+        end = time()
+        times.append(end - start)
+
+    return result, sum(times) / len(times)
 
 
 def dist_model_fn(
@@ -115,7 +129,11 @@ def device_fn(
         distribute_tensor(in_tensor, mesh, [Replicate(), Replicate()])
         for in_tensor in inputs
     ]
-    out, time_taken = distributed_timing(model, *inputs)
+    _, time_taken = distributed_average_timing(
+        fn=model,
+        repeat=5,
+        args=inputs,
+    )
     rlog(logger, rank, f"Forward pass finished. Time taken: {time_taken}", level="info")
 
     dist.destroy_process_group()
@@ -130,6 +148,7 @@ class MaseLauncher:
 
     def run(self, tensor_sharding_map={}, inputs=[]):
         logger.info(f"Launching model with world size {self.world_size}.")
+
         mp.spawn(
             partial(
                 device_fn,
