@@ -17,21 +17,19 @@ logger = get_logger(__name__)
 
 def find_shape_and_dtype(arg):
 
+    # If the argument in meta["common"]["args"][key] is correctly
+    # formulated with data, just extract shape and dtype
     if isinstance(arg, dict):
         in_shape = arg["shape"]
         in_dtype = arg["torch_dtype"]
-    elif isinstance(arg, (tuple, list)):
-        arg = torch.Tensor(arg)
-        in_shape = arg.shape
-        in_dtype = arg.dtype
-    elif isinstance(arg, torch.Size):
-        arg = torch.Tensor(list(arg))
-        in_shape = arg.shape
-        in_dtype = arg.dtype
+
+    # Otherwise, depends on the type of argument
+    elif isinstance(arg, torch.Size) or isinstance(arg, (tuple, list)):
+        in_shape = (len(arg),)
+        in_dtype = type(arg[0])
     elif isinstance(arg, (float, int)):
-        arg = torch.Tensor([arg])
-        in_shape = arg.shape
-        in_dtype = arg.dtype
+        in_shape = (1,)
+        in_dtype = type(arg)
     else:
         logger.warning(f"Unknown type for arg: {arg}")
         in_shape = tuple()

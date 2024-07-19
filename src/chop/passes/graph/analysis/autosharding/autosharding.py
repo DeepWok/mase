@@ -1,7 +1,6 @@
 import numpy as np
 import cvxpy as cp
 from time import time
-import csv
 import dill
 
 from torch.distributed._tensor._op_schema import DTensorSpec
@@ -48,9 +47,14 @@ def _import_solution(
         logger.debug(f"Importing solution for node: {node.name}")
 
         if node.name not in solution.keys() and extrapolate_sharding:
+
+            # Expect the layer number to be the first digit in the node name
             layer_num = int([i for i in node.name.split("_") if i.isdigit()][0])
-            extrapolate_node = node.name.replace(f"_{layer_num}_", "_0_")
-            if "decoder_layers" in node.name and extrapolate_node in solution.keys():
+
+            # Only replace the first digit to find the equivalent node in the first layer
+            extrapolate_node = node.name.replace(f"_{layer_num}_", "_0_", 1)
+
+            if extrapolate_node in solution.keys():
                 logger.warning(
                     f"Node: {node.name} not found in solution. Extrapolating from solution for: {extrapolate_node}"
                 )
@@ -64,13 +68,17 @@ def _import_solution(
         # Annotate the metadata for each argument
         for arg, arg_spec in solution[node.name].get("args", {}).items():
             node.meta["mase"]["common"]["args"][arg]["dtensor_spec"] = DTensorSpec(
-                mesh=mesh, placements=arg_spec
+                mesh=mesh,
+                placements=arg_spec,
             )
 
         # Annotate the metadata for each result
         for result, result_spec in solution[node.name].get("results", {}).items():
             node.meta["mase"]["common"]["results"][result]["dtensor_spec"] = (
-                DTensorSpec(mesh=mesh, placements=result_spec)
+                DTensorSpec(
+                    mesh=mesh,
+                    placements=result_spec,
+                )
             )
 
     return mg, {}
@@ -98,18 +106,38 @@ def _export_solution(mg, export_file: str = "ilp_solution.pkl"):
         for arg, arg_info in node.meta["mase"]["common"]["args"].items():
             if not isinstance(arg_info, dict):
                 continue
-            out_dict[node_name]["args"][arg] = arg_info.get(
-                "dtensor_spec", DTensorSpec(None, (Replicate(), Replicate()))
-            ).placements
+
+            if "dtensor_spec" not in arg_info:
+                logger.warning(
+                    f"DTensor spec not found for arg: {arg} in node: {node_name}. Assigning fully-replicated solution."
+                )
+                spec = DTensorSpec(
+                    None,
+                    (Replicate(), Replicate()),
+                )
+            else:
+                spec = arg_info["dtensor_spec"]
+
+            out_dict[node_name]["args"][arg] = spec.placements
 
         for result, result_info in node.meta["mase"]["common"]["results"].items():
             if not isinstance(result_info, dict):
                 continue
-            out_dict[node_name]["results"][result] = result_info.get(
-                "dtensor_spec", DTensorSpec(None, (Replicate(), Replicate()))
-            ).placements
 
-    with open(export_file.replace(".csv", ".pkl"), "wb") as file:
+            # TO DO: add warning when dtensor_spec not found
+            if "dtensor_spec" not in result_info:
+                logger.warning(
+                    f"DTensor spec not found for result: {result} in node: {node_name}. Assigning fully-replicated solution."
+                )
+                spec = DTensorSpec(
+                    None,
+                    (Replicate(), Replicate()),
+                )
+            else:
+                spec = result_info["dtensor_spec"]
+            out_dict[node_name]["results"][result] = spec.placements
+
+    with open(export_file, "wb") as file:
         dill.dump(out_dict, file)
 
     return mg, {}
@@ -147,9 +175,17 @@ def _get_sharding_map(mg):
             attr = node.target.split(".")[-1]
             module = deepgetattr(node.meta["mase"].model, module_str)
 
-            out_specs = node.meta["mase"]["common"]["results"]["data_out_0"][
+            if (
                 "dtensor_spec"
-            ]
+                not in node.meta["mase"]["common"]["results"]["data_out_0"]
+            ):
+                raise ValueError(
+                    f"Couldn't find DTensor sharding specification in solution for node: {node.name}"
+                )
+            else:
+                out_specs = node.meta["mase"]["common"]["results"]["data_out_0"][
+                    "dtensor_spec"
+                ]
 
             logger.debug(
                 f"Exporting sharding map for {node.name} with spec: {out_specs}"
