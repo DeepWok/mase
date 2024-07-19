@@ -5,7 +5,19 @@ logger = get_logger(__name__)
 
 
 class AutoPipeline:
+    """This is the base class for the AutoPipeline.
+
+    It takes a list of passes and runs them in order.
+
+    The output of each pass is stored in a dictionary and can be accessed by the next pass.
+    """
+
     def __init__(self, pass_list=[]) -> None:
+        """Initializes the AutoPipeline.
+
+        Args:
+            pass_list (list, optional): List of passes to run. Defaults to [].
+        """
         self.pass_list = pass_list
         self.pass_outputs = {}
 
