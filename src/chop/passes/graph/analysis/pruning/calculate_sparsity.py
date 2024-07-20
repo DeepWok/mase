@@ -70,6 +70,13 @@ def add_pruning_metadata_analysis_pass(graph, pass_args: dict = {}):
     If add value is true, the mask values would be added to meta data.
     :type pass_args: dict
 
+    .. code-block:: python
+
+            pass_args = {
+                'dummy_in': torch.tensor(...),
+                'add_meta': True # bool value whether to add the natural sparsity to the metadata
+            }
+
     :return: The updated graph and sparsity information.
     The returned dict contains {'weight_sparsity': float, 'activation_sparsity': float}
     :rtype: tuple(MaseGraph, dict)

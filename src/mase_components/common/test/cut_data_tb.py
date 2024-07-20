@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # This script tests the register slice
-import random, os, logging
+import random, os, logging, pytest
 
 from mase_cocotb.random_test import RandomSource, RandomSink, check_results
 from mase_cocotb.runner import mase_runner
@@ -146,6 +146,7 @@ def wave_check(dut):
     )
 
 
+@pytest.mark.dev
 def test_cut_data():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])

@@ -7,7 +7,7 @@ from multiprocessing import Process, Queue
 
 import torch.fx as fx
 from chop.passes.graph.utils import vf, v2p, init_project
-import mase_components.activations.test.generate_memory as gen_lut
+import mase_components.helper.generate_memory as gen_lut
 import torch.nn as nn
 
 logger = logging.getLogger(__name__)
@@ -804,7 +804,7 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
                     d_in_f_width,
                     d_out_width,
                     d_out_f_width,
-                    dir=rtl_dir,
+                    path=rtl_dir,
                     path_with_dtype=False,
                 )
     return graph, {}

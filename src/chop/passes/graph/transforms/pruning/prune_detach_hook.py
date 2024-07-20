@@ -47,6 +47,8 @@ def prune_detach_hook_transform_pass(graph, pass_args: dict = {}):
     :param graph: The input graph to be pruned.
     :type graph: MaseGraph
 
+    pass_args can be None or an empty dictionary.
+
     :param pass_args: Optional arguments for the pruning transformation.
     :type pass_args: dict
 

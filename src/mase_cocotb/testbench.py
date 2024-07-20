@@ -27,7 +27,7 @@ class Testbench:
         self.fail_on_checks = fail_on_checks
 
         if self.clk is not None:
-            self.clock = Clock(self.clk, clk_period_ns, units="ns")
+            self.clock = Clock(self.clk, 20, units="ns")
             cocotb.start_soon(self.clock.start())
 
     def assign_self_params(self, attrs):

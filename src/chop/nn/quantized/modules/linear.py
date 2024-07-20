@@ -54,7 +54,7 @@ class _LinearBase(torch.nn.Linear):
         self.x_quantizer = None
         self.w_quantizer = None
         self.b_quantizer = None
-        self.out_quantizer = lambda x: x
+        self.out_quantizer = None
         self.pruning_masks = None
 
     def forward(self, x: Tensor) -> Tensor:
@@ -66,6 +66,8 @@ class _LinearBase(torch.nn.Linear):
             w = self.w_quantizer(self.weight)
             bias = self.b_quantizer(self.bias) if self.bias is not None else None
             out = F.linear(x, w, bias)
+            if self.out_quantizer is None:
+                return out
             return self.out_quantizer(out)
 
 

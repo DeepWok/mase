@@ -11,7 +11,7 @@ from cocotb.triggers import Timer
 from cocotb.triggers import FallingEdge
 from cocotb.clock import Clock
 
-debug = False
+debug = True
 logger = logging.getLogger("tb_signals")
 if debug:
     logger.setLevel(logging.DEBUG)
@@ -22,9 +22,9 @@ class VerificationCase:
     def __init__(self, samples=10):
         self.data_width = 32
         self.inputs = RandomSource(
-            samples=samples, max_stalls=2 * samples, is_data_vector=False, debug=debug
+            samples=samples, max_stalls=samples / 2, is_data_vector=False, debug=debug
         )
-        self.outputs = RandomSink(samples=samples, max_stalls=2 * samples, debug=debug)
+        self.outputs = RandomSink(samples=samples, max_stalls=samples / 2, debug=debug)
         self.samples = samples
         self.ref = self.sw_compute()
 
@@ -43,12 +43,26 @@ class VerificationCase:
 
 def in_out_wave(dut, name):
     logger.debug(
-        "{}  State: (in_valid,in_ready,out_valid,out_ready) = ({},{},{},{})".format(
+        "{}  State: (data_in,data_in_valid,data_in_ready) = ({},{},{})".format(
             name,
-            dut.data_in_valid.value,
-            dut.data_in_ready.value,
-            dut.data_out_valid.value,
-            dut.data_out_ready.value,
+            int(dut.data_in.value),
+            int(dut.data_in_valid.value),
+            int(dut.data_in_ready.value),
+        )
+    )
+    logger.debug(
+        "{}  State: (data_out,data_out_valid,data_out_ready) = ({},{},{})".format(
+            name,
+            int(dut.data_out.value),
+            int(dut.data_out_valid.value),
+            int(dut.data_out_ready.value),
+        )
+    )
+    logger.debug(
+        "{}  State: (shift_reg, buffer) = ({},{})".format(
+            name,
+            int(dut.shift_reg.value),
+            int(dut.buffer.value),
         )
     )
 
@@ -83,15 +97,22 @@ async def cocotb_test_register_slice(dut):
     in_out_wave(dut, "Post-clk")
 
     done = False
-    while not done:
+    test_limit = 100
+    i = 0
+    while not done and i < test_limit:
+
         await FallingEdge(dut.clk)
         in_out_wave(dut, "Post-clk")
 
         ## Pre_compute
         dut.data_in_valid.value = test_case.inputs.pre_compute()
         await Timer(1, units="ns")
-        dut.data_out_ready.value = test_case.outputs.pre_compute(dut.data_out.value)
+        dut.data_out_ready.value = test_case.outputs.pre_compute(
+            dut.data_out_valid.value
+        )
         await Timer(1, units="ns")
+
+        in_out_wave(dut, "pre-comput")
 
         ## Compute
         dut.data_in_valid.value, dut.data_in.value = test_case.inputs.compute(
@@ -99,13 +120,18 @@ async def cocotb_test_register_slice(dut):
         )
         await Timer(1, units="ns")
         dut.data_out_ready.value = test_case.outputs.compute(
-            dut.data_out.value, dut.data_out.value
+            dut.data_out_valid.value, dut.data_out.value
         )
+        await Timer(1, units="ns")
+
         in_out_wave(dut, "Pre-clk")
         logger.debug("\n")
-        # breakpoint()
-        done = test_case.inputs.is_empty() and test_case.outputs.is_full()
 
+        done = test_case.inputs.is_empty() and test_case.outputs.is_full()
+        i += 1
+
+    print([int(k) for k in test_case.outputs.data])
+    print(test_case.ref)
     check_results(test_case.outputs.data, test_case.ref)
 
 

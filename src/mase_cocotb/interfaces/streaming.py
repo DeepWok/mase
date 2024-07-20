@@ -10,6 +10,7 @@ from cocotb.triggers import *
 from mase_cocotb.driver import Driver
 from mase_cocotb.monitor import Monitor
 
+
 def _sign_extend(value: int, bits: int):
     sign_bit = 1 << (bits - 1)
     return (value & (sign_bit - 1)) - (value & sign_bit)
@@ -64,8 +65,6 @@ class StreamDriver(Driver):
                         self.log.debug("Sent %s" % t)
                 else:
                     self.log.debug("Sent %s" % transaction)
-                if self.record_num_beats:
-                    self.num_beats += 1
                 break
 
         # Load extra
@@ -77,16 +76,7 @@ class StreamDriver(Driver):
 
 
 class StreamMonitor(Monitor):
-    def __init__(
-        self,
-        clk,
-        data,
-        valid,
-        ready,
-        check=True,
-        name=None,
-        unsigned=False,
-    ):
+    def __init__(self, clk, data, valid, ready, check=True, name=None, unsigned=False):
         super().__init__(clk, check=check, name=name)
         self.clk = clk
         self.data = data
@@ -95,7 +85,6 @@ class StreamMonitor(Monitor):
         self.check = check
         self.name = name
         self.unsigned = unsigned
-        self.last_timestamp = None
 
     def _trigger(self):
         if "x" in self.valid.value.binstr or "x" in self.ready.value.binstr:
@@ -120,13 +109,10 @@ class StreamMonitor(Monitor):
 
         if type(self.data) == tuple:
             # Multiple synchronised data signals
-            data = tuple(_get_sig_value(s) for s in self.data)
+            return tuple(_get_sig_value(s) for s in self.data)
         else:
             # Single data signal
-            data = _get_sig_value(self.data)
-
-        self.last_timestamp = simulator.get_sim_time()
-        return data
+            return _get_sig_value(self.data)
 
     def _check(self, got, exp):
 

@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+import sys
 
 
 def is_cuda_available():
@@ -7,39 +8,32 @@ def is_cuda_available():
 
         return torch.cuda.is_available()
     except:
+        print(
+            "You need to install PyTorch before installing MASE: https://pytorch.org/get-started/locally/."
+        )
         return False
+
+
+def get_system():
+    return sys.platform
 
 
 requirements = [
     "torch",
     "torchvision",
-    "torchaudio",
-    "packaging",
-    "py-cpuinfo",
-    "psutil",
-    "lightning",
-    "transformers",
-    "diffusers",
-    "accelerate",
-    "toml",
-    "timm",
-    "pytorch-nlp",
-    "datasets",
     "onnx",
-    "onnxruntime>=1.16",
-    "onnxruntime-tools",
-    "onnxconverter_common",
-    "optimum",
     "black",
+    "toml",
     "GitPython",
     "colorlog",
     "cocotb[bus]==1.8.0",
     "pytest",
-    "pytest-cov",
-    "pytest-xdist",
-    "pytest-sugar",
-    "pytest-html",
-    "pytest-profiling",
+    "pytorch-lightning",
+    "transformers",
+    "toml",
+    "timm",
+    "pytorch-nlp",
+    "datasets",
     "ipython",
     "ipdb",
     "sentencepiece",
@@ -47,41 +41,73 @@ requirements = [
     "deepspeed",
     "pybind11",
     "tabulate",
-    "tensorboard",
+    "tensorboardx",
+    "hyperopt",
+    "accelerate",
     "optuna",
-    "stable-baselines3",
-    "scikit-learn",
+    "stable-baselines3[extra]",
     "h5py",
-    "pyyaml",
-    "numpy",
-    "pandas",
-    "wandb",
+    "scikit-learn",
+    "scipy",
+    "onnxruntime",
+    "matplotlib",
+    "sphinx-rtd-theme",
+    "sphinx-test-reports",
+    "sphinxcontrib-plantuml",
+    "sphinx-needs",
     "imageio",
     "imageio-ffmpeg",
     "opencv-python",
     "kornia",
     "einops",
-    "sphinx",
-    "sphinx-rtd-theme",
-    "numpy",
+    "ghp-import",
+    "optimum",
+    "pytest-profiling",
+    "myst_parser",
+    "pytest-cov",
+    "pytest-xdist",
+    "pytest-sugar",
+    "pytest-html",
+    "lightning",
+    "wandb",
+    "bitarray",
+    "bitstring",
+    "emoji",
+    "numpy<2.0",
+    "tensorboard",
+    "sphinx_needs",
+    "onnxconverter-common",
     "absl-py",
-    "scipy",
     "sphinx-glpi-theme",
     "prettytable",
     "pyyaml",
     "pynvml",
     "bitstring>=4.2",
+    "myst_parser",
+    "cvxpy",
+    "py-cpuinfo",
+    "pandas",
+    "psutil",
+    "Pillow==10.4.0",
+    "mpmath==1.3.0",
 ]
+
 
 if is_cuda_available():
     requirements += [
         "pycuda",
+        "packaging",
         "onnxruntime-gpu",
+        "onnxruntime-tools",
         "torch-tensorRT; platform_system == 'Linux'",
         "tensorRT; platform_system == 'Linux'",
         "cuda-python; platform_system == 'Linux'",
         "pytorch-quantization @ https://pypi.nvidia.com/pytorch-quantization/pytorch_quantization-2.1.2-py3-none-any.whl ",
     ]
+
+if not (get_system() == "darwin"):
+    requirements += ["nni"]
+
 
 setup(
     name="mase-tools",
@@ -90,7 +116,7 @@ setup(
     author="Aaron Zhao, Jianyi Cheng, Cheng Zhang, Pedro Gimenes",
     author_email="a.zhao@imperial.ac.uk, jianyi.cheng17@imperial.ac.uk, chengzhang98@outlook.com, pedro.gimenes19@imperial.ac.uk",
     license_files=("LICENSE",),
-    python_requires=">=3.10.6",
+    python_requires=">=3.11.9",
     package_dir={
         "": "src",
     },
