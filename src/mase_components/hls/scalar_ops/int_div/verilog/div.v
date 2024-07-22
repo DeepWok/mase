@@ -9,20 +9,35 @@
 (* CORE_GENERATION_INFO="div_div,hls_ip_2023_1,{HLS_INPUT_TYPE=cxx,HLS_INPUT_FLOAT=0,HLS_INPUT_FIXED=0,HLS_INPUT_PART=xcu250-figd2104-2L-e,HLS_INPUT_CLOCK=10.000000,HLS_INPUT_ARCH=pipeline,HLS_SYN_CLOCK=2.594500,HLS_SYN_LAT=27,HLS_SYN_TPT=1,HLS_SYN_MEM=0,HLS_SYN_DSP=0,HLS_SYN_FF=1487,HLS_SYN_LUT=1130,HLS_VERSION=2023_1}" *)
 
 module div (
-        ap_clk,
+	// connect to clk
+	ap_clk,
+	// connect to rst
         ap_rst,
+	// connect to 1
         ap_start,
+	// ignore 
         ap_done,
+	// ignore 
         ap_idle,
+	// ignore 
         ap_ready,
+	// data
         data_in_0_dout,
+	// valid
         data_in_0_empty_n,
+	// ready
         data_in_0_read,
+	// data
         data_in_1_dout,
+	// valid
         data_in_1_empty_n,
+	// ready
         data_in_1_read,
+	// data
         data_out_0_din,
+	// ready
         data_out_0_full_n,
+	// valid 
         data_out_0_write
 );
 
