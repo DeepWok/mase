@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
 import logging
-from torch import manual_seed
-from random import randint, seed
+from random import randint, choice
 
 import cocotb
 from cocotb.triggers import *
+from torch import manual_seed
+from random import randint, seed
 
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
@@ -13,25 +14,23 @@ from mase_cocotb.runner import mase_runner
 from mase_cocotb.matrix_tools import gen_random_matrix_input, matrix_mult_model
 from mase_cocotb.utils import bit_driver
 
-
 manual_seed(0)
 seed(0)
-
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.INFO)
 
 
-class MatmulTB(Testbench):
+class MatmulProgrammableTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
         self.assign_self_params(
             [
-                "A_TOTAL_DIM0",
-                "A_TOTAL_DIM1",
-                "B_TOTAL_DIM0",
-                "B_TOTAL_DIM1",
-                "C_TOTAL_DIM0",
-                "C_TOTAL_DIM1",
+                "A_MAX_DIM0",
+                "A_MAX_DIM1",
+                "B_MAX_DIM0",
+                "B_MAX_DIM1",
+                "C_MAX_DIM0",
+                "C_MAX_DIM1",
                 "A_COMPUTE_DIM0",
                 "A_COMPUTE_DIM1",
                 "B_COMPUTE_DIM0",
@@ -48,9 +47,26 @@ class MatmulTB(Testbench):
             ]
         )
 
+        self.A_DIM0 = choice(range(self.A_COMPUTE_DIM0, self.A_MAX_DIM0+1, self.A_COMPUTE_DIM0))
+        self.A_DIM1 = choice(range(self.A_COMPUTE_DIM1, self.A_MAX_DIM1+1, self.A_COMPUTE_DIM1))
+        self.B_DIM0 = choice(range(self.B_COMPUTE_DIM0, self.B_MAX_DIM0+1, self.B_COMPUTE_DIM0))
+        self.B_DIM1 = self.A_DIM0
+
+        # self.A_DIM0 = self.A_MAX_DIM0
+        # self.A_DIM1 = self.A_MAX_DIM1
+        # self.B_DIM0 = self.B_MAX_DIM0
+        # self.B_DIM1 = self.B_MAX_DIM1
+
+    
         # Drivers & Monitors
         self.a_driver = StreamDriver(dut.clk, dut.a_data, dut.a_valid, dut.a_ready)
         self.b_driver = StreamDriver(dut.clk, dut.b_data, dut.b_valid, dut.b_ready)
+        dut.a_depth_dim1.value = self.A_DIM1//dut.A_COMPUTE_DIM1.value
+        dut.b_depth_dim0.value = self.B_DIM0//dut.B_COMPUTE_DIM0.value
+        dut.b_depth_dim1.value = self.B_DIM1//dut.B_COMPUTE_DIM1.value
+        dut.b_depth_mult.value = self.B_DIM1//dut.B_COMPUTE_DIM1.value * self.B_DIM0//dut.B_COMPUTE_DIM0.value
+        dut.c_depth_dim0.value = self.B_DIM0//dut.B_COMPUTE_DIM0.value
+
         self.output_monitor = StreamMonitor(
             dut.clk,
             dut.out_data,
@@ -62,16 +78,16 @@ class MatmulTB(Testbench):
 
     def generate_inputs(self):
         A_inputs = gen_random_matrix_input(
-            self.A_TOTAL_DIM0,
-            self.A_TOTAL_DIM1,
+            self.A_DIM0,
+            self.A_DIM1,
             self.A_COMPUTE_DIM0,
             self.A_COMPUTE_DIM1,
             self.A_WIDTH,
             self.A_FRAC_WIDTH,
         )
         B_inputs = gen_random_matrix_input(
-            self.B_TOTAL_DIM0,
-            self.B_TOTAL_DIM1,
+            self.B_DIM0,
+            self.B_DIM1,
             self.B_COMPUTE_DIM0,
             self.B_COMPUTE_DIM1,
             self.B_WIDTH,
@@ -81,16 +97,16 @@ class MatmulTB(Testbench):
 
     def model(self, A_inputs, B_inputs):
         return matrix_mult_model(
-            self.A_TOTAL_DIM0,
-            self.A_TOTAL_DIM1,
+            self.A_DIM0,
+            self.A_DIM1,
             self.A_COMPUTE_DIM0,
             self.A_COMPUTE_DIM1,
-            self.B_TOTAL_DIM0,
-            self.B_TOTAL_DIM1,
+            self.B_DIM0,
+            self.B_DIM1,
             self.B_COMPUTE_DIM0,
             self.B_COMPUTE_DIM1,
-            self.C_TOTAL_DIM0,
-            self.C_TOTAL_DIM1,
+            self.B_DIM0,
+            self.A_DIM1,
             self.C_COMPUTE_DIM0,
             self.C_COMPUTE_DIM1,
             self.A_WIDTH,
@@ -108,8 +124,6 @@ class MatmulTB(Testbench):
         await self.reset()
         for _ in range(batches):
             A_inputs, B_inputs = self.generate_inputs()
-            print(A_inputs)
-            print(B_inputs)
             exp_out = self.model(A_inputs, B_inputs)
             # Setup drivers and monitors
             self.a_driver.load_driver(A_inputs)
@@ -119,34 +133,32 @@ class MatmulTB(Testbench):
         assert self.output_monitor.exp_queue.empty()
 
 
+
 @cocotb.test()
-async def single_mult(dut):
-    tb = MatmulTB(dut)
+async def single_mult_programmable(dut):
+    tb = MatmulProgrammableTB(dut)
     tb.output_monitor.ready.value = 1
     await tb.run_test(batches=1, us=100)
 
+@cocotb.test()
+async def repeated_mult(dut):
+    tb = MatmulProgrammableTB(dut)
+    tb.output_monitor.ready.value = 1
+    await tb.run_test(batches=1000, us=2000)
 
-# @cocotb.test()
-# async def repeated_mult(dut):
-#     tb = MatmulTB(dut)
-#     tb.output_monitor.ready.value = 1
-#     await tb.run_test(batches=1000, us=2000)
+@cocotb.test()
+async def repeated_mult_backpressure(dut):
+    tb = MatmulProgrammableTB(dut)
+    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.6))
+    await tb.run_test(batches=500, us=2000)
 
-
-# @cocotb.test()
-# async def repeated_mult_backpressure(dut):
-#     tb = MatmulTB(dut)
-#     cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.6))
-#     await tb.run_test(batches=500, us=2000)
-
-
-# @cocotb.test()
-# async def repeated_mult_valid_backpressure(dut):
-#     tb = MatmulTB(dut)
-#     tb.a_driver.set_valid_prob(0.7)
-#     tb.b_driver.set_valid_prob(0.7)
-#     cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.6))
-#     await tb.run_test(batches=500, us=2000)
+@cocotb.test()
+async def repeated_mult_valid_backpressure(dut):
+    tb = MatmulProgrammableTB(dut)
+    tb.a_driver.set_valid_prob(0.7)
+    tb.b_driver.set_valid_prob(0.7)
+    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.6))
+    await tb.run_test(batches=500, us=2000)
 
 
 def gen_random_dimensions():
@@ -163,10 +175,10 @@ def random_matrix_mult_dim_cfg():
     b_cfg = gen_random_dimensions()
     b_compute_dim0, _, b_total_dim0, _ = b_cfg
     return {
-        "A_TOTAL_DIM0": a_total_dim0,
-        "A_TOTAL_DIM1": a_total_dim1,
-        "B_TOTAL_DIM0": b_total_dim0,
-        "B_TOTAL_DIM1": a_total_dim0,  # Must equal A_TOTAL_DIM0
+        "A_MAX_DIM0": a_total_dim0,
+        "A_MAX_DIM1": a_total_dim1,
+        "B_MAX_DIM0": b_total_dim0,
+        "B_MAX_DIM1": a_total_dim0,  # Must equal A_TOTAL_DIM0
         "A_COMPUTE_DIM0": a_compute_dim0,
         "A_COMPUTE_DIM1": a_compute_dim1,
         "B_COMPUTE_DIM0": b_compute_dim0,
@@ -190,10 +202,10 @@ def test_matmul():
     # Default is a square matrix mult
     # 4x4 4x4 matrix multiplication done using 2x2 window
     DEFAULT_CONFIG = {
-        "A_TOTAL_DIM0": 4,
-        "A_TOTAL_DIM1": 4,
-        "B_TOTAL_DIM0": 4,
-        "B_TOTAL_DIM1": 4,  # Must equal A_TOTAL_DIM0
+        "A_MAX_DIM0": 4,
+        "A_MAX_DIM1": 4,
+        "B_MAX_DIM0": 4,
+        "B_MAX_DIM1": 4,  # Must equal A_TOTAL_DIM0
         "A_COMPUTE_DIM0": 2,
         "A_COMPUTE_DIM1": 2,
         "B_COMPUTE_DIM0": 2,
@@ -213,10 +225,10 @@ def test_matmul():
             # Failing case before
             {
                 **DEFAULT_CONFIG,
-                "A_TOTAL_DIM0": 4,
-                "A_TOTAL_DIM1": 4,
-                "B_TOTAL_DIM0": 2,
-                "B_TOTAL_DIM1": 4,
+                "A_MAX_DIM0": 4,
+                "A_MAX_DIM1": 4,
+                "B_MAX_DIM0": 2,
+                "B_MAX_DIM1": 4,
                 "A_WIDTH": 4,
                 "A_FRAC_WIDTH": 1,
                 "B_WIDTH": 4,
@@ -227,10 +239,10 @@ def test_matmul():
             # Long Rectangle, should saturate many values
             {
                 **DEFAULT_CONFIG,
-                "A_TOTAL_DIM0": 16,
-                "A_TOTAL_DIM1": 2,
-                "B_TOTAL_DIM0": 2,
-                "B_TOTAL_DIM1": 16,
+                "A_MAX_DIM0": 16,
+                "A_MAX_DIM1": 2,
+                "B_MAX_DIM0": 2,
+                "B_MAX_DIM1": 16,
                 "OUT_WIDTH": 10,
                 "OUT_FRAC_WIDTH": 0,
             },

@@ -147,6 +147,8 @@ MASE_HW_DEPS = {
     "common/fifo": ["common"],
     "common/input_buffer": ["common"],
     "common/repeat_circular_buffer": ["common"],
+    "common/repeat_circular_buffer_programmable": ["common"],
+    "common/single_element_repeat": ["common"],
     "common/lut": [],
     "common/ram_block": [],
     "common/join2": [],
@@ -175,6 +177,7 @@ MASE_HW_DEPS = {
     "matmul/simple_matmul": ["common", "linear", "cast", "fixed_arithmetic", "matmul"],
     "matmul/fixed_matmul": ["common", "linear", "cast", "fixed_arithmetic", "matmul"],
     "matmul/matmul": ["common", "linear", "cast", "fixed_arithmetic", "matmul"],
+    "matmul/matmul_programmable": ["common", "linear", "cast", "fixed_arithmetic", "matmul"],
     "matmul/test_chain_matmul": [
         "common",
         "linear",
