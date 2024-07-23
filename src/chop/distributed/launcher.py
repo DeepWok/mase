@@ -19,7 +19,7 @@ from chop.distributed.utils import rlog
 from ..tools import get_logger
 
 logger = get_logger(__name__)
-logger.setLevel("INFO")
+logger.setLevel("DEBUG")
 
 
 def distributed_timing(fn, *args, **kwargs):
@@ -34,15 +34,27 @@ def distributed_timing(fn, *args, **kwargs):
 
 def distributed_average_timing(fn, repeat, args):
     times = []
-    for _ in range(repeat):
+    for itr in range(repeat):
+        rlog(
+            logger,
+            dist.get_rank(),
+            f"Running teration {itr}",
+            "debug",
+        )
         dist.barrier(async_op=True)
         start = time()
         result = fn(*args)
         dist.barrier(async_op=True)
         end = time()
         times.append(end - start)
+        rlog(
+            logger,
+            dist.get_rank(),
+            f"Time taken: {end - start}s",
+            "debug",
+        )
 
-    return result, sum(times) / len(times)
+    return result, sum(times[2:]) / len(times[2:])
 
 
 def dist_model_fn(
@@ -131,7 +143,7 @@ def device_fn(
     ]
     _, time_taken = distributed_average_timing(
         fn=model,
-        repeat=5,
+        repeat=10,
         args=inputs,
     )
     rlog(logger, rank, f"Forward pass finished. Time taken: {time_taken}", level="info")
