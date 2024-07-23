@@ -42,6 +42,7 @@ MASE_HW_DEPS = {
         "convolution_layers",
         "memory",
         "linear_layers/fixed_operators",
+        "scalar_operators/fixed",
     ],
     "activation_layers/fixed_softermax": [
         "common",
@@ -293,6 +294,10 @@ MASE_HW_DEPS = {
         "common",
         "scalar_operators/fixed",
         "linear_layers/fixed_operators",
+    ],
+    "scalar_operators/fixed/fixed_div": [
+        "scalar_operators/fixed",
+        "cast",
     ],
     # Transformer Layers
     "transformer_layers/fixed_gqa_head": [
