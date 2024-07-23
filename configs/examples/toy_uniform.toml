@@ -1,6 +1,9 @@
 # basics
 model = "toy"
-dataset = "toy-tiny"
+dataset = "toy_tiny"
+
+[transform]
+style = "graph"
 
 [passes.quantize]
 by = "type"

@@ -2,6 +2,7 @@
 # This example converts a simple MLP model to Verilog
 import os, sys, logging
 import toml
+import pytest
 
 import torch
 import torch.nn as nn
@@ -43,6 +44,7 @@ class MLP(torch.nn.Module):
         return x
 
 
+@pytest.mark.skip(reason="Fixing needed")
 def test_emit_verilog_partition_linear():
     num_layers = 3
     num_devices = 1

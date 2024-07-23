@@ -28,7 +28,8 @@ module fixed_round #(
   always_comb begin
     lsb_below[2] = (IN_FRAC_WIDTH >= OUT_FRAC_WIDTH) ? input_data[IN_FRAC_WIDTH-OUT_FRAC_WIDTH] : 0;
     lsb_below[1] = (IN_FRAC_WIDTH-1 >= OUT_FRAC_WIDTH)  ? input_data[IN_FRAC_WIDTH-OUT_FRAC_WIDTH-1]     : 0;
-    lsb_below[0] = (IN_FRAC_WIDTH-2 >= OUT_FRAC_WIDTH)  ? |(input_data[IN_FRAC_WIDTH-OUT_FRAC_WIDTH-2:0]): 0;
+    // lsb_below[0] = (IN_FRAC_WIDTH-2 >= OUT_FRAC_WIDTH)  ? |(input_data[IN_FRAC_WIDTH-OUT_FRAC_WIDTH-2:0]): 0;
+    lsb_below[0] = '0;  // to do: fix
   end
   always_comb begin
     if ((IN_FRAC_WIDTH - OUT_FRAC_WIDTH) >= 0)

@@ -6,80 +6,87 @@ module register_slice #(
     input logic clk,
     input logic rst,
 
-    input  MYDATA in_data,
-    input  logic  in_valid,
-    output logic  in_ready,
+    input  MYDATA data_in,
+    input  logic  data_in_valid,
+    output logic  data_in_ready,
 
-    output MYDATA out_data,
-    output logic  out_valid,
-    input  logic  out_ready
+    output MYDATA data_out,
+    output logic  data_out_valid,
+    input  logic  data_out_ready
 );
 
   // The buffer stores the intermeidate data being computed in the register slice
   logic [DATA_WIDTH-1:0] buffer;
   // The shift register stores the validity of the data in the buffer
   logic shift_reg;
+  logic to_load;
+
+
+  // There are eight cases:
+  // +----------------+----------+-----------+----------------+--------------------+---------------------+
+  // | hold_any_input | in_valid | out_ready | accept_next_in | release_current_in | hold_any_input_next |
+  // |   (shift_reg)  |          |           |                |                    |   (shift_reg_next)  |
+  // +----------------+----------+-----------+----------------+--------------------+---------------------+
+  // |              0 |        0 |         0 |              0 |                  0 |                   0 |
+  // +----------------+----------+-----------+----------------+--------------------+---------------------+
+  // |              0 |        0 |         1 |              0 |                  0 |                   0 |
+  // +----------------+----------+-----------+----------------+--------------------+---------------------+
+  // |              0 |        1 |         0 |              1 |                  0 |                   1 |
+  // +----------------+----------+-----------+----------------+--------------------+---------------------+
+  // |              0 |        1 |         1 |              1 |                  0 |                   1 |
+  // +----------------+----------+-----------+----------------+--------------------+---------------------+
+  // |              1 |        0 |         0 |              0 |                  0 |                   1 |
+  // +----------------+----------+-----------+----------------+--------------------+---------------------+
+  // |              1 |        0 |         1 |              0 |                  1 |                   0 |
+  // +----------------+----------+-----------+----------------+--------------------+---------------------+
+  // |              1 |        1 |         0 |              0 |                  0 |                   1 |
+  // +----------------+----------+-----------+----------------+--------------------+---------------------+
+  // |              1 |        1 |         1 |              1 |                  1 |                   1 |
+  // +----------------+----------+-----------+----------------+--------------------+---------------------+
 
   // shift_register
   always_ff @(posedge clk) begin
     if (rst) shift_reg <= 1'b0;
     else begin
-      // no backpressure or buffer empty
-      if (out_ready || !shift_reg) shift_reg <= in_valid;
-      else shift_reg <= shift_reg;
+      shift_reg <= (shift_reg && (!data_out_ready)) || data_in_valid;
     end
   end
 
   // buffer
+  assign to_load = ((!shift_reg) && data_in_valid) || (data_in_valid && data_out_ready);
   always_ff @(posedge clk) begin
     if (rst) buffer <= 0;
-    // backpressure && valid output
-    if (!out_ready && out_valid) buffer <= buffer;
-    else buffer <= in_data;
+    else if (to_load) buffer <= data_in;
   end
 
-  always_comb begin
-    // empty buffer or no back pressure
-    in_ready  = (~shift_reg) | out_ready;
-    // dummy data_iniring
-    out_valid = shift_reg;
-    out_data  = buffer;
-  end
+  // output 
+  assign data_out = buffer;
+
+
+  // control logic
+  // +----------------+----------+-----------+----------+-----------+
+  // | hold_any_input | in_valid | out_ready | in_ready | out_valid |
+  // |   (shift_reg)  |          |           |          |           |
+  // +----------------+----------+-----------+----------+-----------+
+  // |              0 |        0 |         0 |        1 |         0 |
+  // +----------------+----------+-----------+----------+-----------+
+  // |              0 |        0 |         1 |        1 |         0 |
+  // +----------------+----------+-----------+----------+-----------+
+  // |              0 |        1 |         0 |        1 |         0 |
+  // +----------------+----------+-----------+----------+-----------+
+  // |              0 |        1 |         1 |        1 |         0 |
+  // +----------------+----------+-----------+----------+-----------+
+  // |              1 |        0 |         0 |        1 |         1 |
+  // +----------------+----------+-----------+----------+-----------+
+  // |              1 |        0 |         1 |        1 |         1 |
+  // +----------------+----------+-----------+----------+-----------+
+  // |              1 |        1 |         0 |        0 |         1 |
+  // +----------------+----------+-----------+----------+-----------+
+  // |              1 |        1 |         1 |        1 |         1 |
+  // +----------------+----------+-----------+----------+-----------+
+
+  assign data_in_ready = (!shift_reg) || (!data_in_valid) || data_out_ready;
+  assign data_out_valid = shift_reg;
 
 endmodule
-/* verilator lint_off DECLFILENAME */
-module unpacked_register_slice #(
-    parameter DATA_WIDTH = 32,
-    parameter IN_SIZE = 16,
-    parameter type MYDATA = logic [DATA_WIDTH-1:0]
-) (
-    input logic clk,
-    input logic rst,
 
-    input  MYDATA in_data [IN_SIZE-1:0],
-    input  logic  in_valid,
-    output logic  in_ready,
-
-    output MYDATA out_data [IN_SIZE-1:0],
-    output logic  out_valid,
-    input  logic  out_ready
-);
-  logic [DATA_WIDTH * IN_SIZE - 1 : 0] data_in_flatten;
-  logic [DATA_WIDTH * IN_SIZE - 1 : 0] data_out_flatten;
-  for (genvar i = 0; i < IN_SIZE; i++) begin
-    assign data_in_flatten[i*DATA_WIDTH+DATA_WIDTH-1:i*DATA_WIDTH] = in_data[i];
-    assign out_data[i] = data_out_flatten[i*DATA_WIDTH+DATA_WIDTH-1:i*DATA_WIDTH];
-  end
-  register_slice #(
-      .DATA_WIDTH(DATA_WIDTH * IN_SIZE)
-  ) register_slice (
-      .clk      (clk),
-      .rst      (rst),
-      .in_valid (in_valid),
-      .in_ready (in_ready),
-      .in_data  (data_in_flatten),
-      .out_valid(out_valid),
-      .out_ready(out_ready),
-      .out_data (data_out_flatten)
-  );
-endmodule

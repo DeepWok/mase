@@ -5,31 +5,31 @@ norm = {
     "dependence_files": [
         "common/rtl/join2.sv",
         "common/rtl/split2.sv",
-        "common/rtl/repeat_circular_buffer.sv",
-        "common/rtl/skid_buffer.sv",
         "common/rtl/register_slice.sv",
-        "common/rtl/simple_dual_port_ram.sv",
-        "common/rtl/fifo.sv",
         "common/rtl/lut.sv",
+        "memory/rtl/simple_dual_port_ram.sv",
+        "memory/rtl/repeat_circular_buffer.sv",
+        "memory/rtl/fifo.sv",
+        "memory/rtl/skid_buffer.sv",
         "cast/rtl/floor_round.sv",
         "cast/rtl/signed_clamp.sv",
         "cast/rtl/fixed_signed_cast.sv",
-        "fixed_arithmetic/rtl/fixed_accumulator.sv",
-        "fixed_arithmetic/rtl/fixed_adder_tree.sv",
-        "fixed_arithmetic/rtl/fixed_adder_tree_layer.sv",
-        "fixed_arithmetic/rtl/fixed_lut_index.sv",
-        "fixed_math/rtl/fixed_nr_stage.sv",
-        "fixed_arithmetic/rtl/fixed_range_augmentation.sv",
-        "fixed_arithmetic/rtl/fixed_range_reduction.sv",
-        "fixed_math/rtl/fixed_isqrt.sv",
-        "matmul/rtl/matrix_fifo.sv",
-        "matmul/rtl/matrix_flatten.sv",
-        "matmul/rtl/matrix_unflatten.sv",
-        "norm/rtl/channel_selection.sv",
-        "norm/rtl/group_norm_2d.sv",
-        "norm/rtl/rms_norm_2d.sv",
-        "norm/rtl/batch_norm_2d.sv",
-        "norm/rtl/norm.sv",
+        "linear_layers/fixed_operators/rtl/fixed_accumulator.sv",
+        "linear_layers/fixed_operators/rtl/fixed_adder_tree.sv",
+        "linear_layers/fixed_operators/rtl/fixed_adder_tree_layer.sv",
+        "linear_layers/fixed_operators/rtl/fixed_lut_index.sv",
+        "linear_layers/fixed_operators/rtl/fixed_range_augmentation.sv",
+        "linear_layers/fixed_operators/rtl/fixed_range_reduction.sv",
+        "scalar_operators/fixed/rtl/fixed_isqrt.sv",
+        "scalar_operators/fixed/rtl/fixed_nr_stage.sv",
+        "linear_layers/matmul/rtl/matrix_fifo.sv",
+        "linear_layers/matmul/rtl/matrix_flatten.sv",
+        "linear_layers/matmul/rtl/matrix_unflatten.sv",
+        "normalization_layers/rtl/channel_selection.sv",
+        "normalization_layers/rtl/group_norm_2d.sv",
+        "normalization_layers/rtl/rms_norm_2d.sv",
+        "normalization_layers/rtl/batch_norm_2d.sv",
+        "normalization_layers/rtl/norm.sv",
     ],
 }
 
@@ -39,16 +39,17 @@ INTERNAL_COMP = {
             "name": "fixed_linear",
             "dependence_files": [
                 "cast/rtl/fixed_cast.sv",
-                "fixed_arithmetic/rtl/fixed_dot_product.sv",
-                "fixed_arithmetic/rtl/fixed_vector_mult.sv",
-                "fixed_arithmetic/rtl/fixed_accumulator.sv",
-                "fixed_arithmetic/rtl/fixed_adder_tree.sv",
-                "fixed_arithmetic/rtl/fixed_adder_tree_layer.sv",
-                "fixed_arithmetic/rtl/fixed_mult.sv",
+                "linear_layers/fixed_operators/rtl/fixed_dot_product.sv",
+                "linear_layers/fixed_operators/rtl/fixed_vector_mult.sv",
+                "linear_layers/fixed_operators/rtl/fixed_accumulator.sv",
+                "linear_layers/fixed_operators/rtl/fixed_adder_tree.sv",
+                "linear_layers/fixed_operators/rtl/fixed_adder_tree_layer.sv",
+                "linear_layers/fixed_operators/rtl/fixed_mult.sv",
                 "common/rtl/register_slice.sv",
                 "common/rtl/join2.sv",
-                "common/rtl/skid_buffer.sv",
-                "linear/rtl/fixed_linear.sv",
+                "memory/rtl/unpacked_repeat_circular_buffer.sv",
+                "memory/rtl/skid_buffer.sv",
+                "linear_layers/fixed_linear_layer/rtl/fixed_linear.sv",
             ],
         },
     ],
@@ -56,7 +57,7 @@ INTERNAL_COMP = {
         {
             "name": "fixed_relu",
             "dependence_files": [
-                "activations/rtl/fixed_relu.sv",
+                "activation_layers/rtl/fixed_relu.sv",
             ],
         },
     ],
@@ -64,7 +65,7 @@ INTERNAL_COMP = {
         {
             "name": "fixed_hardshrink",
             "dependence_files": [
-                "activations/rtl/fixed_hardshrink.sv",
+                "activation_layers/rtl/fixed_hardshrink.sv",
             ],
         },
     ],
@@ -72,8 +73,8 @@ INTERNAL_COMP = {
         {
             "name": "fixed_silu",
             "dependence_files": [
-                "activations/rtl/fixed_silu.sv",
-                "activations/rtl/silu_lut.sv",
+                "activation_layers/rtl/fixed_silu.sv",
+                "activation_layers/rtl/silu_lut.sv",
             ],
         },
     ],
@@ -81,8 +82,8 @@ INTERNAL_COMP = {
         {
             "name": "fixed_elu",
             "dependence_files": [
-                "activations/rtl/fixed_elu.sv",
-                "activations/rtl/elu_lut.sv",
+                "activation_layers/rtl/fixed_elu.sv",
+                "activation_layers/rtl/elu_lut.sv",
             ],
         },
     ],
@@ -90,8 +91,8 @@ INTERNAL_COMP = {
         {
             "name": "fixed_sigmoid",
             "dependence_files": [
-                "activations/rtl/fixed_sigmoid.sv",
-                "activations/rtl/sigmoid_lut.sv",
+                "activation_layers/rtl/fixed_sigmoid.sv",
+                "activation_layers/rtl/sigmoid_lut.sv",
             ],
         },
     ],
@@ -99,7 +100,7 @@ INTERNAL_COMP = {
         {
             "name": "fixed_softshrink",
             "dependence_files": [
-                "activations/rtl/fixed_softshrink.sv",
+                "activation_layers/rtl/fixed_softshrink.sv",
             ],
         },
     ],
@@ -107,8 +108,8 @@ INTERNAL_COMP = {
         {
             "name": "fixed_logsigmoid",
             "dependence_files": [
-                "activations/rtl/fixed_logsigmoid.sv",
-                "activations/rtl/logsigmoid_lut.sv",
+                "activation_layers/rtl/fixed_logsigmoid.sv",
+                "activation_layers/rtl/logsigmoid_lut.sv",
             ],
         },
     ],
@@ -116,8 +117,8 @@ INTERNAL_COMP = {
         {
             "name": "fixed_softmax",
             "dependence_files": [
-                "activations/rtl/fixed_softmax.sv",
-                "activations/rtl/exp_lut .sv",
+                "activation_layers/rtl/fixed_softmax.sv",
+                "activation_layers/rtl/exp_lut .sv",
             ],
         }
     ],
@@ -130,7 +131,7 @@ INTERNAL_COMP = {
         {
             "name": "fixed_selu",
             "dependence_files": [
-                "activations/rtl/fixed_selu.sv",
+                "activation_layers/rtl/fixed_selu.sv",
             ],
         },
     ],
@@ -138,7 +139,7 @@ INTERNAL_COMP = {
         {
             "name": "fixed_tanh",
             "dependence_files": [
-                "activations/rtl/fixed_tanh.sv",
+                "activation_layers/rtl/fixed_tanh.sv",
             ],
         },
     ],
@@ -146,8 +147,8 @@ INTERNAL_COMP = {
         {
             "name": "fixed_gelu",
             "dependence_files": [
-                "activations/rtl/fixed_gelu.sv",
-                "arithmetic/rtl/fixed_mult.sv",
+                "activation_layers/rtl/fixed_gelu.sv",
+                "activation_layers/rtl/gelu_lut.sv",
             ],
         },
     ],
@@ -155,8 +156,8 @@ INTERNAL_COMP = {
         {
             "name": "fixed_softsign",
             "dependence_files": [
-                "activations/rtl/fixed_softsign.sv",
-                "arithmetic/rtl/fixed_mult.sv",
+                "activation_layers/rtl/fixed_softsign.sv",
+                "linear_layers/fixed_operators/rtl/fixed_mult.sv",
             ],
         },
     ],
@@ -164,8 +165,38 @@ INTERNAL_COMP = {
         {
             "name": "fixed_softplus",
             "dependence_files": [
-                "activations/rtl/fixed_softplus.sv",
+                "activation_layers/rtl/fixed_softplus.sv",
             ],
         },
+    ],
+    "add": [
+        {
+            "name": "fixed_adder",
+            "dependence_files": [
+                "linear_layers/fixed_operators/rtl/fixed_adder.sv",
+            ],
+        }
+    ],
+    "mul": [
+        {
+            "name": "fixed_elementwise_multiplier",
+            "dependence_files": [
+                "linear_layers/fixed_operators/rtl/fixed_vector_mult.sv",
+            ],
+        }
+    ],
+    "df_split": [
+        {
+            "name": "df_split",
+            "dependence_files": ["common/rtl/df_split.sv", "common/rtl/split2.sv"],
+        }
+    ],
+    "getitem": [
+        {
+            "name": "buffer",
+            "dependence_files": [
+                "memory/rtl/buffer.sv",
+            ],
+        }
     ],
 }

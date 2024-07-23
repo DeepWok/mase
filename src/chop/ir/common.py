@@ -30,7 +30,6 @@ MASE_IMPLICIT_FUNCS = [
     "where",
     "_assert",
     "getattr",
-    "getitem",
     "long",
     "type_as",
     "clamp",
@@ -124,6 +123,8 @@ MASE_BUILTIN_FUNCS = [
     "gelu",
     "scaled_dot_product_attention",
     "embedding",
+    "df_split",
+    "getitem",
 ]
 
 

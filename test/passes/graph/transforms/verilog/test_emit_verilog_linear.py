@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # This example converts a simple MLP model to Verilog
 import os, sys, logging, traceback, pdb
+import pytest
 import toml
 
 import torch
@@ -8,12 +9,12 @@ import torch.nn as nn
 
 import chop as chop
 import chop.passes as passes
-from chop.tools.utils import execute_cli
 
 from pathlib import Path
 
 from chop.actions import simulate
 from chop.tools.logger import set_logging_verbosity
+from chop.tools import get_logger
 
 set_logging_verbosity("debug")
 
@@ -24,6 +25,7 @@ def excepthook(exc_type, exc_value, exc_traceback):
     pdb.post_mortem(exc_traceback)
 
 
+logger = get_logger(__name__)
 sys.excepthook = excepthook
 
 
@@ -39,21 +41,21 @@ class MLP(torch.nn.Module):
     def __init__(self) -> None:
         super().__init__()
 
-        self.fc1 = nn.Linear(28 * 28, 28 * 28, bias=False)
+        self.fc1 = nn.Linear(10, 10, bias=True)
 
     def forward(self, x):
-        x = torch.flatten(x, start_dim=1, end_dim=-1)
         x = torch.nn.functional.relu(self.fc1(x))
         return x
 
 
+@pytest.mark.dev
 def test_emit_verilog_linear():
     mlp = MLP()
     mg = chop.MaseGraph(model=mlp)
 
     # Provide a dummy input for the graph so it can use for tracing
-    batch_size = 1
-    x = torch.randn((batch_size, 28, 28))
+    batch_size = 2
+    x = torch.randn((batch_size, 10))
     dummy_in = {"x": x}
 
     mg, _ = passes.init_metadata_analysis_pass(mg, None)
@@ -105,15 +107,20 @@ def test_emit_verilog_linear():
         10 * torch.randn(mg.model.fc1.weight.shape)
     )
 
-    mg, _ = passes.add_hardware_metadata_analysis_pass(mg)
+    mg, _ = passes.add_hardware_metadata_analysis_pass(
+        mg, pass_args={"max_parallelism": [2] * 4}
+    )
     mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
 
     mg, _ = passes.emit_verilog_top_transform_pass(mg)
     mg, _ = passes.emit_bram_transform_pass(mg)
     mg, _ = passes.emit_internal_rtl_transform_pass(mg)
-    mg, _ = passes.emit_cocotb_transform_pass(mg)
+    mg, _ = passes.emit_cocotb_transform_pass(
+        mg, pass_args={"wait_time": 100, "wait_unit": "ms", "batch_size": batch_size}
+    )
+    mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
-    simulate(skip_build=False, skip_test=True)
+    simulate(skip_build=False, skip_test=False, simulator="verilator")
 
 
 if __name__ == "__main__":

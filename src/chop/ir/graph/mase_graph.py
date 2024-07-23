@@ -148,9 +148,16 @@ class MaseGraph:
                     is_hf_built_in_leaf_module = hf_is_leaf_module(
                         self, m, module_qualified_name
                     )
-
                     is_custom_module = isinstance(m, custom_modules)
-                    return is_hf_built_in_leaf_module or is_custom_module
+                    is_mase_leaf_layer = isinstance(m, MASE_LEAF_LAYERS)
+
+                    return any(
+                        (
+                            is_hf_built_in_leaf_module,
+                            is_custom_module,
+                            is_mase_leaf_layer,
+                        )
+                    )
 
                 return is_leaf_module
 
@@ -188,13 +195,13 @@ class MaseGraph:
                 custom_leaf_functions += tuple(patched_nodes["functions"])
                 custom_leaf_layers += tuple(patched_nodes["layers"])
 
-            tracer = MaseTracer(
+            self.tracer = MaseTracer(
                 custom_leaf_modules=custom_leaf_modules,
                 custom_leaf_functions=custom_leaf_functions,
                 custom_leaf_layers=custom_leaf_layers,
             )
 
-            graph_module = fx.GraphModule(model, tracer.trace(model, cf_args))
+            graph_module = fx.GraphModule(model, self.tracer.trace(model, cf_args))
 
             if patched_nodes is not None:
                 graph_module.patched_op_names = [

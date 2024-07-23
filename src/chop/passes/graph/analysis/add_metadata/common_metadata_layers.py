@@ -5,6 +5,7 @@ import torch
 import inspect
 from chop.tools.utils import to_numpy_if_tensor as to_numpy
 from chop.passes.graph.utils import vf, get_node_by_name
+from chop.passes.graph.patching import MASE_LEAF_FUNCTIONS, MASE_LEAF_LAYERS
 import traceback
 from functools import reduce
 
@@ -142,6 +143,8 @@ func_data = {
     "sigmoid": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.argmax.html
     "argmax": {"input": "data_in"},
+    # dataflow_split
+    "df_split": {"x": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.split.html
     "split": {"input": "data_in", "split_size_or_sections": "config", "dim": "config"},
     # https://pytorch.org/docs/stable/generated/torch.logical_not.html
@@ -195,7 +198,7 @@ func_data = {
     # https://pytorch.org/docs/stable/generated/torch.full.html
     "full": {"size": "config", "fill_value": "data_in", "device": "config"},
     # get item
-    "getitem": {"a": "data_in", "b": "data_in"},
+    "getitem": {"in": "data_in", "select": "config"},
     # getattr
     "getattr": {"a": "data_in", "b": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.ones.html
@@ -270,6 +273,7 @@ module_data = {
     "silu": {"input": "data_in"},
     "elu": {"input": "data_in"},
     "softmax": {"input": "data_in"},
+    "gelu": {"input": "data_in"},
 }
 
 
@@ -334,23 +338,59 @@ method_data = {
 }
 
 
+def get_type_and_precision(meta):
+    # * Fetch type and precision from q_config for quantized modules
+    if isinstance(meta.module, MASE_LEAF_LAYERS):
+        cf = (
+            meta.module.q_config
+            if hasattr(meta.module, "q_config")
+            else meta.module.config
+        )
+        arg_type = "fixed"
+        arg_precision = [
+            cf["data_in_width"],
+            cf["data_in_frac_width"],
+        ]
+    else:
+        arg_type = "float"
+        arg_precision = [32]
+    return arg_type, arg_precision
+
+
 def match_args_and_kwargs(meta, args, kwargs, data, add_value):
     ordered_func_data = [(k, v) for k, v in data.items()]
     meta.parameters["common"]["args"] = {}
     meta_kwargs = {}
+
+    arg_type, arg_precision = get_type_and_precision(meta)
+
+    # * Assign metadata for each argument
     j = 0
     for i, x in enumerate(args):
         if isinstance(x, torch.Tensor) and ordered_func_data[i][1] == "data_in":
             arg_meta = {
                 "shape": list(x.shape),
                 "torch_dtype": x.dtype,
-                "type": "float",
-                "precision": [32],
+                "type": arg_type,
+                "precision": arg_precision,
             }
             if add_value:
                 arg_meta["value"] = x
             meta.parameters["common"]["args"][f"data_in_{j}"] = arg_meta
             j += 1
+        # check if it's a tuple of tensors
+        elif isinstance(x, tuple) and all([isinstance(x, torch.Tensor) for x in x]):
+            for k, x in enumerate(x):
+                arg_meta = {
+                    "shape": list(x.shape),
+                    "torch_dtype": x.dtype,
+                    "type": arg_type,
+                    "precision": arg_precision,
+                }
+                if add_value:
+                    arg_meta["value"] = x
+                meta.parameters["common"]["args"][f"data_in_{j}"] = arg_meta
+                j += 1
         else:
             # this is not an data_in, but just actually an named arg
             n, vtype = ordered_func_data[i]
@@ -375,8 +415,8 @@ def match_args_and_kwargs(meta, args, kwargs, data, add_value):
             arg_meta = {
                 "shape": shape,
                 "torch_dtype": v.dtype if isinstance(v, torch.Tensor) else type(v),
-                "type": "float",
-                "precision": [32],
+                "type": arg_type,
+                "precision": arg_precision,
             }
             if add_value:
                 arg_meta["value"] = v
@@ -393,21 +433,39 @@ def match_args_and_kwargs(meta, args, kwargs, data, add_value):
 def analyse_result(meta, result, add_value):
     # deal with results
     meta.parameters["common"]["results"] = {}
+
+    result_type, result_precision = get_type_and_precision(meta)
+
     if isinstance(result, torch.Tensor):
         meta.parameters["common"]["results"]["data_out_0"] = {
-            "type": "float",
-            "precision": [32],
+            "type": result_type,
+            "precision": result_precision,
             "shape": list(result.shape),
             "torch_dtype": result.dtype,
         }
         if add_value:
             meta.parameters["common"]["results"]["data_out_0"]["value"] = result
+
+    # check if it's a tuple of tensors
+    elif isinstance(result, tuple) and all(
+        [isinstance(x, torch.Tensor) for x in result]
+    ):
+        for i, x in enumerate(result):
+            meta.parameters["common"]["results"][f"data_out_{i}"] = {
+                "type": result_type,
+                "precision": result_precision,
+                "shape": list(x.shape),
+                "torch_dtype": x.dtype,
+            }
+            if add_value:
+                meta.parameters["common"]["results"][f"data_out_{i}"]["value"] = x
     else:
         meta.parameters["common"]["results"]["data_out_0"] = {
             "type": type(result),
             "shape": [1],
             "value": result,
         }
+
     return meta
 
 
@@ -479,11 +537,19 @@ def analyse_common_parameters_module(meta, result, args, kwargs, add_value=True)
         module_args = module_data[mase_op]
 
     meta = match_args_and_kwargs(meta, args, kwargs, module_args, add_value)
+
+    arg_type, arg_precision = get_type_and_precision(meta)
+
     for name, parameter in meta.module.named_parameters():
+        name = name.replace(".", "_")
         meta.parameters["common"]["args"][name] = {
-            "type": "float",
-            "precision": [32],
-            "shape": list(parameter.shape),
+            "type": arg_type,
+            "precision": arg_precision,
+            "shape": (
+                list(parameter.shape)
+                if len(parameter.shape) > 1
+                else list(parameter.unsqueeze(dim=0).shape)
+            ),
             "from": None,
         }
         if add_value:

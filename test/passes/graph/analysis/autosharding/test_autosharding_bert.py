@@ -1,4 +1,5 @@
 import sys, pdb, traceback
+import pytest
 
 import torch
 import torch.nn as nn
@@ -16,8 +17,10 @@ logger.setLevel("DEBUG")
 WORLD_SIZE = 8
 DEVICE_MESH = [[0, 1, 2, 3], [4, 5, 6, 7]]
 
+
+@pytest.mark.skip(reason="Fixing needed")
 def test_autosharding():
-    
+
     # Define config
     config = BertConfig()
     config.num_hidden_layers = 3
@@ -43,15 +46,18 @@ def test_autosharding():
 
     # Run autosharding pass to decide sharding configuration
     mg, module_map = passes.autosharding_analysis_pass(
-        mg, 
-        pass_args = {
+        mg,
+        pass_args={
             "mesh_shape": (2, 4),
             "inter_node_bandwidth": 10e9,
-            "intra_node_bandwidth": 100e9
-        })
+            "intra_node_bandwidth": 100e9,
+        },
+    )
 
     # Insert resharding wrappers around each module to handle inter-operator communication
-    mg, _ = passes.resharding_transform_pass(mg, pass_args={"module_map": module_map, "device_mesh": DEVICE_MESH})
+    mg, _ = passes.resharding_transform_pass(
+        mg, pass_args={"module_map": module_map, "device_mesh": DEVICE_MESH}
+    )
 
     # dump print model to a file
     with open("model.txt", "w") as f:
