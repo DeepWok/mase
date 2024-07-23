@@ -254,8 +254,6 @@ class ShardingPropagator:
                     assert isinstance(output_strategy.output_specs, DTensorSpec)
 
                 for idx, input_spec in enumerate(op_schema.args_spec):
-                    if "layer_norm" in str(op_schema.op):
-                        rlog(f"           arg {idx}, input_spec: {input_spec}")
                     desired_spec = (
                         output_strategy.output_spec
                         if output_strategy.input_specs is None

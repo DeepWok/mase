@@ -118,8 +118,6 @@ class OpDispatcher:
         """
         # operators that does not need to go through sharding propagation
 
-        rlog(f"Dispatching op call: {op_call}")
-
         if op_call in self._custom_op_handlers:
             return self._custom_op_handlers[op_call](op_call, args, kwargs)  # type: ignore[operator]
 
@@ -183,7 +181,6 @@ class OpDispatcher:
             if output_sharding.needs_redistribute:
                 # compute locally with redistribute first if needed
                 assert output_sharding.redistribute_schema is not None
-                rlog(f"Op: {op_call} needs redistribute")
                 self.redistribute_local_args(
                     op_info, output_sharding.redistribute_schema
                 )
@@ -217,7 +214,6 @@ class OpDispatcher:
                 with rng_context:
                     local_results = op_call(*local_tensor_args, **op_info.local_kwargs)
             else:
-                # rlog(f"Calling {op_call} with args: {local_tensor_args} and kwargs: {op_info.local_kwargs}")
                 local_results = op_call(*local_tensor_args, **op_info.local_kwargs)
 
         # communicate the result to all ranks for some operators that return scalar value

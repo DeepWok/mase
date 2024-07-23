@@ -787,18 +787,10 @@ def layer_norm_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy:
     input_ndim = input_strategy.ndim
     axis = input_ndim - len(normalized_size)
 
-    rlog(f"=========== LAYER NORM STRATEGY ===========")
-
-    rlog(f"    normalized_size: {normalized_size}")
-    rlog(f"    input_ndim: {input_ndim}")
-    rlog(f"    axis: {axis}")
-    rlog(f"    input_strategy: {input_strategy}")
-
     # we use OpStrategy because the output (out, mean, rstd)
     # should have the same placements
     output_strategy = OpStrategy([])
     for idx, input_placement_strategy in enumerate(input_strategy.strategies):
-        rlog(f"strategy {idx}: {input_placement_strategy}")
         op_args_target_specs = []
         redistribute_costs = []
         input_src_spec = input_placement_strategy.output_spec
@@ -859,9 +851,6 @@ def layer_norm_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy:
                 redistribute_cost=redistribute_costs,
             )
         )
-
-    rlog(f"LAYER_NORM_STRATEGY output: {output_strategy}")
-    rlog(f"===========================================")
 
     return output_strategy
 
