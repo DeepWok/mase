@@ -7,7 +7,6 @@ import mase_components
 from mase_components.deps import MASE_HW_DEPS
 
 logger = get_logger(f"linter")
-set_logging_verbosity("debug")
 
 COMPONENTS_PATH = Path(__file__).parents[0]
 

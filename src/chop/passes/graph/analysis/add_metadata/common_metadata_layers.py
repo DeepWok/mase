@@ -5,8 +5,7 @@ import torch
 import inspect
 from chop.tools.utils import to_numpy_if_tensor as to_numpy
 from chop.passes.graph.utils import vf, get_node_by_name
-from chop.passes.graph.patching import MASE_LEAF_FUNCTIONS, MASE_LEAF_LAYERS
-import traceback
+from chop.nn.quantized.modules import quantized_module_map
 from functools import reduce
 
 
@@ -340,7 +339,7 @@ method_data = {
 
 def get_type_and_precision(meta):
     # * Fetch type and precision from q_config for quantized modules
-    if isinstance(meta.module, MASE_LEAF_LAYERS):
+    if isinstance(meta.module, tuple(quantized_module_map.values())):
         cf = (
             meta.module.q_config
             if hasattr(meta.module, "q_config")
