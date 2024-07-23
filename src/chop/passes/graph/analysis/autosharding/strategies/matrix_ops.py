@@ -202,7 +202,6 @@ def scaled_dot_product_flash_attention_strategy(
     meta: MaseMetadata,
     mesh: tuple,
 ) -> OpStrategy:
-    breakpoint()
     # NOTE: currently we only support some simple strategies to support tensor parallelism
     # TODO: sdpa might be a good candidate for us to explore decomposed sharding propagation
     # as it involves: matmul, pointwise, reduction ops together.

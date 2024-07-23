@@ -566,10 +566,7 @@ def analyse_common_parameters_module(meta, result, args, kwargs, add_value=True)
 def analyse_common_parameters_method(meta, result, args, kwargs, add_value=True):
     mase_op = meta.parameters["common"]["mase_op"]
     meta = analyse_result(meta, result, add_value)
-    # try:
     meta = match_args_and_kwargs(meta, args, kwargs, method_data[mase_op], add_value)
-    # except:
-    #     breakpoint()
     return meta
 
 
