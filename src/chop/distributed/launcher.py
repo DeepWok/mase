@@ -9,11 +9,11 @@ import torch.multiprocessing as mp
 
 from torch.distributed._tensor import (
     DeviceMesh,
-    distribute_module,
-    distribute_tensor,
     Replicate,
     Shard,
 )
+
+from chop.distributed.tensor import distribute_module, distribute_tensor
 
 from chop.distributed.utils import rlog
 from ..tools import get_logger

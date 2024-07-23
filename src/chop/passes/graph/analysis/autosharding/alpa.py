@@ -1,7 +1,6 @@
 from chop.tools import get_logger
 
 from .alpa_intra_operator import alpa_intra_op_sharding_pass
-from .mesh_model import MeshModel
 
 logger = get_logger(__name__)
 logger.setLevel("DEBUG")
