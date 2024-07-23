@@ -16,7 +16,6 @@ from torch.distributed._tensor._op_schema import (
     OpSchema,
     OutputSpecType,
 )
-from torch.distributed._tensor._redistribute import redistribute_local_tensor
 from torch.distributed._tensor._tp_conv import (
     convolution_backward_handler,
     convolution_handler,
@@ -36,6 +35,7 @@ except ImportError:
 
 import chop.distributed.tensor.api as dtensor
 from chop.distributed.tensor._sharding_prop import ShardingPropagator
+from chop.distributed.tensor._redistribute import redistribute_local_tensor
 
 aten = torch.ops.aten
 logger = logging.getLogger(__name__)
