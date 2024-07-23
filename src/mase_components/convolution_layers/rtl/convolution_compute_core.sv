@@ -1,5 +1,6 @@
+/* verilator lint_off DECLFILENAME */
 `timescale 1ns / 1ps
-module convolution_arith #(
+module convolution_compute_core #(
     // assume output will only unroll_out_channels
     parameter DATA_IN_0_PRECISION_0 = 16,
     parameter DATA_IN_0_PRECISION_1 = 3,
@@ -107,7 +108,6 @@ module convolution_arith #(
   //         .data_out(data_out_0[i])
   //     );end
 endmodule
-
 module simple_convolution_arith #(
     parameter DATA_IN_0_PRECISION_0 = 16,
     parameter DATA_IN_0_PRECISION_1 = 3,
@@ -119,7 +119,7 @@ module simple_convolution_arith #(
     parameter ROLL_OUT_NUM = 2,
     parameter IN_CHANNELS_DEPTH = 4,
     parameter OUT_CHANNELS_PARALLELISM = 2,
-    parameter HAS_BIAS,
+    parameter HAS_BIAS = 1,
     parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 + $clog2(
         ROLL_IN_NUM * IN_CHANNELS_DEPTH
     ),
@@ -174,7 +174,7 @@ module simple_convolution_arith #(
         .DATA_IN_0_PRECISION_0(DATA_IN_0_PRECISION_0),
         .WEIGHT_PRECISION_0(WEIGHT_PRECISION_0),
         .DP_SIZE(ROLL_OUT_NUM),
-        .ACC_DEPTH(ROLL_IN_NUM / ROLL_OUT_NUM * IN_CHANNELS_DEPTH),
+        .ACC_DEPTH(ROLL_IN_NUM / ROLL_OUT_NUM * IN_CHANNELS_DEPTH)
     ) dp_acc_inst (
         .clk(clk),
         .rst(rst),

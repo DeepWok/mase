@@ -10,9 +10,22 @@ def get_modules():
         for d in os.listdir(current_dir)
         if os.path.isdir(os.path.join(current_dir, d))
     ]
-    if "__pycache__" in mods:
-        mods.remove("__pycache__")
-    return mods
+    detailed_mods = []
+    for mod in mods:
+        new_dir = os.path.join(current_dir, mod)
+        if ("rtl" in os.listdir(new_dir)) or ("test" in os.listdir(new_dir)):
+            detailed_mods.append(mod)
+        else:
+            update_mods = [
+                mod + "/" + d
+                for d in os.listdir(new_dir)
+                if os.path.isdir(os.path.join(new_dir, d))
+            ]
+            detailed_mods += update_mods
+            # breakpoint()
+    if "__pycache__" in detailed_mods:
+        detailed_mods.remove("__pycache__")
+    return detailed_mods
 
 
 def get_group_files(group):

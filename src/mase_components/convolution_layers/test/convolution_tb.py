@@ -322,7 +322,7 @@ def get_fixed_conv_config(kwargs={}):
     out_width = ceil((in_x - kernel_x + 2 * padding_x + 1) / stride)
 
     sliding_num = out_width * out_height
-    config["SLIDING_NUM"] = sliding_num
+    # config["SLIDING_NUM"] = sliding_num
     config.update(kwargs)
     return config
 

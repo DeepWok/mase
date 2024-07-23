@@ -29,7 +29,11 @@ module padding #(
       .data_out(reg_out),
       .data_out_valid(reg_out_valid),
       .data_out_ready(reg_out_ready),
-      .*
+      .data_in(data_in),
+      .data_in_valid(data_in_valid),
+      .data_in_ready(data_in_ready),
+      .clk(clk),
+      .rst(rst)
   );
   logic [C_WIDTH -1:0] count_c;
   logic [X_WIDTH -1:0] count_x;
