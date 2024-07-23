@@ -1,6 +1,7 @@
 from .modules import (
     quantized_module_map,
     BertSelfAttentionInteger,
+    ViTSelfAttentionInteger,
     BertSelfAttentionHeadInteger,
     LlamaSdpaAttentionInteger,
     LinearInteger,

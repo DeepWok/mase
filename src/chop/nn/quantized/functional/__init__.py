@@ -1,5 +1,5 @@
 from .softermax import fixed_softermax
-
+from .softmax import softmax_integer
 from .add import (
     add_block_fp,
     add_block_log,

@@ -6,6 +6,8 @@ from torch.nn import functional as F
 
 from transformers.models.bert.modeling_bert import BertSelfAttention
 from chop.models.patched.llama.modeling_llama import LlamaSdpaAttention
+from transformers.models.vit.modeling_vit import ViTSelfAttention
+
 from chop.models.patched.llama.configuration_llama import LlamaConfig
 
 from chop.nn.quantized.modules.linear import (
@@ -14,7 +16,7 @@ from chop.nn.quantized.modules.linear import (
 from chop.nn.quantized.functional import fixed_softermax
 from chop.nn.quantized.functional import matmul_integer
 
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 
 class _BertSelfAttentionBase(BertSelfAttention):
@@ -99,6 +101,38 @@ class _LlamaSdpaAttentionBase(LlamaSdpaAttention):
         return out
 
 
+class _ViTSelfAttentionBase(ViTSelfAttention):
+    def __init__(
+        self,
+        config,
+        q_config: dict = None,
+        out_q_config: dict = None,
+        bias=True,
+        output_tensor_only=False,
+    ) -> None:
+        super().__init__(config)
+        self.bypass = False
+        self.q_config = q_config
+        self.out_q_config = out_q_config
+        self.bias = bias
+        self.output_tensor_only = output_tensor_only
+
+    def forward(
+        self,
+        hidden_states,
+        head_mask: Optional[torch.Tensor] = None,
+        output_attentions: bool = False,
+    ) -> Union[Tuple[torch.Tensor, torch.Tensor], Tuple[torch.Tensor]]:
+        out = super().forward(
+            hidden_states,
+            head_mask,
+            output_attentions,
+        )
+        if self.output_tensor_only:
+            return out[0]
+        return out
+
+
 class BertSelfAttentionInteger(_BertSelfAttentionBase):
     def __init__(
         self,
@@ -148,10 +182,10 @@ class BertSelfAttentionInteger(_BertSelfAttentionBase):
         self.matmul = partial(
             matmul_integer,
             config={
-                "data_in_width": self.q_config["data_out_width"],
-                "data_in_frac_width": self.q_config["data_out_frac_width"],
-                "weight_width": self.q_config["data_out_width"],
-                "weight_frac_width": self.q_config["data_out_frac_width"],
+                "data_in_width": self.q_config["data_in_width"],
+                "data_in_frac_width": self.q_config["data_in_frac_width"],
+                "weight_width": self.q_config["weight_width"],
+                "weight_frac_width": self.q_config["weight_frac_width"],
             },
             out_config=out_q_config,
             floor=floor,
@@ -201,4 +235,61 @@ class LlamaSdpaAttentionInteger(_LlamaSdpaAttentionBase):
             bias=config.attention_bias,
             config=q_config,
             out_config=out_q_config,
+        )
+
+
+class ViTSelfAttentionInteger(_ViTSelfAttentionBase):
+    def __init__(
+        self,
+        config,
+        q_config: dict = None,
+        out_q_config: dict = None,
+        bias=True,
+        floor=False,
+        output_tensor_only=False,
+    ) -> None:
+        super().__init__(
+            config,
+            q_config,
+            out_q_config,
+            bias=bias,
+            output_tensor_only=output_tensor_only,
+        )
+        self.query = LinearInteger(
+            config.hidden_size,
+            config.hidden_size,
+            config=q_config,
+            out_config=out_q_config,
+            bias=bias,
+            floor=floor,
+        )
+        self.key = LinearInteger(
+            config.hidden_size,
+            config.hidden_size,
+            config=q_config,
+            out_config=out_q_config,
+            bias=bias,
+            floor=floor,
+        )
+        self.value = LinearInteger(
+            config.hidden_size,
+            config.hidden_size,
+            config=q_config,
+            out_config=out_q_config,
+            bias=bias,
+            floor=floor,
+        )
+        # * Matmul is used for Q @ K^T and Scores @ V where the input values have already
+        # * been casted to the output precision, so we provide the output precision to the
+        # * software model
+        self.matmul = partial(
+            matmul_integer,
+            config={
+                "data_in_width": self.q_config["data_in_width"],
+                "data_in_frac_width": self.q_config["data_in_frac_width"],
+                "weight_width": self.q_config["weight_width"],
+                "weight_frac_width": self.q_config["weight_frac_width"],
+            },
+            out_config=out_q_config,
+            floor=floor,
         )

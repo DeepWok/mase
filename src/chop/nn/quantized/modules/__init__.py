@@ -1,5 +1,9 @@
 from .attention_head import BertSelfAttentionHeadInteger
-from .attention import BertSelfAttentionInteger, LlamaSdpaAttentionInteger
+from .attention import (
+    BertSelfAttentionInteger,
+    LlamaSdpaAttentionInteger,
+    ViTSelfAttentionInteger,
+)
 
 # from .add import AddInteger
 from .conv1d import (

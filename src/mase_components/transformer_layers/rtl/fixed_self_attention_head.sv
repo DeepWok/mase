@@ -11,6 +11,7 @@ module fixed_self_attention_head #(
     parameter IN_DATA_PRECISION_1 = 3,
 
     // * Output tokens are casted to requested precision
+    parameter ACTIVATION = 0,
     parameter OUT_DATA_TENSOR_SIZE_DIM_0 = 64,
     parameter OUT_DATA_TENSOR_SIZE_DIM_1 = 32,
     parameter OUT_DATA_PARALLELISM_DIM_0 = IN_DATA_PARALLELISM_DIM_0,
@@ -178,34 +179,58 @@ module fixed_self_attention_head #(
   // ! TO DO: normalize query_key_transpose
 
   // * Attention scores: softmax(Query x Key^T)
+  if (ACTIVATION == 0) begin
+    fixed_softermax #(
+        .DATA_IN_0_PRECISION_0      (OUT_DATA_PRECISION_0),
+        .DATA_IN_0_PRECISION_1      (OUT_DATA_PRECISION_1),
+        .DATA_IN_0_TENSOR_SIZE_DIM_0(IN_DATA_TENSOR_SIZE_DIM_1),
+        .DATA_IN_0_TENSOR_SIZE_DIM_1(IN_DATA_TENSOR_SIZE_DIM_1),
+        .DATA_IN_0_PARALLELISM_DIM_0(IN_DATA_PARALLELISM_DIM_1),
+        .DATA_IN_0_PARALLELISM_DIM_1(IN_DATA_PARALLELISM_DIM_1),
 
-  fixed_softermax #(
-      .DATA_IN_0_PRECISION_0      (OUT_DATA_PRECISION_0),
-      .DATA_IN_0_PRECISION_1      (OUT_DATA_PRECISION_1),
-      .DATA_IN_0_TENSOR_SIZE_DIM_0(IN_DATA_TENSOR_SIZE_DIM_1),
-      .DATA_IN_0_TENSOR_SIZE_DIM_1(IN_DATA_TENSOR_SIZE_DIM_1),
-      .DATA_IN_0_PARALLELISM_DIM_0(IN_DATA_PARALLELISM_DIM_1),
-      .DATA_IN_0_PARALLELISM_DIM_1(IN_DATA_PARALLELISM_DIM_1),
+        .DATA_OUT_0_PRECISION_0      (OUT_DATA_PRECISION_0),
+        .DATA_OUT_0_PRECISION_1      (OUT_DATA_PRECISION_1),
+        .DATA_OUT_0_TENSOR_SIZE_DIM_0(IN_DATA_TENSOR_SIZE_DIM_1),
+        .DATA_OUT_0_TENSOR_SIZE_DIM_1(IN_DATA_TENSOR_SIZE_DIM_1),
+        .DATA_OUT_0_PARALLELISM_DIM_0(IN_DATA_PARALLELISM_DIM_1),
+        .DATA_OUT_0_PARALLELISM_DIM_1(IN_DATA_PARALLELISM_DIM_1)
+    ) fixed_softermax_i (
+        .clk,
+        .rst,
 
-      .DATA_OUT_0_PRECISION_0      (OUT_DATA_PRECISION_0),
-      .DATA_OUT_0_PRECISION_1      (OUT_DATA_PRECISION_1),
-      .DATA_OUT_0_TENSOR_SIZE_DIM_0(IN_DATA_TENSOR_SIZE_DIM_1),
-      .DATA_OUT_0_TENSOR_SIZE_DIM_1(IN_DATA_TENSOR_SIZE_DIM_1),
-      .DATA_OUT_0_PARALLELISM_DIM_0(IN_DATA_PARALLELISM_DIM_1),
-      .DATA_OUT_0_PARALLELISM_DIM_1(IN_DATA_PARALLELISM_DIM_1)
+        .data_in_0      (query_key_transpose),
+        .data_in_0_valid(query_key_transpose_valid),
+        .data_in_0_ready(query_key_transpose_ready),
 
-  ) fixed_softermax_i (
-      .clk,
-      .rst,
+        .data_out_0      (attention_scores),
+        .data_out_0_valid(attention_scores_valid),
+        .data_out_0_ready(attention_scores_ready)
+    );
+  end else begin
+    fixed_softmax #(
+        .DATA_IN_0_PRECISION_0      (OUT_DATA_PRECISION_0),
+        .DATA_IN_0_PRECISION_1      (OUT_DATA_PRECISION_1),
+        .DATA_EXP_0_PRECISION_0     (OUT_DATA_PRECISION_0),
+        .DATA_EXP_0_PRECISION_1     (OUT_DATA_PRECISION_1),
+        .DATA_IN_0_TENSOR_SIZE_DIM_0(IN_DATA_TENSOR_SIZE_DIM_1),
+        .DATA_IN_0_TENSOR_SIZE_DIM_1(IN_DATA_TENSOR_SIZE_DIM_1),
+        .DATA_IN_0_PARALLELISM_DIM_0(IN_DATA_PARALLELISM_DIM_1),
+        .DATA_IN_0_PARALLELISM_DIM_1(IN_DATA_PARALLELISM_DIM_1),
+        .DATA_OUT_0_PRECISION_0     (OUT_DATA_PRECISION_0),
+        .DATA_OUT_0_PRECISION_1     (OUT_DATA_PRECISION_1),
+    ) fixed_softmax_i (
+        .clk,
+        .rst,
 
-      .data_in_0      (query_key_transpose),
-      .data_in_0_valid(query_key_transpose_valid),
-      .data_in_0_ready(query_key_transpose_ready),
+        .data_in_0      (query_key_transpose),
+        .data_in_0_valid(query_key_transpose_valid),
+        .data_in_0_ready(query_key_transpose_ready),
 
-      .data_out_0      (attention_scores),
-      .data_out_0_valid(attention_scores_valid),
-      .data_out_0_ready(attention_scores_ready)
-  );
+        .data_out_0      (attention_scores),
+        .data_out_0_valid(attention_scores_valid),
+        .data_out_0_ready(attention_scores_ready)
+    );
+  end
 
   // * Output: Attention scores x Value
 
