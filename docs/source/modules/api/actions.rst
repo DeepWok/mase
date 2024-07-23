@@ -1,4 +1,4 @@
-Chop Actions 
+chop.actions
 ====================
 
 chop.actions.train 

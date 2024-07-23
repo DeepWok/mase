@@ -38,7 +38,6 @@ requirements = [
     "ipdb",
     "sentencepiece",
     "einops",
-    "deepspeed",
     "pybind11",
     "tabulate",
     "tensorboardx",
@@ -91,23 +90,6 @@ requirements = [
     "Pillow==10.4.0",
     "mpmath==1.3.0",
 ]
-
-
-if is_cuda_available():
-    requirements += [
-        "pycuda",
-        "packaging",
-        "onnxruntime-gpu",
-        "onnxruntime-tools",
-        "torch-tensorRT; platform_system == 'Linux'",
-        "tensorRT; platform_system == 'Linux'",
-        "cuda-python; platform_system == 'Linux'",
-        "pytorch-quantization @ https://pypi.nvidia.com/pytorch-quantization/pytorch_quantization-2.1.2-py3-none-any.whl ",
-    ]
-
-if not (get_system() == "darwin"):
-    requirements += ["nni"]
-
 
 setup(
     name="mase-tools",

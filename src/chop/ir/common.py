@@ -1,5 +1,3 @@
-import torch.nn.functional as F
-
 MASE_TYPES = [
     "module",
     "module_related_func",
@@ -10,13 +8,13 @@ MASE_TYPES = [
     "output",
 ]
 
-
 MASE_IMPLICIT_FUNCS = [
     # possibly are just constants
     "size",
     "view",
     # Memory ops and tensor reshapes
     "to",
+    "bool",
     "flatten",
     "squeeze",
     "unsqueeze",
@@ -26,6 +24,7 @@ MASE_IMPLICIT_FUNCS = [
     "contiguous",
     "dropout",
     "eq",
+    "ne",
     "gemm",
     "ge",
     "where",
@@ -49,6 +48,7 @@ MASE_IMPLICIT_FUNCS = [
     "dim",
     "finfo",
     "masked_fill",
+    "masked_fill_",
 ]
 
 MASE_MODULE_RELATED_FUNCS = [
@@ -88,6 +88,8 @@ MASE_MODULES = [
 
 MASE_BUILTIN_FUNCS = [
     "mul",
+    "baddbmm",
+    "addmm",
     "sub",
     "add",
     "matmul",
@@ -107,15 +109,20 @@ MASE_BUILTIN_FUNCS = [
     "cosh",
     "tanh",
     "greater",
+    "gt",
     "less",
     "le",  # less or equal
+    "lt",
     "sigmoid",
     "not",
     "min",
     "neg",
     "log",
+    "arange",
     "range",
     "gelu",
+    "scaled_dot_product_attention",
+    "embedding",
     "df_split",
     "getitem",
 ]
