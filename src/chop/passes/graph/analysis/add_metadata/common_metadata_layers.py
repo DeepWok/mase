@@ -3,8 +3,6 @@ import math
 
 import torch
 import inspect
-from chop.tools.utils import to_numpy_if_tensor as to_numpy
-from chop.passes.graph.utils import vf, get_node_by_name
 from chop.nn.quantized.modules import quantized_module_map
 from functools import reduce
 

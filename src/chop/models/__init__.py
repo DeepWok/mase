@@ -13,15 +13,15 @@ from .patched import (
     get_patched_model_tokenizer_cls,
 )
 
-# from .manual import (
-#     is_manual_model,
-#     get_manual_model,
-#     get_manual_model_cls,
-#     get_manual_model_config_cls,
-#     get_manual_model_tokenizer_cls,
-#     get_manual_model_info,
-#     get_manual_model_tokenizer,
-# )
+from .manual import (
+    is_manual_model,
+    get_manual_model,
+    get_manual_model_cls,
+    get_manual_model_config_cls,
+    get_manual_model_tokenizer_cls,
+    get_manual_model_info,
+    get_manual_model_tokenizer,
+)
 
 from .huggingface_nlp_models import (
     is_hf_nlp_model,

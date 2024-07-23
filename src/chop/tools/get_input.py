@@ -1,6 +1,27 @@
 import inspect
 from typing import Literal
-from ..models.utils import ModelSource
+from enum import Enum
+
+
+class ModelSource(Enum):
+    """
+    The source of the model, must be one of the following:
+    - HF: HuggingFace
+    - MANUAL: manually implemented
+    - PATCHED: patched HuggingFace
+    - TOY: toy model for testing and debugging
+    - PHYSICAL: model that perform classification using physical data point vectors
+    - NERF: model that estimates neural radiance field (NeRF) of a 3D scene
+    """
+
+    HF_TRANSFORMERS = "hf_transformers"
+    MANUAL = "manual"
+    PATCHED = "patched"
+    TOY = "toy"
+    TORCHVISION = "torchvision"
+    VISION_OTHERS = "vision_others"
+    PHYSICAL = "physical"
+    NERF = "nerf"
 
 
 def _get_default_args(func):
