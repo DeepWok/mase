@@ -63,18 +63,24 @@ module matmul_programmable #(
     localparam B_MAX_DEPTH_DIM0 = B_MAX_DIM0 / B_COMPUTE_DIM0,
     localparam B_MAX_DEPTH_DIM1 = B_MAX_DIM1 / B_COMPUTE_DIM1,
     localparam C_MAX_DEPTH_DIM0 = C_MAX_DIM0 / C_COMPUTE_DIM0,
-    localparam C_MAX_DEPTH_DIM1 = C_MAX_DIM1 / C_COMPUTE_DIM1
+    localparam C_MAX_DEPTH_DIM1 = C_MAX_DIM1 / C_COMPUTE_DIM1,
+
+    localparam A_MAX_DEPTH_DIM1_WIDTH = $clog2(A_MAX_DEPTH_DIM1),
+    localparam B_MAX_DEPTH_DIM0_WIDTH = $clog2(B_MAX_DEPTH_DIM0),
+    localparam B_MAX_DEPTH_DIM1_WIDTH = $clog2(B_MAX_DEPTH_DIM1),
+    localparam B_MAX_DEPTH_MULT_WIDTH = $clog2(B_MAX_DEPTH_DIM1 + B_MAX_DEPTH_DIM0),
+    localparam C_MAX_DEPTH_DIM0_WIDTH = $clog2(C_MAX_DEPTH_DIM0)
 ) (
     input logic clk,
     input logic rst,
 
-    input logic [A_MAX_DEPTH_DIM1-1:0] a_depth_dim1,
-    input logic [B_MAX_DEPTH_DIM0-1:0] b_depth_dim0,
-    input logic [B_MAX_DEPTH_DIM1-1:0] b_depth_dim1,
-    input logic [B_MAX_DEPTH_DIM1 + B_MAX_DEPTH_DIM0-1:0] b_depth_mult,
+    input logic [A_MAX_DEPTH_DIM1_WIDTH:0] a_depth_dim1,
+    input logic [B_MAX_DEPTH_DIM0_WIDTH:0] b_depth_dim0,
+    input logic [B_MAX_DEPTH_DIM1_WIDTH:0] b_depth_dim1,
+    input logic [B_MAX_DEPTH_MULT_WIDTH:0] b_depth_mult,
 
     //unnecessary - to be removed - equal to b_depth_dim0
-    input logic [C_MAX_DEPTH_DIM0-1:0] c_depth_dim0,
+    input logic [C_MAX_DEPTH_DIM0_WIDTH:0] c_depth_dim0,
 
     // Matix A - row-major order
     input  logic [A_WIDTH-1:0] a_data [A_COMPUTE_DIM0*A_COMPUTE_DIM1-1:0],

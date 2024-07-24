@@ -71,7 +71,10 @@ module repeat_circular_buffer_programmable #(
     next_self = self;
 
     // Input side ready
-    in_ready = (self.size != size_n) && !(self.rep == repeat_n - 1 && self.write_ptr == self.read_ptr);
+    if(repeat_n==1)
+      in_ready = (self.size != SIZE);
+    else
+      in_ready = (self.size != size_n) && !(self.rep == repeat_n - 1 && self.write_ptr == self.read_ptr);
 
     // Pause reading when there is (no transfer on this cycle) AND the registers are full.
     pause_reads = !out_ready && (self.out_reg.valid || self.extra_reg.valid);

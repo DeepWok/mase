@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-import os, pytest
+import os
 
 import torch
 import logging
 from functools import partial
+from random import randint, choice
 
 import cocotb
 from cocotb.log import SimLog
@@ -44,13 +45,6 @@ class LinearTB(Testbench):
             )
             self.bias_driver.log.setLevel(logging.DEBUG)
 
-        # self.data_out_0_monitor = StreamMonitor(
-        #     dut.clk,
-        #     dut.data_out_0,
-        #     dut.data_out_0_valid,
-        #     dut.data_out_0_ready,
-        #     check=True,
-        # )
 
         self.data_out_0_monitor = ErrorThresholdStreamMonitor(
             dut.clk,
@@ -200,9 +194,8 @@ def get_fixed_linear_config(kwargs={}):
         "HAS_BIAS": 0,
         "WEIGHTS_PRE_TRANSPOSED": 1,
         "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
-        "DATA_IN_0_TENSOR_SIZE_DIM_1": 1,
+        "DATA_IN_0_TENSOR_SIZE_DIM_1": 20,
         "DATA_IN_0_PARALLELISM_DIM_0": 4,
-        "DATA_IN_0_PARALLELISM_DIM_1": 1,
         "WEIGHT_TENSOR_SIZE_DIM_0": 20,
         "WEIGHT_TENSOR_SIZE_DIM_1": 20,
         "WEIGHT_PARALLELISM_DIM_0": 4,
@@ -214,7 +207,6 @@ def get_fixed_linear_config(kwargs={}):
     return config
 
 
-@pytest.mark.dev
 def test_fixed_linear_smoke():
     """
     Some quick tests to check if the module is working.
@@ -224,14 +216,12 @@ def test_fixed_linear_smoke():
         module_param_list=[
             get_fixed_linear_config(),
             get_fixed_linear_config({"WEIGHTS_PRE_TRANSPOSED": 0}),
-            # TODO: fix these two cases
             get_fixed_linear_config({"HAS_BIAS": 1}),
             get_fixed_linear_config({"HAS_BIAS": 1, "WEIGHTS_PRE_TRANSPOSED": 0}),
         ],
     )
 
 
-@pytest.mark.dev
 def test_fixed_linear_regression():
     """
     More extensive tests to check realistic parameter sizes.

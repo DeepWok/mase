@@ -95,6 +95,7 @@ MASE_HW_DEPS = {
     "buffers/hybrid_buffer": ["buffers"],
     # Linear
     "linear/fixed_linear": ["matmul", "cast", "common", "fixed_arithmetic"],
+    "linear/fixed_linear_programmable": ["matmul", "cast", "common", "fixed_arithmetic"],
     "linear/binary_activation_binary_linear": [
         "cast",
         "linear",
