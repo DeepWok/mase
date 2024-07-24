@@ -1,11 +1,15 @@
 import inspect
-import math
-
-import torch
-import inspect
-from chop.nn.quantized.modules import quantized_module_map
+from collections import OrderedDict
 from functools import reduce
 
+import torch
+
+from chop.nn.quantized.modules import quantized_module_map
+from chop.ir import MaseGraphMetadata
+from chop.tools import get_logger
+
+logger = get_logger(__name__)
+logger.setLevel("INFO")
 
 # ----------------------------------------------------------
 # Utility
@@ -334,6 +338,10 @@ method_data = {
     "type_as": {"tensor": "data_in"},
 }
 
+# ----------------------------------------------------------
+# Helpers
+# ----------------------------------------------------------
+
 
 def get_type_and_precision(meta):
     # * Fetch type and precision from q_config for quantized modules
@@ -354,16 +362,65 @@ def get_type_and_precision(meta):
     return arg_type, arg_precision
 
 
-def match_args_and_kwargs(meta, args, kwargs, data, add_value):
-    ordered_func_data = [(k, v) for k, v in data.items()]
-    meta.parameters["common"]["args"] = {}
-    meta_kwargs = {}
+def get_shape(x):
+    if x is None:
+        return None
+    elif isinstance(x, torch.Tensor):
+        return list(x.shape)
+    elif isinstance(x, int):
+        return [1]
+    elif isinstance(x, (list, tuple, torch.Size)):
+        return [len(x)]
+    else:
+        return [0]
+
+
+def deepgetattr(obj, attr):
+    """Recurses through an attribute chain to get the ultimate value."""
+    return reduce(getattr, attr.split("."), obj)
+
+
+# ----------------------------------------------------------
+# Metadata annotators
+# ----------------------------------------------------------
+
+
+def _annotate_arg_metadata(
+    meta: MaseGraphMetadata,
+    args: list,
+    kwargs: dict,
+    func_data: dict,
+    add_value: bool,
+):
+    """
+    Analyse target args and kwargs received from shape propagation to annotate combined meta["mase"]["args"]
+    dictionary with metadata about each argument. The order of the args and kwargs must be preserved in the
+    combined dictionary (this is expected by downstream passes). However, arguments with the 'data_in' flag
+    in func_data are renamed to 'data_in_{itr}' where itr = 0 ... the number of data_in arguments.
+
+    This function should not be called directly, but rather through the `annotate_common_parameters_<OP>` function.
+    The value in the meta["common"]["args"] dictionary should always be a dictionary, not a tensor.
+
+    Args:
+        meta (MaseGraphMetadata): The metadata object.
+        args (list): List of args passed to the target.
+        kwargs (dict): Dictionary of kwargs passed to the target.
+        func_data (dict): Dictionary defining whether each argument is data_in or config.
+        add_value (bool): indicate whether to add the value of the tensor to the metadata.
+
+    Returns:
+        MaseGraphMetadata: metadata object with annotated args.
+    """
+    ordered_func_data = [(k, v) for k, v in func_data.items()]
+    meta["common"]["args"] = OrderedDict()
+    data_in_itr = 0
 
     arg_type, arg_precision = get_type_and_precision(meta)
 
-    # * Assign metadata for each argument
-    j = 0
+    # * Handle args
     for i, x in enumerate(args):
+
+        # Input data tensor
         if isinstance(x, torch.Tensor) and ordered_func_data[i][1] == "data_in":
             arg_meta = {
                 "shape": list(x.shape),
@@ -373,9 +430,10 @@ def match_args_and_kwargs(meta, args, kwargs, data, add_value):
             }
             if add_value:
                 arg_meta["value"] = x
-            meta.parameters["common"]["args"][f"data_in_{j}"] = arg_meta
-            j += 1
-        # check if it's a tuple of tensors
+            meta["common"]["args"][f"data_in_{data_in_itr}"] = arg_meta
+            data_in_itr += 1
+
+        # Tuple of tensors
         elif isinstance(x, tuple) and all([isinstance(x, torch.Tensor) for x in x]):
             for k, x in enumerate(x):
                 arg_meta = {
@@ -386,27 +444,32 @@ def match_args_and_kwargs(meta, args, kwargs, data, add_value):
                 }
                 if add_value:
                     arg_meta["value"] = x
-                meta.parameters["common"]["args"][f"data_in_{j}"] = arg_meta
-                j += 1
-        else:
-            # this is not an data_in, but just actually an named arg
-            n, vtype = ordered_func_data[i]
-            meta_kwargs[n] = args[i]
+                meta["common"]["args"][f"data_in_{data_in_itr}"] = arg_meta
+                data_in_itr += 1
 
-    def get_shape(x):
-        if x is None:
-            return None
-        elif isinstance(x, torch.Tensor):
-            return list(x.shape)
-        elif isinstance(x, int):
-            return [1]
-        elif isinstance(x, list):
-            return [len(x)]
+        # Unknown data_in type or config argument
         else:
-            raise ValueError(f"Unknown type {type(x)}")
+            # Don't increment the iterator for config arguments, but
+            # preserve order in meta["common"]["args"]
+            arg_name, arg_flag = ordered_func_data[i]
 
+            if arg_flag == "data_in":
+                arg_name = f"data_in_{data_in_itr}"
+                data_in_itr += 1
+
+            meta["common"]["args"][arg_name] = {
+                "torch_dtype": x.dtype if isinstance(x, torch.Tensor) else None,
+                "type": type(args[i]),
+                "precision": arg_precision,
+                "shape": get_shape(args[i]),
+            }
+
+            if add_value:
+                meta["common"]["args"][arg_name]["value"] = args[i]
+
+    # * Handle kwargs
     for k, v in kwargs.items():
-        if data[k] == "data_in":
+        if func_data[k] == "data_in":
             # rename this to mase data_in_number
             shape = get_shape(v)
             arg_meta = {
@@ -417,47 +480,71 @@ def match_args_and_kwargs(meta, args, kwargs, data, add_value):
             }
             if add_value:
                 arg_meta["value"] = v
-            meta.parameters["common"]["args"][f"data_in_{j}"] = arg_meta
-            j += 1
+            meta["common"]["args"][f"data_in_{data_in_itr}"] = arg_meta
+            data_in_itr += 1
         else:
             # otherwise this must be a configuration parameter in meta
-            meta_kwargs[k] = v
-    # merge configuratipn args
-    meta.parameters["common"]["args"] = meta.parameters["common"]["args"] | meta_kwargs
+            # meta_kwargs[k] = v
+            meta["common"]["args"][k] = {
+                "type": type(v),
+                "precision": arg_precision,
+                "shape": get_shape(v),
+            }
+            if add_value:
+                meta["common"]["args"][k]["value"] = v
+
     return meta
 
 
-def analyse_result(meta, result, add_value):
+def _annotate_result_metadata(
+    meta: MaseGraphMetadata,
+    result,
+    add_value: bool,
+) -> MaseGraphMetadata:
+    """
+    Analyse the result from running the target to annotate the meta["mase"]["results"] dictionary with metadata.
+
+    Args:
+        meta (MaseGraphMetadata): The metadata object.
+        result (_type_): The result object.
+        add_value (bool): indicate whether to add the value of the tensor to the metadata.
+
+    Returns:
+        MaseGraphMetadata: metadata object with annotated results.
+    """
     # deal with results
-    meta.parameters["common"]["results"] = {}
+    meta["common"]["results"] = OrderedDict()
 
     result_type, result_precision = get_type_and_precision(meta)
 
     if isinstance(result, torch.Tensor):
-        meta.parameters["common"]["results"]["data_out_0"] = {
+        meta["common"]["results"]["data_out_0"] = {
             "type": result_type,
             "precision": result_precision,
             "shape": list(result.shape),
             "torch_dtype": result.dtype,
         }
         if add_value:
-            meta.parameters["common"]["results"]["data_out_0"]["value"] = result
+            meta["common"]["results"]["data_out_0"]["value"] = result
 
     # check if it's a tuple of tensors
     elif isinstance(result, tuple) and all(
         [isinstance(x, torch.Tensor) for x in result]
     ):
         for i, x in enumerate(result):
-            meta.parameters["common"]["results"][f"data_out_{i}"] = {
+            meta["common"]["results"][f"data_out_{i}"] = {
                 "type": result_type,
                 "precision": result_precision,
                 "shape": list(x.shape),
                 "torch_dtype": x.dtype,
             }
             if add_value:
-                meta.parameters["common"]["results"][f"data_out_{i}"]["value"] = x
+                meta["common"]["results"][f"data_out_{i}"]["value"] = x
     else:
-        meta.parameters["common"]["results"]["data_out_0"] = {
+        logger.debug(
+            f"Expected result to be a tensor or tuple of tensors, but found: {type(result)}. Will annotate with default value, but this may cause issues downstream."
+        )
+        meta["common"]["results"]["data_out_0"] = {
             "type": type(result),
             "shape": [1],
             "value": result,
@@ -478,19 +565,19 @@ def analyse_common_parameters_placeholder(meta, result, args, kwargs, add_value=
     var_name = meta.node.target
     # deal with model specific inputs, normally these are not numerical values/tensors
     if var_name in meta.model.additional_inputs:
-        meta.parameters["common"]["args"] = {}
-        meta.parameters["common"]["results"] = {}
-        meta.parameters["common"]["results"]["data_out_0"] = {
+        meta["common"]["args"] = {}
+        meta["common"]["results"] = {}
+        meta["common"]["results"]["data_out_0"] = {
             "type": "model_specific_input",
             "shape": result.shape,
             "torhc_dtype": result.dtype,
         }
         if add_value:
-            meta.parameters["common"]["results"]["data_out_0"]["value"] = result
+            meta["common"]["results"]["data_out_0"]["value"] = result
         return meta
 
-    meta.parameters["common"]["args"] = {}
-    meta = analyse_result(meta, result, add_value)
+    meta["common"]["args"] = {}
+    meta = _annotate_result_metadata(meta, result, add_value)
     return meta
 
 
@@ -501,12 +588,12 @@ def analyse_common_parameters_placeholder(meta, result, args, kwargs, add_value=
 
 def analyse_common_parameters_function(meta, result, args, kwargs, add_value=True):
     # fetch mase info
-    mase_op = meta.parameters["common"]["mase_op"]
+    mase_op = meta["common"]["mase_op"]
 
     # deal with result
-    meta = analyse_result(meta, result, add_value)
+    meta = _annotate_result_metadata(meta, result, add_value)
     # deal with args and kwargs
-    meta = match_args_and_kwargs(meta, args, kwargs, func_data[mase_op], add_value)
+    meta = _annotate_arg_metadata(meta, args, kwargs, func_data[mase_op], add_value)
 
     return meta
 
@@ -516,13 +603,8 @@ def analyse_common_parameters_function(meta, result, args, kwargs, add_value=Tru
 # ----------------------------------------------------------
 
 
-def deepgetattr(obj, attr):
-    """Recurses through an attribute chain to get the ultimate value."""
-    return reduce(getattr, attr.split("."), obj)
-
-
 def analyse_common_parameters_module(meta, result, args, kwargs, add_value=True):
-    mase_op = meta.parameters["common"]["mase_op"]
+    mase_op = meta["common"]["mase_op"]
     node_module = deepgetattr(meta.model, meta.node.target)
 
     if mase_op == "user_defined_module":
@@ -533,13 +615,13 @@ def analyse_common_parameters_module(meta, result, args, kwargs, add_value=True)
     else:
         module_args = module_data[mase_op]
 
-    meta = match_args_and_kwargs(meta, args, kwargs, module_args, add_value)
+    meta = _annotate_arg_metadata(meta, args, kwargs, module_args, add_value)
 
     arg_type, arg_precision = get_type_and_precision(meta)
 
     for name, parameter in meta.module.named_parameters():
         name = name.replace(".", "_")
-        meta.parameters["common"]["args"][name] = {
+        meta["common"]["args"][name] = {
             "type": arg_type,
             "precision": arg_precision,
             "shape": (
@@ -550,21 +632,21 @@ def analyse_common_parameters_module(meta, result, args, kwargs, add_value=True)
             "from": None,
         }
         if add_value:
-            meta.parameters["common"]["args"][name]["value"] = parameter
+            meta["common"]["args"][name]["value"] = parameter
 
-    meta = analyse_result(meta, result, add_value)
+    meta = _annotate_result_metadata(meta, result, add_value)
     return meta
 
 
 # ----------------------------------------------------------
-# Module
+# Method
 # ----------------------------------------------------------
 
 
 def analyse_common_parameters_method(meta, result, args, kwargs, add_value=True):
-    mase_op = meta.parameters["common"]["mase_op"]
-    meta = analyse_result(meta, result, add_value)
-    meta = match_args_and_kwargs(meta, args, kwargs, method_data[mase_op], add_value)
+    mase_op = meta["common"]["mase_op"]
+    meta = _annotate_result_metadata(meta, result, add_value)
+    meta = _annotate_arg_metadata(meta, args, kwargs, method_data[mase_op], add_value)
     return meta
 
 
@@ -574,8 +656,8 @@ def analyse_common_parameters_method(meta, result, args, kwargs, add_value=True)
 
 
 def analyse_common_parameters_attr(meta, result, args, kwargs, add_value=True):
-    meta.parameters["common"]["args"] = {}
-    meta = analyse_result(meta, result, add_value)
+    meta["common"]["args"] = {}
+    meta = _annotate_result_metadata(meta, result, add_value)
     return meta
 
 
@@ -585,6 +667,6 @@ def analyse_common_parameters_attr(meta, result, args, kwargs, add_value=True):
 
 
 def analyse_common_parameters_output(meta, result, args, kwargs, add_value=True):
-    meta.parameters["common"]["args"] = {}
-    meta = analyse_result(meta, result, add_value)
+    meta["common"]["args"] = {}
+    meta = _annotate_result_metadata(meta, result, add_value)
     return meta
