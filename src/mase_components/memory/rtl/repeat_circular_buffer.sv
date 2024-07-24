@@ -69,8 +69,7 @@ module repeat_circular_buffer #(
   always_comb begin
     next_self = self;
 
-    if (REPEAT==1)
-      in_ready = (self.size != SIZE);
+    if (REPEAT == 1) in_ready = (self.size != SIZE);
     else
       in_ready = (self.size != SIZE) && !(self.rep == REPEAT - 1 && self.write_ptr == self.read_ptr);
 
