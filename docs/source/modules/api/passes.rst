@@ -1,4 +1,4 @@
-Passes
+chop.passes
 ============================
 
 
@@ -124,14 +124,15 @@ MaseGraph Analysis Passes
 .. toctree::
   :maxdepth: 2
 
-  analysis/init_metadata
   analysis/add_metadata
+  analysis/autosharding
+  analysis/init_metadata
   analysis/report
   analysis/statistical_profiler
+  analysis/verify
   analysis/quantization
   analysis/pruning
   analysis/runtime
-  analysis/verify
 
 
 MaseGraph Transform Passes

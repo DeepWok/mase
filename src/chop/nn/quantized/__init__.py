@@ -2,7 +2,6 @@ from .modules import (
     quantized_module_map,
     BertSelfAttentionInteger,
     BertSelfAttentionHeadInteger,
-    LlamaSdpaAttentionInteger,
     LinearInteger,
     LayerNormInteger,
     GELUInteger,
