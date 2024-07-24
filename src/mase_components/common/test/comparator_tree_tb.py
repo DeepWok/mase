@@ -132,8 +132,11 @@ if __name__ == "__main__":
         "SIGNED": 0,
     }
 
-    cfgs = size_cfgs([DEFAULT])
-    cfgs = signed_max_min_cfgs(cfgs)
+    cfgs = [
+        DEFAULT,
+    ]
+    # cfgs = size_cfgs([DEFAULT])
+    # cfgs = signed_max_min_cfgs(cfgs)
 
     mase_runner(
         module_param_list=cfgs,

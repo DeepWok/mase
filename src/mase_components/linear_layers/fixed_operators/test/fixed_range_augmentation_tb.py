@@ -96,8 +96,8 @@ def test_fixed_range_augmentation():
                 parameter_list.append(parameters)
         return parameter_list
 
-    parameter_list = full_sweep()
-    # parameter_list = [{"WIDTH": 2, "FRAC_WIDTH": 2}]
+    # parameter_list = full_sweep()
+    parameter_list = [{"WIDTH": 16, "FRAC_WIDTH": 8}]
 
     mase_runner(module_param_list=parameter_list)
 

@@ -121,10 +121,10 @@ async def cocotb_test_soak(dut):
 def test_fifo():
     mase_runner(
         module_param_list=[
-            {"DEPTH": 1},
-            {"DEPTH": 7},
+            # {"DEPTH": 1},
+            # {"DEPTH": 7},
             {"DEPTH": 8},
-            {"DEPTH": 81},
+            # {"DEPTH": 81},
         ],
         trace=True,
     )

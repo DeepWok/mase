@@ -11,7 +11,7 @@ from cocotb.triggers import Timer
 from cocotb.triggers import FallingEdge
 from cocotb.clock import Clock
 
-debug = True
+debug = False
 logger = logging.getLogger("tb_signals")
 if debug:
     logger.setLevel(logging.DEBUG)
