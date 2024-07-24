@@ -32,7 +32,11 @@ from .common import fully_replicated_strategy
 logger = get_logger(__name__)
 
 
-def pointwise_strategy(meta, mesh, linearity=False):
+def pointwise_strategy(
+    meta,
+    mesh,
+    linearity=False,
+):
     max_shards_strategy_index = -1
     max_shards = -1
     followed_strategy = None
@@ -66,7 +70,11 @@ def pointwise_strategy(meta, mesh, linearity=False):
 
 
 def common_pointwise_strategy(
-    meta, mesh, followed_strategy, linearity, followed_strategy_index=0
+    meta,
+    mesh,
+    followed_strategy,
+    linearity,
+    followed_strategy_index=0,
 ):
     # handle broadcasting
     parsed_args = []
@@ -112,7 +120,6 @@ def common_pointwise_strategy(
                 out_placements.append(placement)
 
         input_specs: List[DTensorSpec] = []
-        # redistribute_costs: List[List[float]] = []
         for arg_node in meta.node.args:
             if not isinstance(arg_node, torch.fx.Node):
                 continue
@@ -134,10 +141,8 @@ def common_pointwise_strategy(
                     placements=input_target_placements,
                     tensor_meta=input_arg_spec.tensor_meta,
                 )
-                input_specs.append(input_arg_target_spec)
-                # redistribute_costs.append(
-                #     generate_redistribute_costs(input_arg, input_arg_target_spec)
-                # )
+                # input_specs.append(input_arg_target_spec)
+                input_specs = [input_arg_target_spec] * 2
 
         dtype = meta["common"]["results"]["data_out_0"].get(
             "torch_dtype", torch.float32
@@ -154,16 +159,22 @@ def common_pointwise_strategy(
                     ),
                 ),
                 input_specs=input_specs,
-                # redistribute_cost=redistribute_costs,
             )
         )
     return pointwise_strategy
 
 
-def linear_pointwise_strategy(meta, mesh):
+def linear_pointwise_strategy(
+    meta,
+    mesh,
+):
     """
     Linear pointwise operators can propagate pending reductions.
     For example, c = add(a, b); if a is pending sum, then c will be
     pending sum as well without any communication overhead.
     """
-    return pointwise_strategy(meta, mesh, linearity=True)
+    return pointwise_strategy(
+        meta,
+        mesh,
+        linearity=True,
+    )

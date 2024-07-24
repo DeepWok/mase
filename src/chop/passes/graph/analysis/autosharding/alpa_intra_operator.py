@@ -1,12 +1,17 @@
+import math
+import numpy as np
+import cvxpy as cp
+from copy import copy
+
 import torch
 import torch.fx as fx
 from torch.distributed._tensor._collective_utils import redistribute_cost
-from torch.distributed._tensor._op_schema import DTensorSpec
-import numpy as np
-import cvxpy as cp
+from torch.distributed._tensor._op_schema import DTensorSpec, OpStrategy
+from torch.distributed._tensor.placement_types import Shard
 
 from chop.tools import get_logger
 from chop.tools.utils import deepgetattr
+from .mesh_model import MeshModel
 
 from .layers import (
     AUTOSHARDING_MODULES,
@@ -23,6 +28,101 @@ from .strategies.common import (
 
 logger = get_logger(__name__)
 logger.setLevel("DEBUG")
+
+
+def _get_computation_cost_from_strategy(
+    node: fx.Node,
+    strategy: OpStrategy,
+    mesh: MeshModel,
+    repeat: int = 5,
+    warmup_iters: int = 2,
+    profiling_device: int = 0,
+):
+    """
+    ...
+
+    Args:
+        node (fx.Node): _description_
+        strategy (OpStrategy): _description_
+        repeat (int, optional): _description_. Defaults to 5.
+        warmup_iters (int, optional): _description_. Defaults to 1.
+
+    Returns:
+        _type_: _description_
+    """
+    arg_specs = strategy.input_specs
+    arg_specs = [arg_specs] if isinstance(arg_specs, DTensorSpec) else arg_specs
+
+    # Formulate list of arguments to run the target with
+    args = []
+    for arg_idx, arg_spec in enumerate(arg_specs):
+
+        # If tensor meta is None, this is not a sharded argument
+        if arg_spec.tensor_meta is None:
+            key = list(node.meta["mase"]["common"]["args"].keys())[arg_idx]
+            arg_value = node.meta["mase"]["common"]["args"][key]["value"]
+            args.append(arg_value)
+            continue
+
+        # If it is a sharded argument, find the local tensor shape
+        else:
+            global_shape = copy(arg_spec.tensor_meta.shape)
+            local_shape = copy(arg_spec.tensor_meta.shape)
+
+            # Check if each tensor dimension is sharded to update local_shape
+            for dim in range(len(global_shape)):
+                # Get device mesh dimensions along which dimension 'dim' of the tensor is sharded
+                sharded_mesh_dims = [
+                    idx
+                    for idx, plac in enumerate(arg_spec.placements)
+                    if plac == Shard(dim)
+                ]
+
+                # This tensor dimension is not sharded
+                if len(sharded_mesh_dims) == 0:
+                    continue
+
+                # This tensor dimension is fully sharded
+                elif len(sharded_mesh_dims) == 2:
+                    num_gpus = np.prod(mesh.mesh_shape)
+
+                # This tensor dimension is sharded along one mesh dimension
+                elif len(sharded_mesh_dims) == 1:
+                    num_gpus = mesh.mesh_shape[sharded_mesh_dims[0]]
+
+                # Define the local shape with minimum == 1
+                local_shape[dim] = math.ceil(global_shape[dim] / num_gpus)
+
+            # Generate a random tensor with the local shape
+            args.append(
+                torch.randn(
+                    local_shape,
+                    device=f"cuda:{profiling_device}",
+                )
+            )
+
+    # Get target function
+    fn = node.target
+
+    # Run the function with the arguments
+    start_event = [
+        torch.cuda.Event(enable_timing=True, blocking=True) for _ in range(repeat)
+    ]
+    end_event = [
+        torch.cuda.Event(enable_timing=True, blocking=True) for _ in range(repeat)
+    ]
+
+    torch.cuda.empty_cache()
+
+    for idx in range(repeat):
+        start_event[idx].record()
+        _ = fn(*args)
+        end_event[idx].record()
+    torch.cuda.synchronize()
+
+    elapsed = [start_event[idx].elapsed_time(end_event[idx]) for idx in range(repeat)]
+
+    return np.mean(elapsed[warmup_iters:])
 
 
 def _extract_ilp(mg, mesh, pass_args={}):
@@ -102,24 +202,27 @@ def _extract_ilp(mg, mesh, pass_args={}):
             continue
 
         elif node.op == "call_module" and isinstance(
-            deepgetattr(mg.model, node.target), tuple(AUTOSHARDING_MODULES.keys())
+            deepgetattr(mg.model, node.target),
+            tuple(AUTOSHARDING_MODULES.keys()),
         ):
-            logger.debug(f"Obtaining strategy for node {node.name}")
+            logger.debug(f"Obtaining strategy for call_module node: {node.name}")
             module_cls = type(deepgetattr(mg.model, node.target))
             op_strategy = AUTOSHARDING_MODULES[module_cls](node.meta["mase"], mesh)
 
         elif node.op == "call_method" and node.target in AUTOSHARDING_METHODS.keys():
-            logger.debug(f"Obtaining strategy for node {node.name}")
+            logger.debug(f"Obtaining strategy for call_method node: {node.name}")
             op_strategy = AUTOSHARDING_METHODS[node.target](node.meta["mase"], mesh)
 
         elif (
             node.op == "call_function" and node.target in AUTOSHARDING_FUNCTIONS.keys()
         ):
-            logger.debug(f"Obtaining strategy for node {node.name}")
+            logger.debug(f"Obtaining strategy for call_function node: {node.name}")
             op_strategy = AUTOSHARDING_FUNCTIONS[node.target](node.meta["mase"], mesh)
 
         else:
-            logger.warning(f"Unknown node {node.name} with op {node.op}")
+            logger.warning(
+                f"Unknown node {node.name} with op {node.op} with be allocated fully replicated strategy."
+            )
             op_strategy = fully_replicated_strategy(node.meta["mase"], mesh)
             opt_var = cp.Variable(1, boolean=True)
             constr += [
@@ -146,6 +249,23 @@ def _extract_ilp(mg, mesh, pass_args={}):
             "input": None,
             "output": None,
         }
+
+        # Consider computation cost (c_v term) for each of the node's strategies
+        # placeholder/get_attr/output nodes have no computation cost
+        if node.op not in [
+            "placeholder",
+            "get_attr",
+            "output",
+            # todo: decide how to handle call_method nodes
+            "call_method",
+        ]:
+            cost_vector = []
+            try:
+                for strategy in op_strategy.strategies:
+                    cost = _get_computation_cost_from_strategy(node, strategy, mesh)
+                    cost_vector.append(cost)
+            except:
+                print(f"Op {node} failed to compute cost")
 
         # Consider resharding cost for each of the node's arguments
         e_var_checks = []

@@ -251,6 +251,7 @@ AUTOSHARDING_METHODS = {
     "expand": get_reshape_strategy(torch.Tensor.expand),
     "permute": get_reshape_strategy(torch.Tensor.permute),
     "transpose": get_reshape_strategy(torch.Tensor.transpose),
+    "unsqueeze": get_reshape_strategy(torch.Tensor.unsqueeze),
     "masked_fill": pointwise_strategy,
     "masked_fill_": pointwise_strategy,
     "contiguous": tensor_op_strategy,

@@ -463,6 +463,7 @@ dim_maps: Dict[Callable[..., torch.Tensor], Callable[..., DimMap]] = {
     ),
     Tensor.transpose: lambda input, dim0, dim1: dim_transpose(input.ndim, dim0, dim1),
     Tensor.view: lambda input, *shape: view_groups(input.shape, shape),
+    Tensor.unsqueeze: lambda input, dim: dim_unsqueeze(input.ndim, dim),
 }
 
 
@@ -575,11 +576,10 @@ def propagate_shape_and_sharding(
 def get_reshape_strategy(op):
     dim_map = dim_maps[op]
 
-    # def reshape_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> StrategyType:
     def reshape_strategy(meta, mesh):
         assert meta.node.op == "call_method", "Node should have call_method op."
         args_schema = [meta["common"]["self"]] + [
-            i for i in meta["common"]["args"].values()
+            i["value"] for i in meta["common"]["args"].values()
         ]
         rules = dim_map(*args_schema)
         parent_node = meta.node.args[0]
