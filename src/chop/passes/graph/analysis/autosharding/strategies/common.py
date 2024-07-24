@@ -1,4 +1,5 @@
 import itertools
+import numpy as np
 
 import torch
 import torch.nn.functional as F
@@ -40,20 +41,61 @@ def find_shape_and_dtype(arg):
 
 def placeholder_or_getattr_strategy(meta, mesh, skip_fully_replicated=False):
     ndims = len(meta["common"]["results"]["data_out_0"]["shape"])
+    tensor_shape = meta["common"]["results"]["data_out_0"]["shape"]
     opts = [Replicate()] + [Shard(dim) for dim in range(ndims)]
 
     tensor_meta = TensorMeta(
-        shape=meta["common"]["results"]["data_out_0"]["shape"],
+        shape=tensor_shape,
         stride=None,
         dtype=meta["common"]["results"]["data_out_0"]["torch_dtype"],
     )
 
     shardings = []
     for sharding in itertools.product(opts, repeat=2):
+        # Skip fully replicated shardings since this sometimes forces the ILP
+        # to choose a fully replicated strategy for the entire model when
+        # the computation cost term is not formulated
         if skip_fully_replicated and sharding == (Replicate(), Replicate()):
             continue
-        spec = DTensorSpec(mesh=mesh, placements=sharding, tensor_meta=tensor_meta)
-        shardings.append(PlacementStrategy(input_specs=spec, output_specs=spec))
+
+        # Skip sharding if any dimension is sharded to 0
+        skip_sharding = False
+        for dim in range(ndims):
+            # Find all device mesh dimensions along which this tensor dimension is sharded
+            mesh_sharded_dims = [
+                idx for idx, shard in enumerate(sharding) if shard == Shard(dim)
+            ]
+
+            # This tensor dimension is not sharded
+            if len(mesh_sharded_dims) == 0:
+                continue
+
+            elif len(mesh_sharded_dims) == 1:
+                num_gpus = mesh.mesh_shape[mesh_sharded_dims[0]]
+
+            else:
+                num_gpus = np.prod(mesh.mesh_shape)
+
+            dim_size_after_sharding = tensor_shape[dim] // num_gpus
+            if dim_size_after_sharding == 0:
+                skip_sharding = True
+                continue
+
+        if skip_sharding is True:
+            continue
+
+        spec = DTensorSpec(
+            mesh=mesh,
+            placements=sharding,
+            tensor_meta=tensor_meta,
+        )
+        shardings.append(
+            PlacementStrategy(
+                input_specs=spec,
+                output_specs=spec,
+            )
+        )
+
     return OpStrategy(shardings)
 
 
