@@ -13,6 +13,20 @@ class MeshModel:
         self.mesh_alpha = [0] * 2 if mesh_alpha is None else mesh_alpha
         self.mesh_beta = [None] * 2 if mesh_beta is None else mesh_beta
 
+        # For compatibility with torch DeviceMesh when building MeshTopoInfo object
+        # for sharding redistribution cost estimation
+        self.device_type = "cuda"
+        self.ndim = 2
+
+    def __getitem__(self, key):
+        return self.mesh_shape[key]
+
+    def size(self, dim=None):
+        if dim is None:
+            return np.prod(self.mesh_shape)
+        else:
+            return self.mesh_shape[dim]
+
     def set_cost_model_parameters(
         self,
         intra_node_bandwidth: int,

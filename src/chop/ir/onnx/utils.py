@@ -1,6 +1,6 @@
 import torch
 
-from chop.tools.onnx_operators import (
+from chop.ir.onnx.onnx_operators import (
     onnx_gemm,
     onnx_slice,
     onnx_squeeze,

@@ -3,7 +3,6 @@ from .modules import (
     BertSelfAttentionInteger,
     ViTSelfAttentionInteger,
     BertSelfAttentionHeadInteger,
-    LlamaSdpaAttentionInteger,
     LinearInteger,
     LayerNormInteger,
     GELUInteger,

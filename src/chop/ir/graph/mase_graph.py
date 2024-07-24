@@ -11,9 +11,8 @@ import torch
 import torch.fx as fx
 from torch.fx.passes.graph_drawer import FxGraphDrawer
 
-from chop.passes.graph.common import MASE_IMPLICIT_FUNCS
-from chop.passes.graph.transforms import utils as utils_passes
-from chop.passes.graph.patching import MASE_LEAF_FUNCTIONS, MASE_LEAF_LAYERS
+from chop.ir.common import MASE_IMPLICIT_FUNCS
+from chop.nn import MASE_LEAF_LAYERS
 from chop.nn.quantized import (
     quantized_func_map,
     quantized_module_map,
@@ -64,7 +63,7 @@ class MaseTracer(fx.Tracer):
         self.param_shapes_constant = param_shapes_constant
         super().__init__(
             self.custom_leaf_modules + (math,),
-            self.custom_leaf_functions + MASE_LEAF_FUNCTIONS,
+            self.custom_leaf_functions,
             self.param_shapes_constant,
         )
 
@@ -94,6 +93,7 @@ class MaseGraph:
         model,
         cf_args: Optional[Dict[str, Any]] = None,
         custom_ops: dict = None,
+        hf_input_names: list = None,
     ) -> None:
         """Mase takes a torch.fx graph representation of a model and translates
         it into a customised representation (Mase graph IR). The Mase graph
@@ -111,7 +111,12 @@ class MaseGraph:
             self.model.patched_custom_layers = []
             self.model.additional_inputs = []
         elif isinstance(model, torch.nn.Module):
-            self.model = self.trace_torch_module(model, cf_args, custom_ops)
+            self.model = self.trace_torch_module(
+                model,
+                cf_args,
+                custom_ops,
+                hf_input_names=hf_input_names,
+            )
         else:
             raise ValueError(
                 f"Expected fx.GraphModule or nn.Module, but received model: {type(model)}"
@@ -124,6 +129,7 @@ class MaseGraph:
         model: torch.nn.Module,
         cf_args: Optional[Dict[str, Any]] = None,
         custom_ops: dict = None,
+        hf_input_names: list = None,
     ):
         # * HuggingFace model
         if isinstance(model, PreTrainedModel):
@@ -161,7 +167,11 @@ class MaseGraph:
                 wrap_is_leaf_module(tracer_cls.is_leaf_module),
             )
 
-            graph_module = hf_symbolic_trace(model, tracer_cls=tracer_cls)
+            graph_module = hf_symbolic_trace(
+                model,
+                tracer_cls=tracer_cls,
+                input_names=hf_input_names,
+            )
             graph_module.custom_ops = custom_ops
 
             # ! TO DO: remove this legacy stuff
