@@ -1,59 +1,8 @@
-chop.passes
+chop.passes.graph
 ============================
 
 
-All passes, no matter analysis or transform, take a standard form:
-
-.. code-block:: python 
-
-  # pass_args is a dict
-  def pass(m, pass_args):
-      ...
-  # info a a dict
-  return m, info
-
-
-
-Mase Module Analysis Passes
-----------------------------
-
-.. list-table:: MASE module-level analysis passes 
-  :widths: 20 40 40
-  :header-rows: 1
-
-  * - Pass Name
-    - Usage Example
-    - Summary
-  * - :py:meth:`~chop.passes.module.analysis.quantize.calculate_avg_bits_module_analysis_pass`
-    - `test_calcualte_avg_bits_module <https://github.com/DeepWok/mase/blob/main/test/passes/module/analysis/quantize/test_calcualte_avg_bits_module.py>`_
-    - Analyzes the averaged bitwidth of a given module.
-
-.. toctree::
-  :maxdepth: 2
-
-  module_analysis/quantization
-
-Mase Module Transform Passes
-----------------------------
-
-.. list-table:: MASE module-level transform passes 
-  :widths: 20 40 40
-  :header-rows: 1
-
-  * - Pass Name
-    - Usage Example
-    - Summary
-  * - :py:meth:`~chop.passes.module.transforms.quantize.quantize_module_transform_pass`
-    - `test_module_quantize <https://github.com/DeepWok/mase/blob/main/test/passes/module/transforms/quantize/test_quantize_module.py>`_
-    - Apply quantization transformation to the given nn.Module
-
-.. toctree::
-  :maxdepth: 2
-
-  module_transform/quantization
-
-
-MaseGraph Analysis Passes
+Summary of MaseGraph Analysis Passes
 -------------------------
 
 .. list-table:: MaseGraph graph analysis passes 
@@ -123,6 +72,7 @@ MaseGraph Analysis Passes
 
 .. toctree::
   :maxdepth: 2
+  :caption: Full list of graph-level analysis passes
 
   analysis/add_metadata
   analysis/autosharding
@@ -135,7 +85,7 @@ MaseGraph Analysis Passes
   analysis/runtime
 
 
-MaseGraph Transform Passes
+Summary of MaseGraph Transform Passes
 --------------------------
 
 .. list-table:: MaseGraph graph transform passes 
@@ -194,6 +144,7 @@ MaseGraph Transform Passes
 
 .. toctree::
   :maxdepth: 2
+  :caption: Full list of graph-level transform passes
 
   transform/pruning
   transform/quantize
@@ -202,8 +153,7 @@ MaseGraph Transform Passes
   transform/tensorrt
 
 
-
-MaseGraph Interface Passes
+Summary of MaseGraph Interface Passes
 --------------------------
 
 .. list-table:: A summary of all MaseGraph interface passes 
@@ -234,18 +184,8 @@ MaseGraph Interface Passes
 
 .. toctree::
   :maxdepth: 2
+  :caption: Full list of graph-level interface passes
 
   interface/save_and_load
   interface/tensorrt
   interface/onnxrt
-
-
-Additional Documentation
-------------------------
-
-.. toctree::
-	:maxdepth: 1
-
-	transform/quantize_further_doc
-
-.. test-results:: ../../software_report.xml

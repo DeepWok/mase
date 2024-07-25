@@ -15,21 +15,41 @@ logger = logging.getLogger(__name__)
 
 @pytest.mark.skip(reason="This isn't a test")
 def test(
-    model,
-    model_info,
-    data_module,
-    dataset_info,
-    task,
-    optimizer,
-    learning_rate,
-    weight_decay,
-    plt_trainer_args,
-    auto_requeue,
-    save_path,
-    visualizer,
-    load_name,
-    load_type,
+    model: pl.LightningModule,
+    model_info: dict,
+    data_module: pl.LightningDataModule,
+    dataset_info: dict,
+    task: str,
+    optimizer: str,
+    learning_rate: float,
+    weight_decay: float,
+    plt_trainer_args: dict,
+    auto_requeue: bool,
+    save_path: str,
+    visualizer: TensorBoardLogger,
+    load_name: str,
+    load_type: str,
 ):
+    """
+    Evaluate a trained model using PyTorch Lightning.
+
+    Args:
+        model (pl.LightningModule): Model to be trained.
+        model_info (dict): Information about the model.
+        data_module (pl.LightningDataModule): Data module for the model.
+        dataset_info (dict): Information about the dataset.
+        task (str): Task to be performed.
+        optimizer (str): Optimizer to be used.
+        learning_rate (float): Learning rate for the optimizer.
+        weight_decay (float): Weight decay for the optimizer.
+        plt_trainer_args (dict): Arguments for PyTorch Lightning Trainer.
+        auto_requeue (bool): Requeue on SLURM.
+        save_path (str): Path to save the model.
+        visualizer (TensorBoardLogger): Tensorboard logger.
+        load_name (str): Name of the checkpoint to load.
+        load_type (str): Type of the checkpoint to load.
+
+    """
     if save_path is not None:
         if not os.path.exists(save_path):
             os.makedirs(save_path)

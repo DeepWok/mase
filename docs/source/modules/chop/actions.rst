@@ -17,6 +17,14 @@ chop.actions.test
    :undoc-members:
    :show-inheritance:
 
+chop.actions.transform
+-------------------------
+
+.. automodule:: chop.actions.transform
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 chop.actions.search 
 ---------------------------------
 
