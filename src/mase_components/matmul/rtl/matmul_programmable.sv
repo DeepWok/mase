@@ -80,7 +80,7 @@ module matmul_programmable #(
     input logic [B_MAX_DEPTH_MULT_WIDTH:0] b_depth_mult,
 
     //unnecessary - to be removed - equal to b_depth_dim0
-    input logic [C_MAX_DEPTH_DIM0_WIDTH:0] c_depth_dim0,
+    //input logic [C_MAX_DEPTH_DIM0_WIDTH:0] c_depth_dim0,
 
     // Matix A - row-major order
     input  logic [A_WIDTH-1:0] a_data [A_COMPUTE_DIM0*A_COMPUTE_DIM1-1:0],
@@ -398,7 +398,7 @@ module matmul_programmable #(
 
     // Change accumulator pointer
     if (sm_out_valid && sm_out_ready) begin
-      if (self.matrix_acc_ptr == c_depth_dim0- 1) begin
+      if (self.matrix_acc_ptr == b_depth_dim0- 1) begin
         next_self.matrix_acc_ptr = 0;
       end else begin
         next_self.matrix_acc_ptr += 1;
@@ -407,7 +407,7 @@ module matmul_programmable #(
 
     // Change output pointer
     if (|acc_out_ready && |acc_out_valid) begin
-      if (self.output_acc_ptr == c_depth_dim0 - 1) begin
+      if (self.output_acc_ptr == b_depth_dim0 - 1) begin
         next_self.output_acc_ptr = 0;
       end else begin
         next_self.output_acc_ptr += 1;
