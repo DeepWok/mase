@@ -11,6 +11,9 @@ import cocotb
 from cocotb.log import SimLog
 from cocotb.triggers import Timer
 
+from torch import manual_seed
+from random import randint, seed
+
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import (
     StreamDriver,
@@ -22,6 +25,9 @@ from mase_cocotb.runner import mase_runner
 # from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner
 from chop.nn.quantized.modules.linear import LinearInteger
 from chop.nn.quantizers import integer_quantizer
+
+#manual_seed(0)
+#seed(0)
 
 
 class LinearTB(Testbench):
@@ -45,7 +51,6 @@ class LinearTB(Testbench):
             )
             self.bias_driver.log.setLevel(logging.DEBUG)
 
-
         self.data_out_0_monitor = ErrorThresholdStreamMonitor(
             dut.clk,
             dut.data_out_0,
@@ -57,10 +62,58 @@ class LinearTB(Testbench):
             check=True,
         )
 
+        self.DATA_IN_0_TENSOR_SIZE_DIM_0 = choice(range(self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"), 
+        self.get_parameter("DATA_IN_0_MAX_TENSOR_SIZE_DIM_0")+1, 
+        self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0")))
+
+        self.DATA_IN_0_TENSOR_SIZE_DIM_1 = choice(range(self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1"), 
+        self.get_parameter("DATA_IN_0_MAX_TENSOR_SIZE_DIM_1")+1, 
+        self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1")))
+
+        
+        self.WEIGHT_TENSOR_SIZE_DIM_0 = choice(range(self.get_parameter("WEIGHT_PARALLELISM_DIM_0"), 
+        self.get_parameter("WEIGHT_MAX_TENSOR_SIZE_DIM_0")+1, 
+        self.get_parameter("WEIGHT_PARALLELISM_DIM_0")))
+
+        self.WEIGHT_TENSOR_SIZE_DIM_1 = self.DATA_IN_0_TENSOR_SIZE_DIM_0
+
+        # self.BIAS_TENSOR_SIZE_DIM_0 = choice(range(self.get_parameter("BIAS_PARALLELISM_DIM_0"), 
+        # self.get_parameter("BIAS_MAX_TENSOR_SIZE_DIM_0")+1, 
+        # self.get_parameter("BIAS_PARALLELISM_DIM_0")))
+
+        # self.BIAS_TENSOR_SIZE_DIM_1 = choice(range(self.get_parameter("BIAS_PARALLELISM_DIM_1"), 
+        # self.get_parameter("BIAS_MAX_TENSOR_SIZE_DIM_1")+1, 
+        # self.get_parameter("BIAS_PARALLELISM_DIM_1")))
+
+        # self.DATA_IN_0_TENSOR_SIZE_DIM_0 = self.get_parameter("DATA_IN_0_MAX_TENSOR_SIZE_DIM_0")     
+        # self.DATA_IN_0_TENSOR_SIZE_DIM_1 = self.get_parameter("DATA_IN_0_MAX_TENSOR_SIZE_DIM_1")
+        # self.WEIGHT_TENSOR_SIZE_DIM_0 = self.get_parameter("WEIGHT_MAX_TENSOR_SIZE_DIM_0")
+        # self.WEIGHT_TENSOR_SIZE_DIM_1 = self.get_parameter("WEIGHT_MAX_TENSOR_SIZE_DIM_1")    
+        # self.BIAS_TENSOR_SIZE_DIM_0 = self.get_parameter("BIAS_MAX_TENSOR_SIZE_DIM_0")
+        # self.BIAS_TENSOR_SIZE_DIM_1 = self.get_parameter("BIAS_MAX_TENSOR_SIZE_DIM_1")
+
+        # self.DATA_IN_0_TENSOR_SIZE_DIM_0 = 16     
+        # self.DATA_IN_0_TENSOR_SIZE_DIM_1 = 1
+        # self.WEIGHT_TENSOR_SIZE_DIM_0 = 20
+        # self.WEIGHT_TENSOR_SIZE_DIM_1 = 16 
+        # self.BIAS_TENSOR_SIZE_DIM_0 = 20
+        # self.BIAS_TENSOR_SIZE_DIM_1 = 1
+
+        self.DATA_OUT_0_TENSOR_SIZE_DIM_0 = self.WEIGHT_TENSOR_SIZE_DIM_0
+        self.DATA_OUT_0_TENSOR_SIZE_DIM_1 = self.DATA_IN_0_TENSOR_SIZE_DIM_1
+
+
+        dut.data_in_0_depth_dim1.value = self.DATA_IN_0_TENSOR_SIZE_DIM_1//self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1")
+        dut.weight_tensor_size_dim0.value = self.WEIGHT_TENSOR_SIZE_DIM_0
+        dut.weight_depth_dim0.value = self.WEIGHT_TENSOR_SIZE_DIM_0//self.get_parameter("WEIGHT_PARALLELISM_DIM_0")
+        dut.weight_depth_dim1.value = self.WEIGHT_TENSOR_SIZE_DIM_1//self.get_parameter("WEIGHT_PARALLELISM_DIM_1")
+        dut.weight_depth_mult.value = self.WEIGHT_TENSOR_SIZE_DIM_0//self.get_parameter("WEIGHT_PARALLELISM_DIM_0") * \
+                                      self.WEIGHT_TENSOR_SIZE_DIM_1//self.get_parameter("WEIGHT_PARALLELISM_DIM_1")
+
         # Model
         self.model = LinearInteger(
-            in_features=self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
-            out_features=self.get_parameter("DATA_OUT_0_TENSOR_SIZE_DIM_0"),
+            in_features=self.DATA_IN_0_TENSOR_SIZE_DIM_0,
+            out_features=self.DATA_OUT_0_TENSOR_SIZE_DIM_0,
             bias=True if self.get_parameter("HAS_BIAS") == 1 else False,
             config={
                 "data_in_width": self.get_parameter("DATA_IN_0_PRECISION_0"),
@@ -127,11 +180,7 @@ class LinearTB(Testbench):
         )
         self.data_in_0_driver.load_driver(inputs)
 
-        # * Load the weights driver
-        if self.get_parameter("WEIGHTS_PRE_TRANSPOSED") == 1:
-            weights = self.model.weight.transpose(0, 1)
-        else:
-            weights = self.model.weight
+        weights = self.model.weight.transpose(0, 1)
 
         self.log.info(f"Processing weights: {weights}")
         weights = self.preprocess_tensor(
@@ -193,14 +242,15 @@ def get_fixed_linear_config(kwargs={}):
     config = {
         "HAS_BIAS": 0,
         "WEIGHTS_PRE_TRANSPOSED": 1,
-        "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
-        "DATA_IN_0_TENSOR_SIZE_DIM_1": 20,
+        "DATA_IN_0_MAX_TENSOR_SIZE_DIM_0": 40,
+        "DATA_IN_0_MAX_TENSOR_SIZE_DIM_1": 40,
         "DATA_IN_0_PARALLELISM_DIM_0": 4,
-        "WEIGHT_TENSOR_SIZE_DIM_0": 20,
-        "WEIGHT_TENSOR_SIZE_DIM_1": 20,
+        "DATA_IN_0_PARALLELISM_DIM_1": 1,
+        "WEIGHT_MAX_TENSOR_SIZE_DIM_0": 40,
+        "WEIGHT_MAX_TENSOR_SIZE_DIM_1": 40,
         "WEIGHT_PARALLELISM_DIM_0": 4,
         "WEIGHT_PARALLELISM_DIM_1": 4,
-        "BIAS_TENSOR_SIZE_DIM_0": 20,
+        "BIAS_MAX_TENSOR_SIZE_DIM_0": 40,
         "BIAS_PARALLELISM_DIM_0": 4,
     }
     config.update(kwargs)
@@ -231,13 +281,13 @@ def test_fixed_linear_regression():
         module_param_list=[
             get_fixed_linear_config(
                 {
-                    "DATA_IN_0_TENSOR_SIZE_DIM_0": 768,
+                    "DATA_IN_0_MAX_TENSOR_SIZE_DIM_0": 768,
                     "DATA_IN_0_PARALLELISM_DIM_0": 32,
-                    "WEIGHT_TENSOR_SIZE_DIM_0": 768,
-                    "WEIGHT_TENSOR_SIZE_DIM_1": 768,
+                    "WEIGHT_MAX_TENSOR_SIZE_DIM_0": 768,
+                    "WEIGHT_MAX_TENSOR_SIZE_DIM_1": 768,
                     "WEIGHT_PARALLELISM_DIM_0": 32,
                     "WEIGHT_PARALLELISM_DIM_1": 32,
-                    "BIAS_TENSOR_SIZE_DIM_0": 768,
+                    "BIAS_MAX_TENSOR_SIZE_DIM_0": 768,
                     "BIAS_PARALLELISM_DIM_0": 32,
                 }
             ),
@@ -245,13 +295,13 @@ def test_fixed_linear_regression():
                 {
                     "HAS_BIAS": 1,
                     "WEIGHTS_PRE_TRANSPOSED": 0,
-                    "DATA_IN_0_TENSOR_SIZE_DIM_0": 768,
+                    "DATA_IN_0_MAX_TENSOR_SIZE_DIM_0": 768,
                     "DATA_IN_0_PARALLELISM_DIM_0": 32,
-                    "WEIGHT_TENSOR_SIZE_DIM_0": 768,
-                    "WEIGHT_TENSOR_SIZE_DIM_1": 768,
+                    "WEIGHT_MAX_TENSOR_SIZE_DIM_0": 768,
+                    "WEIGHT_MAX_TENSOR_SIZE_DIM_1": 768,
                     "WEIGHT_PARALLELISM_DIM_0": 32,
                     "WEIGHT_PARALLELISM_DIM_1": 32,
-                    "BIAS_TENSOR_SIZE_DIM_0": 768,
+                    "BIAS_MAX_TENSOR_SIZE_DIM_0": 768,
                     "BIAS_PARALLELISM_DIM_0": 32,
                 }
             ),
@@ -261,4 +311,4 @@ def test_fixed_linear_regression():
 
 if __name__ == "__main__":
     test_fixed_linear_smoke()
-    test_fixed_linear_regression()
+    #test_fixed_linear_regression()

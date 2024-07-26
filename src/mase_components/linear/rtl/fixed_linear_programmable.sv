@@ -28,8 +28,8 @@ module fixed_linear_programmable #(
     parameter DATA_IN_0_PARALLELISM_DIM_0 = 4,  // must equal WEIGHT_PARALLELISM_DIM_1
     parameter DATA_IN_0_PARALLELISM_DIM_1 = 4,
     parameter DATA_IN_0_PARALLELISM_DIM_2 = 1,
-    localparam DATA_IN_0_MAX_DEPTH_DIM0 = DATA_IN_0_MAX_TENSOR_SIZE_DIM_0 / DATA_IN_0_PARALLELISM_DIM_0,
-    localparam DATA_IN_0_MAX_DEPTH_DIM1 = DATA_IN_0_MAX_TENSOR_SIZE_DIM_1 / DATA_IN_0_PARALLELISM_DIM_1,
+    localparam DATA_IN_0_MAX_DEPTH_DIM_0 = DATA_IN_0_MAX_TENSOR_SIZE_DIM_0 / DATA_IN_0_PARALLELISM_DIM_0,
+    localparam DATA_IN_0_MAX_DEPTH_DIM_1 = DATA_IN_0_MAX_TENSOR_SIZE_DIM_1 / DATA_IN_0_PARALLELISM_DIM_1,
 
     parameter WEIGHT_PRECISION_0 = 16,
     parameter WEIGHT_PRECISION_1 = 3,
@@ -58,10 +58,10 @@ module fixed_linear_programmable #(
     parameter BIAS_PARALLELISM_DIM_1 = 1,
     localparam BIAS_MAX_DEPTH_DIM_0 = BIAS_MAX_TENSOR_SIZE_DIM_0 / BIAS_PARALLELISM_DIM_0,
     localparam BIAS_MAX_DEPTH_DIM_1 = BIAS_MAX_TENSOR_SIZE_DIM_1 / BIAS_PARALLELISM_DIM_1,
-    localparam DATA_IN_0_MAX_DEPTH_DIM1_WIDTH = $clog2(DATA_IN_0_MAX_DEPTH_DIM1),
+    localparam DATA_IN_0_MAX_DEPTH_DIM1_WIDTH = $clog2(DATA_IN_0_MAX_DEPTH_DIM_1),
     localparam WEIGHT_MAX_DEPTH_DIM0_WIDTH = $clog2(WEIGHT_MAX_DEPTH_DIM0),
     localparam WEIGHT_MAX_DEPTH_DIM1_WIDTH = $clog2(WEIGHT_MAX_DEPTH_DIM1),
-    localparam WEIGHT_MAX_DEPTH_MULT_WIDTH = $clog2(WEIGHT_MAX_DEPTH_DIM1 + WEIGHT_MAX_DEPTH_DIM0),
+    localparam WEIGHT_MAX_DEPTH_MULT_WIDTH = $clog2(WEIGHT_MAX_DEPTH_DIM1) + $clog2(WEIGHT_MAX_DEPTH_DIM0),
     localparam WEIGHT_MAX_TENSOR_SIZE_DIM_0_WIDTH = $clog2(WEIGHT_MAX_TENSOR_SIZE_DIM_0)
 
 ) (
@@ -99,10 +99,6 @@ module fixed_linear_programmable #(
   // * Declarations
   // * ---------------------------------------------------------------------------------------------------
 
-  logic [WEIGHT_PRECISION_0-1:0] weight_transposed [WEIGHT_PARALLELISM_DIM_0 * WEIGHT_PARALLELISM_DIM_1-1:0];
-  logic weight_transposed_valid;
-  logic weight_transposed_ready;
-
   logic [DATA_OUT_0_PRECISION_0-1:0] matmul_out [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0];
   logic matmul_out_valid;
   logic matmul_out_ready;
@@ -119,7 +115,7 @@ module fixed_linear_programmable #(
   // * ---------------------------------------------------------------------------------------------------
 
 
-  matmul_programamble #(
+  matmul_programmable #(
       // Total dimensions
       .A_MAX_DIM0(DATA_IN_0_MAX_TENSOR_SIZE_DIM_0),
       .A_MAX_DIM1(DATA_IN_0_MAX_TENSOR_SIZE_DIM_1),
@@ -128,8 +124,8 @@ module fixed_linear_programmable #(
 
       .A_COMPUTE_DIM0(DATA_IN_0_PARALLELISM_DIM_0),
       .A_COMPUTE_DIM1(DATA_IN_0_PARALLELISM_DIM_1),
-      .B_COMPUTE_DIM0(REAL_WEIGHT_PARALLELISM_DIM_0),
-      .B_COMPUTE_DIM1(REAL_WEIGHT_PARALLELISM_DIM_1),
+      .B_COMPUTE_DIM0(WEIGHT_PARALLELISM_DIM_0),
+      .B_COMPUTE_DIM1(WEIGHT_PARALLELISM_DIM_1),
 
       .A_WIDTH     (DATA_IN_0_PRECISION_0),
       .A_FRAC_WIDTH(DATA_IN_0_PRECISION_1),
@@ -152,9 +148,9 @@ module fixed_linear_programmable #(
       .a_valid(data_in_0_valid),
       .a_ready(data_in_0_ready),
 
-      .b_data (weight_transposed),
-      .b_valid(weight_transposed_valid),
-      .b_ready(weight_transposed_ready),
+      .b_data (weight),
+      .b_valid(weight_valid),
+      .b_ready(weight_ready),
 
       .out_data (matmul_out),
       .out_valid(matmul_out_valid),
@@ -174,7 +170,7 @@ module fixed_linear_programmable #(
     unpacked_repeat_circular_buffer_programmable #(
         .DATA_WIDTH (BIAS_PRECISION_0),
         .IN_NUM     (BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1),
-        .MAX_REPEAT     (IN_0_MAX_DEPTH_DIM_0),
+        .MAX_REPEAT     (DATA_IN_0_MAX_DEPTH_DIM_1),
         .MAX_SIZE       (BIAS_MAX_DEPTH_DIM_0)
     ) bias_buffer_inst (
         .clk,
