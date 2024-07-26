@@ -72,7 +72,7 @@ module repeat_circular_buffer_programmable #(
 
     // Input side ready
     if(repeat_n==1)
-      in_ready = (self.size != SIZE);
+      in_ready = (self.size != size_n);
     else
       in_ready = (self.size != size_n) && !(self.rep == repeat_n - 1 && self.write_ptr == self.read_ptr);
 
