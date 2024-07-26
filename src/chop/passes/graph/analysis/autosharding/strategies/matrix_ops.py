@@ -34,6 +34,10 @@ def transpose_strategy(
 
     assert isinstance(self_strategy, OpStrategy)
 
+    fully_replicated_spec = DTensorSpec(
+        mesh=mesh, placements=[Replicate(), Replicate()], tensor_meta=None
+    )
+
     transpose_strategies = []
     for input_strategy in self_strategy.strategies:
         input_spec = input_strategy.output_spec
@@ -52,7 +56,8 @@ def transpose_strategy(
                     dtype=meta["common"]["results"]["data_out_0"]["torch_dtype"],
                 ),
             ),
-            input_specs=(input_strategy.output_spec,),
+            # include 2 fully replicated inputs for dim_0 and dim_1 arguments
+            input_specs=(input_strategy.output_spec,) + (fully_replicated_spec,) * 2,
         )
         transpose_strategies.append(transpose_strategy)
 

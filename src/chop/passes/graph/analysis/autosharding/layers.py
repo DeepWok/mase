@@ -4,6 +4,16 @@ import torch
 import torch.nn.functional as F
 
 from chop.tools import get_logger
+from chop.nn.functional.tensor import (
+    torch_size,
+    torch_expand,
+    torch_view,
+    torch_contiguous,
+    torch_reshape,
+    torch_split,
+    torch_permute,
+    torch_transpose,
+)
 
 from .strategies.common import fully_replicated_strategy
 from .strategies.matrix_ops import (
@@ -242,6 +252,15 @@ AUTOSHARDING_FUNCTIONS = {
     torch.Tensor.zero_: tensor_op_strategy,
     torch.Tensor.equal: tensor_equal_strategy,
     torch.Tensor.is_same_size: tensor_equal_strategy,
+    # chop.nn.functional.tensor functions
+    torch_expand: get_reshape_strategy(torch.Tensor.expand),
+    torch_view: get_reshape_strategy(torch.Tensor.view),
+    torch_contiguous: tensor_op_strategy,
+    torch_reshape: get_reshape_strategy(torch.Tensor.reshape),
+    # torch_split:
+    torch_permute: get_reshape_strategy(torch.Tensor.permute),
+    torch_transpose: transpose_strategy,
+    torch.unsqueeze: get_reshape_strategy(torch.unsqueeze),
 }
 
 AUTOSHARDING_METHODS = {
@@ -262,6 +281,7 @@ IMPLICIT_FUNCS = [
     getattr,
     torch.finfo,
     torch.arange,
+    torch_size,
 ]
 
 IMPLICIT_METHODS = [

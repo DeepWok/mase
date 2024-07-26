@@ -270,6 +270,18 @@ func_data = {
         "dim0": "config",
         "dim1": "config",
     },
+    # DTensor ops
+    "dtensor_arange": {
+        "device_mesh": "config",
+        "start": "config",
+        "end": "config",
+        "step": "config",
+        "out": "config",
+        "dtype": "config",
+        "layout": "config",
+        "device": "config",
+        "requires_grad": "config",
+    },
 }
 
 module_data = {

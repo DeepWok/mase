@@ -178,6 +178,14 @@ def layer_norm_strategy(meta, mesh):
             )
             op_args_target_specs.append(bias_target_spec)
 
+        # add fully replicated strategy for eps
+        eps_spec = DTensorSpec(
+            mesh=mesh,
+            placements=(Replicate(),) * 2,
+            tensor_meta=None,
+        )
+        op_args_target_specs.append(eps_spec)
+
         # the output spec is the same as input spec
         output_target_spec = input_target_spec
         output_strategy.strategies.append(

@@ -217,6 +217,16 @@ def expand_to_full_mesh_op_strategy(
             for inp, s in zip(input_args_strategy, input_specs)
         )
 
+        # extend input_specs to include fully replicated sharding for constant nodes
+        extended_input_specs = input_specs + [
+            DTensorSpec(
+                mesh,
+                (Replicate(), Replicate()),
+                # todo: may need to set tensor meta
+                tensor_meta=None,
+            )
+        ] * (len(meta["common"]["args"].keys()) - len(input_specs))
+
         # only add to the all_strategies list when all inputs are shardable
         if inputs_shardable:
             redistribute_cost = [
@@ -227,7 +237,7 @@ def expand_to_full_mesh_op_strategy(
                 output_specs=(
                     tuple(spec_list[:input_index]) if input_index > 1 else spec_list[0]
                 ),
-                input_specs=input_specs,
+                input_specs=extended_input_specs,
                 redistribute_cost=redistribute_cost,
             )
             all_strategies.append(strategy)

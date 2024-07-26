@@ -58,6 +58,8 @@ MASE_IMPLICIT_FUNCS = [
     "torch_split",
     "torch_permute",
     "torch_transpose",
+    # dtensor ops (return DTensor)
+    "dtensor_arange",
 ]
 
 MASE_MODULE_RELATED_FUNCS = [

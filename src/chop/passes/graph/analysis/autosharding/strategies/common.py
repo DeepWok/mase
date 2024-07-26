@@ -120,15 +120,17 @@ def fully_replicated_strategy(meta, mesh):
         arg = meta["common"]["args"][first_arg_key]
         in_shape, in_dtype = find_shape_and_dtype(arg)
 
-    in_spec = DTensorSpec(
-        mesh,
-        sharding,
-        tensor_meta=TensorMeta(
-            shape=in_shape,
-            stride=None,
-            dtype=in_dtype,
-        ),
-    )
+    in_spec = [
+        DTensorSpec(
+            mesh,
+            sharding,
+            tensor_meta=TensorMeta(
+                shape=in_shape,
+                stride=None,
+                dtype=in_dtype,
+            ),
+        )
+    ] * len(meta["common"]["args"].keys())
 
     dtype_key = (
         "torch_dtype"
@@ -146,6 +148,11 @@ def fully_replicated_strategy(meta, mesh):
         ),
     )
 
-    shardings = [PlacementStrategy(input_specs=in_spec, output_specs=out_spec)]
-
-    return OpStrategy(shardings)
+    return OpStrategy(
+        [
+            PlacementStrategy(
+                input_specs=in_spec,
+                output_specs=out_spec,
+            )
+        ]
+    )

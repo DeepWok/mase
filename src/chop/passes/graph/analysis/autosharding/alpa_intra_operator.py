@@ -159,7 +159,6 @@ def _extract_ilp(mg, mesh, pass_args={}):
             )
 
             op_strategy = fully_replicated_strategy(node.meta["mase"], mesh)
-
             opt_var = cp.Variable(1, boolean=True)
             constr += [
                 cp.sum(opt_var) == 1,
@@ -169,15 +168,33 @@ def _extract_ilp(mg, mesh, pass_args={}):
             node.meta["mase"]["software"]["autosharding"] = {
                 "op_strategy": op_strategy,
                 "opt_var": opt_var,
-                "input": None,
-                "output": None,
+            }
+            continue
+
+        # Output nodes simply propagate op_strategy from their input nodes
+        elif node.op == "output":
+            logger.debug(
+                f"Op strategy from node {node.all_input_nodes[0]} is propagated to {node} node."
+            )
+            opt_var = cp.Variable(1, boolean=True)
+            constr += [
+                cp.sum(opt_var) == 1,
+            ]
+            node.meta["mase"]["software"]["autosharding"] = {
+                "op_strategy": node.all_input_nodes[0].meta["mase"]["software"][
+                    "autosharding"
+                ]["op_strategy"],
+                "opt_var": opt_var,
             }
             continue
 
         # Obtain strategy according to node op
         # ================================================
 
-        if node.op in ["placeholder", "get_attr"]:
+        elif node.op in [
+            "placeholder",
+            "get_attr",
+        ]:
             logger.debug(
                 f"Node {node} with op {node.op} will be assigned all permutations of Shard(dims) and Replicate()"
             )
@@ -186,32 +203,6 @@ def _extract_ilp(mg, mesh, pass_args={}):
                 mesh,
                 skip_fully_replicated=pass_args.get("skip_fully_replicated", False),
             )
-
-        elif node.op == "output":
-            logger.debug(
-                f"Op strategy from node {node.all_input_nodes[0]} is propagated to {node} node."
-            )
-            node.meta["mase"]["software"]["autosharding"] = {
-                "op_strategy": node.all_input_nodes[0].meta["mase"]["software"][
-                    "autosharding"
-                ]["op_strategy"],
-                "opt_var": None,
-                "input": None,
-                "output": None,
-            }
-            continue
-
-        elif node.op == "call_module" and isinstance(
-            deepgetattr(mg.model, node.target),
-            tuple(AUTOSHARDING_MODULES.keys()),
-        ):
-            logger.debug(f"Obtaining strategy for call_module node: {node.name}")
-            module_cls = type(deepgetattr(mg.model, node.target))
-            op_strategy = AUTOSHARDING_MODULES[module_cls](node.meta["mase"], mesh)
-
-        elif node.op == "call_method" and node.target in AUTOSHARDING_METHODS.keys():
-            logger.debug(f"Obtaining strategy for call_method node: {node.name}")
-            op_strategy = AUTOSHARDING_METHODS[node.target](node.meta["mase"], mesh)
 
         elif (
             node.op == "call_function" and node.target in AUTOSHARDING_FUNCTIONS.keys()
@@ -229,10 +220,11 @@ def _extract_ilp(mg, mesh, pass_args={}):
                 cp.sum(opt_var) == 1,
             ]
             node.meta["mase"]["software"]["autosharding"] = {
-                "op_strategy": fully_replicated_strategy(node.meta["mase"], mesh),
+                "op_strategy": fully_replicated_strategy(
+                    node.meta["mase"],
+                    mesh,
+                ),
                 "opt_var": opt_var,
-                "input": None,
-                "output": None,
             }
             continue
 
@@ -246,8 +238,6 @@ def _extract_ilp(mg, mesh, pass_args={}):
         node.meta["mase"]["software"]["autosharding"] = {
             "op_strategy": op_strategy,
             "opt_var": opt_var,
-            "input": None,
-            "output": None,
         }
 
         # Consider computation cost (c_v term) for each of the node's strategies
@@ -383,35 +373,49 @@ def _mark_sharding(mg, pass_args):
         dict: tensor sharding map.
     """
 
+    logger.info(
+        f"Autosharding optimization finished, annotating graph with chosen sharding strategies for each node."
+    )
+
     for node in mg.fx_graph.nodes:
         opt_var = node.meta["mase"]["software"]["autosharding"]["opt_var"]
 
         if opt_var is None:
-            continue
+            chosen_strategy = node.meta["mase"]["software"]["autosharding"][
+                "op_strategy"
+            ]
+        else:
+            # Get the strategy chosen by the ILP
+            try:
+                idx = np.where(opt_var.value == 1)[0][0]
+            except:
+                idx = np.argmax(opt_var.value)
 
-        try:
-            idx = np.where(opt_var.value == 1)[0][0]
-        except:
-            idx = np.argmax(opt_var.value)
-
-        chosen_strategy = node.meta["mase"]["software"]["autosharding"][
-            "op_strategy"
-        ].strategies[idx]
+            chosen_strategy = node.meta["mase"]["software"]["autosharding"][
+                "op_strategy"
+            ].strategies[idx]
 
         # Annotate chosen placement strategy
         node.meta["mase"]["software"]["autosharding"][
             "placement_strategy"
         ] = chosen_strategy
 
+        # Annotate arg metadata with chosen strategy
         arg_specs = chosen_strategy.input_specs
-        out_spec = chosen_strategy.output_specs
-
         if isinstance(arg_specs, DTensorSpec):
             arg_specs = (arg_specs,)
 
-        # Annotate arg metadata with chosen strategy
-        if node.op in ["placeholder", "get_attr", "call_method", "output"]:
-            pass
+        if not node.op in ["placeholder", "get_attr", "output"]:
+            assert len(arg_specs) == len(
+                node.meta["mase"]["common"]["args"].keys()
+            ), "Number of arguments do not match metadata."
+
+        out_spec = chosen_strategy.output_specs
+
+        if node.op in ["placeholder", "get_attr", "output"]:
+            node.meta["mase"]["common"]["results"]["data_out_0"][
+                "dtensor_spec"
+            ] = out_spec
 
         # call_function nodes
         else:

@@ -25,10 +25,10 @@ class AutoPipelineForDistributedInference(AutoPipeline):
         pass_list = [
             passes.replace_method_with_function,
             passes.init_metadata_analysis_pass,
-            passes.report_graph_analysis_pass,
             passes.add_common_metadata_analysis_pass,
             passes.autosharding_analysis_pass,
             passes.resharding_transform_pass,
+            passes.report_graph_analysis_pass,
         ]
 
         super().__init__(pass_list)

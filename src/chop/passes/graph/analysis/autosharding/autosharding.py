@@ -46,12 +46,6 @@ def _import_solution(
     for node in mg.fx_graph.nodes:
         logger.debug(f"Importing solution for node: {node.name}")
 
-        # Only import solution for getattr nodes
-        # TO DO: this is hard-coded for GPT2
-        # Figure out how to generalize
-        if not node.name.startswith("transformer_"):
-            continue
-
         # Extrapolate from first layer by string matching
         if node.name not in solution.keys() and extrapolate_sharding:
 
@@ -62,7 +56,7 @@ def _import_solution(
             extrapolate_node = node.name.replace(f"_{layer_num}_", "_0_", 1)
 
             if extrapolate_node in solution.keys():
-                logger.warning(
+                logger.debug(
                     f"Node: {node.name} not found in solution. Extrapolating from solution for: {extrapolate_node}"
                 )
                 solution[node.name] = solution[extrapolate_node]
