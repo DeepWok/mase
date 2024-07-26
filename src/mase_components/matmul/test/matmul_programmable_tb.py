@@ -65,7 +65,7 @@ class MatmulProgrammableTB(Testbench):
         dut.b_depth_dim0.value = self.B_DIM0//dut.B_COMPUTE_DIM0.value
         dut.b_depth_dim1.value = self.B_DIM1//dut.B_COMPUTE_DIM1.value
         dut.b_depth_mult.value = self.B_DIM1//dut.B_COMPUTE_DIM1.value * self.B_DIM0//dut.B_COMPUTE_DIM0.value
-        dut.c_depth_dim0.value = self.B_DIM0//dut.B_COMPUTE_DIM0.value
+        #dut.c_depth_dim0.value = self.B_DIM0//dut.B_COMPUTE_DIM0.value
 
         self.output_monitor = StreamMonitor(
             dut.clk,
