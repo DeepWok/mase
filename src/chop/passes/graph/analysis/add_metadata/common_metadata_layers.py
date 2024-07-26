@@ -225,6 +225,51 @@ func_data = {
         "scale_grad_by_freq": "config",
         "sparse": "config",
     },
+    # Inserted ops from the replace_method_with_function pass
+    "torch_size": {"input": "data_in", "dim": "config"},
+    "torch_contiguous": {
+        "input": "data_in",
+        "memory_format": "config",
+    },
+    # arbitrary length - support up to 4
+    "torch_expand": {
+        "input": "data_in",
+        "size_0": "config",
+        "size_1": "config",
+        "size_2": "config",
+        "size_3": "config",
+    },
+    "torch_view": {
+        "input": "data_in",
+        "shape_0": "config",
+        "shape_1": "config",
+        "shape_2": "config",
+        "shape_3": "config",
+    },
+    "torch_reshape": {
+        "input": "data_in",
+        "shape_0": "config",
+        "shape_1": "config",
+        "shape_2": "config",
+        "shape_3": "config",
+    },
+    "torch_split": {
+        "input": "data_in",
+        "split_size": "config",
+        "dim": "config",
+    },
+    "torch_permute": {
+        "input": "data_in",
+        "dim_0": "config",
+        "dim_1": "config",
+        "dim_2": "config",
+        "dim_3": "config",
+    },
+    "torch_transpose": {
+        "input": "data_in",
+        "dim0": "config",
+        "dim1": "config",
+    },
 }
 
 module_data = {

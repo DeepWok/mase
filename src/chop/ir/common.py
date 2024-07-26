@@ -49,6 +49,15 @@ MASE_IMPLICIT_FUNCS = [
     "finfo",
     "masked_fill",
     "masked_fill_",
+    # Inserted ops from the replace_method_with_function pass
+    "torch_size",
+    "torch_contiguous",
+    "torch_expand",
+    "torch_view",
+    "torch_reshape",
+    "torch_split",
+    "torch_permute",
+    "torch_transpose",
 ]
 
 MASE_MODULE_RELATED_FUNCS = [

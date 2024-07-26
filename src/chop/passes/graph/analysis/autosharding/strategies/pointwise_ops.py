@@ -142,7 +142,7 @@ def common_pointwise_strategy(
                     tensor_meta=input_arg_spec.tensor_meta,
                 )
                 # input_specs.append(input_arg_target_spec)
-                input_specs = [input_arg_target_spec] * 2
+                input_specs = [input_arg_target_spec] * len(meta.node.args)
 
         dtype = meta["common"]["results"]["data_out_0"].get(
             "torch_dtype", torch.float32

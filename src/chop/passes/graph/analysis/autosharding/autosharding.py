@@ -214,6 +214,9 @@ def _get_sharding_map(mg):
 def autosharding_analysis_pass(mg, pass_args: dict = {}):
     """Annotate the metadata of each operator in the graph with a parallelization strategy.
 
+    For the autosharding pass to work, the fx graph must contain only placeholder, get_attr,
+    call_functional and output nodes. call_method and call_module nodes are not allowed.
+
     Args:
         mg (MaseGraph): input mase graph.
         pass_args (dict, optional): pass arguments. Defaults to {}.
