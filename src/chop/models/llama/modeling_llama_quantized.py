@@ -45,6 +45,8 @@ from transformers.utils import (
 from ..quant_utils import get_quantized_cls, get_quantized_func, parse_op_quant_config
 from .configuration_llama import LlamaQuantizedConfig
 
+from chop.models.utils import register_mase_model
+
 logger = logging.get_logger(__name__)
 
 _CONFIG_FOR_DOC = "LlamaQuantConfig"
@@ -532,6 +534,15 @@ LLAMA_INPUTS_DOCSTRING = r"""
 """
 
 
+@register_mase_model(
+    "llama_quantized",
+    checkpoints=["llama_quantized"],
+    model_source="manual",
+    task_type="nlp",
+    sequence_classification=True,
+    causal_LM=True,
+    is_quantized=True,
+)
 @add_start_docstrings(
     "The bare LLaMA Model outputting raw hidden-states without any specific head on top.",
     LLAMA_START_DOCSTRING,

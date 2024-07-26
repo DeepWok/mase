@@ -14,6 +14,7 @@ from torchvision.models.mobilenetv3 import (
     MobileNet_V3_Small_Weights,
 )
 from torchvision.utils import _make_ntuple
+from chop.models.utils import register_mase_model
 
 logger = getLogger(__name__)
 
@@ -262,6 +263,14 @@ class InvertedResidual(nn.Module):
         return result
 
 
+@register_mase_model(
+    "mobilenetv3",
+    checkpoints=["mobilenetv3_small", "mobilenetv3_large"],
+    model_source="torchvision",
+    task_type="vision",
+    image_classification=True,
+    is_fx_traceable=True,
+)
 class MobileNetV3(nn.Module):
     def __init__(
         self,

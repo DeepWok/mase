@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 from timm.models.layers import trunc_normal_
 from timm.models.vision_transformer import VisionTransformer, _cfg
+from chop.models.utils import register_mase_model
 
 logger = getLogger(__name__)
 # __all__ = [
@@ -21,6 +22,22 @@ logger = getLogger(__name__)
 # ]
 
 
+@register_mase_model(
+    "deit",
+    checkpoints=[
+        "deit_tiny_patch16_224",
+        "deit_small_patch16_224",
+        "deit_base_patch16_224",
+        "deit_tiny_distilled_patch16_224",
+        "deit_small_distilled_patch16_224",
+        "deit_base_distilled_patch16_224",
+        "deit_base_patch16_384",
+        "deit_base_distilled_patch16_384",
+    ],
+    model_source="vision_others",
+    task_type="vision",
+    image_classification=True,
+)
 class DistilledVisionTransformer(VisionTransformer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

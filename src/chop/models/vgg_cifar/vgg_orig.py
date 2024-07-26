@@ -32,7 +32,17 @@ __all__ = [
     "vgg19_bn",
 ]
 
+from chop.models.utils import register_mase_model
 
+
+@register_mase_model(
+    "vgg7",
+    checkpoints=["vgg7"],
+    model_source="vision_others",
+    task_type="vision",
+    image_classification=True,
+    is_fx_traceable=True,
+)
 class VGG(nn.Module):
     def __init__(
         self,

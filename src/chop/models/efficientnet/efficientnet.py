@@ -21,6 +21,7 @@ from torchvision.models.efficientnet import (
 )
 from torchvision.ops import SqueezeExcitation, StochasticDepth
 from torchvision.utils import _make_ntuple
+from chop.models.utils import register_mase_model
 
 # from ....graph.mase_tracer import mark_as_leaf_module
 
@@ -359,6 +360,20 @@ class FusedMBConv(nn.Module):
         return result
 
 
+@register_mase_model(
+    "efficientnet",
+    checkpoints=[
+        "efficientnet_b0",
+        "efficientnet_b3",
+        "efficientnet_v2_s",
+        "efficientnet_v2_m",
+        "efficientnet_v2_l",
+    ],
+    model_source="torchvision",
+    task_type="vision",
+    image_classification=True,
+    is_fx_traceable=True,
+)
 class EfficientNet(nn.Module):
     def __init__(
         self,

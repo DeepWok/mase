@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 from timm.models.vision_transformer import _cfg
+from chop.models.utils import register_mase_model
 
 __all__ = ["get_pvt_tiny", "get_pvt_small", "get_pvt_medium", "get_pvt_large"]
 
@@ -179,6 +180,18 @@ class PatchEmbed(nn.Module):
         return x, (H, W)
 
 
+@register_mase_model(
+    "pvt",
+    checkpoints=[
+        "pvt_tiny",
+        "pvt_small",
+        "pvt_medium",
+        "pvt_large",
+    ],
+    model_source="vision_others",
+    task_type="vision",
+    image_classification=True,
+)
 class PyramidVisionTransformer(nn.Module):
     def __init__(
         self,
@@ -487,22 +500,3 @@ def get_pvt_large(info, pretrained=False, **kwargs):
     else:
         logger.info("pvt_large randomly initialized")
     return model
-
-
-# def pvt_huge_v2(pretrained=False, **kwargs):
-#     kwargs.pop("info")
-#     model = PyramidVisionTransformer(
-#         patch_size=4,
-#         embed_dims=[128, 256, 512, 768],
-#         num_heads=[2, 4, 8, 12],
-#         mlp_ratios=[8, 8, 4, 4],
-#         qkv_bias=True,
-#         norm_layer=partial(nn.LayerNorm, eps=1e-6),
-#         depths=[3, 10, 60, 3],
-#         sr_ratios=[8, 4, 2, 1],
-#         # drop_rate=0.0, drop_path_rate=0.02)
-#         **kwargs,
-#     )
-#     model.default_cfg = _cfg()
-
-#     return model

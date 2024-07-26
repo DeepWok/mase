@@ -6,7 +6,17 @@ from collections import defaultdict
 from .layers import Embedding, NeRF
 from .rendering import render_rays
 
+from chop.models.utils import register_mase_model
 
+
+@register_mase_model(
+    "nerf",
+    checkpoints=["nerf"],
+    model_source="nerf",
+    task_type="nerf",
+    physical_data_point_classification=True,
+    is_fx_traceable=True,
+)
 class NeRFModel(pl.LightningModule):
     def __init__(self, info):
         super().__init__()

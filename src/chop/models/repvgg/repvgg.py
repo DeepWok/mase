@@ -12,6 +12,7 @@ import torch.utils.checkpoint as checkpoint
 
 # --added
 from typing import Any, Callable, Dict, List, Optional, Type, Union
+from chop.models.utils import register_mase_model
 
 
 def conv_bn(in_channels, out_channels, kernel_size, stride, padding, groups=1):
@@ -227,6 +228,28 @@ class RepVGGBlock(nn.Module):
         self.deploy = True
 
 
+@register_mase_model(
+    "repvgg_a0",
+    checkpoints=[
+        "repvgg_a0",
+        "repvgg_a1",
+        "repvgg_a2",
+        "repvgg_b0",
+        "repvgg_b1",
+        "repvgg_b1g2",
+        "repvgg_b1g4",
+        "repvgg_b2",
+        "repvgg_b2g2",
+        "repvgg_b2g4",
+        "repvgg_b3",
+        "repvgg_b3g2",
+        "repvgg_b3g4",
+        "repvgg_d2se",
+    ],
+    model_source="vision_others",
+    task_type="vision",
+    image_classification=True,
+)
 class RepVGG(nn.Module):
     def __init__(
         self,
@@ -623,65 +646,6 @@ def get_repvgg_d2se(
         use_se=True,
         use_act_checkpoint=use_act_checkpoint,
     )
-
-
-# def create_RepVGG_A0(deploy=False, use_act_checkpoint=False):
-#     return RepVGG(num_blocks=[2, 4, 14, 1], num_classes=1000,
-#                   width_multiplier=[0.75, 0.75, 0.75, 2.5], override_groups_map=None, deploy=deploy, use_act_checkpoint=use_act_checkpoint)
-
-# def create_RepVGG_A1(deploy=False, use_act_checkpoint=False):
-#     return RepVGG(num_blocks=[2, 4, 14, 1], num_classes=1000,
-#                   width_multiplier=[1, 1, 1, 2.5], override_groups_map=None, deploy=deploy, use_act_checkpoint=use_act_checkpoint)
-
-# def create_RepVGG_A2(deploy=False, use_act_checkpoint=False):
-#     return RepVGG(num_blocks=[2, 4, 14, 1], num_classes=1000,
-#                   width_multiplier=[1.5, 1.5, 1.5, 2.75], override_groups_map=None, deploy=deploy, use_act_checkpoint=use_act_checkpoint)
-
-# def create_RepVGG_B0(deploy=False, use_act_checkpoint=False):
-#     return RepVGG(num_blocks=[4, 6, 16, 1], num_classes=1000,
-#                   width_multiplier=[1, 1, 1, 2.5], override_groups_map=None, deploy=deploy, use_act_checkpoint=use_act_checkpoint)
-
-# def create_RepVGG_B1(deploy=False, use_act_checkpoint=False):
-#     return RepVGG(num_blocks=[4, 6, 16, 1], num_classes=1000,
-#                   width_multiplier=[2, 2, 2, 4], override_groups_map=None, deploy=deploy, use_act_checkpoint=use_act_checkpoint)
-
-# def create_RepVGG_B1g2(deploy=False, use_act_checkpoint=False):
-#     return RepVGG(num_blocks=[4, 6, 16, 1], num_classes=1000,
-#                   width_multiplier=[2, 2, 2, 4], override_groups_map=g2_map, deploy=deploy, use_act_checkpoint=use_act_checkpoint)
-
-# def create_RepVGG_B1g4(deploy=False, use_act_checkpoint=False):
-#     return RepVGG(num_blocks=[4, 6, 16, 1], num_classes=1000,
-#                   width_multiplier=[2, 2, 2, 4], override_groups_map=g4_map, deploy=deploy, use_act_checkpoint=use_act_checkpoint)
-
-
-# def create_RepVGG_B2(deploy=False, use_act_checkpoint=False):
-#     return RepVGG(num_blocks=[4, 6, 16, 1], num_classes=1000,
-#                   width_multiplier=[2.5, 2.5, 2.5, 5], override_groups_map=None, deploy=deploy, use_act_checkpoint=use_act_checkpoint)
-
-# def create_RepVGG_B2g2(deploy=False, use_act_checkpoint=False):
-#     return RepVGG(num_blocks=[4, 6, 16, 1], num_classes=1000,
-#                   width_multiplier=[2.5, 2.5, 2.5, 5], override_groups_map=g2_map, deploy=deploy, use_act_checkpoint=use_act_checkpoint)
-
-# def create_RepVGG_B2g4(deploy=False, use_act_checkpoint=False):
-#     return RepVGG(num_blocks=[4, 6, 16, 1], num_classes=1000,
-#                   width_multiplier=[2.5, 2.5, 2.5, 5], override_groups_map=g4_map, deploy=deploy, use_act_checkpoint=use_act_checkpoint)
-
-
-# def create_RepVGG_B3(deploy=False, use_act_checkpoint=False):
-#     return RepVGG(num_blocks=[4, 6, 16, 1], num_classes=1000,
-#                   width_multiplier=[3, 3, 3, 5], override_groups_map=None, deploy=deploy, use_act_checkpoint=use_act_checkpoint)
-
-# def create_RepVGG_B3g2(deploy=False, use_act_checkpoint=False):
-#     return RepVGG(num_blocks=[4, 6, 16, 1], num_classes=1000,
-#                   width_multiplier=[3, 3, 3, 5], override_groups_map=g2_map, deploy=deploy, use_act_checkpoint=use_act_checkpoint)
-
-# def create_RepVGG_B3g4(deploy=False, use_act_checkpoint=False):
-#     return RepVGG(num_blocks=[4, 6, 16, 1], num_classes=1000,
-#                   width_multiplier=[3, 3, 3, 5], override_groups_map=g4_map, deploy=deploy, use_act_checkpoint=use_act_checkpoint)
-
-# def create_RepVGG_D2se(deploy=False, use_act_checkpoint=False):
-#     return RepVGG(num_blocks=[8, 14, 24, 1], num_classes=1000,
-#                   width_multiplier=[2.5, 2.5, 2.5, 5], override_groups_map=None, deploy=deploy, use_se=True, use_act_checkpoint=use_act_checkpoint)
 
 
 func_dict = {

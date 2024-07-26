@@ -10,6 +10,7 @@ from torch import Tensor, nn
 from torchvision.models._utils import _make_divisible
 from torchvision.models.mobilenetv2 import MobileNet_V2_Weights
 from torchvision.utils import _make_ntuple
+from chop.models.utils import register_mase_model
 
 logger = getLogger(__name__)
 
@@ -178,6 +179,14 @@ class InvertedResidual(nn.Module):
             return self.conv(x)
 
 
+@register_mase_model(
+    "mobilenetv2",
+    checkpoints=["mobilenetv2"],
+    model_source="torchvision",
+    task_type="vision",
+    image_classification=True,
+    is_fx_traceable=True,
+)
 class MobileNetV2(nn.Module):
     def __init__(
         self,

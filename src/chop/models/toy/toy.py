@@ -5,7 +5,17 @@ A collection of toy models for testing and development runs.
 import torch.nn as nn
 from typing import Any
 
+from chop.models.utils import register_mase_model
 
+
+@register_mase_model(
+    "toy",
+    checkpoints=["toy"],
+    model_source="toy",
+    task_type="vision",
+    image_classification=True,
+    is_fx_traceable=True,
+)
 class ToyNet(nn.Module):
     def __init__(self, image_size, num_classes):
         super(ToyNet, self).__init__()
@@ -22,6 +32,14 @@ class ToyNet(nn.Module):
         return self.seq_blocks(x.view(x.size(0), -1))
 
 
+@register_mase_model(
+    "toy_tiny",
+    checkpoints=["toy_tiny"],
+    model_source="toy",
+    task_type="vision",
+    image_classification=True,
+    is_fx_traceable=True,
+)
 class ToyTiny(nn.Module):
     def __init__(self, image_size, num_classes=1) -> None:
         super().__init__()
@@ -40,6 +58,14 @@ class ToyTiny(nn.Module):
         return x
 
 
+@register_mase_model(
+    "toy_testmodel",
+    checkpoints=["toy_testmodel"],
+    model_source="toy",
+    task_type="vision",
+    image_classification=True,
+    is_fx_traceable=True,
+)
 class ToyTestModel(nn.Module):
     """Test model with all layors and operations with binarization operation
 
@@ -94,6 +120,14 @@ class ToyTestModel(nn.Module):
 
 # A simple convolutional toy net that uses Conv2d, Conv1d and Linear layers.  This
 # network is primarily used to test the pruning transformation.
+@register_mase_model(
+    "toy_convnet",
+    checkpoints=["toy_convnet"],
+    model_source="toy",
+    task_type="vision",
+    image_classification=True,
+    is_fx_traceable=True,
+)
 class ToyConvNet(nn.Module):
     def __init__(self, num_classes, channels=[3, 8, 16, 32, 64]):
         super(ToyConvNet, self).__init__()
@@ -163,13 +197,3 @@ def get_toy_convnet(
     # NOTE: The model isn't configurable through the CLI or a configuration file yet.
     num_classes = info.num_classes
     return ToyConvNet(num_classes)
-
-
-def get_toy_emit(
-    info,
-    pretrained=False,
-    **kwargs: Any,
-):
-    image_size = info.image_size
-    num_classes = info.num_classes
-    return ToyEmit(image_size, num_classes)

@@ -7,6 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 from timm.models.vision_transformer import _cfg
+from chop.models.utils import register_mase_model
 
 logger = getLogger(__name__)
 
@@ -278,6 +279,13 @@ class OverlapPatchEmbed(nn.Module):
         return x, H, W
 
 
+@register_mase_model(
+    "pvt_v2",
+    checkpoints=["pvt_v2"],
+    model_source="vision_others",
+    task_type="vision",
+    image_classification=True,
+)
 class PyramidVisionTransformerV2(nn.Module):
     def __init__(
         self,

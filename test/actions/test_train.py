@@ -4,12 +4,6 @@ from pathlib import PosixPath
 import torch
 import torch.nn as nn
 
-sys.path.append(
-    os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), "..", "..", "..", "machop"
-    )
-)
-
 from chop.actions.train import train
 from chop.models import get_model_info, get_model, get_tokenizer
 from chop.dataset import get_dataset_info, MaseDataModule

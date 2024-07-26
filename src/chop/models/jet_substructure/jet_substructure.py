@@ -4,7 +4,17 @@ Jet Substructure Models used in the LogicNets paper
 
 import torch.nn as nn
 
+from chop.models.utils import register_mase_model
 
+
+@register_mase_model(
+    "jsc-toy",
+    checkpoints=["jsc-toy"],
+    model_source="physical",
+    task_type="physical",
+    physical_data_point_classification=True,
+    is_fx_traceable=True,
+)
 class JSC_Toy(nn.Module):
     def __init__(self, info):
         super(JSC_Toy, self).__init__()
@@ -29,6 +39,14 @@ class JSC_Toy(nn.Module):
         return self.seq_blocks(x)
 
 
+@register_mase_model(
+    "jsc-tiny",
+    checkpoints=["jsc-tiny"],
+    model_source="physical",
+    task_type="physical",
+    physical_data_point_classification=True,
+    is_fx_traceable=True,
+)
 class JSC_Tiny(nn.Module):
     def __init__(self, info):
         super(JSC_Tiny, self).__init__()
@@ -46,6 +64,14 @@ class JSC_Tiny(nn.Module):
         return self.seq_blocks(x)
 
 
+@register_mase_model(
+    "jsc-s",
+    checkpoints=["jsc-s"],
+    model_source="physical",
+    task_type="physical",
+    physical_data_point_classification=True,
+    is_fx_traceable=True,
+)
 class JSC_S(nn.Module):
     def __init__(self, info):
         super(JSC_S, self).__init__()
@@ -83,6 +109,14 @@ class JSC_S(nn.Module):
         return x
 
 
+@register_mase_model(
+    "jsc-trt",
+    checkpoints=["jsc-trt"],
+    model_source="physical",
+    task_type="physical",
+    physical_data_point_classification=True,
+    is_fx_traceable=True,
+)
 class JSC_TRT(nn.Module):
     def __init__(self, info):
         super(JSC_TRT, self).__init__()
@@ -109,8 +143,9 @@ class JSC_TRT(nn.Module):
 
 
 # Getters ------------------------------------------------------------------------------
+
+
 def get_jsc_toy(info):
-    # TODO: Tanh is not supported by mase yet
     return JSC_Toy(info)
 
 

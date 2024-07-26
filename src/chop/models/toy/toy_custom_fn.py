@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 
+from chop.models.utils import register_mase_model
+
 
 class CustomActivation(torch.autograd.Function):
     @staticmethod
@@ -12,6 +14,14 @@ class CustomActivation(torch.autograd.Function):
 custom_activation = CustomActivation.apply
 
 
+@register_mase_model(
+    "toy_custom_fn",
+    checkpoints=["toy_custom_fn"],
+    model_source="toy",
+    task_type="vision",
+    image_classification=True,
+    is_fx_traceable=True,
+)
 class ToyCustomFnNet(nn.Module):
     def __init__(self, image_size, num_classes, batch_size=1):
         super(ToyCustomFnNet, self).__init__()

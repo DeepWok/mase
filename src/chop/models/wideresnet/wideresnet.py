@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
+from chop.models.utils import register_mase_model, register_mase_checkpoint
 
 logger = getLogger(__name__)
 _bn_momentum = 0.1
@@ -187,6 +188,14 @@ class WideBasic(nn.Module):
         return out
 
 
+@register_mase_model(
+    "wideresnet",
+    checkpoints=["wideresnet28_cifar"],
+    model_source="torchvision",
+    task_type="vision",
+    image_classification=True,
+    is_fx_traceable=True,
+)
 class WideResNet(nn.Module):
     def __init__(
         self,
@@ -286,6 +295,7 @@ class WideResNet(nn.Module):
         return out
 
 
+@register_mase_checkpoint("wideresnet28_cifar")
 def wideresnet28_cifar(info, pretrained=False, **kwargs):
     num_classes = info.num_classes
     model = WideResNet(

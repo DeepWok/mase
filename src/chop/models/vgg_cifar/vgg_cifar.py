@@ -3,8 +3,17 @@
 
 import torch
 import torch.nn as nn
+from chop.models.utils import register_mase_model
 
 
+@register_mase_model(
+    "vgg7_cifar",
+    checkpoints=["vgg7_cifar"],
+    model_source="vision_others",
+    task_type="vision",
+    image_classification=True,
+    is_fx_traceable=True,
+)
 class VGG7(nn.Module):
     def __init__(self, image_size: list[int], num_classes: int) -> None:
         super().__init__()

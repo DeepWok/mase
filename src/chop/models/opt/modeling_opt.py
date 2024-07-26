@@ -55,6 +55,7 @@ from chop.passes.graph.patching.mase_op_wrapper import (
     torch_ones,
     torch_zeros,
 )
+from chop.models.utils import register_mase_model
 
 logger = logging.get_logger(__name__)
 
@@ -786,6 +787,15 @@ class OPTPatchedDecoder(OPTPatchedPreTrainedModel):
         )
 
 
+@register_mase_model(
+    "opt-patched",
+    checkpoints=["opt-patched"],
+    model_source="patched",
+    task_type="nlp",
+    sequence_classification=True,
+    causal_LM=True,
+    is_fx_traceable=True,
+)
 @add_start_docstrings(
     "The bare OPT Model outputting raw hidden-states without any specific head on top.",
     OPT_START_DOCSTRING,

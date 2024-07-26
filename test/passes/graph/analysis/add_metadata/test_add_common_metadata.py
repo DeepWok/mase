@@ -7,24 +7,9 @@ import sys
 
 import torch
 
-sys.path.append(
-    os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "..",
-        "..",
-        "..",
-        "..",
-        "..",
-        "..",
-        "machop",
-    )
-)
-
-print(sys.path)
-
 from chop.tools.logger import set_logging_verbosity
 from chop.ir.graph import MaseGraph
-from chop.models.toys.toy_custom_fn import ToyCustomFnNet
+from chop.models.toy.toy_custom_fn import ToyCustomFnNet
 from chop.passes.graph.analysis import (
     add_common_metadata_analysis_pass,
     init_metadata_analysis_pass,

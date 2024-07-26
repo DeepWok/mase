@@ -10,6 +10,7 @@ from chop.nn.quantized.modules.conv2d import (
 from chop.nn.quantized.modules.linear import (
     LinearBinaryResidualSign,
 )
+from chop.models.utils import register_mase_model, register_mase_checkpoint
 
 """
 This is the CNV model from the LUTNet Paper
@@ -19,6 +20,14 @@ https://arxiv.org/pdf/1904.00938.pdf
 """
 
 
+@register_mase_model(
+    "cnv",
+    checkpoints=["cnv", "cnv_residual"],
+    model_source="vision_others",
+    task_type="vision",
+    image_classification=True,
+    is_fx_traceable=True,
+)
 class CNV(nn.Module):
     def __init__(self, num_classes):
         super(CNV, self).__init__()
@@ -162,6 +171,7 @@ class CNV_Residual(nn.Module):
 
 
 # Getters ------------------------------------------------------------------------------
+@register_mase_checkpoint("cnv")
 def get_cnv(
     info,
     pretrained=False,
@@ -172,6 +182,7 @@ def get_cnv(
     return CNV(num_classes)
 
 
+@register_mase_checkpoint("cnv_residual")
 def get_cnv_residual(
     info,
     pretrained=False,

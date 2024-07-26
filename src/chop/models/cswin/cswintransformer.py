@@ -18,6 +18,7 @@ from einops.layers.torch import Rearrange
 import torch.utils.checkpoint as checkpoint
 import numpy as np
 import time
+from chop.models.utils import register_mase_model
 
 
 def _cfg(url="", **kwargs):
@@ -321,6 +322,20 @@ class Merge_Block(nn.Module):
         return x
 
 
+@register_mase_model(
+    "cswin",
+    checkpoints=[
+        "cswin_64_12211_tiny_224",
+        "cswin_64_24322_small_224",
+        "cswin_96_24322_base_224",
+        "cswin_144_24322_large_224",
+        "cswin_96_24322_base_384",
+        "cswin_144_24322_large_384",
+    ],
+    model_source="vision_others",
+    task_type="vision",
+    image_classification=True,
+)
 class CSWinTransformer(nn.Module):
     """Vision Transformer with support for patch or hybrid CNN input stage"""
 

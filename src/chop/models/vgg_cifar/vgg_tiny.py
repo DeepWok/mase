@@ -1,7 +1,17 @@
 import torch
 import torch.nn as nn
 
+from chop.models.utils import register_mase_model
 
+
+@register_mase_model(
+    "vgg7_tiny",
+    checkpoints=["vgg7_tiny"],
+    model_source="vision_others",
+    task_type="vision",
+    image_classification=True,
+    is_fx_traceable=True,
+)
 class TinyVGG(nn.Module):
     def __init__(self, image_size: list[int], num_classes: int) -> None:
         super().__init__()

@@ -39,6 +39,8 @@ from transformers.utils import (
 from ..quant_utils import get_quantized_cls, get_quantized_func
 from .configuration_opt import OPTQuantizedConfig
 
+from chop.models.utils import register_mase_model
+
 logger = logging.get_logger(__name__)
 
 _CHECKPOINT_FOR_DOC = "facebook/opt-350m"
@@ -894,6 +896,15 @@ class OPTQuantizedDecoder(OPTQuantizedPreTrainedModel):
         )
 
 
+@register_mase_model(
+    "opt_quantized",
+    checkpoints=["opt-quantized"],
+    model_source="manual",
+    task_type="nlp",
+    sequence_classification=True,
+    causal_LM=True,
+    is_quantized=True,
+)
 @add_start_docstrings(
     "The bare OPT Model outputting raw hidden-states without any specific head on top.",
     OPT_START_DOCSTRING,

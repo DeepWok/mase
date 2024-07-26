@@ -22,6 +22,7 @@ from torchvision.models.resnet import (
     ResNet101_Weights,
     Wide_ResNet50_2_Weights,
 )
+from chop.models.utils import register_mase_model, register_mase_checkpoint
 
 logger = getLogger(__name__)
 
@@ -154,6 +155,20 @@ class Bottleneck(nn.Module):
         return out
 
 
+@register_mase_model(
+    name="resnet",
+    checkpoints=[
+        "resnet18",
+        "resnet34",
+        "resnet50",
+        "resnet101",
+        "wide_resnet50_2",
+    ],
+    model_source="torchvision",
+    task_type="vision",
+    image_classification=True,
+    is_fx_traceable=True,
+)
 class ResNet(nn.Module):
     def __init__(
         self,
@@ -300,7 +315,7 @@ def _resnet(
     pretrained_weight_cls: Optional[WeightsEnum],
     **kwargs,
 ) -> ResNet:
-    model = ResNet(block, layers, num_classes=num_classes, **kwargs)
+    model = ResNet(block, layers, **kwargs)
 
     if pretrained_weight_cls is not None:
         pretrained_weight = pretrained_weight_cls.get_state_dict(progress=True)
@@ -318,13 +333,12 @@ def _resnet(
     return model
 
 
+@register_mase_checkpoint("resnet18")
 def get_resnet18(
-    info: Dict,
     pretrained: bool = False,
     **kwargs: Any,
 ) -> ResNet:
     """ResNet-18 from `Deep Residual Learning for Image Recognition <https://arxiv.org/pdf/1512.03385.pdf>`__."""
-    num_classes = info.num_classes
     if pretrained:
         pretrained_weight_cls = ResNet18_Weights.IMAGENET1K_V1
     else:
@@ -333,19 +347,18 @@ def get_resnet18(
     return _resnet(
         BasicBlock,
         [2, 2, 2, 2],
-        num_classes=num_classes,
         pretrained_weight_cls=pretrained_weight_cls,
         **kwargs,
     )
 
 
+@register_mase_checkpoint("resnet34")
 def get_resnet34(
-    info: Dict,
     pretrained: bool = False,
     **kwargs: Any,
 ) -> ResNet:
     """ResNet-34 from `Deep Residual Learning for Image Recognition <https://arxiv.org/pdf/1512.03385.pdf>`__."""
-    num_classes = info.num_classes
+    num_classes = kwargs["num_classes"]
     if pretrained:
         pretrained_weight_cls = ResNet34_Weights.IMAGENET1K_V1
     else:
@@ -354,19 +367,18 @@ def get_resnet34(
     return _resnet(
         BasicBlock,
         [2, 2, 2, 2],
-        num_classes=num_classes,
         pretrained_weight_cls=pretrained_weight_cls,
         **kwargs,
     )
 
 
+@register_mase_checkpoint("resnet50")
 def get_resnet50(
-    info: Dict,
     pretrained: bool = False,
     **kwargs: Any,
 ) -> ResNet:
     """ResNet-50 from `Deep Residual Learning for Image Recognition <https://arxiv.org/pdf/1512.03385.pdf>`__."""
-    num_classes = info.num_classes
+    num_classes = kwargs["num_classes"]
     if pretrained:
         pretrained_weight_cls = ResNet50_Weights.IMAGENET1K_V2
     else:
@@ -375,19 +387,18 @@ def get_resnet50(
     return _resnet(
         Bottleneck,
         [3, 4, 6, 3],
-        num_classes=num_classes,
         pretrained_weight_cls=pretrained_weight_cls,
         **kwargs,
     )
 
 
+@register_mase_checkpoint("resnet101")
 def get_resnet101(
-    info: Dict,
     pretrained: bool = False,
     **kwargs: Any,
 ) -> ResNet:
     """ResNet-101 from `Deep Residual Learning for Image Recognition <https://arxiv.org/pdf/1512.03385.pdf>`__."""
-    num_classes = info.num_classes
+    num_classes = kwargs["num_classes"]
     if pretrained:
         pretrained_weight_cls = ResNet101_Weights.IMAGENET1K_V2
     else:
@@ -396,13 +407,16 @@ def get_resnet101(
     return _resnet(
         BasicBlock,
         [2, 2, 2, 2],
-        num_classes=num_classes,
         pretrained_weight_cls=pretrained_weight_cls,
         **kwargs,
     )
 
 
-def get_wide_resnet50_2(info: Dict, pretrained: bool = False, **kwargs):
+@register_mase_checkpoint("wide_resnet50_2")
+def get_wide_resnet50_2(
+    pretrained: bool = False,
+    **kwargs,
+):
     """
     `Wide Residual Networks <https://arxiv.org/abs/1605.07146>`_.
 
@@ -411,7 +425,7 @@ def get_wide_resnet50_2(info: Dict, pretrained: bool = False, **kwargs):
     convolutions is the same, e.g. last block in ResNet-50 has 2048-512-2048
     channels, and in Wide ResNet-50-2 has 2048-1024-2048.
     """
-    num_classes = info.num_classes
+    num_classes = kwargs["num_classes"]
     if pretrained:
         pretrained_weight_cls = Wide_ResNet50_2_Weights.IMAGENET1K_V2
     else:
@@ -421,7 +435,6 @@ def get_wide_resnet50_2(info: Dict, pretrained: bool = False, **kwargs):
     return _resnet(
         Bottleneck,
         [3, 4, 6, 3],
-        num_classes=num_classes,
         pretrained_weight_cls=pretrained_weight_cls,
         **kwargs,
     )

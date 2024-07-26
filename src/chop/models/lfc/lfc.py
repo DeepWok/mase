@@ -1,5 +1,6 @@
 import torch.nn as nn
 from typing import Any
+from chop.models.utils import register_mase_model
 
 """
 This is the LFC model from the LUTNet Paper
@@ -9,6 +10,14 @@ https://arxiv.org/pdf/1904.00938.pdf
 """
 
 
+@register_mase_model(
+    "lfc",
+    checkpoints=["lfc"],
+    model_source="vision_others",
+    task_type="vision",
+    image_classification=True,
+    is_fx_traceable=True,
+)
 class LFC(nn.Module):
     def __init__(self, image_size, num_classes):
         super(LFC, self).__init__()

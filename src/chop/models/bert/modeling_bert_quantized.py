@@ -54,7 +54,8 @@ from transformers.utils import (
 )
 
 from ..quant_utils import get_quantized_cls, get_quantized_func
-from .configuration_bert import BertQuantizedConfig
+from .configuration_bert_quantized import BertQuantizedConfig
+from chop.models.utils import register_mase_model
 
 logger = logging.get_logger(__name__)
 
@@ -1034,6 +1035,14 @@ BERT_INPUTS_DOCSTRING = r"""
 """
 
 
+@register_mase_model(
+    "bert_quantized",
+    checkpoints=[],
+    model_source="manual",
+    task_type="nlp",
+    sequence_classification=True,
+    is_quantized=True,
+)
 @add_start_docstrings(
     "The bare Bert Model transformer outputting raw hidden-states without any specific head on top.",
     BERT_START_DOCSTRING,
