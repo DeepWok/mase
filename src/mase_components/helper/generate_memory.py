@@ -278,7 +278,7 @@ def generate_sv_lut(
     in_f_width,
     data_width,
     f_width,
-    path=None,
+    path=None,# maybe not accept path as a parameter due to redundantly-generated exp_lut
     path_with_dtype=False,
     constant_mult=1,
 ):
@@ -291,29 +291,17 @@ def generate_sv_lut(
     else:
         end = ""
 
-    if path is None:
-        p = Path(__file__).parents[1] / "rtl"
-        lookup_to_sv_file(
-            in_data_width,
-            in_f_width,
-            data_width,
-            f_width,
-            function_name,
-            str(p / f"{function_name}_lut{end}.sv"),
-            path_with_dtype=path_with_dtype,
-            constant_mult=constant_mult,
-        )
-    else:
-        lookup_to_sv_file(
-            in_data_width,
-            in_f_width,
-            data_width,
-            f_width,
-            function_name,
-            f"{path}/{function_name}_lut{end}.sv",
-            path_with_dtype=path_with_dtype,
-            constant_mult=constant_mult,
-        )
+    p = Path(__file__).parents[1] / "generated_lut"/ "rtl"
+    lookup_to_sv_file(
+        in_data_width,
+        in_f_width,
+        data_width,
+        f_width,
+        function_name,
+        str(p / f"{function_name}_lut{end}.sv"),
+        path_with_dtype=path_with_dtype,
+        constant_mult=constant_mult,
+    )
 
 
 if __name__ == "__main__":

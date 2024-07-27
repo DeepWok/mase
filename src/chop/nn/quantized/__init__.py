@@ -3,6 +3,7 @@ from .modules import (
     BertSelfAttentionInteger,
     ViTSelfAttentionInteger,
     BertSelfAttentionHeadInteger,
+    ViTSelfAttentionHeadInteger,
     LinearInteger,
     LayerNormInteger,
     GELUInteger,

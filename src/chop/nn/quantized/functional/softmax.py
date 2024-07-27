@@ -20,10 +20,12 @@ def softmax_integer(x: torch.Tensor, dim: int, config: dict):
     quant_x = integer_quantizer(
         x, config["data_in_width"], config["data_in_frac_width"]
     )
+    print("quant_x = ",quant_x * 2**config["data_in_frac_width"])
     exp_x = (quant_x*mult).exp()
     quant_exp = integer_quantizer(
         exp_x, config["data_in_exp_width"], config["data_in_exp_frac_width"]
     )
+    print("quant_exp = ",quant_exp * 2**config["data_in_exp_frac_width"])
     exp_sum = quant_exp.sum(dim=dim, keepdim=True)
 
     shift_width = config["data_out_frac_width"]

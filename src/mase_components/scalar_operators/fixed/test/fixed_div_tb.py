@@ -14,6 +14,7 @@ from cocotb.triggers import Timer
 
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
+from mase_cocotb.utils import bit_driver
 from mase_cocotb.runner import mase_runner
 
 from mase_cocotb.z_qlayers import quantize_to_int as q2i
@@ -49,49 +50,56 @@ class FixedDivTB(Testbench):
 
     def generate_inputs(self):
         return torch.randint(
-            255,
-            (
-                self.samples,
+            low = 1, 
+            high=100,
+            size = (
+                1,
                 self.get_parameter("IN_NUM"),
             ),
         )
 
-    async def run_test(self):
-        self.samples = 10
+    async def run_test(self, batches, us):
         await self.reset()
         self.log.info(f"Reset finished")
-        self.quotient_monitor.ready.value = 1
-        await Timer(1, units="ns")
-        dividend = self.generate_inputs()
-        # * Load the inputs driver
-        self.log.info(f"Processing dividend: {dividend}")
-        qdividend = dividend
-        self.dividend_driver.load_driver(qdividend.tolist())
+        for _ in range(batches):
+            dividend = self.generate_inputs()
+            # * Load the inputs driver
+            self.log.info(f"Processing dividend: {dividend}")
+            qdividend = dividend
+            self.dividend_driver.load_driver(qdividend.tolist())
 
-        divisor = self.generate_inputs()
-        qdivisor = divisor
-        self.log.info(f"Processing divisor: {divisor}")
-        self.divisor_driver.load_driver(qdivisor.tolist())
-        safe_divisor = torch.where(divisor == 0, torch.tensor(0.000001), divisor)
-        result = dividend // safe_divisor
-        qresult = torch.where(
-            result >= 2 * self.get_parameter("QUOTIENT_WIDTH"),
-            torch.tensor(2 ** (self.get_parameter("QUOTIENT_WIDTH") - 1)),
-            result,
-        )
+            divisor = self.generate_inputs()
+            qdivisor = divisor
+            self.log.info(f"Processing divisor: {divisor}")
+            self.divisor_driver.load_driver(qdivisor.tolist())
+            safe_divisor = torch.where(divisor == 0, torch.tensor(0.000001), divisor)
+            result = dividend // safe_divisor
+            qresult = result
 
-        self.log.info(f"Processing outputs: {result}")
-        self.quotient_monitor.load_monitor(qresult.tolist())
+            self.log.info(f"Processing outputs: {result}")
+            self.quotient_monitor.load_monitor(qresult.tolist())
 
-        await Timer(1, units="ms")
+        await Timer(us, units="us")
         assert self.quotient_monitor.exp_queue.empty()
 
+# @cocotb.test()
+# async def single_test(dut):
+#     tb = FixedDivTB(dut)
+#     tb.quotient_monitor.ready.value = 1
+#     await tb.run_test(batches=1, us=100)
+
+
+# @cocotb.test()
+# async def repeated_test(dut):
+#     tb = FixedDivTB(dut)
+#     tb.quotient_monitor.ready.value = 1
+#     await tb.run_test(batches=100, us=200)
 
 @cocotb.test()
-async def cocotb_test(dut):
+async def repeated_backpressure(dut):
     tb = FixedDivTB(dut)
-    await tb.run_test()
-
+    cocotb.start_soon(bit_driver(dut.quotient_data_ready, dut.clk, 0.1))
+    await tb.run_test(batches=10, us=200)
 
 dut_params = {
     "IN_NUM": 8,

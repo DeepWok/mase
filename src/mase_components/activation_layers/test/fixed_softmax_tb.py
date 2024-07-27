@@ -17,6 +17,7 @@ from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 from mase_cocotb.runner import mase_runner
 from mase_cocotb.utils import fixed_preprocess_tensor
 
+from mase_cocotb.utils import bit_driver
 from chop.nn.quantized.functional import softmax_integer
 
 class SoftmaxTB(Testbench):
@@ -64,61 +65,83 @@ class SoftmaxTB(Testbench):
             )
         )
 
-    async def run_test(self):
+    async def run_test(self, batches, us):
         await self.reset()
         self.log.info(f"Reset finished")
-        self.out_data_monitor.ready.value = 1
 
-        inputs = self.generate_inputs()
-        exp_out = self.model(inputs)
+        for _ in range(batches):
+            inputs = self.generate_inputs()
+            exp_out = self.model(inputs)
 
-        # * Load the inputs driver
-        self.log.info(f"Processing inputs: {inputs}")
-        inputs = fixed_preprocess_tensor(
-            tensor=inputs,
-            q_config={
-                "width": self.get_parameter("DATA_IN_0_PRECISION_0"),
-                "frac_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
-            },
-            parallelism=[
-                self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1"),
-                self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"),
-            ],
-        )
-        self.in_data_driver.load_driver(inputs)
+            # * Load the inputs driver
+            self.log.info(f"Processing inputs: {inputs}")
+            inputs = fixed_preprocess_tensor(
+                tensor=inputs,
+                q_config={
+                    "width": self.get_parameter("DATA_IN_0_PRECISION_0"),
+                    "frac_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
+                },
+                parallelism=[
+                    self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1"),
+                    self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"),
+                ],
+            )
+            self.in_data_driver.load_driver(inputs)
 
-        # * Load the output monitor
-        self.log.info(f"Processing outputs: {exp_out}")
-        outs = fixed_preprocess_tensor(
-            tensor=exp_out,
-            q_config={
-                "width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
-                "frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
-            },
-            parallelism=[
-                self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_1"),
-                self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"),
-            ],
-        )
-        self.out_data_monitor.load_monitor(outs)
+            # * Load the output monitor
+            self.log.info(f"Processing outputs: {exp_out}")
+            outs = fixed_preprocess_tensor(
+                tensor=exp_out,
+                q_config={
+                    "width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
+                    "frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
+                },
+                parallelism=[
+                    self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_1"),
+                    self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"),
+                ],
+            )
+            self.out_data_monitor.load_monitor(outs)
 
-        await Timer(1, units="ms")
+        await Timer(us, units="us")
         assert self.out_data_monitor.exp_queue.empty()
+
+# @cocotb.test()
+# async def single_test(dut):
+#     tb = SoftmaxTB(dut)
+#     tb.out_data_monitor.ready.value = 1
+#     await tb.run_test(batches=1, us=100)
+
+
+# @cocotb.test()
+# async def repeated_mult(dut):
+#     tb = SoftmaxTB(dut)
+#     tb.out_data_monitor.ready.value = 1
+#     await tb.run_test(batches=1000, us=2000)
 
 
 @cocotb.test()
-async def cocotb_test(dut):
+async def repeated_mult_backpressure(dut):
     tb = SoftmaxTB(dut)
-    await tb.run_test()
+    cocotb.start_soon(bit_driver(dut.data_out_0_ready, dut.clk, 0.6))
+    await tb.run_test(batches=1, us=500)
 
+
+# @cocotb.test()
+# async def repeated_mult_valid_backpressure(dut):
+#     tb = MatmulTB(dut)
+#     tb.a_driver.set_valid_prob(0.7)
+#     tb.b_driver.set_valid_prob(0.7)
+#     cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.6))
+#     await tb.run_test(batches=500, us=2000)
 
 dut_params = {
     "DATA_IN_0_PRECISION_0": 8,
     "DATA_IN_0_PRECISION_1": 4,
-    "DATA_IN_0_TENSOR_SIZE_DIM_0": 32,
-    "DATA_IN_0_TENSOR_SIZE_DIM_1": 8,
-    "DATA_IN_0_PARALLELISM_DIM_0": 16,
-    "DATA_IN_0_PARALLELISM_DIM_1": 2,
+    "DATA_IN_0_TENSOR_SIZE_DIM_0": 2,
+    "DATA_IN_0_TENSOR_SIZE_DIM_1": 1,
+    "DATA_IN_0_PARALLELISM_DIM_0": 1,
+    "DATA_IN_0_PARALLELISM_DIM_1": 1,
     "DATA_EXP_0_PRECISION_0": 8,
     "DATA_EXP_0_PRECISION_1": 4,
     "DATA_OUT_0_PRECISION_1": 6,

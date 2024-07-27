@@ -1,7 +1,6 @@
-from .attention_head import BertSelfAttentionHeadInteger
+from .attention_head import BertSelfAttentionHeadInteger, ViTSelfAttentionHeadInteger
 from .attention import (
     BertSelfAttentionInteger,
-    LlamaSdpaAttentionInteger,
     ViTSelfAttentionInteger,
 )
 

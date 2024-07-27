@@ -43,6 +43,7 @@ MASE_HW_DEPS = {
         "memory",
         "linear_layers/fixed_operators",
         "scalar_operators/fixed",
+        "generated_lut",
     ],
     "activation_layers/fixed_softermax": [
         "common",
@@ -297,6 +298,7 @@ MASE_HW_DEPS = {
     ],
     "scalar_operators/fixed/fixed_div": [
         "scalar_operators/fixed",
+        "memory",
         "cast",
     ],
     # Transformer Layers
@@ -337,6 +339,18 @@ MASE_HW_DEPS = {
     ],
     "arithmetic/mac": ["fixed_arithmetic", "float_arithmetic"],
     # ViT
+    "vision_models/vit/fixed_self_attention_head": [
+        "vision_models/attention",
+        "cast",
+        "memory",
+        "common",
+        "linear_layers/fixed_operators",
+        "linear_layers/fixed_linear_layer",
+        "linear_layers/matmul",
+        "activation_layers",
+        "scalar_operators/fixed",
+        "generated_lut",
+    ],
     "ViT/fixed_patch_embed": [
         "conv",
         "ViT",
