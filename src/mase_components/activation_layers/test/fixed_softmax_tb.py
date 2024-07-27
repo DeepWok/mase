@@ -19,7 +19,6 @@ from mase_cocotb.utils import fixed_preprocess_tensor
 
 from chop.nn.quantized.functional import softmax_integer
 
-
 class SoftmaxTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
@@ -47,7 +46,8 @@ class SoftmaxTB(Testbench):
                 "data_in_frac_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
                 "data_in_exp_width": self.get_parameter("DATA_EXP_0_PRECISION_0"),
                 "data_in_exp_frac_width": self.get_parameter("DATA_EXP_0_PRECISION_1"),
-                "data_in_div_frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
+                "data_out_frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
+                "mult_data": CONSTANT_MULT,
             },
             dim=-1,
         )
@@ -115,10 +115,10 @@ async def cocotb_test(dut):
 dut_params = {
     "DATA_IN_0_PRECISION_0": 8,
     "DATA_IN_0_PRECISION_1": 4,
-    "DATA_IN_0_TENSOR_SIZE_DIM_0": 128,
-    "DATA_IN_0_TENSOR_SIZE_DIM_1": 64,
+    "DATA_IN_0_TENSOR_SIZE_DIM_0": 32,
+    "DATA_IN_0_TENSOR_SIZE_DIM_1": 8,
     "DATA_IN_0_PARALLELISM_DIM_0": 16,
-    "DATA_IN_0_PARALLELISM_DIM_1": 16,
+    "DATA_IN_0_PARALLELISM_DIM_1": 2,
     "DATA_EXP_0_PRECISION_0": 8,
     "DATA_EXP_0_PRECISION_1": 4,
     "DATA_OUT_0_PRECISION_1": 6,
@@ -132,8 +132,7 @@ def get_fixed_softmax_config(kwargs={}):
 
 
 torch.manual_seed(1)
-
-
+CONSTANT_MULT = 0.19
 @pytest.mark.dev
 def test_fixed_softmax_smoke():
     """
@@ -147,6 +146,7 @@ def test_fixed_softmax_smoke():
         dut_params["DATA_EXP_0_PRECISION_0"],
         dut_params["DATA_EXP_0_PRECISION_1"],
         path=path,
+        constant_mult=CONSTANT_MULT,
     )
     mase_runner(
         trace=True,

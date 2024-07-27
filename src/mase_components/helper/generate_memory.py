@@ -26,7 +26,6 @@ FUNCTION_TABLE = {
     "softmax": torch.exp,
 }
 
-
 def fxtodouble(data_width: int, f_width: int, fx_num: str):
     intstr, fracstr = fx_num[: data_width - f_width], fx_num[data_width - f_width :]
     intval = float(BitArray(bin=intstr).int)
@@ -70,7 +69,7 @@ def generate_lookup(data_width: int, f_width: int, function: str, type="hex"):
 
 
 def aligned_generate_lookup(
-    in_data_width, in_f_width, data_width: int, f_width: int, function: str, type="hex"
+    in_data_width, in_f_width, data_width: int, f_width: int, function: str, type="hex",constant_mult=1,
 ):
     f = FUNCTION_TABLE[function]
     lut = {
@@ -91,7 +90,7 @@ def aligned_generate_lookup(
     while pi <= maxval:
         count += 1
         iarr.append(pi)
-        val = quanter(f(torch.tensor(pi)))  # entry in the lookup table
+        val = quanter(f(torch.tensor(pi*constant_mult)))  # entry in the lookup table
         lut[
             doubletofx(data_width=in_data_width, f_width=in_f_width, num=pi, type=type)
         ] = doubletofx(
@@ -103,7 +102,7 @@ def aligned_generate_lookup(
     while i <= -1 * 2 ** -(in_f_width):
         count += 1
         iarr.append(i)
-        val = quanter(f(torch.tensor(i)))  # entry in the lookup table
+        val = quanter(f(torch.tensor(i*constant_mult)))  # entry in the lookup table
         lut[
             doubletofx(data_width=in_data_width, f_width=in_f_width, num=i, type=type)
         ] = doubletofx(
@@ -211,6 +210,7 @@ def lookup_to_sv_file(
     function: str,
     file_path=None,
     path_with_dtype=False,
+    constant_mult=1,
 ):
     dicto = aligned_generate_lookup(
         in_data_width=in_data_width,
@@ -219,6 +219,7 @@ def lookup_to_sv_file(
         f_width=f_width,
         function=function,
         type="bin",
+        constant_mult=constant_mult,
     )
     dicto = {
         k: v
@@ -279,6 +280,7 @@ def generate_sv_lut(
     f_width,
     path=None,
     path_with_dtype=False,
+    constant_mult=1,
 ):
     assert (
         function_name in FUNCTION_TABLE
@@ -299,6 +301,7 @@ def generate_sv_lut(
             function_name,
             str(p / f"{function_name}_lut{end}.sv"),
             path_with_dtype=path_with_dtype,
+            constant_mult=constant_mult,
         )
     else:
         lookup_to_sv_file(
@@ -309,6 +312,7 @@ def generate_sv_lut(
             function_name,
             f"{path}/{function_name}_lut{end}.sv",
             path_with_dtype=path_with_dtype,
+            constant_mult=constant_mult,
         )
 
 
