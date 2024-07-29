@@ -1,5 +1,4 @@
-import numpy as np
-import cvxpy as cp
+import os
 from time import time
 import dill
 
@@ -246,8 +245,9 @@ def autosharding_analysis_pass(mg, pass_args: dict = {}):
     mesh = MeshModel(pass_args["mesh_shape"])
 
     # Preload autosharding solution
-    if pass_args.get("preload_solution", False):
-        fname = pass_args.get("ilp_solution_file", "ilp_solution.pkl")
+    fname = pass_args.get("ilp_solution_file", "ilp_solution.pkl")
+    # check if solution file exists
+    if pass_args.get("preload_solution", False) and os.path.exists(fname):
         logger.info(f"Preloading autosharding solution from: {fname}")
         with open(fname, "rb") as file:
             solution = dill.load(file)

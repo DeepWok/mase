@@ -1,15 +1,18 @@
+from copy import copy
+
+import torch
 import torch.fx as fx
+from torch.distributed._tensor.placement_types import Replicate, Shard
+
 from chop.tools import get_logger
 from chop.nn.functional.dtensor import redistribute_dtensor
 from chop.ir.graph import MaseMetadata
-
-from torch.distributed._tensor.placement_types import Replicate, Shard
 
 logger = get_logger(__name__)
 logger.setLevel("INFO")
 
 
-def resharding_transform_pass(mg, pass_args={}):
+def _insert_resharding_nodes(mg, pass_args={}):
     """Insert resharding nodes"""
     logger.info(
         f"Running resharding_transform_pass to insert resharding nodes along necessary edges."
@@ -20,6 +23,7 @@ def resharding_transform_pass(mg, pass_args={}):
             continue
 
         flattened_args = node.args + tuple(node.kwargs.values())
+        kwarg_keys = list(node.kwargs.keys())
 
         # Number of arguments should match metadata
         if node.op != "output" and len(flattened_args) != len(
@@ -43,7 +47,6 @@ def resharding_transform_pass(mg, pass_args={}):
             # Check if the parent node output spec is different from the arg input spec
             arg_info = node.meta["mase"]["common"]["args"][arg_name]
             arg_specs = arg_info.get("dtensor_spec", None)
-
             parent_out_specs = arg_obj.meta["mase"]["common"]["results"][
                 "data_out_0"
             ].get("dtensor_spec", None)
@@ -56,7 +59,7 @@ def resharding_transform_pass(mg, pass_args={}):
 
             if arg_specs.placements != parent_out_specs.placements:
                 logger.info(
-                    f"Inserting resharding node along edge {arg_obj} -> {node.name} due to arg {arg_idx}: {arg_name}"
+                    f"Inserting resharding node along edge {arg_obj} -> {node.name} because arg {arg_name} requires placement {arg_specs.placements} but parent node {arg_obj.name} has placement {parent_out_specs.placements}."
                 )
 
                 # Create resharding node
@@ -75,14 +78,30 @@ def resharding_transform_pass(mg, pass_args={}):
                 )
 
                 # Update the current node's argument
-                updated_args = list(node.args)
-                updated_args[arg_idx] = resharding_node
-                node.args = tuple(updated_args)
+                # Node arg can be referenced in either node.args or node.kwargs so we
+                # infer which container to update based on the arg_idx value, which
+                # indexes the combined list of args and kwargs
+                if arg_idx < len(node.args):
+                    updated_args = list(node.args)
+                    updated_args[arg_idx] = resharding_node
+                    node.args = tuple(updated_args)
+                else:
+                    kwarg_idx = arg_idx - len(node.args)
+                    arg_key = kwarg_keys[kwarg_idx]
+                    kwarg_dict = {}
+
+                    # Reconstruct they node.kwargs dict since this is immutable
+                    for key, value in node.kwargs.items():
+                        if key == arg_key:
+                            kwarg_dict[key] = resharding_node
+                        else:
+                            kwarg_dict[key] = value
+                    node.kwargs = kwarg_dict
 
     # Insert DTensor import at the top of code
     def insert_imports(body):
         return [
-            "from torch.distributed._tensor.placement_types import Replicate, Shard \n",
+            "from torch.distributed._tensor.placement_types import Replicate, Shard, Partial; sum = 'sum' \n",
             *body,
         ]
 
@@ -93,3 +112,7 @@ def resharding_transform_pass(mg, pass_args={}):
     mg.model.recompile()
 
     return mg, {}
+
+
+def resharding_transform_pass(mg, pass_args={}):
+    return _insert_resharding_nodes(mg, pass_args)

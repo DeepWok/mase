@@ -122,7 +122,7 @@ class OpDispatcher:
 
         # extract local tensor and sharding infos to a OpInfo
         op_info = self.unwrap_to_op_info(op_call, args, kwargs)
-        rlog(f"Dispatching op_call: {op_call.name}")
+        # rlog(f"Dispatching op_call: {op_call.name}")
 
         # self.sharding_propagator.propagate(op_info)
         # output_sharding = op_info.output_sharding

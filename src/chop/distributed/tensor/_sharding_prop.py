@@ -285,14 +285,14 @@ class ShardingPropagator:
                     if output_strategy.output_spec.is_sharded():
                         schema = suggestion_schema or op_schema
                         assert isinstance(out_tensor_meta, TensorMeta)
-                        rlog(f"Need the out tensor meta here!")
+                        # rlog(f"Need the out tensor meta here!")
                         suggestion_schema = self._adjust_shape_and_stride_args(
                             out_tensor_meta, schema, output_strategy.output_spec, mesh
                         )
                         needs_redistribute = True
 
-                    else:
-                        rlog(f"Don't need it because it's not sharded")
+                    # else:
+                    #     rlog(f"Don't need it because it's not sharded")
 
                 # construct output spec for the op
                 if op_schema.return_type_tuple_tensor_like():
@@ -324,7 +324,7 @@ class ShardingPropagator:
                     needs_redistribute=needs_redistribute,
                 )
             elif isinstance(op_strategy, TupleStrategy):
-                rlog(f"Strategy returned a TupleStrategy")
+                # rlog(f"Strategy returned a TupleStrategy")
                 # tuple strategy output sharding processing
                 # runtime selected placement strategy for each TupleStrategy input arg
                 selected_strategies: List[PlacementStrategy] = []
@@ -401,7 +401,7 @@ class ShardingPropagator:
             )
             return output_sharding
         elif op_schema.op in self.op_to_rules:
-            rlog(f"Op {op_schema.op} has no strategy, using rule")
+            # rlog(f"Op {op_schema.op} has no strategy, using rule")
             # propagate the sharding with rule
             sharding_prop_func = self.op_to_rules[op_schema.op]
 

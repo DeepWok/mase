@@ -1,14 +1,22 @@
 from typing import Tuple
 
 import torch
+import torch.fx as fx
 from torch.distributed.device_mesh import DeviceMesh
-from torch.distributed._tensor import DTensor
 from torch.distributed._tensor.placement_types import DTensorSpec
 from torch.distributed._tensor._redistribute import redistribute_local_tensor
 
 from torch.distributed._tensor.placement_types import Placement
 
+from chop.distributed.tensor import DTensor
+from chop.tools import get_logger
+from chop.distributed.utils import rlog
 
+logger = get_logger(__name__)
+logger.setLevel("DEBUG")
+
+
+@fx.wrap
 def dtensor_arange(
     start: int,
     end: int,
@@ -46,6 +54,7 @@ def dtensor_arange(
     )
 
 
+@fx.wrap
 def redistribute_dtensor(
     input: DTensor,
     placements: Tuple[Placement, ...],
@@ -62,18 +71,44 @@ def redistribute_dtensor(
     Returns:
         DTensor: The redistributed DTensor.
     """
+
+    # If we are not in a distributed setting, we can skip redistribution.
+    try:
+        rank = torch.distributed.get_rank()
+    except:
+        rank = 0
+
+    if not isinstance(input, DTensor):
+        rlog(
+            logger,
+            rank,
+            f"Skipping redistribution because received {type(input)} instead of DTensor",
+            level="warning",
+        )
+        return input
+
     current_spec = input._spec
+
+    rlog(
+        logger,
+        rank,
+        f"Redistributing tensor from {current_spec.placements} to {placements}",
+        level="info",
+    )
 
     if current_spec.placements != placements:
         target_spec = DTensorSpec(
-            None,
+            input._spec.mesh,
             placements,
             tensor_meta=input._spec.tensor_meta,
         )
 
         local_tensor = input._local_tensor
         output = redistribute_local_tensor(
-            local_tensor, current_spec, target_spec, async_op=async_op
+            local_tensor,
+            current_spec,
+            target_spec,
+            async_op=async_op,
         )
     else:
         # use the same local tensor if placements are the same.
