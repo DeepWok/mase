@@ -18,7 +18,7 @@ in pkgs.mkShellNoCC {
     # TODO: consider use setuptoolsBuildHook, as documented in https://nixos.org/manual/nixpkgs/stable/#python
     pythonPackages.venvShellHook
 
-    # houskeeping 
+    # houskeeping
     wget
     just
     sphinx
@@ -29,7 +29,6 @@ in pkgs.mkShellNoCC {
     mesa
     cmake
     zsh
-    just
 
     # hardware
     # verible is only supported on Linux (x86_64-linux, i686-linux and aarch64-linux)
@@ -40,7 +39,7 @@ in pkgs.mkShellNoCC {
   postShellHook = ''
     # install mase as a package
     sudo -H python3 -m pip install -e .
-    # add env variables 
+    # add env variables
     source scripts/init-nix.sh
   '';
 }

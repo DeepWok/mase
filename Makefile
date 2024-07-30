@@ -43,11 +43,6 @@ hw_test_dir = src/mase_components/
 
 NUM_WORKERS ?= 1
 
-sw_test_dir = machop/test/
-hw_test_dir = machop/mase_components/
-
-NUM_WORKERS ?= 1
-
 # Make sure the repo is up to date
 sync:
 	git submodule sync
@@ -56,8 +51,8 @@ sync:
 # Only needed if you are using the MLIR flow - it will be slow!
 sync-mlir:
 	bash mlir-air/utils/github-clone-build-libxaie.sh
-	bash mlir-air/utils/clone-llvm.sh 
-	bash mlir-air/utils/clone-mlir-aie.sh 
+	bash mlir-air/utils/clone-llvm.sh
+	bash mlir-air/utils/clone-mlir-aie.sh
 
 # Build Docker container
 build-docker:
