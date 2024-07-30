@@ -111,7 +111,6 @@ module fixed_self_attention_head #(
   logic attention_scores_valid;
   logic attention_scores_ready;
 
-  logic [OUT_DATA_PRECISION_0-1:0] out_pre_cast [OUT_DATA_PARALLELISM_DIM_0*OUT_DATA_PARALLELISM_DIM_1-1:0];
   logic [OUT_DATA_PRECISION_0-1:0] out_casted [OUT_DATA_PARALLELISM_DIM_0*OUT_DATA_PARALLELISM_DIM_1-1:0];
   logic out_cast_valid;
   logic out_cast_ready;
@@ -273,24 +272,9 @@ module fixed_self_attention_head #(
       .b_valid(value_valid),
       .b_ready(value_ready),
 
-      .out_data (out_pre_cast),
+      .out_data (out_casted),
       .out_valid(out_cast_valid),
       .out_ready(out_cast_ready)
-  );
-
-  // * Output cast
-
-  fixed_rounding #(
-      .IN_SIZE(OUT_DATA_PARALLELISM_DIM_0 * OUT_DATA_PARALLELISM_DIM_1),
-
-      .IN_WIDTH     (OUT_DATA_PRECISION_0),
-      .IN_FRAC_WIDTH(OUT_DATA_PRECISION_1),
-
-      .OUT_WIDTH     (OUT_DATA_PRECISION_0),
-      .OUT_FRAC_WIDTH(OUT_DATA_PRECISION_1)
-  ) data_out_cast (
-      .data_in (out_pre_cast),
-      .data_out(out_casted)
   );
 
   unpacked_register_slice #(

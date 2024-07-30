@@ -17,7 +17,7 @@ from mase_cocotb.runner import mase_runner
 
 # from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner
 from chop.nn.quantized import ViTSelfAttentionHeadInteger
-from chop.nn.quantizers import integer_quantizer
+from chop.nn.quantizers import integer_quantizer, integer_floor_quantizer
 
 from mase_components.helper import generate_memory
 
@@ -71,6 +71,7 @@ class FixedSelfAttentionHeadTB(Testbench):
             dim=self.get_parameter("IN_DATA_TENSOR_SIZE_DIM_0"),
             num_heads=1,
             q_config=self.q_config,
+            floor=True,
         )
         # assert self.model.mult_data == torch.tensor(MULT_DATA), f"running set mult data {self.model.mult_data} != {MULT_DATA}"
         # Set verbosity of driver and monitor loggers to debug
@@ -86,12 +87,13 @@ class FixedSelfAttentionHeadTB(Testbench):
             "value_layer": torch.randn((seq_len, self.head_size)),
         }
 
-    def preprocess_tensor(self, tensor, config, parallelism):
+    def preprocess_tensor(self, tensor, config, parallelism, floor=True):
         if len(tensor.shape) == 1:
             tensor = tensor.unsqueeze(0)
 
         # Quantize
-        quantizer = partial(integer_quantizer, **config)
+        base_quantizer = integer_floor_quantizer if floor else integer_quantizer
+        quantizer = partial(base_quantizer, **config)
         q_tensor = quantizer(tensor)
         self.log.debug(f"Quantized tensor: {q_tensor}")
 
@@ -193,10 +195,10 @@ default_config = {
         "IN_DATA_TENSOR_SIZE_DIM_1": 64,
         "IN_DATA_PARALLELISM_DIM_0": 4,
         "IN_DATA_PARALLELISM_DIM_1": 2,
-        "IN_DATA_PRECISION_0": 12,
+        "IN_DATA_PRECISION_0": 8,
         "IN_DATA_PRECISION_1": 4,
         "ACTIVATION": 1,
-        "QKMM_OUT_PRECISION_0": 12,
+        "QKMM_OUT_PRECISION_0": 8,
         "QKMM_OUT_PRECISION_1": 4,
         "SOFTMAX_EXP_PRECISION_0": 16,
         "SOFTMAX_EXP_PRECISION_1": 4,
@@ -206,6 +208,24 @@ default_config = {
         "OUT_DATA_PRECISION_0": 12,
         "OUT_DATA_PRECISION_1": 4,
     }
+# default_config = {
+#         "IN_DATA_TENSOR_SIZE_DIM_0": 4,
+#         "IN_DATA_TENSOR_SIZE_DIM_1": 2,
+#         "IN_DATA_PARALLELISM_DIM_0": 2,
+#         "IN_DATA_PARALLELISM_DIM_1": 1,
+#         "ACTIVATION": 1,
+#         "IN_DATA_PRECISION_0": 8,
+#         "IN_DATA_PRECISION_1": 4,
+#         "QKMM_OUT_PRECISION_0": 8,
+#         "QKMM_OUT_PRECISION_1": 4,
+#         "SOFTMAX_EXP_PRECISION_0": 16,
+#         "SOFTMAX_EXP_PRECISION_1": 4,
+
+#         "SOFTMAX_OUT_DATA_PRECISION_1": 7,
+
+#         "OUT_DATA_PRECISION_0": 12,
+#         "OUT_DATA_PRECISION_1": 4,
+#     }
 def get_fixed_self_attention_head_config(kwargs={}):
     config = default_config
     config.update(kwargs)
@@ -247,6 +267,7 @@ def test_fixed_self_attention_head_smoke():
         default_config["SOFTMAX_EXP_PRECISION_1"],
         path=Path(__file__).parents[1] / "rtl",
         constant_mult=MULT_DATA,
+        floor=True,
     )
     mase_runner(
         trace=True,

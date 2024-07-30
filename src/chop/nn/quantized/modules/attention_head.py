@@ -12,7 +12,7 @@ from chop.nn.quantized.functional.matmul import (
 from chop.nn.quantized.functional.softmax import (
     softmax_integer,
 )
-from chop.nn.quantizers.integer import integer_quantizer
+from chop.nn.quantizers.integer import integer_quantizer, integer_floor_quantizer
 
 class _BertSelfAttentionHeadBase(torch.nn.Module):
     def __init__(self, config) -> None:
@@ -96,12 +96,11 @@ class BertSelfAttentionHeadInteger(_BertSelfAttentionHeadBase):
 class _ViTSelfAttentionHeadBase(torch.nn.Module):
     def __init__(self, dim, num_heads, attn_drop) -> None:
         super().__init__()
-        self.attention_head_size = dim // num_heads
         self.dropout = nn.Dropout(attn_drop)
 
         self.matmul1 = torch.matmul
         self.matmul2 = torch.matmul
-        self.mult_data = torch.tensor(1 / math.sqrt(self.attention_head_size))
+        self.mult_data = torch.tensor(1 / math.sqrt(dim))
         self.act = nn.functional.softmax
 
     def self_attention_head(
@@ -140,21 +139,21 @@ class _ViTSelfAttentionHeadBase(torch.nn.Module):
 
 
 class ViTSelfAttentionHeadInteger(_ViTSelfAttentionHeadBase):
-    def __init__(self, dim, num_heads, attn_drop = 0.0, q_config: dict = None, ) -> None:
+    def __init__(self, dim, num_heads, attn_drop = 0.0, q_config: dict = None, floor=False) -> None:
         super().__init__(dim, num_heads, attn_drop)
-
+        base_quantizer = integer_floor_quantizer if floor else integer_quantizer
         self.query_quantizer = partial(
-            integer_quantizer,
+            base_quantizer,
             width = q_config["query_width"],
             frac_width = q_config["query_frac_width"]
         )
         self.key_quantizer = partial(
-            integer_quantizer,
+            base_quantizer,
             width = q_config["key_width"],
             frac_width = q_config["key_frac_width"]
             )
         self.value_quantizer = partial(
-            integer_quantizer,
+            base_quantizer,
             width = q_config["value_width"],
             frac_width = q_config["value_frac_width"]
             )
@@ -169,7 +168,8 @@ class ViTSelfAttentionHeadInteger(_ViTSelfAttentionHeadBase):
             out_config = {
                 "data_out_width": q_config["qkmm_out_width"],
                 "data_out_frac_width": q_config["qkmm_out_frac_width"]
-            }
+            },
+            floor = floor,
             )
         self.act = partial(
             softmax_integer,
@@ -181,6 +181,7 @@ class ViTSelfAttentionHeadInteger(_ViTSelfAttentionHeadBase):
                 "data_out_frac_width": q_config["softmax_out_frac_width"],
                 "mult_data": self.mult_data,
             },
+            floor=floor,
         )
         self.mult_data=torch.tensor(1)
         self.matmul2 = partial(
@@ -194,6 +195,7 @@ class ViTSelfAttentionHeadInteger(_ViTSelfAttentionHeadBase):
             out_config = {
                 "data_out_width": q_config["svmm_out_width"],
                 "data_out_frac_width": q_config["svmm_out_frac_width"]
-            }
+            },
+            floor = floor,
             )
         
