@@ -112,25 +112,29 @@ def fully_replicated_strategy(meta, mesh):
         in_shape = meta["common"]["self"].shape
         in_dtype = meta["common"]["self"].dtype
     else:
-        first_arg_key = (
-            "data_in_0"
-            if "data_in_0" in meta["common"]["args"]
-            else [i for i in meta["common"]["args"].keys()][0]
-        )
-        arg = meta["common"]["args"][first_arg_key]
-        in_shape, in_dtype = find_shape_and_dtype(arg)
+        if len(meta["common"]["args"]) > 0:
+            first_arg_key = (
+                "data_in_0"
+                if "data_in_0" in meta["common"]["args"]
+                else [i for i in meta["common"]["args"].keys()][0]
+            )
+            arg = meta["common"]["args"][first_arg_key]
+            in_shape, in_dtype = find_shape_and_dtype(arg)
 
-    in_spec = [
-        DTensorSpec(
-            mesh,
-            sharding,
-            tensor_meta=TensorMeta(
-                shape=in_shape,
-                stride=None,
-                dtype=in_dtype,
-            ),
-        )
-    ] * len(meta["common"]["args"].keys())
+            in_spec = [
+                DTensorSpec(
+                    mesh,
+                    sharding,
+                    tensor_meta=TensorMeta(
+                        shape=in_shape,
+                        stride=None,
+                        dtype=in_dtype,
+                    ),
+                )
+            ] * len(meta["common"]["args"].keys())
+
+        else:
+            in_spec = []
 
     dtype_key = (
         "torch_dtype"

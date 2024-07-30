@@ -6,8 +6,12 @@ from copy import copy
 import torch
 import torch.fx as fx
 from torch.distributed._tensor._collective_utils import redistribute_cost
-from torch.distributed._tensor._op_schema import DTensorSpec, OpStrategy
-from torch.distributed._tensor.placement_types import Shard
+from torch.distributed._tensor._op_schema import (
+    DTensorSpec,
+    OpStrategy,
+    PlacementStrategy,
+)
+from torch.distributed._tensor.placement_types import Shard, Replicate
 
 from chop.tools import get_logger
 from chop.tools.utils import deepgetattr
@@ -19,6 +23,7 @@ from .layers import (
     AUTOSHARDING_METHODS,
     IMPLICIT_FUNCS,
     IMPLICIT_METHODS,
+    FULLY_REPLICATED_FUNCS,
 )
 from .strategies.common import (
     fully_replicated_strategy,
@@ -125,6 +130,55 @@ def _get_computation_cost_from_strategy(
     return np.mean(elapsed[warmup_iters:])
 
 
+def _no_tensor_args(node):
+    has_tensor_args = False
+    for arg, arg_info in node.meta["mase"]["common"]["args"].items():
+        if isinstance(arg_info["value"], torch.Tensor):
+            has_tensor_args = True
+            break
+    return not has_tensor_args
+
+
+def _inherit_strategy(node, parent_strategy):
+    """
+    Inherit the sharding strategy from the parent node. The main data
+    argument is assigned the ouput sharding of the parent node, with
+    all other arguments casted to fully replicated placement. The output
+    sharding of the parent node is also assigned to the output spec of
+    each strategy since implicit nodes don't change the tensor shardings
+
+    Args:
+        node (fx.Node): input node.
+        parent_strategy (OpStrategy): parent node's sharding strategy.
+
+    Returns:
+        OpStrategy: inherited sharding strategy.
+    """
+
+    strategies = []
+
+    logger.warning(
+        f"Node {node.name} will inherit sharding strategy from its parent, {node.all_input_nodes[0].name}."
+    )
+    logger.warning(f"Args: {node.meta['mase']['common']['args'].keys()}")
+    for strategy in parent_strategy.strategies:
+        spec = [strategy.output_specs] + [
+            DTensorSpec(
+                mesh=strategy.output_specs.mesh,
+                placements=(Replicate(), Replicate()),
+                tensor_meta=None,
+            )
+        ] * (len(node.meta["mase"]["common"]["args"]) - 1)
+        strategies.append(
+            PlacementStrategy(
+                input_specs=spec,
+                output_specs=spec[0],
+            )
+        )
+
+    return OpStrategy(strategies)
+
+
 def _extract_ilp(mg, mesh, pass_args={}):
     """
     For each node in the graph, assign an OpStrategy object which contains all possible
@@ -151,47 +205,8 @@ def _extract_ilp(mg, mesh, pass_args={}):
     # Find sharding strategies for each operator in the graph
     for node in mg.fx_graph.nodes:
 
-        if (node.op == "call_function" and node.target in IMPLICIT_FUNCS) or (
-            node.op == "call_method" and node.target in IMPLICIT_METHODS
-        ):
-            logger.debug(
-                f"Implicit {node.op} node {node.name} was assigned fully replicated sharding."
-            )
-
-            op_strategy = fully_replicated_strategy(node.meta["mase"], mesh)
-            opt_var = cp.Variable(1, boolean=True)
-            constr += [
-                cp.sum(opt_var) == 1,
-            ]
-
-            # Opt var is None since no decision needs to be taken
-            node.meta["mase"]["software"]["autosharding"] = {
-                "op_strategy": op_strategy,
-                "opt_var": opt_var,
-            }
-            continue
-
-        # Output nodes simply propagate op_strategy from their input nodes
-        elif node.op == "output":
-            logger.debug(
-                f"Op strategy from node {node.all_input_nodes[0]} is propagated to {node} node."
-            )
-            opt_var = cp.Variable(1, boolean=True)
-            constr += [
-                cp.sum(opt_var) == 1,
-            ]
-            node.meta["mase"]["software"]["autosharding"] = {
-                "op_strategy": node.all_input_nodes[0].meta["mase"]["software"][
-                    "autosharding"
-                ]["op_strategy"],
-                "opt_var": opt_var,
-            }
-            continue
-
-        # Obtain strategy according to node op
-        # ================================================
-
-        elif node.op in [
+        # Placeholder and get_attr nodes inject tensors into the graph
+        if node.op in [
             "placeholder",
             "get_attr",
         ]:
@@ -204,6 +219,55 @@ def _extract_ilp(mg, mesh, pass_args={}):
                 skip_fully_replicated=pass_args.get("skip_fully_replicated", False),
             )
 
+        # Constrain some nodes to have fully replicated sharding
+        elif node.op == "call_function" and node.target in FULLY_REPLICATED_FUNCS:
+            logger.debug(
+                f"Node {node.name} will be assigned fully replicated sharding."
+            )
+
+            op_strategy = fully_replicated_strategy(node.meta["mase"], mesh)
+            opt_var = cp.Variable(1, boolean=True)
+            constr += [
+                cp.sum(opt_var) == 1,
+            ]
+
+            # Opt var is None since no decision needs to be taken
+            node.meta["mase"]["software"]["autosharding"] = {
+                "op_strategy": op_strategy,
+                "opt_var": opt_var,
+                "is_implicit": False,
+            }
+            continue
+
+        # Output nodes, implicit nodes and nodes with only non-tensor arguments
+        # inherit the sharding strategy from their parent node
+        elif (
+            node.op == "output"
+            or node.op == "call_function"
+            and node.target in IMPLICIT_FUNCS
+            or _no_tensor_args(node)
+        ):
+            logger.debug(
+                f"Node {node.name} will inherit sharding strategy from its parent, {node.all_input_nodes[0].name}."
+            )
+            opt_var = cp.Variable(1, boolean=True)
+            constr += [
+                cp.sum(opt_var) == 1,
+            ]
+            node.meta["mase"]["software"]["autosharding"] = {
+                "op_strategy": _inherit_strategy(
+                    node,
+                    node.all_input_nodes[0].meta["mase"]["software"]["autosharding"][
+                        "op_strategy"
+                    ],
+                ),
+                "opt_var": opt_var,
+                "is_implicit": True,
+                "inherited_from": node.all_input_nodes[0],
+            }
+            continue
+
+        # For general call_function nodes, evaluate strategy based on the target
         elif (
             node.op == "call_function" and node.target in AUTOSHARDING_FUNCTIONS.keys()
         ):
@@ -225,6 +289,7 @@ def _extract_ilp(mg, mesh, pass_args={}):
                     mesh,
                 ),
                 "opt_var": opt_var,
+                "is_implicit": False,
             }
             continue
 
@@ -238,6 +303,7 @@ def _extract_ilp(mg, mesh, pass_args={}):
         node.meta["mase"]["software"]["autosharding"] = {
             "op_strategy": op_strategy,
             "opt_var": opt_var,
+            "is_implicit": False,
         }
 
         # Consider computation cost (c_v term) for each of the node's strategies
@@ -380,12 +446,19 @@ def _mark_sharding(mg, pass_args):
     for node in mg.fx_graph.nodes:
         opt_var = node.meta["mase"]["software"]["autosharding"]["opt_var"]
 
-        if opt_var is None:
+        # Get the strategy chosen by the ILP
+        if node.meta["mase"]["software"]["autosharding"].get("is_implicit", False):
+            parent_node = node.meta["mase"]["software"]["autosharding"][
+                "inherited_from"
+            ]
+            idx = parent_node.meta["mase"]["software"]["autosharding"][
+                "chosen_strategy_idx"
+            ]
             chosen_strategy = node.meta["mase"]["software"]["autosharding"][
                 "op_strategy"
-            ]
+            ].strategies[idx]
+
         else:
-            # Get the strategy chosen by the ILP
             try:
                 idx = np.where(opt_var.value == 1)[0][0]
             except:
@@ -396,6 +469,7 @@ def _mark_sharding(mg, pass_args):
             ].strategies[idx]
 
         # Annotate chosen placement strategy
+        node.meta["mase"]["software"]["autosharding"]["chosen_strategy_idx"] = idx
         node.meta["mase"]["software"]["autosharding"][
             "placement_strategy"
         ] = chosen_strategy

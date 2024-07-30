@@ -276,11 +276,17 @@ AUTOSHARDING_METHODS = {
     "contiguous": tensor_op_strategy,
 }
 
+FULLY_REPLICATED_FUNCS = [
+    F.embedding,
+    torch.arange,
+]
+
+# Implicit functions inherit their parent's strategy
+# and do not change the sharding profile of their input tensors
 IMPLICIT_FUNCS = [
     operator.getitem,
     getattr,
     torch.finfo,
-    torch.arange,
     torch_size,
 ]
 
