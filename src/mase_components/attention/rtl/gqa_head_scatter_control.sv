@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module gqa_head_scatter_control #(
-    parameter NUM_HEADS = 12,
+    parameter NUM_HEADS  = 12,
     parameter GROUP_SIZE = 4,
 
     // Example:
@@ -40,157 +40,157 @@ module gqa_head_scatter_control #(
     input  logic [NUM_HEADS-1:0] split_value_ready
 );
 
-// -----
-// Params
-// -----
+  // -----
+  // Params
+  // -----
 
-localparam NUM_GROUPS = NUM_HEADS / GROUP_SIZE;
+  localparam NUM_GROUPS = NUM_HEADS / GROUP_SIZE;
 
-localparam GROUPED_TENSOR_SIZE_DIM_0 = IN_DATA_TENSOR_SIZE_DIM_0 / GROUP_SIZE;
-localparam GROUPED_TENSOR_SIZE_DIM_1 = IN_DATA_TENSOR_SIZE_DIM_1;
+  localparam GROUPED_TENSOR_SIZE_DIM_0 = IN_DATA_TENSOR_SIZE_DIM_0 / GROUP_SIZE;
+  localparam GROUPED_TENSOR_SIZE_DIM_1 = IN_DATA_TENSOR_SIZE_DIM_1;
 
-localparam HEAD_TENSOR_SIZE_DIM_0 = IN_DATA_TENSOR_SIZE_DIM_0 / NUM_HEADS;
+  localparam HEAD_TENSOR_SIZE_DIM_0 = IN_DATA_TENSOR_SIZE_DIM_0 / NUM_HEADS;
 
-localparam GROUPED_DEPTH_DIM_0 = HEAD_TENSOR_SIZE_DIM_0 / IN_DATA_PARALLELISM_DIM_0;
-localparam GROUPED_DEPTH_DIM_1 = GROUPED_TENSOR_SIZE_DIM_1 / IN_DATA_PARALLELISM_DIM_1;
+  localparam GROUPED_DEPTH_DIM_0 = HEAD_TENSOR_SIZE_DIM_0 / IN_DATA_PARALLELISM_DIM_0;
+  localparam GROUPED_DEPTH_DIM_1 = GROUPED_TENSOR_SIZE_DIM_1 / IN_DATA_PARALLELISM_DIM_1;
 
-// Number of packets per head
-localparam HEAD_NUM_PACKETS = GROUPED_DEPTH_DIM_0 * GROUPED_DEPTH_DIM_1;
-localparam NUM_PACKETS_CTR_WIDTH = HEAD_NUM_PACKETS == 1 ? 1 : $clog2(HEAD_NUM_PACKETS);
+  // Number of packets per head
+  localparam HEAD_NUM_PACKETS = GROUPED_DEPTH_DIM_0 * GROUPED_DEPTH_DIM_1;
+  localparam NUM_PACKETS_CTR_WIDTH = HEAD_NUM_PACKETS == 1 ? 1 : $clog2(HEAD_NUM_PACKETS);
 
-// Group counter
-localparam GROUP_CTR_WIDTH = NUM_GROUPS == 1 ? 1 : $clog2(NUM_GROUPS);
+  // Group counter
+  localparam GROUP_CTR_WIDTH = NUM_GROUPS == 1 ? 1 : $clog2(NUM_GROUPS);
 
-initial begin
+  initial begin
     // Divisibility checks
     assert (NUM_GROUPS * GROUP_SIZE == NUM_HEADS);
     assert (GROUP_SIZE * GROUPED_TENSOR_SIZE_DIM_0 == IN_DATA_TENSOR_SIZE_DIM_0);
     assert (NUM_HEADS * HEAD_TENSOR_SIZE_DIM_0 == IN_DATA_TENSOR_SIZE_DIM_0);
     assert (IN_DATA_PARALLELISM_DIM_0 * GROUPED_DEPTH_DIM_0 == HEAD_TENSOR_SIZE_DIM_0);
     assert (IN_DATA_PARALLELISM_DIM_1 * GROUPED_DEPTH_DIM_1 == GROUPED_TENSOR_SIZE_DIM_1);
-end
+  end
 
-// -----
-// Wires
-// -----
+  // -----
+  // Wires
+  // -----
 
-logic [NUM_GROUPS-1:0] grouped_key_valid;
-logic [NUM_GROUPS-1:0] grouped_key_ready;
+  logic [NUM_GROUPS-1:0] grouped_key_valid;
+  logic [NUM_GROUPS-1:0] grouped_key_ready;
 
-logic [NUM_GROUPS-1:0] grouped_value_valid;
-logic [NUM_GROUPS-1:0] grouped_value_ready;
+  logic [NUM_GROUPS-1:0] grouped_value_valid;
+  logic [NUM_GROUPS-1:0] grouped_value_ready;
 
-// -----
-// State
-// -----
+  // -----
+  // State
+  // -----
 
-typedef struct packed {
+  typedef struct packed {
     logic [NUM_PACKETS_CTR_WIDTH-1:0] k_block_count;
     logic [GROUP_CTR_WIDTH-1:0] k_group_count;
-} self_t;
+  } self_t;
 
-self_t self, next_self;
+  self_t self, next_self;
 
-// -----
-// Modules
-// -----
+  // -----
+  // Modules
+  // -----
 
-// Instantiate Q scatter
+  // Instantiate Q scatter
 
-self_attention_head_single_scatter #(
-    .NUM_HEADS                  (NUM_HEADS),
-    .IN_DATA_TENSOR_SIZE_DIM_0  (IN_DATA_TENSOR_SIZE_DIM_0),
-    .IN_DATA_TENSOR_SIZE_DIM_1  (IN_DATA_TENSOR_SIZE_DIM_1),
-    .IN_DATA_PARALLELISM_DIM_0  (IN_DATA_PARALLELISM_DIM_0),
-    .IN_DATA_PARALLELISM_DIM_1  (IN_DATA_PARALLELISM_DIM_1)
-) q_scatter (
-    .clk                        (clk),
-    .rst                        (rst),
-    .in_valid                   (query_valid),
-    .in_ready                   (query_ready),
-    .out_valid                  (split_query_valid),
-    .out_ready                  (split_query_ready)
-);
+  self_attention_head_single_scatter #(
+      .NUM_HEADS                (NUM_HEADS),
+      .IN_DATA_TENSOR_SIZE_DIM_0(IN_DATA_TENSOR_SIZE_DIM_0),
+      .IN_DATA_TENSOR_SIZE_DIM_1(IN_DATA_TENSOR_SIZE_DIM_1),
+      .IN_DATA_PARALLELISM_DIM_0(IN_DATA_PARALLELISM_DIM_0),
+      .IN_DATA_PARALLELISM_DIM_1(IN_DATA_PARALLELISM_DIM_1)
+  ) q_scatter (
+      .clk      (clk),
+      .rst      (rst),
+      .in_valid (query_valid),
+      .in_ready (query_ready),
+      .out_valid(split_query_valid),
+      .out_ready(split_query_ready)
+  );
 
-// K Scatter
-// The key is already transposed and in correct format so all we do is count
-// input signal
+  // K Scatter
+  // The key is already transposed and in correct format so all we do is count
+  // input signal
 
-// Handshake signals
-for (genvar i = 0; i < NUM_GROUPS; i++) begin
+  // Handshake signals
+  for (genvar i = 0; i < NUM_GROUPS; i++) begin
     assign grouped_key_valid[i] = (self.k_group_count == i) && key_valid;
-end
-assign key_ready = grouped_key_ready[self.k_group_count];
+  end
+  assign key_ready = grouped_key_ready[self.k_group_count];
 
-// Counter logic
-always_comb begin
+  // Counter logic
+  always_comb begin
     next_self = self;
 
     if (key_valid && key_ready) begin
-        if ((self.k_group_count == NUM_GROUPS-1) &&
+      if ((self.k_group_count == NUM_GROUPS-1) &&
             (self.k_block_count == HEAD_NUM_PACKETS-1)) begin
-            next_self.k_block_count = 0;
-            next_self.k_group_count = 0;
-        end else if (self.k_block_count == HEAD_NUM_PACKETS-1) begin
-            next_self.k_block_count = 0;
-            next_self.k_group_count = self.k_group_count + 1;
-        end else begin
-            next_self.k_block_count = self.k_block_count + 1;
-        end
+        next_self.k_block_count = 0;
+        next_self.k_group_count = 0;
+      end else if (self.k_block_count == HEAD_NUM_PACKETS - 1) begin
+        next_self.k_block_count = 0;
+        next_self.k_group_count = self.k_group_count + 1;
+      end else begin
+        next_self.k_block_count = self.k_block_count + 1;
+      end
     end
-end
+  end
 
-always_ff @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
-        self <= '{default: '0};
+      self <= '{default: '0};
     end else begin
-        self <= next_self;
+      self <= next_self;
     end
-end
+  end
 
-// Instantiate V scatter
+  // Instantiate V scatter
 
-// We only instantiate NUM_GROUPS of outputs for K & V since we will duplicate
-// each output GROUP_SIZE times.
+  // We only instantiate NUM_GROUPS of outputs for K & V since we will duplicate
+  // each output GROUP_SIZE times.
 
-self_attention_head_single_scatter #(
-    .NUM_HEADS                  (NUM_GROUPS),
-    .IN_DATA_TENSOR_SIZE_DIM_0  (GROUPED_TENSOR_SIZE_DIM_0),
-    .IN_DATA_TENSOR_SIZE_DIM_1  (GROUPED_TENSOR_SIZE_DIM_1),
-    .IN_DATA_PARALLELISM_DIM_0  (IN_DATA_PARALLELISM_DIM_0),
-    .IN_DATA_PARALLELISM_DIM_1  (IN_DATA_PARALLELISM_DIM_1)
-) v_scatter (
-    .clk                        (clk),
-    .rst                        (rst),
-    .in_valid                   (value_valid),
-    .in_ready                   (value_ready),
-    .out_valid                  (grouped_value_valid),
-    .out_ready                  (grouped_value_ready)
-);
+  self_attention_head_single_scatter #(
+      .NUM_HEADS                (NUM_GROUPS),
+      .IN_DATA_TENSOR_SIZE_DIM_0(GROUPED_TENSOR_SIZE_DIM_0),
+      .IN_DATA_TENSOR_SIZE_DIM_1(GROUPED_TENSOR_SIZE_DIM_1),
+      .IN_DATA_PARALLELISM_DIM_0(IN_DATA_PARALLELISM_DIM_0),
+      .IN_DATA_PARALLELISM_DIM_1(IN_DATA_PARALLELISM_DIM_1)
+  ) v_scatter (
+      .clk      (clk),
+      .rst      (rst),
+      .in_valid (value_valid),
+      .in_ready (value_ready),
+      .out_valid(grouped_value_valid),
+      .out_ready(grouped_value_ready)
+  );
 
 
-// Pipeline split single group handshake signal across entire group
-// Not just simple duplication since heads operate at different times.
-// Note that data is also buffered in separate downstream fifos in the main module.
+  // Pipeline split single group handshake signal across entire group
+  // Not just simple duplication since heads operate at different times.
+  // Note that data is also buffered in separate downstream fifos in the main module.
 
-for (genvar i = 0; i < NUM_GROUPS; i++) begin : pipeline_splits
+  for (genvar i = 0; i < NUM_GROUPS; i++) begin : pipeline_splits
     split_n #(
-        .N               (GROUP_SIZE)
+        .N(GROUP_SIZE)
     ) split_key_inst (
-        .data_in_valid   (grouped_key_valid[i]),
-        .data_in_ready   (grouped_key_ready[i]),
-        .data_out_valid  (split_key_valid[(i+1)*GROUP_SIZE-1 : i*GROUP_SIZE]),
-        .data_out_ready  (split_key_ready[(i+1)*GROUP_SIZE-1 : i*GROUP_SIZE])
+        .data_in_valid (grouped_key_valid[i]),
+        .data_in_ready (grouped_key_ready[i]),
+        .data_out_valid(split_key_valid[(i+1)*GROUP_SIZE-1 : i*GROUP_SIZE]),
+        .data_out_ready(split_key_ready[(i+1)*GROUP_SIZE-1 : i*GROUP_SIZE])
     );
     split_n #(
-        .N               (GROUP_SIZE)
+        .N(GROUP_SIZE)
     ) split_value_inst (
-        .data_in_valid   (grouped_value_valid[i]),
-        .data_in_ready   (grouped_value_ready[i]),
-        .data_out_valid  (split_value_valid[(i+1)*GROUP_SIZE-1 : i*GROUP_SIZE]),
-        .data_out_ready  (split_value_ready[(i+1)*GROUP_SIZE-1 : i*GROUP_SIZE])
+        .data_in_valid (grouped_value_valid[i]),
+        .data_in_ready (grouped_value_ready[i]),
+        .data_out_valid(split_value_valid[(i+1)*GROUP_SIZE-1 : i*GROUP_SIZE]),
+        .data_out_ready(split_value_ready[(i+1)*GROUP_SIZE-1 : i*GROUP_SIZE])
     );
-end
+  end
 
 
 endmodule

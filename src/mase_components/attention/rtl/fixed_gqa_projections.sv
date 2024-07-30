@@ -127,136 +127,132 @@ module fixed_gqa_projections #(
 
   // * Split the incoming data over the QKV projections
   split_n #(
-      .N               (3)
+      .N(3)
   ) split_i (
-      .data_in_valid   (data_in_0_valid),
-      .data_in_ready   (data_in_0_ready),
-      .data_out_valid  ({query_data_in_valid,
-                         key_data_in_valid,
-                         value_data_in_valid}),
-      .data_out_ready  ({query_data_in_ready,
-                         key_data_in_ready,
-                         value_data_in_ready})
+      .data_in_valid (data_in_0_valid),
+      .data_in_ready (data_in_0_ready),
+      .data_out_valid({query_data_in_valid, key_data_in_valid, value_data_in_valid}),
+      .data_out_ready({query_data_in_ready, key_data_in_ready, value_data_in_ready})
   );
 
   // * Query linear
 
   fixed_linear #(
-      .HAS_BIAS                     (HAS_BIAS),
-      .WEIGHTS_PRE_TRANSPOSED       (WEIGHTS_PRE_TRANSPOSED),
+      .HAS_BIAS              (HAS_BIAS),
+      .WEIGHTS_PRE_TRANSPOSED(WEIGHTS_PRE_TRANSPOSED),
 
-      .DATA_IN_0_PRECISION_0        (DATA_IN_0_PRECISION_0),
-      .DATA_IN_0_PRECISION_1        (DATA_IN_0_PRECISION_1),
-      .DATA_IN_0_TENSOR_SIZE_DIM_0  (DATA_IN_0_TENSOR_SIZE_DIM_0),
-      .DATA_IN_0_TENSOR_SIZE_DIM_1  (DATA_IN_0_TENSOR_SIZE_DIM_1),
-      .DATA_IN_0_PARALLELISM_DIM_0  (DATA_IN_0_PARALLELISM_DIM_0),
-      .DATA_IN_0_PARALLELISM_DIM_1  (DATA_IN_0_PARALLELISM_DIM_1),
+      .DATA_IN_0_PRECISION_0      (DATA_IN_0_PRECISION_0),
+      .DATA_IN_0_PRECISION_1      (DATA_IN_0_PRECISION_1),
+      .DATA_IN_0_TENSOR_SIZE_DIM_0(DATA_IN_0_TENSOR_SIZE_DIM_0),
+      .DATA_IN_0_TENSOR_SIZE_DIM_1(DATA_IN_0_TENSOR_SIZE_DIM_1),
+      .DATA_IN_0_PARALLELISM_DIM_0(DATA_IN_0_PARALLELISM_DIM_0),
+      .DATA_IN_0_PARALLELISM_DIM_1(DATA_IN_0_PARALLELISM_DIM_1),
 
-      .WEIGHT_PRECISION_0           (WEIGHT_PRECISION_0),
-      .WEIGHT_PRECISION_1           (WEIGHT_PRECISION_1),
-      .WEIGHT_TENSOR_SIZE_DIM_0     (WEIGHT_TENSOR_SIZE_DIM_0),
-      .WEIGHT_TENSOR_SIZE_DIM_1     (WEIGHT_TENSOR_SIZE_DIM_1),
-      .WEIGHT_PARALLELISM_DIM_0     (WEIGHT_PARALLELISM_DIM_0),
-      .WEIGHT_PARALLELISM_DIM_1     (WEIGHT_PARALLELISM_DIM_1),
+      .WEIGHT_PRECISION_0      (WEIGHT_PRECISION_0),
+      .WEIGHT_PRECISION_1      (WEIGHT_PRECISION_1),
+      .WEIGHT_TENSOR_SIZE_DIM_0(WEIGHT_TENSOR_SIZE_DIM_0),
+      .WEIGHT_TENSOR_SIZE_DIM_1(WEIGHT_TENSOR_SIZE_DIM_1),
+      .WEIGHT_PARALLELISM_DIM_0(WEIGHT_PARALLELISM_DIM_0),
+      .WEIGHT_PARALLELISM_DIM_1(WEIGHT_PARALLELISM_DIM_1),
 
-      .BIAS_PRECISION_0             (BIAS_PRECISION_0),
-      .BIAS_PRECISION_1             (BIAS_PRECISION_1),
-      .BIAS_TENSOR_SIZE_DIM_0       (BIAS_TENSOR_SIZE_DIM_0),
-      .BIAS_TENSOR_SIZE_DIM_1       (BIAS_TENSOR_SIZE_DIM_1),
-      .BIAS_PARALLELISM_DIM_0       (BIAS_PARALLELISM_DIM_0),
-      .BIAS_PARALLELISM_DIM_1       (BIAS_PARALLELISM_DIM_1),
+      .BIAS_PRECISION_0      (BIAS_PRECISION_0),
+      .BIAS_PRECISION_1      (BIAS_PRECISION_1),
+      .BIAS_TENSOR_SIZE_DIM_0(BIAS_TENSOR_SIZE_DIM_0),
+      .BIAS_TENSOR_SIZE_DIM_1(BIAS_TENSOR_SIZE_DIM_1),
+      .BIAS_PARALLELISM_DIM_0(BIAS_PARALLELISM_DIM_0),
+      .BIAS_PARALLELISM_DIM_1(BIAS_PARALLELISM_DIM_1),
 
-      .DATA_OUT_0_PRECISION_0       (DATA_OUT_0_PRECISION_0),
-      .DATA_OUT_0_PRECISION_1       (DATA_OUT_0_PRECISION_1)
+      .DATA_OUT_0_PRECISION_0(DATA_OUT_0_PRECISION_0),
+      .DATA_OUT_0_PRECISION_1(DATA_OUT_0_PRECISION_1)
 
   ) fixed_linear_query (
-      .clk                          (clk),
-      .rst                          (rst),
+      .clk(clk),
+      .rst(rst),
 
-      .data_in_0                    (data_in_0),
-      .data_in_0_valid              (query_data_in_valid),
-      .data_in_0_ready              (query_data_in_ready),
+      .data_in_0      (data_in_0),
+      .data_in_0_valid(query_data_in_valid),
+      .data_in_0_ready(query_data_in_ready),
 
-      .weight                       (weight_query),
-      .weight_valid                 (weight_query_valid),
-      .weight_ready                 (weight_query_ready),
+      .weight      (weight_query),
+      .weight_valid(weight_query_valid),
+      .weight_ready(weight_query_ready),
 
-      .bias                         (bias_query),
-      .bias_valid                   (bias_query_valid),
-      .bias_ready                   (bias_query_ready),
+      .bias      (bias_query),
+      .bias_valid(bias_query_valid),
+      .bias_ready(bias_query_ready),
 
-      .data_out_0                   (query_buffer),
-      .data_out_0_valid             (query_buffer_valid),
-      .data_out_0_ready             (query_buffer_ready)
+      .data_out_0      (query_buffer),
+      .data_out_0_valid(query_buffer_valid),
+      .data_out_0_ready(query_buffer_ready)
   );
 
   // * We must buffer the queries to latency match the key transpose path
   // * since the matmul for QK^T buffers K^T but streams Q
   matrix_fifo #(
-      .DATA_WIDTH (DATA_OUT_0_PRECISION_0),
-      .DIM0       (WEIGHT_PARALLELISM_DIM_0),
-      .DIM1       (DATA_IN_0_PARALLELISM_DIM_1),
-      .FIFO_SIZE  (DATA_IN_0_DEPTH_DIM_1 * WEIGHT_DEPTH_DIM_0)
+      .DATA_WIDTH(DATA_OUT_0_PRECISION_0),
+      .DIM0      (WEIGHT_PARALLELISM_DIM_0),
+      .DIM1      (DATA_IN_0_PARALLELISM_DIM_1),
+      .FIFO_SIZE (DATA_IN_0_DEPTH_DIM_1 * WEIGHT_DEPTH_DIM_0)
   ) query_buffer_i (
-      .clk        (clk),
-      .rst        (rst),
-      .in_data    (query_buffer),
-      .in_valid   (query_buffer_valid),
-      .in_ready   (query_buffer_ready),
-      .out_data   (data_out_query),
-      .out_valid  (data_out_query_valid),
-      .out_ready  (data_out_query_ready)
+      .clk      (clk),
+      .rst      (rst),
+      .in_data  (query_buffer),
+      .in_valid (query_buffer_valid),
+      .in_ready (query_buffer_ready),
+      .out_data (data_out_query),
+      .out_valid(data_out_query_valid),
+      .out_ready(data_out_query_ready)
   );
 
   // * Key linear
 
   fixed_linear #(
-      .HAS_BIAS                     (HAS_BIAS),
-      .WEIGHTS_PRE_TRANSPOSED       (WEIGHTS_PRE_TRANSPOSED),
+      .HAS_BIAS              (HAS_BIAS),
+      .WEIGHTS_PRE_TRANSPOSED(WEIGHTS_PRE_TRANSPOSED),
 
-      .DATA_IN_0_PRECISION_0        (DATA_IN_0_PRECISION_0),
-      .DATA_IN_0_PRECISION_1        (DATA_IN_0_PRECISION_1),
-      .DATA_IN_0_TENSOR_SIZE_DIM_0  (DATA_IN_0_TENSOR_SIZE_DIM_0),
-      .DATA_IN_0_TENSOR_SIZE_DIM_1  (DATA_IN_0_TENSOR_SIZE_DIM_1),
-      .DATA_IN_0_PARALLELISM_DIM_0  (DATA_IN_0_PARALLELISM_DIM_0),
-      .DATA_IN_0_PARALLELISM_DIM_1  (DATA_IN_0_PARALLELISM_DIM_1),
+      .DATA_IN_0_PRECISION_0      (DATA_IN_0_PRECISION_0),
+      .DATA_IN_0_PRECISION_1      (DATA_IN_0_PRECISION_1),
+      .DATA_IN_0_TENSOR_SIZE_DIM_0(DATA_IN_0_TENSOR_SIZE_DIM_0),
+      .DATA_IN_0_TENSOR_SIZE_DIM_1(DATA_IN_0_TENSOR_SIZE_DIM_1),
+      .DATA_IN_0_PARALLELISM_DIM_0(DATA_IN_0_PARALLELISM_DIM_0),
+      .DATA_IN_0_PARALLELISM_DIM_1(DATA_IN_0_PARALLELISM_DIM_1),
 
-      .WEIGHT_PRECISION_0           (GROUPED_WEIGHT_PRECISION_0),
-      .WEIGHT_PRECISION_1           (GROUPED_WEIGHT_PRECISION_1),
-      .WEIGHT_TENSOR_SIZE_DIM_0     (GROUPED_WEIGHT_TENSOR_SIZE_DIM_0),
-      .WEIGHT_TENSOR_SIZE_DIM_1     (GROUPED_WEIGHT_TENSOR_SIZE_DIM_1),
-      .WEIGHT_PARALLELISM_DIM_0     (GROUPED_WEIGHT_PARALLELISM_DIM_0),
-      .WEIGHT_PARALLELISM_DIM_1     (GROUPED_WEIGHT_PARALLELISM_DIM_1),
+      .WEIGHT_PRECISION_0      (GROUPED_WEIGHT_PRECISION_0),
+      .WEIGHT_PRECISION_1      (GROUPED_WEIGHT_PRECISION_1),
+      .WEIGHT_TENSOR_SIZE_DIM_0(GROUPED_WEIGHT_TENSOR_SIZE_DIM_0),
+      .WEIGHT_TENSOR_SIZE_DIM_1(GROUPED_WEIGHT_TENSOR_SIZE_DIM_1),
+      .WEIGHT_PARALLELISM_DIM_0(GROUPED_WEIGHT_PARALLELISM_DIM_0),
+      .WEIGHT_PARALLELISM_DIM_1(GROUPED_WEIGHT_PARALLELISM_DIM_1),
 
-      .BIAS_PRECISION_0             (BIAS_PRECISION_0),
-      .BIAS_PRECISION_1             (BIAS_PRECISION_1),
-      .BIAS_TENSOR_SIZE_DIM_0       (BIAS_TENSOR_SIZE_DIM_0),
-      .BIAS_TENSOR_SIZE_DIM_1       (BIAS_TENSOR_SIZE_DIM_1),
-      .BIAS_PARALLELISM_DIM_0       (BIAS_PARALLELISM_DIM_0),
-      .BIAS_PARALLELISM_DIM_1       (BIAS_PARALLELISM_DIM_1),
+      .BIAS_PRECISION_0      (BIAS_PRECISION_0),
+      .BIAS_PRECISION_1      (BIAS_PRECISION_1),
+      .BIAS_TENSOR_SIZE_DIM_0(BIAS_TENSOR_SIZE_DIM_0),
+      .BIAS_TENSOR_SIZE_DIM_1(BIAS_TENSOR_SIZE_DIM_1),
+      .BIAS_PARALLELISM_DIM_0(BIAS_PARALLELISM_DIM_0),
+      .BIAS_PARALLELISM_DIM_1(BIAS_PARALLELISM_DIM_1),
 
-      .DATA_OUT_0_PRECISION_0       (DATA_OUT_0_PRECISION_0),
-      .DATA_OUT_0_PRECISION_1       (DATA_OUT_0_PRECISION_1)
+      .DATA_OUT_0_PRECISION_0(DATA_OUT_0_PRECISION_0),
+      .DATA_OUT_0_PRECISION_1(DATA_OUT_0_PRECISION_1)
 
   ) fixed_linear_key (
-      .clk                          (clk),
-      .rst                          (rst),
+      .clk(clk),
+      .rst(rst),
 
-      .data_in_0                    (data_in_0),
-      .data_in_0_valid              (key_data_in_valid),
-      .data_in_0_ready              (key_data_in_ready),
+      .data_in_0      (data_in_0),
+      .data_in_0_valid(key_data_in_valid),
+      .data_in_0_ready(key_data_in_ready),
 
-      .weight                       (weight_key),
-      .weight_valid                 (weight_key_valid),
-      .weight_ready                 (weight_key_ready),
+      .weight      (weight_key),
+      .weight_valid(weight_key_valid),
+      .weight_ready(weight_key_ready),
 
-      .bias                         (bias_key),
-      .bias_valid                   (bias_key_valid),
-      .bias_ready                   (bias_key_ready),
+      .bias      (bias_key),
+      .bias_valid(bias_key_valid),
+      .bias_ready(bias_key_ready),
 
-      .data_out_0                   (data_out_key),
-      .data_out_0_valid             (data_out_key_valid),
-      .data_out_0_ready             (data_out_key_ready)
+      .data_out_0      (data_out_key),
+      .data_out_0_valid(data_out_key_valid),
+      .data_out_0_ready(data_out_key_ready)
   );
 
   // Transpose K Matrix
@@ -264,89 +260,89 @@ module fixed_gqa_projections #(
   // - Total: (DATA_IN_0_TENSOR_SIZE_DIM_1 x GROUPED_WEIGHT_TENSOR_SIZE_DIM_0)
   // - Compute: (DATA_IN_0_PARALLELISM_DIM_1 x GROUPED_WEIGHT_PARALLELISM_DIM_0)
   matrix_stream_transpose #(
-      .TOTAL_DIM0    (GROUPED_WEIGHT_TENSOR_SIZE_DIM_0),
-      .TOTAL_DIM1    (DATA_IN_0_TENSOR_SIZE_DIM_1),
-      .COMPUTE_DIM0  (GROUPED_WEIGHT_PARALLELISM_DIM_0),
-      .COMPUTE_DIM1  (DATA_IN_0_PARALLELISM_DIM_1),
-      .DATA_WIDTH    (DATA_OUT_0_PRECISION_0)
+      .TOTAL_DIM0  (GROUPED_WEIGHT_TENSOR_SIZE_DIM_0),
+      .TOTAL_DIM1  (DATA_IN_0_TENSOR_SIZE_DIM_1),
+      .COMPUTE_DIM0(GROUPED_WEIGHT_PARALLELISM_DIM_0),
+      .COMPUTE_DIM1(DATA_IN_0_PARALLELISM_DIM_1),
+      .DATA_WIDTH  (DATA_OUT_0_PRECISION_0)
   ) key_transpose_inst (
-      .clk           (clk),
-      .rst           (rst),
-      .in_data       (data_out_key),
-      .in_valid      (data_out_key_valid),
-      .in_ready      (data_out_key_ready),
-      .out_data      (data_out_key_transpose),
-      .out_valid     (data_out_key_transpose_valid),
-      .out_ready     (data_out_key_transpose_ready)
+      .clk      (clk),
+      .rst      (rst),
+      .in_data  (data_out_key),
+      .in_valid (data_out_key_valid),
+      .in_ready (data_out_key_ready),
+      .out_data (data_out_key_transpose),
+      .out_valid(data_out_key_transpose_valid),
+      .out_ready(data_out_key_transpose_ready)
   );
 
   // * Value linear
 
   fixed_linear #(
-      .HAS_BIAS                     (HAS_BIAS),
-      .WEIGHTS_PRE_TRANSPOSED       (WEIGHTS_PRE_TRANSPOSED),
+      .HAS_BIAS              (HAS_BIAS),
+      .WEIGHTS_PRE_TRANSPOSED(WEIGHTS_PRE_TRANSPOSED),
 
-      .DATA_IN_0_PRECISION_0        (DATA_IN_0_PRECISION_0),
-      .DATA_IN_0_PRECISION_1        (DATA_IN_0_PRECISION_1),
-      .DATA_IN_0_TENSOR_SIZE_DIM_0  (DATA_IN_0_TENSOR_SIZE_DIM_0),
-      .DATA_IN_0_TENSOR_SIZE_DIM_1  (DATA_IN_0_TENSOR_SIZE_DIM_1),
-      .DATA_IN_0_PARALLELISM_DIM_0  (DATA_IN_0_PARALLELISM_DIM_0),
-      .DATA_IN_0_PARALLELISM_DIM_1  (DATA_IN_0_PARALLELISM_DIM_1),
+      .DATA_IN_0_PRECISION_0      (DATA_IN_0_PRECISION_0),
+      .DATA_IN_0_PRECISION_1      (DATA_IN_0_PRECISION_1),
+      .DATA_IN_0_TENSOR_SIZE_DIM_0(DATA_IN_0_TENSOR_SIZE_DIM_0),
+      .DATA_IN_0_TENSOR_SIZE_DIM_1(DATA_IN_0_TENSOR_SIZE_DIM_1),
+      .DATA_IN_0_PARALLELISM_DIM_0(DATA_IN_0_PARALLELISM_DIM_0),
+      .DATA_IN_0_PARALLELISM_DIM_1(DATA_IN_0_PARALLELISM_DIM_1),
 
-      .WEIGHT_PRECISION_0           (GROUPED_WEIGHT_PRECISION_0),
-      .WEIGHT_PRECISION_1           (GROUPED_WEIGHT_PRECISION_1),
-      .WEIGHT_TENSOR_SIZE_DIM_0     (GROUPED_WEIGHT_TENSOR_SIZE_DIM_0),
-      .WEIGHT_TENSOR_SIZE_DIM_1     (GROUPED_WEIGHT_TENSOR_SIZE_DIM_1),
-      .WEIGHT_PARALLELISM_DIM_0     (GROUPED_WEIGHT_PARALLELISM_DIM_0),
-      .WEIGHT_PARALLELISM_DIM_1     (GROUPED_WEIGHT_PARALLELISM_DIM_1),
+      .WEIGHT_PRECISION_0      (GROUPED_WEIGHT_PRECISION_0),
+      .WEIGHT_PRECISION_1      (GROUPED_WEIGHT_PRECISION_1),
+      .WEIGHT_TENSOR_SIZE_DIM_0(GROUPED_WEIGHT_TENSOR_SIZE_DIM_0),
+      .WEIGHT_TENSOR_SIZE_DIM_1(GROUPED_WEIGHT_TENSOR_SIZE_DIM_1),
+      .WEIGHT_PARALLELISM_DIM_0(GROUPED_WEIGHT_PARALLELISM_DIM_0),
+      .WEIGHT_PARALLELISM_DIM_1(GROUPED_WEIGHT_PARALLELISM_DIM_1),
 
-      .BIAS_PRECISION_0             (BIAS_PRECISION_0),
-      .BIAS_PRECISION_1             (BIAS_PRECISION_1),
-      .BIAS_TENSOR_SIZE_DIM_0       (BIAS_TENSOR_SIZE_DIM_0),
-      .BIAS_TENSOR_SIZE_DIM_1       (BIAS_TENSOR_SIZE_DIM_1),
-      .BIAS_PARALLELISM_DIM_0       (BIAS_PARALLELISM_DIM_0),
-      .BIAS_PARALLELISM_DIM_1       (BIAS_PARALLELISM_DIM_1),
+      .BIAS_PRECISION_0      (BIAS_PRECISION_0),
+      .BIAS_PRECISION_1      (BIAS_PRECISION_1),
+      .BIAS_TENSOR_SIZE_DIM_0(BIAS_TENSOR_SIZE_DIM_0),
+      .BIAS_TENSOR_SIZE_DIM_1(BIAS_TENSOR_SIZE_DIM_1),
+      .BIAS_PARALLELISM_DIM_0(BIAS_PARALLELISM_DIM_0),
+      .BIAS_PARALLELISM_DIM_1(BIAS_PARALLELISM_DIM_1),
 
-      .DATA_OUT_0_PRECISION_0       (DATA_OUT_0_PRECISION_0),
-      .DATA_OUT_0_PRECISION_1       (DATA_OUT_0_PRECISION_1)
+      .DATA_OUT_0_PRECISION_0(DATA_OUT_0_PRECISION_0),
+      .DATA_OUT_0_PRECISION_1(DATA_OUT_0_PRECISION_1)
 
   ) fixed_linear_value (
-      .clk                          (clk),
-      .rst                          (rst),
+      .clk(clk),
+      .rst(rst),
 
-      .data_in_0                    (data_in_0),
-      .data_in_0_valid              (value_data_in_valid),
-      .data_in_0_ready              (value_data_in_ready),
+      .data_in_0      (data_in_0),
+      .data_in_0_valid(value_data_in_valid),
+      .data_in_0_ready(value_data_in_ready),
 
-      .weight                       (weight_value),
-      .weight_valid                 (weight_value_valid),
-      .weight_ready                 (weight_value_ready),
+      .weight      (weight_value),
+      .weight_valid(weight_value_valid),
+      .weight_ready(weight_value_ready),
 
-      .bias                         (bias_value),
-      .bias_valid                   (bias_value_valid),
-      .bias_ready                   (bias_value_ready),
+      .bias      (bias_value),
+      .bias_valid(bias_value_valid),
+      .bias_ready(bias_value_ready),
 
-      .data_out_0                   (value_buffer),
-      .data_out_0_valid             (value_buffer_valid),
-      .data_out_0_ready             (value_buffer_ready)
+      .data_out_0      (value_buffer),
+      .data_out_0_valid(value_buffer_valid),
+      .data_out_0_ready(value_buffer_ready)
   );
 
   // Value output buffer
 
   matrix_fifo #(
-      .DATA_WIDTH (DATA_OUT_0_PRECISION_0),
-      .DIM0       (WEIGHT_PARALLELISM_DIM_0),
-      .DIM1       (DATA_IN_0_PARALLELISM_DIM_1),
-      .FIFO_SIZE  (DATA_IN_0_DEPTH_DIM_1 * WEIGHT_DEPTH_DIM_0)
+      .DATA_WIDTH(DATA_OUT_0_PRECISION_0),
+      .DIM0      (WEIGHT_PARALLELISM_DIM_0),
+      .DIM1      (DATA_IN_0_PARALLELISM_DIM_1),
+      .FIFO_SIZE (DATA_IN_0_DEPTH_DIM_1 * WEIGHT_DEPTH_DIM_0)
   ) value_buffer_i (
-      .clk        (clk),
-      .rst        (rst),
-      .in_data    (value_buffer),
-      .in_valid   (value_buffer_valid),
-      .in_ready   (value_buffer_ready),
-      .out_data   (data_out_value),
-      .out_valid  (data_out_value_valid),
-      .out_ready  (data_out_value_ready)
+      .clk      (clk),
+      .rst      (rst),
+      .in_data  (value_buffer),
+      .in_valid (value_buffer_valid),
+      .in_ready (value_buffer_ready),
+      .out_data (data_out_value),
+      .out_valid(data_out_value_valid),
+      .out_ready(data_out_value_ready)
   );
 
 endmodule

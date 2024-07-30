@@ -205,7 +205,6 @@ def mase_runner(
 
     # Single threaded run
     if jobs == 1:
-
         for i, module_params in enumerate(module_param_list):
             test_work_dir = group_path.joinpath(f"test/build/{module}/test_{i}")
             results = _single_test(
