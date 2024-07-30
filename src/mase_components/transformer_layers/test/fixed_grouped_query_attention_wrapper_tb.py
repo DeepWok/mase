@@ -676,8 +676,7 @@ def more_realistic():
         module_param_list=cfgs,
         hierarchical=True,
         template=True,
-        extra_build_args=["--unroll-count", "10000"]
-        # trace=True,
+        extra_build_args=["--unroll-count", "10000"],
     )
 
 
