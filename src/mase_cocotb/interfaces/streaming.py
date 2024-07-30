@@ -38,7 +38,6 @@ class StreamDriver(Driver):
         self.load_fn = load_fn
         self.load_max_iters = load_max_iters
 
-
     def set_valid_prob(self, prob):
         assert prob >= 0.0 and prob <= 1.0
         self.valid_prob = prob
@@ -92,9 +91,7 @@ class StreamMonitor(Monitor):
         return self.valid.value == 1 and self.ready.value == 1
 
     def _recv(self):
-
         def _get_sig_value(sig):
-
             if type(sig.value) == list:
                 if self.unsigned:
                     return [x.integer for x in sig.value]
@@ -115,7 +112,6 @@ class StreamMonitor(Monitor):
             return _get_sig_value(self.data)
 
     def _check(self, got, exp):
-
         def _check_sig(got, exp):
             if not np.equal(got, exp).all():
                 self.log.error(

@@ -39,7 +39,7 @@ module self_attention_head_single_scatter #(
   always_ff @(posedge clk) begin
     if (rst) begin
       block_cnt <= '0;
-      head_cnt <= '0;
+      head_cnt  <= '0;
     end else begin
       // Increment query counter
       if (in_valid && in_ready) begin

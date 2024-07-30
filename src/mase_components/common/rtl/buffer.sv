@@ -63,21 +63,21 @@ module buffer #(
     input logic data_out_0_ready
 );
 
-unpacked_fifo #(
-    .DEPTH          (CHOSEN_DEPTH_DIM_0 * CHOSEN_DEPTH_DIM_1),
-    .DATA_WIDTH     (CHOSEN_DATA_IN_PRECISION_0),
-    .IN_NUM         (CHOSEN_DATA_IN_PARALLELISM_DIM_0 * CHOSEN_DATA_IN_PARALLELISM_DIM_1)
-) buffer_i (
-    .clk,
-    .rst,
-    
-    .data_in        (data_in_0),
-    .data_in_valid  (data_in_0_valid),
-    .data_in_ready  (data_in_0_ready),
+  unpacked_fifo #(
+      .DEPTH     (CHOSEN_DEPTH_DIM_0 * CHOSEN_DEPTH_DIM_1),
+      .DATA_WIDTH(CHOSEN_DATA_IN_PRECISION_0),
+      .IN_NUM    (CHOSEN_DATA_IN_PARALLELISM_DIM_0 * CHOSEN_DATA_IN_PARALLELISM_DIM_1)
+  ) buffer_i (
+      .clk,
+      .rst,
 
-    .data_out       (data_out_0),
-    .data_out_valid (data_out_0_valid),
-    .data_out_ready (data_out_0_ready)
-);
+      .data_in      (data_in_0),
+      .data_in_valid(data_in_0_valid),
+      .data_in_ready(data_in_0_ready),
+
+      .data_out      (data_out_0),
+      .data_out_valid(data_out_0_valid),
+      .data_out_ready(data_out_0_ready)
+  );
 
 endmodule

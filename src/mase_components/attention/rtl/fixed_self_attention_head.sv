@@ -20,7 +20,7 @@ module fixed_self_attention_head #(
 
     // * Extra params
     parameter KEY_PRE_TRANSPOSED = 0,  // Skip transpose for K
-    parameter VALUE_BUFFER = 0 // Instantiates large buffer on value path
+    parameter VALUE_BUFFER = 0  // Instantiates large buffer on value path
 ) (
     input logic clk,
     input logic rst,
@@ -41,7 +41,7 @@ module fixed_self_attention_head #(
     output logic out_valid,
     input logic out_ready
 );
-/*verilator hier_block*/
+  /*verilator hier_block*/
   initial begin
     assert (OUT_DATA_TENSOR_SIZE_DIM_0 == IN_DATA_TENSOR_SIZE_DIM_0)
     else
@@ -123,49 +123,49 @@ module fixed_self_attention_head #(
 
   generate
     if (KEY_PRE_TRANSPOSED) begin : gen_passthrough_keys
-        assign key_transpose = key;
-        assign key_transpose_valid = key_valid;
-        assign key_ready = key_transpose_ready;
+      assign key_transpose = key;
+      assign key_transpose_valid = key_valid;
+      assign key_ready = key_transpose_ready;
     end else begin : gen_transpose_keys
-        matrix_stream_transpose #(
-            .DATA_WIDTH    (IN_DATA_PRECISION_0),
-            .TOTAL_DIM0    (IN_DATA_TENSOR_SIZE_DIM_0),
-            .TOTAL_DIM1    (IN_DATA_TENSOR_SIZE_DIM_1),
-            .COMPUTE_DIM0  (IN_DATA_PARALLELISM_DIM_0),
-            .COMPUTE_DIM1  (IN_DATA_PARALLELISM_DIM_1)
-        ) key_transpose_i (
-            .clk           (clk),
-            .rst           (rst),
-            .in_data       (key),
-            .in_valid      (key_valid),
-            .in_ready      (key_ready),
-            .out_data      (key_transpose),
-            .out_valid     (key_transpose_valid),
-            .out_ready     (key_transpose_ready)
-        );
+      matrix_stream_transpose #(
+          .DATA_WIDTH  (IN_DATA_PRECISION_0),
+          .TOTAL_DIM0  (IN_DATA_TENSOR_SIZE_DIM_0),
+          .TOTAL_DIM1  (IN_DATA_TENSOR_SIZE_DIM_1),
+          .COMPUTE_DIM0(IN_DATA_PARALLELISM_DIM_0),
+          .COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_1)
+      ) key_transpose_i (
+          .clk      (clk),
+          .rst      (rst),
+          .in_data  (key),
+          .in_valid (key_valid),
+          .in_ready (key_ready),
+          .out_data (key_transpose),
+          .out_valid(key_transpose_valid),
+          .out_ready(key_transpose_ready)
+      );
     end
 
 
     if (VALUE_BUFFER) begin : gen_value_buffer
-        matrix_fifo #(
-            .DATA_WIDTH  (IN_DATA_PRECISION_0),
-            .DIM0        (IN_DATA_PARALLELISM_DIM_0),
-            .DIM1        (IN_DATA_PARALLELISM_DIM_1),
-            .FIFO_SIZE   (4 * IN_DATA_NUM_ITERS)
-        ) value_buffer (
-            .clk         (clk),
-            .rst         (rst),
-            .in_data     (value),
-            .in_valid    (value_valid),
-            .in_ready    (value_ready),
-            .out_data    (value_fifo),
-            .out_valid   (value_fifo_valid),
-            .out_ready   (value_fifo_ready)
-        );
+      matrix_fifo #(
+          .DATA_WIDTH(IN_DATA_PRECISION_0),
+          .DIM0      (IN_DATA_PARALLELISM_DIM_0),
+          .DIM1      (IN_DATA_PARALLELISM_DIM_1),
+          .FIFO_SIZE (4 * IN_DATA_NUM_ITERS)
+      ) value_buffer (
+          .clk      (clk),
+          .rst      (rst),
+          .in_data  (value),
+          .in_valid (value_valid),
+          .in_ready (value_ready),
+          .out_data (value_fifo),
+          .out_valid(value_fifo_valid),
+          .out_ready(value_fifo_ready)
+      );
     end else begin : no_value_buffer
-        assign value_fifo = value;
-        assign value_fifo_valid = value_valid;
-        assign value_ready = value_fifo_ready;
+      assign value_fifo = value;
+      assign value_fifo_valid = value_valid;
+      assign value_ready = value_fifo_ready;
     end
   endgenerate
 
@@ -303,11 +303,11 @@ module fixed_self_attention_head #(
       .clk(clk),
       .rst(rst),
 
-      .data_in (out_casted),
+      .data_in(out_casted),
       .data_in_valid(out_cast_valid),
       .data_in_ready(out_cast_ready),
 
-      .data_out (out),
+      .data_out(out),
       .data_out_valid(out_valid),
       .data_out_ready(out_ready)
   );

@@ -206,17 +206,17 @@ module matmul #(
 
       // Add a register stage to cut any combinatoral paths to simple matmul
       unpacked_skid_buffer #(
-          .DATA_WIDTH      (A_WIDTH),
-          .IN_NUM          (A_COMPUTE_DIM0 * A_COMPUTE_DIM1)
+          .DATA_WIDTH(A_WIDTH),
+          .IN_NUM    (A_COMPUTE_DIM0 * A_COMPUTE_DIM1)
       ) input_stream_reg_slice (
-          .clk             (clk),
-          .rst             (rst),
-          .data_in         (a_data),
-          .data_in_valid   (a_valid),
-          .data_in_ready   (a_ready),
-          .data_out        (a_buffer_out_data),
-          .data_out_valid  (a_buffer_out_valid),
-          .data_out_ready  (a_buffer_out_ready)
+          .clk           (clk),
+          .rst           (rst),
+          .data_in       (a_data),
+          .data_in_valid (a_valid),
+          .data_in_ready (a_ready),
+          .data_out      (a_buffer_out_data),
+          .data_out_valid(a_buffer_out_valid),
+          .data_out_ready(a_buffer_out_ready)
       );
     end
 
@@ -260,17 +260,17 @@ module matmul #(
 
       // Add a register stage to cut any combinatoral paths to simple matmul
       unpacked_skid_buffer #(
-          .DATA_WIDTH      (B_WIDTH),
-          .IN_NUM          (B_COMPUTE_DIM0 * B_COMPUTE_DIM1)
+          .DATA_WIDTH(B_WIDTH),
+          .IN_NUM    (B_COMPUTE_DIM0 * B_COMPUTE_DIM1)
       ) weight_reg_slice (
-          .clk             (clk),
-          .rst             (rst),
-          .data_in         (b_data),
-          .data_in_valid   (b_valid),
-          .data_in_ready   (b_ready),
-          .data_out        (b_buffer_out_data),
-          .data_out_valid  (b_buffer_out_valid),
-          .data_out_ready  (b_buffer_out_ready)
+          .clk           (clk),
+          .rst           (rst),
+          .data_in       (b_data),
+          .data_in_valid (b_valid),
+          .data_in_ready (b_ready),
+          .data_out      (b_buffer_out_data),
+          .data_out_valid(b_buffer_out_valid),
+          .data_out_ready(b_buffer_out_ready)
       );
     end
   endgenerate

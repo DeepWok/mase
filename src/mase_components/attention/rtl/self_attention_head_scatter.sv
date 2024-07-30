@@ -38,48 +38,48 @@ module self_attention_head_scatter #(
   // Instantiate QKV scatters
 
   self_attention_head_single_scatter #(
-      .NUM_HEADS                  (NUM_HEADS),
-      .IN_DATA_TENSOR_SIZE_DIM_0  (IN_DATA_TENSOR_SIZE_DIM_0),
-      .IN_DATA_TENSOR_SIZE_DIM_1  (IN_DATA_TENSOR_SIZE_DIM_1),
-      .IN_DATA_PARALLELISM_DIM_0  (IN_DATA_PARALLELISM_DIM_0),
-      .IN_DATA_PARALLELISM_DIM_1  (IN_DATA_PARALLELISM_DIM_1)
+      .NUM_HEADS                (NUM_HEADS),
+      .IN_DATA_TENSOR_SIZE_DIM_0(IN_DATA_TENSOR_SIZE_DIM_0),
+      .IN_DATA_TENSOR_SIZE_DIM_1(IN_DATA_TENSOR_SIZE_DIM_1),
+      .IN_DATA_PARALLELISM_DIM_0(IN_DATA_PARALLELISM_DIM_0),
+      .IN_DATA_PARALLELISM_DIM_1(IN_DATA_PARALLELISM_DIM_1)
   ) q_scatter (
-      .clk                        (clk),
-      .rst                        (rst),
-      .in_valid                   (query_valid),
-      .in_ready                   (query_ready),
-      .out_valid                  (split_query_valid),
-      .out_ready                  (split_query_ready)
+      .clk      (clk),
+      .rst      (rst),
+      .in_valid (query_valid),
+      .in_ready (query_ready),
+      .out_valid(split_query_valid),
+      .out_ready(split_query_ready)
   );
 
   self_attention_head_single_scatter #(
-      .NUM_HEADS                  (NUM_HEADS),
-      .IN_DATA_TENSOR_SIZE_DIM_0  (IN_DATA_TENSOR_SIZE_DIM_0),
-      .IN_DATA_TENSOR_SIZE_DIM_1  (IN_DATA_TENSOR_SIZE_DIM_1),
-      .IN_DATA_PARALLELISM_DIM_0  (IN_DATA_PARALLELISM_DIM_0),
-      .IN_DATA_PARALLELISM_DIM_1  (IN_DATA_PARALLELISM_DIM_1)
+      .NUM_HEADS                (NUM_HEADS),
+      .IN_DATA_TENSOR_SIZE_DIM_0(IN_DATA_TENSOR_SIZE_DIM_0),
+      .IN_DATA_TENSOR_SIZE_DIM_1(IN_DATA_TENSOR_SIZE_DIM_1),
+      .IN_DATA_PARALLELISM_DIM_0(IN_DATA_PARALLELISM_DIM_0),
+      .IN_DATA_PARALLELISM_DIM_1(IN_DATA_PARALLELISM_DIM_1)
   ) k_scatter (
-      .clk                        (clk),
-      .rst                        (rst),
-      .in_valid                   (key_valid),
-      .in_ready                   (key_ready),
-      .out_valid                  (split_key_valid),
-      .out_ready                  (split_key_ready)
+      .clk      (clk),
+      .rst      (rst),
+      .in_valid (key_valid),
+      .in_ready (key_ready),
+      .out_valid(split_key_valid),
+      .out_ready(split_key_ready)
   );
 
   self_attention_head_single_scatter #(
-      .NUM_HEADS                  (NUM_HEADS),
-      .IN_DATA_TENSOR_SIZE_DIM_0  (IN_DATA_TENSOR_SIZE_DIM_0),
-      .IN_DATA_TENSOR_SIZE_DIM_1  (IN_DATA_TENSOR_SIZE_DIM_1),
-      .IN_DATA_PARALLELISM_DIM_0  (IN_DATA_PARALLELISM_DIM_0),
-      .IN_DATA_PARALLELISM_DIM_1  (IN_DATA_PARALLELISM_DIM_1)
+      .NUM_HEADS                (NUM_HEADS),
+      .IN_DATA_TENSOR_SIZE_DIM_0(IN_DATA_TENSOR_SIZE_DIM_0),
+      .IN_DATA_TENSOR_SIZE_DIM_1(IN_DATA_TENSOR_SIZE_DIM_1),
+      .IN_DATA_PARALLELISM_DIM_0(IN_DATA_PARALLELISM_DIM_0),
+      .IN_DATA_PARALLELISM_DIM_1(IN_DATA_PARALLELISM_DIM_1)
   ) v_scatter (
-      .clk                        (clk),
-      .rst                        (rst),
-      .in_valid                   (value_valid),
-      .in_ready                   (value_ready),
-      .out_valid                  (split_value_valid),
-      .out_ready                  (split_value_ready)
+      .clk      (clk),
+      .rst      (rst),
+      .in_valid (value_valid),
+      .in_ready (value_ready),
+      .out_valid(split_value_valid),
+      .out_ready(split_value_ready)
   );
 
 endmodule
