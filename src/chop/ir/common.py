@@ -104,6 +104,7 @@ MASE_BUILTIN_FUNCS = [
     "sub",
     "add",
     "matmul",
+    "mm",
     "bmm",
     "mean",
     "pow",

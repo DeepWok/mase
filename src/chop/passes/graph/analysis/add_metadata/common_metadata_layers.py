@@ -79,6 +79,8 @@ func_data = {
     "sub": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.matmul.html
     "matmul": {"input": "data_in", "other": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.mm.html
+    "mm": {"input": "data_in", "mat2": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.bmm.html
     "bmm": {"input": "data_in", "mat2": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.squeeze.html
