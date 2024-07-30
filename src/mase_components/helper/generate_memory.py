@@ -11,8 +11,9 @@ import mase_components
 from pathlib import Path
 
 
-def make_quantizer(data_width: int, f_width: int):
-    return partial(integer_quantizer, width=data_width, frac_width=f_width)
+def make_quantizer(data_width: int, f_width: int, floor):
+    base_quantizer = integer_floor_quantizer if floor else integer_quantizer
+    return partial(base_quantizer, width=data_width, frac_width=f_width)
 
 
 FUNCTION_TABLE = {
@@ -69,7 +70,7 @@ def generate_lookup(data_width: int, f_width: int, function: str, type="hex"):
 
 
 def aligned_generate_lookup(
-    in_data_width, in_f_width, data_width: int, f_width: int, function: str, type="hex",constant_mult=1,
+    in_data_width, in_f_width, data_width: int, f_width: int, function: str, type="hex",constant_mult=1,floor=False
 ):
     f = FUNCTION_TABLE[function]
     lut = {
@@ -82,8 +83,8 @@ def aligned_generate_lookup(
     # entries = 2 ** data_width
     minval = float(-(2 ** (in_data_width - in_f_width - 1)))
     maxval = (2 ** (in_data_width - 1) - 1) * 2 ** (-in_f_width)
-    inp_quanter = make_quantizer(in_data_width, in_f_width)
-    quanter = make_quantizer(data_width, f_width)
+    inp_quanter = make_quantizer(in_data_width, in_f_width, floor)
+    quanter = make_quantizer(data_width, f_width, floor)
     count = 0
     iarr = []
     pi = float(0)
@@ -211,6 +212,7 @@ def lookup_to_sv_file(
     file_path=None,
     path_with_dtype=False,
     constant_mult=1,
+    floor=False,
 ):
     dicto = aligned_generate_lookup(
         in_data_width=in_data_width,
@@ -220,6 +222,7 @@ def lookup_to_sv_file(
         function=function,
         type="bin",
         constant_mult=constant_mult,
+        floor=floor,
     )
     dicto = {
         k: v
@@ -281,6 +284,7 @@ def generate_sv_lut(
     path=None,# maybe not accept path as a parameter due to redundantly-generated exp_lut
     path_with_dtype=False,
     constant_mult=1,
+    floor=False,
 ):
     assert (
         function_name in FUNCTION_TABLE
@@ -301,6 +305,7 @@ def generate_sv_lut(
         str(p / f"{function_name}_lut{end}.sv"),
         path_with_dtype=path_with_dtype,
         constant_mult=constant_mult,
+        floor=floor,
     )
 
 

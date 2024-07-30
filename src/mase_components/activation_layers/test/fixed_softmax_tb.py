@@ -51,6 +51,7 @@ class SoftmaxTB(Testbench):
                 "mult_data": CONSTANT_MULT,
             },
             dim=-1,
+            floor=True,
         )
 
         # Set verbosity of driver and monitor loggers to debug
@@ -85,6 +86,7 @@ class SoftmaxTB(Testbench):
                     self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1"),
                     self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"),
                 ],
+                floor=True,
             )
             self.in_data_driver.load_driver(inputs)
 
@@ -106,42 +108,41 @@ class SoftmaxTB(Testbench):
         await Timer(us, units="us")
         assert self.out_data_monitor.exp_queue.empty()
 
-# @cocotb.test()
-# async def single_test(dut):
-#     tb = SoftmaxTB(dut)
-#     tb.out_data_monitor.ready.value = 1
-#     await tb.run_test(batches=1, us=100)
+@cocotb.test()
+async def single_test(dut):
+    tb = SoftmaxTB(dut)
+    tb.out_data_monitor.ready.value = 1
+    await tb.run_test(batches=1, us=100)
 
 
 # @cocotb.test()
 # async def repeated_mult(dut):
 #     tb = SoftmaxTB(dut)
 #     tb.out_data_monitor.ready.value = 1
-#     await tb.run_test(batches=1000, us=2000)
-
-
-@cocotb.test()
-async def repeated_mult_backpressure(dut):
-    tb = SoftmaxTB(dut)
-    cocotb.start_soon(bit_driver(dut.data_out_0_ready, dut.clk, 0.6))
-    await tb.run_test(batches=1, us=500)
+#     await tb.run_test(batches=100, us=2000)
 
 
 # @cocotb.test()
-# async def repeated_mult_valid_backpressure(dut):
-#     tb = MatmulTB(dut)
-#     tb.a_driver.set_valid_prob(0.7)
-#     tb.b_driver.set_valid_prob(0.7)
-#     cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.6))
-#     await tb.run_test(batches=500, us=2000)
+# async def repeated_mult_backpressure(dut):
+#     tb = SoftmaxTB(dut)
+#     cocotb.start_soon(bit_driver(dut.data_out_0_ready, dut.clk, 0.6))
+#     await tb.run_test(batches=10, us=500)
+
+
+@cocotb.test()
+async def repeated_mult_valid_backpressure(dut):
+    tb = SoftmaxTB(dut)
+    tb.in_data_driver.set_valid_prob(0.7)
+    cocotb.start_soon(bit_driver(dut.data_out_0_ready, dut.clk, 0.6))
+    await tb.run_test(batches=50, us=200)
 
 dut_params = {
     "DATA_IN_0_PRECISION_0": 8,
     "DATA_IN_0_PRECISION_1": 4,
-    "DATA_IN_0_TENSOR_SIZE_DIM_0": 2,
-    "DATA_IN_0_TENSOR_SIZE_DIM_1": 1,
-    "DATA_IN_0_PARALLELISM_DIM_0": 1,
-    "DATA_IN_0_PARALLELISM_DIM_1": 1,
+    "DATA_IN_0_TENSOR_SIZE_DIM_0": 32,
+    "DATA_IN_0_TENSOR_SIZE_DIM_1": 16,
+    "DATA_IN_0_PARALLELISM_DIM_0": 16,
+    "DATA_IN_0_PARALLELISM_DIM_1": 4,
     "DATA_EXP_0_PRECISION_0": 8,
     "DATA_EXP_0_PRECISION_1": 4,
     "DATA_OUT_0_PRECISION_1": 6,
@@ -170,6 +171,7 @@ def test_fixed_softmax_smoke():
         dut_params["DATA_EXP_0_PRECISION_1"],
         path=path,
         constant_mult=CONSTANT_MULT,
+        floor=True,
     )
     mase_runner(
         trace=True,
