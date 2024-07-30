@@ -24,8 +24,6 @@ class StreamDriver(Driver):
         valid,
         ready,
         record_num_beats=False,
-        load_fn=None,
-        load_max_iters=None,
     ) -> None:
         super().__init__()
         self.clk = clk
@@ -35,8 +33,6 @@ class StreamDriver(Driver):
         self.valid_prob = 1.0
         self.record_num_beats = record_num_beats
         self.num_beats = 0 if record_num_beats else None
-        self.load_fn = load_fn
-        self.load_max_iters = load_max_iters
 
     def set_valid_prob(self, prob):
         assert prob >= 0.0 and prob <= 1.0
