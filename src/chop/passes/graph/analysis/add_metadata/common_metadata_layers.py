@@ -3,10 +3,7 @@ import math
 
 import torch
 import inspect
-from chop.tools.utils import to_numpy_if_tensor as to_numpy
-from chop.passes.graph.utils import vf, get_node_by_name
-from chop.passes.graph.patching import MASE_LEAF_FUNCTIONS, MASE_LEAF_LAYERS
-import traceback
+from chop.nn.quantized.modules import quantized_module_map
 from functools import reduce
 
 
@@ -16,6 +13,16 @@ from functools import reduce
 
 # The following information is fetched from pytorch documentation
 func_data = {
+    # https://pytorch.org/docs/stable/generated/torch.nn.functional.scaled_dot_product_attention.html
+    "scaled_dot_product_attention": {
+        "query": "data_in",
+        "key": "data_in",
+        "value": "data_in",
+        "attn_mask": "data_in",
+        "dropout_p": "config",
+        "is_causal": "config",
+        "scale": "config",
+    },
     # https://pytorch.org/docs/stable/generated/torch.flatten.html#torch.flatten
     "flatten": {"input": "data_in", "start_dim": "config", "end_dim": "config"},
     # https://pytorch.org/docs/stable/generated/torch.nn.functional.relu.html
@@ -44,6 +51,22 @@ func_data = {
     "softsign": {"input": "data_in", "inplace": "config"},
     # https://pytorch.org/docs/stable/generated/torch.nn.Softplus.html
     "softplus": {"input": "data_in", "inplace": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.addmm.html
+    "baddbmm": {
+        "input": "data_in",
+        "batch1": "data_in",
+        "batch2": "data_in",
+        "beta": "config",
+        "alpha": "config",
+    },
+    # https://pytorch.org/docs/stable/generated/torch.addmm.html
+    "addmm": {
+        "input": "data_in",
+        "mat1": "data_in",
+        "mat2": "data_in",
+        "beta": "config",
+        "alpha": "config",
+    },
     # https://pytorch.org/docs/stable/generated/torch.add.html
     "add": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.mul.html
@@ -108,8 +131,10 @@ func_data = {
     "tan": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.tanh.html
     "tanh": {"input": "data_in"},
-    # https://pytorch.org/docs/stable/generated/torch.gt.html#torch.gt
+    # https://pytorch.org/docs/stable/generated/torch.greater.html
     "greater": {"input": "data_in", "other": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.gt.html
+    "gt": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.abs.html
     "abs": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.sigmoid.html
@@ -126,8 +151,12 @@ func_data = {
     "tile": {"input": "data_in", "dims": "config"},
     # https://pytorch.org/docs/stable/generated/torch.lt.html#torch.lt
     "less": {"input": "data_in", "other": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.lt.html#torch.lt
+    "lt": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.le.html
     "lessorequal": {"input": "data_in", "other": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.le.html
+    "le": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.min.html
     "min": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.neg.html
@@ -136,12 +165,22 @@ func_data = {
     "log": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.mean.html
     "mean": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.arange.html
+    "arange": {
+        "start": "config",
+        "end": "config",
+        "step": "config",
+        "dtype": "config",
+        "device": "config",
+    },
     # https://pytorch.org/docs/stable/generated/torch.range.html
     "range": {"start": "config", "end": "config", "step": "config"},
     # https://pytorch.org/docs/stable/generated/torch.where.html
     "where": {"condition": "config", "input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.equal.html
     "eq": {"input": "data_in", "other": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.ne.html
+    "ne": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.cumsum.html
     "cumsum": {"input": "data_in", "dim": "config"},
     # onnx_gemm (custom implementation)
@@ -155,7 +194,7 @@ func_data = {
         "transB": "config",
     },
     # https://pytorch.org/docs/stable/generated/torch.full.html
-    "full": {"size": "config", "fill_value": "data_in"},
+    "full": {"size": "config", "fill_value": "data_in", "device": "config"},
     # get item
     "getitem": {"in": "data_in", "select": "config"},
     # getattr
@@ -163,6 +202,26 @@ func_data = {
     # https://pytorch.org/docs/stable/generated/torch.ones.html
     "ones": {"size": "config", "device": "config"},
     "finfo": {"dtype": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.LayerNorm.html#torch.nn.LayerNorm
+    "layer_norm": {
+        "input": "data_in",
+        "normalized_shape": "config",
+        "weight": "data_in",
+        "bias": "data_in",
+        "eps": "config",
+    },
+    # https://pytorch.org/docs/stable/generated/torch.transpose.html
+    "transpose": {"input": "data_in", "dim_0": "config", "dim_1": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.functional.embedding.html
+    "embedding": {
+        "input": "data_in",
+        "weight": "data_in",
+        "padding_idx": "config",
+        "max_norm": "config",
+        "norm_type": "config",
+        "scale_grad_by_freq": "config",
+        "sparse": "config",
+    },
 }
 
 module_data = {
@@ -225,6 +284,13 @@ method_data = {
         "shape_2": "data_in",
         "shape_3": "data_in",
     },
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.reshape.html#torch.Tensor.reshape
+    "reshape": {
+        "shape_0": "data_in",
+        "shape_1": "data_in",
+        "shape_2": "data_in",
+        "shape_3": "data_in",
+    },
     # https://pytorch.org/docs/stable/generated/torch.Tensor.addmm.html#torch.Tensor.addmm
     "addm": {"mat1": "data_in", "mat2": "data_in", "beta": "config", "alpha": "config"},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.size.html#torch.Tensor.size
@@ -280,13 +346,26 @@ method_data = {
     "transpose": {"dim_0": "config", "dim_1": "config"},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.contiguous.html#torch.Tensor.contiguous
     "contiguous": {},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.masked_fill.html#torch.Tensor.masked_fill
     "masked_fill": {"mask": "data_in", "value": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.masked_fill_.html#torch.Tensor.masked_fill_
+    "masked_fill_": {"mask": "data_in", "value": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.unsqueeze.html#torch.Tensor.unsqueeze
+    "unsqueeze": {"input": "data_in", "dim": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.split.html#torch.Tensor.split
+    "split": {"input": "data_in", "split_size_or_sections": "config", "dim": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.bool.html
+    "bool": {"memory_format": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.long.html
+    "long": {"memory_format": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.type_as.html
+    "type_as": {"tensor": "data_in"},
 }
 
 
 def get_type_and_precision(meta):
     # * Fetch type and precision from q_config for quantized modules
-    if isinstance(meta.module, MASE_LEAF_LAYERS):
+    if isinstance(meta.module, tuple(quantized_module_map.values())):
         cf = (
             meta.module.q_config
             if hasattr(meta.module, "q_config")
@@ -343,7 +422,9 @@ def match_args_and_kwargs(meta, args, kwargs, data, add_value):
             meta_kwargs[n] = args[i]
 
     def get_shape(x):
-        if isinstance(x, torch.Tensor):
+        if x is None:
+            return None
+        elif isinstance(x, torch.Tensor):
             return list(x.shape)
         elif isinstance(x, int):
             return [1]
@@ -355,8 +436,9 @@ def match_args_and_kwargs(meta, args, kwargs, data, add_value):
     for k, v in kwargs.items():
         if data[k] == "data_in":
             # rename this to mase data_in_number
+            shape = get_shape(v)
             arg_meta = {
-                "shape": get_shape(v),
+                "shape": shape,
                 "torch_dtype": v.dtype if isinstance(v, torch.Tensor) else type(v),
                 "type": arg_type,
                 "precision": arg_precision,

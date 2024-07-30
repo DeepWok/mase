@@ -1,5 +1,5 @@
 from .attention_head import BertSelfAttentionHeadInteger
-from .attention import BertSelfAttentionInteger, LlamaSdpaAttentionInteger
+from .attention import BertSelfAttentionInteger
 
 # from .add import AddInteger
 from .conv1d import (
@@ -269,5 +269,4 @@ quantized_module_map = {
     "batch_norm1d_linear": BatchNorm1dInteger,
     "bert_self_attention_head_integer": BertSelfAttentionHeadInteger,
     "bert_self_attention_integer": BertSelfAttentionInteger,
-    "llama_sdpa_attention_integer": LlamaSdpaAttentionInteger,
 }

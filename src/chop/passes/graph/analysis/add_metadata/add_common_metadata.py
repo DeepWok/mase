@@ -13,8 +13,7 @@ from chop.passes.graph.analysis.utils import (
     get_input_nodes,
     get_output_nodes,
 )
-from chop.nn.modules import GroupedQueryAttention
-from chop.passes.graph.common import (
+from chop.ir.common import (
     MASE_BUILTIN_FUNCS,
     MASE_IMPLICIT_FUNCS,
     MASE_MODULE_RELATED_FUNCS,
@@ -254,6 +253,11 @@ def graph_iterator_for_metadata(
             node.meta["mase"], result, args, kwargs, add_value=add_value
         )
         env[node.name] = result
+
+        # For call_method nodes, the input tensor is not kept in meta["common"]["args"]
+        # so we keep a copy under the "self" key. This is used in autosharding spec propagation.
+        if add_value and node.op == "call_method":
+            node.meta["mase"]["common"]["self"] = self_obj
 
     return graph
 
