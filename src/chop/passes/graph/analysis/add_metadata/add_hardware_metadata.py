@@ -10,7 +10,7 @@ from chop.passes.graph.analysis.utils import (
     get_input_nodes,
     get_output_nodes,
 )
-from chop.passes.graph.utils import get_mase_op, deepgetattr
+from chop.passes.graph.utils import get_mase_op, deepgetattr, get_module_by_name
 
 from torch import nn
 
@@ -146,7 +146,7 @@ def add_extra_verilog_param(node, graph: MaseGraph):
     """Adds extra verilog parameters based on the node module type."""
 
     if node.op == "call_module":
-        module = graph.modules[node.name]
+        module = get_module_by_name(graph.model, node.target)
         vp = node.meta["mase"]["hardware"]["verilog_param"]
 
         if isinstance(module, GroupedQueryAttention):
