@@ -42,12 +42,15 @@ MASE_HW_DEPS = {
         "conv",
         "activation_layers",
     ],
-    "activation_layers/fixed_softermax": [
+    "activation_layers/fixed_softermax_1d": [
         "common",
         "cast",
         "fixed_arithmetic",
         "conv",
         "matmul",
+        "memory",
+        "linear_layers/fixed_operators",
+        "linear_layers/matmul",
         "activation_layers",
     ],
     # Cast
