@@ -282,16 +282,15 @@ module matmul #(
   // and round ourselves after the output accumulation in this matmul module.
 
   simple_matmul #(
-      .N              (A_COMPUTE_DIM1),
-      .M              (A_COMPUTE_DIM0),  // == B_COMPUTE_DIM1
-      .K              (B_COMPUTE_DIM0),
-      .X_WIDTH        (A_WIDTH),
-      .X_FRAC_WIDTH   (A_FRAC_WIDTH),
-      .Y_WIDTH        (B_WIDTH),
-      .Y_FRAC_WIDTH   (B_FRAC_WIDTH),
-      .OUTPUT_ROUNDING(0),
-      .OUT_WIDTH      (SM_OUT_WIDTH),
-      .OUT_FRAC_WIDTH (SM_OUT_FRAC_WIDTH)
+      .N             (A_COMPUTE_DIM1),
+      .M             (A_COMPUTE_DIM0),    // == B_COMPUTE_DIM1
+      .K             (B_COMPUTE_DIM0),
+      .X_WIDTH       (A_WIDTH),
+      .X_FRAC_WIDTH  (A_FRAC_WIDTH),
+      .Y_WIDTH       (B_WIDTH),
+      .Y_FRAC_WIDTH  (B_FRAC_WIDTH),
+      .OUT_WIDTH     (SM_OUT_WIDTH),
+      .OUT_FRAC_WIDTH(SM_OUT_FRAC_WIDTH)
   ) simple_matmul_inst (
       .clk      (clk),
       .rst      (rst),

@@ -68,8 +68,8 @@ module matrix_stream_transpose #(
 
   struct {
     // Current row & col that the window is at for the input
-    logic [IN_ROW_COUNTER_WIDTH-1:0] in_row_count;
-    logic [IN_COL_COUNTER_WIDTH-1:0] in_col_count;
+    logic [IN_ROW_COUNTER_WIDTH-1:0]  in_row_count;
+    logic [IN_COL_COUNTER_WIDTH-1:0]  in_col_count;
     // Current row & col that the window is at for the output
     logic [OUT_ROW_COUNTER_WIDTH-1:0] out_row_count;
     logic [OUT_COL_COUNTER_WIDTH-1:0] out_col_count;
