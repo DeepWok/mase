@@ -3,14 +3,8 @@ import cvxpy as cp
 from time import time
 import dill
 
-from torch.distributed._tensor._op_schema import DTensorSpec
-from torch.distributed._tensor.placement_types import Replicate
-
 from chop.tools import get_logger
-
 from .mesh_model import MeshModel
-from .alpa import alpa_autosharding_pass
-from .megatron import megatron_autosharding_pass
 
 logger = get_logger(__name__)
 logger.setLevel("INFO")
@@ -238,6 +232,11 @@ def autosharding_analysis_pass(mg, pass_args: dict = {}):
     - preload_solution (optional) -> bool : If set to true, preload autosharding solution from file.
     - ilp_solution_file (optional) -> str : File to export the autosharding solution to. Defaults to: "ilp_solution.pkl".
     """
+
+    from torch.distributed._tensor._op_schema import DTensorSpec
+    from torch.distributed._tensor.placement_types import Replicate
+    from .alpa import alpa_autosharding_pass
+    from .megatron import megatron_autosharding_pass
 
     assert (
         "mesh_shape" in pass_args
