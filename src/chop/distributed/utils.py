@@ -10,7 +10,7 @@ from chop.tools import get_logger
 from chop.distributed.tensor import distribute_tensor
 
 logger = get_logger(__name__)
-logger.setLevel("INFO")
+logger.setLevel("DEBUG")
 
 
 def rlog(logger, rank, msg, level="info"):

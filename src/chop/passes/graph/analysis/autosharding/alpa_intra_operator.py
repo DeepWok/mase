@@ -157,10 +157,6 @@ def _inherit_strategy(node, parent_strategy):
 
     strategies = []
 
-    logger.warning(
-        f"Node {node.name} will inherit sharding strategy from its parent, {node.all_input_nodes[0].name}."
-    )
-    logger.warning(f"Args: {node.meta['mase']['common']['args'].keys()}")
     for strategy in parent_strategy.strategies:
         spec = [strategy.output_specs] + [
             DTensorSpec(

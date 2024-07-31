@@ -38,14 +38,16 @@ def _insert_resharding_nodes(mg, pass_args={}):
 
             # Check if argument is an FX node, otherwise it's a constant
             arg_obj = flattened_args[arg_idx]
-            if not isinstance(arg_obj, fx.Node):
+            arg_info = node.meta["mase"]["common"]["args"][arg_name]
+            if not isinstance(arg_obj, fx.Node) or not isinstance(
+                arg_info["value"], torch.Tensor
+            ):
                 logger.debug(
                     f"Skipping node: {node.name}, argument: {arg_name} because it is a constant."
                 )
                 continue
 
             # Check if the parent node output spec is different from the arg input spec
-            arg_info = node.meta["mase"]["common"]["args"][arg_name]
             arg_specs = arg_info.get("dtensor_spec", None)
             parent_out_specs = arg_obj.meta["mase"]["common"]["results"][
                 "data_out_0"

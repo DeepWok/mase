@@ -137,16 +137,6 @@ class OpDispatcher:
 
         local_results = op_call(*local_tensor_args, **op_info.local_kwargs)
 
-        # rlog(
-        #     f"Reshape {op_call.name} outputs type {type(local_results)}, shape {local_results.shape}"
-        # )
-
-        # if "aten.view" in str(op_call.name):
-        rlog(f"op call: {str(op_call.name)}")
-        rlog(f"local tensor args: {local_tensor_args}")
-        if isinstance(local_results, (torch.Tensor, dtensor.DTensor)):
-            rlog(f"op call output: {local_results.shape}")
-
         return self.wrap(local_results, output_sharding.output_spec)  # type: ignore[possibly-undefined]
 
     @staticmethod

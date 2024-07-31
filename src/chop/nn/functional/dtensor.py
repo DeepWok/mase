@@ -79,23 +79,23 @@ def redistribute_dtensor(
         rank = 0
 
     if not isinstance(input, DTensor):
-        rlog(
-            logger,
-            rank,
-            f"Skipping redistribution because received {type(input)} instead of DTensor",
-            level="warning",
-        )
+        # rlog(
+        #     logger,
+        #     rank,
+        #     f"Skipping redistribution because received {type(input)} instead of DTensor",
+        #     level="warning",
+        # )
         return input
 
     current_spec = input._spec
 
     if current_spec.placements != placements:
-        rlog(
-            logger,
-            rank,
-            f"Redistributing tensor from {current_spec.placements} to {placements}",
-            level="info",
-        )
+        # rlog(
+        #     logger,
+        #     rank,
+        #     f"Redistributing tensor from {current_spec.placements} to {placements}",
+        #     level="info",
+        # )
         target_spec = DTensorSpec(
             input._spec.mesh,
             placements,
@@ -111,12 +111,12 @@ def redistribute_dtensor(
         )
     else:
         # use the same local tensor if placements are the same.
-        rlog(
-            logger,
-            rank,
-            f"Skipping redistribution because placements are the same: {placements}",
-            level="info",
-        )
+        # rlog(
+        #     logger,
+        #     rank,
+        #     f"Skipping redistribution because placements are the same: {placements}",
+        #     level="info",
+        # )
         output = input._local_tensor
         target_spec = current_spec
 
