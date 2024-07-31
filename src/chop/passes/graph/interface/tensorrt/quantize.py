@@ -41,6 +41,12 @@ else:
         check_for_value_in_dict,
     )
 
+    from chop.passes.utils import register_mase_pass
+
+    @register_mase_pass(
+        "tensorrt_engine_interface_pass",
+        dependencies=["pytorch_quantization", "tensorrt", "pynvml", "pycuda", "cuda"],
+    )
     def tensorrt_engine_interface_pass(graph, pass_args=None):
         """
         Converts a PyTorch model within a MaseGraph to a TensorRT engine, optimizing the model for faster inference speeds.
