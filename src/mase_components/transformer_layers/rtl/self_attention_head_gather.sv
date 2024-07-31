@@ -45,7 +45,10 @@ module self_attention_head_gather #(
         // * Increment block counter when accepting a block for a given head
         // * But saturate at BLOCKS_PER_HEAD
       end else if (split_head_out_valid[head] & split_head_out_ready[head]) begin
-        block_counter [head] <= (block_counter == BLOCKS_PER_HEAD - 1) ? BLOCKS_PER_HEAD : block_counter[head] + 1'b1;
+
+        if (block_counter[head] != BLOCKS_PER_HEAD) begin
+          block_counter[head] <= block_counter[head] + 1'b1;
+        end
 
         // * Reset counter when all heads done
       end else if (heads_flushed == '1) begin

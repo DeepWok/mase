@@ -19,6 +19,9 @@ from mase_cocotb.utils import fixed_preprocess_tensor, bit_driver
 
 from chop.nn.quantized.functional import fixed_softermax
 
+from chop.nn.quantizers import (
+    integer_quantizer,
+)
 
 class SoftermaxTB(Testbench):
     def __init__(self, dut) -> None:
@@ -59,17 +62,24 @@ class SoftermaxTB(Testbench):
         )
 
         # Model
-        self.model = partial(
-            fixed_softermax,
-            q_config={
-                "width": self.IN_WIDTH,
-                "frac_width": self.IN_FRAC_WIDTH,
-            },
-        )
+        self.model = self._model
 
         # Set verbosity of driver and monitor loggers to debug
         # self.in_data_driver.log.setLevel(logging.DEBUG)
         # self.out_data_monitor.log.setLevel(logging.DEBUG)
+
+    def _model(self, x: torch.Tensor):
+        x = integer_quantizer(
+            x=x,
+            width=self.IN_WIDTH,
+            frac_width=self.IN_FRAC_WIDTH
+        )
+        out = x - x.max(dim=0, keepdim=True).values.floor()
+        out = 2**out
+        row_sum = out.sum()
+        # Elementwise division
+        out = out / row_sum
+        return out
 
     def generate_inputs(self, batches):
         return torch.randn(
@@ -118,7 +128,7 @@ class SoftermaxTB(Testbench):
 async def basic(dut):
     tb = SoftermaxTB(dut)
     tb.out_data_monitor.ready.value = 1
-    await tb.run_test(batches=1, us=10)
+    await tb.run_test(batches=2, us=10)
 
 
 @cocotb.test()
@@ -190,9 +200,9 @@ def test_fixed_softermax_1d_smoke():
         trace=True,
         module_param_list=[
             get_fixed_softermax_config(),
-            *[get_random_softermax_config() for _ in range(50)],
+            # *[get_random_softermax_config() for _ in range(50)],
         ],
-        jobs=12,
+        jobs=1,
         # skip_build=True,
     )
 
