@@ -21,7 +21,6 @@ from mase_cocotb.runner import mase_runner
 from chop.nn.quantized import (
     BertSelfAttentionInteger,
     fixed_softermax,
-    ViTSelfAttentionInteger,
 )
 from chop.nn.quantized.functional import softmax_integer
 from mase_cocotb.utils import fixed_preprocess_tensor
@@ -88,23 +87,13 @@ class FixedSelfAttentionTB(Testbench):
             "data_out_width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
             "data_out_frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
         }
-        self.model = (
-            ViTSelfAttentionInteger(
+        self.model = BertSelfAttentionInteger(
                 config=self.config,
                 q_config=self.q_config,
                 out_q_config=self.out_q_config,
                 bias=self.get_parameter("HAS_BIAS"),
                 floor=True,
             )
-            if ("vit" in model_name)
-            else BertSelfAttentionInteger(
-                config=self.config,
-                q_config=self.q_config,
-                out_q_config=self.out_q_config,
-                bias=self.get_parameter("HAS_BIAS"),
-                floor=True,
-            )
-        )
         # * Replace softmax with fixed softermax
         if self.get_parameter("ACTIVATION") == 0:
             self.model.softmax = partial(
@@ -241,7 +230,7 @@ async def cocotb_test(dut):
 def get_config(kwargs={}):
     config = {
         "NUM_HEADS": 3,
-        "ACTIVATION": 1,
+        "ACTIVATION": 0,
         "DATA_IN_0_TENSOR_SIZE_DIM_0": 32,
         "DATA_IN_0_TENSOR_SIZE_DIM_1": 16,
         "DATA_IN_0_PARALLELISM_DIM_0": 4,

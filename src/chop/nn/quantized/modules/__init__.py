@@ -1,7 +1,7 @@
 from .attention_head import BertSelfAttentionHeadInteger, ViTSelfAttentionHeadInteger
 from .attention import (
     BertSelfAttentionInteger,
-    ViTSelfAttentionInteger,
+    ViTAttentionInteger
 )
 
 # from .add import AddInteger
@@ -269,4 +269,7 @@ quantized_module_map = {
     "batch_norm1d_linear": BatchNorm1dInteger,
     "bert_self_attention_head_integer": BertSelfAttentionHeadInteger,
     "bert_self_attention_integer": BertSelfAttentionInteger,
+    "bert_self_attention_head_integer": ViTSelfAttentionHeadInteger,
+    "bert_self_attention_integer": ViTAttentionInteger,
 }
+

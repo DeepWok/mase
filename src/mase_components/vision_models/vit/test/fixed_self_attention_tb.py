@@ -8,7 +8,7 @@ from functools import partial
 
 import cocotb
 from cocotb.log import SimLog
-from cocotb.triggers import Timer
+from cocotb.triggers import Timer, RisingEdge
 
 import math
 
@@ -77,13 +77,13 @@ class FixedSelfAttentionTB(Testbench):
             "qkv_weight_frac_width":self.get_parameter("WEIGHT_PRECISION_1"),
             "qkv_bias_width":self.get_parameter("BIAS_PRECISION_0"),
             "qkv_bias_frac_width":self.get_parameter("BIAS_PRECISION_1"),
-            "qkv_width":self.get_parameter("DATA_OUT_0_PRECISION_0"),
-            "qkv_frac_width":self.get_parameter("DATA_OUT_0_PRECISION_1"),
-            "qkmm_out_width":self.get_parameter("DATA_OUT_0_PRECISION_0"),
-            "qkmm_out_frac_width":self.get_parameter("DATA_OUT_0_PRECISION_1"),
-            "softmax_exp_width":self.get_parameter("DATA_OUT_0_PRECISION_0"),
-            "softmax_exp_frac_width":self.get_parameter("DATA_OUT_0_PRECISION_1"),
-            "softmax_out_frac_width":self.get_parameter("DATA_OUT_0_PRECISION_1"),
+            "qkv_width":self.get_parameter("QKV_PRECISION_0"),
+            "qkv_frac_width":self.get_parameter("QKV_PRECISION_1"),
+            "qkmm_out_width":self.get_parameter("QKMM_OUT_PRECISION_0"),
+            "qkmm_out_frac_width":self.get_parameter("QKMM_OUT_PRECISION_1"),
+            "softmax_exp_width":self.get_parameter("SOFTMAX_EXP_PRECISION_0"),
+            "softmax_exp_frac_width":self.get_parameter("SOFTMAX_EXP_PRECISION_1"),
+            "softmax_out_frac_width":self.get_parameter("SOFTMAX_OUT_DATA_PRECISION_1"),
             "svmm_out_width":self.get_parameter("DATA_OUT_0_PRECISION_0"),
             "svmm_out_frac_width":self.get_parameter("DATA_OUT_0_PRECISION_1"),
         }
@@ -91,7 +91,8 @@ class FixedSelfAttentionTB(Testbench):
                 dim=self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
                 num_heads=self.get_parameter("NUM_HEADS"),
                 qkv_bias=True if self.get_parameter("HAS_BIAS") else False,
-                q_config=self.q_config
+                q_config=self.q_config,
+                floor=True,
             )
 
 
@@ -131,6 +132,7 @@ class FixedSelfAttentionTB(Testbench):
                 self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1"),
                 self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"),
             ],
+            floor=True,
         )
         self.data_in_0_driver.load_driver(inputs)
 
@@ -158,6 +160,7 @@ class FixedSelfAttentionTB(Testbench):
                     self.get_parameter("WEIGHT_PARALLELISM_DIM_1"),
                     self.get_parameter("WEIGHT_PARALLELISM_DIM_0"),
                 ],
+                floor=True,
             )
             getattr(self, f"weight_{projection}_driver").load_driver(weights)
 
@@ -175,6 +178,7 @@ class FixedSelfAttentionTB(Testbench):
                         self.get_parameter("BIAS_PARALLELISM_DIM_1"),
                         self.get_parameter("BIAS_PARALLELISM_DIM_0"),
                     ],
+                    floor=True,
                 )
                 getattr(self, f"bias_{projection}_driver").load_driver(bias)
             i = i+1
@@ -190,9 +194,11 @@ class FixedSelfAttentionTB(Testbench):
                 self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_1"),
                 self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"),
             ],
+            floor=True,
         )
         self.data_out_0_monitor.load_monitor(outs)
-
+        cocotb.start_soon(check_signal(self.dut, self.log))
+        
         await Timer(us, units="us")
         assert self.data_out_0_monitor.exp_queue.empty()
 
@@ -205,38 +211,88 @@ async def cocotb_test(dut):
 default_config = {
     "NUM_HEADS": 2,
     "ACTIVATION": 1,
-    "DATA_IN_0_TENSOR_SIZE_DIM_0": 4,
-    "DATA_IN_0_TENSOR_SIZE_DIM_1": 2,
-    "DATA_IN_0_PARALLELISM_DIM_0": 1,
-    "DATA_IN_0_PARALLELISM_DIM_1": 1,
-    "DATA_IN_0_PRECISION_0": 8,
-    "DATA_IN_0_PRECISION_1": 4,
+    "HAS_BIAS": 1,
     "WEIGHTS_PRE_TRANSPOSED": 1,
-    "WEIGHT_TENSOR_SIZE_DIM_0": 4,
-    "WEIGHT_TENSOR_SIZE_DIM_1": 4,
-    "WEIGHT_PARALLELISM_DIM_0": 1,
-    "WEIGHT_PARALLELISM_DIM_1": 1,
+    "DATA_IN_0_TENSOR_SIZE_DIM_0": 16,
+    "DATA_IN_0_TENSOR_SIZE_DIM_1": 4,
+    "DATA_IN_0_PARALLELISM_DIM_0": 4,
+    "DATA_IN_0_PARALLELISM_DIM_1": 2,
+    "WEIGHT_TENSOR_SIZE_DIM_0": 16,
+    "WEIGHT_TENSOR_SIZE_DIM_1": 16,
+    "WEIGHT_PARALLELISM_DIM_0": 4,
+    "WEIGHT_PARALLELISM_DIM_1": 4,
+    
+    "DATA_IN_0_PRECISION_0": 8,
+    "DATA_IN_0_PRECISION_1": 3,
     "WEIGHT_PRECISION_0": 16,
     "WEIGHT_PRECISION_1": 8,
-    "HAS_BIAS": 1,
-    "BIAS_TENSOR_SIZE_DIM_0": 4,
-    "BIAS_TENSOR_SIZE_DIM_1": 1,
-    "BIAS_PARALLELISM_DIM_0": 1,
-    "BIAS_PARALLELISM_DIM_1": 1,
     "BIAS_PRECISION_0": 16,
     "BIAS_PRECISION_1": 8,
-    "DATA_OUT_0_TENSOR_SIZE_DIM_0": 4,
-    "DATA_OUT_0_TENSOR_SIZE_DIM_1": 2,
-    "DATA_OUT_0_PARALLELISM_DIM_0": 1,
-    "DATA_OUT_0_PARALLELISM_DIM_1": 1,
+    "QKV_PRECISION_0": 8,
+    "QKV_PRECISION_1": 3,
+    "QKMM_OUT_PRECISION_0": 8,
+    "QKMM_OUT_PRECISION_1": 3,
+    "SOFTMAX_EXP_PRECISION_0": 12,
+    "SOFTMAX_EXP_PRECISION_1": 4,
+    "SOFTMAX_OUT_DATA_PRECISION_1": 6,
     "DATA_OUT_0_PRECISION_0": 10,
     "DATA_OUT_0_PRECISION_1": 4,
 }
+# default_config = {
+#     "NUM_HEADS": 2,
+#     "ACTIVATION": 1,
+#     "HAS_BIAS": 1,
+#     "WEIGHTS_PRE_TRANSPOSED": 1,
+#     "DATA_IN_0_TENSOR_SIZE_DIM_0": 4,
+#     "DATA_IN_0_TENSOR_SIZE_DIM_1": 2,
+#     "DATA_IN_0_PARALLELISM_DIM_0": 2,
+#     "DATA_IN_0_PARALLELISM_DIM_1": 1,
+#     "WEIGHT_TENSOR_SIZE_DIM_0": 4,
+#     "WEIGHT_TENSOR_SIZE_DIM_1": 4,
+#     "WEIGHT_PARALLELISM_DIM_0": 1,
+#     "WEIGHT_PARALLELISM_DIM_1": 2,
+    
+#     "DATA_IN_0_PRECISION_0": 8,
+#     "DATA_IN_0_PRECISION_1": 3,
+#     "WEIGHT_PRECISION_0": 16,
+#     "WEIGHT_PRECISION_1": 8,
+#     "BIAS_PRECISION_0": 16,
+#     "BIAS_PRECISION_1": 8,
+#     "QKV_PRECISION_0": 8,
+#     "QKV_PRECISION_1": 3,
+#     "QKMM_OUT_PRECISION_0": 8,
+#     "QKMM_OUT_PRECISION_1": 3,
+#     "SOFTMAX_EXP_PRECISION_0": 12,
+#     "SOFTMAX_EXP_PRECISION_1": 4,
+#     "SOFTMAX_OUT_DATA_PRECISION_1": 6,
+#     "DATA_OUT_0_PRECISION_0": 10,
+#     "DATA_OUT_0_PRECISION_1": 4,
+# }
 MULT_DATA = 1 / math.sqrt(default_config["DATA_IN_0_TENSOR_SIZE_DIM_0"] // default_config["NUM_HEADS"])
 def get_config(kwargs={}):
     config = default_config
     config.update(kwargs)
     return config
+
+torch.manual_seed(1)
+async def check_signal(dut, log):
+    while True:
+        await RisingEdge(dut.clk)
+        handshake_signal_check(
+            dut.joint_query_valid, 
+            dut.joint_query_ready, 
+            dut.query, log)
+        # handshake_signal_check(dut.rolled_k_valid, dut.rolled_k_ready, dut.rolled_k, log)
+        # handshake_signal_check(dut.bias_valid,
+        #                        dut.bias_ready,
+        #                        dut.bias, log)
+
+
+def handshake_signal_check(valid, ready, signal, log):
+    svalue = [i.signed_integer for i in signal.value]
+    if valid.value & ready.value:
+        log.debug(f"handshake {signal} = {svalue}")
+
 
 
 def test_fixed_linear_smoke():
@@ -245,11 +301,12 @@ def test_fixed_linear_smoke():
     """
     generate_memory.generate_sv_lut(
         "exp",
-        default_config["DATA_OUT_0_PRECISION_0"],
-        default_config["DATA_OUT_0_PRECISION_1"],
-        default_config["DATA_OUT_0_PRECISION_0"],
-        default_config["DATA_OUT_0_PRECISION_1"],
+        default_config["QKMM_OUT_PRECISION_0"],
+        default_config["QKMM_OUT_PRECISION_1"],
+        default_config["SOFTMAX_EXP_PRECISION_0"],
+        default_config["SOFTMAX_EXP_PRECISION_1"],
         constant_mult=MULT_DATA,
+        floor=True,
     )
     mase_runner(trace=True, module_param_list=[get_config()], skip_build=False)
 

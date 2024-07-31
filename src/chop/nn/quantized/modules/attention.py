@@ -1,17 +1,18 @@
 from functools import partial
 
 import torch
+import torch.nn as nn
 from torch import Tensor
 from torch.nn import functional as F
 
 from transformers.models.bert.modeling_bert import BertSelfAttention
-from transformers.models.vit.modeling_vit import ViTSelfAttention
-
+from .attention_head import _ViTSelfAttentionHeadBase, ViTSelfAttentionHeadInteger
 
 from chop.nn.quantized.modules.linear import (
     LinearInteger,
 )
 from chop.nn.quantized.functional import fixed_softermax
+from chop.nn.quantizers import integer_quantizer
 from chop.nn.quantized.functional import matmul_integer
 
 from typing import Optional, Tuple, Union
@@ -58,38 +59,43 @@ class _BertSelfAttentionBase(BertSelfAttention):
         return out
 
 
-
-class _ViTSelfAttentionBase(ViTSelfAttention):
+class _ViTAttentionBase(nn.Module):
     def __init__(
         self,
-        config,
-        q_config: dict = None,
-        out_q_config: dict = None,
-        bias=True,
-        output_tensor_only=False,
+        dim: int,
+        num_heads: int = 8,
+        qkv_bias: bool = False,
+        qk_norm: bool = False,
+        attn_drop: float = 0.0,
+        proj_drop: float = 0.0,
     ) -> None:
-        super().__init__(config)
-        self.bypass = False
-        self.q_config = q_config
-        self.out_q_config = out_q_config
-        self.bias = bias
-        self.output_tensor_only = output_tensor_only
-
-    def forward(
-        self,
-        hidden_states,
-        head_mask: Optional[torch.Tensor] = None,
-        output_attentions: bool = False,
-    ) -> Union[Tuple[torch.Tensor, torch.Tensor], Tuple[torch.Tensor]]:
-        out = super().forward(
-            hidden_states,
-            head_mask,
-            output_attentions,
+        super().__init__()
+        assert dim % num_heads == 0, "dim should be divisible by num_heads"
+        self.num_heads = num_heads
+        self.head_dim = dim // num_heads
+        self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
+        self.self_attention = _ViTSelfAttentionHeadBase(
+            dim=self.head_dim, num_heads=num_heads,attn_drop=attn_drop
         )
-        if self.output_tensor_only:
-            return out[0]
-        return out
+        self.proj = nn.Linear(dim, dim)
+        self.proj_drop = nn.Dropout(proj_drop)
 
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        B, N, C = x.shape
+        qkv = (
+            self.qkv(x)
+            .reshape(B, N, 3, self.num_heads, self.head_dim)
+            .permute(2, 0, 3, 1, 4)
+        )
+        q, k, v = qkv[0], qkv[1], qkv[2]
+        
+        print(integer_quantizer(q,10,4)* 16)
+        x = self.self_attention(q,k,v)
+
+        x = x.transpose(1, 2).reshape(B, N, C)
+        # x = self.proj(x)
+        # x = self.proj_drop(x)
+        return x
 
 class BertSelfAttentionInteger(_BertSelfAttentionBase):
     def __init__(
@@ -149,58 +155,60 @@ class BertSelfAttentionInteger(_BertSelfAttentionBase):
             floor=floor,
         )
 
-class ViTSelfAttentionInteger(_ViTSelfAttentionBase):
+class ViTAttentionInteger(_ViTAttentionBase):
     def __init__(
         self,
-        config,
+        dim: int,
+        num_heads: int = 8,
+        qkv_bias: bool = False,
+        qk_norm: bool = False,
+        attn_drop: float = 0.0,
+        proj_drop: float = 0.0,
+        norm_layer: nn.Module = nn.LayerNorm,
         q_config: dict = None,
-        out_q_config: dict = None,
-        bias=True,
         floor=False,
-        output_tensor_only=False,
     ) -> None:
         super().__init__(
-            config,
-            q_config,
-            out_q_config,
-            bias=bias,
-            output_tensor_only=output_tensor_only,
-        )
-        self.query = LinearInteger(
-            config.hidden_size,
-            config.hidden_size,
-            config=q_config,
-            out_config=out_q_config,
-            bias=bias,
-            floor=floor,
-        )
-        self.key = LinearInteger(
-            config.hidden_size,
-            config.hidden_size,
-            config=q_config,
-            out_config=out_q_config,
-            bias=bias,
-            floor=floor,
-        )
-        self.value = LinearInteger(
-            config.hidden_size,
-            config.hidden_size,
-            config=q_config,
-            out_config=out_q_config,
-            bias=bias,
-            floor=floor,
-        )
-        # * Matmul is used for Q @ K^T and Scores @ V where the input values have already
-        # * been casted to the output precision, so we provide the output precision to the
-        # * software model
-        self.matmul = partial(
-            matmul_integer,
+            dim, num_heads,qkv_bias,qk_norm,attn_drop,proj_drop)
+
+        self.qkv = LinearInteger(
+            dim,
+            dim*3,
+            bias=qkv_bias,
             config={
-                "data_in_width": self.q_config["data_in_width"],
-                "data_in_frac_width": self.q_config["data_in_frac_width"],
-                "weight_width": self.q_config["weight_width"],
-                "weight_frac_width": self.q_config["weight_frac_width"],
+                "data_in_width": q_config["data_in_width"],
+                "data_in_frac_width": q_config["data_in_frac_width"],
+                "weight_width": q_config["qkv_weight_width"],
+                "weight_frac_width": q_config["qkv_weight_frac_width"],
+                "bias_width": q_config["qkv_bias_width"],
+                "bias_frac_width": q_config["qkv_bias_frac_width"],
             },
-            out_config=out_q_config,
-            floor=floor,
+            out_config={
+                "data_out_width": q_config["qkv_width"],
+                "data_out_frac_width": q_config["qkv_frac_width"],
+            },
+            floor=True,
         )
+        self.self_attention = ViTSelfAttentionHeadInteger(
+            dim=self.head_dim,
+            num_heads=num_heads,
+            attn_drop=attn_drop,
+            q_config={
+                "query_width":q_config["qkv_width"],
+                "query_frac_width":q_config["qkv_frac_width"],
+                "key_width":q_config["qkv_width"],
+                "key_frac_width":q_config["qkv_frac_width"],
+                "value_width":q_config["qkv_width"],
+                "value_frac_width":q_config["qkv_frac_width"],
+                "qkmm_out_width":q_config["qkmm_out_width"],
+                "qkmm_out_frac_width":q_config["qkmm_out_frac_width"],
+                "softmax_exp_width":q_config["softmax_exp_width"],
+                "softmax_exp_frac_width":q_config["softmax_exp_frac_width"],
+                "softmax_out_frac_width":q_config["softmax_out_frac_width"],
+                "svmm_out_width":q_config["svmm_out_width"],
+                "svmm_out_frac_width":q_config["svmm_out_frac_width"],
+            },
+            floor=True,
+        )
+        # self.proj = nn.Linear(dim, dim)
+        # self.proj_drop = nn.Dropout(proj_drop)

@@ -23,9 +23,9 @@ module fixed_self_attention_input_block_batched #(
     parameter BIAS_PRECISION_0 = 16,
     parameter BIAS_PRECISION_1 = 3,
 
-    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = WEIGHT_TENSOR_SIZE_DIM_0,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_TENSOR_SIZE_DIM_1: WEIGHT_TENSOR_SIZE_DIM_0,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1,
-    parameter DATA_OUT_0_PARALLELISM_DIM_0 = WEIGHT_PARALLELISM_DIM_0,
+    parameter DATA_OUT_0_PARALLELISM_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_PARALLELISM_DIM_1: WEIGHT_PARALLELISM_DIM_0,
     parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1,
     parameter DATA_OUT_0_PRECISION_0 = 16,
     parameter DATA_OUT_0_PRECISION_1 = 3
@@ -69,17 +69,17 @@ module fixed_self_attention_input_block_batched #(
     output logic bias_value_ready,
 
     // Query
-    output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_query [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0-1:0],
+    output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_query [DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0-1:0],
     output logic data_out_query_valid,
     input logic data_out_query_ready,
 
     // Key
-    output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_key [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0-1:0],
+    output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_key [DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0-1:0],
     output logic data_out_key_valid,
     input logic data_out_key_ready,
 
     // Value
-    output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_value [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0-1:0],
+    output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_value [DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0-1:0],
     output logic data_out_value_valid,
     input logic data_out_value_ready
 );

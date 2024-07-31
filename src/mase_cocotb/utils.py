@@ -127,10 +127,10 @@ def fixed_preprocess_tensor(tensor: Tensor, q_config: dict, parallelism: list, f
     base_quantizer = integer_floor_quantizer if floor else integer_quantizer
     quantizer = partial(base_quantizer, **q_config)
     q_tensor = quantizer(tensor)
-
+    # breakpoint()
     # Convert to integer format
     q_tensor = (q_tensor * 2 ** q_config["frac_width"]).int()
-    q_tensor = signed_to_unsigned(q_tensor, bits=q_config["width"])
+    # q_tensor = signed_to_unsigned(q_tensor, bits=q_config["width"])
 
     # Split into chunks according to parallelism in each dimension
     # parallelism[0]: along rows, parallelism[1]: along columns
