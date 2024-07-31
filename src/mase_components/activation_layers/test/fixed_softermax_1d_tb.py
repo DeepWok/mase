@@ -23,6 +23,7 @@ from chop.nn.quantizers import (
     integer_quantizer,
 )
 
+
 class SoftermaxTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
@@ -69,11 +70,7 @@ class SoftermaxTB(Testbench):
         # self.out_data_monitor.log.setLevel(logging.DEBUG)
 
     def _model(self, x: torch.Tensor):
-        x = integer_quantizer(
-            x=x,
-            width=self.IN_WIDTH,
-            frac_width=self.IN_FRAC_WIDTH
-        )
+        x = integer_quantizer(x=x, width=self.IN_WIDTH, frac_width=self.IN_FRAC_WIDTH)
         out = x - x.max(dim=0, keepdim=True).values.floor()
         out = 2**out
         row_sum = out.sum()
