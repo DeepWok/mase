@@ -351,6 +351,18 @@ MASE_HW_DEPS = {
         "scalar_operators/fixed",
         "generated_lut",
     ],
+    "vision_models/vit/fixed_self_attention": [
+        "vision_models/vit",
+        "cast",
+        "memory",
+        "common",
+        "linear_layers/fixed_operators",
+        "linear_layers/fixed_linear_layer",
+        "linear_layers/matmul",
+        "activation_layers",
+        "scalar_operators/fixed",
+        "generated_lut",
+    ],
     "ViT/fixed_patch_embed": [
         "conv",
         "ViT",

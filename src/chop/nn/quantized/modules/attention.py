@@ -89,12 +89,14 @@ class _ViTAttentionBase(nn.Module):
         )
         q, k, v = qkv[0], qkv[1], qkv[2]
         
-        print(integer_quantizer(q,10,4)* 16)
+        print(integer_quantizer(q,10,4)* 8)
         x = self.self_attention(q,k,v)
 
         x = x.transpose(1, 2).reshape(B, N, C)
-        # x = self.proj(x)
-        # x = self.proj_drop(x)
+
+        print("proj_in = ",integer_quantizer(x,10,4)* 16)
+        x = self.proj(x)
+        x = self.proj_drop(x)
         return x
 
 class BertSelfAttentionInteger(_BertSelfAttentionBase):
@@ -187,7 +189,7 @@ class ViTAttentionInteger(_ViTAttentionBase):
                 "data_out_width": q_config["qkv_width"],
                 "data_out_frac_width": q_config["qkv_frac_width"],
             },
-            floor=True,
+            floor=floor,
         )
         self.self_attention = ViTSelfAttentionHeadInteger(
             dim=self.head_dim,
@@ -208,7 +210,22 @@ class ViTAttentionInteger(_ViTAttentionBase):
                 "svmm_out_width":q_config["svmm_out_width"],
                 "svmm_out_frac_width":q_config["svmm_out_frac_width"],
             },
-            floor=True,
+            floor=floor,
         )
-        # self.proj = nn.Linear(dim, dim)
-        # self.proj_drop = nn.Dropout(proj_drop)
+        self.proj = LinearInteger(
+            dim,
+            dim,
+            config={
+                "data_in_width": q_config["svmm_out_width"],
+                "data_in_frac_width": q_config["svmm_out_frac_width"],
+                "weight_width": q_config["proj_weight_width"],
+                "weight_frac_width": q_config["proj_weight_frac_width"],
+                "bias_width": q_config["proj_bias_width"],
+                "bias_frac_width": q_config["proj_bias_frac_width"],
+            },
+            out_config={
+                "data_out_width": q_config["data_out_width"],
+                "data_out_frac_width": q_config["data_out_frac_width"],
+            },
+            floor=floor,
+        )

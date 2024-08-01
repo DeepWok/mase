@@ -1,5 +1,8 @@
 `timescale 1ns / 1ps
 module fixed_self_attention #(
+    // currently assume weights are all transposed
+    // currently force weight dim keep same
+
     parameter NUM_HEADS  = 12,
     parameter ACTIVATION = 0,
 
@@ -10,7 +13,7 @@ module fixed_self_attention #(
     parameter DATA_IN_0_PRECISION_0 = 16,
     parameter DATA_IN_0_PRECISION_1 = 3,
 
-    parameter WEIGHTS_PRE_TRANSPOSED = 0,
+    parameter WEIGHTS_PRE_TRANSPOSED = 1,
     parameter WEIGHT_TENSOR_SIZE_DIM_0 = 768,
     parameter WEIGHT_TENSOR_SIZE_DIM_1 = 768,
     parameter WEIGHT_PARALLELISM_DIM_0 = 4,
@@ -33,10 +36,27 @@ module fixed_self_attention #(
     parameter SOFTMAX_EXP_PRECISION_0 = 16,
     parameter SOFTMAX_EXP_PRECISION_1 = 3,
     parameter SOFTMAX_OUT_DATA_PRECISION_1 = 3,
+    parameter SVMM_OUT_PRECISION_0 = 8,
+    parameter SVMM_OUT_PRECISION_1 = 3,
+
+    parameter WEIGHT_PROJ_PRECISION_0 = 12,
+    parameter WEIGHT_PROJ_PRECISION_1 = 3,
+
+    parameter WEIGHT_PROJ_TENSOR_SIZE_DIM_0 = 768,
+    parameter WEIGHT_PROJ_TENSOR_SIZE_DIM_1 = 768,
+    parameter WEIGHT_PROJ_PARALLELISM_DIM_0 = 4,
+    parameter WEIGHT_PROJ_PARALLELISM_DIM_1 = 4,
     
-    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_TENSOR_SIZE_DIM_1: WEIGHT_TENSOR_SIZE_DIM_0,
+    parameter BIAS_PROJ_PRECISION_0 = 12,
+    parameter BIAS_PROJ_PRECISION_1 = 3,
+    parameter BIAS_PROJ_TENSOR_SIZE_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_PROJ_TENSOR_SIZE_DIM_1: WEIGHT_PROJ_TENSOR_SIZE_DIM_0,
+    parameter BIAS_PROJ_TENSOR_SIZE_DIM_1 = 1,
+    parameter BIAS_PROJ_PARALLELISM_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_PROJ_PARALLELISM_DIM_1: WEIGHT_PROJ_PARALLELISM_DIM_0,
+    parameter BIAS_PROJ_PARALLELISM_DIM_1 = 1,
+
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_PROJ_TENSOR_SIZE_DIM_1: WEIGHT_PROJ_TENSOR_SIZE_DIM_0,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1,
-    parameter DATA_OUT_0_PARALLELISM_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_PARALLELISM_DIM_1: WEIGHT_PARALLELISM_DIM_0,
+    parameter DATA_OUT_0_PARALLELISM_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_PROJ_PARALLELISM_DIM_1: WEIGHT_PROJ_PARALLELISM_DIM_0,
     parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1,
     parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0,
     parameter DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1
@@ -79,6 +99,16 @@ module fixed_self_attention #(
     input logic bias_value_valid,
     output logic bias_value_ready,
 
+    // Proj weights
+    input logic [WEIGHT_PROJ_PRECISION_0-1:0] weight_proj [WEIGHT_PROJ_PARALLELISM_DIM_0 * WEIGHT_PROJ_PARALLELISM_DIM_1-1:0],
+    input logic weight_proj_valid,
+    output logic weight_proj_ready,
+
+    // Proj bias
+    input logic [BIAS_PROJ_PRECISION_0-1:0] bias_proj [BIAS_PROJ_PARALLELISM_DIM_0 * BIAS_PROJ_PARALLELISM_DIM_1 -1:0],
+    input logic bias_proj_valid,
+    output logic bias_proj_ready,
+
     output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_0 [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0],
     output logic data_out_0_valid,
     input logic data_out_0_ready
@@ -87,25 +117,31 @@ module fixed_self_attention #(
   // * Declarations
   // * =================================================================
 
+    localparam HEAD_OUT_0_TENSOR_SIZE_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_TENSOR_SIZE_DIM_1: WEIGHT_TENSOR_SIZE_DIM_0;
+    localparam HEAD_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1;
+    localparam HEAD_OUT_0_PARALLELISM_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_PARALLELISM_DIM_1: WEIGHT_PARALLELISM_DIM_0;
+    localparam HEAD_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1;
   // Query
-  logic [QKV_PRECISION_0-1:0] query[DATA_IN_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0-1:0];
+  logic [QKV_PRECISION_0-1:0] query[DATA_IN_0_PARALLELISM_DIM_1 * HEAD_OUT_0_PARALLELISM_DIM_0-1:0];
   logic joint_query_valid, joint_query_ready;
   logic [NUM_HEADS-1:0] split_query_valid, split_query_ready;
 
   // Key
-  logic [QKV_PRECISION_0-1:0] key[DATA_IN_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0-1:0];
+  logic [QKV_PRECISION_0-1:0] key[DATA_IN_0_PARALLELISM_DIM_1 * HEAD_OUT_0_PARALLELISM_DIM_0-1:0];
   logic joint_key_valid, joint_key_ready;
   logic [NUM_HEADS-1:0] split_key_valid, split_key_ready;
 
   // Value
-  logic [QKV_PRECISION_0-1:0] value[DATA_IN_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0-1:0];
+  logic [QKV_PRECISION_0-1:0] value[DATA_IN_0_PARALLELISM_DIM_1 * HEAD_OUT_0_PARALLELISM_DIM_0-1:0];
   logic joint_value_valid, joint_value_ready;
   logic [NUM_HEADS-1:0] split_value_valid, split_value_ready;
-
   // Head output
-  logic [DATA_OUT_0_PRECISION_0-1:0] head_out [NUM_HEADS-1:0] [DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1-1:0];
+  logic [SVMM_OUT_PRECISION_0-1:0] head_out [NUM_HEADS-1:0] [HEAD_OUT_0_PARALLELISM_DIM_0 * HEAD_OUT_0_PARALLELISM_DIM_1-1:0];
   logic [NUM_HEADS-1:0] head_out_valid;
   logic [NUM_HEADS-1:0] head_out_ready;
+
+  logic [SVMM_OUT_PRECISION_0-1:0] proj_in [HEAD_OUT_0_PARALLELISM_DIM_1 * HEAD_OUT_0_PARALLELISM_DIM_1-1:0];
+  logic proj_in_valid, proj_in_ready;
 
   // * Instances
   // * =================================================================
@@ -222,23 +258,23 @@ module fixed_self_attention #(
 
   // * Heads
 
-  for (genvar head = 0; head < NUM_HEADS; head++) begin
+  for (genvar head = 0; head < NUM_HEADS; head++) begin: g_attention_head
 
     fixed_self_attention_head #(
-        .IN_DATA_TENSOR_SIZE_DIM_0(DATA_OUT_0_TENSOR_SIZE_DIM_0 / NUM_HEADS),
-        .IN_DATA_TENSOR_SIZE_DIM_1(DATA_OUT_0_TENSOR_SIZE_DIM_1),
-        .IN_DATA_PARALLELISM_DIM_0(DATA_OUT_0_PARALLELISM_DIM_0),
-        .IN_DATA_PARALLELISM_DIM_1(DATA_OUT_0_PARALLELISM_DIM_1),
-        .ACTIVATION               (ACTIVATION),
-        .IN_DATA_PRECISION_0      (QKV_PRECISION_0),
-        .IN_DATA_PRECISION_1      (QKV_PRECISION_1),
-        .QKMM_OUT_PRECISION_0      (QKMM_OUT_PRECISION_0),
-        .QKMM_OUT_PRECISION_1      (QKMM_OUT_PRECISION_1),
-        .SOFTMAX_EXP_PRECISION_0      (SOFTMAX_EXP_PRECISION_0),
-        .SOFTMAX_EXP_PRECISION_1      (SOFTMAX_EXP_PRECISION_1),
-        .SOFTMAX_OUT_DATA_PRECISION_1      (SOFTMAX_OUT_DATA_PRECISION_1),
-        .OUT_DATA_PRECISION_0      (DATA_OUT_0_PRECISION_0),
-        .OUT_DATA_PRECISION_1      (DATA_OUT_0_PRECISION_1)
+        .IN_DATA_TENSOR_SIZE_DIM_0   (HEAD_OUT_0_TENSOR_SIZE_DIM_0 / NUM_HEADS),
+        .IN_DATA_TENSOR_SIZE_DIM_1   (HEAD_OUT_0_TENSOR_SIZE_DIM_1),
+        .IN_DATA_PARALLELISM_DIM_0   (HEAD_OUT_0_PARALLELISM_DIM_0),
+        .IN_DATA_PARALLELISM_DIM_1   (HEAD_OUT_0_PARALLELISM_DIM_1),
+        .ACTIVATION                  (ACTIVATION),
+        .IN_DATA_PRECISION_0         (QKV_PRECISION_0),
+        .IN_DATA_PRECISION_1         (QKV_PRECISION_1),
+        .QKMM_OUT_PRECISION_0        (QKMM_OUT_PRECISION_0),
+        .QKMM_OUT_PRECISION_1        (QKMM_OUT_PRECISION_1),
+        .SOFTMAX_EXP_PRECISION_0     (SOFTMAX_EXP_PRECISION_0),
+        .SOFTMAX_EXP_PRECISION_1     (SOFTMAX_EXP_PRECISION_1),
+        .SOFTMAX_OUT_DATA_PRECISION_1(SOFTMAX_OUT_DATA_PRECISION_1),
+        .OUT_DATA_PRECISION_0        (SVMM_OUT_PRECISION_0),
+        .OUT_DATA_PRECISION_1        (SVMM_OUT_PRECISION_1)
 
     ) head_i (
         .clk,
@@ -268,13 +304,12 @@ module fixed_self_attention #(
   self_attention_head_gather #(
       .NUM_HEADS(NUM_HEADS),
 
-      .IN_DATA_TENSOR_SIZE_DIM_0(DATA_OUT_0_TENSOR_SIZE_DIM_0),
-      .IN_DATA_TENSOR_SIZE_DIM_1(DATA_OUT_0_TENSOR_SIZE_DIM_1),
-      .IN_DATA_PARALLELISM_DIM_0(DATA_OUT_0_PARALLELISM_DIM_0),
-      .IN_DATA_PARALLELISM_DIM_1(DATA_OUT_0_PARALLELISM_DIM_1),
-      .IN_DATA_PRECISION_0      (DATA_OUT_0_PRECISION_0),
-      .IN_DATA_PRECISION_1      (DATA_OUT_0_PRECISION_1)
-
+      .IN_DATA_TENSOR_SIZE_DIM_0(HEAD_OUT_0_TENSOR_SIZE_DIM_0),
+      .IN_DATA_TENSOR_SIZE_DIM_1(HEAD_OUT_0_TENSOR_SIZE_DIM_1),
+      .IN_DATA_PARALLELISM_DIM_0(HEAD_OUT_0_PARALLELISM_DIM_0),
+      .IN_DATA_PARALLELISM_DIM_1(HEAD_OUT_0_PARALLELISM_DIM_1),
+      .IN_DATA_PRECISION_0      (SVMM_OUT_PRECISION_0),
+      .IN_DATA_PRECISION_1      (SVMM_OUT_PRECISION_1)
   ) gather_qkv_i (
       .clk,
       .rst,
@@ -283,9 +318,53 @@ module fixed_self_attention #(
       .split_head_out_valid(head_out_valid),
       .split_head_out_ready(head_out_ready),
 
-      .updated_tokens      (data_out_0),
-      .updated_tokens_valid(data_out_0_valid),
-      .updated_tokens_ready(data_out_0_ready)
+      .updated_tokens      (proj_in),
+      .updated_tokens_valid(proj_in_valid),
+      .updated_tokens_ready(proj_in_ready)
   );
 
+  fixed_linear #(
+      .HAS_BIAS              (HAS_BIAS),
+      .WEIGHTS_PRE_TRANSPOSED(WEIGHTS_PRE_TRANSPOSED),
+
+      .DATA_IN_0_PRECISION_0      (SVMM_OUT_PRECISION_0),
+      .DATA_IN_0_PRECISION_1      (SVMM_OUT_PRECISION_1),
+      .DATA_IN_0_TENSOR_SIZE_DIM_0(HEAD_OUT_0_TENSOR_SIZE_DIM_0),
+      .DATA_IN_0_TENSOR_SIZE_DIM_1(HEAD_OUT_0_TENSOR_SIZE_DIM_1),
+      .DATA_IN_0_PARALLELISM_DIM_0(HEAD_OUT_0_PARALLELISM_DIM_0),
+      .DATA_IN_0_PARALLELISM_DIM_1(HEAD_OUT_0_PARALLELISM_DIM_1),
+
+      .WEIGHT_PRECISION_0      (WEIGHT_PROJ_PRECISION_0),
+      .WEIGHT_PRECISION_1      (WEIGHT_PROJ_PRECISION_1),
+      .WEIGHT_TENSOR_SIZE_DIM_0(WEIGHT_PROJ_TENSOR_SIZE_DIM_0),
+      .WEIGHT_TENSOR_SIZE_DIM_1(WEIGHT_PROJ_TENSOR_SIZE_DIM_1),
+      .WEIGHT_PARALLELISM_DIM_0(WEIGHT_PROJ_PARALLELISM_DIM_0),
+      .WEIGHT_PARALLELISM_DIM_1(WEIGHT_PROJ_PARALLELISM_DIM_1),
+
+      .BIAS_PRECISION_0      (BIAS_PROJ_PRECISION_0),
+      .BIAS_PRECISION_1      (BIAS_PROJ_PRECISION_1),
+      .DATA_OUT_0_PRECISION_0(DATA_OUT_0_PRECISION_0),
+      .DATA_OUT_0_PRECISION_1(DATA_OUT_0_PRECISION_1)
+  ) proj (
+      .clk(clk),
+      .rst(rst),
+
+      // input port for data_inivations
+      .data_in_0      (proj_in),
+      .data_in_0_valid(proj_in_valid),
+      .data_in_0_ready(proj_in_ready),
+
+      // input port for weight
+      .weight      (weight_proj),
+      .weight_valid(weight_proj_valid),
+      .weight_ready(weight_proj_ready),
+
+      .bias      (bias_proj),
+      .bias_valid(bias_proj_valid),
+      .bias_ready(bias_proj_ready),
+
+      .data_out_0(data_out_0),
+      .data_out_0_valid(data_out_0_valid),
+      .data_out_0_ready(data_out_0_ready)
+  );
 endmodule

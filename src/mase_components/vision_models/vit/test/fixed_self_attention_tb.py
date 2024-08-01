@@ -46,6 +46,9 @@ class FixedSelfAttentionTB(Testbench):
         self.weight_value_driver = StreamDriver(
             dut.clk, dut.weight_value, dut.weight_value_valid, dut.weight_value_ready
         )
+        self.weight_proj_driver = StreamDriver(
+            dut.clk, dut.weight_proj, dut.weight_proj_valid, dut.weight_proj_ready
+        )
 
         if self.get_parameter("HAS_BIAS") == 1:
             self.bias_query_driver = StreamDriver(
@@ -57,9 +60,13 @@ class FixedSelfAttentionTB(Testbench):
             self.bias_value_driver = StreamDriver(
                 dut.clk, dut.bias_value, dut.bias_value_valid, dut.bias_value_ready
             )
+            self.bias_proj_driver = StreamDriver(
+                dut.clk, dut.bias_proj, dut.bias_proj_valid, dut.bias_proj_ready
+            )
             self.bias_query_driver.log.setLevel(logging.DEBUG)
             self.bias_key_driver.log.setLevel(logging.DEBUG)
             self.bias_value_driver.log.setLevel(logging.DEBUG)
+            self.bias_proj_driver.log.setLevel(logging.DEBUG)
 
         self.data_out_0_monitor = StreamMonitor(
             dut.clk,
@@ -84,8 +91,15 @@ class FixedSelfAttentionTB(Testbench):
             "softmax_exp_width":self.get_parameter("SOFTMAX_EXP_PRECISION_0"),
             "softmax_exp_frac_width":self.get_parameter("SOFTMAX_EXP_PRECISION_1"),
             "softmax_out_frac_width":self.get_parameter("SOFTMAX_OUT_DATA_PRECISION_1"),
-            "svmm_out_width":self.get_parameter("DATA_OUT_0_PRECISION_0"),
-            "svmm_out_frac_width":self.get_parameter("DATA_OUT_0_PRECISION_1"),
+            "svmm_out_width":self.get_parameter("SVMM_OUT_PRECISION_0"),
+            "svmm_out_frac_width":self.get_parameter("SVMM_OUT_PRECISION_1"),
+
+            "proj_weight_width":self.get_parameter("WEIGHT_PROJ_PRECISION_0"),
+            "proj_weight_frac_width":self.get_parameter("WEIGHT_PROJ_PRECISION_1"),
+            "proj_bias_width":self.get_parameter("BIAS_PROJ_PRECISION_0"),
+            "proj_bias_frac_width":self.get_parameter("BIAS_PROJ_PRECISION_1"),
+            "data_out_width":self.get_parameter("DATA_OUT_0_PRECISION_0"),
+            "data_out_frac_width":self.get_parameter("DATA_OUT_0_PRECISION_1"),
         }
         self.model = ViTAttentionInteger(
                 dim=self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
@@ -101,6 +115,7 @@ class FixedSelfAttentionTB(Testbench):
         self.weight_query_driver.log.setLevel(logging.DEBUG)
         self.weight_key_driver.log.setLevel(logging.DEBUG)
         self.weight_value_driver.log.setLevel(logging.DEBUG)
+        self.weight_proj_driver.log.setLevel(logging.DEBUG)
         self.data_out_0_monitor.log.setLevel(logging.DEBUG)
 
     def generate_inputs(self, batch_size=1):
@@ -136,11 +151,11 @@ class FixedSelfAttentionTB(Testbench):
         )
         self.data_in_0_driver.load_driver(inputs)
 
+        # * Load the qkv weight driver
         qkv_weight = self.model.qkv.weight.reshape(
             3, self.get_parameter("WEIGHT_TENSOR_SIZE_DIM_1"), self.get_parameter("WEIGHT_TENSOR_SIZE_DIM_0"))
         qkv_bias = self.model.qkv.bias.reshape(
             3, self.get_parameter("BIAS_TENSOR_SIZE_DIM_1"), self.get_parameter("BIAS_TENSOR_SIZE_DIM_0"))
-        # * Load the weights driver
         i = 0
         for projection in ["query", "key", "value"]:
             
@@ -182,6 +197,44 @@ class FixedSelfAttentionTB(Testbench):
                 )
                 getattr(self, f"bias_{projection}_driver").load_driver(bias)
             i = i+1
+        
+        # * Load the proj weight driver
+        if self.get_parameter("WEIGHTS_PRE_TRANSPOSED") == 1:
+            proj_weight = self.model.proj.weight.transpose(0, 1)
+        else:
+            proj_weight = self.model.proj.weight
+        proj_bias = self.model.proj.bias
+        self.log.info(f"Processing projection weights: {proj_weight}")
+        proj_weight = fixed_preprocess_tensor(
+            tensor=proj_weight,
+            q_config={
+                "width": self.get_parameter("WEIGHT_PRECISION_0"),
+                "frac_width": self.get_parameter("WEIGHT_PRECISION_1"),
+            },
+            parallelism=[
+                self.get_parameter("WEIGHT_PROJ_PARALLELISM_DIM_1"),
+                self.get_parameter("WEIGHT_PROJ_PARALLELISM_DIM_0"),
+            ],
+            floor=True,
+        )
+        self.weight_proj_driver.load_driver(proj_weight)
+
+        # * Load the bias driver
+        if self.get_parameter("HAS_BIAS") == 1:
+            self.log.info(f"Processing projection bias: {proj_bias}")
+            proj_bias = fixed_preprocess_tensor(
+                tensor=proj_bias,
+                q_config={
+                    "width": self.get_parameter("BIAS_PROJ_PRECISION_0"),
+                    "frac_width": self.get_parameter("BIAS_PROJ_PRECISION_1"),
+                },
+                parallelism=[
+                    self.get_parameter("BIAS_PROJ_PARALLELISM_DIM_1"),
+                    self.get_parameter("BIAS_PROJ_PARALLELISM_DIM_0"),
+                ],
+                floor=True,
+            )
+            self.bias_proj_driver.load_driver(proj_bias)
         # * Load the output monitor
         self.log.info(f"Processing outputs: {exp_out}")
         outs = fixed_preprocess_tensor(
@@ -209,7 +262,7 @@ async def cocotb_test(dut):
     await tb.run_test(us=100)
 
 default_config = {
-    "NUM_HEADS": 2,
+    "NUM_HEADS": 4,
     "ACTIVATION": 1,
     "HAS_BIAS": 1,
     "WEIGHTS_PRE_TRANSPOSED": 1,
@@ -219,8 +272,13 @@ default_config = {
     "DATA_IN_0_PARALLELISM_DIM_1": 2,
     "WEIGHT_TENSOR_SIZE_DIM_0": 16,
     "WEIGHT_TENSOR_SIZE_DIM_1": 16,
-    "WEIGHT_PARALLELISM_DIM_0": 4,
+    "WEIGHT_PARALLELISM_DIM_0": 2,
     "WEIGHT_PARALLELISM_DIM_1": 4,
+
+    "WEIGHT_PROJ_TENSOR_SIZE_DIM_0": 16,
+    "WEIGHT_PROJ_TENSOR_SIZE_DIM_1": 16,
+    "WEIGHT_PROJ_PARALLELISM_DIM_0": 4,
+    "WEIGHT_PROJ_PARALLELISM_DIM_1": 2,
     
     "DATA_IN_0_PRECISION_0": 8,
     "DATA_IN_0_PRECISION_1": 3,
@@ -235,6 +293,13 @@ default_config = {
     "SOFTMAX_EXP_PRECISION_0": 12,
     "SOFTMAX_EXP_PRECISION_1": 4,
     "SOFTMAX_OUT_DATA_PRECISION_1": 6,
+
+    "SVMM_OUT_PRECISION_0": 10,
+    "SVMM_OUT_PRECISION_1": 4,
+    "WEIGHT_PROJ_PRECISION_0": 16,
+    "WEIGHT_PROJ_PRECISION_1": 8,
+    "BIAS_PROJ_PRECISION_0": 16,
+    "BIAS_PROJ_PRECISION_1": 8,
     "DATA_OUT_0_PRECISION_0": 10,
     "DATA_OUT_0_PRECISION_1": 4,
 }
@@ -278,10 +343,10 @@ torch.manual_seed(1)
 async def check_signal(dut, log):
     while True:
         await RisingEdge(dut.clk)
-        handshake_signal_check(
-            dut.joint_query_valid, 
-            dut.joint_query_ready, 
-            dut.query, log)
+        # handshake_signal_check(
+        #     dut.g_attention_head[0].head_i.query_key_transpose_valid, 
+        #     dut.g_attention_head[0].head_i.query_key_transpose_ready, 
+        #     dut.g_attention_head[0].head_i.query_key_transpose, log)
         # handshake_signal_check(dut.rolled_k_valid, dut.rolled_k_ready, dut.rolled_k, log)
         # handshake_signal_check(dut.bias_valid,
         #                        dut.bias_ready,

@@ -211,39 +211,26 @@ module matmul #(
 
     // A matrix Buffers
 
-    if (A_DEPTH_DIM1 > 1) begin
-      matrix_flatten #(
+    if (A_DEPTH_DIM1 > 1) begin: g_circular_buffer
+      
+      input_buffer #(
           .DATA_WIDTH(B_WIDTH),
-          .DIM0      (B_COMPUTE_DIM0),
-          .DIM1      (B_COMPUTE_DIM1)
-      ) weight_buffer_flatten_b (
-          .data_in (b_data),
-          .data_out(b_data_flat)
-      );
-
-      repeat_circular_buffer #(
-          .DATA_WIDTH(B_FLAT_WIDTH),
-          // Repeat for number of rows in matrix A
+          .IN_NUM    (B_COMPUTE_DIM0 * B_COMPUTE_DIM1),
           .REPEAT    (A_DEPTH_DIM1),
-          .SIZE      (B_DEPTH_DIM0 * B_DEPTH_DIM1)
+          .BUFFER_SIZE      (B_DEPTH_DIM0 * B_DEPTH_DIM1)
       ) weight_buffer (
-          .clk      (clk),
-          .rst      (rst),
-          .in_data  (b_data_flat),
-          .in_valid (b_valid),
-          .in_ready (b_ready),
-          .out_data (b_buffer_out_data_flat),
-          .out_valid(b_buffer_out_valid),
-          .out_ready(b_buffer_out_ready)
-      );
+          .clk,
+          .rst,
 
-      matrix_unflatten #(
-          .DATA_WIDTH(B_WIDTH),
-          .DIM0      (B_COMPUTE_DIM0),
-          .DIM1      (B_COMPUTE_DIM1)
-      ) weight_buffer_unflatten_b (
-          .data_in (b_buffer_out_data_flat),
-          .data_out(b_buffer_out_data)
+          // Input streaming port
+          .data_in (b_data),
+          .data_in_valid(b_valid),
+          .data_in_ready(b_ready),
+
+          // Output streaming port
+          .data_out (b_buffer_out_data),
+          .data_out_valid(b_buffer_out_valid),
+          .data_out_ready(b_buffer_out_ready)
       );
     end else begin
       assign b_buffer_out_data = b_data;
