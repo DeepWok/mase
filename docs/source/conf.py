@@ -40,10 +40,10 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
-    "myst_parser",
     "sphinx_needs",
     "sphinxcontrib.test_reports",
     "sphinxcontrib.plantuml",
+    "myst_nb",
 ]
 
 myst_enable_extensions = [
@@ -94,3 +94,5 @@ autodoc_default_options = {
     "undoc-members": True,
     "exclude-members": "__weakref__",
 }
+
+nb_execution_mode = "off"

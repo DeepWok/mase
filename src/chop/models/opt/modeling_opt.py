@@ -787,15 +787,6 @@ class OPTPatchedDecoder(OPTPatchedPreTrainedModel):
         )
 
 
-@register_mase_model(
-    "opt-patched",
-    checkpoints=["opt-patched"],
-    model_source="patched",
-    task_type="nlp",
-    sequence_classification=True,
-    causal_LM=True,
-    is_fx_traceable=True,
-)
 @add_start_docstrings(
     "The bare OPT Model outputting raw hidden-states without any specific head on top.",
     OPT_START_DOCSTRING,
@@ -1118,6 +1109,15 @@ class OPTPatchedForCausalLM(OPTPatchedPreTrainedModel):
         return reordered_past
 
 
+@register_mase_model(
+    "opt-patched",
+    checkpoints=["opt-patched"],
+    model_source="patched",
+    task_type="nlp",
+    sequence_classification=True,
+    causal_LM=False,
+    is_fx_traceable=True,
+)
 @add_start_docstrings(
     """
     The OPT Model transformer with a sequence classification head on top (linear layer).

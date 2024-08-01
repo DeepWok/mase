@@ -940,6 +940,8 @@ BERT_INPUTS_DOCSTRING = r"""
             Whether or not to return a [`~utils.ModelOutput`] instead of a plain tuple.
 """
 
+from chop.models.utils import register_mase_model
+
 
 @add_start_docstrings(
     "The bare Bert Model transformer outputting raw hidden-states without any specific head on top.",
@@ -1673,6 +1675,15 @@ class BertForNextSentencePrediction(BertPreTrainedModel):
         )
 
 
+@register_mase_model(
+    "bert",
+    checkpoints=["bert-base-uncased"],
+    model_source="patched",
+    task_type="nlp",
+    sequence_classification=True,
+    causal_LM=False,
+    is_fx_traceable=True,
+)
 @add_start_docstrings(
     """
     Bert Model transformer with a sequence classification/regression head on top (a linear layer on top of the pooled
