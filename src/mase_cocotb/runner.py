@@ -7,11 +7,6 @@ import inspect
 from typing import Any
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from time import time
-<<<<<<< HEAD
-=======
-
-import torch
->>>>>>> main
 
 import cocotb
 from cocotb.runner import get_runner, get_results
