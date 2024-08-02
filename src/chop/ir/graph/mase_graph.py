@@ -88,6 +88,7 @@ def trace_torch_module(
     model: torch.nn.Module,
     cf_args: Optional[Dict[str, Any]] = None,
     custom_ops: dict = None,
+    hf_input_names: list = None,
 ):
     """
     Trace a torch.nn.Module using the MaseTracer. This function is a wrapper
@@ -120,11 +121,20 @@ def trace_torch_module(
                 self, m: torch.nn.Module, module_qualified_name: str
             ) -> bool:
                 is_hf_built_in_leaf_module = hf_is_leaf_module(
-                    self, m, module_qualified_name
+                    self,
+                    m,
+                    module_qualified_name,
                 )
-
                 is_custom_module = isinstance(m, custom_modules)
-                return is_hf_built_in_leaf_module or is_custom_module
+                is_mase_leaf_layer = isinstance(m, MASE_LEAF_LAYERS)
+
+                return any(
+                    (
+                        is_hf_built_in_leaf_module,
+                        is_custom_module,
+                        is_mase_leaf_layer,
+                    )
+                )
 
             return is_leaf_module
 
@@ -134,7 +144,11 @@ def trace_torch_module(
             wrap_is_leaf_module(tracer_cls.is_leaf_module),
         )
 
-        graph_module = hf_symbolic_trace(model, tracer_cls=tracer_cls)
+        graph_module = hf_symbolic_trace(
+            model,
+            tracer_cls=tracer_cls,
+            input_names=hf_input_names,
+        )
         graph_module.custom_ops = custom_ops
 
         # ! TO DO: remove this legacy stuff
@@ -197,6 +211,7 @@ class MaseGraph:
         model: torch.nn.Module | fx.GraphModule,
         cf_args: Optional[Dict[str, Any]] = None,
         custom_ops: dict = None,
+        hf_input_names: list = None,
     ) -> None:
         """MaseGraph is a dataflow representation of a model with both software and hardware constraints.
         The MaseGraph can be constructed from a torch.nn.Module:
@@ -270,7 +285,12 @@ class MaseGraph:
             self.model.patched_custom_layers = []
             self.model.additional_inputs = []
         elif isinstance(model, torch.nn.Module):
-            self.model = trace_torch_module(model, cf_args, custom_ops)
+            self.model = trace_torch_module(
+                model,
+                cf_args,
+                custom_ops,
+                hf_input_names=hf_input_names,
+            )
         else:
             raise ValueError(
                 f"Expected fx.GraphModule or nn.Module, but received model: {type(model)}"

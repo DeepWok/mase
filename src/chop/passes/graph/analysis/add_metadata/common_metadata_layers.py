@@ -271,6 +271,11 @@ module_data = {
     "elu": {"input": "data_in"},
     "softmax": {"input": "data_in"},
     "gelu": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html
+    "crossentropyloss": {
+        "input": "data_in",
+        "target": "data_in",
+    },
 }
 
 

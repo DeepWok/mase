@@ -1,4 +1,4 @@
-Getting Started
+Installation
 =============================
 
 To use MASE, you can easily create an environment with all required dependendies using Docker or Anaconda. Follow the instructions on the links below according to your preferred method.

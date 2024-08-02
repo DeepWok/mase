@@ -33,6 +33,7 @@ from .graph.transforms import (
     emit_vivado_project_transform_pass,
     raise_granularity_transform_pass,
     patch_metadata_transform_pass,
+    insert_lora_adapter_transform_pass,
 )
 from .module.analysis import calculate_avg_bits_module_analysis_pass
 from .module.transforms import quantize_module_transform_pass, resharding_transform_pass

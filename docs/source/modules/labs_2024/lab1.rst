@@ -40,7 +40,7 @@ Learning tasks
 
 2. Go through `"Tutorial 1: Introduction to the Mase IR, MaseGraph and Torch FX passes" <https://github.com/DeepWok/mase/blob/adls_2024/docs/tutorials/introduction_to_masegraph_and_torch_fx.ipynb>`__ to understand the basic concepts of the framework.
 
-3. Go through "Tutorial 2: Fine-tuning a Bert model with LoRA" to understand how to fine-tune a model using the LoRA adapter.
+3. Go through `"Tutorial 2: Insert a LoRA adapter to Finetune Bert for Sequence Classification" <https://github.com/DeepWok/mase/blob/adls_2024/docs/tutorials/tutorial_2_lora_finetune.html>`__ to understand how to fine-tune a model using the LoRA adapter.
 
 Implementation tasks
 =============================

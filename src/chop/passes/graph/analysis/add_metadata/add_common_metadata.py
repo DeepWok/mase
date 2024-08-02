@@ -121,6 +121,8 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "softshrink"
             elif isinstance(module, nn.LogSigmoid):
                 mase_op = "logsigmoid"
+            elif isinstance(module, nn.CrossEntropyLoss):
+                mase_op = "crossentropyloss"
             else:
                 mase_op = None
                 for module_cls in graph.model.custom_ops["modules"].keys():

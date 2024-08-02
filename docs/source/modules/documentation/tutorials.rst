@@ -8,6 +8,7 @@ Core Tutorials
    :maxdepth: 1
 
    tutorials/tutorial_1_introduction_to_mase
+   tutorials/tutorial_2_lora_finetune
    
 
 Interactive Usage with Python
