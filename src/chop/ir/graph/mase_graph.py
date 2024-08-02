@@ -2,14 +2,18 @@ import logging
 import math
 import os
 from pathlib import Path
-
 from types import FunctionType, ModuleType
 from typing import Any, Callable, Dict, Optional, Tuple
+import dill
 
 import toml
 import torch
 import torch.fx as fx
 from torch.fx.passes.graph_drawer import FxGraphDrawer
+
+from transformers import PreTrainedModel
+from transformers.utils.fx import symbolic_trace as hf_symbolic_trace
+from transformers.utils.fx import HFTracer
 
 from chop.ir.common import MASE_IMPLICIT_FUNCS
 from chop.nn import MASE_LEAF_LAYERS
@@ -17,12 +21,12 @@ from chop.nn.quantized import (
     quantized_func_map,
     quantized_module_map,
 )
+from chop.tools import get_logger
 
-from transformers import PreTrainedModel
-from transformers.utils.fx import symbolic_trace as hf_symbolic_trace
-from transformers.utils.fx import HFTracer
+from .mase_metadata import MaseMetadata
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
+logger.setLevel("INFO")
 
 # ----------------------------------------
 #   Mase Tracer
@@ -80,6 +84,106 @@ class MaseTracer(fx.Tracer):
         )
 
 
+def trace_torch_module(
+    model: torch.nn.Module,
+    cf_args: Optional[Dict[str, Any]] = None,
+    custom_ops: dict = None,
+):
+    """
+    Trace a torch.nn.Module using the MaseTracer. This function is a wrapper
+    around the HFTracer and MaseTracer, and is used to trace a torch.nn.Module
+    into a fx.GraphModule. The fx.GraphModule is a dataflow representation of
+    the model with both software and hardware constraints. The MaseTracer is
+    used to trace the model, and the custom_ops are used to provide custom
+    operations to the tracer.
+
+    Args:
+        model (torch.nn.Module): Input model to trace.
+        cf_args (Optional[Dict[str, Any]], optional): Concrete forward arguments to trace the model with. Defaults to None.
+        custom_ops (dict, optional): Custom operations to be used in the model. Defaults to None.
+
+    Returns:
+        fx.GraphModule: Traced model as a fx.GraphModule.
+    """
+    # * HuggingFace model
+    if isinstance(model, PreTrainedModel):
+        tracer_cls = HFTracer
+
+        if custom_ops is not None:
+            custom_modules = tuple(custom_ops.get("modules", {}).keys())
+        else:
+            custom_ops = {"modules": {}, "functions": {}}
+            custom_modules = ()
+
+        def wrap_is_leaf_module(hf_is_leaf_module):
+            def is_leaf_module(
+                self, m: torch.nn.Module, module_qualified_name: str
+            ) -> bool:
+                is_hf_built_in_leaf_module = hf_is_leaf_module(
+                    self, m, module_qualified_name
+                )
+
+                is_custom_module = isinstance(m, custom_modules)
+                return is_hf_built_in_leaf_module or is_custom_module
+
+            return is_leaf_module
+
+        setattr(
+            tracer_cls,
+            "is_leaf_module",
+            wrap_is_leaf_module(tracer_cls.is_leaf_module),
+        )
+
+        graph_module = hf_symbolic_trace(model, tracer_cls=tracer_cls)
+        graph_module.custom_ops = custom_ops
+
+        # ! TO DO: remove this legacy stuff
+        graph_module.patched_op_names = []
+        graph_module.patched_custom_layers = []
+        graph_module.additional_inputs = {}
+
+    # * Other models
+    else:
+        # MASE internal auto-wrapped functions/layers
+        custom_leaf_modules = ()
+        custom_leaf_functions = ()
+        custom_leaf_layers = ()
+        # quantized functions/layers
+        custom_leaf_functions += tuple(quantized_func_map.values())
+        custom_leaf_layers += tuple(quantized_module_map.values())
+        # patched functions/layers
+        patched_nodes = getattr(model, "patched_nodes", None)
+        if patched_nodes is not None:
+            custom_leaf_modules += tuple(patched_nodes["modules"])
+            custom_leaf_functions += tuple(patched_nodes["functions"])
+            custom_leaf_layers += tuple(patched_nodes["layers"])
+
+        tracer = MaseTracer(
+            custom_leaf_modules=custom_leaf_modules,
+            custom_leaf_functions=custom_leaf_functions,
+            custom_leaf_layers=custom_leaf_layers,
+        )
+
+        graph_module = fx.GraphModule(model, tracer.trace(model, cf_args))
+
+        if patched_nodes is not None:
+            graph_module.patched_op_names = [
+                obj.__name__.lower()
+                for obj in model.patched_nodes["layers"]
+                + model.patched_nodes["functions"]
+            ]
+            # these are layers we believe the user will provide system verilog for
+            graph_module.patched_custom_layers = model.patched_nodes["layers"]
+            graph_module.additional_inputs = model.patched_nodes["additional_inputs"]
+            graph_module.patched_nodes = model.patched_nodes
+        else:
+            graph_module.patched_op_names = []
+            graph_module.patched_custom_layers = []
+            graph_module.additional_inputs = {}
+
+    return graph_module
+
+
 # ----------------------------------------
 #   Mase Graph IR
 # ----------------------------------------
@@ -90,137 +194,89 @@ class MaseGraph:
 
     def __init__(
         self,
-        model,
+        model: torch.nn.Module | fx.GraphModule,
         cf_args: Optional[Dict[str, Any]] = None,
         custom_ops: dict = None,
-        hf_input_names: list = None,
     ) -> None:
-        """Mase takes a torch.fx graph representation of a model and translates
-        it into a customised representation (Mase graph IR). The Mase graph
-        IR is a dataflow representation of the model with both software and
-        hardware constraints.
+        """MaseGraph is a dataflow representation of a model with both software and hardware constraints.
+        The MaseGraph can be constructed from a torch.nn.Module:
 
-        :param model: Input model to construct the MaseGraph. When a nn.Module is provided, this is parsed into a fx.GraphModule using the MaseTracer.
-        :type model: torch.nn.Module | fx.GraphModule
-        :param cf_args: _description_, defaults to None
-        :type cf_args: Optional[Dict[str, Any]], optional
+        .. code-block:: python
+
+            from chop.ir.graph import MaseGraph
+            from transformers import BertModel
+
+            model = BertModel.from_pretrained("bert-base-uncased")
+            mase_graph = MaseGraph(model)
+
+            # Or, equivalently:
+            mase_graph = MaseGraph.from_module(model)
+
+
+        A MaseGraph can also be constructed from a pre-traced fx.GraphModule:
+
+        .. code-block:: python
+
+            from chop.ir.graph import MaseGraph
+            import torch
+            import torch.fx as fx
+
+            model = torch.nn.Linear(10, 10)
+            traced_model = fx.symbolic_trace(model)
+            mase_graph = MaseGraph(traced_model)
+
+        A MaseGraph can be exported as follows:
+
+        .. code-block:: python
+
+            from chop.ir.graph import MaseGraph
+            import torch
+            import torch.fx as fx
+
+            model = torch.nn.Linear(10, 10)
+            traced_model = fx.symbolic_trace(model)
+            mase_graph = MaseGraph(traced_model)
+            mase_graph.export("masegraph")
+
+        The MaseGraph can then be loaded from a checkpoint as follows:
+
+        .. code-block:: python
+
+            from chop.ir.graph import MaseGraph
+
+            mase_graph = MaseGraph.from_checkpoint("masegraph")
+
+        To visualize the MaseGraph, the `draw` method can be used:
+
+        .. code-block:: python
+
+            from chop.ir.graph import MaseGraph
+
+            mase_graph = MaseGraph.from_module(model)
+            mase_graph.draw("mase_graph.svg")
+
+        Args:
+            model (torch.nn.Module | fx.GraphModule): Input model to construct the MaseGraph.
+            cf_args (Optional[Dict[str, Any]], optional): Concrete forward arguments to trace the model with. Defaults to None.
+            custom_ops (dict, optional): Custom operations to be used in the model. Defaults to None.
+
+        Raises:
+            ValueError: If the input model is not a torch.nn.Module or fx.Graph.
         """
+
         if isinstance(model, fx.GraphModule):
             self.model = model
             self.model.patched_op_names = []
             self.model.patched_custom_layers = []
             self.model.additional_inputs = []
         elif isinstance(model, torch.nn.Module):
-            self.model = self.trace_torch_module(
-                model,
-                cf_args,
-                custom_ops,
-                hf_input_names=hf_input_names,
-            )
+            self.model = trace_torch_module(model, cf_args, custom_ops)
         else:
             raise ValueError(
                 f"Expected fx.GraphModule or nn.Module, but received model: {type(model)}"
             )
 
         self.cf_args = cf_args
-
-    def trace_torch_module(
-        self,
-        model: torch.nn.Module,
-        cf_args: Optional[Dict[str, Any]] = None,
-        custom_ops: dict = None,
-        hf_input_names: list = None,
-    ):
-        # * HuggingFace model
-        if isinstance(model, PreTrainedModel):
-            tracer_cls = HFTracer
-
-            if custom_ops is not None:
-                custom_modules = tuple(custom_ops.get("modules", {}).keys())
-            else:
-                custom_ops = {"modules": {}, "functions": {}}
-                custom_modules = ()
-
-            def wrap_is_leaf_module(hf_is_leaf_module):
-                def is_leaf_module(
-                    self, m: torch.nn.Module, module_qualified_name: str
-                ) -> bool:
-                    is_hf_built_in_leaf_module = hf_is_leaf_module(
-                        self, m, module_qualified_name
-                    )
-                    is_custom_module = isinstance(m, custom_modules)
-                    is_mase_leaf_layer = isinstance(m, MASE_LEAF_LAYERS)
-
-                    return any(
-                        (
-                            is_hf_built_in_leaf_module,
-                            is_custom_module,
-                            is_mase_leaf_layer,
-                        )
-                    )
-
-                return is_leaf_module
-
-            setattr(
-                tracer_cls,
-                "is_leaf_module",
-                wrap_is_leaf_module(tracer_cls.is_leaf_module),
-            )
-
-            graph_module = hf_symbolic_trace(
-                model,
-                tracer_cls=tracer_cls,
-                input_names=hf_input_names,
-            )
-            graph_module.custom_ops = custom_ops
-
-            # ! TO DO: remove this legacy stuff
-            graph_module.patched_op_names = []
-            graph_module.patched_custom_layers = []
-            graph_module.additional_inputs = {}
-
-        # * Other models
-        else:
-            # MASE internal auto-wrapped functions/layers
-            custom_leaf_modules = ()
-            custom_leaf_functions = ()
-            custom_leaf_layers = ()
-            # quantized functions/layers
-            custom_leaf_functions += tuple(quantized_func_map.values())
-            custom_leaf_layers += tuple(quantized_module_map.values())
-            # patched functions/layers
-            patched_nodes = getattr(model, "patched_nodes", None)
-            if patched_nodes is not None:
-                custom_leaf_modules += tuple(patched_nodes["modules"])
-                custom_leaf_functions += tuple(patched_nodes["functions"])
-                custom_leaf_layers += tuple(patched_nodes["layers"])
-
-            self.tracer = MaseTracer(
-                custom_leaf_modules=custom_leaf_modules,
-                custom_leaf_functions=custom_leaf_functions,
-                custom_leaf_layers=custom_leaf_layers,
-            )
-
-            graph_module = fx.GraphModule(model, self.tracer.trace(model, cf_args))
-
-            if patched_nodes is not None:
-                graph_module.patched_op_names = [
-                    obj.__name__.lower()
-                    for obj in model.patched_nodes["layers"]
-                    + model.patched_nodes["functions"]
-                ]
-                # these are layers we believe the user will provide system verilog for
-                graph_module.patched_custom_layers = model.patched_nodes["layers"]
-                graph_module.additional_inputs = model.patched_nodes[
-                    "additional_inputs"
-                ]
-                graph_module.patched_nodes = model.patched_nodes
-            else:
-                graph_module.patched_op_names = []
-                graph_module.patched_custom_layers = []
-                graph_module.additional_inputs = {}
-
-        return graph_module
 
     @classmethod
     def from_module(
@@ -229,14 +285,105 @@ class MaseGraph:
         cf_args: Optional[Dict[str, Any]] = None,
         custom_ops: dict = {},
     ):
+        """
+        Construct a MaseGraph from a torch.nn.Module.
+
+        Args:
+            model (torch.nn.Module): Input model to construct the MaseGraph.
+            cf_args (Optional[Dict[str, Any]], optional): Concrete forward arguments to trace the model with. Defaults to None.
+            custom_ops (dict, optional): Custom operations to be used in the model. Defaults to {}.
+
+        Returns:
+            MaseGraph: Constructed MaseGraph.
+        """
         assert isinstance(
             model, torch.nn.Module
         ), f"model must be a torch.nn.Module. Received: {type(model)}"
 
-        graph_module = self.trace_torch_module(model, cf_args, custom_ops)
-        return cls(model=graph_module, cf_args=cf_args)
+        graph_module = trace_torch_module(model, cf_args, custom_ops)
+        return cls(
+            model=graph_module,
+            cf_args=cf_args,
+        )
+
+    @classmethod
+    def from_checkpoint(
+        cls,
+        checkpoint: str,
+        propagate_missing_metadata: bool = True,
+    ):
+        with open(f"{checkpoint}.pt", "rb") as f:
+            loaded_model = torch.load(f)
+
+        assert isinstance(
+            loaded_model, fx.GraphModule
+        ), f"Expected fx.GraphModule, but received model: {type(loaded_model)}"
+
+        mg = cls(loaded_model)
+
+        with open(f"{checkpoint}.mz", "rb") as f:
+            loaded_meta = dill.load(f)
+
+        loaded_meta = {k: dill.loads(v) for k, v in loaded_meta.items()}
+
+        for node in mg.nodes:
+            if node.name in loaded_meta.keys():
+                parameters = loaded_meta[node.name]
+                node.meta["mase"] = MaseMetadata(
+                    node=node,
+                    model=loaded_model,
+                )
+                node.meta["mase"].parameters = parameters
+            else:
+                # todo: propagate metadata for missing nodes
+                logger.debug(f"Node {node.name} not found in loaded metadata.")
+
+        return mg
+
+    def export(
+        self,
+        fname: str = "masegraph",
+    ):
+        """
+        Export the MaseGraph to a pair of files: {fname}.pt and {fname}.mz.
+        {fname}.pt contains the GraphModule, and {fname}.mz contains the MaseMetadata.
+
+        Args:
+            fname (str): Filename to save the MaseGraph to. Defaults to "masegraph".
+        """
+
+        fname = fname.split(".")[0]
+        logger.info(f"Exporting MaseGraph to {fname}.pt, {fname}.mz")
+
+        logger.debug(f"Recompiling GraphModule to preserve any transforms...")
+        self.model.recompile()
+
+        logger.info(f"Exporting GraphModule to {fname}.pt")
+        with open(f"{fname}.pt", "wb") as f:
+            torch.save(self.model, f)
+
+        logger.info(f"Exporting MaseMetadata to {fname}.mz")
+
+        combined_meta = {}
+        for node in self.nodes:
+            parameters = node.meta["mase"].parameters
+            try:
+                pickled = dill.dumps(parameters)
+                combined_meta[node.name] = pickled
+            except Exception as e:
+                logger.warning(f"Failed to pickle node: {node.name}")
+                logger.warning(e)
+
+        with open(f"{fname}.mz", "wb") as f:
+            dill.dump(combined_meta, f)
 
     def draw(self, file="mase_graph.svg"):
+        """
+        Draw the MaseGraph using the FxGraphDrawer.
+
+        Args:
+            file (str, optional): File to save the graph to. Defaults to "mase_graph.svg".
+        """
         drawer = FxGraphDrawer(self.model, "masegraph")
         drawer.get_dot_graph().write_svg(file)
 
