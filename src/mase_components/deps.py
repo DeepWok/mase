@@ -283,6 +283,16 @@ MASE_HW_DEPS = {
         "cast",
         "memory",
     ],
+    "normalization_layers/layer_norm_2d": [
+        "common",
+        "linear_layers/matmul",
+        "linear_layers/fixed_operators",
+        "scalar_operators/fixed",
+        "normalization_layers",
+        "cast",
+        "memory",
+        "generated_lut",
+    ],
     # Scalar Operators
     "scalar_operators/fixed/fixed_isqrt": [
         "memory",

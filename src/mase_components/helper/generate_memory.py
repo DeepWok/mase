@@ -15,6 +15,9 @@ def make_quantizer(data_width: int, f_width: int, floor):
     base_quantizer = integer_floor_quantizer if floor else integer_quantizer
     return partial(base_quantizer, width=data_width, frac_width=f_width)
 
+def isqrt(x):
+    x = (x + 1e-5).sqrt().reciprocal()
+    return x
 
 FUNCTION_TABLE = {
     "silu": nn.SiLU(),
@@ -25,11 +28,12 @@ FUNCTION_TABLE = {
     "gelu": nn.GELU(),
     "exp": torch.exp,
     "softmax": torch.exp,
+    "isqrt": isqrt
 }
 
 def fxtodouble(data_width: int, f_width: int, fx_num: str):
     intstr, fracstr = fx_num[: data_width - f_width], fx_num[data_width - f_width :]
-    intval = float(BitArray(bin=intstr).int)
+    intval = float(BitArray(bin=intstr).int)    
     fracval = float(BitArray(bin=fracstr).uint) / 2 ** (f_width)
 
     return intval + fracval
@@ -99,17 +103,18 @@ def aligned_generate_lookup(
         )
         pi += 2 ** -(in_f_width)
 
-    i = minval
-    while i <= -1 * 2 ** -(in_f_width):
-        count += 1
-        iarr.append(i)
-        val = quanter(f(torch.tensor(i*constant_mult)))  # entry in the lookup table
-        lut[
-            doubletofx(data_width=in_data_width, f_width=in_f_width, num=i, type=type)
-        ] = doubletofx(
-            data_width=data_width, f_width=f_width, num=val.item(), type=type
-        )
-        i += 2 ** -(in_f_width)
+    if function not in ["isqrt"]:
+        i = minval
+        while i <= -1 * 2 ** -(in_f_width):
+            count += 1
+            iarr.append(i)
+            val = quanter(f(torch.tensor(i*constant_mult)))  # entry in the lookup table
+            lut[
+                doubletofx(data_width=in_data_width, f_width=in_f_width, num=i, type=type)
+            ] = doubletofx(
+                data_width=data_width, f_width=f_width, num=val.item(), type=type
+            )
+            i += 2 ** -(in_f_width)
 
     iarr = [(x * 2 ** (in_f_width)) for x in iarr]
     # print(iarr)

@@ -303,36 +303,6 @@ default_config = {
     "DATA_OUT_0_PRECISION_0": 10,
     "DATA_OUT_0_PRECISION_1": 4,
 }
-# default_config = {
-#     "NUM_HEADS": 2,
-#     "ACTIVATION": 1,
-#     "HAS_BIAS": 1,
-#     "WEIGHTS_PRE_TRANSPOSED": 1,
-#     "DATA_IN_0_TENSOR_SIZE_DIM_0": 4,
-#     "DATA_IN_0_TENSOR_SIZE_DIM_1": 2,
-#     "DATA_IN_0_PARALLELISM_DIM_0": 2,
-#     "DATA_IN_0_PARALLELISM_DIM_1": 1,
-#     "WEIGHT_TENSOR_SIZE_DIM_0": 4,
-#     "WEIGHT_TENSOR_SIZE_DIM_1": 4,
-#     "WEIGHT_PARALLELISM_DIM_0": 1,
-#     "WEIGHT_PARALLELISM_DIM_1": 2,
-    
-#     "DATA_IN_0_PRECISION_0": 8,
-#     "DATA_IN_0_PRECISION_1": 3,
-#     "WEIGHT_PRECISION_0": 16,
-#     "WEIGHT_PRECISION_1": 8,
-#     "BIAS_PRECISION_0": 16,
-#     "BIAS_PRECISION_1": 8,
-#     "QKV_PRECISION_0": 8,
-#     "QKV_PRECISION_1": 3,
-#     "QKMM_OUT_PRECISION_0": 8,
-#     "QKMM_OUT_PRECISION_1": 3,
-#     "SOFTMAX_EXP_PRECISION_0": 12,
-#     "SOFTMAX_EXP_PRECISION_1": 4,
-#     "SOFTMAX_OUT_DATA_PRECISION_1": 6,
-#     "DATA_OUT_0_PRECISION_0": 10,
-#     "DATA_OUT_0_PRECISION_1": 4,
-# }
 MULT_DATA = 1 / math.sqrt(default_config["DATA_IN_0_TENSOR_SIZE_DIM_0"] // default_config["NUM_HEADS"])
 def get_config(kwargs={}):
     config = default_config
