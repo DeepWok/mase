@@ -152,15 +152,6 @@ def mase_runner(
     hierarchical: bool = False,
     template: bool = False,
 ):
-    print("# ---------------------------------------")
-    print(f"# Test {i}")
-    print("# ---------------------------------------")
-    print(f"# Parameters:")
-    print(f"# - {'Test Index'}: {i}")
-    for k, v in module_params.items():
-        print(f"# - {k}: {v}")
-    print("# ---------------------------------------")
-
     start_time = time()
 
     if group == None or module == None:
