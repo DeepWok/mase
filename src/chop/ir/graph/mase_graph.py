@@ -312,6 +312,22 @@ class MaseGraph:
         checkpoint: str,
         propagate_missing_metadata: bool = True,
     ):
+        """
+        Load a MaseGraph from a checkpoint. A MaseGraph checkpoint consists of two files:
+        {checkpoint}.pt and {checkpoint}.mz. {checkpoint}.pt contains the GraphModule,
+        and {checkpoint}.mz contains the MaseMetadata.
+
+        If propagate_missing_metadata is set to True, the MaseGraph will attempt to propagate
+        metadata for missing nodes. This is useful when the exported metadata is incomplete due
+        to serialization errors.
+
+        Args:
+            checkpoint (str): Checkpoint to load the MaseGraph from.
+            propagate_missing_metadata (bool, optional): Propagate metadata for missing nodes. Defaults to True.
+
+        Returns:
+            MaseGraph: Loaded MaseGraph.
+        """
         with open(f"{checkpoint}.pt", "rb") as f:
             loaded_model = torch.load(f)
 
@@ -389,16 +405,32 @@ class MaseGraph:
 
     @property
     def fx_graph(self):
-        return self.model.graph
+        """The fx.Graph representation of the MaseGraph.
 
-    @fx_graph.setter
-    def fx_graph(self, graph: fx.Graph):
-        self.model.graph = graph
+        Returns:
+            fx.Graph: fx.Graph representation of the MaseGraph.
+        """
+        return self.model.graph
 
     @property
     def nodes(self):
+        """The nodes of the MaseGraph.
+
+        Returns:
+            list: List of nodes in the MaseGraph.
+        """
         return self.model.graph.nodes
 
     @property
     def modules(self):
+        """
+        Get all the modules in the model.
+
+        Returns:
+            dict: Dictionary of all the modules in the model.
+        """
         return dict(self.model.named_modules())
+
+    @fx_graph.setter
+    def fx_graph(self, graph: fx.Graph):
+        self.model.graph = graph
