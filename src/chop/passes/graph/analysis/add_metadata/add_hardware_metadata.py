@@ -167,8 +167,10 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
 
     :param graph: a MaseGraph
     :type graph: MaseGraph
+
     :param pass_args: this pass does not need any arguments, defaults to None
     :type pass_args: _type_, optional
+
     :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)
     :rtype: tuple(MaseGraph, Dict)
 
@@ -413,7 +415,9 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
     # * Fix max parallelism to small value to enable verilator simulation
     # ! TO DO: enable this to be overriden by user
     for node in graph.nodes:
-        node.meta["mase"]["hardware"]["max_parallelism"] = pass_args.get("max_parallelism", [4] * 4)
+        node.meta["mase"]["hardware"]["max_parallelism"] = pass_args.get(
+            "max_parallelism", [4] * 4
+        )
 
     # Add hardware parameters
     for node in graph.nodes:

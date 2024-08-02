@@ -3,6 +3,7 @@
 # This script tests the fixed point castiplier
 import logging
 import cocotb
+import pytest
 from cocotb.triggers import Timer
 
 import torch
@@ -92,6 +93,7 @@ async def cocotb_test_fixed_rounding(dut):
         )
 
 
+@pytest.mark.dev
 def test_fixed_rounding():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])

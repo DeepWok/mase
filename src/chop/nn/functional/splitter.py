@@ -1,5 +1,5 @@
-
 import torch
+
 
 @torch.fx.wrap
 def splitter(x):

@@ -24,13 +24,13 @@ module unpacked_register_slice_quick #(
   register_slice #(
       .DATA_WIDTH(DATA_WIDTH * IN_SIZE)
   ) register_slice (
-      .clk      (clk),
-      .rst      (rst),
+      .clk           (clk),
+      .rst           (rst),
       .data_in_valid (in_valid),
       .data_in_ready (in_ready),
-      .data_in  (data_in_flatten),
+      .data_in       (data_in_flatten),
       .data_out_valid(out_valid),
       .data_out_ready(out_ready),
-      .data_out (data_out_flatten)
+      .data_out      (data_out_flatten)
   );
 endmodule

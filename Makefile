@@ -17,7 +17,11 @@ endif
 ifeq ($(VIVADO_AVAILABLE),)
     DOCKER_RUN_EXTRA_ARGS=
 else
+<<<<<<< HEAD
     DOCKER_RUN_EXTRA_ARGS= -v /mnt/applications/:/mnt/applications -v $(vhls):$(vhls) -v /$(USER_PREFIX)/$(shell whoami)/shared:/root/shared
+=======
+    DOCKER_RUN_EXTRA_ARGS= -v /mnt/applications/:/mnt/applications -v $(vhls):$(vhls)
+>>>>>>> main
 endif
 
 # * Set docker image according to local flag
@@ -56,8 +60,8 @@ sync:
 # Only needed if you are using the MLIR flow - it will be slow!
 sync-mlir:
 	bash mlir-air/utils/github-clone-build-libxaie.sh
-	bash mlir-air/utils/clone-llvm.sh 
-	bash mlir-air/utils/clone-mlir-aie.sh 
+	bash mlir-air/utils/clone-llvm.sh
+	bash mlir-air/utils/clone-mlir-aie.sh
 
 # Build Docker container
 build-docker:
@@ -65,7 +69,7 @@ build-docker:
 		if [ ! -d Docker ]; then \
     			git clone git@github.com:jianyicheng/mase-docker.git Docker; \
 		fi; \
-		docker build --build-arg VHLS_PATH=$(vhls) --build-arg VHLS_VERSION=$(vhls_version) -f Docker/Dockerfile-$(target) --tag mase-ubuntu2204 Docker; \
+		docker build --build-arg VHLS_PATH=$(vhls) --build-arg VHLS_VERSION=$(vhls_version) -f Docker/Dockerfile-$(PLATFORM) --tag mase-ubuntu2204 Docker; \
 	else \
 		docker pull $(img); \
 	fi
@@ -77,14 +81,14 @@ shell:
         -v /$(USER_PREFIX)/$(shell whoami)/.gitconfig:/root/.gitconfig \
         -v /$(USER_PREFIX)/$(shell whoami)/.ssh:/root/.ssh \
         -v /$(USER_PREFIX)/$(shell whoami)/.mase:/root/.mase \
-        -v $(shell pwd):/workspace \
+        -v $(shell pwd):/workspace:z \
         $(DOCKER_RUN_EXTRA_ARGS) \
         $(img) /bin/bash
 
 test-hw:
-	python3 scripts/build-components.py
 	pytest --log-level=DEBUG --verbose \
 		-n $(NUM_WORKERS) \
+		--junitxml=hardware_report.xml \
 		--html=report.html --self-contained-html \
 		$(hw_test_dir)
 
@@ -94,6 +98,7 @@ test-sw:
 		-n $(NUM_WORKERS) \
 		--cov=src/chop/ --cov-report=html \
 		--html=report.html --self-contained-html \
+		--junitxml=software_report.xml \
 		--profile --profile-svg \
 		$(sw_test_dir)
 

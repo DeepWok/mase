@@ -7,13 +7,13 @@ module unpacked_register_slice #(
     input logic clk,
     input logic rst,
 
-    input  MYDATA data_in [IN_SIZE-1:0],
-    input  logic  data_in_valid,
-    output logic  data_in_ready,
+    input MYDATA data_in[IN_SIZE-1:0],
+    input logic data_in_valid,
+    output logic data_in_ready,
 
-    output MYDATA data_out [IN_SIZE-1:0],
-    output logic  data_out_valid,
-    input  logic  data_out_ready
+    output MYDATA data_out[IN_SIZE-1:0],
+    output logic data_out_valid,
+    input logic data_out_ready
 );
   logic [DATA_WIDTH * IN_SIZE - 1 : 0] data_in_flatten;
   logic [DATA_WIDTH * IN_SIZE - 1 : 0] data_out_flatten;
@@ -24,13 +24,13 @@ module unpacked_register_slice #(
   register_slice #(
       .DATA_WIDTH(DATA_WIDTH * IN_SIZE)
   ) register_slice (
-      .clk      (clk),
-      .rst      (rst),
+      .clk           (clk),
+      .rst           (rst),
       .data_in_valid (data_in_valid),
       .data_in_ready (data_in_ready),
-      .data_in  (data_in_flatten),
+      .data_in       (data_in_flatten),
       .data_out_valid(data_out_valid),
       .data_out_ready(data_out_ready),
-      .data_out (data_out_flatten)
+      .data_out      (data_out_flatten)
   );
 endmodule

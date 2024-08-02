@@ -36,7 +36,7 @@ def simulate(
     trace_depth: int = 3,
     gui: bool = False,
     waves: bool = False,
-    simulator: str = "verilator"
+    simulator: str = "verilator",
 ):
     SIM = getenv("SIM", simulator)
     runner = get_runner(SIM)
@@ -48,12 +48,13 @@ def simulate(
 
     if not skip_build:
         # To do: extract from mz checkpoint
-        if (simulator == "questa"):
+        if simulator == "questa":
             sources = glob.glob(os.path.join(project_dir / "hardware" / "rtl", "*.sv"))
             build_args = []
 
-        elif (simulator == "verilator"):
-            sources = ["../../../top.sv"]   
+        elif simulator == "verilator":
+            # sources = ["../../../top.sv"]
+            sources = glob.glob(os.path.join(project_dir / "hardware" / "rtl", "*.sv"))
             build_args = [
                 "-Wno-fatal",
                 "-Wno-lint",
@@ -63,7 +64,6 @@ def simulate(
                 "--trace-depth",
                 str(trace_depth),
             ]
-        
         else:
             raise ValueError(f"Unrecognized simulator: {simulator}")
 
@@ -86,7 +86,6 @@ def simulate(
 
         build_end = time.time()
         logger.info(f"Build finished. Time taken: {build_end - build_start:.2f}s")
-        
 
     if not skip_test:
         # Add tb file to python path
@@ -99,7 +98,7 @@ def simulate(
             test_module="mase_top_tb",
             hdl_toplevel_lang="verilog",
             gui=gui,
-            waves=waves
+            waves=waves,
         )
         test_end = time.time()
         logger.info(f"Test finished. Time taken: {test_end - test_start:.2f}s")

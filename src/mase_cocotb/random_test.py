@@ -30,12 +30,14 @@ class RandomSource:
             logger_level = logging.DEBUG
         else:
             logger_level = logging.INFO
+
         self.logger.setLevel(logger_level)
         self.name = name
         self.num = num
         self.samples = samples
         self.max_stalls = max_stalls
         self.is_data_vector = is_data_vector
+
         if arithmetic in ["binary"]:
             self.rand_gen = lambda: binary_encode(random.choice([-1, 1]))
         elif arithmetic in ["ternary"]:
@@ -75,6 +77,7 @@ class RandomSource:
         self.random_buff = random.randint(0, 1)
         self.stall_count += self.random_buff
         if (not self.random_buff) or self.stall_count > self.max_stalls:
+            self.logger.debug("pre_compute: source {} plans to feed.".format(self.name))
             return 1
         self.logger.debug(
             "pre_compute: source {} skips an iteration.".format(self.name)
@@ -86,8 +89,11 @@ class RandomSource:
         to_feed = (not self.is_empty()) and next_ready
         if self.is_empty():
             data = self.dummy
+            self.logger.debug("source {} is empty.".format(self.name))
+            return 0, data
         else:
             data = self.data[-1]
+
         if not to_feed:
             self.logger.debug(
                 "source {} cannot feed any token because of back pressure.".format(
@@ -96,13 +102,12 @@ class RandomSource:
             )
             return (not self.is_empty()), data
         if (not self.random_buff) or self.stall_count > self.max_stalls:
-            data
-            self.data.pop()
             self.logger.debug(
-                "source {} feeds a token. Current depth = {}/{}".format(
-                    self.name, len(self.data), self.samples
+                "source {} feeds a token {}. Current depth = {}/{}".format(
+                    self.name, int(self.data[-1]), len(self.data) - 1, self.samples
                 )
             )
+            self.data.pop()
             return 1, data
         return 0, data
 
@@ -131,9 +136,12 @@ class RandomSink:
 
     def pre_compute(self, prevalid):
         to_absorb = (not self.is_full()) and prevalid
+        if self.is_full():
+            self.logger.debug("pre_compute: sink {} is full.".format(self.name))
+            return 0
         if not to_absorb:
             self.logger.debug(
-                "pre_compute: a sink {} cannot absorb any token because of no valid data.".format(
+                "pre_compute: sink {} cannot absorb any token because of no valid data.".format(
                     self.name
                 )
             )
@@ -142,6 +150,7 @@ class RandomSink:
         self.trystall = random.randint(0, 1)
         self.stall_count += self.trystall
         if (not self.trystall) or self.stall_count > self.max_stalls:
+            self.logger.debug("pre-compute: sink {} plans to absorb".format(self.name))
             return 1
         self.logger.debug("pre_compute: sink {} skips an iteration.".format(self.name))
         return 0
@@ -153,8 +162,8 @@ class RandomSink:
         if (not self.trystall) or self.stall_count > self.max_stalls:
             self.data.append(datain)
             self.logger.debug(
-                "sink {} absorbs a token. Current depth = {}/{}".format(
-                    self.name, len(self.data), self.samples
+                "sink {} absorbs a token {}. Current depth = {}/{}".format(
+                    self.name, int(datain), len(self.data), self.samples
                 )
             )
             return 1

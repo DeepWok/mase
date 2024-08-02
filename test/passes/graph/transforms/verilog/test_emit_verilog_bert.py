@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, pytest
 
 import torch
 import torch.nn as nn
@@ -20,7 +20,7 @@ from chop.nn.quantized import (
 from chop.tools import get_logger, set_excepthook
 
 from mase_components import get_module_dependencies
-from mase_components.activations.test.generate_memory import generate_sv_lut
+from mase_components.helper.generate_memory import generate_sv_lut
 
 import operator
 from functools import partial
@@ -140,7 +140,12 @@ def bert_update_metadata(mg, q_config):
 
 
 def emit_verilog_bert(
-    config, q_config, config_sequence_length, wait_count=15, wait_unit="ms", max_parallelism=4
+    config,
+    q_config,
+    config_sequence_length,
+    wait_count=15,
+    wait_unit="ms",
+    max_parallelism=4,
 ):
     # * Get model and quantize self attention, linear and layer norm layers
     model = BertModel(config)
@@ -199,7 +204,16 @@ def emit_verilog_bert(
     # Temporary: fix data coherency checks
     os.environ["COCOTB_RESOLVE_X"] = "ZEROS"
 
-    actions.simulate(skip_build=False, skip_test=False, gui=False, waves=False, simulator="questa")
+    # check questa
+    if os.system("questa") != 0:
+        logger.info(
+            "Questa is required for this test, but the system does not have it, so later part this test is skipped."
+        )
+        return
+
+    actions.simulate(
+        skip_build=False, skip_test=False, gui=False, waves=False, simulator="questa"
+    )
 
 
 def get_default_qconfig():
@@ -215,6 +229,7 @@ def get_default_qconfig():
     }
 
 
+@pytest.mark.large
 def test_emit_verilog_bert_smoke():
     config = BertConfig()
     config.num_hidden_layers = 3
@@ -222,9 +237,12 @@ def test_emit_verilog_bert_smoke():
     config.intermediate_size = 384
     config_sequence_length = 4
     q_config = get_default_qconfig()
-    emit_verilog_bert(config, q_config, config_sequence_length, wait_count=10, max_parallelism=2)
+    emit_verilog_bert(
+        config, q_config, config_sequence_length, wait_count=10, max_parallelism=2
+    )
 
 
+@pytest.mark.large
 def test_emit_verilog_bert_regression():
     config = BertConfig()
     config.num_hidden_layers = 3
@@ -232,10 +250,20 @@ def test_emit_verilog_bert_regression():
     config.intermediate_size = 1536
     config_sequence_length = 128
     q_config = get_default_qconfig()
-    emit_verilog_bert(config, q_config, config_sequence_length, wait_count=15, max_parallelism=16)
+    emit_verilog_bert(
+        config, q_config, config_sequence_length, wait_count=15, max_parallelism=16
+    )
 
 
 if __name__ == "__main__":
-    generate_sv_lut("gelu", 8, 3, data_width=8, f_width=3, path_with_dtype=False)
+    generate_sv_lut(
+        "gelu",
+        8,
+        3,
+        data_width=8,
+        f_width=3,
+        path="./src/mase_components/activation_layers/rtl",
+        path_with_dtype=False,
+    )
     test_emit_verilog_bert_smoke()
     test_emit_verilog_bert_regression()

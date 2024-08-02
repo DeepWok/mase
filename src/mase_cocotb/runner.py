@@ -7,7 +7,13 @@ import inspect
 from typing import Any
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from time import time
+<<<<<<< HEAD
+=======
 
+import torch
+>>>>>>> main
+
+import cocotb
 from cocotb.runner import get_runner, get_results
 from mase_components.deps import MASE_HW_DEPS
 
@@ -143,14 +149,21 @@ def mase_runner(
     module_param_list: list[dict[str, Any]] = [dict()],
     sim: str = "verilator",
     extra_build_args: list[str] = [],
-    trace: bool = False,
     seed: int = None,
     jobs: int = 1,
+    trace: bool = False,
     skip_build: bool = False,
     hierarchical: bool = False,
     template: bool = False,
 ):
-    assert type(module_param_list) == list, "Need to pass in a list of dicts!"
+    print("# ---------------------------------------")
+    print(f"# Test {i}")
+    print("# ---------------------------------------")
+    print(f"# Parameters:")
+    print(f"# - {'Test Index'}: {i}")
+    for k, v in module_params.items():
+        print(f"# - {k}: {v}")
+    print("# ---------------------------------------")
 
     start_time = time()
 

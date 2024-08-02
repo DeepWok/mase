@@ -19,5 +19,4 @@ def check_deps_tensorRT_pass(silent: bool = True):
             )
         else:
             logger.info("Extension: All dependencies for TensorRT pass are available.")
-
     return all(availabilities)

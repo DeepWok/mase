@@ -3,7 +3,7 @@ import os
 import torch
 
 import regex as re
-from chop.passes.graph.common import MASE_IMPLICIT_FUNCS
+from chop.ir.common import MASE_IMPLICIT_FUNCS
 
 # from ..session.plt_wrapper.nlp.classification import NLPClassificationModelWrapper
 # from ..session.plt_wrapper.nlp.lm import NLPLanguageModelingModelWrapper

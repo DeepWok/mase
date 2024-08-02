@@ -41,7 +41,6 @@ module comparator_tree #(
   for (genvar level = 0; level < LEVELS; level++) begin : element_handshake
     logic [2 ** (LEVELS - level - 1) - 1 : 0] element_input_valid;
     logic [2 ** (LEVELS - level - 1) - 1 : 0] element_input_ready;
-    
     logic [2 ** (LEVELS - level - 1) - 1 : 0] element_output_valid;
     logic [2 ** (LEVELS - level - 1) - 1 : 0] element_output_ready;
   end : element_handshake
@@ -82,24 +81,24 @@ module comparator_tree #(
       );
     end
 
-    // Join handshake signals from each skid buffer into a single 
+    // Join handshake signals from each skid buffer into a single
     // handshake interface to drive the next level
     split_n #(
-      .N (2 ** (LEVELS - i - 1))
+        .N(2 ** (LEVELS - i - 1))
     ) handshake_split (
-        .data_in_valid    (vars[i].valid),
-        .data_in_ready    (vars[i].ready),
-        .data_out_valid   (element_handshake[i].element_input_valid),
-        .data_out_ready   (element_handshake[i].element_input_ready)
+        .data_in_valid (vars[i].valid),
+        .data_in_ready (vars[i].ready),
+        .data_out_valid(element_handshake[i].element_input_valid),
+        .data_out_ready(element_handshake[i].element_input_ready)
     );
 
     join_n #(
-      .NUM_HANDSHAKES (2 ** (LEVELS - i - 1))
+        .NUM_HANDSHAKES(2 ** (LEVELS - i - 1))
     ) handshake_join (
-      .data_in_valid    (element_handshake[i].element_output_valid),
-      .data_in_ready    (element_handshake[i].element_output_ready),
-      .data_out_valid   (vars[i+1].valid),
-      .data_out_ready   (vars[i+1].ready)
+        .data_in_valid (element_handshake[i].element_output_valid),
+        .data_in_ready (element_handshake[i].element_output_ready),
+        .data_out_valid(vars[i+1].valid),
+        .data_out_ready(vars[i+1].ready)
     );
   end
 

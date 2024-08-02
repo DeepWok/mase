@@ -90,6 +90,13 @@ def add_natural_sparsity_metadata_analysis_pass(graph, pass_args: dict = {}):
     {'dummy_in': tensor, 'add_meta' bool}, add_meta controls whether he natural sparsity would be registered in mase metadata.
     :type pass_args: dict
 
+    .. code-block:: python
+
+            pass_args = {
+                'dummy_in': torch.tensor(...),
+                'add_meta': True # bool value whether to add the natural sparsity to the metadata
+            }
+
     :return: The updated MaseGraph and sparsity information.
     The returned dict contains {name (str): sparsity_value (float)}
     :rtype: tuple
@@ -98,7 +105,7 @@ def add_natural_sparsity_metadata_analysis_pass(graph, pass_args: dict = {}):
 
     A sample output dict:
 
-    .. code-block:: JSON
+    .. code-block:: python
 
         {
             'avg_activation': tensor(0.6709),

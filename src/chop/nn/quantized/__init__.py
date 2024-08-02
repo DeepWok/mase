@@ -5,5 +5,7 @@ from .modules import (
     LinearInteger,
     LayerNormInteger,
     GELUInteger,
+    SiLUInteger,
+    RMSNormInteger,
 )
 from .functional import quantized_func_map, fixed_softermax
