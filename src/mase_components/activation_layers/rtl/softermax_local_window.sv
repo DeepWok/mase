@@ -47,7 +47,8 @@ module softermax_local_window #(
 
   initial begin
     assert (IN_WIDTH > IN_FRAC_WIDTH);
-    assert (OUT_WIDTH > OUT_FRAC_WIDTH) else $fatal("%d > %d", OUT_WIDTH, OUT_FRAC_WIDTH);
+    assert (OUT_WIDTH > OUT_FRAC_WIDTH)
+    else $fatal("%d > %d", OUT_WIDTH, OUT_FRAC_WIDTH);
   end
 
   // -----
@@ -132,29 +133,29 @@ module softermax_local_window #(
 
   assign input_fifo_in_data = in_data;
 
-generate
-  if (PARALLELISM == 1) begin
-    assign max_tree_out_data = rounded_int_out_data[0];
-    assign max_tree_out_valid = rounded_int_out_valid[0];
-    assign rounded_int_out_ready = max_tree_out_ready;
-  end else begin
-    comparator_tree #(
-        .SIZE(PARALLELISM),
-        .DATA_WIDTH(MAX_WIDTH),
-        .MAX1_MIN0(1),  // MAX
-        .SIGNED(1)
-    ) max_tree (
-        .clk(clk),
-        .rst(rst),
-        .in_data(rounded_int_out_data),
-        .in_valid(rounded_int_out_valid[0]),
-        .in_ready(rounded_int_out_ready),
-        .out_data(max_tree_out_data),
-        .out_valid(max_tree_out_valid),
-        .out_ready(max_tree_out_ready)
-    );
-  end
-endgenerate
+  generate
+    if (PARALLELISM == 1) begin
+      assign max_tree_out_data = rounded_int_out_data[0];
+      assign max_tree_out_valid = rounded_int_out_valid[0];
+      assign rounded_int_out_ready = max_tree_out_ready;
+    end else begin
+      comparator_tree #(
+          .SIZE(PARALLELISM),
+          .DATA_WIDTH(MAX_WIDTH),
+          .MAX1_MIN0(1),  // MAX
+          .SIGNED(1)
+      ) max_tree (
+          .clk(clk),
+          .rst(rst),
+          .in_data(rounded_int_out_data),
+          .in_valid(rounded_int_out_valid[0]),
+          .in_ready(rounded_int_out_ready),
+          .out_data(max_tree_out_data),
+          .out_valid(max_tree_out_valid),
+          .out_ready(max_tree_out_ready)
+      );
+    end
+  endgenerate
 
   matrix_fifo #(
       .DATA_WIDTH(IN_WIDTH),

@@ -255,7 +255,7 @@ INTERNAL_COMP = {
                 "attention/rtl/fixed_self_attention_head.sv",
                 "attention/rtl/fixed_grouped_query_attention.sv",
                 "attention/rtl/fixed_gqa_wrapper.sv",
-            ]
+            ],
         }
-    ]
+    ],
 }

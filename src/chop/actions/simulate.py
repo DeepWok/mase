@@ -22,6 +22,7 @@ warnings.filterwarnings(
 logger = get_logger(__name__)
 logger.setLevel("DEBUG")
 
+
 def simulate(
     model: torch.nn.Module = None,
     model_info=None,

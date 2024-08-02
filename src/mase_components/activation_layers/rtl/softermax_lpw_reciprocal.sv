@@ -168,8 +168,8 @@ module softermax_lpw_reciprocal #(
   // Tables
   // -----
 
-  logic [SLOPE_WIDTH-1:0] slope_lut [ENTRIES-1:0];
-  logic [INTERCEPT_WIDTH-1:0] intercept_lut [ENTRIES-1:0];
+  logic [SLOPE_WIDTH-1:0] slope_lut[ENTRIES-1:0];
+  logic [INTERCEPT_WIDTH-1:0] intercept_lut[ENTRIES-1:0];
 
   initial begin
     real step = 1.0 / ENTRIES;
