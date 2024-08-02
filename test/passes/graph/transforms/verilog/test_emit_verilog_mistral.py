@@ -134,6 +134,7 @@ def get_default_qconfig():
         "data_out_frac_width": 3,
     }
 
+
 @pytest.mark.skip(reason="Not working")
 def test_emit_verilog_mistral_smoke():
     config = MistralConfig()
