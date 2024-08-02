@@ -17,11 +17,7 @@ endif
 ifeq ($(VIVADO_AVAILABLE),)
     DOCKER_RUN_EXTRA_ARGS=
 else
-<<<<<<< HEAD
-    DOCKER_RUN_EXTRA_ARGS= -v /mnt/applications/:/mnt/applications -v $(vhls):$(vhls) -v /$(USER_PREFIX)/$(shell whoami)/shared:/root/shared
-=======
     DOCKER_RUN_EXTRA_ARGS= -v /mnt/applications/:/mnt/applications -v $(vhls):$(vhls)
->>>>>>> main
 endif
 
 # * Set docker image according to local flag
