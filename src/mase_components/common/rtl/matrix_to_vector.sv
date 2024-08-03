@@ -130,14 +130,14 @@ end
 always_comb begin
     next = state;
     case(state)
-        IDLE:     if (data_in_0_valid && data_in_0_ready)                               next = LOAD;
-        LOAD:     if (counter == counter_max - data_in_0_depth_dim0)                    next = LAST;     
-                  else if (counter >= (data_in_0_depth_dim0-1) && fifo_activity)        next = PROCESS;
+        IDLE:     if (data_in_0_valid && data_in_0_ready)                                                      next = LOAD;
+        LOAD:     if (counter == (counter_max - data_in_0_depth_dim0 - 1) && fifo_activity)                    next = LAST;     
+                  else if (counter >= (data_in_0_depth_dim0-1) && fifo_activity)                               next = PROCESS;
                   
-        PROCESS:  if (counter == counter_max - data_in_0_depth_dim0)                    next = LAST;
-        LAST:     if (counter == counter_max)                                           next = FINISHED;
-        FINISHED: if (data_in_0_valid && data_in_0_ready)                               next = LOAD;
-                  else                                                                  next = IDLE;
+        PROCESS:  if (counter == counter_max - data_in_0_depth_dim0)                                           next = LAST;
+        LAST:     if (counter == counter_max)                                                                  next = FINISHED;
+        FINISHED: if (data_in_0_valid && data_in_0_ready)                                                      next = LOAD;
+                  else                                                                                         next = IDLE;
     endcase
 end
 
@@ -178,6 +178,7 @@ always_comb  begin
                           ctrl_output_fifo = 0;
                           ctrl_run_counter = 1;
                           ctrl_input_fifo  = 1;
+                          fifo_in_valid    = data_in_0_valid;
                           
         end
     endcase
