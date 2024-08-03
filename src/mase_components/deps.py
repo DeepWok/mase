@@ -297,11 +297,6 @@ MASE_HW_DEPS = {
         "linear_layers/fixed_operators",
     ],
     # Transformer Layers
-    "transformer_layers/fixed_gqa_head": [
-        "common",
-        "linear_layers/matmul",
-        "activation_layers",
-    ],
     "transformer_layers/fixed_self_attention": [
         "transformer_layers",
         "activation_layers",
@@ -331,6 +326,16 @@ MASE_HW_DEPS = {
         "common",
         "linear_layers/fixed_operators",
         "linear_layers/fixed_linear_layer",
+    ],
+    "transformer_layers/fixed_grouped_query_attention_wrapper": [
+        "transformer_layers",
+        "cast",
+        "memory",
+        "common",
+        "linear_layers/fixed_operators",
+        "linear_layers/fixed_linear_layer",
+        "linear_layers/matmul",
+        "activation_layers",
     ],
     "arithmetic/mac": ["fixed_arithmetic", "float_arithmetic"],
     # ViT
