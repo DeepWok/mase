@@ -1,21 +1,23 @@
 `timescale 1ns / 1ps
-module fixed_swin_attention_head #(
+module fixed_swin_attention_head_programmable #(
 
     // * Queries, keys and values are assumed to have the same
     // * precision, dimensions and parallelism
-    parameter IN_DATA_TENSOR_SIZE_DIM_0 = 64,
-    parameter IN_DATA_TENSOR_SIZE_DIM_1 = 32,
+    parameter IN_DATA_MAX_TENSOR_SIZE_DIM_0 = 64,
+    parameter IN_DATA_MAX_TENSOR_SIZE_DIM_1 = 32,
     parameter IN_DATA_PARALLELISM_DIM_0 = 4,
     parameter IN_DATA_PARALLELISM_DIM_1 = 4,
     parameter IN_DATA_PRECISION_0 = 16,
     parameter IN_DATA_PRECISION_1 = 3,
-
-    parameter POS_EMBED_PARALLELISM_DIM_0 = 1,
-    parameter POS_EMBED_PARALLELISM_DIM_1 = 1,
+    localparam IN_DATA_MAX_DEPTH_0 = IN_DATA_MAX_TENSOR_SIZE_DIM_0/IN_DATA_PARALLELISM_DIM_0,
+    localparam IN_DATA_MAX_DEPTH_1 = IN_DATA_MAX_TENSOR_SIZE_DIM_1/IN_DATA_PARALLELISM_DIM_1,
+    localparam IN_DATA_MAX_DEPTH_0_WIDTH = $clog2(IN_DATA_MAX_DEPTH_0),
+    localparam IN_DATA_MAX_DEPTH_1_WIDTH = $clog2(IN_DATA_MAX_DEPTH_1),
+    localparam IN_DATA_MAX_DEPTH_MULT_WIDTH = $clog2(IN_DATA_MAX_DEPTH_0) + $clog2(IN_DATA_MAX_DEPTH_1),
 
     // * Output tokens are casted to requested precision
-    parameter OUT_DATA_TENSOR_SIZE_DIM_0 = 64,
-    parameter OUT_DATA_TENSOR_SIZE_DIM_1 = 32,
+    parameter OUT_DATA_MAX_TENSOR_SIZE_DIM_0 = 64,
+    parameter OUT_DATA_MAX_TENSOR_SIZE_DIM_1 = 32,
     parameter OUT_DATA_PARALLELISM_DIM_0 = IN_DATA_PARALLELISM_DIM_0,
     parameter OUT_DATA_PARALLELISM_DIM_1 = IN_DATA_PARALLELISM_DIM_1,
     parameter OUT_DATA_PRECISION_0 = 16,
@@ -24,6 +26,10 @@ module fixed_swin_attention_head #(
 ) (
     input logic clk,
     input logic rst,
+
+    input logic [IN_DATA_MAX_DEPTH_0_WIDTH:0] in_depth_dim_0,
+    input logic [IN_DATA_MAX_DEPTH_1_WIDTH:0] in_depth_dim_1,
+    input logic [IN_DATA_MAX_DEPTH_MULT_WIDTH:0] in_depth_mult,
 
     input logic [IN_DATA_PRECISION_0-1:0] query_con [IN_DATA_PARALLELISM_DIM_0*IN_DATA_PARALLELISM_DIM_1-1:0],
     input logic query_con_valid,
@@ -41,7 +47,7 @@ module fixed_swin_attention_head #(
     input logic value_valid,
     output logic value_ready,
 
-    input logic [IN_DATA_PRECISION_0-1:0] pos_embed [IN_DATA_PARALLELISM_DIM_0*IN_DATA_PARALLELISM_DIM_1-1:0],
+    input logic [IN_DATA_PRECISION_0-1:0] pos_embed [IN_DATA_PARALLELISM_DIM_1-1:0],
     input logic pos_embed_valid,
     output logic pos_embed_ready,
 
@@ -51,17 +57,17 @@ module fixed_swin_attention_head #(
 );
 
   initial begin
-    assert (OUT_DATA_TENSOR_SIZE_DIM_0 == IN_DATA_TENSOR_SIZE_DIM_0)
-    else
-      $fatal(
-          "Module incorrectly parametrized. OUT_DATA_TENSOR_SIZE_DIM_0 != IN_DATA_TENSOR_SIZE_DIM_0"
-      );
+    // assert (OUT_DATA_TENSOR_SIZE_DIM_0 == IN_DATA_TENSOR_SIZE_DIM_0)
+    // else
+    //   $fatal(
+    //       "Module incorrectly parametrized. OUT_DATA_TENSOR_SIZE_DIM_0 != IN_DATA_TENSOR_SIZE_DIM_0"
+    //   );
 
-    assert (OUT_DATA_TENSOR_SIZE_DIM_1 == IN_DATA_TENSOR_SIZE_DIM_1)
-    else
-      $fatal(
-          "Module incorrectly parametrized. OUT_DATA_TENSOR_SIZE_DIM_1 != IN_DATA_TENSOR_SIZE_DIM_1"
-      );
+    // assert (OUT_DATA_TENSOR_SIZE_DIM_1 == IN_DATA_TENSOR_SIZE_DIM_1)
+    // else
+    //   $fatal(
+    //       "Module incorrectly parametrized. OUT_DATA_TENSOR_SIZE_DIM_1 != IN_DATA_TENSOR_SIZE_DIM_1"
+    //   );
 
     assert (OUT_DATA_PARALLELISM_DIM_0 == IN_DATA_PARALLELISM_DIM_0)
     else
@@ -76,28 +82,28 @@ module fixed_swin_attention_head #(
       );
   end
 
-  parameter IN_DATA_DEPTH_0 = IN_DATA_TENSOR_SIZE_DIM_0 / IN_DATA_PARALLELISM_DIM_0;
-  parameter IN_DATA_DEPTH_1 = IN_DATA_TENSOR_SIZE_DIM_1 / IN_DATA_PARALLELISM_DIM_1;
+//   parameter IN_DATA_DEPTH_0 = IN_DATA_TENSOR_SIZE_DIM_0 / IN_DATA_PARALLELISM_DIM_0;
+//   parameter IN_DATA_DEPTH_1 = IN_DATA_TENSOR_SIZE_DIM_1 / IN_DATA_PARALLELISM_DIM_1;
 
-  // Query key transpose
-  parameter QUERY_TRANSPOSE_PRECISION_0 = 2 * IN_DATA_PRECISION_0 + $clog2(
-      IN_DATA_PARALLELISM_DIM_0
-  ) + $clog2(
-      IN_DATA_DEPTH_1
-  );
-  parameter QUERY_TRANSPOSE_PRECISION_1 = 2 * IN_DATA_PRECISION_1;
+//   // Query key transpose
+//   parameter QUERY_TRANSPOSE_PRECISION_0 = 2 * IN_DATA_PRECISION_0 + $clog2(
+//       IN_DATA_PARALLELISM_DIM_0
+//   ) + $clog2(
+//       IN_DATA_DEPTH_1
+//   );
+//   parameter QUERY_TRANSPOSE_PRECISION_1 = 2 * IN_DATA_PRECISION_1;
 
   // Attention scores
   // ! TO DO: check precision transformation post softmax
-  parameter ATTENTION_SCORES_PRECISION_0 = QUERY_TRANSPOSE_PRECISION_0;
-  parameter ATTENTION_SCORES_PRECISION_1 = QUERY_TRANSPOSE_PRECISION_1;
+//   parameter ATTENTION_SCORES_PRECISION_0 = QUERY_TRANSPOSE_PRECISION_0;
+//   parameter ATTENTION_SCORES_PRECISION_1 = QUERY_TRANSPOSE_PRECISION_1;
 
-  parameter OUT_PRE_CAST_PRECISION_0 = IN_DATA_PRECISION_0 + ATTENTION_SCORES_PRECISION_0 + $clog2(
-      IN_DATA_PARALLELISM_DIM_1
-  ) + $clog2(
-      IN_DATA_TENSOR_SIZE_DIM_1 / IN_DATA_PARALLELISM_DIM_1
-  );
-  parameter OUT_PRE_CAST_PRECISION_1 = IN_DATA_PRECISION_1 + ATTENTION_SCORES_PRECISION_1;
+//   parameter OUT_PRE_CAST_PRECISION_0 = IN_DATA_PRECISION_0 + ATTENTION_SCORES_PRECISION_0 + $clog2(
+//       IN_DATA_PARALLELISM_DIM_1
+//   ) + $clog2(
+//       IN_DATA_TENSOR_SIZE_DIM_1 / IN_DATA_PARALLELISM_DIM_1
+//   );
+//   parameter OUT_PRE_CAST_PRECISION_1 = IN_DATA_PRECISION_1 + ATTENTION_SCORES_PRECISION_1;
 
   // * Declarations
   // * =================================================================
@@ -110,15 +116,15 @@ module fixed_swin_attention_head #(
   logic content_att_valid;
   logic content_att_ready;
 
-  logic [OUT_DATA_PRECISION_0-1:0] positional_att [IN_DATA_PARALLELISM_DIM_0 *POS_EMBED_PARALLELISM_DIM_1-1:0];
+  logic [OUT_DATA_PRECISION_0-1:0] positional_att [IN_DATA_PARALLELISM_DIM_0 *1-1:0];
   logic positional_att_valid;
   logic positional_att_ready;
 
-  logic [OUT_DATA_PRECISION_0-1:0] sum_att [IN_DATA_PARALLELISM_DIM_0 * IN_DATA_PARALLELISM_DIM_1-1:0];
+  logic [OUT_DATA_PRECISION_0-1:0] sum_att [IN_DATA_PARALLELISM_DIM_1-1:0];
   logic sum_att_valid;
   logic sum_att_ready;
 
-  logic [OUT_DATA_PRECISION_0-1:0] attention_scores [IN_DATA_PARALLELISM_DIM_0 * IN_DATA_PARALLELISM_DIM_1-1:0];
+  logic [OUT_DATA_PRECISION_0-1:0] attention_scores [IN_DATA_PARALLELISM_DIM_1-1:0];
   logic attention_scores_valid;
   logic attention_scores_ready;
 
@@ -132,9 +138,9 @@ module fixed_swin_attention_head #(
 
   // * Transpose projected keys
 
-  matrix_stream_transpose #(
-      .TOTAL_DIM0  (IN_DATA_TENSOR_SIZE_DIM_0),
-      .TOTAL_DIM1  (IN_DATA_TENSOR_SIZE_DIM_1),
+  matrix_stream_transpose_programmable #(
+      .TOTAL_MAX_DIM0  (IN_DATA_MAX_TENSOR_SIZE_DIM_0),
+      .TOTAL_MAX_DIM1  (IN_DATA_MAX_TENSOR_SIZE_DIM_1),
       .COMPUTE_DIM0(IN_DATA_PARALLELISM_DIM_0),
       .COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_1),
 
@@ -142,6 +148,9 @@ module fixed_swin_attention_head #(
   ) key_transpose_i (
       .clk,
       .rst,
+
+      .in_depth_dim_0(in_depth_dim_0),
+      .in_depth_dim_1(in_depth_dim_1),
 
       // In Matrix
       .in_data (key),
@@ -156,15 +165,15 @@ module fixed_swin_attention_head #(
 
   // * Content Query x Key^T
 
-  matmul #(
-      .A_TOTAL_DIM0(IN_DATA_TENSOR_SIZE_DIM_0),
-      .A_TOTAL_DIM1(IN_DATA_TENSOR_SIZE_DIM_1),
+  matmul_programmable #(
+      .A_MAX_DIM0(IN_DATA_MAX_TENSOR_SIZE_DIM_0),
+      .A_MAX_DIM1(IN_DATA_MAX_TENSOR_SIZE_DIM_1),
 
-      .B_TOTAL_DIM0(IN_DATA_TENSOR_SIZE_DIM_1),
-      .B_TOTAL_DIM1(IN_DATA_TENSOR_SIZE_DIM_0),
+      .B_MAX_DIM0(IN_DATA_MAX_TENSOR_SIZE_DIM_1),
+      .B_MAX_DIM1(IN_DATA_MAX_TENSOR_SIZE_DIM_0),
 
       .A_COMPUTE_DIM0(IN_DATA_PARALLELISM_DIM_0),
-      .A_COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_0),
+      .A_COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_1),
       .B_COMPUTE_DIM0(IN_DATA_PARALLELISM_DIM_1),
       .B_COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_0),
 
@@ -181,6 +190,11 @@ module fixed_swin_attention_head #(
       .clk,
       .rst,
 
+      .a_depth_dim1(in_depth_dim_1),
+      .b_depth_dim0(in_depth_dim_0),
+      .b_depth_dim1(in_depth_dim_1),
+      .b_depth_mult(in_depth_mult),
+
       .a_data (query_con),
       .a_valid(query_con_valid),
       .a_ready(query_con_ready),
@@ -196,17 +210,17 @@ module fixed_swin_attention_head #(
 
 
     //Positonal Query * Positional Embedding (perhaps transpose rel_k?)
-    matmul #(
-      .A_TOTAL_DIM0(IN_DATA_TENSOR_SIZE_DIM_0),
-      .A_TOTAL_DIM1(IN_DATA_TENSOR_SIZE_DIM_1),
+    matmul_programmable #(
+      .A_MAX_DIM0(1),
+      .A_MAX_DIM1(IN_DATA_MAX_TENSOR_SIZE_DIM_0),
 
-      .B_TOTAL_DIM0(IN_DATA_TENSOR_SIZE_DIM_1),
-      .B_TOTAL_DIM1(2^(IN_DATA_TENSOR_SIZE_DIM_0)-1),
+      .B_MAX_DIM0(IN_DATA_MAX_TENSOR_SIZE_DIM_1),
+      .B_MAX_DIM1(IN_DATA_MAX_TENSOR_SIZE_DIM_0),
 
-      .A_COMPUTE_DIM0(IN_DATA_PARALLELISM_DIM_0),
-      .A_COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_0),
-      .B_COMPUTE_DIM0(POS_EMBED_PARALLELISM_DIM_1),
-      .B_COMPUTE_DIM1(POS_EMBED_PARALLELISM_DIM_0),
+      .A_COMPUTE_DIM0(1),
+      .A_COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_1),
+      .B_COMPUTE_DIM0(IN_DATA_PARALLELISM_DIM_1),
+      .B_COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_0),
 
       .A_WIDTH     (IN_DATA_PRECISION_0),
       .A_FRAC_WIDTH(IN_DATA_PRECISION_1),
@@ -238,17 +252,17 @@ module fixed_swin_attention_head #(
   fixed_adder #(
       .DATA_IN_0_PRECISION_0 (IN_DATA_PRECISION_0),
       .DATA_IN_0_PRECISION_1 (IN_DATA_PRECISION_1),
-      .DATA_IN_0_TENSOR_SIZE_DIM_0 (IN_DATA_TENSOR_SIZE_DIM_0),
-      .DATA_IN_0_TENSOR_SIZE_DIM_1 (IN_DATA_TENSOR_SIZE_DIM_1),
+      .DATA_IN_0_TENSOR_SIZE_DIM_0 (IN_DATA_MAX_TENSOR_SIZE_DIM_0),
+      .DATA_IN_0_TENSOR_SIZE_DIM_1 (IN_DATA_MAX_TENSOR_SIZE_DIM_1),
       .DATA_IN_0_TENSOR_SIZE_DIM_2 (0),
-      .DATA_IN_0_PARALLELISM_DIM_0 (IN_DATA_PARALLELISM_DIM_0),
+      .DATA_IN_0_PARALLELISM_DIM_0 (1),
       .DATA_IN_0_PARALLELISM_DIM_1 (IN_DATA_PARALLELISM_DIM_1),
       .DATA_IN_0_PARALLELISM_DIM_2 (0),
   
       .DATA_IN_1_PRECISION_0 (IN_DATA_PRECISION_0),
       .DATA_IN_1_PRECISION_1 (IN_DATA_PRECISION_1),
-      .DATA_IN_1_TENSOR_SIZE_DIM_0 (IN_DATA_TENSOR_SIZE_DIM_0),
-      .DATA_IN_1_TENSOR_SIZE_DIM_1 (IN_DATA_TENSOR_SIZE_DIM_1),
+      .DATA_IN_1_TENSOR_SIZE_DIM_0 (IN_DATA_MAX_TENSOR_SIZE_DIM_0),
+      .DATA_IN_1_TENSOR_SIZE_DIM_1 (IN_DATA_MAX_TENSOR_SIZE_DIM_1),
       .DATA_IN_1_TENSOR_SIZE_DIM_2 (0),
       .DATA_IN_1_PARALLELISM_DIM_0 (IN_DATA_PARALLELISM_DIM_0),
       .DATA_IN_1_PARALLELISM_DIM_1 (IN_DATA_PARALLELISM_DIM_1),
@@ -280,16 +294,16 @@ module fixed_swin_attention_head #(
   fixed_softermax #(
       .DATA_IN_0_PRECISION_0      (OUT_DATA_PRECISION_0),
       .DATA_IN_0_PRECISION_1      (OUT_DATA_PRECISION_1),
-      .DATA_IN_0_TENSOR_SIZE_DIM_0(IN_DATA_TENSOR_SIZE_DIM_1),
-      .DATA_IN_0_TENSOR_SIZE_DIM_1(IN_DATA_TENSOR_SIZE_DIM_1),
-      .DATA_IN_0_PARALLELISM_DIM_0(IN_DATA_PARALLELISM_DIM_1),
+      .DATA_IN_0_TENSOR_SIZE_DIM_0(IN_DATA_MAX_TENSOR_SIZE_DIM_1),
+      .DATA_IN_0_TENSOR_SIZE_DIM_1(IN_DATA_MAX_TENSOR_SIZE_DIM_1),
+      .DATA_IN_0_PARALLELISM_DIM_0(1),
       .DATA_IN_0_PARALLELISM_DIM_1(IN_DATA_PARALLELISM_DIM_1),
 
       .DATA_OUT_0_PRECISION_0      (OUT_DATA_PRECISION_0),
       .DATA_OUT_0_PRECISION_1      (OUT_DATA_PRECISION_1),
-      .DATA_OUT_0_TENSOR_SIZE_DIM_0(IN_DATA_TENSOR_SIZE_DIM_1),
-      .DATA_OUT_0_TENSOR_SIZE_DIM_1(IN_DATA_TENSOR_SIZE_DIM_1),
-      .DATA_OUT_0_PARALLELISM_DIM_0(IN_DATA_PARALLELISM_DIM_1),
+      .DATA_OUT_0_TENSOR_SIZE_DIM_0(IN_DATA_MAX_TENSOR_SIZE_DIM_1),
+      .DATA_OUT_0_TENSOR_SIZE_DIM_1(IN_DATA_MAX_TENSOR_SIZE_DIM_1),
+      .DATA_OUT_0_PARALLELISM_DIM_0(1),
       .DATA_OUT_0_PARALLELISM_DIM_1(IN_DATA_PARALLELISM_DIM_1)
 
   ) fixed_softermax_i (
@@ -307,43 +321,43 @@ module fixed_swin_attention_head #(
 
   // * Output: Attention scores x Value
 
-  matmul #(
-      .A_TOTAL_DIM0(IN_DATA_TENSOR_SIZE_DIM_1),
-      .A_TOTAL_DIM1(IN_DATA_TENSOR_SIZE_DIM_1),
+//   matmul #(
+//       .A_TOTAL_DIM0(IN_DATA_TENSOR_SIZE_DIM_1),
+//       .A_TOTAL_DIM1(IN_DATA_TENSOR_SIZE_DIM_1),
 
-      .B_TOTAL_DIM0(IN_DATA_TENSOR_SIZE_DIM_0),
-      .B_TOTAL_DIM1(IN_DATA_TENSOR_SIZE_DIM_1),
+//       .B_TOTAL_DIM0(IN_DATA_TENSOR_SIZE_DIM_0),
+//       .B_TOTAL_DIM1(IN_DATA_TENSOR_SIZE_DIM_1),
 
-      .A_COMPUTE_DIM0(IN_DATA_PARALLELISM_DIM_1),
-      .A_COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_1),
-      .B_COMPUTE_DIM0(IN_DATA_PARALLELISM_DIM_0),
-      .B_COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_1),
+//       .A_COMPUTE_DIM0(IN_DATA_PARALLELISM_DIM_1),
+//       .A_COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_1),
+//       .B_COMPUTE_DIM0(IN_DATA_PARALLELISM_DIM_0),
+//       .B_COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_1),
 
-      .A_WIDTH     (OUT_DATA_PRECISION_0),
-      .A_FRAC_WIDTH(OUT_DATA_PRECISION_1),
+//       .A_WIDTH     (OUT_DATA_PRECISION_0),
+//       .A_FRAC_WIDTH(OUT_DATA_PRECISION_1),
 
-      .B_WIDTH     (IN_DATA_PRECISION_0),
-      .B_FRAC_WIDTH(IN_DATA_PRECISION_1),
+//       .B_WIDTH     (IN_DATA_PRECISION_0),
+//       .B_FRAC_WIDTH(IN_DATA_PRECISION_1),
 
-      .OUT_WIDTH     (OUT_DATA_PRECISION_0),
-      .OUT_FRAC_WIDTH(OUT_DATA_PRECISION_1)
+//       .OUT_WIDTH     (OUT_DATA_PRECISION_0),
+//       .OUT_FRAC_WIDTH(OUT_DATA_PRECISION_1)
 
-  ) attention_scores_values_matmul_i (
-      .clk,
-      .rst,
+//   ) attention_scores_values_matmul_i (
+//       .clk,
+//       .rst,
 
-      .a_data (attention_scores),
-      .a_valid(attention_scores_valid),
-      .a_ready(attention_scores_ready),
+//       .a_data (attention_scores),
+//       .a_valid(attention_scores_valid),
+//       .a_ready(attention_scores_ready),
 
-      .b_data (value),
-      .b_valid(value_valid),
-      .b_ready(value_ready),
+//       .b_data (value),
+//       .b_valid(value_valid),
+//       .b_ready(value_ready),
 
-      .out_data (out_pre_cast),
-      .out_valid(out_cast_valid),
-      .out_ready(out_cast_ready)
-  );
+//       .out_data (out_pre_cast),
+//       .out_valid(out_cast_valid),
+//       .out_ready(out_cast_ready)
+//   );
 
   // * Output cast
 

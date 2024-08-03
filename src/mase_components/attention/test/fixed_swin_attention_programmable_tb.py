@@ -682,8 +682,6 @@ def get_config(kwargs={}):
         "BIAS_PARALLELISM_DIM_1": 2,
         "BIAS_PRECISION_0": 16,
         "BIAS_PRECISION_1": 8,
-        "POS_EMBED_PARALLELISM_DIM_0": 1,
-        "POS_EMBED_PARALLELISM_DIM_1": 1,
         "DATA_OUT_0_MAX_TENSOR_SIZE_DIM_0": 4,
         "DATA_OUT_0_MAX_TENSOR_SIZE_DIM_1": 4,
         "DATA_OUT_0_PARALLELISM_DIM_0": 2,
