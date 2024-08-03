@@ -89,6 +89,7 @@ requirements = [
     "psutil",
     "Pillow==10.4.0",
     "mpmath==1.3.0",
+    "evaluate",
 ]
 
 setup(
