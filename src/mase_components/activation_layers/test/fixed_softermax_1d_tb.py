@@ -165,7 +165,7 @@ def get_fixed_softermax_config(kwargs={}):
 
 def get_random_width():
     width = randint(2, 16)
-    frac_width = randint(1, width-1)
+    frac_width = randint(1, width - 1)
     return width, frac_width
 
 
