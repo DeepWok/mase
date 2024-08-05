@@ -95,7 +95,7 @@ def graph_iterator_for_mase_ops(graph):
             elif isinstance(module, nn.Embedding):
                 mase_type = "implicit_func"
                 mase_op = "embedding"
-            elif any(isinstance(module, i) for i in graph.model.patched_custom_layers):
+            elif isinstance(module, tuple(graph.model.patched_custom_layers)):
                 mase_op = "patched_custom_layers"
             # NOTE: The ones below were added to support MobileNetV2 and MobileNetV3.
             # These don't show up when printing the fx.graph.
@@ -121,8 +121,6 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "softshrink"
             elif isinstance(module, nn.LogSigmoid):
                 mase_op = "logsigmoid"
-            elif isinstance(module, nn.Identity):
-                mase_op = "Identity"
             else:
                 mase_op = None
                 for module_cls in graph.model.custom_ops["modules"].keys():

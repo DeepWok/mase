@@ -271,8 +271,6 @@ module_data = {
     "elu": {"input": "data_in"},
     "softmax": {"input": "data_in"},
     "gelu": {"input": "data_in"},
-    "patched_custom_layers": {"input": "data_in"},
-    "Identity": {"input": "data_in"},
 }
 
 
@@ -334,9 +332,6 @@ method_data = {
     "long": {"memory_format": "config"},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.type_as.html
     "type_as": {"tensor": "data_in"},
-    # https://pytorch.org/docs/stable/generated/torch.flatten.html
-    "flatten": {"input": "data_in", "start_dim": "config", "end_dim": "config"}
-
 }
 
 
