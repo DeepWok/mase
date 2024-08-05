@@ -165,13 +165,19 @@ class ShardingPropagator:
                 )
             output_specs.tensor_meta = output_tensor_meta
         elif isinstance(output_specs, (tuple, list)):
-            if not isinstance(output_tensor_meta, (tuple, list)) or len(
-                output_specs
-            ) != len(output_tensor_meta):
+            if not isinstance(output_tensor_meta, (tuple, list)):
+                raise ValueError(
+                    f"For the op {op.name()}, `output_specs` has type {type(output_specs)} but output_tensor_meta has type {type(output_tensor_meta)}"
+                    f"Both should be tuple or list."
+                )
+
+            if len(output_specs) != len(output_tensor_meta):
+
                 raise ValueError(
                     f"For the op {op.name()}, `output_specs` has {len(output_specs)} outputs which does not equal the "
                     f"number of op outputs {_length(output_tensor_meta)}."
                 )
+
             for i, spec in enumerate(output_specs):
                 if isinstance(spec, DTensorSpec):
                     output_tensor_meta_i = output_tensor_meta[i]
@@ -202,8 +208,6 @@ class ShardingPropagator:
         # scalar. TODO: figure out a better way to handle this
         if op_schema.op is aten._local_scalar_dense.default:
             return OutputSharding(None, op_schema)
-
-        out_tensor_meta = self._propagate_tensor_meta(op_schema)
 
         def spec_to_strategy(spec: object) -> object:
             if isinstance(spec, DTensorSpec):
@@ -245,54 +249,11 @@ class ShardingPropagator:
                 # single Op strategy
                 output_strategy = self._select_strategy(op_strategy)
 
-                # check if we need to redistribute the input
-                needs_redistribute = False
-                expected_input_specs = []
-
                 # in case where the op does not specify input_specs and output_specs
                 # is a DTensorSpec, we use output_specs as the spec for each DTensor
                 # input arg.
                 if output_strategy.input_specs is None:
                     assert isinstance(output_strategy.output_specs, DTensorSpec)
-
-                for idx, input_spec in enumerate(op_schema.args_spec):
-                    desired_spec = (
-                        output_strategy.output_spec
-                        if output_strategy.input_specs is None
-                        else output_strategy.input_specs[idx]
-                    )
-                    expected_input_specs.append(
-                        desired_spec.shallow_copy_with_tensor_meta(
-                            input_spec.tensor_meta
-                        )
-                    )
-                    if input_spec.placements != desired_spec.placements:
-                        needs_redistribute = True
-
-                suggestion_schema = None
-                if needs_redistribute:
-                    suggestion_schema = OpSchema(
-                        op_schema.op, tuple(expected_input_specs), {}
-                    )
-                    suggestion_schema._inplace_rewrap_schema_suggestion(op_schema)
-
-                # shape and stride args need to be modified for
-                # view ops and new factory ops, potentially
-                if op_schema.op in self.op_to_shape_and_stride_idx:
-                    assert isinstance(output_strategy.output_spec, DTensorSpec)
-                    # It happens when the output has the same shape as the input
-                    # and the input placements are not all Replicate().
-                    if output_strategy.output_spec.is_sharded():
-                        schema = suggestion_schema or op_schema
-                        assert isinstance(out_tensor_meta, TensorMeta)
-                        # rlog(f"Need the out tensor meta here!")
-                        suggestion_schema = self._adjust_shape_and_stride_args(
-                            out_tensor_meta, schema, output_strategy.output_spec, mesh
-                        )
-                        needs_redistribute = True
-
-                    # else:
-                    #     rlog(f"Don't need it because it's not sharded")
 
                 # construct output spec for the op
                 if op_schema.return_type_tuple_tensor_like():
@@ -320,11 +281,10 @@ class ShardingPropagator:
 
                 output_sharding = OutputSharding(
                     output_specs,
-                    suggestion_schema,
-                    needs_redistribute=needs_redistribute,
+                    redistribute_schema=None,
+                    needs_redistribute=False,
                 )
             elif isinstance(op_strategy, TupleStrategy):
-                # rlog(f"Strategy returned a TupleStrategy")
                 # tuple strategy output sharding processing
                 # runtime selected placement strategy for each TupleStrategy input arg
                 selected_strategies: List[PlacementStrategy] = []
@@ -335,7 +295,6 @@ class ShardingPropagator:
                     selected_strategies.append(selected_strategy)
                     out_spec_list.append(selected_strategy.output_spec)
 
-                needs_redistribute = False
                 suggestion_args: List[object] = []
                 tensor_or_list_tensor_arg_idx = 0
 
@@ -355,8 +314,6 @@ class ShardingPropagator:
                                     arg_spec.tensor_meta
                                 )
                             )
-                            if arg_spec.placements != expected_input_spec.placements:
-                                needs_redistribute = True
                             expected_input_spec_list.append(expected_input_spec)
                         suggestion_args.append(
                             tuple(expected_input_spec_list)
@@ -374,34 +331,21 @@ class ShardingPropagator:
                                 arg.tensor_meta
                             )
                         )
-                        if arg.placements != expected_input_spec.placements:
-                            needs_redistribute = True
                         suggestion_args.append(expected_input_spec)
                         tensor_or_list_tensor_arg_idx += 1
                     else:
                         suggestion_args.append(arg)
 
-                suggestion_schema = None
-                if needs_redistribute:
-                    suggestion_schema = OpSchema(
-                        op_schema.op, tuple(suggestion_args), op_schema.kwargs_schema
-                    )
-
                 output_sharding = OutputSharding(
-                    tuple(out_spec_list) if out_tensor_meta is not None else None,
-                    suggestion_schema,
-                    needs_redistribute=needs_redistribute,
+                    tuple(out_spec_list),
+                    redistribute_schema=None,
+                    needs_redistribute=False,
                 )
             else:
                 raise ValueError("Unsupported op strategy type")
 
-            # associate the output sharding with the output tensor metadata
-            self._wrap_output_spec_tensor_meta(
-                op_schema.op, output_sharding.output_spec, out_tensor_meta
-            )
             return output_sharding
         elif op_schema.op in self.op_to_rules:
-            # rlog(f"Op {op_schema.op} has no strategy, using rule")
             # propagate the sharding with rule
             sharding_prop_func = self.op_to_rules[op_schema.op]
 
@@ -438,11 +382,6 @@ class ShardingPropagator:
                     output_sharding.output_spec = propagation_res.output_spec
                     output_sharding.needs_redistribute = True
 
-            # associate the output sharding with the output tensor metadata
-            self._wrap_output_spec_tensor_meta(
-                op_schema.op, output_sharding.output_spec, out_tensor_meta
-            )
-
             return output_sharding
         else:
             raise NotImplementedError(
@@ -464,32 +403,3 @@ class ShardingPropagator:
 
         # for eager execution, we just select the one with the minimal redistribute cost
         return strategy.strategies[strategy_costs.index(min(strategy_costs))]
-
-    def _adjust_shape_and_stride_args(
-        self,
-        out_tensor_meta: TensorMeta,
-        schema: OpSchema,
-        spec: DTensorSpec,
-        mesh: DeviceMesh,
-    ) -> OpSchema:
-        shape_stride_idx = self.op_to_shape_and_stride_idx[schema.op]
-        if isinstance(shape_stride_idx, tuple):
-            shape_idx, stride_idx = shape_stride_idx
-        else:
-            shape_idx = shape_stride_idx
-            stride_idx = None
-
-        expected_input_schema = list(schema.args_schema)
-        # adjust shape to be the same as that of the _local_tensor
-        # of the DTensor input arg at index 0, which is inferred
-        expected_input_schema[shape_idx] = compute_local_shape(
-            out_tensor_meta.shape, mesh, spec.placements
-        )
-
-        # adjust the stride arg for aten.new_empty_strided.default
-        if stride_idx:
-            expected_input_schema[stride_idx] = compute_local_stride(
-                out_tensor_meta.stride, mesh, spec.placements
-            )
-
-        return OpSchema(schema.op, tuple(expected_input_schema), schema.kwargs_schema)

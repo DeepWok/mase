@@ -3,7 +3,7 @@ from typing import Tuple
 import torch
 import torch.fx as fx
 from torch.distributed.device_mesh import DeviceMesh
-from torch.distributed._tensor.placement_types import DTensorSpec
+from torch.distributed._tensor.placement_types import DTensorSpec, TensorMeta
 from torch.distributed._tensor._redistribute import redistribute_local_tensor
 
 from torch.distributed._tensor.placement_types import Placement
@@ -73,29 +73,12 @@ def redistribute_dtensor(
     """
 
     # If we are not in a distributed setting, we can skip redistribution.
-    try:
-        rank = torch.distributed.get_rank()
-    except:
-        rank = 0
-
     if not isinstance(input, DTensor):
-        # rlog(
-        #     logger,
-        #     rank,
-        #     f"Skipping redistribution because received {type(input)} instead of DTensor",
-        #     level="warning",
-        # )
         return input
 
     current_spec = input._spec
 
     if current_spec.placements != placements:
-        # rlog(
-        #     logger,
-        #     rank,
-        #     f"Redistributing tensor from {current_spec.placements} to {placements}",
-        #     level="info",
-        # )
         target_spec = DTensorSpec(
             input._spec.mesh,
             placements,
@@ -111,12 +94,6 @@ def redistribute_dtensor(
         )
     else:
         # use the same local tensor if placements are the same.
-        # rlog(
-        #     logger,
-        #     rank,
-        #     f"Skipping redistribution because placements are the same: {placements}",
-        #     level="info",
-        # )
         output = input._local_tensor
         target_spec = current_spec
 

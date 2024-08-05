@@ -21,7 +21,12 @@ from torch.distributed._tensor._tp_conv import (
     convolution_handler,
 )
 from torch.distributed._tensor._utils import try_find_mesh_from_args
-from torch.distributed._tensor.placement_types import DTensorSpec, Replicate, TensorMeta
+from torch.distributed._tensor.placement_types import (
+    DTensorSpec,
+    Replicate,
+    Shard,
+    TensorMeta,
+)
 from torch.distributed._tensor.random import is_rng_supported_mesh
 
 
@@ -38,6 +43,30 @@ from chop.distributed.tensor._sharding_prop import ShardingPropagator
 from chop.distributed.tensor._redistribute import redistribute_local_tensor
 
 aten = torch.ops.aten
+
+
+def try_get_replicate_spec(tensor_arg: torch.Tensor, mesh: "DeviceMesh") -> DTensorSpec:
+    # tensor_arg is an instance of torch.Tensor and could be an arg or kwarg.
+    if tensor_arg.numel() == 1 and tensor_arg.ndim == 1:
+        warnings.warn(
+            "Found a non-scalar tensor with numel=1 and ndim!=0, "
+            "we are implicitly creating a replicated DTensor for it. "
+            "However, please consider changing it to a scalar tensor "
+            "or explicitly create a DTensor under distributed enviroment."
+        )
+
+    # scalar tensor can be safely treated as replicated
+    replication_spec = DTensorSpec(
+        mesh,
+        (Replicate(),) * mesh.ndim,
+        tensor_meta=TensorMeta(
+            shape=tensor_arg.shape,
+            stride=tensor_arg.stride(),
+            dtype=tensor_arg.dtype,
+        ),
+    )
+
+    return replication_spec
 
 
 def decompose_handler(
@@ -72,6 +101,23 @@ def rlog(msg):
         print(msg)
 
 
+def _get_global_shape(local_shape, dtensor_spec):
+    if dtensor_spec is None:
+        return local_shape
+
+    placements = dtensor_spec.placements
+    global_shape = list(local_shape)
+    mesh_shape = dtensor_spec.mesh.shape
+
+    for mesh_dim, placement in enumerate(placements):
+        if isinstance(placement, Shard):
+            global_shape[placement.dim] = (
+                global_shape[placement.dim] * mesh_shape[mesh_dim]
+            )
+
+    return torch.Size(global_shape)
+
+
 class OpDispatcher:
     """
     Op dispatching class instance to handle args/kwargs pre-processing (un-wrapping), sharding
@@ -102,8 +148,6 @@ class OpDispatcher:
 
         # This flag is used internally to control whether we treat the torch.Tensor(non-DTensor)
         # as implicitly replicated or we throw error to user.
-        # NOTE: It is EXTREMELY UNSAFE to turn this flag on by default so we intentionally leave
-        # it as False by default.
         self._allow_implicit_replication = True
 
     def dispatch(
@@ -122,13 +166,8 @@ class OpDispatcher:
 
         # extract local tensor and sharding infos to a OpInfo
         op_info = self.unwrap_to_op_info(op_call, args, kwargs)
-        # rlog(f"Dispatching op_call: {op_call.name}")
-
-        # self.sharding_propagator.propagate(op_info)
-        # output_sharding = op_info.output_sharding
 
         output_sharding = self.sharding_propagator.propagate(op_info)
-
         assert output_sharding is not None, "output sharding should not be None"
 
         # run local op computation with potentially modified args/kwargs
@@ -137,7 +176,40 @@ class OpDispatcher:
 
         local_results = op_call(*local_tensor_args, **op_info.local_kwargs)
 
-        return self.wrap(local_results, output_sharding.output_spec)  # type: ignore[possibly-undefined]
+        # Getting tensor meta after running the op to avoid running it twice
+        if isinstance(local_results, (tuple, list)):
+            out_tensor_meta = [
+                TensorMeta(
+                    shape=_get_global_shape(
+                        r.shape,
+                        output_sharding.output_spec[out_idx],
+                    ),
+                    stride=r.stride(),
+                    dtype=r.dtype,
+                )
+                for out_idx, r in enumerate(local_results)
+            ]
+        else:
+            out_tensor_meta = TensorMeta(
+                shape=_get_global_shape(
+                    local_results.shape,
+                    output_sharding.output_spec,
+                ),
+                stride=local_results.stride(),
+                dtype=local_results.dtype,
+            )
+
+        # Annotate output DTensorSpec with TensorMeta object
+        self.sharding_propagator._wrap_output_spec_tensor_meta(
+            op_call,
+            output_sharding.output_spec,
+            out_tensor_meta,
+        )
+
+        return self.wrap(
+            local_results,
+            output_sharding.output_spec,
+        )
 
     @staticmethod
     def redistribute_local_args(
@@ -183,12 +255,6 @@ class OpDispatcher:
             op_call, None
         )
 
-        # if runtime_schema_info is not None and runtime_schema_info.needs_pytree:
-        #     # flatten args/kwargs when necessary
-        #     print(f"needs pytree...")
-        #     tree_args, args_spec = pytree.tree_flatten(args)
-        #     args_list: Sequence[object] = tree_args
-        # else:
         args_list, args_spec = args, None
 
         args_schema: List[object] = []
@@ -196,41 +262,6 @@ class OpDispatcher:
         local_args: List[object] = []
         local_kwargs: Dict[str, object] = {}
         mesh: Optional[DeviceMesh] = None
-
-        def try_get_replicate_spec(
-            tensor_arg: torch.Tensor, mesh: "DeviceMesh"
-        ) -> DTensorSpec:
-            # tensor_arg is an instance of torch.Tensor and could be an arg or kwarg.
-            if tensor_arg.numel() == 1 and tensor_arg.ndim == 1:
-                warnings.warn(
-                    "Found a non-scalar tensor with numel=1 and ndim!=0, "
-                    "we are implicitly creating a replicated DTensor for it. "
-                    "However, please consider changing it to a scalar tensor "
-                    "or explicitly create a DTensor under distributed enviroment."
-                )
-
-            # if the arg.numel() == 1, arg.ndim could be 0 or 1.
-            if (
-                tensor_arg.ndim <= 1
-                and tensor_arg.numel() == 1
-                or self._allow_implicit_replication
-            ):
-                # scalar tensor can be safely treated as replicated
-                replication_spec = DTensorSpec(
-                    mesh,
-                    (Replicate(),) * mesh.ndim,
-                    tensor_meta=TensorMeta(
-                        shape=tensor_arg.shape,
-                        stride=tensor_arg.stride(),
-                        dtype=tensor_arg.dtype,
-                    ),
-                )
-            else:
-                raise RuntimeError(
-                    f"{op_call}: got mixed torch.Tensor and DTensor, need to convert all"
-                    " torch.Tensor to DTensor before calling distributed operators!"
-                )
-            return replication_spec
 
         for arg in args_list:
             if isinstance(arg, dtensor.DTensor):
@@ -288,13 +319,20 @@ class OpDispatcher:
         return op_info
 
     @staticmethod
-    def wrap(res: object, spec: OutputSpecType) -> object:
+    def wrap(
+        res: object,
+        spec: OutputSpecType,
+    ) -> object:
         if isinstance(res, torch.Tensor):
             if spec is not None:
                 assert isinstance(
                     spec, DTensorSpec
                 ), f"output spec does not match with output! Expected DTensorSpec, got {spec}."
-                return dtensor.DTensor(res, spec, requires_grad=res.requires_grad)
+                return dtensor.DTensor(
+                    res,
+                    spec,
+                    requires_grad=res.requires_grad,
+                )
             else:
                 # if output does not have a DTensorSpec due to specific ops, it must be a scalar tensor
                 assert res.ndim == 0, "output tensor should be scalar!"

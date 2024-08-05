@@ -756,7 +756,10 @@ def split_rule(op_schema: OpSchema) -> OutputSharding:
         need_reshard = True
         input_spec = DTensorSpec(
             mesh=input_spec.mesh,
-            placements=unshard_tensor_dim(input_spec.placements, dim=dim),
+            placements=unshard_tensor_dim(
+                input_spec.placements,
+                dim=dim,
+            ),
             tensor_meta=input_spec.tensor_meta,
         )
 
@@ -777,7 +780,10 @@ def split_rule(op_schema: OpSchema) -> OutputSharding:
         return [i] * (N // i) + ([N % i] if N % i != 0 else [])
 
     output_size_list = (
-        size_split(input_spec.shape[dim], split_size_or_sections)
+        size_split(
+            input_spec.shape[dim],
+            split_size_or_sections,
+        )
         if isinstance(split_size_or_sections, int)
         else split_size_or_sections
     )
