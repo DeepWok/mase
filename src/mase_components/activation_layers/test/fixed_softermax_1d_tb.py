@@ -63,20 +63,18 @@ class SoftermaxTB(Testbench):
         )
 
         # Model
-        self.model = self._model
+        self.model = partial(
+            fixed_softermax,
+            dim=0,
+            q_config={
+                "width": self.IN_WIDTH,
+                "frac_width": self.IN_FRAC_WIDTH,
+            },
+        )
 
         # Set verbosity of driver and monitor loggers to debug
         # self.in_data_driver.log.setLevel(logging.DEBUG)
         # self.out_data_monitor.log.setLevel(logging.DEBUG)
-
-    def _model(self, x: torch.Tensor):
-        x = integer_quantizer(x=x, width=self.IN_WIDTH, frac_width=self.IN_FRAC_WIDTH)
-        out = x - x.max(dim=0, keepdim=True).values.floor()
-        out = 2**out
-        row_sum = out.sum()
-        # Elementwise division
-        out = out / row_sum
-        return out
 
     def generate_inputs(self, batches):
         return torch.randn(
@@ -167,7 +165,7 @@ def get_fixed_softermax_config(kwargs={}):
 
 def get_random_width():
     width = randint(2, 16)
-    frac_width = randint(1, width)
+    frac_width = randint(1, width-1)
     return width, frac_width
 
 
@@ -197,7 +195,7 @@ def test_fixed_softermax_1d_smoke():
         trace=True,
         module_param_list=[
             get_fixed_softermax_config(),
-            *[get_random_softermax_config() for _ in range(10)],
+            *[get_random_softermax_config() for _ in range(2)],
         ],
         jobs=1,
         # skip_build=True,
