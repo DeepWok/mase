@@ -190,9 +190,11 @@ class MaseGraph:
             custom_leaf_layers += tuple(quantized_module_map.values())
             # patched functions/layers
             patched_nodes = getattr(model, "patched_nodes", None)
-            if patched_nodes is not None:
+            if patched_nodes.get("modules") is not None:
                 custom_leaf_modules += tuple(patched_nodes["modules"])
+            if patched_nodes.get("functions") is not None:
                 custom_leaf_functions += tuple(patched_nodes["functions"])
+            if patched_nodes.get("layers") is not None:
                 custom_leaf_layers += tuple(patched_nodes["layers"])
 
             self.tracer = MaseTracer(
@@ -200,7 +202,6 @@ class MaseGraph:
                 custom_leaf_functions=custom_leaf_functions,
                 custom_leaf_layers=custom_leaf_layers,
             )
-
             graph_module = fx.GraphModule(model, self.tracer.trace(model, cf_args))
 
             if patched_nodes is not None:
@@ -219,7 +220,7 @@ class MaseGraph:
                 graph_module.patched_op_names = []
                 graph_module.patched_custom_layers = []
                 graph_module.additional_inputs = {}
-
+            # breakpoint()
         return graph_module
 
     @classmethod
