@@ -50,18 +50,15 @@ class HardwareGQA(GroupedQueryAttentionInteger):
         floor=False,
     ) -> None:
         super().__init__(
-            embed_dim,
-            num_heads,
-            num_kv_heads,
-            bias,
-            device,
-            dtype,
-            linear_q_config,
-            linear_out_q_config,
-            softermax_out_q_config,
-            qk_matmul_out_q_config,
-            v_matmul_out_q_config,
-            floor,
+            embed_dim=embed_dim,
+            num_heads=num_heads,
+            num_kv_heads=num_kv_heads,
+            bias=bias,
+            device=device,
+            dtype=dtype,
+            config=linear_q_config,
+            out_config=linear_out_q_config,
+            floor=floor,
         )
 
     def forward(self, x: Tensor):
@@ -706,7 +703,7 @@ def llama_160m():
 
 
 if __name__ == "__main__":
-    # test_fixed_linear_smoke()
+    test_fixed_linear_smoke()
     # test_parallelism_sweep()
     # test_small_parallelism()
     # test_heads_sweep()
@@ -714,4 +711,4 @@ if __name__ == "__main__":
     # more_realistic()
     # mistral()
     # mqa()
-    llama_160m()
+    # llama_160m()
