@@ -35,6 +35,10 @@ from .pvt import (
     get_pvt_v2_b4,
     get_pvt_v2_b5,
 )
+from .vit import (
+    get_vit_tiny_patch16,
+    get_vit_base_patch16,
+)
 from .resnet import (
     get_resnet18,
     get_resnet34,
@@ -169,6 +173,18 @@ VISION_MODELS = {
         "get_model_fn_image_classification": get_pvt_small,
         "info": MaseModelInfo(
             "pvt_small", model_source="vision_others", task_type="vision", image_classification=True
+        ), # TODO: Check if traceable
+    },
+    "vit_tiny": {
+        "get_model_fn_image_classification": get_vit_tiny_patch16,
+        "info": MaseModelInfo(
+            "vit_tiny", model_source="vision_others", task_type="vision", image_classification=True
+        ), # TODO: Check if traceable
+    },
+    "vit_base": {
+        "get_model_fn_image_classification": get_vit_base_patch16,
+        "info": MaseModelInfo(
+            "vit_base", model_source="vision_others", task_type="vision", image_classification=True
         ), # TODO: Check if traceable
     },
     "pvt_medium": {
