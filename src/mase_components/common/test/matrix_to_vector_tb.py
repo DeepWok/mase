@@ -52,23 +52,18 @@ class MatrixToVectorTB(Testbench):
             dut.clk, dut.data_out_0, dut.data_out_0_valid, dut.data_out_0_ready, unsigned = True
         )
 
-        self.output_monitor.log.setLevel(logging.DEBUG)
+        #self.output_monitor.log.setLevel(logging.DEBUG)
 
 
-    async def run_test(self, us):
+    async def run_test(self, batches, us):
         await self.reset()
-
-        self.output_monitor.ready.value = 1
-
-        inputs = self.generate_inputs()
-        print(inputs)
-        exp_out = self.model(inputs)
-        print(exp_out)
-
-        # Setup drivers and monitors
-        self.in_driver.load_driver(inputs)
-        self.output_monitor.load_monitor(exp_out)
-
+        #self.output_monitor.ready.value = 1
+        for _ in range(batches):
+            inputs = self.generate_inputs()
+            exp_out = self.model(inputs)
+            # Setup drivers and monitors
+            self.in_driver.load_driver(inputs)
+            self.output_monitor.load_monitor(exp_out)
         await Timer(us, units="us")
         assert self.output_monitor.exp_queue.empty()
 
@@ -133,8 +128,14 @@ def test_matrix_to_vector():
 @cocotb.test()
 async def single_mult(dut):
     tb = MatrixToVectorTB(dut)
-    #tb.output_monitor.ready.value = 1
-    await tb.run_test(us=100)
+    tb.output_monitor.ready.value = 1
+    await tb.run_test(batches=1, us=100)
+
+@cocotb.test()
+async def repeated_mult(dut):
+    tb = MatrixToVectorTB(dut)
+    tb.output_monitor.ready.value = 1
+    await tb.run_test(batches=100, us=2000)
 
 if __name__ == "__main__":
     test_matrix_to_vector()

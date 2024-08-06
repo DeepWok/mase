@@ -210,7 +210,7 @@ always_comb  begin
                           ctrl_output_fifo    = 0;
                           ctrl_run_counter    = 1;
                           ctrl_input_fifo     = 1;
-                          ctrl_data_out_valid = 1;
+                          ctrl_data_out_valid = 0;
                           fifo_in_valid       = data_in_0_valid;
                           
         end
