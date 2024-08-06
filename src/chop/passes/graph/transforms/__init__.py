@@ -21,4 +21,4 @@ from .dse import partition_to_multi_device_transform_pass
 from .granularity import raise_granularity_transform_pass
 from .patching import patch_metadata_transform_pass
 
-from .lora import insert_lora_adapter_transform_pass
+from .lora import insert_lora_adapter_transform_pass, fuse_lora_weights_transform_pass
