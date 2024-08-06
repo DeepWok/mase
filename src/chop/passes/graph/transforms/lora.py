@@ -68,6 +68,6 @@ def fuse_lora_weights_transform_pass(
             )
             new_linear.weight = nn.Parameter(new_weights)
 
-            setattr(mg.model, node.target, new_linear)
+            deepsetattr(mg.model, node.target, new_linear)
 
     return mg, {}

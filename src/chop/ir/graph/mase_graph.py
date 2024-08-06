@@ -372,7 +372,11 @@ class MaseGraph:
                 node.meta["mase"].parameters = parameters
             else:
                 # todo: propagate metadata for missing nodes
-                logger.debug(f"Node {node.name} not found in loaded metadata.")
+                logger.warning(f"Node {node.name} not found in loaded metadata.")
+                node.meta["mase"] = MaseMetadata(
+                    node=node,
+                    model=loaded_model,
+                )
 
         return mg
 
@@ -407,7 +411,7 @@ class MaseGraph:
                 pickled = dill.dumps(parameters)
                 combined_meta[node.name] = pickled
             except Exception as e:
-                logger.warning(f"Failed to pickle node: {node.name}")
+                logger.warning(f"Failed to pickle {node.op} node: {node.name}")
                 logger.warning(e)
 
         with open(f"{fname}.mz", "wb") as f:
