@@ -296,6 +296,12 @@ class MaseGraph:
                 f"Expected fx.GraphModule or nn.Module, but received model: {type(model)}"
             )
 
+        # is_huggingface flag is used in passes to automate dummy input generation etc
+        if isinstance(model, PreTrainedModel):
+            self.is_huggingface = True
+        else:
+            self.is_huggingface = False
+
         self.cf_args = cf_args
 
     @classmethod
