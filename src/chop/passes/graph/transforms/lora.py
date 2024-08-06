@@ -30,6 +30,7 @@ def insert_lora_adapter_transform_pass(
                 alpha=lora_alpha,
                 dropout=lora_dropout,
             )
+            new_module.linear.weight = target.weight
             deepsetattr(mg.model, node.target, new_module)
             logger.info(
                 f"Replaced node: {node.name}, target: {node.target} with LoRALinear module."

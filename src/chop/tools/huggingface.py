@@ -101,10 +101,10 @@ def get_trainer(
     tokenizer: PreTrainedTokenizer,
     evaluate_metric: str = "accuracy",
     output_dir: str = "mase-trainer",
-    use_cpu: bool = True,
     use_mps_device: bool = False,
     report_to: str = "none",
     num_train_epochs: int = 1,
+    checkpoint: str = None,
 ):
     """
     Returns a Trainer object for a given model and tokenized dataset.
@@ -133,7 +133,12 @@ def get_trainer(
     - trainer: Trainer
         Trainer object for training
     """
-    checkpoint = model.config._name_or_path
+    if checkpoint is None:
+        try:
+            checkpoint = model.config._name_or_path
+        except:
+            raise ValueError("Checkpoint not provided and model does not have one.")
+
     logger.info(f"Getting trainer for {checkpoint}.")
 
     # Handle requested metric
@@ -152,7 +157,6 @@ def get_trainer(
     # Define Trainer
     training_args = TrainingArguments(
         output_dir,
-        use_cpu=use_cpu,
         use_mps_device=use_mps_device,
         report_to=report_to,
         num_train_epochs=num_train_epochs,
