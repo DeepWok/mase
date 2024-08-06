@@ -10,9 +10,9 @@ To use MASE, you can easily create an environment with all required dependendies
 .. toctree::
     :maxdepth: 1
 
-    getting_started/Get-started-using-Nix
-    getting_started/Get-started-using-Docker
     getting_started/Get-started-using-Anaconda
+    getting_started/Get-started-using-Docker
+    getting_started/Get-started-using-Nix
     getting_started/Get-started-students
 
 Import a model
