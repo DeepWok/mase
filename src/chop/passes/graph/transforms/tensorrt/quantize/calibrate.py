@@ -3,17 +3,13 @@ import logging
 import torch
 from torch.autograd import Variable
 
-
-import pytorch_quantization.calib as calib
-import pytorch_quantization.nn as qnn
-import tensorrt as trt
-from cuda import cudart
-from pytorch_quantization import quant_modules
-from pytorch_quantization.tensor_quant import QuantDescriptor
-
-from .utils import FakeQuantizer, check_for_value_in_dict, get_calibrator_dataloader
+from chop.passes.utils import register_mase_pass
 
 
+@register_mase_pass(
+    "tensorrt_fake_quantize_transform_pass",
+    dependencies=["pytorch_quantization", "tensorrt", "pynvml", "pycuda", "cuda"],
+)
 def tensorrt_fake_quantize_transform_pass(graph, pass_args=None):
     """
     Applies a fake quantization pass to a model graph, preparing it for calibration and fine-tuning before actual quantization.
@@ -41,6 +37,15 @@ def tensorrt_fake_quantize_transform_pass(graph, pass_args=None):
     Raises:
         ValueError: If the "by" parameter in `pass_args` is not supported. Currently, only "type" and "name" are valid options for specifying how to apply the fake quantization.
     """
+
+    import pytorch_quantization.calib as calib
+    import pytorch_quantization.nn as qnn
+    import tensorrt as trt
+    from cuda import cudart
+    from pytorch_quantization import quant_modules
+    from pytorch_quantization.tensor_quant import QuantDescriptor
+    from .utils import FakeQuantizer, check_for_value_in_dict, get_calibrator_dataloader
+
     by = pass_args["by"]
     fq = FakeQuantizer(pass_args)
     match by:
@@ -54,6 +59,10 @@ def tensorrt_fake_quantize_transform_pass(graph, pass_args=None):
     return graph, {}
 
 
+@register_mase_pass(
+    "tensorrt_calibrate_transform_pass",
+    dependencies=["pytorch_quantization", "tensorrt", "pynvml", "pycuda", "cuda"],
+)
 def tensorrt_calibrate_transform_pass(graph, pass_args=None):
     """
     Performs calibration on a model graph by deciding the best maximum absolute values (amax) for activations using specified calibrators.
@@ -81,6 +90,15 @@ def tensorrt_calibrate_transform_pass(graph, pass_args=None):
 
     It's important to choose the right calibrator based on the model and dataset characteristics to ensure optimal performance and accuracy of the quantized model.
     """
+
+    import pytorch_quantization.calib as calib
+    import pytorch_quantization.nn as qnn
+    import tensorrt as trt
+    from cuda import cudart
+    from pytorch_quantization import quant_modules
+    from pytorch_quantization.tensor_quant import QuantDescriptor
+    from .utils import FakeQuantizer, check_for_value_in_dict, get_calibrator_dataloader
+
     calibrator = Calibrator(pass_args)
     graph = calibrator.calibrate_model(graph)
     graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)

@@ -119,3 +119,69 @@ class MaseModelInfo:
     @property
     def is_nerf_model(self):
         return self.task_type == ModelTaskType.NERF
+
+
+class ModelFactory:
+    _model_info_dict: dict = {}
+    _model_cls_dict: dict = {}
+    _checkpoint_getter_dict: dict = {}
+
+    def __init__(self, model):
+        self.model = model
+
+
+def register_mase_model(
+    name: str,
+    checkpoints: list[str],
+    model_source: ModelSource,
+    task_type: ModelTaskType,
+    image_classification: bool = False,
+    physical_data_point_classification: bool = False,
+    sequence_classification: bool = False,
+    seq2seqLM: bool = False,
+    causal_LM: bool = False,
+    is_quantized: bool = False,
+    is_lora: bool = False,
+    is_sparse: bool = False,
+    is_fx_traceable: bool = False,
+):
+    """This decorator registers models as ModelFactory class attributes which can be used globally."""
+
+    def decorator(cls):
+
+        model_info = MaseModelInfo(
+            name=name,
+            model_source=model_source,
+            task_type=task_type,
+            image_classification=image_classification,
+            physical_data_point_classification=physical_data_point_classification,
+            sequence_classification=sequence_classification,
+            seq2seqLM=seq2seqLM,
+            causal_LM=causal_LM,
+            is_quantized=is_quantized,
+            is_lora=is_lora,
+            is_sparse=is_sparse,
+            is_fx_traceable=is_fx_traceable,
+        )
+
+        # Register each checkpoint in the factory with the same model info
+        for checkpoint in checkpoints:
+            ModelFactory._model_info_dict[checkpoint] = model_info
+            ModelFactory._model_cls_dict[checkpoint] = cls
+
+        # Register in the Pytorch module
+        cls.mase_model_info = model_info
+
+        return cls
+
+    return decorator
+
+
+def register_mase_checkpoint(checkpoint: str):
+    """This decorator registers checkpoint getters as ModelFactory class attributes which can be used globally."""
+
+    def decorator(cls):
+        ModelFactory._checkpoint_getter_dict[checkpoint] = cls
+        return cls
+
+    return decorator

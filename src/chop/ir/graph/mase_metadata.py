@@ -17,28 +17,44 @@ class MaseMetadata:
     The metadata of a Mase node in a Mase graph describes the constraints of the
     node for any static analysis or possible transformation. The metadata has a
     tree structure, e.g.
+
     - common
+
       - mase_op -> str : the mase op of the node, e.g. placeholder, linear, relu
+
       - mase_type -> str : the mase type of the node, e.g. module, builtin_func, module_related_func
+
       - args -> {}
+
          - $name : name of the arg
            (if the arg is a tensor)
+
            - type -> type of the arg, e.g. fixed point or float
+
            - precision -> format of the type, e.g. (10, 5)
-           - shape -> shape of the arg
-           (if the arg is not a tensor)
+
+           - shape -> shape of the arg (if the arg is not a tensor)
+
            - value of the arg
+
       - results -> {}
-         - $name : name of the result
-           (if the result is a tensor)
+
+         - $name : name of the result (if the result is a tensor)
+
            - type -> type of the result, e.g. fixed point or float
+
            - precision -> format of the type, e.g. (10, 5)
-           - size -> size of the result
-           (if the result is not a tensor)
+
+           - size -> size of the result (if the result is not a tensor)
+
            - value of the result
+
     - software: dict
+
       - args: dict
+
         - $name (dict): name of the arg, e.g. data_in_0
+
           - "stat": {"record": {"data": ..., "count": ...},
                      "variance_online": {"variance": ..., "mean": ..., "count": ...}},
                      "variance_precise": {"variance": ..., "mean": ..., "count": ...},
@@ -46,21 +62,36 @@ class MaseMetadata:
                      "range_quantile": {"min": ..., "max": ..., "count": ...},
                      "range_min_max": {"min": ..., "max": ..., "count": ...},
                     }.
+
+
       - results: dict
+
         - $name (dict): name of the result, e.g. data_out_0
+
           - "stat": {"stat_name": { # stat_values } }
+
     - hardware
+
       - is_implicit -> bool : whether the node is mapped on hardware or software annotation only
+
       - verilog_param -> {} : parameters need for customise the hardware module
+
       - device_id -> int : the ID of the device where the node is mapped, default = -1
+
       - toolchain -> str : tool chain for code generation, must be INTERNAL, EXTERNAL or HLS
+
       - module -> str : the name of the used hardware module
+
       - interface -> {}
+
          - name : name of the parameters
+
            - storage : the hardware interface implemented, must be BRAM
+
            - transpose : whether the data needs to be transposed before emitting
+
       - dependence_files -> [] : the dependent files for the generated module
-    ...
+
     """
 
     # Hardware dict

@@ -1,13 +1,15 @@
 Tutorials
 =============================
 
-Common Usage Examples
+Core Tutorials
 ---------------------
 
 .. toctree::
-    :maxdepth: 1
+   :maxdepth: 1
 
-    tutorials/common/bert_emit
+   tutorials/tutorial_1_introduction_to_mase
+   tutorials/tutorial_2_lora_finetune
+   
 
 Interactive Usage with Python
 -----------------------------

@@ -80,6 +80,7 @@ def add_pruning_metadata_analysis_pass(graph, pass_args: dict = {}):
     :return: The updated graph and sparsity information.
     The returned dict contains {'weight_sparsity': float, 'activation_sparsity': float}
     :rtype: tuple(MaseGraph, dict)
+
     """
 
     graph, sparsity_info = graph_iterator_for_metadata(

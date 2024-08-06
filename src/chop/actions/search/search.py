@@ -15,12 +15,17 @@ from chop.tools.utils import parse_accelerator
 logger = logging.getLogger(__name__)
 
 
-def parse_search_config(search_config):
+def parse_search_config(
+    search_config: dict,
+):
     """
-    Parse search config from a dict or a toml file and do sanity check.
+    Parse search config from a dict or a toml file and do sanity check. The search config must consist of two parts: strategy and search_space.
 
-    ---
-    The search config must consist of two parts: strategy and search_space.
+    Args:
+        search_config: A dictionary or a path to a toml file containing the search config.
+
+    Returns:
+        _type_: _description_
     """
     if not isinstance(search_config, dict):
         search_config = load_config(search_config)
@@ -45,9 +50,22 @@ def search(
     visualizer=None,
 ):
     """
+    Perform search using a defined search strategy and a search space.
+
     Args:
-        model: the model to be searched
+        model (torch.nn.Module): _description_
+        model_info (_type_): _description_
+        task (str): _description_
+        dataset_info (_type_): _description_
+        data_module (_type_): _description_
+        search_config (dict | PathLike): _description_
+        save_path (PathLike): _description_
+        accelerator (str): _description_
+        load_name (PathLike, optional): _description_. Defaults to None.
+        load_type (str, optional): _description_. Defaults to None.
+        visualizer (_type_, optional): _description_. Defaults to None.
     """
+
     # search preparation
     accelerator = parse_accelerator(accelerator)
     strategy_config, search_space_config = parse_search_config(search_config)
