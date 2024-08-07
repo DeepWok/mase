@@ -1,4 +1,4 @@
-# How to write documentations in MASE
+# Developer: How to write documentations in MASE
 
 For developers working on large software projects, documentation is essential as it provides a detailed guide to the software's architecture, design, and coding standards, ensuring consistent development practices across the team. It helps in understanding complex systems, facilitates smoother collaboration among team members, and serves as a reference for troubleshooting and making informed decisions about code modifications. Effective documentation also aids in onboarding new developers, enabling them to quickly become productive members of the team, and ensures that the knowledge about the software's intricacies is not lost over time, crucial for long-term maintenance and scalability of the project. 
 

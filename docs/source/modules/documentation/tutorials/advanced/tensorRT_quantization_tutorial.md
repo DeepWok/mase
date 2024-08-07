@@ -1,4 +1,4 @@
-# TensorRT Quantization Tutorial
+# Advanced: TensorRT Quantization Tutorial
 
 This notebook is designed to show the features of the TensorRT passes integrated into MASE as part of the MASERT framework. The following demonstrations were run on a NVIDIA RTX A2000 GPU with a Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz CPU.
 

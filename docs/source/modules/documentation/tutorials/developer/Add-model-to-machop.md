@@ -1,4 +1,5 @@
-# Guide on how to add a new model into Machop
+# Developer: Guide on how to add a new model into Machop
+
 This document includes steps to add a new model into Machop
 ## Overall Structure
 ### Model

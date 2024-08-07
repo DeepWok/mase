@@ -1,4 +1,4 @@
-# How to extend search
+# Developer: How to extend search
 
 This tutorial shows how to extend the search space and search strategy in MASE.
 
