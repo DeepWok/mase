@@ -1,9 +1,9 @@
 `timescale 1ns / 1ps
 module binary_activation_binary_adder_tree #(
     parameter IN_SIZE   = 1,
-    // DO NOT MODIFY. This is a module for Popcount operation. 
+    // DO NOT MODIFY. This is a module for Popcount operation.
     parameter IN_WIDTH  = 1,
-    // We would need to add one more digit to the output width. Because the output is a sign number. 
+    // We would need to add one more digit to the output width. Because the output is a sign number.
     parameter OUT_WIDTH = $clog2(IN_SIZE) + IN_WIDTH + 1
 ) (
     /* verilator lint_off UNUSEDSIGNAL */
@@ -26,11 +26,11 @@ module binary_activation_binary_adder_tree #(
     // The number of inputs at each level
     // level_num = ceil(num/(2^i))
     localparam LEVEL_IN_SIZE = (IN_SIZE + ((1 << i) - 1)) >> i;
-    // The input data array at each level 
+    // The input data array at each level
     // When i = 0, data is the input of the adder tree.
     // When i = level, data is the output of the adder tree.
     logic [(IN_WIDTH + i)-1:0] data[LEVEL_IN_SIZE-1:0];
-    // Each level has a pair of handshake signals 
+    // Each level has a pair of handshake signals
     // When i = 0, they are the handshake logic of the input.
     // When i = level, they are the handshake logic of the output.
     logic valid;
@@ -91,7 +91,7 @@ module binary_activation_binary_adder_tree #(
         .data_out      (cast_data)
     );
 
-    // Casting array for vars[i+1].data 
+    // Casting array for vars[i+1].data
     for (genvar j = 0; j < NEXT_LEVEL_IN_SIZE; j++) begin
       assign vars[i+1].data[j] = cast_data[(IN_WIDTH+i+1)*j+(IN_WIDTH+i):(IN_WIDTH+i+1)*j];
     end

@@ -25,76 +25,84 @@ module single_element_repeat #(
     input  logic                  out_ready
 );
 
-  initial begin
-    assert (REPEAT > 1);
-  end
+  generate
 
-  localparam CTR_WIDTH = $clog2(REPEAT);
+    if (REPEAT == 1) begin : gen_passthrough
 
-  logic [DATA_WIDTH-1:0] output_buffer_data;
-  logic output_buffer_valid, output_buffer_ready;
+      assign out_data  = in_data;
+      assign out_valid = in_valid;
+      assign in_ready  = out_ready;
 
-  typedef struct packed {
-    // Data element
-    logic [DATA_WIDTH-1:0] buffer_data;
-    logic buffer_valid;
+    end else begin : gen_repeater
 
-    // Counters
-    logic [CTR_WIDTH-1:0] count;
-  } SELF_T;
+      localparam CTR_WIDTH = $clog2(REPEAT);
 
-  SELF_T self, next_self;
+      logic [DATA_WIDTH-1:0] output_buffer_data;
+      logic output_buffer_valid, output_buffer_ready;
 
+      typedef struct packed {
+        // Data element
+        logic [DATA_WIDTH-1:0] buffer_data;
+        logic buffer_valid;
 
-  always_comb begin
+        // Counters
+        logic [CTR_WIDTH-1:0] count;
+      } SELF_T;
 
-    next_self = self;
+      SELF_T self, next_self;
 
-    in_ready = !self.buffer_valid ||
+      always_comb begin
+
+        next_self = self;
+
+        in_ready = !self.buffer_valid ||
                (self.buffer_valid && output_buffer_ready && self.count == REPEAT-1);
-    output_buffer_data = self.buffer_data;
-    output_buffer_valid = self.buffer_valid;
+        output_buffer_data = self.buffer_data;
+        output_buffer_valid = self.buffer_valid;
 
-    if (in_valid && in_ready) begin
-      next_self.buffer_data  = in_data;
-      next_self.buffer_valid = 1;
-    end
-
-    if (output_buffer_valid && output_buffer_ready) begin
-      if (self.count == REPEAT - 1) begin
-        next_self.count = 0;
         if (in_valid && in_ready) begin
           next_self.buffer_data  = in_data;
           next_self.buffer_valid = 1;
-        end else begin
-          next_self.buffer_valid = 0;
         end
-      end else begin
-        next_self.count = self.count + 1;
+
+        if (output_buffer_valid && output_buffer_ready) begin
+          if (self.count == REPEAT - 1) begin
+            next_self.count = 0;
+            if (in_valid && in_ready) begin
+              next_self.buffer_data  = in_data;
+              next_self.buffer_valid = 1;
+            end else begin
+              next_self.buffer_valid = 0;
+            end
+          end else begin
+            next_self.count = self.count + 1;
+          end
+        end
+
       end
+
+      skid_buffer #(
+          .DATA_WIDTH(DATA_WIDTH)
+      ) output_buffer (
+          .clk(clk),
+          .rst(rst),
+          .data_in(output_buffer_data),
+          .data_in_valid(output_buffer_valid),
+          .data_in_ready(output_buffer_ready),
+          .data_out(out_data),
+          .data_out_valid(out_valid),
+          .data_out_ready(out_ready)
+      );
+
+      always_ff @(posedge clk) begin
+        if (rst) begin
+          self <= '{default: '0};
+        end else begin
+          self <= next_self;
+        end
+      end
+
     end
-
-  end
-
-  skid_buffer #(
-      .DATA_WIDTH(DATA_WIDTH)
-  ) output_buffer (
-      .clk(clk),
-      .rst(rst),
-      .data_in(output_buffer_data),
-      .data_in_valid(output_buffer_valid),
-      .data_in_ready(output_buffer_ready),
-      .data_out(out_data),
-      .data_out_valid(out_valid),
-      .data_out_ready(out_ready)
-  );
-
-  always_ff @(posedge clk) begin
-    if (rst) begin
-      self <= '{default: '0};
-    end else begin
-      self <= next_self;
-    end
-  end
+  endgenerate
 
 endmodule
