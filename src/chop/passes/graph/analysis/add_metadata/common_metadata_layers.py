@@ -5,6 +5,7 @@ from functools import reduce
 import torch
 
 from chop.nn.quantized.modules import quantized_module_map
+
 from chop.ir.graph import MaseMetadata
 from chop.tools import get_logger
 

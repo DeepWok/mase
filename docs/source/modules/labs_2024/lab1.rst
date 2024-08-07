@@ -16,8 +16,8 @@ Lab 1: Introduction to Mase
       ELEC70109/EE9-AML3-10/EE9-AO25
       <br />
    Written by
-      <a href="https://aaron-zhao123.github.io/">Aaron Zhao </a> ,
-      <a href="https://www.pedrogimenes.co.uk/">Pedro Gimenes </a> ,
+      <a href="https://aaron-zhao123.github.io/">Aaron Zhao </a>,
+      <a href="https://www.pedrogimenes.co.uk/">Pedro Gimenes </a>,
       <a href="https://chengzhang-98.github.io/blog/">Cheng Zhang </a>
    </p>
    </div>

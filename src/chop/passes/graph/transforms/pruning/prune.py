@@ -1,9 +1,13 @@
 import torch
 
+from chop.tools import get_logger
+
 from .load import load_activation_prune_config, load_weight_prune_config
 from .pruning_methods import weight_criteria_map, activation_criteria_map
-
 from .sparse_parameterization import FakeSparseWeight, FakeStructuredSparseWeight
+
+logger = get_logger(__name__)
+logger.setLevel("INFO")
 
 
 def prune_with_a_function(info, fn, sparsity):
@@ -55,17 +59,19 @@ def build_pruning_hooks(info, w_config, a_config):
                 "module_type": v["module_type"],
                 "weight_sparsity": w_config["sparsity"],
                 "value": v["weight_value"],
-                "stats": v["weight_stats"],
                 "shape": v["weight_shape"],
             }
+            if "weight_stats" in v.keys():
+                w_info["stats"] = v["weight_stats"]
             # for activations
             a_info = {
                 "module_type": v["module_type"],
                 "activation_sparsity": a_config["sparsity"],
                 "value": v["activation_value"],
-                "stats": v["activation_stats"],
                 "shape": v["activation_shape"],
             }
+            if "activation_stats" in v.keys():
+                a_info["stats"] = v["activation_stats"]
             named_hooks[k] = {
                 "w_hook": get_weight_hook(k, info, w_info, w_config),
                 "a_hook": get_activation_hook(k, info, a_info, a_config),
@@ -77,40 +83,55 @@ def fetch_info(node, module):
     # deal with conv2d
     if isinstance(module, torch.nn.Conv2d):
         a_value = node.meta["mase"].parameters["common"]["args"]["data_in_0"]["value"]
-        a_stats = node.meta["mase"].parameters["software"]["args"]["data_in_0"]["stat"]
         a_shape = node.meta["mase"].parameters["common"]["args"]["data_in_0"]["shape"]
 
         w_value = node.meta["mase"].parameters["common"]["args"]["weight"]["value"]
-        w_stats = node.meta["mase"].parameters["software"]["args"]["weight"]["stat"]
         w_shape = node.meta["mase"].parameters["common"]["args"]["weight"]["shape"]
-        return {
+
+        out = {
             "module_type": "conv2d",
             "weight_value": w_value,
-            "weight_stats": w_stats,
             "weight_shape": w_shape,
             "activation_value": a_value,
-            "activation_stats": a_stats,
             "activation_shape": a_shape,
         }
+
+        # Register weight/activation statistics for pruning methods that require the profile_statistics_analysis_pass
+        if "args" in node.meta["mase"].parameters["software"]:
+            out["activation_stats"] = node.meta["mase"].parameters["software"]["args"][
+                "data_in_0"
+            ]["stat"]
+            out["weight_stats"] = node.meta["mase"].parameters["software"]["args"][
+                "weight"
+            ]["stat"]
+
+        return out
 
     # deal with linear
     if isinstance(module, torch.nn.Linear):
         a_value = node.meta["mase"].parameters["common"]["args"]["data_in_0"]["value"]
-        a_stats = node.meta["mase"].parameters["software"]["args"]["data_in_0"]["stat"]
         a_shape = node.meta["mase"].parameters["common"]["args"]["data_in_0"]["shape"]
 
         w_value = node.meta["mase"].parameters["common"]["args"]["weight"]["value"]
-        w_stats = node.meta["mase"].parameters["software"]["args"]["weight"]["stat"]
         w_shape = node.meta["mase"].parameters["common"]["args"]["weight"]["shape"]
-        return {
+        out = {
             "module_type": "linear",
             "weight_value": w_value,
-            "weight_stats": w_stats,
             "weight_shape": w_shape,
             "activation_value": a_value,
-            "activation_stats": a_stats,
             "activation_shape": a_shape,
         }
+
+        # Register weight/activation statistics for pruning methods that require the profile_statistics_analysis_pass
+        if "args" in node.meta["mase"].parameters["software"]:
+            out["activation_stats"] = node.meta["mase"].parameters["software"]["args"][
+                "data_in_0"
+            ]["stat"]
+            out["weight_stats"] = node.meta["mase"].parameters["software"]["args"][
+                "weight"
+            ]["stat"]
+
+        return out
 
     # otherwise we just return None, and this module would be ignore in build_pruning_hooks
     return None
@@ -138,8 +159,10 @@ def prune_graph_iterator(graph, config: dict):
     for node in graph.fx_graph.nodes:
         # pruning only deals with modules at the moment
         if node.op == "call_module":
+
             name = node.target
             if name in hooks.keys():
+                logger.info(f"Pruning module: {node.name}")
                 node_hooks = hooks[name]
                 # check weight hook, if it exits, apply it
                 if node_hooks["w_hook"] is not None:
@@ -177,7 +200,7 @@ def prune_transform_pass(graph, pass_args: dict = {}):
                 "granularity": "element", # ["element"] are available
                 "method": "l1", # ["l1", "random"] are available
                 "sparsity": 0.5, # a float between 0.0 and 1.0
-            }
+            },
             "activation" : {
                 "scope": "local", # ["local, "global"] are available
                 "granularity": "element", # ["element"] are available
