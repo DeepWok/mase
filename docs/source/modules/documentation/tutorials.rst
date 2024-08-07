@@ -9,7 +9,8 @@ Core Tutorials
 
    tutorials/tutorial_1_introduction_to_mase
    tutorials/tutorial_2_lora_finetune
-   tutorials/tutorial_3_running_qat
+   tutorials/tutorial_3_qat
+   tutorials/tutorial_4_pruning
    
 
 Interactive Usage with Python
