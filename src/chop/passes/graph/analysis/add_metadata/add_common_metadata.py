@@ -1,14 +1,7 @@
 import logging
-import math
-from tabulate import tabulate
-import toml
 
-import torch
 import torch.fx as fx
-from torch.fx.passes.shape_prop import ShapeProp
 from torch import nn
-
-from transformers import PreTrainedModel
 
 from chop.passes.graph.analysis.utils import (
     is_tensor_constant,
@@ -22,7 +15,6 @@ from chop.ir.common import (
     MASE_IMPLICIT_FUNCS,
     MASE_MODULE_RELATED_FUNCS,
 )
-from chop.ir.graph.mase_metadata import MaseMetadata
 from chop.passes.graph.analysis.utils import fetch_attr, load_arg
 from chop.tools import get_hf_dummy_in
 
@@ -212,7 +204,7 @@ def graph_iterator_for_metadata(
     force_device_meta=False,
 ):
     """
-    largely apated from https://pytorch.org/docs/stable/fx.html
+    largely adapted from https://pytorch.org/docs/stable/fx.html
     """
 
     model, fx_graph, modules = graph.model, graph.fx_graph, graph.modules

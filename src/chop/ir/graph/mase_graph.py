@@ -212,6 +212,8 @@ class MaseGraph:
         cf_args: Optional[Dict[str, Any]] = None,
         custom_ops: dict = None,
         hf_input_names: list = None,
+        skip_init_metadata: bool = False,
+        add_metadata_args: dict = None,
     ) -> None:
         """MaseGraph is a dataflow representation of a model with both software and hardware constraints.
         The MaseGraph can be constructed from a torch.nn.Module:
@@ -274,11 +276,23 @@ class MaseGraph:
             model (torch.nn.Module | fx.GraphModule): Input model to construct the MaseGraph.
             cf_args (Optional[Dict[str, Any]], optional): Concrete forward arguments to trace the model with. Defaults to None.
             custom_ops (dict, optional): Custom operations to be used in the model. Defaults to None.
+            hf_input_names (list, optional): Input names for HuggingFace models. Defaults to None.
+            skip_init_metadata (bool, optional): Skip initializing metadata for the nodes. Defaults to False.
+            add_metadata_args (dict, optional): Additional arguments for metadata initialization. Defaults to None.
 
         Raises:
             ValueError: If the input model is not a torch.nn.Module or fx.Graph.
         """
 
+        # is_huggingface flag is used in passes to automate dummy input generation etc
+        if isinstance(model, PreTrainedModel):
+            self.is_huggingface = True
+        else:
+            self.is_huggingface = False
+
+        self.cf_args = cf_args
+
+        # Generate the GraphModule according to the model type
         if isinstance(model, fx.GraphModule):
             self.model = model
             self.model.patched_op_names = []
@@ -296,13 +310,14 @@ class MaseGraph:
                 f"Expected fx.GraphModule or nn.Module, but received model: {type(model)}"
             )
 
-        # is_huggingface flag is used in passes to automate dummy input generation etc
-        if isinstance(model, PreTrainedModel):
-            self.is_huggingface = True
-        else:
-            self.is_huggingface = False
-
-        self.cf_args = cf_args
+        # Initialize metadata for each node
+        # todo: will need to move metadata analysis passes into chop.ir for this to work
+        # if not skip_init_metadata and add_metadata_args is not None:
+        #     mg, _ = passes.init_metadata_analysis_pass(self.fx_graph)
+        #     mg, _ = passes.add_common_metadata_analysis_pass(
+        #         mg,
+        #         pass_args=add_metadata_args,
+        #     )
 
     @classmethod
     def from_module(
@@ -384,6 +399,14 @@ class MaseGraph:
                     model=loaded_model,
                 )
 
+        for attr in [
+            "class_for_deserialization",
+            "config",
+            "device",
+        ]:
+            if hasattr(mg.model, attr):
+                setattr(mg, attr, getattr(mg.model, attr))
+
         return mg
 
     def export(
@@ -403,6 +426,20 @@ class MaseGraph:
 
         logger.debug(f"Recompiling GraphModule to preserve any transforms...")
         self.model.recompile()
+
+        # The following parameters must be set as attributes in the GraphModule
+        # for tracing to work during deserialization. These get overwritten during
+        # transform passes so they are read from the MaseGraph attributes (which are
+        # set during the import process).
+        logger.debug(f"Storing tracing parameters into mg.model for deserialization...")
+        for attr in [
+            "class_for_deserialization",
+            "config",
+            "device",
+        ]:
+            if hasattr(self, attr):
+                logger.debug(f"Setting {attr}")
+                setattr(self.model, attr, getattr(self, attr))
 
         logger.info(f"Exporting GraphModule to {fname}.pt")
         with open(f"{fname}.pt", "wb") as f:
