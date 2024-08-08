@@ -10,6 +10,7 @@ from chop.tools import get_logger
 from .mesh_model import MeshModel
 from .alpa import alpa_autosharding_pass
 from .megatron import megatron_autosharding_pass
+from .fully_replicated import fully_replicated_autosharding_pass
 
 logger = get_logger(__name__)
 logger.setLevel("INFO")
@@ -273,7 +274,9 @@ def autosharding_analysis_pass(mg, pass_args: dict = {}):
 
         # Run intra-operator pass
         start_time = time()
-        if algo == "alpa":
+        if algo == "fully_replicated":
+            mg, pass_outs = fully_replicated_autosharding_pass(mg, mesh, pass_args)
+        elif algo == "alpa":
             mg, pass_outs = alpa_autosharding_pass(mg, mesh, pass_args)
         elif algo == "megatron":
             mg, pass_outs = megatron_autosharding_pass(mg, mesh, pass_args)
