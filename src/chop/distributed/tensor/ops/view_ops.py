@@ -29,7 +29,6 @@ from torch.distributed.device_mesh import DeviceMesh
 
 from chop.distributed.tensor.ops.utils import register_op_strategy
 from chop.distributed.tensor.ops.utils import (
-    generate_redistribute_costs,
     normalize_dim,
     normalize_dims,
     prod,
@@ -621,16 +620,13 @@ def register_op_strategy_map(
                 mesh=input_src_spec.mesh,
                 tensor_meta=input_src_spec.tensor_meta,
             )
-            redistribute_costs = [
-                generate_redistribute_costs(input_strategy, input_tgt_spec)
-            ]
 
             output_spec = DTensorSpec(mesh=mesh, placements=tuple(output_placements))
             output_strategy.strategies.append(
                 PlacementStrategy(
                     output_specs=output_spec,
                     input_specs=(input_tgt_spec,),
-                    redistribute_cost=redistribute_costs,
+                    redistribute_cost=[],
                 )
             )
 

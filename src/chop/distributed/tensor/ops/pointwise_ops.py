@@ -13,7 +13,6 @@ from torch.distributed._tensor._op_schema import (
     TupleStrategy,
 )
 from torch.distributed._tensor.ops.utils import (
-    generate_redistribute_costs,
     infer_broadcast_dims_map,
     map_placements_after_broadcast,
     normalize_dim,
@@ -29,22 +28,6 @@ from torch.distributed.device_mesh import DeviceMesh
 from chop.distributed.tensor.ops.utils import register_op_strategy
 
 aten = torch.ops.aten
-# leave the remaining pointwise_ops list here for convenience,
-# Below ops are some pointwise ops that are yet to be supported,
-# they might not be a complete list.
-# pointwise_ops = [
-#     "fake_quantize_per_channel_affine",
-#     "fake_quantize_per_tensor_affine",
-#     "floor_divide",  # floor_divide is deprecated
-#     "frexp",  # multiple output pointwise op, need to add support
-#     "gradient",  #  need investigation on this op
-#     "imag",  # complex data type only
-#     "quantized_batch_norm",
-#     "quantized_max_pool1d",
-#     "quantized_max_pool2d",
-#     "real",  # complex data type only
-# ]
-
 
 linear_pointwise_ops = [
     aten.div.Scalar,  # this op is linear on the first argument, and the second argument is scalar, so it fits as a linear op.
@@ -474,8 +457,7 @@ def common_pointwise_strategy(
                 out_placements.append(placement)
 
         input_specs: List[DTensorSpec] = []
-        redistribute_costs: List[List[float]] = []
-        for idx, input_arg in enumerate(args_schema):
+        for input_arg in args_schema:
             if isinstance(input_arg, OpStrategy):
                 # every arg follow the out_placements, but need to handle broadcasting
                 input_arg_spec = input_arg.strategies[0].output_spec
@@ -493,9 +475,6 @@ def common_pointwise_strategy(
                     tensor_meta=input_arg_spec.tensor_meta,
                 )
                 input_specs.append(input_arg_target_spec)
-                redistribute_costs.append(
-                    generate_redistribute_costs(input_arg, input_arg_target_spec)
-                )
 
         pointwise_strategy.strategies.append(
             PlacementStrategy(
@@ -504,7 +483,7 @@ def common_pointwise_strategy(
                     placements=tuple(out_placements),
                 ),
                 input_specs=input_specs,
-                redistribute_cost=redistribute_costs,
+                redistribute_cost=[],
             )
         )
     return pointwise_strategy

@@ -37,6 +37,24 @@ def _length(obj) -> int:
     return len(obj)
 
 
+def spec_to_strategy(spec: object) -> object:
+    if isinstance(spec, DTensorSpec):
+        return OpStrategy([PlacementStrategy(spec)])
+    elif (
+        isinstance(spec, (list, tuple))
+        and len(spec) > 0
+        and isinstance(spec[0], DTensorSpec)
+    ):
+        # tensor list create tuple strategy
+        tuple_strategy = [spec_to_strategy(s) for s in spec]
+        tuple_strategy = cast(Sequence[StrategyType], tuple_strategy)
+        return TupleStrategy(
+            tuple(tuple_strategy) if isinstance(spec, tuple) else tuple_strategy
+        )
+    else:
+        return spec
+
+
 def rlog(msg):
     rank = torch.distributed.get_rank()
     if rank == 0:
@@ -209,23 +227,6 @@ class ShardingPropagator:
         if op_schema.op is aten._local_scalar_dense.default:
             return OutputSharding(None, op_schema)
 
-        def spec_to_strategy(spec: object) -> object:
-            if isinstance(spec, DTensorSpec):
-                return OpStrategy([PlacementStrategy(spec)])
-            elif (
-                isinstance(spec, (list, tuple))
-                and len(spec) > 0
-                and isinstance(spec[0], DTensorSpec)
-            ):
-                # tensor list create tuple strategy
-                tuple_strategy = [spec_to_strategy(s) for s in spec]
-                tuple_strategy = cast(Sequence[StrategyType], tuple_strategy)
-                return TupleStrategy(
-                    tuple(tuple_strategy) if isinstance(spec, tuple) else tuple_strategy
-                )
-            else:
-                return spec
-
         if op_schema.op in self.op_strategy_funcs:
             # generate op strategy for the op.
             mesh = try_find_mesh_from_args(op_schema.op, op_schema.args_schema)
@@ -248,12 +249,6 @@ class ShardingPropagator:
             if isinstance(op_strategy, OpStrategy):
                 # single Op strategy
                 output_strategy = self._select_strategy(op_strategy)
-
-                # in case where the op does not specify input_specs and output_specs
-                # is a DTensorSpec, we use output_specs as the spec for each DTensor
-                # input arg.
-                if output_strategy.input_specs is None:
-                    assert isinstance(output_strategy.output_specs, DTensorSpec)
 
                 # construct output spec for the op
                 if op_schema.return_type_tuple_tensor_like():
@@ -290,7 +285,6 @@ class ShardingPropagator:
                 selected_strategies: List[PlacementStrategy] = []
                 out_spec_list: List[DTensorSpec] = []
                 for strategy in op_strategy.childs:
-                    assert isinstance(strategy, OpStrategy)
                     selected_strategy = self._select_strategy(strategy)
                     selected_strategies.append(selected_strategy)
                     out_spec_list.append(selected_strategy.output_spec)
@@ -395,9 +389,6 @@ class ShardingPropagator:
 
         strategy_costs: List[float] = []
         for strtg in strategy.strategies:
-            assert (
-                strtg.redistribute_cost is not None
-            ), "must set redistribute cost each strategy!"
             redistribute_cost = sum(chain.from_iterable(strtg.redistribute_cost))
             strategy_costs.append(redistribute_cost)
 

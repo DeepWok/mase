@@ -792,7 +792,6 @@ def layer_norm_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy:
     output_strategy = OpStrategy([])
     for idx, input_placement_strategy in enumerate(input_strategy.strategies):
         op_args_target_specs = []
-        redistribute_costs = []
         input_src_spec = input_placement_strategy.output_spec
 
         # for the input tensor, we replicate it on the inner dims if necessary
@@ -804,9 +803,6 @@ def layer_norm_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy:
             tensor_meta=input_src_spec.tensor_meta,
         )
         op_args_target_specs.append(input_target_spec)
-        redistribute_costs.append(
-            generate_redistribute_costs(input_strategy, input_target_spec)
-        )
 
         if weight_strategy is not None:
             assert isinstance(weight_strategy, OpStrategy)
@@ -821,9 +817,6 @@ def layer_norm_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy:
                 tensor_meta=weight_src_spec.tensor_meta,
             )
             op_args_target_specs.append(weight_target_spec)
-            redistribute_costs.append(
-                generate_redistribute_costs(weight_strategy, weight_target_spec)
-            )
 
         if bias_strategy is not None:
             assert isinstance(bias_strategy, OpStrategy)
@@ -838,9 +831,6 @@ def layer_norm_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy:
                 tensor_meta=bias_src_spec.tensor_meta,
             )
             op_args_target_specs.append(bias_target_spec)
-            redistribute_costs.append(
-                generate_redistribute_costs(bias_strategy, bias_target_spec)
-            )
 
         # the output spec is the same as input spec
         output_target_spec = input_target_spec
@@ -848,7 +838,7 @@ def layer_norm_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy:
             PlacementStrategy(
                 output_specs=output_target_spec,
                 input_specs=op_args_target_specs,
-                redistribute_cost=redistribute_costs,
+                redistribute_cost=[0],
             )
         )
 

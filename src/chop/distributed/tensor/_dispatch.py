@@ -1,17 +1,8 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates
-import contextlib
-import functools
-import logging
-import operator
-import warnings
 from typing import cast, Dict, List, Optional, Sequence, Tuple, TYPE_CHECKING
 
 import torch
-import torch.distributed as dist
-import torch.distributed._tensor.random as random
 from torch.distributed._tensor._op_schema import (
-    _is_inplace_op,
-    _is_out_variant_op,
     OpInfo,
     OpSchema,
     OutputSpecType,
@@ -30,8 +21,7 @@ from torch.distributed._tensor.placement_types import (
 from torch.distributed._tensor.random import is_rng_supported_mesh
 
 
-if TYPE_CHECKING:
-    from torch.distributed.device_mesh import DeviceMesh
+from torch.distributed.device_mesh import DeviceMesh
 
 try:
     from torch.utils import _cxx_pytree as pytree
@@ -45,16 +35,7 @@ from chop.distributed.tensor._redistribute import redistribute_local_tensor
 aten = torch.ops.aten
 
 
-def try_get_replicate_spec(tensor_arg: torch.Tensor, mesh: "DeviceMesh") -> DTensorSpec:
-    # tensor_arg is an instance of torch.Tensor and could be an arg or kwarg.
-    if tensor_arg.numel() == 1 and tensor_arg.ndim == 1:
-        warnings.warn(
-            "Found a non-scalar tensor with numel=1 and ndim!=0, "
-            "we are implicitly creating a replicated DTensor for it. "
-            "However, please consider changing it to a scalar tensor "
-            "or explicitly create a DTensor under distributed enviroment."
-        )
-
+def get_replicate_spec(tensor_arg: torch.Tensor, mesh: "DeviceMesh") -> DTensorSpec:
     # scalar tensor can be safely treated as replicated
     replication_spec = DTensorSpec(
         mesh,
@@ -93,29 +74,6 @@ def is_same_size_handler(
     lhs = cast(torch.Tensor, args[0])
     rhs = cast(torch.Tensor, args[1])
     return lhs.shape == rhs.shape
-
-
-def rlog(msg):
-    rank = torch.distributed.get_rank()
-    if rank == 0:
-        print(msg)
-
-
-def _get_global_shape(local_shape, dtensor_spec):
-    if dtensor_spec is None:
-        return local_shape
-
-    placements = dtensor_spec.placements
-    global_shape = list(local_shape)
-    mesh_shape = dtensor_spec.mesh.shape
-
-    for mesh_dim, placement in enumerate(placements):
-        if isinstance(placement, Shard):
-            global_shape[placement.dim] = (
-                global_shape[placement.dim] * mesh_shape[mesh_dim]
-            )
-
-    return torch.Size(global_shape)
 
 
 class OpDispatcher:
@@ -164,159 +122,47 @@ class OpDispatcher:
         if op_call in self._custom_op_handlers:
             return self._custom_op_handlers[op_call](op_call, args, kwargs)  # type: ignore[operator]
 
-        # extract local tensor and sharding infos to a OpInfo
-        op_info = self.unwrap_to_op_info(op_call, args, kwargs)
-
-        output_sharding = self.sharding_propagator.propagate(op_info)
-        assert output_sharding is not None, "output sharding should not be None"
-
         # run local op computation with potentially modified args/kwargs
-        local_tensor_args = op_info.local_args
-        local_tensor_args = cast(Tuple[object, ...], local_tensor_args)
+        local_tensor_args = [
+            arg._local_tensor if isinstance(arg, dtensor.DTensor) else arg
+            for arg in args
+        ]
 
-        local_results = op_call(*local_tensor_args, **op_info.local_kwargs)
+        local_tensor_kwargs = {
+            k: v.local_tensor if isinstance(v, dtensor.DTensor) else v
+            for k, v in kwargs.items()
+        }
 
-        # Getting tensor meta after running the op to avoid running it twice
-        if isinstance(local_results, (tuple, list)):
-            out_tensor_meta = [
-                TensorMeta(
-                    shape=_get_global_shape(
-                        r.shape,
-                        output_sharding.output_spec[out_idx],
+        local_results = op_call(*local_tensor_args, **local_tensor_kwargs)
+
+        # We still need to wrap the local result in a DTensor here in two cases
+        # 1. When creating a nn.Parameter from a DTensor, it must call tensor.detach
+        #   and the return type must match the input type (DTensor).
+        # 2. When a single FX op decomposes into multiple aten ops (e.g. torch.embedding)
+        if op_call._name == "aten::detach":
+            return self.wrap(
+                local_results,
+                DTensorSpec(
+                    mesh=DeviceMesh(
+                        "cuda",
+                        mesh=torch.Tensor(
+                            # todo: generalize
+                            [
+                                [0, 1, 2, 3],
+                                [4, 5, 6, 7],
+                            ]
+                        ),
                     ),
-                    stride=r.stride(),
-                    dtype=r.dtype,
-                )
-                for out_idx, r in enumerate(local_results)
-            ]
-        else:
-            out_tensor_meta = TensorMeta(
-                shape=_get_global_shape(
-                    local_results.shape,
-                    output_sharding.output_spec,
+                    placements=args[0]._spec.placements,
+                    tensor_meta=TensorMeta(
+                        shape=args[0]._spec.tensor_meta.shape,
+                        stride=args[0]._spec.tensor_meta.stride,
+                        dtype=args[0]._spec.tensor_meta.dtype,
+                    ),
                 ),
-                stride=local_results.stride(),
-                dtype=local_results.dtype,
             )
 
-        # Annotate output DTensorSpec with TensorMeta object
-        self.sharding_propagator._wrap_output_spec_tensor_meta(
-            op_call,
-            output_sharding.output_spec,
-            out_tensor_meta,
-        )
-
-        return self.wrap(
-            local_results,
-            output_sharding.output_spec,
-        )
-
-    @staticmethod
-    def redistribute_local_args(
-        op_info: OpInfo,
-        suggested_input_schema: OpSchema,
-    ) -> None:
-        # NOTE: it's very rare that we need to reshard kwargs so we intentionally skip it
-
-        # TODO: the op schema should probably just remain flattened so that we can avoid this tree flatten
-        # Need to fix all the ops before doing this.
-        if op_info.args_tree_spec is not None:
-            flatten_args_schema_to_reshard = tuple(
-                pytree.tree_leaves(suggested_input_schema.args_schema)
-            )
-        else:
-            flatten_args_schema_to_reshard = suggested_input_schema.args_schema
-
-        new_local_args: List[object] = []
-        for i, arg_spec in enumerate(op_info.flat_args_schema):
-            reshard_arg_spec = flatten_args_schema_to_reshard[i]
-            if isinstance(arg_spec, DTensorSpec):
-                local_tensor = cast(torch.Tensor, op_info.local_args[i])
-                if arg_spec != reshard_arg_spec:
-                    resharded_local_tensor = redistribute_local_tensor(
-                        local_tensor, arg_spec, reshard_arg_spec
-                    )
-                    new_local_args.append(resharded_local_tensor)
-                else:
-                    new_local_args.append(local_tensor)
-            else:
-                new_local_args.append(reshard_arg_spec)
-
-        op_info.local_args = tuple(new_local_args)
-
-    def unwrap_to_op_info(
-        self,
-        op_call: torch._ops.OpOverload,
-        args: Tuple[object, ...],
-        kwargs: Dict[str, object],
-    ) -> OpInfo:
-        # get runtime schema to determine whether to use pytree to flatten inputs
-        runtime_schema_info = self.sharding_propagator.op_to_schema_info.get(
-            op_call, None
-        )
-
-        args_list, args_spec = args, None
-
-        args_schema: List[object] = []
-        kwargs_schema: Dict[str, object] = {}
-        local_args: List[object] = []
-        local_kwargs: Dict[str, object] = {}
-        mesh: Optional[DeviceMesh] = None
-
-        for arg in args_list:
-            if isinstance(arg, dtensor.DTensor):
-                args_schema.append(arg._spec)
-                local_args.append(arg._local_tensor)
-                if mesh is not None:
-                    if mesh != arg.device_mesh:
-                        raise NotImplementedError(
-                            f"{op_call}: DTensor does not support cross-mesh operation yet!"
-                            f"Got meshes: {mesh} {arg.device_mesh}"
-                        )
-                else:
-                    mesh = arg.device_mesh
-            elif isinstance(arg, torch.Tensor):
-                mesh = mesh or try_find_mesh_from_args(op_call, args_list)
-                args_schema.append(try_get_replicate_spec(arg, mesh))
-                local_args.append(arg)
-            else:
-                args_schema.append(arg)
-                local_args.append(arg)
-
-        for k, v in kwargs.items():
-            if isinstance(v, dtensor.DTensor):
-                kwargs_schema[k] = v._spec
-                local_kwargs[k] = v._local_tensor
-                if mesh is not None:
-                    if mesh != v.device_mesh:
-                        raise NotImplementedError(
-                            f"{op_call}: DTensor does not support cross-mesh operation yet!"
-                        )
-                else:
-                    mesh = v.device_mesh
-            elif isinstance(v, torch.Tensor):
-                mesh = mesh or try_find_mesh_from_args(op_call, args_list)
-                kwargs_schema[k] = try_get_replicate_spec(v, mesh)
-                local_kwargs[k] = v
-            else:
-                kwargs_schema[k] = v
-                local_kwargs[k] = v
-
-        assert mesh is not None, f"found no DeviceMesh from dtensor args for {op_call}!"
-        op_info = OpInfo(
-            mesh=mesh,
-            schema=OpSchema(
-                op_call,
-                tuple(args_schema),
-                kwargs_schema,
-                schema_info=runtime_schema_info,
-            ),
-            flat_args_schema=args_schema,
-            local_args=tuple(local_args),
-            local_kwargs=local_kwargs,
-            args_tree_spec=args_spec,
-        )
-        return op_info
+        return local_results
 
     @staticmethod
     def wrap(
@@ -324,23 +170,12 @@ class OpDispatcher:
         spec: OutputSpecType,
     ) -> object:
         if isinstance(res, torch.Tensor):
-            if spec is not None:
-                assert isinstance(
-                    spec, DTensorSpec
-                ), f"output spec does not match with output! Expected DTensorSpec, got {spec}."
-                return dtensor.DTensor(
-                    res,
-                    spec,
-                    requires_grad=res.requires_grad,
-                )
-            else:
-                # if output does not have a DTensorSpec due to specific ops, it must be a scalar tensor
-                assert res.ndim == 0, "output tensor should be scalar!"
-                return res
+            return dtensor.DTensor(
+                res,
+                spec,
+                requires_grad=res.requires_grad,
+            )
         elif isinstance(res, (list, tuple)):
-            assert spec is not None and isinstance(
-                spec, (list, tuple)
-            ), f"output spec does not match with output! Expected list/tuple, got {spec}."
             res_list = []
             for e, s in zip(res, spec):
                 res_list.append(OpDispatcher.wrap(e, s))

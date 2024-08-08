@@ -109,7 +109,11 @@ def dist_model_fn(
                 distributed_tensor = distribute_tensor(
                     getattr(module, parameter), device_mesh, placement
                 )
-                setattr(module, parameter, torch.nn.Parameter(distributed_tensor))
+                setattr(
+                    module,
+                    parameter,
+                    torch.nn.Parameter(distributed_tensor),
+                )
             except Exception as e:
                 rlog(
                     logger,
@@ -117,3 +121,4 @@ def dist_model_fn(
                     f"Error distributing parameter {parameter} of module {node_name} to {placement}: {e}",
                     level="error",
                 )
+                raise e

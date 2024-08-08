@@ -31,6 +31,7 @@ from .transforms import (
     onnx_annotate_transform_pass,
     partition_to_multi_device_transform_pass,
     raise_granularity_transform_pass,
+    insert_dtensor_wrapper_transform_pass,
 )
 
 from .interface import (

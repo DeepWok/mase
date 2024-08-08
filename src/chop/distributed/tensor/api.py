@@ -205,7 +205,7 @@ class _FromTorchTensor(torch.autograd.Function):
         return grad_output.to_local(), None, None, None, None, None
 
 
-class DTensor(torch.Tensor):  # pyre-ignore[13]: pyre is bad at __new__
+class DTensor(torch.Tensor):
     _local_tensor: torch.Tensor
     _spec: DTensorSpec
     __slots__ = ["_local_tensor", "_spec"]
@@ -227,15 +227,7 @@ class DTensor(torch.Tensor):  # pyre-ignore[13]: pyre is bad at __new__
         Construct a DTensor from a local tensor, device mesh, and placement and
         other tensor properties (i.e. shape, requires_grad, strides, etc).
         """
-        if local_tensor.requires_grad and not requires_grad:
-            warnings.warn(
-                "To construct DTensor from torch.Tensor, it's recommended to "
-                "use local_tensor.detach() and make requires_grad consistent."
-            )
 
-        # new method instruct wrapper tensor from local_tensor and add
-        # placement spec, it does not do actual distribution
-        assert spec.tensor_meta is not None, "TensorMeta should not be None!"
         r = torch.Tensor._make_wrapper_subclass(  # type: ignore[attr-defined]
             cls,
             spec.tensor_meta.shape,
@@ -254,7 +246,10 @@ class DTensor(torch.Tensor):  # pyre-ignore[13]: pyre is bad at __new__
     # pyre-fixme[3]: Return type must be annotated.
     def __repr__(self):
         # TODO: consider all_gather the local tensors for better debugging
-        return f"DTensor(local_tensor={self._local_tensor}, device_mesh={self._spec.mesh}, placements={self._spec.placements})"
+        if self._spec is None:
+            return f"DTensor(local_tensor={self._local_tensor}, device_mesh=None, placements=None)"
+        else:
+            return f"DTensor(local_tensor={self._local_tensor}, device_mesh={self._spec.mesh}, placements={self._spec.placements})"
 
     def __tensor_flatten__(self):
         """

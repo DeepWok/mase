@@ -17,6 +17,9 @@ def _insert_resharding_nodes(mg, pass_args={}):
     logger.info(
         f"Running resharding_transform_pass to insert resharding nodes along necessary edges."
     )
+
+    device_mesh = pass_args.get("device_mesh", None)
+
     for node in mg.fx_graph.nodes:
 
         if node.op == "call_function" and node.target == redistribute_dtensor:
@@ -71,6 +74,7 @@ def _insert_resharding_nodes(mg, pass_args={}):
                         args=(arg_obj, arg_specs.placements),
                         kwargs={
                             "async_op": False,
+                            "input_tensor_mesh": device_mesh,
                         },
                     )
 

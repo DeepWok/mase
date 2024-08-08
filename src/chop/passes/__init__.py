@@ -35,6 +35,7 @@ from .graph.transforms import (
     patch_metadata_transform_pass,
     resharding_transform_pass,
     replace_method_with_function,
+    insert_dtensor_wrapper_transform_pass,
 )
 from .module.analysis import calculate_avg_bits_module_analysis_pass
 from .module.transforms import quantize_module_transform_pass

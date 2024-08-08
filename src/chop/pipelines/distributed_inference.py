@@ -27,6 +27,7 @@ class AutoPipelineForDistributedInference(AutoPipeline):
             passes.init_metadata_analysis_pass,
             passes.add_common_metadata_analysis_pass,
             passes.autosharding_analysis_pass,
+            passes.insert_dtensor_wrapper_transform_pass,
             passes.resharding_transform_pass,
             passes.report_graph_analysis_pass,
         ]

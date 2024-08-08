@@ -13,6 +13,7 @@ class MaseLauncher:
 
     def __init__(
         self,
+        mg=None,
         world_size=None,
         device_mesh=None,
         device_fn=None,
@@ -24,6 +25,7 @@ class MaseLauncher:
             world_size (int, optional): Number of GPUs to use. Defaults to None.
             device_mesh (list, optional): List of GPUs to use. Defaults to None.
         """
+        self.mg = mg
         self.world_size = world_size
         self.device_mesh = device_mesh
         self.device_fn = device_fn

@@ -8,12 +8,18 @@ from torch.distributed._tensor._redistribute import redistribute_local_tensor
 
 from torch.distributed._tensor.placement_types import Placement
 
+from chop.ir.graph import MaseMetadata
 from chop.distributed.tensor import DTensor
 from chop.tools import get_logger
-from chop.distributed.utils import rlog
 
 logger = get_logger(__name__)
 logger.setLevel("DEBUG")
+
+
+def rlog(msg):
+    rank = torch.distributed.get_rank()
+    if rank == 0:
+        print(msg)
 
 
 @fx.wrap
@@ -59,6 +65,7 @@ def redistribute_dtensor(
     input: DTensor,
     placements: Tuple[Placement, ...],
     async_op: bool = False,
+    input_tensor_mesh=None,
 ):
     """
     Redistribute a DTensor to a new set of placements.
@@ -76,16 +83,24 @@ def redistribute_dtensor(
     if not isinstance(input, DTensor):
         return input
 
+    torch_mesh = DeviceMesh(
+        "cuda",
+        mesh=torch.Tensor(input_tensor_mesh),
+    )
+
     current_spec = input._spec
 
     if current_spec.placements != placements:
         target_spec = DTensorSpec(
-            input._spec.mesh,
+            torch_mesh,
             placements,
             tensor_meta=input._spec.tensor_meta,
         )
 
         local_tensor = input._local_tensor
+
+        assert not isinstance(local_tensor, DTensor)
+
         output = redistribute_local_tensor(
             local_tensor,
             current_spec,

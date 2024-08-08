@@ -29,7 +29,7 @@ def _import_solution(
     mg,
     solution: dict,
     mesh: MeshModel,
-    extrapolate_sharding: bool = True,
+    extrapolate_sharding: bool = False,
 ):
     """Import an autosharding solution into the metadata of the MaseGraph.
 
@@ -247,7 +247,10 @@ def autosharding_analysis_pass(mg, pass_args: dict = {}):
     # Preload autosharding solution
     fname = pass_args.get("ilp_solution_file", "ilp_solution.pkl")
     # check if solution file exists
-    if pass_args.get("preload_solution", False) and os.path.exists(fname):
+    if pass_args.get("preload_solution", False):
+        if not os.path.exists(fname):
+            raise FileNotFoundError(f"Solution file {fname} not found.")
+
         logger.info(f"Preloading autosharding solution from: {fname}")
         with open(fname, "rb") as file:
             solution = dill.load(file)
