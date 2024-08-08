@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>chop.passes.graph.analysis.autosharding.autosharding &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/assets/jsonview.bundle.css?v=f6ef2277" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common.css?v=bd9ab754" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/styles.css?v=6c8eb985" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/modern.css?v=ffa536d2" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/layouts.css?v=448c382f" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-test-results/common.css?v=9ec2c1d5" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../../../../../_static/assets/jsonview.bundle.js?v=18cd53c5"></script>
+        <script src="../../../../../../_static/assets/jsonview_loader.js?v=f7ff7e7d"></script>
+        <script src="../../../../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+        <script src="../../../../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+        <script src="../../../../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=f783d6a5"></script>
+    <script src="../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/actions.html">chop.actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/datasets.html">chop.datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/distributed.html">chop.distributed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/ir.html">chop.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/models.html">chop.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/nn.html">chop.nn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/passes.html">chop.passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/tools.html">chop.tools</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">chop.passes.graph.analysis.autosharding.autosharding</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for chop.passes.graph.analysis.autosharding.autosharding</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">cvxpy</span> <span class="k">as</span> <span class="nn">cp</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
+<span class="kn">import</span> <span class="nn">dill</span>
+
+<span class="kn">from</span> <span class="nn">chop.tools</span> <span class="kn">import</span> <span class="n">get_logger</span>
+<span class="kn">from</span> <span class="nn">.mesh_model</span> <span class="kn">import</span> <span class="n">MeshModel</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="s2">&quot;INFO&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">deepgetattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Recurses through an attribute chain to get the ultimate value.&quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">functools</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">functools</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="nb">getattr</span><span class="p">,</span> <span class="n">attr</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">),</span> <span class="n">obj</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">default</span>
+
+
+<span class="k">def</span> <span class="nf">_import_solution</span><span class="p">(</span>
+    <span class="n">mg</span><span class="p">,</span>
+    <span class="n">solution</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+    <span class="n">mesh</span><span class="p">:</span> <span class="n">MeshModel</span><span class="p">,</span>
+    <span class="n">extrapolate_sharding</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Import an autosharding solution into the metadata of the MaseGraph.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mg (MaseGraph): input mase graph.</span>
+<span class="sd">        solution (dict): autosharding solution.</span>
+<span class="sd">        extrapolate (bool): extrapolate solution from the 1st layer to the rest.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        MaseGraph: input mase graph.</span>
+<span class="sd">        dict: empty dictionary.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">mg</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Importing solution for node: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Only import solution for getattr nodes</span>
+        <span class="c1"># TO DO: this is hard-coded for GPT2</span>
+        <span class="c1"># Figure out how to generalize</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;transformer_&quot;</span><span class="p">):</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Extrapolate from first layer by string matching</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">solution</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="n">extrapolate_sharding</span><span class="p">:</span>
+
+            <span class="c1"># Expect the layer number to be the first digit in the node name</span>
+            <span class="n">layer_num</span> <span class="o">=</span> <span class="nb">int</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()][</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="c1"># Only replace the first digit to find the equivalent node in the first layer</span>
+            <span class="n">extrapolate_node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">layer_num</span><span class="si">}</span><span class="s2">_&quot;</span><span class="p">,</span> <span class="s2">&quot;_0_&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">extrapolate_node</span> <span class="ow">in</span> <span class="n">solution</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Node: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> not found in solution. Extrapolating from solution for: </span><span class="si">{</span><span class="n">extrapolate_node</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="n">solution</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">solution</span><span class="p">[</span><span class="n">extrapolate_node</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Node: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> not found in solution, and cannot extrapolate.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>
+
+        <span class="c1"># Annotate the metadata for each argument</span>
+        <span class="k">for</span> <span class="n">arg</span><span class="p">,</span> <span class="n">arg_spec</span> <span class="ow">in</span> <span class="n">solution</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;args&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="n">arg</span><span class="p">][</span><span class="s2">&quot;dtensor_spec&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DTensorSpec</span><span class="p">(</span>
+                <span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span>
+                <span class="n">placements</span><span class="o">=</span><span class="n">arg_spec</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Annotate the metadata for each result</span>
+        <span class="k">for</span> <span class="n">result</span><span class="p">,</span> <span class="n">result_spec</span> <span class="ow">in</span> <span class="n">solution</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;results&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;results&quot;</span><span class="p">][</span><span class="n">result</span><span class="p">][</span><span class="s2">&quot;dtensor_spec&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">DTensorSpec</span><span class="p">(</span>
+                    <span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span>
+                    <span class="n">placements</span><span class="o">=</span><span class="n">result_spec</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mg</span><span class="p">,</span> <span class="p">{}</span>
+
+
+<span class="k">def</span> <span class="nf">_export_solution</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="n">export_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ilp_solution.pkl&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Export the ILP solution to a pickle file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mg (MaseGraph): input mase graph.</span>
+<span class="sd">        export_file (str, optional): output file name. Defaults to &quot;ilp_solution.pkl&quot;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        MaseGraph: input mase graph.</span>
+<span class="sd">        dict: empty dictionary.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Reduce metadata to autosharding solution</span>
+    <span class="n">out_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">mg</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="n">node_name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">out_dict</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;args&quot;</span><span class="p">:</span> <span class="p">{},</span>
+            <span class="s2">&quot;results&quot;</span><span class="p">:</span> <span class="p">{},</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">arg</span><span class="p">,</span> <span class="n">arg_info</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg_info</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="s2">&quot;dtensor_spec&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">arg_info</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;DTensor spec not found for arg: </span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2"> in node: </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">. Assigning fully-replicated solution.&quot;</span>
+                <span class="p">)</span>
+                <span class="n">spec</span> <span class="o">=</span> <span class="n">DTensorSpec</span><span class="p">(</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="p">(</span><span class="n">Replicate</span><span class="p">(),</span> <span class="n">Replicate</span><span class="p">()),</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">spec</span> <span class="o">=</span> <span class="n">arg_info</span><span class="p">[</span><span class="s2">&quot;dtensor_spec&quot;</span><span class="p">]</span>
+
+            <span class="n">out_dict</span><span class="p">[</span><span class="n">node_name</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="n">arg</span><span class="p">]</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">placements</span>
+
+        <span class="k">for</span> <span class="n">result</span><span class="p">,</span> <span class="n">result_info</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;results&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result_info</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># TO DO: add warning when dtensor_spec not found</span>
+            <span class="k">if</span> <span class="s2">&quot;dtensor_spec&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">result_info</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;DTensor spec not found for result: </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2"> in node: </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">. Assigning fully-replicated solution.&quot;</span>
+                <span class="p">)</span>
+                <span class="n">spec</span> <span class="o">=</span> <span class="n">DTensorSpec</span><span class="p">(</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="p">(</span><span class="n">Replicate</span><span class="p">(),</span> <span class="n">Replicate</span><span class="p">()),</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">spec</span> <span class="o">=</span> <span class="n">result_info</span><span class="p">[</span><span class="s2">&quot;dtensor_spec&quot;</span><span class="p">]</span>
+            <span class="n">out_dict</span><span class="p">[</span><span class="n">node_name</span><span class="p">][</span><span class="s2">&quot;results&quot;</span><span class="p">][</span><span class="n">result</span><span class="p">]</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">placements</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">export_file</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">dill</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">out_dict</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mg</span><span class="p">,</span> <span class="p">{}</span>
+
+
+<span class="k">def</span> <span class="nf">_get_sharding_map</span><span class="p">(</span><span class="n">mg</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Export the tensor sharding map to a dictionary, to be used by the MaseLauncher for</span>
+<span class="sd">    distributed deployment.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mg (MaseGraph): input mase graph.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        MaseGraph: input mase graph.</span>
+<span class="sd">        dict: tensor sharding map.</span>
+
+<span class="sd">    The tensor sharding map is a dictionary with the following structure.</span>
+<span class="sd">    {</span>
+<span class="sd">        module: {</span>
+<span class="sd">            node: node_name,</span>
+<span class="sd">            sharding: {</span>
+<span class="sd">                attr: out_specs,</span>
+<span class="sd">            },</span>
+<span class="sd">        },</span>
+<span class="sd">    }</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exporting tensor sharding map from MaseGraph for MaseLauncher.&quot;</span><span class="p">)</span>
+
+    <span class="n">tensor_sharding_map</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">mg</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;get_attr&quot;</span><span class="p">:</span>
+            <span class="n">module_str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">module</span> <span class="o">=</span> <span class="n">deepgetattr</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">module_str</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="s2">&quot;dtensor_spec&quot;</span>
+                <span class="ow">not</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;results&quot;</span><span class="p">][</span><span class="s2">&quot;data_out_0&quot;</span><span class="p">]</span>
+            <span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Couldn&#39;t find DTensor sharding specification in solution for node: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out_specs</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;results&quot;</span><span class="p">][</span><span class="s2">&quot;data_out_0&quot;</span><span class="p">][</span>
+                    <span class="s2">&quot;dtensor_spec&quot;</span>
+                <span class="p">]</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Exporting sharding map for </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> with spec: </span><span class="si">{</span><span class="n">out_specs</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">module</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tensor_sharding_map</span><span class="p">:</span>
+                <span class="n">tensor_sharding_map</span><span class="p">[</span><span class="n">module</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;node&quot;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="s2">&quot;sharding&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="n">attr</span><span class="p">:</span> <span class="n">out_specs</span><span class="p">,</span>
+                    <span class="p">},</span>
+                <span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">tensor_sharding_map</span><span class="p">[</span><span class="n">module</span><span class="p">][</span><span class="s2">&quot;sharding&quot;</span><span class="p">][</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">out_specs</span>
+
+    <span class="k">return</span> <span class="n">tensor_sharding_map</span>
+
+
+<div class="viewcode-block" id="autosharding_analysis_pass">
+<a class="viewcode-back" href="../../../../../../modules/api/analysis/autosharding.html#chop.passes.graph.analysis.autosharding.autosharding_analysis_pass">[docs]</a>
+<span class="k">def</span> <span class="nf">autosharding_analysis_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Annotate the metadata of each operator in the graph with a parallelization strategy.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mg (MaseGraph): input mase graph.</span>
+<span class="sd">        pass_args (dict, optional): pass arguments. Defaults to {}.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        MaseGraph: annotated mase graph.</span>
+
+<span class="sd">    The pass_args dictionary expects the following elements.</span>
+
+<span class="sd">    - mesh_shape -&gt; tuple : Shape of the device cluster. Should be a 2-dimensional tuple.</span>
+<span class="sd">    - inter_node_bandwidth -&gt; int : Inter-node bandwidth, i.e. between GPU nodes.</span>
+<span class="sd">    - intra_node_bandwidth -&gt; int : Intra-node bandwidth, i.e. between GPU devices in each node.</span>
+
+<span class="sd">    Additionally, the following elements can be passed.</span>
+
+<span class="sd">    - algo (optional) -&gt; str : Sharding algorithm to use. Default is &quot;alpa&quot;.</span>
+<span class="sd">    - communications_backend (optional) -&gt; str : Communications backend to use, e.g. &quot;nccl&quot; or &quot;gloo&quot;. Default is &quot;nccl&quot;.</span>
+<span class="sd">    - skip_fully_replicated (optional) -&gt; bool : If set to true, do not consider fully replicated sharding as an option for any operator.</span>
+<span class="sd">    - time_limit (optional) -&gt; int : Time limit for the ILP solver, in seconds. Default is 10000.</span>
+<span class="sd">    - mip_rel_gap (optional) -&gt; int : MIP relative gap for the ILP solver. Default is 0 (i.e. obtain full solution).</span>
+<span class="sd">    - run_checks (optional) -&gt; bool : If set to true, run checks on the autosharding solution. Default is False.</span>
+<span class="sd">    - preload_solution (optional) -&gt; bool : If set to true, preload autosharding solution from file.</span>
+<span class="sd">    - ilp_solution_file (optional) -&gt; str : File to export the autosharding solution to. Defaults to: &quot;ilp_solution.pkl&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">torch.distributed._tensor._op_schema</span> <span class="kn">import</span> <span class="n">DTensorSpec</span>
+    <span class="kn">from</span> <span class="nn">torch.distributed._tensor.placement_types</span> <span class="kn">import</span> <span class="n">Replicate</span>
+    <span class="kn">from</span> <span class="nn">.alpa</span> <span class="kn">import</span> <span class="n">alpa_autosharding_pass</span>
+    <span class="kn">from</span> <span class="nn">.megatron</span> <span class="kn">import</span> <span class="n">megatron_autosharding_pass</span>
+
+    <span class="k">assert</span> <span class="p">(</span>
+        <span class="s2">&quot;mesh_shape&quot;</span> <span class="ow">in</span> <span class="n">pass_args</span>
+    <span class="p">),</span> <span class="s2">&quot;Logical description for device cluster was not specified.&quot;</span>
+    <span class="k">assert</span> <span class="s2">&quot;inter_node_bandwidth&quot;</span> <span class="ow">in</span> <span class="n">pass_args</span><span class="p">,</span> <span class="s2">&quot;Inter-node bandwidth not specified&quot;</span>
+    <span class="k">assert</span> <span class="s2">&quot;intra_node_bandwidth&quot;</span> <span class="ow">in</span> <span class="n">pass_args</span><span class="p">,</span> <span class="s2">&quot;Intra-node bandwidth not specified&quot;</span>
+
+    <span class="c1"># Initialize device mesh model, used for cost estimation</span>
+    <span class="n">mesh</span> <span class="o">=</span> <span class="n">MeshModel</span><span class="p">(</span><span class="n">pass_args</span><span class="p">[</span><span class="s2">&quot;mesh_shape&quot;</span><span class="p">])</span>
+
+    <span class="c1"># Preload autosharding solution</span>
+    <span class="k">if</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;preload_solution&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ilp_solution_file&quot;</span><span class="p">,</span> <span class="s2">&quot;ilp_solution.pkl&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Preloading autosharding solution from: </span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">solution</span> <span class="o">=</span> <span class="n">dill</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+        <span class="c1"># Annotate the metadata of each operator with the autosharding solution</span>
+        <span class="n">mg</span><span class="p">,</span> <span class="n">pass_outs</span> <span class="o">=</span> <span class="n">_import_solution</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="n">solution</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span>
+        <span class="n">autosharding_time</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Run autosharding pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Define autosharding backend</span>
+        <span class="n">algo</span> <span class="o">=</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;algo&quot;</span><span class="p">,</span> <span class="s2">&quot;alpa&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Communication cost model depends</span>
+        <span class="n">mesh</span><span class="o">.</span><span class="n">set_cost_model_parameters</span><span class="p">(</span>
+            <span class="n">intra_node_bandwidth</span><span class="o">=</span><span class="n">pass_args</span><span class="p">[</span><span class="s2">&quot;intra_node_bandwidth&quot;</span><span class="p">],</span>
+            <span class="n">inter_node_bandwidth</span><span class="o">=</span><span class="n">pass_args</span><span class="p">[</span><span class="s2">&quot;inter_node_bandwidth&quot;</span><span class="p">],</span>
+            <span class="n">backend</span><span class="o">=</span><span class="n">pass_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;communications_backend&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Run intra-operator pass</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">algo</span> <span class="o">==</span> <span class="s2">&quot;alpa&quot;</span><span class="p">:</span>
+            <span class="n">mg</span><span class="p">,</span> <span class="n">pass_outs</span> <span class="o">=</span> <span class="n">alpa_autosharding_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">algo</span> <span class="o">==</span> <span class="s2">&quot;megatron&quot;</span><span class="p">:</span>
+            <span class="n">mg</span><span class="p">,</span> <span class="n">pass_outs</span> <span class="o">=</span> <span class="n">megatron_autosharding_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Autosharding algorithm </span><span class="si">{</span><span class="n">algo</span><span class="si">}</span><span class="s2"> not recognized&quot;</span><span class="p">)</span>
+
+        <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
+        <span class="n">autosharding_time</span> <span class="o">=</span> <span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Autosharding pass complete. Time taken: </span><span class="si">{</span><span class="n">autosharding_time</span><span class="si">}</span><span class="s2"> seconds. Solution: </span><span class="si">{</span><span class="n">pass_outs</span><span class="p">[</span><span class="s1">&#39;solution&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Export solution</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ilp_solution_file&quot;</span><span class="p">,</span> <span class="s2">&quot;ilp_solution.pkl&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exporting solution to </span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_export_solution</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="n">export_file</span><span class="o">=</span><span class="n">fname</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;skip_forward&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="n">tensor_sharding_map</span> <span class="o">=</span> <span class="n">_get_sharding_map</span><span class="p">(</span><span class="n">mg</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mg</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s2">&quot;autosharding_time&quot;</span><span class="p">:</span> <span class="n">autosharding_time</span><span class="p">,</span>
+        <span class="s2">&quot;tensor_sharding_map&quot;</span><span class="p">:</span> <span class="n">tensor_sharding_map</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">pass_outs</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

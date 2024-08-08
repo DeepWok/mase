@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Further Documentation on Quantization &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/assets/jsonview.bundle.css?v=f6ef2277" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common.css?v=bd9ab754" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/styles.css?v=6c8eb985" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/modern.css?v=ffa536d2" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/layouts.css?v=448c382f" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-test-results/common.css?v=9ec2c1d5" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../../_static/assets/jsonview.bundle.js?v=18cd53c5"></script>
+        <script src="../../../_static/assets/jsonview_loader.js?v=f7ff7e7d"></script>
+        <script src="../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+        <script src="../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+        <script src="../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=f783d6a5"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="chop.pipelines" href="../pipelines.html" />
+    <link rel="prev" title="chop.passes.interface.onnxrt" href="../interface/onnxrt.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../documentation/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../documentation/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../documentation/roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../documentation/specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../actions.html">chop.actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets.html">chop.datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../distributed.html">chop.distributed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir.html">chop.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models.html">chop.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nn.html">chop.nn</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../passes.html">chop.passes</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../passes.html#mase-module-analysis-passes">Mase Module Analysis Passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../passes.html#mase-module-transform-passes">Mase Module Transform Passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../passes.html#masegraph-analysis-passes">MaseGraph Analysis Passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../passes.html#masegraph-transform-passes">MaseGraph Transform Passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../passes.html#masegraph-interface-passes">MaseGraph Interface Passes</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../passes.html#additional-documentation">Additional Documentation</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Further Documentation on Quantization</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools.html">chop.tools</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../passes.html">chop.passes</a></li>
+      <li class="breadcrumb-item active">Further Documentation on Quantization</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/modules/api/transform/quantize_further_doc.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="further-documentation-on-quantization">
+<h1>Further Documentation on Quantization<a class="headerlink" href="#further-documentation-on-quantization" title="Link to this heading"></a></h1>
+<p>Quantization is a technique to reduce the precision of the weights and activations of a model. MASE supports a wide range of arithmetics with flexible precision settings. This document provides a detailed guide on how to quantize a model with MASE.</p>
+<p>The core pass associated with this would be the <code class="docutils literal notranslate"><span class="pre">quantize_transform_pass</span></code> and its test file (usage example) is located in <a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/quantize/test_quantize.py">test_quantize</a>.</p>
+<p>Just like other transform passes, this requires a <code class="docutils literal notranslate"><span class="pre">pass_args</span></code> to configure the pass, the following provides an example of the usage:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mg</span> <span class="o">=</span> <span class="n">MaseGraph</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">mlp</span><span class="p">)</span>
+<span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">init_metadata_analysis_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="p">{})</span>
+<span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">add_common_metadata_analysis_pass</span><span class="p">(</span>
+		<span class="n">mg</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;dummy_in&quot;</span><span class="p">:</span> <span class="n">dummy_in</span><span class="p">,</span> <span class="s2">&quot;add_value&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+<span class="p">)</span>
+<span class="c1"># Sanity check and report</span>
+<span class="c1"># mg = verify_common_metadata_analysis_pass(mg)</span>
+<span class="n">quan_args</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="s2">&quot;by&quot;</span><span class="p">:</span> <span class="s2">&quot;type&quot;</span><span class="p">,</span>
+		<span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}},</span>
+		<span class="s2">&quot;linear&quot;</span><span class="p">:</span> <span class="p">{</span>
+				<span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+						<span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span><span class="p">,</span>
+						<span class="c1"># data</span>
+						<span class="s2">&quot;data_in_width&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+						<span class="s2">&quot;data_in_frac_width&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+						<span class="c1"># weight</span>
+						<span class="s2">&quot;weight_width&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+						<span class="s2">&quot;weight_frac_width&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+						<span class="c1"># bias</span>
+						<span class="s2">&quot;bias_width&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+						<span class="s2">&quot;bias_frac_width&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+				<span class="p">}</span>
+		<span class="p">},</span>
+<span class="p">}</span>
+<span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">quantize_transform_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="n">quan_args</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">pass_args</span></code> for the <code class="docutils literal notranslate"><span class="pre">quantize_transform_pass</span></code> is a dictionary with the following keys:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">by</span></code>: The quantization strategy, currently <code class="docutils literal notranslate"><span class="pre">['type',</span> <span class="pre">'name']</span></code> are supported.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default</span></code>: The default quantization configuration for layers that are not defined.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{&quot;key&quot;</span> <span class="pre">:</span> <span class="pre">value}</span></code>: The key is the layer name and the value is the quantization configuration for that layer. <code class="docutils literal notranslate"><span class="pre">key</span></code> would be node types if <code class="docutils literal notranslate"><span class="pre">by</span></code> is set to <code class="docutils literal notranslate"><span class="pre">type</span></code> and layer names if <code class="docutils literal notranslate"><span class="pre">by</span></code> is set to <code class="docutils literal notranslate"><span class="pre">name</span></code>.</p></li>
+</ul>
+<p>The quantization configuration <code class="docutils literal notranslate"><span class="pre">&quot;config&quot;</span></code> is a dictionary with the following keys:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The quantization scheme to use.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data_in_width</span></code>: The bitwidth of the input data.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data_in_frac_width</span></code>: The fractional bitwidth of the input data.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">weight_width</span></code>: The bitwidth of the weights.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">weight_frac_width</span></code>: The fractional bitwidth of the weights.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bias_width</span></code>: The bitwidth of the bias.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bias_frac_width</span></code>: The fractional bitwidth of the bias.</p></li>
+</ul>
+<p>We consider the following quantization ops:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">QUANTIZEABLE_OP</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;add&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;bmm&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;conv1d&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;conv2d&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;matmul&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mul&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;linear&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;relu&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;sub&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;batch_norm2d&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;layer_norm&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;group_norm&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;instance_norm2d&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;rms_norm&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;selu&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tanh&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;gelu&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;softsign&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;softplus&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>We supported the following quantization schemes that can be set in the <code class="docutils literal notranslate"><span class="pre">config</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">integer</span></code>: Integer quantization scheme.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code>: same as <code class="docutils literal notranslate"><span class="pre">integer</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lutnet</span></code>: <a class="reference external" href="https://arxiv.org/abs/1904.00938">LUTNet</a> quantization scheme (DEV mode).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">logicnets</span></code>: <a class="reference external" href="https://arxiv.org/abs/2004.03021">LogicNets</a> quantization scheme (DEV mode).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">binary</span></code>: Binary quantization scheme.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">binary_residual</span></code>: Binary Residual quantization scheme.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ternary</span></code>: Ternary quantization scheme.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">minifloat_ieee</span></code>: Minifloat quantization scheme, where <code class="docutils literal notranslate"><span class="pre">exponent_width</span></code> and <code class="docutils literal notranslate"><span class="pre">exponent_bias</span></code> are customizable.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">minifloat_denorm</span></code>: Minifloat quantization scheme with denormalization.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">log</span></code>: Logarithmic quantization scheme.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">block_fp</span></code>: Block floating point quantization scheme.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">block_minifloat</span></code>: Block minifloat quantization scheme.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">block_log</span></code>: Block logarithmic quantization scheme.</p></li>
+</ul>
+<p>For blocked-based quantization schemes, see this <a class="reference external" href="https://arxiv.org/abs/2310.05079">paper</a>.</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../interface/onnxrt.html" class="btn btn-neutral float-left" title="chop.passes.interface.onnxrt" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../pipelines.html" class="btn btn-neutral float-right" title="chop.pipelines" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

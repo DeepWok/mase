@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>chop.ir &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/assets/jsonview.bundle.css?v=f6ef2277" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common.css?v=bd9ab754" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/styles.css?v=6c8eb985" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/modern.css?v=ffa536d2" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/layouts.css?v=448c382f" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-test-results/common.css?v=9ec2c1d5" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../_static/assets/jsonview.bundle.js?v=18cd53c5"></script>
+        <script src="../../_static/assets/jsonview_loader.js?v=f7ff7e7d"></script>
+        <script src="../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+        <script src="../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+        <script src="../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=f783d6a5"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="chop.models" href="models.html" />
+    <link rel="prev" title="chop.distributed" href="distributed.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="actions.html">chop.actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets.html">chop.datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributed.html">chop.distributed</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">chop.ir</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#masetracer">MaseTracer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#chop.ir.graph.mase_graph.MaseTracer"><code class="docutils literal notranslate"><span class="pre">MaseTracer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#chop.ir.graph.mase_graph.MaseTracer.__init__"><code class="docutils literal notranslate"><span class="pre">MaseTracer.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#chop.ir.graph.mase_graph.MaseTracer.is_leaf_module"><code class="docutils literal notranslate"><span class="pre">MaseTracer.is_leaf_module()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#masegraph">MaseGraph</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#chop.ir.graph.mase_graph.MaseGraph"><code class="docutils literal notranslate"><span class="pre">MaseGraph</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#chop.ir.graph.mase_graph.MaseGraph.implicit_nodes"><code class="docutils literal notranslate"><span class="pre">MaseGraph.implicit_nodes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#chop.ir.graph.mase_graph.MaseGraph.__init__"><code class="docutils literal notranslate"><span class="pre">MaseGraph.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#chop.ir.graph.mase_graph.MaseGraph.trace_torch_module"><code class="docutils literal notranslate"><span class="pre">MaseGraph.trace_torch_module()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#chop.ir.graph.mase_graph.MaseGraph.from_module"><code class="docutils literal notranslate"><span class="pre">MaseGraph.from_module()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#chop.ir.graph.mase_graph.MaseGraph.draw"><code class="docutils literal notranslate"><span class="pre">MaseGraph.draw()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#chop.ir.graph.mase_graph.MaseGraph.fx_graph"><code class="docutils literal notranslate"><span class="pre">MaseGraph.fx_graph</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#chop.ir.graph.mase_graph.MaseGraph.nodes"><code class="docutils literal notranslate"><span class="pre">MaseGraph.nodes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#chop.ir.graph.mase_graph.MaseGraph.modules"><code class="docutils literal notranslate"><span class="pre">MaseGraph.modules</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#masemetadata">MaseMetadata</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#chop.ir.graph.mase_metadata.MaseMetadata"><code class="docutils literal notranslate"><span class="pre">MaseMetadata</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#chop.ir.graph.mase_metadata.MaseMetadata.known_types"><code class="docutils literal notranslate"><span class="pre">MaseMetadata.known_types</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#chop.ir.graph.mase_metadata.MaseMetadata.known_toolchain"><code class="docutils literal notranslate"><span class="pre">MaseMetadata.known_toolchain</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#chop.ir.graph.mase_metadata.MaseMetadata.known_storage"><code class="docutils literal notranslate"><span class="pre">MaseMetadata.known_storage</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#chop.ir.graph.mase_metadata.MaseMetadata.__init__"><code class="docutils literal notranslate"><span class="pre">MaseMetadata.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#chop.ir.graph.mase_metadata.MaseMetadata.module"><code class="docutils literal notranslate"><span class="pre">MaseMetadata.module</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#chop.ir.graph.mase_metadata.MaseMetadata.graph"><code class="docutils literal notranslate"><span class="pre">MaseMetadata.graph</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">chop.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nn.html">chop.nn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="passes.html">chop.passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">chop.tools</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">chop.ir</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/modules/api/ir.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="chop-ir">
+<h1>chop.ir<a class="headerlink" href="#chop-ir" title="Link to this heading"></a></h1>
+<section id="masetracer">
+<h2>MaseTracer<a class="headerlink" href="#masetracer" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="chop.ir.graph.mase_graph.MaseTracer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chop.ir.graph.mase_graph.</span></span><span class="sig-name descname"><span class="pre">MaseTracer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">custom_leaf_modules</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ModuleType</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_leaf_layers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Module</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_leaf_functions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param_shapes_constant</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/ir/graph/mase_graph.html#MaseTracer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.ir.graph.mase_graph.MaseTracer" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="chop.ir.graph.mase_graph.MaseTracer.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">custom_leaf_modules</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ModuleType</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_leaf_layers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Module</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_leaf_functions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param_shapes_constant</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/chop/ir/graph/mase_graph.html#MaseTracer.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.ir.graph.mase_graph.MaseTracer.__init__" title="Link to this definition"></a></dt>
+<dd><p>Mase Tracer is an extended version of FX Tracer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>custom_leaf_modules</strong> (<em>tuple</em><em>[</em><em>ModuleType</em><em>]</em><em>, </em><em>optional</em>) – Python modules whose functions should be wrapped automatically
+without needing to use fx.wrap(). Backward-compatibility for
+this parameter is guaranteed, defaults to ()</p></li>
+<li><p><strong>custom_leaf_layers</strong> (<em>tuple</em><em>[</em><em>torch.nn.Module</em><em>]</em><em>, </em><em>optional</em>) – Python functions that should be wrapped automatically without
+needing to use fx.wrap(). Backward compatibility for this
+parameter is guaranteed, defaults to ()</p></li>
+<li><p><strong>custom_leaf_functions</strong> (<em>tuple</em><em>[</em><em>Callable</em><em>]</em><em>, </em><em>optional</em>) – _description_, defaults to ()</p></li>
+<li><p><strong>param_shapes_constant</strong> (<em>bool</em><em>, </em><em>optional</em>) – When this flag is set,  calls to shape,
+size and a few other shape like attributes of a module’s parameter
+will be evaluated directly, rather than returning a new Proxy value
+for an attribute access. Backward compatibility for this parameter
+is guaranteed, defaults to False</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chop.ir.graph.mase_graph.MaseTracer.is_leaf_module">
+<span class="sig-name descname"><span class="pre">is_leaf_module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_qualified_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/chop/ir/graph/mase_graph.html#MaseTracer.is_leaf_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.ir.graph.mase_graph.MaseTracer.is_leaf_module" title="Link to this definition"></a></dt>
+<dd><p>A method to specify whether a given <code class="docutils literal notranslate"><span class="pre">nn.Module</span></code> is a “leaf” module.</p>
+<p>Leaf modules are the atomic units that appear in
+the IR, referenced by <code class="docutils literal notranslate"><span class="pre">call_module</span></code> calls. By default,
+Modules in the PyTorch standard library namespace (torch.nn)
+are leaf modules. All other modules are traced through and
+their constituent ops are recorded, unless specified otherwise
+via this parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>m</strong> (<em>Module</em>) – The module being queried about</p></li>
+<li><p><strong>module_qualified_name</strong> (<em>str</em>) – The path to root of this module. For example,
+if you have a module hierarchy where submodule <code class="docutils literal notranslate"><span class="pre">foo</span></code> contains
+submodule <code class="docutils literal notranslate"><span class="pre">bar</span></code>, which contains submodule <code class="docutils literal notranslate"><span class="pre">baz</span></code>, that module will
+appear with the qualified name <code class="docutils literal notranslate"><span class="pre">foo.bar.baz</span></code> here.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Backwards-compatibility for this API is guaranteed.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="masegraph">
+<h2>MaseGraph<a class="headerlink" href="#masegraph" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="chop.ir.graph.mase_graph.MaseGraph">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chop.ir.graph.mase_graph.</span></span><span class="sig-name descname"><span class="pre">MaseGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_ops</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hf_input_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/ir/graph/mase_graph.html#MaseGraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.ir.graph.mase_graph.MaseGraph" title="Link to this definition"></a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="chop.ir.graph.mase_graph.MaseGraph.implicit_nodes">
+<span class="sig-name descname"><span class="pre">implicit_nodes</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['size',</span> <span class="pre">'view',</span> <span class="pre">'to',</span> <span class="pre">'bool',</span> <span class="pre">'flatten',</span> <span class="pre">'squeeze',</span> <span class="pre">'unsqueeze',</span> <span class="pre">'transpose',</span> <span class="pre">'permute',</span> <span class="pre">'reshape',</span> <span class="pre">'contiguous',</span> <span class="pre">'dropout',</span> <span class="pre">'eq',</span> <span class="pre">'ne',</span> <span class="pre">'gemm',</span> <span class="pre">'ge',</span> <span class="pre">'where',</span> <span class="pre">'_assert',</span> <span class="pre">'getattr',</span> <span class="pre">'long',</span> <span class="pre">'type_as',</span> <span class="pre">'clamp',</span> <span class="pre">'abs',</span> <span class="pre">'stack',</span> <span class="pre">'cast',</span> <span class="pre">'shape',</span> <span class="pre">'gather',</span> <span class="pre">'slice',</span> <span class="pre">'cat',</span> <span class="pre">'split',</span> <span class="pre">'tile',</span> <span class="pre">'expand',</span> <span class="pre">'full',</span> <span class="pre">'ones',</span> <span class="pre">'dim',</span> <span class="pre">'finfo',</span> <span class="pre">'masked_fill',</span> <span class="pre">'masked_fill_']</span></em><a class="headerlink" href="#chop.ir.graph.mase_graph.MaseGraph.implicit_nodes" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chop.ir.graph.mase_graph.MaseGraph.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_ops</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hf_input_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/chop/ir/graph/mase_graph.html#MaseGraph.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.ir.graph.mase_graph.MaseGraph.__init__" title="Link to this definition"></a></dt>
+<dd><p>Mase takes a torch.fx graph representation of a model and translates
+it into a customised representation (Mase graph IR). The Mase graph
+IR is a dataflow representation of the model with both software and
+hardware constraints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>torch.nn.Module</em><em> | </em><em>fx.GraphModule</em>) – Input model to construct the MaseGraph. When a nn.Module is provided, this is parsed into a fx.GraphModule using the MaseTracer.</p></li>
+<li><p><strong>cf_args</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – _description_, defaults to None</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chop.ir.graph.mase_graph.MaseGraph.trace_torch_module">
+<span class="sig-name descname"><span class="pre">trace_torch_module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_ops</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hf_input_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/ir/graph/mase_graph.html#MaseGraph.trace_torch_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.ir.graph.mase_graph.MaseGraph.trace_torch_module" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chop.ir.graph.mase_graph.MaseGraph.from_module">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_ops</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/ir/graph/mase_graph.html#MaseGraph.from_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.ir.graph.mase_graph.MaseGraph.from_module" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chop.ir.graph.mase_graph.MaseGraph.draw">
+<span class="sig-name descname"><span class="pre">draw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mase_graph.svg'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/ir/graph/mase_graph.html#MaseGraph.draw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.ir.graph.mase_graph.MaseGraph.draw" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="chop.ir.graph.mase_graph.MaseGraph.fx_graph">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fx_graph</span></span><a class="headerlink" href="#chop.ir.graph.mase_graph.MaseGraph.fx_graph" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="chop.ir.graph.mase_graph.MaseGraph.nodes">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nodes</span></span><a class="headerlink" href="#chop.ir.graph.mase_graph.MaseGraph.nodes" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="chop.ir.graph.mase_graph.MaseGraph.modules">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">modules</span></span><a class="headerlink" href="#chop.ir.graph.mase_graph.MaseGraph.modules" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="masemetadata">
+<h2>MaseMetadata<a class="headerlink" href="#masemetadata" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="chop.ir.graph.mase_metadata.MaseMetadata">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chop.ir.graph.mase_metadata.</span></span><span class="sig-name descname"><span class="pre">MaseMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/ir/graph/mase_metadata.html#MaseMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.ir.graph.mase_metadata.MaseMetadata" title="Link to this definition"></a></dt>
+<dd><p>The metadata of a Mase node in a Mase graph describes the constraints of the
+node for any static analysis or possible transformation. The metadata has a
+tree structure, e.g.
+- common</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>mase_op -&gt; str : the mase op of the node, e.g. placeholder, linear, relu</p></li>
+<li><p>mase_type -&gt; str : the mase type of the node, e.g. module, builtin_func, module_related_func</p></li>
+<li><dl class="simple">
+<dt>args -&gt; {}</dt><dd><ul>
+<li><p>$name : name of the arg
+(if the arg is a tensor)
+- type -&gt; type of the arg, e.g. fixed point or float
+- precision -&gt; format of the type, e.g. (10, 5)
+- shape -&gt; shape of the arg
+(if the arg is not a tensor)
+- value of the arg</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>results -&gt; {}</dt><dd><ul>
+<li><p>$name : name of the result
+(if the result is a tensor)
+- type -&gt; type of the result, e.g. fixed point or float
+- precision -&gt; format of the type, e.g. (10, 5)
+- size -&gt; size of the result
+(if the result is not a tensor)
+- value of the result</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<ul>
+<li><p>software: dict
+- args: dict</p>
+<blockquote>
+<div><ul>
+<li><p>$name (dict): name of the arg, e.g. data_in_0
+- “stat”: {“record”: {“data”: …, “count”: …},</p>
+<blockquote>
+<div><blockquote>
+<div><p>“variance_online”: {“variance”: …, “mean”: …, “count”: …}},
+“variance_precise”: {“variance”: …, “mean”: …, “count”: …},
+“range_n_sigma”: {“min”: …, “max”: …, “count”: …},
+“range_quantile”: {“min”: …, “max”: …, “count”: …},
+“range_min_max”: {“min”: …, “max”: …, “count”: …},</p>
+</div></blockquote>
+<p>}.</p>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+<ul>
+<li><p>results: dict
+- $name (dict): name of the result, e.g. data_out_0</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>“stat”: {“stat_name”: { # stat_values } }</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</li>
+<li><p>hardware
+- is_implicit -&gt; bool : whether the node is mapped on hardware or software annotation only
+- verilog_param -&gt; {} : parameters need for customise the hardware module
+- device_id -&gt; int : the ID of the device where the node is mapped, default = -1
+- toolchain -&gt; str : tool chain for code generation, must be INTERNAL, EXTERNAL or HLS
+- module -&gt; str : the name of the used hardware module
+- interface -&gt; {}</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>name : name of the parameters
+- storage : the hardware interface implemented, must be BRAM
+- transpose : whether the data needs to be transposed before emitting</p></li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li><p>dependence_files -&gt; [] : the dependent files for the generated module</p></li>
+</ul>
+</li>
+</ul>
+<p>…</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chop.ir.graph.mase_metadata.MaseMetadata.known_types">
+<span class="sig-name descname"><span class="pre">known_types</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['fixed',</span> <span class="pre">'float',</span> <span class="pre">'NA']</span></em><a class="headerlink" href="#chop.ir.graph.mase_metadata.MaseMetadata.known_types" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chop.ir.graph.mase_metadata.MaseMetadata.known_toolchain">
+<span class="sig-name descname"><span class="pre">known_toolchain</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['INTERNAL',</span> <span class="pre">'EXTERNAL',</span> <span class="pre">'HLS']</span></em><a class="headerlink" href="#chop.ir.graph.mase_metadata.MaseMetadata.known_toolchain" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chop.ir.graph.mase_metadata.MaseMetadata.known_storage">
+<span class="sig-name descname"><span class="pre">known_storage</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['BRAM']</span></em><a class="headerlink" href="#chop.ir.graph.mase_metadata.MaseMetadata.known_storage" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chop.ir.graph.mase_metadata.MaseMetadata.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/ir/graph/mase_metadata.html#MaseMetadata.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.ir.graph.mase_metadata.MaseMetadata.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="chop.ir.graph.mase_metadata.MaseMetadata.module">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">module</span></span><a class="headerlink" href="#chop.ir.graph.mase_metadata.MaseMetadata.module" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="chop.ir.graph.mase_metadata.MaseMetadata.graph">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">graph</span></span><a class="headerlink" href="#chop.ir.graph.mase_metadata.MaseMetadata.graph" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="distributed.html" class="btn btn-neutral float-left" title="chop.distributed" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="models.html" class="btn btn-neutral float-right" title="chop.models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

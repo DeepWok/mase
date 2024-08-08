@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MaseGraph and MaseGraph Passes &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/assets/jsonview.bundle.css?v=f6ef2277" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/common.css?v=bd9ab754" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/styles.css?v=6c8eb985" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/modern.css?v=ffa536d2" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/layouts.css?v=448c382f" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-test-results/common.css?v=9ec2c1d5" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../../../_static/assets/jsonview.bundle.js?v=18cd53c5"></script>
+        <script src="../../../../_static/assets/jsonview_loader.js?v=f7ff7e7d"></script>
+        <script src="../../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+        <script src="../../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+        <script src="../../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=f783d6a5"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="Guide on how to add a new model into Machop" href="../Add-model-to-machop.html" />
+    <link rel="prev" title="MaseModule Passes" href="module_and_pass.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials.html#common-usage-examples">Common Usage Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials.html#interactive-usage-with-python">Interactive Usage with Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials.html#the-mase-command-line-system">The MASE Command Line System</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../tutorials.html#the-mase-pass-system">The MASE Pass System</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="module_and_pass.html">MaseModule Passes</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">MaseGraph and MaseGraph Passes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mase-ops-and-mase-types">MASE OPs and MASE Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#masegraph-passes">MASEGraph Passes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials.html#advanced-topics">Advanced Topics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/actions.html">chop.actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/datasets.html">chop.datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/distributed.html">chop.distributed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/ir.html">chop.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/models.html">chop.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/nn.html">chop.nn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/passes.html">chop.passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tools.html">chop.tools</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../tutorials.html">Tutorials</a></li>
+      <li class="breadcrumb-item active">MaseGraph and MaseGraph Passes</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/modules/documentation/tutorials/passes/graph_and_pass.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="masegraph-and-masegraph-passes">
+<h1>MaseGraph and MaseGraph Passes<a class="headerlink" href="#masegraph-and-masegraph-passes" title="Link to this heading"></a></h1>
+<section id="mase-ops-and-mase-types">
+<h2>MASE OPs and MASE Types<a class="headerlink" href="#mase-ops-and-mase-types" title="Link to this heading"></a></h2>
+<p>MASE is designed to be an intermediate representation (IR), this is very different from the classic <a class="reference external" href="https://llvm.org/docs/LangRef.html">LLVM IR</a> that you might be familiar with.</p>
+<p>The following MASE Types are available:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">module_related_func</span></code>: MASE module_realted_func includes functions under <code class="docutils literal notranslate"><span class="pre">torch.nn.functional</span></code> and the <code class="docutils literal notranslate"><span class="pre">torch.nn.Module</span></code> that wrapps them. For example, <code class="docutils literal notranslate"><span class="pre">torch.nn.functional.relu</span></code> and <code class="docutils literal notranslate"><span class="pre">torch.nn.ReLU</span></code> are both MASE module_related_func.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">module</span></code>: a MASE module is a subclass of <code class="docutils literal notranslate"><span class="pre">torch.nn.Module</span></code> that does not have corresponding <code class="docutils literal notranslate"><span class="pre">torch.nn.functional</span></code> counterpart. For example, <code class="docutils literal notranslate"><span class="pre">torch.nn.BatchNorm2D</span></code> is a MASE module because <code class="docutils literal notranslate"><span class="pre">torch.nn.functional.batch_norm_2d</span></code> does not exist.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">builtin_func</span></code>: MASE builtin_func includes functions under <code class="docutils literal notranslate"><span class="pre">torch</span></code> that are not <code class="docutils literal notranslate"><span class="pre">torch.nn.functional</span></code> and <code class="docutils literal notranslate"><span class="pre">torch.nn.Module</span></code>. For example, <code class="docutils literal notranslate"><span class="pre">torch.cat</span></code> and <code class="docutils literal notranslate"><span class="pre">torch.bmm</span></code> are both MASE builtin_func.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">placeholder</span></code>: a MASE placeholder is the input node of a MASEGraph, i.e., a proxy of input tensor to the network. This type inherits from torch.fx.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">get_attr</span></code>: a MASE get_attr is a node that represents the attribute of a MASE module. This type inherits from torch.fx. An example is <code class="docutils literal notranslate"><span class="pre">self.scale</span> <span class="pre">*</span> <span class="pre">x</span></code> in a <code class="docutils literal notranslate"><span class="pre">forward</span></code> function where <code class="docutils literal notranslate"><span class="pre">self.scale</span></code> is user-defined <code class="docutils literal notranslate"><span class="pre">torch.nn.Parameter</span></code> and <code class="docutils literal notranslate"><span class="pre">x</span></code> is an intermediate tensor.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output</span></code>: a MASE output is the output node of a MASEGraph, i.e., a proxy of output tensor to the network. This type also inherits from torch.fx.</p></li>
+</ul>
+<p>You may find more clue in the <a class="reference external" href="https://github.com/DeepWok/mase/blob/main/src/chop/passes/__init__.py">this source code file</a>.</p>
+</section>
+<section id="masegraph-passes">
+<h2>MASEGraph Passes<a class="headerlink" href="#masegraph-passes" title="Link to this heading"></a></h2>
+<p>These passes can only be applied when you transform the model to a MASEGraph:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mg</span> <span class="o">=</span> <span class="n">MaseGraph</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+
+<span class="c1"># Three different analysis passes</span>
+<span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">init_metadata_analysis_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">add_common_metadata_analysis_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;dummy_in&quot;</span><span class="p">:</span> <span class="n">dummy_in</span><span class="p">})</span>
+<span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">add_software_metadata_analysis_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You will see the MASE OPs in the graph. For example, <code class="docutils literal notranslate"><span class="pre">module_related_func</span></code> and <code class="docutils literal notranslate"><span class="pre">module</span></code> are the most common MASE OPs in the graph.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="module_and_pass.html" class="btn btn-neutral float-left" title="MaseModule Passes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../Add-model-to-machop.html" class="btn btn-neutral float-right" title="Guide on how to add a new model into Machop" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

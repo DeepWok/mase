@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>chop.passes.graph.transforms.pruning.prune &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/assets/jsonview.bundle.css?v=f6ef2277" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common.css?v=bd9ab754" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/styles.css?v=6c8eb985" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/modern.css?v=ffa536d2" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/layouts.css?v=448c382f" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-test-results/common.css?v=9ec2c1d5" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../../../../../_static/assets/jsonview.bundle.js?v=18cd53c5"></script>
+        <script src="../../../../../../_static/assets/jsonview_loader.js?v=f7ff7e7d"></script>
+        <script src="../../../../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+        <script src="../../../../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+        <script src="../../../../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=f783d6a5"></script>
+    <script src="../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/actions.html">chop.actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/datasets.html">chop.datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/distributed.html">chop.distributed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/ir.html">chop.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/models.html">chop.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/nn.html">chop.nn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/passes.html">chop.passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/tools.html">chop.tools</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">chop.passes.graph.transforms.pruning.prune</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for chop.passes.graph.transforms.pruning.prune</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">torch</span>
+
+<span class="kn">from</span> <span class="nn">.load</span> <span class="kn">import</span> <span class="n">load_activation_prune_config</span><span class="p">,</span> <span class="n">load_weight_prune_config</span>
+<span class="kn">from</span> <span class="nn">.pruning_methods</span> <span class="kn">import</span> <span class="n">weight_criteria_map</span><span class="p">,</span> <span class="n">activation_criteria_map</span>
+
+<span class="kn">from</span> <span class="nn">.sparse_parameterization</span> <span class="kn">import</span> <span class="n">FakeSparseWeight</span><span class="p">,</span> <span class="n">FakeStructuredSparseWeight</span>
+
+
+<span class="k">def</span> <span class="nf">prune_with_a_function</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">sparsity</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">fn</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">sparsity</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">get_weight_rank_fn</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">weight_criteria_map</span><span class="p">[</span><span class="n">c</span><span class="p">[</span><span class="s2">&quot;scope&quot;</span><span class="p">]][</span><span class="n">c</span><span class="p">[</span><span class="s2">&quot;granularity&quot;</span><span class="p">]][</span><span class="n">c</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]]</span>
+
+
+<span class="k">def</span> <span class="nf">get_activation_rank_fn</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">activation_criteria_map</span><span class="p">[</span><span class="n">c</span><span class="p">[</span><span class="s2">&quot;scope&quot;</span><span class="p">]][</span><span class="n">c</span><span class="p">[</span><span class="s2">&quot;granularity&quot;</span><span class="p">]][</span><span class="n">c</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]]</span>
+
+
+<span class="k">def</span> <span class="nf">get_weight_hook</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">named_info</span><span class="p">,</span> <span class="n">w_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="c1"># register parameterization</span>
+    <span class="n">w_rank_fn</span> <span class="o">=</span> <span class="n">get_weight_rank_fn</span><span class="p">(</span><span class="n">w_config</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">named_info</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+    <span class="n">w_sparsity</span> <span class="o">=</span> <span class="n">named_info</span><span class="p">[</span><span class="s2">&quot;weight_sparsity&quot;</span><span class="p">]</span>
+    <span class="n">register_parameter_name</span> <span class="o">=</span> <span class="s2">&quot;weight&quot;</span>
+    <span class="n">parameterization</span> <span class="o">=</span> <span class="n">FakeSparseWeight</span><span class="p">(</span><span class="n">w_rank_fn</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">w_sparsity</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">register_parameter_name</span><span class="p">,</span> <span class="n">parameterization</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">get_activation_hook</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">named_info</span><span class="p">,</span> <span class="n">a_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="n">a_rank_fn</span> <span class="o">=</span> <span class="n">get_activation_rank_fn</span><span class="p">(</span><span class="n">a_config</span><span class="p">)</span>
+    <span class="n">a_sparsity</span> <span class="o">=</span> <span class="n">named_info</span><span class="p">[</span><span class="s2">&quot;activation_sparsity&quot;</span><span class="p">]</span>
+
+    <span class="c1"># register forward hook</span>
+    <span class="k">def</span> <span class="nf">sparsify_input</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">module</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> takes more than 1 argument at inference, the current sparsiy_input pre forward hook only allows one!&quot;</span>
+            <span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">a_rank_fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">a_sparsity</span><span class="p">)</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">activation_mask</span> <span class="o">=</span> <span class="n">mask</span>
+        <span class="c1"># it seems like the output of this can be a non-tuple thing??</span>
+        <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="n">mask</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;register_forward_pre_hook&quot;</span><span class="p">,</span> <span class="n">sparsify_input</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">build_pruning_hooks</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">w_config</span><span class="p">,</span> <span class="n">a_config</span><span class="p">):</span>
+    <span class="n">named_hooks</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">w_info</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;module_type&quot;</span><span class="p">:</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;module_type&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;weight_sparsity&quot;</span><span class="p">:</span> <span class="n">w_config</span><span class="p">[</span><span class="s2">&quot;sparsity&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;weight_value&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;stats&quot;</span><span class="p">:</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;weight_stats&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;weight_shape&quot;</span><span class="p">],</span>
+            <span class="p">}</span>
+            <span class="c1"># for activations</span>
+            <span class="n">a_info</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;module_type&quot;</span><span class="p">:</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;module_type&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;activation_sparsity&quot;</span><span class="p">:</span> <span class="n">a_config</span><span class="p">[</span><span class="s2">&quot;sparsity&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;activation_value&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;stats&quot;</span><span class="p">:</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;activation_stats&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;activation_shape&quot;</span><span class="p">],</span>
+            <span class="p">}</span>
+            <span class="n">named_hooks</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;w_hook&quot;</span><span class="p">:</span> <span class="n">get_weight_hook</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">w_info</span><span class="p">,</span> <span class="n">w_config</span><span class="p">),</span>
+                <span class="s2">&quot;a_hook&quot;</span><span class="p">:</span> <span class="n">get_activation_hook</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">a_info</span><span class="p">,</span> <span class="n">a_config</span><span class="p">),</span>
+            <span class="p">}</span>
+    <span class="k">return</span> <span class="n">named_hooks</span>
+
+
+<span class="k">def</span> <span class="nf">fetch_info</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
+    <span class="c1"># deal with conv2d</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">):</span>
+        <span class="n">a_value</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="s2">&quot;data_in_0&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+        <span class="n">a_stats</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;software&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="s2">&quot;data_in_0&quot;</span><span class="p">][</span><span class="s2">&quot;stat&quot;</span><span class="p">]</span>
+        <span class="n">a_shape</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="s2">&quot;data_in_0&quot;</span><span class="p">][</span><span class="s2">&quot;shape&quot;</span><span class="p">]</span>
+
+        <span class="n">w_value</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="s2">&quot;weight&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+        <span class="n">w_stats</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;software&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="s2">&quot;weight&quot;</span><span class="p">][</span><span class="s2">&quot;stat&quot;</span><span class="p">]</span>
+        <span class="n">w_shape</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="s2">&quot;weight&quot;</span><span class="p">][</span><span class="s2">&quot;shape&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;module_type&quot;</span><span class="p">:</span> <span class="s2">&quot;conv2d&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;weight_value&quot;</span><span class="p">:</span> <span class="n">w_value</span><span class="p">,</span>
+            <span class="s2">&quot;weight_stats&quot;</span><span class="p">:</span> <span class="n">w_stats</span><span class="p">,</span>
+            <span class="s2">&quot;weight_shape&quot;</span><span class="p">:</span> <span class="n">w_shape</span><span class="p">,</span>
+            <span class="s2">&quot;activation_value&quot;</span><span class="p">:</span> <span class="n">a_value</span><span class="p">,</span>
+            <span class="s2">&quot;activation_stats&quot;</span><span class="p">:</span> <span class="n">a_stats</span><span class="p">,</span>
+            <span class="s2">&quot;activation_shape&quot;</span><span class="p">:</span> <span class="n">a_shape</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="c1"># deal with linear</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">):</span>
+        <span class="n">a_value</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="s2">&quot;data_in_0&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+        <span class="n">a_stats</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;software&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="s2">&quot;data_in_0&quot;</span><span class="p">][</span><span class="s2">&quot;stat&quot;</span><span class="p">]</span>
+        <span class="n">a_shape</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="s2">&quot;data_in_0&quot;</span><span class="p">][</span><span class="s2">&quot;shape&quot;</span><span class="p">]</span>
+
+        <span class="n">w_value</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="s2">&quot;weight&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+        <span class="n">w_stats</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;software&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="s2">&quot;weight&quot;</span><span class="p">][</span><span class="s2">&quot;stat&quot;</span><span class="p">]</span>
+        <span class="n">w_shape</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="s2">&quot;weight&quot;</span><span class="p">][</span><span class="s2">&quot;shape&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;module_type&quot;</span><span class="p">:</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;weight_value&quot;</span><span class="p">:</span> <span class="n">w_value</span><span class="p">,</span>
+            <span class="s2">&quot;weight_stats&quot;</span><span class="p">:</span> <span class="n">w_stats</span><span class="p">,</span>
+            <span class="s2">&quot;weight_shape&quot;</span><span class="p">:</span> <span class="n">w_shape</span><span class="p">,</span>
+            <span class="s2">&quot;activation_value&quot;</span><span class="p">:</span> <span class="n">a_value</span><span class="p">,</span>
+            <span class="s2">&quot;activation_stats&quot;</span><span class="p">:</span> <span class="n">a_stats</span><span class="p">,</span>
+            <span class="s2">&quot;activation_shape&quot;</span><span class="p">:</span> <span class="n">a_shape</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="c1"># otherwise we just return None, and this module would be ignore in build_pruning_hooks</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span> <span class="nf">prune_graph_iterator</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="c1"># Setup all pruning-related parameters (incl. basic validation)</span>
+    <span class="n">w_config</span> <span class="o">=</span> <span class="n">load_weight_prune_config</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;weight&quot;</span><span class="p">],</span> <span class="n">graph</span><span class="p">)</span>
+    <span class="n">a_config</span> <span class="o">=</span> <span class="n">load_activation_prune_config</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;activation&quot;</span><span class="p">],</span> <span class="n">graph</span><span class="p">)</span>
+
+    <span class="c1"># we need to loop twice, the first time is to fetch all necessary information</span>
+    <span class="c1"># first sloop</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="c1"># pruning only deals with modules at the moment</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;call_module&quot;</span><span class="p">:</span>
+            <span class="n">module</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">]</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="n">fetch_info</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">module</span><span class="p">)</span>
+            <span class="n">info</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">]</span> <span class="o">=</span> <span class="n">meta</span>
+
+    <span class="c1"># hook building</span>
+    <span class="n">hooks</span> <span class="o">=</span> <span class="n">build_pruning_hooks</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">w_config</span><span class="p">,</span> <span class="n">a_config</span><span class="p">)</span>
+
+    <span class="c1"># prune in second loop by applying hooks to relevant modules</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="c1"># pruning only deals with modules at the moment</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;call_module&quot;</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">target</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">hooks</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">node_hooks</span> <span class="o">=</span> <span class="n">hooks</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+                <span class="c1"># check weight hook, if it exits, apply it</span>
+                <span class="k">if</span> <span class="n">node_hooks</span><span class="p">[</span><span class="s2">&quot;w_hook&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">register_name</span><span class="p">,</span> <span class="n">parameterization</span> <span class="o">=</span> <span class="n">node_hooks</span><span class="p">[</span><span class="s2">&quot;w_hook&quot;</span><span class="p">]</span>
+                    <span class="c1"># apply weigh pruning</span>
+                    <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">parametrize</span><span class="o">.</span><span class="n">register_parametrization</span><span class="p">(</span>
+                        <span class="n">graph</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">],</span> <span class="n">register_name</span><span class="p">,</span> <span class="n">parameterization</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="n">node_hooks</span><span class="p">[</span><span class="s2">&quot;a_hook&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">register_fn</span><span class="p">,</span> <span class="n">hook_fn</span> <span class="o">=</span> <span class="n">node_hooks</span><span class="p">[</span><span class="s2">&quot;a_hook&quot;</span><span class="p">]</span>
+                    <span class="nb">getattr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">],</span> <span class="n">register_fn</span><span class="p">)(</span><span class="n">hook_fn</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">graph</span>
+
+
+<div class="viewcode-block" id="prune_transform_pass">
+<a class="viewcode-back" href="../../../../../../modules/api/transform/pruning.html#chop.passes.graph.transforms.pruning.prune.prune_transform_pass">[docs]</a>
+<span class="k">def</span> <span class="nf">prune_transform_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Apply pruning transformation to the given graph.</span>
+<span class="sd">    This is achieved by adding a register_parametrization hook to weights</span>
+<span class="sd">    and a register_pre_forward hook to activations</span>
+
+<span class="sd">    :param graph: The input graph to be pruned.</span>
+<span class="sd">    :type graph: MaseGraph</span>
+
+<span class="sd">    :param pass_args: Optional arguments for the pruning transformation.</span>
+<span class="sd">    :type pass_args: dict</span>
+
+<span class="sd">    pass_args should take the following form:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        pass_config = {</span>
+<span class="sd">            &quot;weight&quot; : {</span>
+<span class="sd">                &quot;scope&quot;: &quot;local&quot;, # [&quot;local, &quot;global&quot;] are available</span>
+<span class="sd">                &quot;granularity&quot;: &quot;element&quot;, # [&quot;element&quot;] are available</span>
+<span class="sd">                &quot;method&quot;: &quot;l1&quot;, # [&quot;l1&quot;, &quot;random&quot;] are available</span>
+<span class="sd">                &quot;sparsity&quot;: 0.5, # a float between 0.0 and 1.0</span>
+<span class="sd">            }</span>
+<span class="sd">            &quot;activation&quot; : {</span>
+<span class="sd">                &quot;scope&quot;: &quot;local&quot;, # [&quot;local, &quot;global&quot;] are available</span>
+<span class="sd">                &quot;granularity&quot;: &quot;element&quot;, # [&quot;element&quot;] are available</span>
+<span class="sd">                &quot;method&quot;: &quot;l1&quot;, # [&quot;l1&quot;, &quot;random&quot;] are available</span>
+<span class="sd">                &quot;sparsity&quot;: 0.5, # a float between 0.0 and 1.0</span>
+<span class="sd">        }</span>
+
+<span class="sd">    :return: The pruned graph and an empty dictionary.</span>
+<span class="sd">    :rtype: tuple</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">prune_graph_iterator</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">graph</span><span class="p">,</span> <span class="p">{}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

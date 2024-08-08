@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How to use the Statistics Pass Combined with the Ternary Quantiser &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/assets/jsonview.bundle.css?v=f6ef2277" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common.css?v=bd9ab754" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/styles.css?v=6c8eb985" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/modern.css?v=ffa536d2" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/layouts.css?v=448c382f" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-test-results/common.css?v=9ec2c1d5" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../../_static/assets/jsonview.bundle.js?v=18cd53c5"></script>
+        <script src="../../../_static/assets/jsonview_loader.js?v=f7ff7e7d"></script>
+        <script src="../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+        <script src="../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+        <script src="../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=f783d6a5"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="How to write documentations in MASE" href="doc_writing.html" />
+    <link rel="prev" title="Guide on how to add a new model into Machop" href="Add-model-to-machop.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../tutorials.html#common-usage-examples">Common Usage Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials.html#interactive-usage-with-python">Interactive Usage with Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials.html#the-mase-command-line-system">The MASE Command Line System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials.html#the-mase-pass-system">The MASE Pass System</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../tutorials.html#advanced-topics">Advanced Topics</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="Add-model-to-machop.html">Guide on how to add a new model into Machop</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">How to use the Statistics Pass Combined with the Ternary Quantiser</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#train-a-model">Train a model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#perform-statistics-pass">Perform Statistics Pass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#use-the-stat-to-conf-py-script-to-generate-the-new-quantisation-config-file">Use the <code class="docutils literal notranslate"><span class="pre">stat-to-conf.py</span></code> Script to Generate the new Quantisation Config File</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#finally-the-quantisation-can-be-performed-in-the-usual-way">Finally, the Quantisation can be Performed in the Usual Way</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="doc_writing.html">How to write documentations in MASE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="passes/interface/masert/tensorrt/tensorRT_quantization_tutorial.html">TensorRT Quantization Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="passes/interface/masert/onnxrt/onnxrt_quantization_tutorial.html">ONNX Runtime Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="actions/search/how_to_extend_search.html">How to extend search</a></li>
+<li class="toctree-l3"><a class="reference internal" href="accelerate_fsdp.html">Accelerate FSDP</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/actions.html">chop.actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/datasets.html">chop.datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/distributed.html">chop.distributed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/ir.html">chop.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/models.html">chop.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/nn.html">chop.nn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/passes.html">chop.passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/tools.html">chop.tools</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../tutorials.html">Tutorials</a></li>
+      <li class="breadcrumb-item active">How to use the Statistics Pass Combined with the Ternary Quantiser</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/modules/documentation/tutorials/stat_to_ternary_q_config.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="how-to-use-the-statistics-pass-combined-with-the-ternary-quantiser">
+<h1>How to use the Statistics Pass Combined with the Ternary Quantiser<a class="headerlink" href="#how-to-use-the-statistics-pass-combined-with-the-ternary-quantiser" title="Link to this heading"></a></h1>
+<section id="train-a-model">
+<h2>Train a model<a class="headerlink" href="#train-a-model" title="Link to this heading"></a></h2>
+<p>We will be using the <code class="docutils literal notranslate"><span class="pre">toy</span></code> model with the <code class="docutils literal notranslate"><span class="pre">toy-tiny</span></code> dataset.
+We are collecting data about every layer.</p>
+<p>We will be obtaining the maximums and medians.</p>
+<p>Train using the following command</p>
+<p><code class="docutils literal notranslate"><span class="pre">./ch</span> <span class="pre">train</span> <span class="pre">--config</span> <span class="pre">../configs/quantized_ops/toy_ternary_collect_stats.toml</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">toy_ternary_collect_stats.toml</span></code>:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="c1"># basics</span>
+<span class="n">model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;toy&quot;</span>
+<span class="n">dataset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;toy_tiny&quot;</span>
+
+<span class="k">[transform]</span>
+<span class="w">    </span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;graph&quot;</span>
+
+<span class="k">[passes.profile_statistics]</span>
+<span class="n">by</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;type&quot;</span>
+<span class="n">target_weight_nodes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;linear&quot;</span><span class="p">]</span>
+<span class="n">target_activation_nodes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;linear&quot;</span><span class="p">]</span>
+<span class="n">num_samples</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">32</span>
+
+<span class="k">[passes.profile_statistics.weight_statistics.range_min_max]</span>
+<span class="n">dims</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;all&quot;</span>
+<span class="n">abs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+
+<span class="k">[passes.profile_statistics.weight_statistics.range_quantile]</span>
+<span class="n">dims</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;all&quot;</span>
+<span class="n">abs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="n">quantile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span>
+
+<span class="k">[passes.profile_statistics.activation_statistics.range_min_max]</span>
+<span class="n">dims</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;all&quot;</span>
+<span class="n">abs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+
+<span class="k">[passes.profile_statistics.activation_statistics.range_quantile]</span>
+<span class="n">dims</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;all&quot;</span>
+<span class="n">abs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="n">quantile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span>
+
+<span class="k">[passes.report_node_meta_param]</span>
+<span class="n">which</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;software&quot;</span><span class="p">]</span>
+
+<span class="k">[passes.save_node_meta_param]</span>
+<span class="n">save_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;stats_for_quantisation.toml&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="perform-statistics-pass">
+<h2>Perform Statistics Pass<a class="headerlink" href="#perform-statistics-pass" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">./ch</span> <span class="pre">transform</span> <span class="pre">--config</span> <span class="pre">configs/quantized_ops/toy_ternary_collect_stats.toml</span></code></p>
+<p>This outputs the results of the statistics pass to a file named <code class="docutils literal notranslate"><span class="pre">stats_for_quantisation.toml</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">stats_for_quantisation.toml</span></code>:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[x.common]</span>
+<span class="n">mase_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;placeholder&quot;</span>
+<span class="n">mase_op</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;placeholder&quot;</span>
+
+<span class="k">[x.hardware]</span>
+
+<span class="k">[size.common]</span>
+<span class="n">mase_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;implicit_func&quot;</span>
+<span class="n">mase_op</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;size&quot;</span>
+
+<span class="k">[size.hardware]</span>
+
+<span class="k">[view.common]</span>
+<span class="n">mase_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;implicit_func&quot;</span>
+<span class="n">mase_op</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;view&quot;</span>
+
+<span class="k">[view.hardware]</span>
+
+<span class="k">[seq_blocks_0.common]</span>
+<span class="n">mase_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;module_related_func&quot;</span>
+<span class="n">mase_op</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;linear&quot;</span>
+
+<span class="k">[seq_blocks_0.hardware]</span>
+
+<span class="k">[seq_blocks_1.common]</span>
+<span class="n">mase_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;module_related_func&quot;</span>
+<span class="n">mase_op</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;relu&quot;</span>
+
+<span class="k">[seq_blocks_1.hardware]</span>
+
+<span class="k">[seq_blocks_2.common]</span>
+<span class="n">mase_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;module_related_func&quot;</span>
+<span class="n">mase_op</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;linear&quot;</span>
+
+<span class="k">[seq_blocks_2.hardware]</span>
+
+<span class="k">[seq_blocks_3.common]</span>
+<span class="n">mase_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;module_related_func&quot;</span>
+<span class="n">mase_op</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;relu&quot;</span>
+
+<span class="k">[seq_blocks_3.hardware]</span>
+
+<span class="k">[seq_blocks_4.common]</span>
+<span class="n">mase_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;module_related_func&quot;</span>
+<span class="n">mase_op</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;linear&quot;</span>
+
+<span class="k">[seq_blocks_4.hardware]</span>
+
+<span class="k">[output.common]</span>
+<span class="n">mase_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;output&quot;</span>
+<span class="n">mase_op</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;output&quot;</span>
+
+<span class="k">[output.hardware]</span>
+
+<span class="k">[x.common.args]</span>
+
+<span class="k">[output.common.results]</span>
+
+<span class="k">[x.common.results.data_out_0]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,]</span>
+
+<span class="k">[size.common.args.data_in_0]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,]</span>
+<span class="n">from</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;x&quot;</span>
+
+<span class="k">[size.common.args.data_in_1]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="p">,]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;fixed&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,]</span>
+<span class="n">from</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NA&quot;</span>
+<span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+
+<span class="k">[size.common.results.data_out_0]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="p">,]</span>
+<span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+
+<span class="k">[view.common.args.data_in_0]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,]</span>
+<span class="n">from</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;x&quot;</span>
+
+<span class="k">[view.common.args.data_in_2]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="p">,]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;fixed&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,]</span>
+<span class="n">from</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NA&quot;</span>
+<span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span>
+
+<span class="k">[view.common.args.data_in_1]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="p">,]</span>
+<span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="n">from</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;size&quot;</span>
+
+<span class="k">[view.common.results.data_out_0]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,]</span>
+
+<span class="k">[seq_blocks_0.common.args.data_in_0]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,]</span>
+<span class="n">from</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;view&quot;</span>
+
+<span class="k">[seq_blocks_0.common.args.weight]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,]</span>
+
+<span class="k">[seq_blocks_0.common.args.bias]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">100</span><span class="p">,]</span>
+
+<span class="k">[seq_blocks_0.common.results.data_out_0]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,]</span>
+
+<span class="k">[seq_blocks_1.common.args.data_in_0]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,]</span>
+<span class="n">from</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;seq_blocks_0&quot;</span>
+
+<span class="k">[seq_blocks_1.common.results.data_out_0]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,]</span>
+
+<span class="k">[seq_blocks_2.common.args.data_in_0]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,]</span>
+<span class="n">from</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;seq_blocks_1&quot;</span>
+
+<span class="k">[seq_blocks_2.common.args.weight]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,]</span>
+
+<span class="k">[seq_blocks_2.common.args.bias]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">100</span><span class="p">,]</span>
+
+<span class="k">[seq_blocks_2.common.results.data_out_0]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,]</span>
+
+<span class="k">[seq_blocks_3.common.args.data_in_0]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,]</span>
+<span class="n">from</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;seq_blocks_2&quot;</span>
+
+<span class="k">[seq_blocks_3.common.results.data_out_0]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,]</span>
+
+<span class="k">[seq_blocks_4.common.args.data_in_0]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,]</span>
+<span class="n">from</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;seq_blocks_3&quot;</span>
+
+<span class="k">[seq_blocks_4.common.args.weight]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,]</span>
+
+<span class="k">[seq_blocks_4.common.args.bias]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">2</span><span class="p">,]</span>
+
+<span class="k">[seq_blocks_4.common.results.data_out_0]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,]</span>
+
+<span class="k">[output.common.args.data_in_0]</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span>
+<span class="n">precision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">32</span><span class="p">,]</span>
+<span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,]</span>
+<span class="n">from</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;seq_blocks_4&quot;</span>
+
+<span class="k">[x.software.results.data_out_0.stat]</span>
+
+<span class="k">[size.software.args.data_in_0.stat]</span>
+
+<span class="k">[view.software.args.data_in_0.stat]</span>
+
+<span class="k">[view.software.args.data_in_1.stat]</span>
+
+<span class="k">[view.software.results.data_out_0.stat]</span>
+
+<span class="k">[seq_blocks_0.software.results.data_out_0.stat]</span>
+
+<span class="k">[seq_blocks_1.software.results.data_out_0.stat]</span>
+
+<span class="k">[seq_blocks_2.software.results.data_out_0.stat]</span>
+
+<span class="k">[seq_blocks_3.software.results.data_out_0.stat]</span>
+
+<span class="k">[seq_blocks_4.software.results.data_out_0.stat]</span>
+
+<span class="k">[output.software.args.data_in_0.stat]</span>
+
+<span class="k">[seq_blocks_0.software.args.data_in_0.stat.range_min_max]</span>
+<span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-4.972967624664307</span>
+<span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">4.985265731811523</span>
+<span class="n">range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">9.958232879638672</span>
+<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">512</span>
+
+<span class="k">[seq_blocks_0.software.args.data_in_0.stat.range_quantile]</span>
+<span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0833507776260376</span>
+<span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0833507776260376</span>
+<span class="n">range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">512</span>
+
+<span class="k">[seq_blocks_0.software.args.weight.stat.range_min_max]</span>
+<span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-0.4987639784812927</span>
+<span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.4998381733894348</span>
+<span class="n">range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.9986021518707275</span>
+<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">400</span>
+
+<span class="k">[seq_blocks_0.software.args.weight.stat.range_quantile]</span>
+<span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-0.0033772289752960205</span>
+<span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-0.0033772289752960205</span>
+<span class="n">range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">400</span>
+
+<span class="k">[seq_blocks_0.software.args.bias.stat.range_min_max]</span>
+<span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-0.49093878269195557</span>
+<span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.4969978332519531</span>
+<span class="n">range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.9879366159439087</span>
+<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span>
+
+<span class="k">[seq_blocks_0.software.args.bias.stat.range_quantile]</span>
+<span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.021730512380599976</span>
+<span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.021730512380599976</span>
+<span class="n">range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span>
+
+<span class="k">[seq_blocks_1.software.args.data_in_0.stat.range_min_max]</span>
+<span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-6.881089687347412</span>
+<span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">6.567787170410156</span>
+<span class="n">range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">13.448877334594727</span>
+<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">12800</span>
+
+<span class="k">[seq_blocks_1.software.args.data_in_0.stat.range_quantile]</span>
+<span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-0.008840139955282211</span>
+<span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-0.008840139955282211</span>
+<span class="n">range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">12800</span>
+
+<span class="k">[seq_blocks_2.software.args.data_in_0.stat.range_min_max]</span>
+<span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">6.567787170410156</span>
+<span class="n">range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">6.567787170410156</span>
+<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">12800</span>
+
+<span class="k">[seq_blocks_2.software.args.data_in_0.stat.range_quantile]</span>
+<span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="n">range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">12800</span>
+
+<span class="k">[seq_blocks_2.software.args.weight.stat.range_min_max]</span>
+<span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-0.0999840646982193</span>
+<span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.099988654255867</span>
+<span class="n">range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.1999727189540863</span>
+<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10000</span>
+
+<span class="k">[seq_blocks_2.software.args.weight.stat.range_quantile]</span>
+<span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.00030127764330245554</span>
+<span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.00030127764330245554</span>
+<span class="n">range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10000</span>
+
+<span class="k">[seq_blocks_2.software.args.bias.stat.range_min_max]</span>
+<span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-0.09788546711206436</span>
+<span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.09944488853216171</span>
+<span class="n">range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.19733035564422607</span>
+<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span>
+
+<span class="k">[seq_blocks_2.software.args.bias.stat.range_quantile]</span>
+<span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-0.010821569710969925</span>
+<span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-0.010821569710969925</span>
+<span class="n">range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span>
+
+<span class="k">[seq_blocks_3.software.args.data_in_0.stat.range_min_max]</span>
+<span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-2.998079538345337</span>
+<span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2.9003794193267822</span>
+<span class="n">range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">5.898458957672119</span>
+<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">12800</span>
+
+<span class="k">[seq_blocks_3.software.args.data_in_0.stat.range_quantile]</span>
+<span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.03673841804265976</span>
+<span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.03673841804265976</span>
+<span class="n">range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">12800</span>
+
+<span class="k">[seq_blocks_4.software.args.data_in_0.stat.range_min_max]</span>
+<span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2.9003794193267822</span>
+<span class="n">range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2.9003794193267822</span>
+<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">12800</span>
+
+<span class="k">[seq_blocks_4.software.args.data_in_0.stat.range_quantile]</span>
+<span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.03673841804265976</span>
+<span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.03673841804265976</span>
+<span class="n">range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">12800</span>
+
+<span class="k">[seq_blocks_4.software.args.weight.stat.range_min_max]</span>
+<span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-0.09916079044342041</span>
+<span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.09934879839420319</span>
+<span class="n">range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.1985095888376236</span>
+<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">200</span>
+
+<span class="k">[seq_blocks_4.software.args.weight.stat.range_quantile]</span>
+<span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.003981685731559992</span>
+<span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.003981685731559992</span>
+<span class="n">range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">200</span>
+
+<span class="k">[seq_blocks_4.software.args.bias.stat.range_min_max]</span>
+<span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-0.07179033756256104</span>
+<span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0846341997385025</span>
+<span class="n">range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.15642453730106354</span>
+<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+
+<span class="k">[seq_blocks_4.software.args.bias.stat.range_quantile]</span>
+<span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.006421931087970734</span>
+<span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.006421931087970734</span>
+<span class="n">range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+</pre></div>
+</div>
+</section>
+<section id="use-the-stat-to-conf-py-script-to-generate-the-new-quantisation-config-file">
+<h2>Use the <code class="docutils literal notranslate"><span class="pre">stat-to-conf.py</span></code> Script to Generate the new Quantisation Config File<a class="headerlink" href="#use-the-stat-to-conf-py-script-to-generate-the-new-quantisation-config-file" title="Link to this heading"></a></h2>
+<p>Here, the user can optionally use another config file as a “base” which will be modified to allow for the scaled ternarisation.</p>
+<p>We will be using <code class="docutils literal notranslate"><span class="pre">toy_ternary_scaled.toml</span></code> as a base. This means that the values of <code class="docutils literal notranslate"><span class="pre">quantize.default.config</span></code> will be used to create the quantise config for the separate blocks.</p>
+<p>It is necessary to have a separate quantisation config for each block as the stats are different for each block, and this was identified as the simplest way to get the appropriate stats to the quantise function.</p>
+<p><code class="docutils literal notranslate"><span class="pre">toy_ternary_base.toml</span></code>:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="c1"># basics</span>
+<span class="n">model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;toy&quot;</span>
+<span class="n">dataset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;toy_tiny&quot;</span>
+
+<span class="k">[transform]</span>
+<span class="w">    </span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;graph&quot;</span>
+
+<span class="k">[passes.quantize]</span>
+<span class="n">by</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;name&quot;</span>
+<span class="n">report</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+
+<span class="k">[passes.quantize.default.config]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ternary&quot;</span>
+<span class="n">data_in_scaling_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">data_in_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="n">weight_scaling_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">weight_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="n">bias_scaling_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">bias_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+
+<span class="k">[passes.quantize.seq_blocks_1.config]</span><span class="w"> </span><span class="c1"># ReLU override</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ternary&quot;</span>
+<span class="n">data_in_scaling_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">data_in_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="n">data_in_frac_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="n">data_in_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NA&quot;</span>
+<span class="n">data_in_median</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-0.009714938700199127</span>
+<span class="n">data_in_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">6.568027019500732</span>
+</pre></div>
+</div>
+<p>The script is run in the following way: <code class="docutils literal notranslate"><span class="pre">./stat-to-conf.py</span> <span class="pre">stats_for_quantisation.toml</span> <span class="pre">toy_ternary_scaled.toml</span> <span class="pre">--base</span> <span class="pre">toy_ternary_base.toml</span></code></p>
+<p>The written file is:</p>
+<p><code class="docutils literal notranslate"><span class="pre">toy_ternary_scaled.toml</span></code>:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;toy&quot;</span>
+<span class="n">dataset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;toy_tiny&quot;</span>
+
+<span class="k">[transform]</span>
+<span class="w">    </span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;graph&quot;</span>
+
+<span class="k">[passes.quantize]</span>
+<span class="n">by</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;name&quot;</span>
+<span class="n">report</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+
+<span class="k">[passes.quantize.default.config]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ternary&quot;</span>
+<span class="n">data_in_scaling_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">data_in_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="n">weight_scaling_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">weight_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="n">bias_scaling_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">bias_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="n">data_in_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NA&quot;</span>
+<span class="n">data_in_median</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0833507776260376</span>
+<span class="n">data_in_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">4.985265731811523</span>
+<span class="n">weight_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NA&quot;</span>
+<span class="n">weight_median</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-0.0033772289752960205</span>
+<span class="n">weight_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.4998381733894348</span>
+<span class="n">bias_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NA&quot;</span>
+<span class="n">bias_median</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.021730512380599976</span>
+<span class="n">bias_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.4969978332519531</span>
+
+<span class="k">[passes.quantize.seq_blocks_1.config]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ternary&quot;</span>
+<span class="n">data_in_scaling_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">data_in_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="n">data_in_frac_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="n">data_in_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NA&quot;</span>
+<span class="n">data_in_median</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-0.009714938700199127</span>
+<span class="n">data_in_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">6.568027019500732</span>
+
+<span class="k">[passes.quantize.seq_blocks_0.config]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ternary&quot;</span>
+<span class="n">data_in_scaling_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">data_in_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="n">weight_scaling_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">weight_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="n">bias_scaling_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">bias_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="n">data_in_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NA&quot;</span>
+<span class="n">data_in_median</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0833507776260376</span>
+<span class="n">data_in_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">4.985265731811523</span>
+<span class="n">weight_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NA&quot;</span>
+<span class="n">weight_median</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-0.0033772289752960205</span>
+<span class="n">weight_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.4998381733894348</span>
+<span class="n">bias_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NA&quot;</span>
+<span class="n">bias_median</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.021730512380599976</span>
+<span class="n">bias_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.4969978332519531</span>
+
+<span class="k">[passes.quantize.seq_blocks_2.config]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ternary&quot;</span>
+<span class="n">data_in_scaling_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">data_in_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="n">weight_scaling_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">weight_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="n">bias_scaling_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">bias_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="n">data_in_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NA&quot;</span>
+<span class="n">data_in_median</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0833507776260376</span>
+<span class="n">data_in_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">4.985265731811523</span>
+<span class="n">weight_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NA&quot;</span>
+<span class="n">weight_median</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-0.0033772289752960205</span>
+<span class="n">weight_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.4998381733894348</span>
+<span class="n">bias_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NA&quot;</span>
+<span class="n">bias_median</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.021730512380599976</span>
+<span class="n">bias_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.4969978332519531</span>
+
+<span class="k">[passes.quantize.seq_blocks_3.config]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ternary&quot;</span>
+<span class="n">data_in_scaling_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">data_in_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="n">data_in_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NA&quot;</span>
+<span class="n">data_in_median</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.03673841804265976</span>
+<span class="n">data_in_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2.9003794193267822</span>
+
+<span class="k">[passes.quantize.seq_blocks_4.config]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ternary&quot;</span>
+<span class="n">data_in_scaling_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">data_in_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="n">weight_scaling_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">weight_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="n">bias_scaling_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">bias_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="n">data_in_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NA&quot;</span>
+<span class="n">data_in_median</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0833507776260376</span>
+<span class="n">data_in_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">4.985265731811523</span>
+<span class="n">weight_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NA&quot;</span>
+<span class="n">weight_median</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-0.0033772289752960205</span>
+<span class="n">weight_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.4998381733894348</span>
+<span class="n">bias_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NA&quot;</span>
+<span class="n">bias_median</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.021730512380599976</span>
+<span class="n">bias_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.4969978332519531</span>
+</pre></div>
+</div>
+</section>
+<section id="finally-the-quantisation-can-be-performed-in-the-usual-way">
+<h2>Finally, the Quantisation can be Performed in the Usual Way<a class="headerlink" href="#finally-the-quantisation-can-be-performed-in-the-usual-way" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="sb">`</span>./ch<span class="w"> </span>transform<span class="w"> </span>--config<span class="w"> </span>configs/quantized_ops/toy_ternary_scaled.toml<span class="w"> </span>--load<span class="w"> </span>../mase_output/toy_classification_toy-tiny_2023-07-27/software/training_ckpts/best.ckpt<span class="w">  </span>--load-type<span class="w"> </span>pl
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Add-model-to-machop.html" class="btn btn-neutral float-left" title="Guide on how to add a new model into Machop" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="doc_writing.html" class="btn btn-neutral float-right" title="How to write documentations in MASE" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

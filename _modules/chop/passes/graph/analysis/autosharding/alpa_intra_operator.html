@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>chop.passes.graph.analysis.autosharding.alpa_intra_operator &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/assets/jsonview.bundle.css?v=f6ef2277" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common.css?v=bd9ab754" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/styles.css?v=6c8eb985" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/modern.css?v=ffa536d2" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/layouts.css?v=448c382f" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-test-results/common.css?v=9ec2c1d5" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../../../../../_static/assets/jsonview.bundle.js?v=18cd53c5"></script>
+        <script src="../../../../../../_static/assets/jsonview_loader.js?v=f7ff7e7d"></script>
+        <script src="../../../../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+        <script src="../../../../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+        <script src="../../../../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=f783d6a5"></script>
+    <script src="../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/actions.html">chop.actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/datasets.html">chop.datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/distributed.html">chop.distributed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/ir.html">chop.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/models.html">chop.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/nn.html">chop.nn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/passes.html">chop.passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/tools.html">chop.tools</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">chop.passes.graph.analysis.autosharding.alpa_intra_operator</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for chop.passes.graph.analysis.autosharding.alpa_intra_operator</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.fx</span> <span class="k">as</span> <span class="nn">fx</span>
+<span class="kn">from</span> <span class="nn">torch.distributed._tensor._collective_utils</span> <span class="kn">import</span> <span class="n">redistribute_cost</span>
+<span class="kn">from</span> <span class="nn">torch.distributed._tensor._op_schema</span> <span class="kn">import</span> <span class="n">DTensorSpec</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">cvxpy</span> <span class="k">as</span> <span class="nn">cp</span>
+
+<span class="kn">from</span> <span class="nn">chop.tools</span> <span class="kn">import</span> <span class="n">get_logger</span>
+<span class="kn">from</span> <span class="nn">chop.tools.utils</span> <span class="kn">import</span> <span class="n">deepgetattr</span>
+
+<span class="kn">from</span> <span class="nn">.layers</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AUTOSHARDING_MODULES</span><span class="p">,</span>
+    <span class="n">AUTOSHARDING_FUNCTIONS</span><span class="p">,</span>
+    <span class="n">AUTOSHARDING_METHODS</span><span class="p">,</span>
+    <span class="n">IMPLICIT_FUNCS</span><span class="p">,</span>
+    <span class="n">IMPLICIT_METHODS</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.strategies.common</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">fully_replicated_strategy</span><span class="p">,</span>
+    <span class="n">placeholder_or_getattr_strategy</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="s2">&quot;DEBUG&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_extract_ilp</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="p">{}):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    For each node in the graph, assign an OpStrategy object which contains all possible</span>
+<span class="sd">    sharding algorithms. Also assign opt_var instance which is one-hot vector used to</span>
+<span class="sd">    solve ILP.</span>
+
+<span class="sd">    Return list of constraints associated with ILP. The constraints at this stage only</span>
+<span class="sd">    enforce that each optimizer variable is a one-hot boolean vector.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mg (MaseGraph): input mase graph.</span>
+<span class="sd">        mesh (MeshModel): mesh model.</span>
+<span class="sd">        pass_args (dict, optional): pass arguments. Defaults to {}.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        MaseGraph: input mase graph.</span>
+<span class="sd">        cp.Problem: optimization problem.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Setup for the ILP optimization</span>
+    <span class="n">constr</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Find sharding strategies for each operator in the graph</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">mg</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;call_function&quot;</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">target</span> <span class="ow">in</span> <span class="n">IMPLICIT_FUNCS</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;call_method&quot;</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">target</span> <span class="ow">in</span> <span class="n">IMPLICIT_METHODS</span>
+        <span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Implicit </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="si">}</span><span class="s2"> node </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> was assigned fully replicated sharding.&quot;</span>
+            <span class="p">)</span>
+
+            <span class="n">op_strategy</span> <span class="o">=</span> <span class="n">fully_replicated_strategy</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">],</span> <span class="n">mesh</span><span class="p">)</span>
+
+            <span class="n">opt_var</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">boolean</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">constr</span> <span class="o">+=</span> <span class="p">[</span>
+                <span class="n">cp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">opt_var</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="p">]</span>
+
+            <span class="c1"># Opt var is None since no decision needs to be taken</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;software&quot;</span><span class="p">][</span><span class="s2">&quot;autosharding&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;op_strategy&quot;</span><span class="p">:</span> <span class="n">op_strategy</span><span class="p">,</span>
+                <span class="s2">&quot;opt_var&quot;</span><span class="p">:</span> <span class="n">opt_var</span><span class="p">,</span>
+                <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s2">&quot;output&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Obtain strategy according to node op</span>
+        <span class="c1"># ================================================</span>
+
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;placeholder&quot;</span><span class="p">,</span> <span class="s2">&quot;get_attr&quot;</span><span class="p">]:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Node </span><span class="si">{</span><span class="n">node</span><span class="si">}</span><span class="s2"> with op </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="si">}</span><span class="s2"> will be assigned all permutations of Shard(dims) and Replicate()&quot;</span>
+            <span class="p">)</span>
+            <span class="n">op_strategy</span> <span class="o">=</span> <span class="n">placeholder_or_getattr_strategy</span><span class="p">(</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">],</span>
+                <span class="n">mesh</span><span class="p">,</span>
+                <span class="n">skip_fully_replicated</span><span class="o">=</span><span class="n">pass_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;skip_fully_replicated&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;output&quot;</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Op strategy from node </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">all_input_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> is propagated to </span><span class="si">{</span><span class="n">node</span><span class="si">}</span><span class="s2"> node.&quot;</span>
+            <span class="p">)</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;software&quot;</span><span class="p">][</span><span class="s2">&quot;autosharding&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;op_strategy&quot;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">all_input_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;software&quot;</span><span class="p">][</span>
+                    <span class="s2">&quot;autosharding&quot;</span>
+                <span class="p">][</span><span class="s2">&quot;op_strategy&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;opt_var&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s2">&quot;output&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="k">continue</span>
+
+        <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;call_module&quot;</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">deepgetattr</span><span class="p">(</span><span class="n">mg</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">AUTOSHARDING_MODULES</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Obtaining strategy for node </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">module_cls</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">deepgetattr</span><span class="p">(</span><span class="n">mg</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">))</span>
+            <span class="n">op_strategy</span> <span class="o">=</span> <span class="n">AUTOSHARDING_MODULES</span><span class="p">[</span><span class="n">module_cls</span><span class="p">](</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">],</span> <span class="n">mesh</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;call_method&quot;</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">target</span> <span class="ow">in</span> <span class="n">AUTOSHARDING_METHODS</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Obtaining strategy for node </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">op_strategy</span> <span class="o">=</span> <span class="n">AUTOSHARDING_METHODS</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">](</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">],</span> <span class="n">mesh</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="p">(</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;call_function&quot;</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">target</span> <span class="ow">in</span> <span class="n">AUTOSHARDING_FUNCTIONS</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Obtaining strategy for node </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">op_strategy</span> <span class="o">=</span> <span class="n">AUTOSHARDING_FUNCTIONS</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">](</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">],</span> <span class="n">mesh</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown node </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> with op </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">op_strategy</span> <span class="o">=</span> <span class="n">fully_replicated_strategy</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">],</span> <span class="n">mesh</span><span class="p">)</span>
+            <span class="n">opt_var</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">boolean</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">constr</span> <span class="o">+=</span> <span class="p">[</span>
+                <span class="n">cp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">opt_var</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="p">]</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;software&quot;</span><span class="p">][</span><span class="s2">&quot;autosharding&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;op_strategy&quot;</span><span class="p">:</span> <span class="n">fully_replicated_strategy</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">],</span> <span class="n">mesh</span><span class="p">),</span>
+                <span class="s2">&quot;opt_var&quot;</span><span class="p">:</span> <span class="n">opt_var</span><span class="p">,</span>
+                <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s2">&quot;output&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Formulate optimization variable</span>
+        <span class="n">opt_var</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">op_strategy</span><span class="o">.</span><span class="n">strategies</span><span class="p">),</span> <span class="n">boolean</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">constr</span> <span class="o">+=</span> <span class="p">[</span>
+            <span class="n">cp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">opt_var</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="c1"># Write into metadata</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;software&quot;</span><span class="p">][</span><span class="s2">&quot;autosharding&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;op_strategy&quot;</span><span class="p">:</span> <span class="n">op_strategy</span><span class="p">,</span>
+            <span class="s2">&quot;opt_var&quot;</span><span class="p">:</span> <span class="n">opt_var</span><span class="p">,</span>
+            <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;output&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Consider resharding cost for each of the node&#39;s arguments</span>
+        <span class="n">e_var_checks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">arg_idx</span><span class="p">,</span> <span class="n">in_node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">all_input_nodes</span><span class="p">):</span>
+
+            <span class="c1"># Skip constant nodes</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">in_node</span><span class="p">,</span> <span class="n">fx</span><span class="o">.</span><span class="n">Node</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+                <span class="n">in_node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;results&quot;</span><span class="p">][</span><span class="s2">&quot;data_out_0&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parsing arg </span><span class="si">{</span><span class="n">in_node</span><span class="si">}</span><span class="s2"> of node </span><span class="si">{</span><span class="n">node</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Fetch this node&#39;s input specs</span>
+            <span class="n">node_op_strategy</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;software&quot;</span><span class="p">][</span><span class="s2">&quot;autosharding&quot;</span><span class="p">][</span>
+                <span class="s2">&quot;op_strategy&quot;</span>
+            <span class="p">]</span>
+            <span class="n">node_in_specs</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span>
+                    <span class="p">[</span><span class="n">strategy</span><span class="o">.</span><span class="n">input_specs</span><span class="p">][</span><span class="n">arg_idx</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strategy</span><span class="o">.</span><span class="n">input_specs</span><span class="p">,</span> <span class="n">DTensorSpec</span><span class="p">)</span>
+                    <span class="k">else</span> <span class="n">strategy</span><span class="o">.</span><span class="n">input_specs</span><span class="p">[</span><span class="n">arg_idx</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">strategy</span> <span class="ow">in</span> <span class="n">node_op_strategy</span><span class="o">.</span><span class="n">strategies</span>
+            <span class="p">]</span>
+
+            <span class="c1"># Fetch the argument node&#39;s output specs</span>
+            <span class="n">in_opt_var</span> <span class="o">=</span> <span class="n">in_node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;software&quot;</span><span class="p">][</span><span class="s2">&quot;autosharding&quot;</span><span class="p">][</span><span class="s2">&quot;opt_var&quot;</span><span class="p">]</span>
+            <span class="n">arg_op_strategy</span> <span class="o">=</span> <span class="n">in_node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;software&quot;</span><span class="p">][</span><span class="s2">&quot;autosharding&quot;</span><span class="p">][</span>
+                <span class="s2">&quot;op_strategy&quot;</span>
+            <span class="p">]</span>
+            <span class="n">arg_out_specs</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">strategy</span><span class="o">.</span><span class="n">output_specs</span> <span class="k">for</span> <span class="n">strategy</span> <span class="ow">in</span> <span class="n">arg_op_strategy</span><span class="o">.</span><span class="n">strategies</span>
+            <span class="p">]</span>
+
+            <span class="c1"># Formulate resharding cost matrix</span>
+            <span class="n">resharding_costs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">opt_var</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">in_opt_var</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+            <span class="k">for</span> <span class="n">dest_idx</span><span class="p">,</span> <span class="n">dest_spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node_in_specs</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">src_idx</span><span class="p">,</span> <span class="n">src_spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arg_out_specs</span><span class="p">):</span>
+                    <span class="n">cost</span> <span class="o">=</span> <span class="n">redistribute_cost</span><span class="p">(</span><span class="n">src_spec</span><span class="p">,</span> <span class="n">dest_spec</span><span class="p">)</span>
+                    <span class="n">resharding_costs</span><span class="p">[</span><span class="n">dest_idx</span><span class="p">,</span> <span class="n">src_idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="mi">1000000</span> <span class="k">if</span> <span class="n">cost</span> <span class="o">==</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">cost</span>
+                    <span class="p">)</span>
+
+            <span class="n">resharding_costs</span> <span class="o">=</span> <span class="n">resharding_costs</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+            <span class="c1"># Formulate linearized variable for resharding cost</span>
+            <span class="n">e_var</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">resharding_costs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">boolean</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">expr</span> <span class="o">+=</span> <span class="n">e_var</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">resharding_costs</span>
+            <span class="n">constr</span> <span class="o">+=</span> <span class="p">[</span>
+                <span class="n">cp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">e_var</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="p">]</span>
+
+            <span class="c1"># After solving the ILP, verify constraints were correctly formulated</span>
+            <span class="k">if</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_checks&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+                <span class="n">e_var_checks</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">opt_var</span><span class="p">,</span> <span class="n">in_opt_var</span><span class="p">,</span> <span class="n">e_var</span><span class="p">))</span>
+
+            <span class="c1"># Constraints s.t. e_var = outer(opt_var, in_opt_var)</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">e_var</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">opt_indices</span><span class="p">,</span> <span class="n">in_opt_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divmod</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">in_opt_var</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">constr</span> <span class="o">+=</span> <span class="p">[</span>
+                <span class="n">e_var</span> <span class="o">&lt;=</span> <span class="n">opt_var</span><span class="p">[</span><span class="n">opt_indices</span><span class="p">],</span>
+                <span class="n">e_var</span> <span class="o">&lt;=</span> <span class="n">in_opt_var</span><span class="p">[</span><span class="n">in_opt_indices</span><span class="p">],</span>
+                <span class="n">e_var</span> <span class="o">&gt;=</span> <span class="n">opt_var</span><span class="p">[</span><span class="n">opt_indices</span><span class="p">]</span> <span class="o">+</span> <span class="n">in_opt_var</span><span class="p">[</span><span class="n">in_opt_indices</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_checks&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;software&quot;</span><span class="p">][</span><span class="s2">&quot;autosharding&quot;</span><span class="p">][</span><span class="s2">&quot;e_var_checks&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">e_var_checks</span>
+
+    <span class="c1"># Solve the ILP problem</span>
+    <span class="n">prob</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">Minimize</span><span class="p">(</span><span class="n">expr</span><span class="p">),</span> <span class="n">constr</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mg</span><span class="p">,</span> <span class="n">prob</span>
+
+
+<span class="k">def</span> <span class="nf">_run_checks</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run checks on the ILP solution to ensure that the constraints were correctly formulated.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mg (MaseGraph): input mase graph.</span>
+<span class="sd">        pass_args (dict): pass arguments.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">mg</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="n">check_list</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;software&quot;</span><span class="p">][</span><span class="s2">&quot;autosharding&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;e_var_checks&quot;</span><span class="p">,</span> <span class="p">[]</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Check that the constraints on the linearised variable for resharding cost</span>
+        <span class="c1"># are correctly formulated</span>
+        <span class="k">for</span> <span class="n">opt_var</span><span class="p">,</span> <span class="n">in_opt_var</span><span class="p">,</span> <span class="n">e_var</span> <span class="ow">in</span> <span class="n">check_list</span><span class="p">:</span>
+            <span class="n">idx1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">opt_var</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">idx2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">in_opt_var</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">idx3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">e_var</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="n">idx3</span> <span class="o">==</span> <span class="n">idx1</span> <span class="o">*</span> <span class="n">in_opt_var</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">idx2</span>
+            <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Linearized variable for resharding cost is not consistent for node </span><span class="si">{</span><span class="n">node</span><span class="si">}</span><span class="s2">.&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">_mark_sharding</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    After solving the ILP, annotate the metadata of each operator in the graph with the chosen</span>
+<span class="sd">    parallelization strategy.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mg (MaseGraph): input mase graph.</span>
+<span class="sd">        pass_args (dict): pass arguments.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        MaseGraph: input mase graph.</span>
+<span class="sd">        dict: tensor sharding map.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">mg</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="n">opt_var</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;software&quot;</span><span class="p">][</span><span class="s2">&quot;autosharding&quot;</span><span class="p">][</span><span class="s2">&quot;opt_var&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">opt_var</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">opt_var</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">opt_var</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="n">chosen_strategy</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;software&quot;</span><span class="p">][</span><span class="s2">&quot;autosharding&quot;</span><span class="p">][</span>
+            <span class="s2">&quot;op_strategy&quot;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">strategies</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+        <span class="c1"># Annotate chosen placement strategy</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;software&quot;</span><span class="p">][</span><span class="s2">&quot;autosharding&quot;</span><span class="p">][</span>
+            <span class="s2">&quot;placement_strategy&quot;</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="n">chosen_strategy</span>
+
+        <span class="n">arg_specs</span> <span class="o">=</span> <span class="n">chosen_strategy</span><span class="o">.</span><span class="n">input_specs</span>
+        <span class="n">out_spec</span> <span class="o">=</span> <span class="n">chosen_strategy</span><span class="o">.</span><span class="n">output_specs</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg_specs</span><span class="p">,</span> <span class="n">DTensorSpec</span><span class="p">):</span>
+            <span class="n">arg_specs</span> <span class="o">=</span> <span class="p">(</span><span class="n">arg_specs</span><span class="p">,)</span>
+
+        <span class="c1"># Annotate arg metadata with chosen strategy</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;placeholder&quot;</span><span class="p">,</span> <span class="s2">&quot;get_attr&quot;</span><span class="p">,</span> <span class="s2">&quot;call_method&quot;</span><span class="p">,</span> <span class="s2">&quot;output&quot;</span><span class="p">]:</span>
+            <span class="k">pass</span>
+
+        <span class="c1"># call_function nodes</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">arg_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+
+            <span class="k">for</span> <span class="n">arg_idx</span><span class="p">,</span> <span class="n">arg_spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arg_specs</span><span class="p">):</span>
+                <span class="n">arg_meta</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="n">arg_list</span><span class="p">[</span><span class="n">arg_idx</span><span class="p">]]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg_meta</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="k">continue</span>
+                <span class="n">arg_meta</span><span class="p">[</span><span class="s2">&quot;dtensor_spec&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">arg_spec</span>
+
+        <span class="c1"># Annotate output metadata with chosen strategy</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;results&quot;</span><span class="p">][</span><span class="s2">&quot;data_out_0&quot;</span><span class="p">][</span><span class="s2">&quot;dtensor_spec&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">out_spec</span>
+
+    <span class="k">return</span> <span class="n">mg</span><span class="p">,</span> <span class="p">{}</span>
+
+
+<div class="viewcode-block" id="alpa_intra_op_sharding_pass">
+<a class="viewcode-back" href="../../../../../../modules/api/analysis/autosharding.html#chop.passes.graph.analysis.autosharding.alpa_intra_operator.alpa_intra_op_sharding_pass">[docs]</a>
+<span class="k">def</span> <span class="nf">alpa_intra_op_sharding_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="p">{},</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Intra-operator auto parallelization pass from the Alpa paper: https://arxiv.org/abs/2201.12023</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mg (MaseGraph): Input MaseGraph.</span>
+<span class="sd">        mesh (MeshModel): mesh description.</span>
+<span class="sd">        pass_args (dict, optional): pass arguments. Defaults to {}.</span>
+<span class="sd">        debug (bool, optional): enable debug. Defaults to False.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        MaseGraph: annotated MaseGraph.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Formulate and solve the ILP</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Formulating the ILP...&quot;</span><span class="p">)</span>
+    <span class="n">mg</span><span class="p">,</span> <span class="n">problem</span> <span class="o">=</span> <span class="n">_extract_ilp</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Solving the ILP...&quot;</span><span class="p">)</span>
+    <span class="n">problem</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">scipy_options</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;disp&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;time_limit&quot;</span><span class="p">:</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;time_limit&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="s2">&quot;mip_rel_gap&quot;</span><span class="p">:</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mip_rel_gap&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_checks&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="n">_run_checks</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">)</span>
+
+    <span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_mark_sharding</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mg</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;solution&quot;</span><span class="p">:</span> <span class="n">problem</span><span class="o">.</span><span class="n">value</span><span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
