@@ -13,7 +13,7 @@ from chop.nn.functional.tensor import (
 )
 
 logger = get_logger(__name__)
-logger.setLevel("DEBUG")
+logger.setLevel("INFO")
 
 
 REPLACE_METHODS = {

@@ -3,34 +3,22 @@ from typing import cast, Dict, List, Optional, Sequence, Tuple, TYPE_CHECKING
 
 import torch
 from torch.distributed._tensor._op_schema import (
-    OpInfo,
-    OpSchema,
     OutputSpecType,
 )
 from torch.distributed._tensor._tp_conv import (
     convolution_backward_handler,
     convolution_handler,
 )
-from torch.distributed._tensor._utils import try_find_mesh_from_args
 from torch.distributed._tensor.placement_types import (
     DTensorSpec,
     Replicate,
-    Shard,
     TensorMeta,
 )
-from torch.distributed._tensor.random import is_rng_supported_mesh
-
 
 from torch.distributed.device_mesh import DeviceMesh
 
-try:
-    from torch.utils import _cxx_pytree as pytree
-except ImportError:
-    from torch.utils import _pytree as pytree  # type: ignore[no-redef]
-
 import chop.distributed.tensor.api as dtensor
 from chop.distributed.tensor._sharding_prop import ShardingPropagator
-from chop.distributed.tensor._redistribute import redistribute_local_tensor
 
 aten = torch.ops.aten
 
@@ -118,9 +106,6 @@ class OpDispatcher:
         Main dispatching logic
         """
         # operators that does not need to go through sharding propagation
-
-        if op_call in self._custom_op_handlers:
-            return self._custom_op_handlers[op_call](op_call, args, kwargs)  # type: ignore[operator]
 
         # run local op computation with potentially modified args/kwargs
         local_tensor_args = [

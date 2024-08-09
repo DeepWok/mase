@@ -215,7 +215,6 @@ class DTensor(torch.Tensor):
     _op_dispatcher: op_dispatch.OpDispatcher = op_dispatch.OpDispatcher()
 
     @staticmethod
-    @torch._disable_dynamo
     def __new__(
         cls,
         local_tensor: torch.Tensor,
@@ -297,9 +296,6 @@ class DTensor(torch.Tensor):
         )
 
     @classmethod
-    @torch._disable_dynamo
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
     def __torch_dispatch__(cls, func, types, args=(), kwargs=None):
         return DTensor._op_dispatcher.dispatch(
             func,

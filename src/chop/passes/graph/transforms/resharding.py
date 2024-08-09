@@ -1,4 +1,4 @@
-from copy import copy
+import operator
 
 import torch
 import torch.fx as fx
@@ -32,9 +32,10 @@ def _insert_resharding_nodes(mg, pass_args={}):
         if node.op != "output" and len(flattened_args) != len(
             node.meta["mase"]["common"]["args"]
         ):
-            logger.warning(
-                f"Skipping node: {node.name} because number of arguments do not match metadata."
-            )
+            if "getitem" not in node.name:
+                logger.warning(
+                    f"Skipping node: {node.name} because number of arguments do not match metadata."
+                )
             continue
 
         for arg_idx, arg_name in enumerate(node.meta["mase"]["common"]["args"].keys()):
