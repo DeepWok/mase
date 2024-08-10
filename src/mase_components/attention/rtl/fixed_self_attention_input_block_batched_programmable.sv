@@ -44,7 +44,7 @@ module fixed_self_attention_input_block_batched_programmable #(
     input logic clk,
     input logic rst,
 
-    input logic  [DATA_IN_0_MAX_DEPTH_DIM_0_WIDTH:0] data_in_0_depth_dim_0,
+    input logic  [DATA_IN_0_MAX_DEPTH_DIM_0_WIDTH:0] data_in_0_depth_dim_1,
     input logic  [WEIGHT_MAX_TENSOR_SIZE_DIM_0_WIDTH:0] weight_tensor_size_dim0,  
     input logic  [WEIGHT_MAX_DEPTH_DIM_0_WIDTH:0] weight_depth_dim_0,
     input logic  [WEIGHT_MAX_DEPTH_DIM_1_WIDTH:0] weight_depth_dim_1,  
@@ -163,7 +163,7 @@ module fixed_self_attention_input_block_batched_programmable #(
       .clk,
       .rst,
 
-      .data_in_0_depth_dim1(data_in_0_depth_dim_0),
+      .data_in_0_depth_dim1(data_in_0_depth_dim_1),
       .weight_tensor_size_dim0(weight_tensor_size_dim0),
       .weight_depth_dim0(weight_depth_dim_0),
       .weight_depth_dim1(weight_depth_dim_1),
@@ -240,7 +240,7 @@ module fixed_self_attention_input_block_batched_programmable #(
       .clk,
       .rst,
 
-      .data_in_0_depth_dim1(data_in_0_depth_dim_0),
+      .data_in_0_depth_dim1(data_in_0_depth_dim_1),
       .weight_tensor_size_dim0(weight_tensor_size_dim0),
       .weight_depth_dim0(weight_depth_dim_0),
       .weight_depth_dim1(weight_depth_dim_1),
@@ -299,7 +299,7 @@ module fixed_self_attention_input_block_batched_programmable #(
       .clk,
       .rst,
 
-      .data_in_0_depth_dim1(data_in_0_depth_dim_0),
+      .data_in_0_depth_dim1(data_in_0_depth_dim_1),
       .weight_tensor_size_dim0(weight_tensor_size_dim0),
       .weight_depth_dim0(weight_depth_dim_0),
       .weight_depth_dim1(weight_depth_dim_1),

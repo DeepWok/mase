@@ -10,6 +10,8 @@ import logging
 from functools import partial
 from einops import rearrange
 
+from random import choice
+
 import math
 
 import cocotb
@@ -307,6 +309,8 @@ class SwinAttentionHelp(nn.Module):
 
 
         #print("sum: ", q_windows + self.rel_content_bias)
+        print("bias_content", q_windows+self.rel_content_bias)
+        print("bias positioanl", q_windows+self.rel_pos_bias)
 
         k_windows = k_windows.transpose(-2, -1)
         content_attn = torch.matmul(
@@ -316,8 +320,7 @@ class SwinAttentionHelp(nn.Module):
             # k_windows,
         ) * (self.dim_key**-0.5)
 
-        print("ca:", content_attn)
-
+        print("content attention", content_attn)
         # calculate position attention
         rel_k = rel_k.transpose(-2, -1)
 
@@ -325,9 +328,6 @@ class SwinAttentionHelp(nn.Module):
 
         self.rel_k = rel_k
 
-        rel_k_shifted = relative_shift_swin(rel_k.unsqueeze(2))
-
-        print("relk shifted", rel_k_shifted)
 
         rel_logits = torch.matmul(
             q_windows + self.rel_pos_bias,
@@ -340,15 +340,6 @@ class SwinAttentionHelp(nn.Module):
         position_attn = relative_shift_swin(rel_logits)
         
         print("pa shifted:", position_attn)
-
-        rel_logits_pres = torch.matmul(
-            q_windows + self.rel_pos_bias,
-            rel_k_shifted
-            # q_windows,
-            # rel_k,
-        )
-
-        print("pa preshifted", rel_logits_pres)
 
 
         attn = content_attn + position_attn
@@ -366,6 +357,7 @@ class SwinAttentionHelp(nn.Module):
         out = torch.matmul(attn, v_windows)
         out = rearrange(out, "b h w n d -> b w n (h d)")
         out = self.to_out(out)
+        print("out",out)
         out = self.proj_dropout(out)
 
         out = rearrange(out, "b w n d -> b (w n) d")
@@ -396,29 +388,45 @@ class FixedSwinAttentionTB(Testbench):
         print(self.model.to_qkv.weight.data)
         #self.qkv_split_weights = torch.split(self.model.to_qkv.weight.data, 4, dim=0)
 
+        DATA_IN_0_PARALLELISM_DIM_0 = self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0")
+        DATA_IN_0_PARALLELISM_DIM_1 = self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1")
+        DATA_IN_0_MAX_TENSOR_SIZE_DIM_0 = self.get_parameter("DATA_IN_0_MAX_TENSOR_SIZE_DIM_0")
+        DATA_IN_0_MAX_TENSOR_SIZE_DIM_1 = self.get_parameter("DATA_IN_0_MAX_TENSOR_SIZE_DIM_1")
+
+        WEIGHT_PARALLELISM_DIM_0 = self.get_parameter("WEIGHT_PARALLELISM_DIM_0")
+        WEIGHT_PARALLELISM_DIM_1 = self.get_parameter("WEIGHT_PARALLELISM_DIM_1")
+        WEIGHT_MAX_TENSOR_SIZE_DIM_0 = self.get_parameter("WEIGHT_MAX_TENSOR_SIZE_DIM_0")
+        WEIGHT_MAX_TENSOR_SIZE_DIM_1 = self.get_parameter("WEIGHT_MAX_TENSOR_SIZE_DIM_1")
+
+        #SEQ_LEN = choice(range(DATA_IN_0_PARALLELISM_DIM_0, DATA_IN_0_MAX_TENSOR_SIZE_DIM_0, DATA_IN_0_PARALLELISM_DIM_0))
+        #FTR_SIZE = choice(range(DATA_IN_0_PARALLELISM_DIM_1, DATA_IN_0_MAX_TENSOR_SIZE_DIM_1, DATA_IN_0_PARALLELISM_DIM_1))
+        SEQ_LEN = 4
+        FTR_SIZE = 4
+        
+        KEY_SIZE = 4
+        N_HEADS = 1
+        q_shape = (1, 1, 1, SEQ_LEN, FTR_SIZE)
+
+        self.dut.data_in_0_depth_dim_1.value = SEQ_LEN//DATA_IN_0_PARALLELISM_DIM_1
+        self.dut.weight_tensor_size_dim0.value = KEY_SIZE*N_HEADS
+        self.dut.weight_depth_dim_0.value = KEY_SIZE*N_HEADS//WEIGHT_PARALLELISM_DIM_0
+        self.dut.weight_depth_dim_1.value = FTR_SIZE//WEIGHT_PARALLELISM_DIM_1
+        self.dut.weight_depth_mult.value = FTR_SIZE//WEIGHT_PARALLELISM_DIM_1 * KEY_SIZE*N_HEADS//WEIGHT_PARALLELISM_DIM_0
+
+
+        self.dut.block_per_head.value = (KEY_SIZE*N_HEADS//WEIGHT_PARALLELISM_DIM_0) //N_HEADS
+        self.dut.q_depth_dim_0.value = KEY_SIZE*N_HEADS//WEIGHT_PARALLELISM_DIM_0
+        self.dut.q_depth_dim_1.value = SEQ_LEN//DATA_IN_0_PARALLELISM_DIM_1
+        self.dut.q_depth_mult.value = SEQ_LEN//DATA_IN_0_PARALLELISM_DIM_1 * KEY_SIZE*N_HEADS//WEIGHT_PARALLELISM_DIM_0
+
         #rearrange weights so that outputs match
-        self.qkv_split_weights = []
-        self.qkv_split_weights.append(self.model.to_qkv.weight.data[[0, 3, 6, 9], : ]) 
-        self.qkv_split_weights.append(self.model.to_qkv.weight.data[[1, 4, 7, 10], :]) 
-        self.qkv_split_weights.append(self.model.to_qkv.weight.data[[2, 5, 8, 11], :]) 
+        self.qkv_split_weights = self.split_matrix(self.model.to_qkv.weight.data)
+        self.out_weights = self.model.to_out.weight.data
+        self.out_bias = self.model.to_out.bias.expand(q_shape)
 
-        self.rel_content_bias = self.model.rel_content_bias
-        self.rel_content_bias = self.rel_content_bias.squeeze()
-        self.rel_content_bias = self.rel_content_bias.unsqueeze(0)
-        self.rel_content_bias = self.rel_content_bias.repeat(4,1)
-        print("rel content bias", self.rel_content_bias)
+        self.rel_content_bias = self.model.rel_content_bias.expand(q_shape)
 
-        self.rel_positional_bias = self.model.rel_pos_bias
-        self.rel_positional_bias = self.rel_positional_bias.squeeze()
-        self.rel_positional_bias = self.rel_positional_bias.unsqueeze(0)
-        self.rel_positional_bias = self.rel_positional_bias.repeat(4,1)
-        print("rel content bias", self.rel_positional_bias)
-
-        if self.get_parameter("HAS_BIAS") == 1:
-            self.model.to_qkv.bias = nn.Parameter(torch.randn(self.model.to_qkv.out_features))
-            self.qkv_split_bias = torch.split(self.model.to_qkv.bias.data, 4, dim=0)
-        else:
-            self.model.to_qkv.bias = nn.Parameter(torch.zeros(self.model.to_qkv.out_features))
+        self.rel_pos_bias = self.model.rel_pos_bias.expand(q_shape)
 
 
         if not hasattr(self, "log"):
@@ -439,6 +447,9 @@ class FixedSwinAttentionTB(Testbench):
         self.weight_value_driver = StreamDriver(
             dut.clk, dut.weight_value, dut.weight_value_valid, dut.weight_value_ready
         )
+        self.weight_out_driver = StreamDriver(
+            dut.clk, dut.weight_out, dut.weight_out_valid, dut.weight_out_ready
+        )
 
         self.bias_con_driver = StreamDriver(
             dut.clk, dut.bias_con, dut.bias_con_valid, dut.bias_con_ready
@@ -448,23 +459,13 @@ class FixedSwinAttentionTB(Testbench):
             dut.clk, dut.bias_pos, dut.bias_pos_valid, dut.bias_pos_ready
         )
 
+        self.bias_out_driver = StreamDriver(
+            dut.clk, dut.bias_out, dut.bias_out_valid, dut.bias_out_ready
+        )
+
         self.rel_k_driver = StreamDriver(
             dut.clk, dut.pos_embed, dut.pos_embed_valid, dut.pos_embed_ready
         )
-
-        if self.get_parameter("HAS_BIAS") == 1:
-            self.bias_query_driver = StreamDriver(
-                dut.clk, dut.biasquery_, dut.bias_query_valid, dut.bias_query_ready
-            )
-            self.bias_key_driver = StreamDriver(
-                dut.clk, dut.bias_key, dut.bias_key_valid, dut.bias_key_ready
-            )
-            self.bias_value_driver = StreamDriver(
-                dut.clk, dut.bias_value, dut.bias_value_valid, dut.bias_value_ready
-            )
-            self.bias_query_driver.log.setLevel(logging.DEBUG)
-            self.bias_key_driver.log.setLevel(logging.DEBUG)
-            self.bias_value_driver.log.setLevel(logging.DEBUG)
 
         self.data_out_0_monitor = StreamMonitor(
             dut.clk,
@@ -477,21 +478,29 @@ class FixedSwinAttentionTB(Testbench):
         
 
         # Set verbosity of driver and monitor loggers to debug
-        self.data_in_0_driver.log.setLevel(logging.DEBUG)
-        self.weight_query_driver.log.setLevel(logging.DEBUG)
-        self.weight_key_driver.log.setLevel(logging.DEBUG)
-        self.weight_value_driver.log.setLevel(logging.DEBUG)
-        self.bias_con_driver.log.setLevel(logging.DEBUG)
-        self.bias_pos_driver.log.setLevel(logging.DEBUG)
-        self.rel_k_driver.log.setLevel(logging.DEBUG)
-        self.data_out_0_monitor.log.setLevel(logging.DEBUG)
+        # self.data_in_0_driver.log.setLevel(logging.DEBUG)
+        # self.weight_query_driver.log.setLevel(logging.DEBUG)
+        # self.weight_key_driver.log.setLevel(logging.DEBUG)
+        # self.weight_value_driver.log.setLevel(logging.DEBUG)
+        # self.bias_con_driver.log.setLevel(logging.DEBUG)
+        # self.bias_pos_driver.log.setLevel(logging.DEBUG)
+        # self.rel_k_driver.log.setLevel(logging.DEBUG)
+        # self.data_out_0_monitor.log.setLevel(logging.DEBUG)
+
+    #used to split the qkv linear layer weights into seperate matrices
+    def split_matrix(self, input):
+        output = []
+        for i in range(3):
+            indices = list(range(i, input.size(0), 3))
+            output.append(input[indices, :])
+        return output
 
     def generate_inputs(self, batch_size=1):
         return torch.randn(
             (
                 batch_size,
-                self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_1"),
-                self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
+                self.get_parameter("DATA_IN_0_MAX_TENSOR_SIZE_DIM_1"),
+                self.get_parameter("DATA_IN_0_MAX_TENSOR_SIZE_DIM_0"),
             )
         )
 
@@ -499,8 +508,8 @@ class FixedSwinAttentionTB(Testbench):
         return torch.randn(
             (
                 batch_size,
-                self.get_parameter("WEIGHT_TENSOR_SIZE_DIM_0"),
-                self.get_parameter("WEIGHT_TENSOR_SIZE_DIM_1"),
+                self.get_parameter("WEIGHT_MAX_TENSOR_SIZE_DIM_0"),
+                self.get_parameter("WEIGHT_MAX_TENSOR_SIZE_DIM_1"),
             )
         )
 
@@ -508,8 +517,8 @@ class FixedSwinAttentionTB(Testbench):
         return torch.randn(
             (
                 batch_size,
-                self.get_parameter("BIAS_TENSOR_SIZE_DIM_0"),
-                self.get_parameter("BIAS_TENSOR_SIZE_DIM_1"),
+                self.get_parameter("BIAS_MAX_TENSOR_SIZE_DIM_0"),
+                self.get_parameter("BIAS_MAX_TENSOR_SIZE_DIM_1"),
             )
         )
 
@@ -521,19 +530,21 @@ class FixedSwinAttentionTB(Testbench):
         inputs = self.generate_inputs()
         exp_out = self.model(inputs)
 
-        #print("bias: ", self.model.to_qkv.bias)
+        rel_k_squeezed = self.model.rel_k.squeeze()
+        I,J = rel_k_squeezed.shape
 
-        weights = self.model.to_qkv.weight.data
-        #print(weights)
-        #print("k weights: ", self.qkv_split_weights[1])
-        #print("inputs: ", inputs)
+        windows = []
+        for i in range(J-I+1):
+            windows.append (rel_k_squeezed[i,J-I-i:J-i])
+        #     rel_k_input = torch.cat((rel_k_input, window), dim=1)
+        #     temp = rel_k_squeezed[:, -I-i:-i]
+        #     print(temp)
+        print(windows)
+        rel_k_input = torch.stack(windows)
 
-        #print("k transpose: ", torch.matmul(inputs, self.qkv_split_weights[1].t()))
-        #print("k: ", torch.matmul(inputs, self.qkv_split_weights[1]))
-        
-
-
-        #print("Inputs: ", inputs)
+        print("rel_k_input", rel_k_input)   
+        print("rel_k", self.model.rel_k)      
+        #LOAD INPUTS
         inputs = fixed_preprocess_tensor(
             tensor=inputs,
             q_config={
@@ -553,8 +564,8 @@ class FixedSwinAttentionTB(Testbench):
             else:
                 weights = self.qkv_split_weights[index]
 
-            
-
+            if (projection == "key"):
+                weights = weights*(self.model.dim_key**-0.5)
             self.log.info(f"Processing {projection} weights: {weights}")
             weights = fixed_preprocess_tensor(
                 tensor=weights,
@@ -567,67 +578,75 @@ class FixedSwinAttentionTB(Testbench):
                     self.get_parameter("WEIGHT_PARALLELISM_DIM_0"),
                 ],
             )
+
             getattr(self, f"weight_{projection}_driver").load_driver(weights)
 
-            # * Load the bias driver
-            if self.get_parameter("HAS_BIAS") == 1:
-                bias = self.qkv_split_bias[index]
-                self.log.info(f"Processing {projection} bias: {bias}")
-                bias = fixed_preprocess_tensor(
-                    tensor=bias,
-                    q_config={
-                        "width": self.get_parameter("BIAS_PRECISION_0"),
-                        "frac_width": self.get_parameter("BIAS_PRECISION_1"),
-                    },
-                    parallelism=[
-                        self.get_parameter("BIAS_PARALLELISM_DIM_1"),
-                        self.get_parameter("BIAS_PARALLELISM_DIM_0"),
-                    ],
-                )
-                getattr(self, f"bias_{projection}_driver").load_driver(bias)
 
-            content_bias = fixed_preprocess_tensor(
-                    tensor=self.rel_content_bias,
-                    q_config={
-                        "width": self.get_parameter("BIAS_PRECISION_0"),
-                        "frac_width": self.get_parameter("BIAS_PRECISION_1"),
-                    },
-                    parallelism=[
-                        self.get_parameter("BIAS_PARALLELISM_DIM_1"),
-                        self.get_parameter("BIAS_PARALLELISM_DIM_0"),
-                    ],
-                )
-            self.bias_con_driver.load_driver(content_bias)
+        content_bias = fixed_preprocess_tensor(
+                tensor=self.rel_content_bias,
+                q_config={
+                    "width": self.get_parameter("BIAS_PRECISION_0"),
+                    "frac_width": self.get_parameter("BIAS_PRECISION_1"),
+                },
+                parallelism=[
+                    self.get_parameter("BIAS_PARALLELISM_DIM_1"),
+                    self.get_parameter("BIAS_PARALLELISM_DIM_0"),
+                ],
+            )
+        self.bias_con_driver.load_driver(content_bias)
 
-            print("cb", content_bias)
+        positional_bias = fixed_preprocess_tensor(
+                tensor=self.rel_pos_bias,
+                q_config={
+                    "width": self.get_parameter("BIAS_PRECISION_0"),
+                    "frac_width": self.get_parameter("BIAS_PRECISION_1"),
+                },
+                parallelism=[
+                    self.get_parameter("BIAS_PARALLELISM_DIM_1"),
+                    self.get_parameter("BIAS_PARALLELISM_DIM_0"),
+                ],
+            )
+        self.bias_pos_driver.load_driver(positional_bias)
 
-            positional_bias = fixed_preprocess_tensor(
-                    tensor=self.rel_positional_bias,
-                    q_config={
-                        "width": self.get_parameter("BIAS_PRECISION_0"),
-                        "frac_width": self.get_parameter("BIAS_PRECISION_1"),
-                    },
-                    parallelism=[
-                        self.get_parameter("BIAS_PARALLELISM_DIM_1"),
-                        self.get_parameter("BIAS_PARALLELISM_DIM_0"),
-                    ],
-                )
-            print("pb", positional_bias)
-            self.bias_pos_driver.load_driver(positional_bias)
+        rel_k = fixed_preprocess_tensor(
+                tensor=rel_k_input,
+                q_config={
+                    "width": self.get_parameter("WEIGHT_PRECISION_0"),
+                    "frac_width": self.get_parameter("WEIGHT_PRECISION_1"),
+                },
+                parallelism=[
+                    self.get_parameter("WEIGHT_PARALLELISM_DIM_1") * self.get_parameter("WEIGHT_PARALLELISM_DIM_0"),
+                    self.get_parameter("WEIGHT_PARALLELISM_DIM_0"),
+                ],
+            )
+        self.rel_k_driver.load_driver(rel_k)
+        self.rel_k_driver.load_driver(rel_k)
 
-            rel_k = fixed_preprocess_tensor(
-                    tensor=self.model.rel_k,
-                    q_config={
-                        "width": self.get_parameter("WEIGHT_PRECISION_0"),
-                        "frac_width": self.get_parameter("WEIGHT_PRECISION_1"),
-                    },
-                    parallelism=[
-                        self.get_parameter("WEIGHT_PARALLELISM_DIM_1"),
-                        self.get_parameter("WEIGHT_PARALLELISM_DIM_0"),
-                    ],
-                )
-            print("rel k", self.model.rel_k)
-            self.rel_k_driver.load_driver(rel_k)
+        weight_out = fixed_preprocess_tensor(
+                tensor=self.out_weights.transpose(0, 1),
+                q_config={
+                    "width": self.get_parameter("BIAS_PRECISION_0"),
+                    "frac_width": self.get_parameter("BIAS_PRECISION_1"),
+                },
+                parallelism=[
+                    self.get_parameter("BIAS_PARALLELISM_DIM_1"),
+                    self.get_parameter("BIAS_PARALLELISM_DIM_0"),
+                ],
+        )
+        self.weight_out_driver.load_driver(weight_out)
+
+        bias_out = fixed_preprocess_tensor(
+                tensor = self.out_bias,
+                q_config={
+                    "width": self.get_parameter("BIAS_PRECISION_0"),
+                    "frac_width": self.get_parameter("BIAS_PRECISION_1"),
+                },
+                parallelism=[
+                    self.get_parameter("BIAS_PARALLELISM_DIM_1"),
+                    self.get_parameter("BIAS_PARALLELISM_DIM_0"),
+                ],
+        )
+        self.bias_out_driver.load_driver(bias_out)
 
             
 
@@ -660,7 +679,7 @@ async def cocotb_test(dut):
 
 def get_config(kwargs={}):
     config = {
-        "NUM_HEADS": 1,
+        "NUM_HEADS": 2,
         "ACTIVATION": 0,
         "DATA_IN_0_MAX_TENSOR_SIZE_DIM_0": 4,
         "DATA_IN_0_MAX_TENSOR_SIZE_DIM_1": 4,
