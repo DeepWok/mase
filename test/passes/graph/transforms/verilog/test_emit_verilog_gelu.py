@@ -43,12 +43,10 @@ class MLP(torch.nn.Module):
 
         self.fc1 = nn.Linear(10, 10, bias=True)
         self.act = nn.GELU()
-        self.fc2 = nn.Linear(10, 10, bias=True)
 
     def forward(self, x):
         x = self.fc1(x)
         x = self.act(x)
-        x = self.fc2(x)
         return x
 
 

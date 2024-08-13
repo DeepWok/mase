@@ -15,7 +15,7 @@ from pathlib import Path
 from chop.actions import simulate
 from chop.tools.logger import set_logging_verbosity
 from chop.tools import get_logger
-
+from chop.models.vision.vit.vit import Mlp
 set_logging_verbosity("debug")
 
 
@@ -33,28 +33,11 @@ sys.excepthook = excepthook
 #   Model specifications
 #   prefer small models for fast test
 # --------------------------------------------------
-class MLP(torch.nn.Module):
-    """
-    Toy quantized FC model for digit recognition on MNIST
-    """
-
-    def __init__(self) -> None:
-        super().__init__()
-
-        self.fc1 = nn.Linear(10, 10, bias=True)
-        self.act = nn.GELU()
-        self.fc2 = nn.Linear(10, 10, bias=True)
-
-    def forward(self, x):
-        x = self.fc1(x)
-        x = self.act(x)
-        x = self.fc2(x)
-        return x
 
 
 @pytest.mark.dev
 def test_emit_verilog_linear():
-    mlp = MLP()
+    mlp = Mlp()
     mg = chop.MaseGraph(model=mlp)
 
     # Provide a dummy input for the graph so it can use for tracing

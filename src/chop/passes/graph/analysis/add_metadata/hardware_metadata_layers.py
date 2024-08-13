@@ -148,7 +148,6 @@ INTERNAL_COMP = {
             "name": "fixed_gelu",
             "dependence_files": [
                 "activation_layers/rtl/fixed_gelu.sv",
-                "activation_layers/rtl/gelu_lut.sv",
             ],
         },
     ],

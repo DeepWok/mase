@@ -164,7 +164,7 @@ def create_new_module(
         new_module = new_module_cls(config=config)
     elif mase_op == "gelu":
         new_module_cls = quantized_module_map[f"gelu_{quant_name}"]
-        new_module = new_module_cls(inplace=original_module.inplace, config=config)
+        new_module = new_module_cls(config=config)
     elif mase_op == "softsign":
         new_module_cls = quantized_module_map[f"softsign_{quant_name}"]
         new_module = new_module_cls(inplace=original_module.inplace, config=config)

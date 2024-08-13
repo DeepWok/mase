@@ -782,9 +782,10 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
                 func = "logsigmoid"
             elif isinstance(module, nn.Softmax):
                 func = "exp"
+            elif isinstance(module, nn.GELU):
+                func = "gelu"
             else:
                 func = "Unknown"
-
             if func != "Unknown":
                 d_in_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
                     "DATA_IN_0_PRECISION_0"
