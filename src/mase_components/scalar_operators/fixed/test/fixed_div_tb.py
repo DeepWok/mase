@@ -70,6 +70,7 @@ class FixedDivTB(Testbench):
 
             divisor = self.generate_inputs()
             qdivisor = divisor
+            # breakpoint()
             self.log.info(f"Processing divisor: {divisor}")
             self.divisor_driver.load_driver(qdivisor.tolist())
             safe_divisor = torch.where(divisor == 0, torch.tensor(0.000001), divisor)
@@ -98,14 +99,18 @@ class FixedDivTB(Testbench):
 @cocotb.test()
 async def repeated_backpressure(dut):
     tb = FixedDivTB(dut)
-    cocotb.start_soon(bit_driver(dut.quotient_data_ready, dut.clk, 0.1))
+    tb.dividend_driver.set_valid_prob(0.2)
+    tb.divisor_driver.set_valid_prob(0.2)
+    # tb.quotient_monitor.ready.value = 1
+
+    cocotb.start_soon(bit_driver(dut.quotient_data_ready, dut.clk, 0.5))
     await tb.run_test(batches=10, us=200)
 
 dut_params = {
-    "IN_NUM": 8,
-    "DIVIDEND_WIDTH": 16,
-    "DIVISOR_WIDTH": 16,
-    "QUOTIENT_WIDTH": 16,
+    "IN_NUM": 1,
+    "DIVIDEND_WIDTH": 13,
+    "DIVISOR_WIDTH": 20,
+    "QUOTIENT_WIDTH": 9,
 }
 
 

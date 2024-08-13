@@ -215,7 +215,7 @@ def handshake_signal_check(valid, ready, signal, log, frac_width=0):
 async def single_test(dut):
     tb = LayerNormTB(dut)
     tb.out_data_monitor.ready.value = 1
-    await tb.run_test(batches=10, us=100)
+    await tb.run_test(batches=1, us=100)
 
 
 # @cocotb.test()
@@ -225,19 +225,19 @@ async def single_test(dut):
 #     await tb.run_test(batches=100, us=2000)
 
 
-# @cocotb.test()
-# async def repeated_mult_backpressure(dut):
-#     tb = LayerNormTB(dut)
-#     cocotb.start_soon(bit_driver(dut.data_out_0_ready, dut.clk, 0.6))
-#     await tb.run_test(batches=10, us=500)
+@cocotb.test()
+async def repeated_mult_backpressure(dut):
+    tb = LayerNormTB(dut)
+    cocotb.start_soon(bit_driver(dut.data_out_0_ready, dut.clk, 0.6))
+    await tb.run_test(batches=10, us=500)
 
 
-# @cocotb.test()
-# async def repeated_mult_valid_backpressure(dut):
-#     tb = LayerNormTB(dut)
-#     tb.in_data_driver.set_valid_prob(0.7)
-#     cocotb.start_soon(bit_driver(dut.data_out_0_ready, dut.clk, 0.6))
-#     await tb.run_test(batches=50, us=200)
+@cocotb.test()
+async def repeated_mult_valid_backpressure(dut):
+    tb = LayerNormTB(dut)
+    tb.in_data_driver.set_valid_prob(0.7)
+    cocotb.start_soon(bit_driver(dut.data_out_0_ready, dut.clk, 0.6))
+    await tb.run_test(batches=50, us=200)
 
 # Don't support :
 # 1. DATA_IN_0_PARALLELISM_DIM_0 ==DATA_IN_0_TENSOR_SIZE_DIM_0

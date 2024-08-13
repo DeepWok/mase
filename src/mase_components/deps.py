@@ -21,6 +21,7 @@ MASE_HW_DEPS = {
         "common",
         "memory",
         "activation_layers",
+        "generated_lut",
     ],
     "activation_layers/fixed_softsign": [
         "common",
@@ -310,6 +311,7 @@ MASE_HW_DEPS = {
         "scalar_operators/fixed",
         "memory",
         "cast",
+        "common",
     ],
     # Transformer Layers
     "transformer_layers/fixed_gqa_head": [

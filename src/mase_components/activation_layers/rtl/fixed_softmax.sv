@@ -97,7 +97,7 @@ module fixed_softmax #(
   end
 
   unpacked_fifo #(
-      .DEPTH(OUT_0_DEPTH),
+      .DEPTH(OUT_0_DEPTH*8),
       .DATA_WIDTH(DATA_EXP_0_PRECISION_0),
       .IN_NUM(DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1)
   ) out_roller_buffer (
@@ -179,34 +179,34 @@ module fixed_softmax #(
       always_comb begin
         extended_divisor[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j] = ff_exp_data[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j] << DATA_OUT_0_PRECISION_1;
         ff_accumulated_exp_data_dup[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j] = ff_accumulated_exp_data[i];
-        extended_quotient[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j] = extended_divisor[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j] / ff_accumulated_exp_data[i];
+        // extended_quotient[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j] = extended_divisor[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j] / ff_accumulated_exp_data[i];
         data_out_0[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j]  = extended_quotient[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j][DATA_OUT_0_PRECISION_0-1:0];
       end
     end
   end
 
-  join2 #() output_handshake_split (
-      .data_in_valid ({ff_exp_data_valid, ff_acc_valid}),
-      .data_in_ready ({ff_exp_data_ready, ff_acc_ready}),
-      .data_out_valid(data_out_0_valid),
-      .data_out_ready(data_out_0_ready)
-  );
-  // fixed_div #(
-  //     .IN_NUM(DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1),
-  //     .DIVIDEND_WIDTH(DATA_EXP_0_PRECISION_0 + DATA_OUT_0_PRECISION_1),
-  //     .DIVISOR_WIDTH(ACC_WIDTH),
-  //     .QUOTIENT_WIDTH(DATA_OUT_0_PRECISION_0 + DATA_OUT_0_PRECISION_1)
-  // ) div_inst (
-  //     .clk(clk),
-  //     .rst(rst),
-  //     .dividend_data(extended_divisor),
-  //     .dividend_data_valid(ff_exp_data_valid),
-  //     .dividend_data_ready(ff_exp_data_ready),
-  //     .divisor_data(ff_accumulated_exp_data_dup),
-  //     .divisor_data_valid(ff_acc_valid),
-  //     .divisor_data_ready(ff_acc_ready),
-  //     .quotient_data(extended_quotient),
-  //     .quotient_data_valid(data_out_0_valid),
-  //     .quotient_data_ready(data_out_0_ready)
+  // join2 #() output_handshake_split (
+  //     .data_in_valid ({ff_exp_data_valid, ff_acc_valid}),
+  //     .data_in_ready ({ff_exp_data_ready, ff_acc_ready}),
+  //     .data_out_valid(data_out_0_valid),
+  //     .data_out_ready(data_out_0_ready)
   // );
+  fixed_div #(
+      .IN_NUM(DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1),
+      .DIVIDEND_WIDTH(DATA_EXP_0_PRECISION_0 + DATA_OUT_0_PRECISION_1),
+      .DIVISOR_WIDTH(ACC_WIDTH),
+      .QUOTIENT_WIDTH(DATA_OUT_0_PRECISION_0 + DATA_OUT_0_PRECISION_1)
+  ) div_inst (
+      .clk(clk),
+      .rst(rst),
+      .dividend_data(extended_divisor),
+      .dividend_data_valid(ff_exp_data_valid),
+      .dividend_data_ready(ff_exp_data_ready),
+      .divisor_data(ff_accumulated_exp_data_dup),
+      .divisor_data_valid(ff_acc_valid),
+      .divisor_data_ready(ff_acc_ready),
+      .quotient_data(extended_quotient),
+      .quotient_data_valid(data_out_0_valid),
+      .quotient_data_ready(data_out_0_ready)
+  );
 endmodule

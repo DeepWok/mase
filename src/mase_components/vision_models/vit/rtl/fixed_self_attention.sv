@@ -3,22 +3,22 @@ module fixed_self_attention #(
     // currently assume weights are all transposed
     // currently force weight dim keep same
 
-    parameter NUM_HEADS  = 12,
+    parameter NUM_HEADS  = 4,
     parameter ACTIVATION = 0,
 
-    parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 768,
-    parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 20,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 8,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 2,
     parameter DATA_IN_0_PARALLELISM_DIM_0 = 4,
-    parameter DATA_IN_0_PARALLELISM_DIM_1 = 4,
-    parameter DATA_IN_0_PRECISION_0 = 16,
+    parameter DATA_IN_0_PARALLELISM_DIM_1 = 2,
+    parameter DATA_IN_0_PRECISION_0 = 8,
     parameter DATA_IN_0_PRECISION_1 = 3,
 
     parameter WEIGHTS_PRE_TRANSPOSED = 1,
-    parameter WEIGHT_TENSOR_SIZE_DIM_0 = 768,
-    parameter WEIGHT_TENSOR_SIZE_DIM_1 = 768,
+    parameter WEIGHT_TENSOR_SIZE_DIM_0 = 8,
+    parameter WEIGHT_TENSOR_SIZE_DIM_1 = 8,
     parameter WEIGHT_PARALLELISM_DIM_0 = 4,
     parameter WEIGHT_PARALLELISM_DIM_1 = 4,
-    parameter WEIGHT_PRECISION_0 = 16,
+    parameter WEIGHT_PRECISION_0 = 8,
     parameter WEIGHT_PRECISION_1 = 3,
 
     parameter HAS_BIAS = 1,
@@ -26,7 +26,7 @@ module fixed_self_attention #(
     parameter BIAS_TENSOR_SIZE_DIM_1 = 1,
     parameter BIAS_PARALLELISM_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_PARALLELISM_DIM_1: WEIGHT_PARALLELISM_DIM_0,
     parameter BIAS_PARALLELISM_DIM_1 = 1,
-    parameter BIAS_PRECISION_0 = 16,
+    parameter BIAS_PRECISION_0 = 8,
     parameter BIAS_PRECISION_1 = 3,
 
     parameter QKV_PRECISION_0 = 16,
@@ -42,12 +42,12 @@ module fixed_self_attention #(
     parameter WEIGHT_PROJ_PRECISION_0 = 12,
     parameter WEIGHT_PROJ_PRECISION_1 = 3,
 
-    parameter WEIGHT_PROJ_TENSOR_SIZE_DIM_0 = 768,
-    parameter WEIGHT_PROJ_TENSOR_SIZE_DIM_1 = 768,
+    parameter WEIGHT_PROJ_TENSOR_SIZE_DIM_0 = 8,
+    parameter WEIGHT_PROJ_TENSOR_SIZE_DIM_1 = 8,
     parameter WEIGHT_PROJ_PARALLELISM_DIM_0 = 4,
     parameter WEIGHT_PROJ_PARALLELISM_DIM_1 = 4,
     
-    parameter BIAS_PROJ_PRECISION_0 = 12,
+    parameter BIAS_PROJ_PRECISION_0 = 8,
     parameter BIAS_PROJ_PRECISION_1 = 3,
     parameter BIAS_PROJ_TENSOR_SIZE_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_PROJ_TENSOR_SIZE_DIM_1: WEIGHT_PROJ_TENSOR_SIZE_DIM_0,
     parameter BIAS_PROJ_TENSOR_SIZE_DIM_1 = 1,
@@ -135,12 +135,20 @@ module fixed_self_attention #(
   logic [QKV_PRECISION_0-1:0] value[DATA_IN_0_PARALLELISM_DIM_1 * HEAD_OUT_0_PARALLELISM_DIM_0-1:0];
   logic joint_value_valid, joint_value_ready;
   logic [NUM_HEADS-1:0] split_value_valid, split_value_ready;
+
+  logic [QKV_PRECISION_0-1:0] fifo_query[DATA_IN_0_PARALLELISM_DIM_1 * HEAD_OUT_0_PARALLELISM_DIM_0-1:0];
+  logic fifo_query_valid, fifo_query_ready;
+  logic [QKV_PRECISION_0-1:0] fifo_key[DATA_IN_0_PARALLELISM_DIM_1 * HEAD_OUT_0_PARALLELISM_DIM_0-1:0];
+  logic fifo_key_valid, fifo_key_ready;
+  logic [QKV_PRECISION_0-1:0] fifo_value[DATA_IN_0_PARALLELISM_DIM_1 * HEAD_OUT_0_PARALLELISM_DIM_0-1:0];
+  logic fifo_value_valid, fifo_value_ready;
+
   // Head output
   logic [SVMM_OUT_PRECISION_0-1:0] head_out [NUM_HEADS-1:0] [HEAD_OUT_0_PARALLELISM_DIM_0 * HEAD_OUT_0_PARALLELISM_DIM_1-1:0];
   logic [NUM_HEADS-1:0] head_out_valid;
   logic [NUM_HEADS-1:0] head_out_ready;
 
-  logic [SVMM_OUT_PRECISION_0-1:0] proj_in [HEAD_OUT_0_PARALLELISM_DIM_1 * HEAD_OUT_0_PARALLELISM_DIM_1-1:0];
+  logic [SVMM_OUT_PRECISION_0-1:0] proj_in [HEAD_OUT_0_PARALLELISM_DIM_0 * HEAD_OUT_0_PARALLELISM_DIM_1-1:0];
   logic proj_in_valid, proj_in_ready;
 
   // * Instances
@@ -217,12 +225,69 @@ module fixed_self_attention #(
       .data_out_key_valid(joint_key_valid),
       .data_out_key_ready(joint_key_ready),
 
+    //   // Value output
+    //   .data_out_value(value),
+    //   .data_out_value_valid(joint_value_valid),
+    //   .data_out_value_ready(joint_value_ready)
+
+    //   // Query output
+    //   .data_out_query(fifo_query),
+    //   .data_out_query_valid(fifo_query_valid),
+    //   .data_out_query_ready(fifo_query_ready),
+
+    //   // Key output
+    //   .data_out_key(fifo_key),
+    //   .data_out_key_valid(fifo_key_valid),
+    //   .data_out_key_ready(fifo_key_ready),
+
       // Value output
-      .data_out_value(value),
-      .data_out_value_valid(joint_value_valid),
-      .data_out_value_ready(joint_value_ready)
+      .data_out_value(fifo_value),
+      .data_out_value_valid(fifo_value_valid),
+      .data_out_value_ready(fifo_value_ready)
   );
 
+//   unpacked_fifo #(
+//       .DEPTH(64),
+//       .DATA_WIDTH(QKV_PRECISION_0),
+//       .IN_NUM(DATA_IN_0_PARALLELISM_DIM_1 * HEAD_OUT_0_PARALLELISM_DIM_0)
+//   ) query_in_buffer (
+//       .clk(clk),
+//       .rst(rst),
+//       .data_in(fifo_query),
+//       .data_in_valid(fifo_query_valid),
+//       .data_in_ready(fifo_query_ready),  // write enable
+//       .data_out(query),
+//       .data_out_valid(joint_query_valid),
+//       .data_out_ready(joint_query_ready)  // read enable
+//   );
+//   unpacked_fifo #(
+//       .DEPTH(64),
+//       .DATA_WIDTH(QKV_PRECISION_0),
+//       .IN_NUM(DATA_IN_0_PARALLELISM_DIM_1 * HEAD_OUT_0_PARALLELISM_DIM_0)
+//   ) key_in_buffer (
+//       .clk(clk),
+//       .rst(rst),
+//       .data_in(fifo_key),
+//       .data_in_valid(fifo_key_valid),
+//       .data_in_ready(fifo_key_ready),  // write enable
+//       .data_out(key),
+//       .data_out_valid(joint_key_valid),
+//       .data_out_ready(joint_key_ready)  // read enable
+//   );
+  unpacked_fifo #(
+      .DEPTH(64),
+      .DATA_WIDTH(QKV_PRECISION_0),
+      .IN_NUM(DATA_IN_0_PARALLELISM_DIM_1 * HEAD_OUT_0_PARALLELISM_DIM_0)
+  ) value_in_buffer (
+      .clk(clk),
+      .rst(rst),
+      .data_in(fifo_value),
+      .data_in_valid(fifo_value_valid),
+      .data_in_ready(fifo_value_ready),  // write enable
+      .data_out(value),
+      .data_out_valid(joint_value_valid),
+      .data_out_ready(joint_value_ready)  // read enable
+  );
   // * Scatter query, key, value
 
   self_attention_head_scatter #(

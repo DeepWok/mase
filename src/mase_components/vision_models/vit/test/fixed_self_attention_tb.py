@@ -63,10 +63,10 @@ class FixedSelfAttentionTB(Testbench):
             self.bias_proj_driver = StreamDriver(
                 dut.clk, dut.bias_proj, dut.bias_proj_valid, dut.bias_proj_ready
             )
-            self.bias_query_driver.log.setLevel(logging.DEBUG)
-            self.bias_key_driver.log.setLevel(logging.DEBUG)
-            self.bias_value_driver.log.setLevel(logging.DEBUG)
-            self.bias_proj_driver.log.setLevel(logging.DEBUG)
+            self.bias_query_driver.log.setLevel(logging.INFO)
+            self.bias_key_driver.log.setLevel(logging.INFO)
+            self.bias_value_driver.log.setLevel(logging.INFO)
+            self.bias_proj_driver.log.setLevel(logging.INFO)
 
         self.data_out_0_monitor = StreamMonitor(
             dut.clk,
@@ -112,11 +112,11 @@ class FixedSelfAttentionTB(Testbench):
 
         # Set verbosity of driver and monitor loggers to debug
         self.data_in_0_driver.log.setLevel(logging.DEBUG)
-        self.weight_query_driver.log.setLevel(logging.DEBUG)
-        self.weight_key_driver.log.setLevel(logging.DEBUG)
-        self.weight_value_driver.log.setLevel(logging.DEBUG)
-        self.weight_proj_driver.log.setLevel(logging.DEBUG)
-        self.data_out_0_monitor.log.setLevel(logging.DEBUG)
+        self.weight_query_driver.log.setLevel(logging.INFO)
+        self.weight_key_driver.log.setLevel(logging.INFO)
+        self.weight_value_driver.log.setLevel(logging.INFO)
+        self.weight_proj_driver.log.setLevel(logging.INFO)
+        self.data_out_0_monitor.log.setLevel(logging.INFO)
 
     def generate_inputs(self, batch_size=1):
         return torch.randn(
@@ -127,129 +127,129 @@ class FixedSelfAttentionTB(Testbench):
             )
         )
 
-    async def run_test(self, us=100):
+    async def run_test(self, batches = 1, us=100):
         await self.reset()
         self.log.info(f"Reset finished") 
         self.data_out_0_monitor.ready.value = 1
+        for _ in range(batches):
+            inputs = self.generate_inputs()
+            exp_out = self.model(inputs)[0]
 
-        inputs = self.generate_inputs()
-        exp_out = self.model(inputs)[0]
+            # * Load the inputs driver
+            self.log.info(f"Processing inputs: {inputs}")
+            inputs = fixed_preprocess_tensor(
+                tensor=inputs,
+                q_config={
+                    "width": self.get_parameter("DATA_IN_0_PRECISION_0"),
+                    "frac_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
+                },
+                parallelism=[
+                    self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1"),
+                    self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"),
+                ],
+                floor=True,
+            )
+            self.data_in_0_driver.load_driver(inputs)
 
-        # * Load the inputs driver
-        self.log.info(f"Processing inputs: {inputs}")
-        inputs = fixed_preprocess_tensor(
-            tensor=inputs,
-            q_config={
-                "width": self.get_parameter("DATA_IN_0_PRECISION_0"),
-                "frac_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
-            },
-            parallelism=[
-                self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1"),
-                self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"),
-            ],
-            floor=True,
-        )
-        self.data_in_0_driver.load_driver(inputs)
+            # * Load the qkv weight driver
+            qkv_weight = self.model.qkv.weight.reshape(
+                3, self.get_parameter("WEIGHT_TENSOR_SIZE_DIM_1"), self.get_parameter("WEIGHT_TENSOR_SIZE_DIM_0"))
+            qkv_bias = self.model.qkv.bias.reshape(
+                3, self.get_parameter("BIAS_TENSOR_SIZE_DIM_1"), self.get_parameter("BIAS_TENSOR_SIZE_DIM_0"))
+            i = 0
+            for projection in ["query", "key", "value"]:
+                
+                if self.get_parameter("WEIGHTS_PRE_TRANSPOSED") == 1:
+                    weights = qkv_weight[i].transpose(0, 1)
+                else:
+                    weights = qkv_weight[i]
 
-        # * Load the qkv weight driver
-        qkv_weight = self.model.qkv.weight.reshape(
-            3, self.get_parameter("WEIGHT_TENSOR_SIZE_DIM_1"), self.get_parameter("WEIGHT_TENSOR_SIZE_DIM_0"))
-        qkv_bias = self.model.qkv.bias.reshape(
-            3, self.get_parameter("BIAS_TENSOR_SIZE_DIM_1"), self.get_parameter("BIAS_TENSOR_SIZE_DIM_0"))
-        i = 0
-        for projection in ["query", "key", "value"]:
+                self.log.info(f"Processing {projection} weights: {weights}")
+                weights = fixed_preprocess_tensor(
+                    tensor=weights,
+                    q_config={
+                        "width": self.get_parameter("WEIGHT_PRECISION_0"),
+                        "frac_width": self.get_parameter("WEIGHT_PRECISION_1"),
+                    },
+                    parallelism=[
+                        self.get_parameter("WEIGHT_PARALLELISM_DIM_1"),
+                        self.get_parameter("WEIGHT_PARALLELISM_DIM_0"),
+                    ],
+                    floor=True,
+                )
+                getattr(self, f"weight_{projection}_driver").load_driver(weights)
+
+                # * Load the bias driver
+                if self.get_parameter("HAS_BIAS") == 1:
+                    bias = qkv_bias[i]
+                    self.log.info(f"Processing {projection} bias: {bias}")
+                    bias = fixed_preprocess_tensor(
+                        tensor=bias,
+                        q_config={
+                            "width": self.get_parameter("BIAS_PRECISION_0"),
+                            "frac_width": self.get_parameter("BIAS_PRECISION_1"),
+                        },
+                        parallelism=[
+                            self.get_parameter("BIAS_PARALLELISM_DIM_1"),
+                            self.get_parameter("BIAS_PARALLELISM_DIM_0"),
+                        ],
+                        floor=True,
+                    )
+                    getattr(self, f"bias_{projection}_driver").load_driver(bias)
+                i = i+1
             
+            # * Load the proj weight driver
             if self.get_parameter("WEIGHTS_PRE_TRANSPOSED") == 1:
-                weights = qkv_weight[i].transpose(0, 1)
+                proj_weight = self.model.proj.weight.transpose(0, 1)
             else:
-                weights = qkv_weight[i]
-
-            self.log.info(f"Processing {projection} weights: {weights}")
-            weights = fixed_preprocess_tensor(
-                tensor=weights,
+                proj_weight = self.model.proj.weight
+            proj_bias = self.model.proj.bias
+            self.log.info(f"Processing projection weights: {proj_weight}")
+            proj_weight = fixed_preprocess_tensor(
+                tensor=proj_weight,
                 q_config={
                     "width": self.get_parameter("WEIGHT_PRECISION_0"),
                     "frac_width": self.get_parameter("WEIGHT_PRECISION_1"),
                 },
                 parallelism=[
-                    self.get_parameter("WEIGHT_PARALLELISM_DIM_1"),
-                    self.get_parameter("WEIGHT_PARALLELISM_DIM_0"),
+                    self.get_parameter("WEIGHT_PROJ_PARALLELISM_DIM_1"),
+                    self.get_parameter("WEIGHT_PROJ_PARALLELISM_DIM_0"),
                 ],
                 floor=True,
             )
-            getattr(self, f"weight_{projection}_driver").load_driver(weights)
+            self.weight_proj_driver.load_driver(proj_weight)
 
             # * Load the bias driver
             if self.get_parameter("HAS_BIAS") == 1:
-                bias = qkv_bias[i]
-                self.log.info(f"Processing {projection} bias: {bias}")
-                bias = fixed_preprocess_tensor(
-                    tensor=bias,
+                self.log.info(f"Processing projection bias: {proj_bias}")
+                proj_bias = fixed_preprocess_tensor(
+                    tensor=proj_bias,
                     q_config={
-                        "width": self.get_parameter("BIAS_PRECISION_0"),
-                        "frac_width": self.get_parameter("BIAS_PRECISION_1"),
+                        "width": self.get_parameter("BIAS_PROJ_PRECISION_0"),
+                        "frac_width": self.get_parameter("BIAS_PROJ_PRECISION_1"),
                     },
                     parallelism=[
-                        self.get_parameter("BIAS_PARALLELISM_DIM_1"),
-                        self.get_parameter("BIAS_PARALLELISM_DIM_0"),
+                        self.get_parameter("BIAS_PROJ_PARALLELISM_DIM_1"),
+                        self.get_parameter("BIAS_PROJ_PARALLELISM_DIM_0"),
                     ],
                     floor=True,
                 )
-                getattr(self, f"bias_{projection}_driver").load_driver(bias)
-            i = i+1
-        
-        # * Load the proj weight driver
-        if self.get_parameter("WEIGHTS_PRE_TRANSPOSED") == 1:
-            proj_weight = self.model.proj.weight.transpose(0, 1)
-        else:
-            proj_weight = self.model.proj.weight
-        proj_bias = self.model.proj.bias
-        self.log.info(f"Processing projection weights: {proj_weight}")
-        proj_weight = fixed_preprocess_tensor(
-            tensor=proj_weight,
-            q_config={
-                "width": self.get_parameter("WEIGHT_PRECISION_0"),
-                "frac_width": self.get_parameter("WEIGHT_PRECISION_1"),
-            },
-            parallelism=[
-                self.get_parameter("WEIGHT_PROJ_PARALLELISM_DIM_1"),
-                self.get_parameter("WEIGHT_PROJ_PARALLELISM_DIM_0"),
-            ],
-            floor=True,
-        )
-        self.weight_proj_driver.load_driver(proj_weight)
-
-        # * Load the bias driver
-        if self.get_parameter("HAS_BIAS") == 1:
-            self.log.info(f"Processing projection bias: {proj_bias}")
-            proj_bias = fixed_preprocess_tensor(
-                tensor=proj_bias,
+                self.bias_proj_driver.load_driver(proj_bias)
+            # * Load the output monitor
+            self.log.info(f"Processing outputs: {exp_out}")
+            outs = fixed_preprocess_tensor(
+                tensor=exp_out,
                 q_config={
-                    "width": self.get_parameter("BIAS_PROJ_PRECISION_0"),
-                    "frac_width": self.get_parameter("BIAS_PROJ_PRECISION_1"),
+                    "width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
+                    "frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
                 },
                 parallelism=[
-                    self.get_parameter("BIAS_PROJ_PARALLELISM_DIM_1"),
-                    self.get_parameter("BIAS_PROJ_PARALLELISM_DIM_0"),
+                    self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_1"),
+                    self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"),
                 ],
                 floor=True,
             )
-            self.bias_proj_driver.load_driver(proj_bias)
-        # * Load the output monitor
-        self.log.info(f"Processing outputs: {exp_out}")
-        outs = fixed_preprocess_tensor(
-            tensor=exp_out,
-            q_config={
-                "width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
-                "frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
-            },
-            parallelism=[
-                self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_1"),
-                self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"),
-            ],
-            floor=True,
-        )
-        self.data_out_0_monitor.load_monitor(outs)
+            self.data_out_0_monitor.load_monitor(outs)
         cocotb.start_soon(check_signal(self.dut, self.log))
         
         await Timer(us, units="us")
@@ -259,7 +259,7 @@ class FixedSelfAttentionTB(Testbench):
 @cocotb.test()
 async def cocotb_test(dut):
     tb = FixedSelfAttentionTB(dut)
-    await tb.run_test(us=100)
+    await tb.run_test(batches= 5, us=100)
 
 default_config = {
     "NUM_HEADS": 4,
@@ -272,13 +272,13 @@ default_config = {
     "DATA_IN_0_PARALLELISM_DIM_1": 2,
     "WEIGHT_TENSOR_SIZE_DIM_0": 16,
     "WEIGHT_TENSOR_SIZE_DIM_1": 16,
-    "WEIGHT_PARALLELISM_DIM_0": 2,
+    "WEIGHT_PARALLELISM_DIM_0": 4,
     "WEIGHT_PARALLELISM_DIM_1": 4,
 
     "WEIGHT_PROJ_TENSOR_SIZE_DIM_0": 16,
     "WEIGHT_PROJ_TENSOR_SIZE_DIM_1": 16,
     "WEIGHT_PROJ_PARALLELISM_DIM_0": 4,
-    "WEIGHT_PROJ_PARALLELISM_DIM_1": 2,
+    "WEIGHT_PROJ_PARALLELISM_DIM_1": 4,
     
     "DATA_IN_0_PRECISION_0": 8,
     "DATA_IN_0_PRECISION_1": 3,
@@ -293,7 +293,6 @@ default_config = {
     "SOFTMAX_EXP_PRECISION_0": 12,
     "SOFTMAX_EXP_PRECISION_1": 4,
     "SOFTMAX_OUT_DATA_PRECISION_1": 6,
-
     "SVMM_OUT_PRECISION_0": 10,
     "SVMM_OUT_PRECISION_1": 4,
     "WEIGHT_PROJ_PRECISION_0": 16,
@@ -303,6 +302,47 @@ default_config = {
     "DATA_OUT_0_PRECISION_0": 10,
     "DATA_OUT_0_PRECISION_1": 4,
 }
+# default_config = {
+#     "NUM_HEADS": 4,
+#     "ACTIVATION": 1,
+#     "HAS_BIAS": 1,
+#     "WEIGHTS_PRE_TRANSPOSED": 1,
+#     "DATA_IN_0_TENSOR_SIZE_DIM_0": 128,
+#     "DATA_IN_0_TENSOR_SIZE_DIM_1": 64,
+#     "DATA_IN_0_PARALLELISM_DIM_0": 4,
+#     "DATA_IN_0_PARALLELISM_DIM_1": 2,
+#     "WEIGHT_TENSOR_SIZE_DIM_0": 128,
+#     "WEIGHT_TENSOR_SIZE_DIM_1": 128,
+#     "WEIGHT_PARALLELISM_DIM_0": 2,
+#     "WEIGHT_PARALLELISM_DIM_1": 4,
+
+#     "WEIGHT_PROJ_TENSOR_SIZE_DIM_0": 128,
+#     "WEIGHT_PROJ_TENSOR_SIZE_DIM_1": 128,
+#     "WEIGHT_PROJ_PARALLELISM_DIM_0": 4,
+#     "WEIGHT_PROJ_PARALLELISM_DIM_1": 2,
+    
+#     "DATA_IN_0_PRECISION_0": 8,
+#     "DATA_IN_0_PRECISION_1": 3,
+#     "WEIGHT_PRECISION_0": 16,
+#     "WEIGHT_PRECISION_1": 8,
+#     "BIAS_PRECISION_0": 16,
+#     "BIAS_PRECISION_1": 8,
+#     "QKV_PRECISION_0": 8,
+#     "QKV_PRECISION_1": 3,
+#     "QKMM_OUT_PRECISION_0": 8,
+#     "QKMM_OUT_PRECISION_1": 3,
+#     "SOFTMAX_EXP_PRECISION_0": 12,
+#     "SOFTMAX_EXP_PRECISION_1": 4,
+#     "SOFTMAX_OUT_DATA_PRECISION_1": 6,
+#     "SVMM_OUT_PRECISION_0": 10,
+#     "SVMM_OUT_PRECISION_1": 4,
+#     "WEIGHT_PROJ_PRECISION_0": 16,
+#     "WEIGHT_PROJ_PRECISION_1": 8,
+#     "BIAS_PROJ_PRECISION_0": 16,
+#     "BIAS_PROJ_PRECISION_1": 8,
+#     "DATA_OUT_0_PRECISION_0": 10,
+#     "DATA_OUT_0_PRECISION_1": 4,
+# }
 MULT_DATA = 1 / math.sqrt(default_config["DATA_IN_0_TENSOR_SIZE_DIM_0"] // default_config["NUM_HEADS"])
 def get_config(kwargs={}):
     config = default_config
@@ -313,20 +353,16 @@ torch.manual_seed(1)
 async def check_signal(dut, log):
     while True:
         await RisingEdge(dut.clk)
-        # handshake_signal_check(
-        #     dut.g_attention_head[0].head_i.query_key_transpose_valid, 
-        #     dut.g_attention_head[0].head_i.query_key_transpose_ready, 
-        #     dut.g_attention_head[0].head_i.query_key_transpose, log)
-        # handshake_signal_check(dut.rolled_k_valid, dut.rolled_k_ready, dut.rolled_k, log)
-        # handshake_signal_check(dut.bias_valid,
-        #                        dut.bias_ready,
-        #                        dut.bias, log)
+        handshake_signal_check(dut, log, "data_out_0")
 
 
-def handshake_signal_check(valid, ready, signal, log):
-    svalue = [i.signed_integer for i in signal.value]
-    if valid.value & ready.value:
-        log.debug(f"handshake {signal} = {svalue}")
+def handshake_signal_check(dut, log, signal_base, valid=None, ready=None):
+    data_valid = getattr(dut, f'{signal_base}_valid') if valid is None else valid
+    data_ready = getattr(dut, f'{signal_base}_ready') if ready is None else ready
+    data = getattr(dut, signal_base)
+    svalue = [i.signed_integer for i in data.value]
+    if data_valid.value & data_ready.value:
+        log.debug(f"handshake {signal_base} = {svalue}")
 
 
 
@@ -343,7 +379,11 @@ def test_fixed_linear_smoke():
         constant_mult=MULT_DATA,
         floor=True,
     )
-    mase_runner(trace=True, module_param_list=[get_config()], skip_build=False)
+    mase_runner(trace=True, 
+                module_param_list=[
+                    get_config(),
+                    # get_config(),
+                    ], skip_build=False)
 
 torch.manual_seed(0)
 if __name__ == "__main__":

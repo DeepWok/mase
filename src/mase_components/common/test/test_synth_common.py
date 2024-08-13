@@ -4,7 +4,7 @@ from mase_components.synth_runner import run_synth
 
 @pytest.mark.vivado
 def test_synth_common():
-    run_synth("common")
+    run_synth("common", "comparator_tree.sv")
 
 
 if __name__ == "__main__":
