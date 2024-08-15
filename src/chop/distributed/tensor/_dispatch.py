@@ -18,24 +18,8 @@ from torch.distributed._tensor.placement_types import (
 from torch.distributed.device_mesh import DeviceMesh
 
 import chop.distributed.tensor.api as dtensor
-from chop.distributed.tensor._sharding_prop import ShardingPropagator
 
 aten = torch.ops.aten
-
-
-def get_replicate_spec(tensor_arg: torch.Tensor, mesh: "DeviceMesh") -> DTensorSpec:
-    # scalar tensor can be safely treated as replicated
-    replication_spec = DTensorSpec(
-        mesh,
-        (Replicate(),) * mesh.ndim,
-        tensor_meta=TensorMeta(
-            shape=tensor_arg.shape,
-            stride=tensor_arg.stride(),
-            dtype=tensor_arg.dtype,
-        ),
-    )
-
-    return replication_spec
 
 
 def decompose_handler(
@@ -72,7 +56,6 @@ class OpDispatcher:
     """
 
     def __init__(self) -> None:
-        self.sharding_propagator = ShardingPropagator()
         self._random_ops = {
             aten.native_dropout.default,
             aten.normal_.default,
