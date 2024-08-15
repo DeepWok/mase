@@ -18,11 +18,8 @@ from chop.tools.utils import deepgetattr
 from .mesh_model import MeshModel
 
 from .layers import (
-    AUTOSHARDING_MODULES,
     AUTOSHARDING_FUNCTIONS,
-    AUTOSHARDING_METHODS,
     IMPLICIT_FUNCS,
-    IMPLICIT_METHODS,
     FULLY_REPLICATED_FUNCS,
 )
 from .strategies.common import (
@@ -39,7 +36,7 @@ def _get_computation_cost_from_strategy(
     node: fx.Node,
     strategy: OpStrategy,
     mesh: MeshModel,
-    repeat: int = 5,
+    repeat: int = 100,
     warmup_iters: int = 2,
     profiling_device: int = 0,
 ):
@@ -308,7 +305,6 @@ def _extract_ilp(mg, mesh, pass_args={}):
             "placeholder",
             "get_attr",
             "output",
-            # todo: decide how to handle call_method nodes
             "call_method",
         ]:
             cost_vector = []
@@ -316,8 +312,10 @@ def _extract_ilp(mg, mesh, pass_args={}):
                 for strategy in op_strategy.strategies:
                     cost = _get_computation_cost_from_strategy(node, strategy, mesh)
                     cost_vector.append(cost)
+
+                expr += np.array(cost_vector) @ opt_var
             except:
-                print(f"Op {node} failed to compute cost")
+                logger.error(f"Failed to compute computation cost for node {node}")
 
         # Consider resharding cost for each of the node's arguments
         e_var_checks = []

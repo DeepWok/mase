@@ -1,5 +1,5 @@
 from time import time
-
+import numpy as np
 
 import torch
 import torch.nn as nn
@@ -122,3 +122,10 @@ def dist_model_fn(
                     level="error",
                 )
                 raise e
+
+
+def _get_mesh_from_world_size(world_size: int = 8):
+    device_ids = np.arange(world_size)
+    mesh_shape = (2, world_size // 2)
+    mesh_ids = device_ids.reshape(mesh_shape)
+    return mesh_ids.tolist(), tuple(mesh_shape)

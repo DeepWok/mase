@@ -31,10 +31,6 @@ from .strategies.tensor_ops import tensor_op_strategy, tensor_equal_strategy
 
 logger = get_logger(__name__)
 
-AUTOSHARDING_MODULES = {
-    torch.nn.ReLU: pointwise_strategy,
-}
-
 AUTOSHARDING_FUNCTIONS = {
     # embedding_ops.py
     F.embedding: embedding_strategy,
@@ -263,19 +259,6 @@ AUTOSHARDING_FUNCTIONS = {
     torch.unsqueeze: get_reshape_strategy(torch.unsqueeze),
 }
 
-AUTOSHARDING_METHODS = {
-    # view_ops.py
-    "view": get_reshape_strategy(torch.Tensor.view),
-    "reshape": get_reshape_strategy(torch.Tensor.reshape),
-    "expand": get_reshape_strategy(torch.Tensor.expand),
-    "permute": get_reshape_strategy(torch.Tensor.permute),
-    "transpose": get_reshape_strategy(torch.Tensor.transpose),
-    "unsqueeze": get_reshape_strategy(torch.Tensor.unsqueeze),
-    "masked_fill": pointwise_strategy,
-    "masked_fill_": pointwise_strategy,
-    "contiguous": tensor_op_strategy,
-}
-
 FULLY_REPLICATED_FUNCS = [
     F.embedding,
     torch.arange,
@@ -288,8 +271,4 @@ IMPLICIT_FUNCS = [
     getattr,
     torch.finfo,
     torch_size,
-]
-
-IMPLICIT_METHODS = [
-    "size",
 ]

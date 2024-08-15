@@ -1,5 +1,6 @@
 import torch.multiprocessing as mp
 
+from chop.distributed.utils import _get_mesh_from_world_size
 from ..tools import get_logger
 
 logger = get_logger(__name__)
@@ -27,8 +28,10 @@ class MaseLauncher:
         """
         self.mg = mg
         self.world_size = world_size
-        self.device_mesh = device_mesh
         self.device_fn = device_fn
+
+        if device_mesh is None:
+            self.device_mesh, _ = _get_mesh_from_world_size(world_size)
 
     def run(
         self,
