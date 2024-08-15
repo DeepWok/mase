@@ -308,14 +308,17 @@ def _extract_ilp(mg, mesh, pass_args={}):
             "call_method",
         ]:
             cost_vector = []
-            try:
-                for strategy in op_strategy.strategies:
+            for strategy in op_strategy.strategies:
+                try:
                     cost = _get_computation_cost_from_strategy(node, strategy, mesh)
-                    cost_vector.append(cost)
+                except Exception as e:
+                    logger.warning(
+                        f"Failed to compute computation cost for node {node} strategy: {strategy} due to exception: {e}"
+                    )
+                    cost = 100000.0
+                cost_vector.append(cost)
 
-                expr += np.array(cost_vector) @ opt_var
-            except:
-                logger.error(f"Failed to compute computation cost for node {node}")
+            expr += np.array(cost_vector) @ opt_var
 
         # Consider resharding cost for each of the node's arguments
         e_var_checks = []
@@ -356,6 +359,10 @@ def _extract_ilp(mg, mesh, pass_args={}):
 
             for dest_idx, dest_spec in enumerate(node_in_specs):
                 for src_idx, src_spec in enumerate(arg_out_specs):
+
+                    if isinstance(src_spec, tuple):
+                        src_spec = src_spec[0]
+
                     cost = redistribute_cost(src_spec, dest_spec)
                     resharding_costs[dest_idx, src_idx] = (
                         1000000 if cost == float("inf") else cost

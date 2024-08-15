@@ -1,17 +1,26 @@
+from typing import List
 import itertools
 import numpy as np
 
 import torch
 import torch.nn.functional as F
+
+from torch.distributed.device_mesh import DeviceMesh
 from torch.distributed._tensor._op_schema import OpStrategy, PlacementStrategy
 from torch.distributed._tensor.placement_types import (
+    Placement,
     Replicate,
     Shard,
     DTensorSpec,
     TensorMeta,
 )
+from torch.distributed._tensor.ops.utils import (
+    is_tensor_shardable,
+    generate_redistribute_costs,
+)
 
 from chop.tools import get_logger
+
 
 logger = get_logger(__name__)
 
@@ -160,3 +169,84 @@ def fully_replicated_strategy(meta, mesh):
             )
         ]
     )
+
+
+def expand_to_full_mesh_op_strategy(
+    meta,
+    mesh: DeviceMesh,
+    single_mesh_dim_strategies: List[List[Placement]],
+    *,
+    input_index: int = 1,
+    inplace_op: bool = False,
+) -> OpStrategy:
+    # Expand the single_mesh_dim_strategies to full mesh dim strategies.
+    all_mesh_dim_strategies = [single_mesh_dim_strategies] * mesh.ndim
+
+    strategy_combs = itertools.product(*all_mesh_dim_strategies)
+
+    all_strategies = []
+    for strategy_comb in strategy_combs:
+        spec_list = []
+        for specs in zip(*strategy_comb):
+            try:
+                spec_list.append(
+                    DTensorSpec(
+                        mesh,
+                        tuple(specs),
+                        tensor_meta=TensorMeta(
+                            shape=meta["common"]["results"]["data_out_0"]["shape"],
+                            stride=None,
+                            dtype=meta["common"]["results"]["data_out_0"][
+                                "torch_dtype"
+                            ],
+                        ),
+                    )
+                )
+            except:
+                breakpoint()
+
+        input_specs = spec_list[input_index:]
+        # input_args_strategy = op_schema.args_strategy
+        input_args_strategy = tuple(
+            arg.meta["mase"]["software"]["autosharding"]["op_strategy"]
+            for arg in meta.node.args
+        )
+        assert len(input_specs) == len(input_args_strategy)
+        self_spec = input_args_strategy[0].strategies[0].output_spec
+        if inplace_op and self_spec.placements != input_specs[0].placements:
+            # if it's inplace op, we would only allow the placement strategy to be added when the
+            # input_spec matches the first argument's runtime sharding, otherwise we skip
+            continue
+
+        # check inputs shardable
+        inputs_shardable = all(
+            is_tensor_shardable(inp.shape, s)
+            for inp, s in zip(input_args_strategy, input_specs)
+        )
+
+        # extend input_specs to include fully replicated sharding for constant nodes
+        extended_input_specs = input_specs + [
+            DTensorSpec(
+                mesh,
+                (Replicate(), Replicate()),
+                # todo: may need to set tensor meta
+                tensor_meta=None,
+            )
+        ] * (len(meta["common"]["args"].keys()) - len(input_specs))
+
+        # only add to the all_strategies list when all inputs are shardable
+        if inputs_shardable:
+            redistribute_cost = [
+                generate_redistribute_costs(input_strategy, input_spec)
+                for input_strategy, input_spec in zip(input_args_strategy, input_specs)
+            ]
+            strategy = PlacementStrategy(
+                output_specs=(
+                    tuple(spec_list[:input_index]) if input_index > 1 else spec_list[0]
+                ),
+                input_specs=extended_input_specs,
+                redistribute_cost=redistribute_cost,
+            )
+            all_strategies.append(strategy)
+
+    return OpStrategy(all_strategies)

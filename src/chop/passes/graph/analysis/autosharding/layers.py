@@ -22,6 +22,7 @@ from .strategies.matrix_ops import (
     addmm_strategy,
     bmm_strategy,
     baddmm_strategy,
+    scaled_dot_product_strategy,
 )
 from .strategies.view_ops import get_reshape_strategy
 from .strategies.pointwise_ops import pointwise_strategy, linear_pointwise_strategy
@@ -257,6 +258,8 @@ AUTOSHARDING_FUNCTIONS = {
     torch_permute: get_reshape_strategy(torch.Tensor.permute),
     torch_transpose: transpose_strategy,
     torch.unsqueeze: get_reshape_strategy(torch.unsqueeze),
+    # SDPA
+    F.scaled_dot_product_attention: scaled_dot_product_strategy,
 }
 
 FULLY_REPLICATED_FUNCS = [

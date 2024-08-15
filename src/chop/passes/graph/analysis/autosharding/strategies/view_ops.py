@@ -609,7 +609,7 @@ def get_reshape_strategy(op):
             )
 
             replicate_spec = DTensorSpec(
-                placements=tuple(input_tgt_placements),
+                placements=(Replicate(), Replicate()),
                 mesh=input_src_spec.mesh,
                 # todo: may need to set tensor meta
                 tensor_meta=None,

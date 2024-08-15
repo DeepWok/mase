@@ -136,6 +136,8 @@ def _export_solution(mg, export_file: str = "ilp_solution.pkl"):
                 )
             else:
                 spec = result_info["dtensor_spec"]
+                if isinstance(spec, tuple):
+                    spec = spec[0]
             out_dict[node_name]["results"][result] = spec.placements
 
     with open(export_file, "wb") as file:

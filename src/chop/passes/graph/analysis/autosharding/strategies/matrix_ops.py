@@ -19,9 +19,18 @@ from torch.distributed._tensor.placement_types import (
     TensorMeta,
 )
 
+from chop.ir.graph import MaseMetadata
+from .common import expand_to_full_mesh_op_strategy
 from ..utils import is_tensor_shardable
 
-from chop.ir.graph import MaseMetadata
+
+def _other(meta, dim):
+    if dim == meta["common"]["args"]["dim0"]["value"]:
+        return meta["common"]["args"]["dim1"]["value"]
+    elif dim == meta["common"]["args"]["dim1"]["value"]:
+        return meta["common"]["args"]["dim0"]["value"]
+    else:
+        raise ValueError(f"Invalid dim: {dim}")
 
 
 def transpose_strategy(
@@ -35,20 +44,27 @@ def transpose_strategy(
     assert isinstance(self_strategy, OpStrategy)
 
     fully_replicated_spec = DTensorSpec(
-        mesh=mesh, placements=[Replicate(), Replicate()], tensor_meta=None
+        mesh=mesh,
+        placements=[Replicate(), Replicate()],
+        tensor_meta=None,
     )
 
     transpose_strategies = []
     for input_strategy in self_strategy.strategies:
-        input_spec = input_strategy.output_spec
+
+        if isinstance(input_strategy.output_specs, tuple):
+            input_spec = input_strategy.output_specs[0]
+        else:
+            input_spec = input_strategy.output_spec
+
         # follow the input spec but transpose the Shard placements
         output_placements = [
-            Shard(1 - p.dim) if isinstance(p, Shard) else p
+            Shard(_other(meta, p.dim)) if isinstance(p, Shard) else p
             for p in input_spec.placements
         ]
         transpose_strategy = PlacementStrategy(
             output_specs=DTensorSpec(
-                mesh=input_strategy.output_spec.mesh,
+                mesh=input_spec.mesh,
                 placements=tuple(output_placements),
                 tensor_meta=TensorMeta(
                     shape=meta["common"]["results"]["data_out_0"]["shape"],
@@ -57,7 +73,7 @@ def transpose_strategy(
                 ),
             ),
             # include 2 fully replicated inputs for dim_0 and dim_1 arguments
-            input_specs=(input_strategy.output_spec,) + (fully_replicated_spec,) * 2,
+            input_specs=(input_spec,) + (fully_replicated_spec,) * 2,
         )
         transpose_strategies.append(transpose_strategy)
 
@@ -210,11 +226,17 @@ def scaled_dot_product_flash_attention_strategy(
     # NOTE: currently we only support some simple strategies to support tensor parallelism
     # TODO: sdpa might be a good candidate for us to explore decomposed sharding propagation
     # as it involves: matmul, pointwise, reduction ops together.
-    return_debug_mask = len(op_schema.args_schema) >= 6 and op_schema.args_schema[5]
-    q_input_strategy = op_schema.args_schema[0]
+    arg_names = list(meta["common"]["args"].keys())
+    arg_infos = list(meta["common"]["args"].values())
+    return_debug_mask = len(arg_names) >= 6 and arg_infos[5]["value"]
+
+    # q_input_strategy = op_schema.args_schema[0]
+    q_parent_node = meta.node.args[0]
+    q_input_strategy = q_parent_node.meta["mase"]["software"]["autosharding"][
+        "op_strategy"
+    ]
     assert isinstance(q_input_strategy, OpStrategy)
     # assuming q/k/v have the same shape
-    qkv_shape = q_input_strategy.shape
 
     single_mesh_dim_strategies = []
 
@@ -282,5 +304,16 @@ def scaled_dot_product_flash_attention_strategy(
         ]
     )
     return expand_to_full_mesh_op_strategy(
-        mesh, op_schema, single_mesh_dim_strategies, input_index=9
+        meta,
+        mesh,
+        single_mesh_dim_strategies,
+        input_index=9,
     )
+
+
+def scaled_dot_product_strategy(
+    meta: MaseMetadata,
+    mesh: tuple,
+):
+    # todo: support efficient attention backend
+    return scaled_dot_product_flash_attention_strategy(meta, mesh)
