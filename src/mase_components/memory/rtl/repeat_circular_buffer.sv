@@ -33,12 +33,12 @@ module repeat_circular_buffer #(
   localparam ADDR_WIDTH = SIZE == 1 ? 1 : $clog2(SIZE);
   localparam PTR_WIDTH = ADDR_WIDTH + 1;
 
-  typedef struct {
+  typedef struct packed {
     logic [DATA_WIDTH-1:0] data;
     logic valid;
   } reg_t;
 
-  struct {
+  typedef struct packed {
     // Write state
     logic [PTR_WIDTH-1:0] write_ptr;
     logic [ADDR_WIDTH:0]  size;
@@ -56,8 +56,9 @@ module repeat_circular_buffer #(
 
     // Extra register required to buffer the output of RAM due to delay
     reg_t extra_reg;
-  }
-      self, next_self;
+  } self_t;
+
+  self_t self, next_self;
 
   // Ram signals
   logic ram_wr_en;
@@ -69,8 +70,9 @@ module repeat_circular_buffer #(
   always_comb begin
     next_self = self;
 
-    // Input side ready
-    in_ready = (self.size != SIZE) && !(self.rep == REPEAT - 1 && self.write_ptr == self.read_ptr);
+    if (REPEAT == 1) in_ready = (self.size != SIZE);
+    else
+      in_ready = (self.size != SIZE) && !(self.rep == REPEAT - 1 && self.write_ptr == self.read_ptr);
 
     // Pause reading when there is (no transfer on this cycle) AND the registers are full.
     pause_reads = !out_ready && (self.out_reg.valid || self.extra_reg.valid);

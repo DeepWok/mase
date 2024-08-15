@@ -72,10 +72,10 @@ module fixed_activation_binary_linear #(
   logic                 acc_ready;
   logic [ACC_WIDTH-1:0] acc_data_out[PARALLELISM-1:0];
 
-  // There are PARALLELISM number of dot product instances with IN_SIZE inputs 
+  // There are PARALLELISM number of dot product instances with IN_SIZE inputs
   // and each one computes for IN_DEPTH iterations for each inputs.
   for (genvar i = 0; i < PARALLELISM; i = i + 1) begin : linear
-    // Assume the weight are transposed and partitioned 
+    // Assume the weight are transposed and partitioned
     logic [WEIGHT_WIDTH-1:0] current_weight[IN_SIZE-1:0];
     assign current_weight = weight[IN_SIZE*i+IN_SIZE-1:IN_SIZE*i];
 

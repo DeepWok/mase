@@ -4,6 +4,6 @@ channels:
   - symbiflow
 
 dependencies:
-  - python=3.11.4
+  - python=3.11.9
   - pip
   - verible

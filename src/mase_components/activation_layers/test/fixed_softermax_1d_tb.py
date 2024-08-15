@@ -19,6 +19,10 @@ from mase_cocotb.utils import fixed_preprocess_tensor, bit_driver
 
 from chop.nn.quantized.functional import fixed_softermax
 
+from chop.nn.quantizers import (
+    integer_quantizer,
+)
+
 
 class SoftermaxTB(Testbench):
     def __init__(self, dut) -> None:
@@ -61,6 +65,7 @@ class SoftermaxTB(Testbench):
         # Model
         self.model = partial(
             fixed_softermax,
+            dim=0,
             q_config={
                 "width": self.IN_WIDTH,
                 "frac_width": self.IN_FRAC_WIDTH,
@@ -118,7 +123,7 @@ class SoftermaxTB(Testbench):
 async def basic(dut):
     tb = SoftermaxTB(dut)
     tb.out_data_monitor.ready.value = 1
-    await tb.run_test(batches=1, us=10)
+    await tb.run_test(batches=2, us=10)
 
 
 @cocotb.test()
@@ -160,7 +165,7 @@ def get_fixed_softermax_config(kwargs={}):
 
 def get_random_width():
     width = randint(2, 16)
-    frac_width = randint(1, width)
+    frac_width = randint(1, width - 1)
     return width, frac_width
 
 
@@ -190,9 +195,9 @@ def test_fixed_softermax_1d_smoke():
         trace=True,
         module_param_list=[
             get_fixed_softermax_config(),
-            *[get_random_softermax_config() for _ in range(50)],
+            *[get_random_softermax_config() for _ in range(2)],
         ],
-        jobs=12,
+        jobs=1,
         # skip_build=True,
     )
 

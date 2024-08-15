@@ -59,7 +59,7 @@ module register_slice #(
     else if (to_load) buffer <= data_in;
   end
 
-  // output 
+  // output
   assign data_out = buffer;
 
 
@@ -89,4 +89,3 @@ module register_slice #(
   assign data_out_valid = shift_reg;
 
 endmodule
-

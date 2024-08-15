@@ -20,7 +20,7 @@ test-hw:
 	python3 src/mase_components/activation_layers/test/fixed_relu_tb.py
 	python3 src/mase_components/activation_layers/test/fixed_selu_tb.py
 	# python3 src/mase_components/activation_layers/test/fixed_sigmoid_tb.py
-	# python3 src/mase_components/activation_layers/test/fixed_softermax_1d_tb.py
+	python3 src/mase_components/activation_layers/test/fixed_softermax_1d_tb.py
 	# python3 src/mase_components/activation_layers/test/fixed_softermax_tb.py
 	# python3 src/mase_components/activation_layers/test/fixed_softmax_tb.py
 	python3 src/mase_components/activation_layers/test/fixed_softplus_tb.py
@@ -123,13 +123,13 @@ test-hw:
 	# python3 src/mase_components/normalization_layers/test/rms_norm_2d_tb.py
 	# python3 src/mase_components/normalization_layers/test/test_lint_norm.py
 
-	# Scalar operators 
+	# Scalar operators
 	python3 src/mase_components/scalar_operators/fixed/test/fixed_isqrt_tb.py
 	python3 src/mase_components/scalar_operators/fixed/test/isqrt_sw.py
 	# python3 src/mase_components/scalar_operators/float/test/test_lint_float_arithmetic.py
 	# python3 src/mase_components/scalar_operators/fixed/test/fixed_nr_stage_tb.py
 	# python3 src/mase_components/scalar_operators/fixed/test/test_lint_fixed_math.py
-	
+
 	# Systolic array
 	# python3 src/mase_components/systolic_arrays/test/test_lint_systolic_arrays.py
 

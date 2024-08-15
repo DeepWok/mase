@@ -237,6 +237,16 @@ def create_new_module(
             elementwise_affine=original_module.elementwise_affine,
             config=config,
         )
+    elif mase_op == "grouped_query_attention":
+        new_module_cls = quantized_module_map[f"grouped_query_attention_{quant_name}"]
+        new_module = new_module_cls(
+            embed_dim=original_module.embed_dim,
+            num_heads=original_module.num_heads,
+            num_kv_heads=original_module.num_kv_heads,
+            bias=original_module.bias,
+            config=config,
+            floor=True,
+        )
     else:
         raise NotImplementedError(
             f"Unsupported module class {original_module_cls} to modify"
