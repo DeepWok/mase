@@ -212,7 +212,11 @@ async def check_signal(dut, log):
 
 
 
-
+# verified case
+# weight per transpoed = 0
+# weight pre transposed = 1
+# has bias = 0
+# has bias = 1
 def get_fixed_linear_config(kwargs={}):
     # if pretranspose
     #   weight1 = in0
@@ -220,23 +224,23 @@ def get_fixed_linear_config(kwargs={}):
     #   weight0 = in0
     config = {
         "HAS_BIAS": 1,
-        "WEIGHTS_PRE_TRANSPOSED": 1,
+        "WEIGHTS_PRE_TRANSPOSED": 0,
         "DATA_IN_0_TENSOR_SIZE_DIM_0": 32,
         "DATA_IN_0_TENSOR_SIZE_DIM_1": 16,
         "DATA_IN_0_PARALLELISM_DIM_0": 8,
         "DATA_IN_0_PARALLELISM_DIM_1": 4,
-        "WEIGHT_TENSOR_SIZE_DIM_0": 16,
-        "WEIGHT_TENSOR_SIZE_DIM_1": 32,
-        "WEIGHT_PARALLELISM_DIM_0": 2,
-        "WEIGHT_PARALLELISM_DIM_1": 8,
+        "WEIGHT_TENSOR_SIZE_DIM_0": 32,
+        "WEIGHT_TENSOR_SIZE_DIM_1": 16,
+        "WEIGHT_PARALLELISM_DIM_0": 8,
+        "WEIGHT_PARALLELISM_DIM_1": 4,
 
         "DATA_IN_0_PRECISION_0": 8,
         "DATA_IN_0_PRECISION_1": 4,
-        "WEIGHT_PRECISION_0": 8,
-        "WEIGHT_PRECISION_1": 4,
-        "BIAS_PRECISION_0": 8,
-        "BIAS_PRECISION_1": 4,
-        "DATA_OUT_0_PRECISION_0": 10,
+        "WEIGHT_PRECISION_0": 10,
+        "WEIGHT_PRECISION_1": 3,
+        "BIAS_PRECISION_0": 5,
+        "BIAS_PRECISION_1": 2,
+        "DATA_OUT_0_PRECISION_0": 8,
         "DATA_OUT_0_PRECISION_1": 4,
     }
     config.update(kwargs)

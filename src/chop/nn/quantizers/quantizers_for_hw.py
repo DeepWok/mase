@@ -3,15 +3,15 @@ import torch
 import torch.nn.functional as F
 from torch import Tensor
 
-# from .quantizers import integer_quantizer
+from .integer import integer_quantizer, integer_floor_quantizer
 from .utils import block, my_clamp, my_round, unblock, my_floor
 
 
-def integer_quantizer_for_hw(x: Tensor, width: int, frac_width: int):
+def integer_quantizer_for_hw(x: Tensor, width: int, frac_width: int, floor=False):
     thresh = 2 ** (width - 1)
     scale = 2**frac_width
-
-    fixed_point_value = my_clamp(my_round(x.mul(scale)), -thresh, thresh - 1)
+    base_quantizer = integer_floor_quantizer if floor else integer_quantizer
+    fixed_point_value = base_quantizer(x, width, frac_width)*scale
     fixed_point_value = fixed_point_value.to(torch.int)
     fixed_point_value = fixed_point_value % (2**width)
     return fixed_point_value

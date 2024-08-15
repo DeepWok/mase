@@ -19,7 +19,7 @@ from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 
 import dill
 import inspect
-
+torch.manual_seed(0)
 
 def _cap(name):
     """
@@ -95,7 +95,7 @@ def _emit_cocotb_tb(graph):
                         getattr(dut, result),
                         getattr(dut, f"{result}_valid"),
                         getattr(dut, f"{result}_ready"),
-                        check=False,
+                        check=True,
                     )
                     self.output_monitors[result].log.setLevel(logging.DEBUG)
 
@@ -145,6 +145,7 @@ def _emit_cocotb_tb(graph):
                             self.get_parameter(f"{_cap(arg)}_PARALLELISM_DIM_1"),
                             self.get_parameter(f"{_cap(arg)}_PARALLELISM_DIM_0"),
                         ],
+                        floor=True,
                     )
 
                 else:
@@ -176,6 +177,7 @@ def _emit_cocotb_tb(graph):
                     self.get_parameter(f"DATA_OUT_0_PARALLELISM_DIM_1"),
                     self.get_parameter(f"DATA_OUT_0_PARALLELISM_DIM_0"),
                 ],
+                floor=True,
             )
 
             # Set expectation for each monitor

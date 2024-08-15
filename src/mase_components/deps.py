@@ -257,6 +257,7 @@ MASE_HW_DEPS = {
     "memory/ram_block": [],
     "memory/unpacked_fifo": ["memory"],
     "memory/unpacked_skid_buffer": ["memory"],
+    "memory/weight_source": ["memory"],
     # Normalization Layers
     "normalization_layers/batch_norm_2d": [
         "normalization_layers",

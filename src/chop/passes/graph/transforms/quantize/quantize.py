@@ -229,9 +229,15 @@ def quantize_transform_pass(graph, pass_args=None):
                     # weight
                     "weight_width": 8,
                     "weight_frac_width": 4,
+
+                    # optional
                     # bias
                     "bias_width": 8,
                     "bias_frac_width": 4,
+                    "data_out_width": 8,
+                    "data_out_frac_width": 4,
+                    # quantize method
+                    "floor": True,
                 }
             },
         }
