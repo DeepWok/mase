@@ -1,5 +1,5 @@
 from chop.ir import MaseGraph
-from .mesh_model import MeshModel
+from ..mesh_model import MeshModel
 
 
 def megatron_autosharding_pass(

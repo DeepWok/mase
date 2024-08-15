@@ -15,8 +15,8 @@ from chop.nn.functional.tensor import (
     torch_transpose,
 )
 
-from .strategies.common import fully_replicated_strategy
-from .strategies.matrix_ops import (
+from .ops.common import fully_replicated_strategy
+from .ops.matrix_ops import (
     transpose_strategy,
     mm_strategy,
     addmm_strategy,
@@ -24,11 +24,11 @@ from .strategies.matrix_ops import (
     baddmm_strategy,
     scaled_dot_product_strategy,
 )
-from .strategies.view_ops import get_reshape_strategy
-from .strategies.pointwise_ops import pointwise_strategy, linear_pointwise_strategy
-from .strategies.math_ops import softmax_strategy, layer_norm_strategy
-from .strategies.embedding_ops import embedding_strategy
-from .strategies.tensor_ops import tensor_op_strategy, tensor_equal_strategy
+from .ops.view_ops import get_reshape_strategy
+from .ops.pointwise_ops import pointwise_strategy, linear_pointwise_strategy
+from .ops.math_ops import softmax_strategy, layer_norm_strategy
+from .ops.embedding_ops import embedding_strategy
+from .ops.tensor_ops import tensor_op_strategy, tensor_equal_strategy
 
 logger = get_logger(__name__)
 

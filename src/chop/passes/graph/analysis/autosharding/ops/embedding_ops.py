@@ -3,7 +3,6 @@
 
 from dataclasses import dataclass, field
 from typing import cast, List, Optional
-import itertools
 
 import torch
 import torch.distributed._functional_collectives as funcol

@@ -8,9 +8,9 @@ from torch.distributed._tensor.placement_types import Replicate
 from chop.tools import get_logger
 
 from .mesh_model import MeshModel
-from .alpa import alpa_autosharding_pass
-from .megatron import megatron_autosharding_pass
-from .fully_replicated import fully_replicated_autosharding_pass
+from .algos.alpa import alpa_autosharding_pass
+from .algos.megatron import megatron_autosharding_pass
+from .algos.fully_replicated import fully_replicated_autosharding_pass
 
 logger = get_logger(__name__)
 logger.setLevel("INFO")

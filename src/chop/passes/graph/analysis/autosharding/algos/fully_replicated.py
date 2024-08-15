@@ -2,7 +2,7 @@ from torch.distributed._tensor._op_schema import DTensorSpec
 from torch.distributed._tensor.placement_types import Replicate
 
 from chop.ir import MaseGraph
-from .mesh_model import MeshModel
+from ..mesh_model import MeshModel
 
 
 def fully_replicated_autosharding_pass(

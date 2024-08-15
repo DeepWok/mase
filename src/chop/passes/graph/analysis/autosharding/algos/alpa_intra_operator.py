@@ -14,15 +14,14 @@ from torch.distributed._tensor._op_schema import (
 from torch.distributed._tensor.placement_types import Shard, Replicate
 
 from chop.tools import get_logger
-from chop.tools.utils import deepgetattr
-from .mesh_model import MeshModel
+from ..mesh_model import MeshModel
 
-from .layers import (
+from ..layers import (
     AUTOSHARDING_FUNCTIONS,
     IMPLICIT_FUNCS,
     FULLY_REPLICATED_FUNCS,
 )
-from .strategies.common import (
+from ..ops.common import (
     fully_replicated_strategy,
     placeholder_or_getattr_strategy,
 )
