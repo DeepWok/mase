@@ -50,8 +50,6 @@ def create_new_module(
             out_features=original_module.out_features,
             bias=use_bias,
             config=config,
-            out_config=config.get("out_config"),
-            floor=config.get("floor"),
         )
         if quant_name == "lutnet":
             initialized_weight, pruning_masks = init_LinearLUT_weight(

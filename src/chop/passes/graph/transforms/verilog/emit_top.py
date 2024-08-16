@@ -807,5 +807,6 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
                     d_out_f_width,
                     path=rtl_dir,
                     path_with_dtype=False,
+                    floor=True,
                 )
     return graph, {}

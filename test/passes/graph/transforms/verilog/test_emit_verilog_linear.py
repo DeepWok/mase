@@ -57,10 +57,10 @@ quan_args = {
     "default": {"config": {"name": None}}, # default config, this would be used for any node that does not have a specific config
     "linear": {
         "config": {
-            "name": "integer",  # quantization scheme name supported are ["integer", "fixed" (equivalent to integer), "lutnet" (dev mode), "logicnets" (dev mode), "binary", "binary_residual", "ternary", "minifloat_ieee", "minifloat_denorm", "log", "block_fp", "block_minifloat", "block_log"]
+            "name": "integer_floor",  # quantization scheme name supported are ["integer", "fixed" (equivalent to integer), "lutnet" (dev mode), "logicnets" (dev mode), "binary", "binary_residual", "ternary", "minifloat_ieee", "minifloat_denorm", "log", "block_fp", "block_minifloat", "block_log"]
             # data
             "data_in_width": 8,
-            "data_in_frac_width": 3,
+            "data_in_frac_width": 4,
             # weight
             "weight_width": 10,
             "weight_frac_width": 3,
@@ -68,11 +68,9 @@ quan_args = {
             "bias_width": 5,
             "bias_frac_width": 2,
             
-            # optional
             "data_out_width": 8,
             "data_out_frac_width": 4,
 
-            "floor": True,
         },
     },
 }
