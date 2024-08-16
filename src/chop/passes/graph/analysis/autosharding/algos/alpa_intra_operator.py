@@ -37,7 +37,7 @@ def _get_computation_cost_from_strategy(
     mesh: MeshModel,
     repeat: int = 100,
     warmup_iters: int = 2,
-    profiling_device: int = 0,
+    profiling_device: int = None,
 ):
     """
     ...
@@ -119,7 +119,7 @@ def _get_computation_cost_from_strategy(
         start_event[idx].record()
         _ = fn(*args)
         end_event[idx].record()
-    torch.cuda.synchronize()
+    torch.cuda.synchronize(device=f"cuda:{profiling_device}")
 
     elapsed = [start_event[idx].elapsed_time(end_event[idx]) for idx in range(repeat)]
 
@@ -309,7 +309,12 @@ def _extract_ilp(mg, mesh, pass_args={}):
             cost_vector = []
             for strategy in op_strategy.strategies:
                 try:
-                    cost = _get_computation_cost_from_strategy(node, strategy, mesh)
+                    cost = _get_computation_cost_from_strategy(
+                        node,
+                        strategy,
+                        mesh,
+                        profiling_device=pass_args.get("benchmarking_device", None),
+                    )
                 except Exception as e:
                     logger.warning(
                         f"Failed to compute computation cost for node {node} strategy: {strategy} due to exception: {e}"
@@ -522,6 +527,13 @@ def alpa_intra_op_sharding_pass(mg, mesh, pass_args={}, debug=False):
 
     # Formulate and solve the ILP
     logger.info(f"Formulating the ILP...")
+
+    # Set CUDA device for profiling
+    device_id = pass_args.get("benchmarking_device", None)
+    torch.cuda.set_device(device_id)
+
+    logger.info(f"Setting CUDA device to: {device_id}")
+
     mg, problem = _extract_ilp(mg, mesh, pass_args)
 
     logger.info(f"Solving the ILP...")
