@@ -78,10 +78,10 @@ class GELUIntegerFloor(_GELUBase):
         x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
         out_width, out_frac_width = config["data_out_width"], config["data_out_frac_width"]
         self.x_quantizer = partial(
-            integer_floor_quantizer, width=x_width, frac_width=x_frac_width, is_signed=False
+            integer_floor_quantizer, width=x_width, frac_width=x_frac_width
         )
         self.out_quantizer = partial(
-            integer_floor_quantizer, width=out_width, frac_width=out_frac_width, is_signed=False
+            integer_floor_quantizer, width=out_width, frac_width=out_frac_width
         )
         self.x_width = x_width
         self.x_frac_width = x_frac_width
