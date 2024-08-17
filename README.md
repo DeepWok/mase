@@ -1,4 +1,4 @@
-# Machine-Learning Accelerator System Exploration Tools
+# MASE 
 
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
@@ -21,13 +21,27 @@
 [doc-shield]: https://readthedocs.org/projects/pytorch-geometric/badge/?version=latest
 [doc-url]: https://deepwok.github.io/mase/
 
-## Overview
+## TL;DR
 
-Machine learning accelerators have been used extensively to compute models with high performance and low power. Unfortunately, the development pace of ML models is much faster than the accelerator design cycle, leading to frequent changes in the hardware architecture requirements, rendering many accelerators obsolete. Existing design tools and frameworks can provide quick accelerator prototyping, but only for a limited range of models that fit into a single hardware device. With the emergence of large language models such as GPT-3, there is an increased need for hardware prototyping of large models within a many-accelerator system to ensure the hardware can scale with ever-growing model sizes.
+`torch.fx` graph-based transformations facilitate seamless exploration in ML systems, software and hardware optimizations, all for efficient AI.
+
+## Key Features 
+
+* **torch.fx graph based**: optimizations can be applied as simple as a single [graph](https://pytorch.org/docs/stable/fx.html) transformation.
+* **Efficient ML algorithms all bundled**: MASE provides a wide range of efficient ML algorithms (PTQ, QAT, Pruning and so on), and allow you apply **any** combinations of them by chaining the transformations.
+* **Direct HDL code generation**: MASE directly generates HDL code (`.sv`) for FPGA and ASIC devices, enabling you to build efficient AI hardware.
+
+## Examples
+
+* [Getting started](https://deepwok.github.io/mase/getting_started.html)
+* [Quantize a vision model](https://deepwok.github.io/mase/modules/documentation/tutorials/common/interactive.html)
+<!-- TODO: add more when Pedro's PR is merged -->
+
+<!-- Machine learning accelerators have been used extensively to compute models with high performance and low power. Unfortunately, the development pace of ML models is much faster than the accelerator design cycle, leading to frequent changes in the hardware architecture requirements, rendering many accelerators obsolete. Existing design tools and frameworks can provide quick accelerator prototyping, but only for a limited range of models that fit into a single hardware device. With the emergence of large language models such as GPT-3, there is an increased need for hardware prototyping of large models within a many-accelerator system to ensure the hardware can scale with ever-growing model sizes.
 
 MASE provides an efficient and scalable approach for exploring accelerator systems to compute large ML models by directly mapping onto an efficient streaming accelerator system. Over a set of ML models, MASE can achieve better energy efficiency to GPUs when computing inference for recent transformer models.
 
-![Alt text](./docs/imgs/overview.png)
+![Alt text](./docs/imgs/overview.png) -->
 
 
 ## MASE Publications
