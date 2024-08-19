@@ -6,7 +6,7 @@ from typing import Callable, cast, Dict, List, Optional, Sequence, Tuple, Union
 import torch
 from torch._ops import OpOverload
 from torch._subclasses import FakeTensorMode
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._op_schema import (
     OpInfo,
     OpSchema,
     OpStrategy,
@@ -17,12 +17,12 @@ from torch.distributed._tensor._op_schema import (
     StrategyType,
     TupleStrategy,
 )
-from torch.distributed._tensor._utils import (
+from torch.distributed.tensor._utils import (
     compute_local_shape,
     compute_local_stride,
     try_find_mesh_from_args,
 )
-from torch.distributed._tensor.placement_types import DTensorSpec, TensorMeta
+from torch.distributed.tensor.placement_types import DTensorSpec, TensorMeta
 from torch.distributed.device_mesh import DeviceMesh
 
 

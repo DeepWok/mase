@@ -2,15 +2,15 @@
 from typing import cast, Dict, List, Optional, Tuple
 
 import torch
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._op_schema import (
     _is_inplace_op,
     _is_out_variant_op,
     OpSchema,
     OutputSharding,
 )
-from torch.distributed._tensor._utils import compute_local_shape
-from torch.distributed._tensor.ops.utils import prod
-from torch.distributed._tensor.placement_types import DTensorSpec, TensorMeta
+from torch.distributed.tensor._utils import compute_local_shape
+from torch.distributed.tensor._ops.utils import prod
+from torch.distributed.tensor.placement_types import DTensorSpec, TensorMeta
 
 
 def _replace_char_in_str(string: str, new_char: str, idx: int) -> str:

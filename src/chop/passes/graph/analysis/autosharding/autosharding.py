@@ -2,8 +2,8 @@ import os
 from time import time
 import dill
 
-from torch.distributed._tensor._op_schema import DTensorSpec
-from torch.distributed._tensor.placement_types import Replicate
+from torch.distributed.tensor._op_schema import DTensorSpec
+from torch.distributed.tensor.placement_types import Replicate
 
 from chop.tools import get_logger
 from .mesh_model import MeshModel

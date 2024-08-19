@@ -2,18 +2,18 @@
 # https://github.com/pytorch/pytorch/blob/main/torch/distributed/_tensor/ops/matrix_ops.py
 
 import torch
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._op_schema import (
     OpStrategy,
     PlacementStrategy,
     PlacementList,
 )
-from torch.distributed._tensor.placement_types import Replicate, Shard, Placement
+from torch.distributed.tensor.placement_types import Replicate, Shard, Placement
 from .basic_strategy import gen_einsum_strategies
-from torch.distributed._tensor.ops.utils import (
+from torch.distributed.tensor._ops.utils import (
     infer_broadcast_dims_map,
     map_placements_after_broadcast,
 )
-from torch.distributed._tensor.placement_types import (
+from torch.distributed.tensor.placement_types import (
     DTensorSpec,
     Shard,
     TensorMeta,

@@ -1,7 +1,7 @@
 import torch
 import torch.fx as fx
-from torch.distributed._tensor._collective_utils import redistribute_cost
-from torch.distributed._tensor._op_schema import DTensorSpec
+from torch.distributed.tensor._collective_utils import redistribute_cost
+from torch.distributed.tensor._op_schema import DTensorSpec
 import numpy as np
 import cvxpy as cp
 

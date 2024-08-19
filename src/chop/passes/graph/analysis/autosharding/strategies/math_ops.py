@@ -4,16 +4,17 @@
 from typing import cast, List, Optional, Sequence, Tuple, Union
 
 import torch
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._op_schema import (
     OpStrategy,
     PlacementStrategy,
 )
-from torch.distributed._tensor.ops.utils import (
-    generate_redistribute_costs,
+from torch.distributed.tensor._ops.utils import (
     normalize_dim,
+)
+from torch.distributed.tensor._utils import (
     normalize_to_torch_size,
 )
-from torch.distributed._tensor.placement_types import (
+from torch.distributed.tensor.placement_types import (
     DTensorSpec,
     Placement,
     Replicate,

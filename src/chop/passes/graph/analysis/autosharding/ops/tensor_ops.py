@@ -1,15 +1,15 @@
 # Adapted from Pytorch Distributed DTensor API.
 # https://github.com/pytorch/pytorch/blob/main/torch/distributed/_tensor/ops/tensor_ops.py
 
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._op_schema import (
     OpStrategy,
     PlacementStrategy,
     StrategyType,
 )
-from torch.distributed._tensor.ops.utils import (
+from torch.distributed.tensor._ops.utils import (
     is_tensor_partial,
 )
-from torch.distributed._tensor.placement_types import (
+from torch.distributed.tensor.placement_types import (
     DTensorSpec,
     Partial,
     Replicate,

@@ -47,6 +47,7 @@ class AutoPipelineForDistributedInference(AutoPipeline):
         # Raise to Mase IR
         pass_list += [
             passes.init_metadata_analysis_pass,
+            passes.report_graph_analysis_pass,
             passes.add_common_metadata_analysis_pass,
         ]
 

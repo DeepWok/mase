@@ -4,9 +4,9 @@ from typing import Optional, Sequence
 
 # Import all builtin dist tensor ops
 import torch
-import torch.distributed._tensor.random as random
+import torch.distributed.tensor.random as random
 
-from torch.distributed._tensor.placement_types import (
+from torch.distributed.tensor.placement_types import (
     Partial,
     Placement,
     Replicate,
@@ -57,7 +57,7 @@ def _dtensor_init_helper(
     placements=None,
     **kwargs,
 ) -> DTensor:
-    from torch.distributed._tensor.placement_types import DTensorSpec, TensorMeta
+    from torch.distributed.tensor.placement_types import DTensorSpec, TensorMeta
 
     # if device_mesh is None, use the one from mesh resources
     device_mesh = device_mesh or _mesh_resources.get_current_mesh()

@@ -2,8 +2,8 @@ import itertools
 from dataclasses import dataclass
 from typing import List, Set, Tuple
 
-from torch.distributed._tensor._op_schema import OpStrategy, PlacementStrategy
-from torch.distributed._tensor.placement_types import (
+from torch.distributed.tensor._op_schema import OpStrategy, PlacementStrategy
+from torch.distributed.tensor.placement_types import (
     DTensorSpec,
     Partial,
     Placement,

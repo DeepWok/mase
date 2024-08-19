@@ -1,5 +1,5 @@
 import torch
-from torch.distributed._tensor.api import DTensorSpec, TensorMeta
+from torch.distributed.tensor.api import DTensorSpec, TensorMeta
 from torch.distributed import DeviceMesh
 from copy import deepcopy
 

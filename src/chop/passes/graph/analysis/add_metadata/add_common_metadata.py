@@ -204,7 +204,10 @@ def graph_iterator_for_mase_ops(graph):
 
 
 def graph_iterator_for_metadata(
-    graph, dummy_in=None, add_value=True, force_device_meta=False
+    graph,
+    dummy_in=None,
+    add_value=True,
+    force_device_meta=False,
 ):
     """
     largely apated from https://pytorch.org/docs/stable/fx.html
@@ -229,7 +232,10 @@ def graph_iterator_for_metadata(
         elif node.op == "call_function":
             args = load_arg(node.args, env)
             kwargs = load_arg(node.kwargs, env)
-            result = node.target(*args, **kwargs)
+            try:
+                result = node.target(*args, **kwargs)
+            except:
+                breakpoint()
             analyse_fn = analyse_common_parameters_function
         elif node.op == "call_method":
             self_obj, *args = load_arg(node.args, env)
