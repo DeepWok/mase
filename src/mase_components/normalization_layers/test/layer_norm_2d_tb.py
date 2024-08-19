@@ -26,6 +26,7 @@ from mase_cocotb.utils import fixed_preprocess_tensor
 
 from mase_cocotb.utils import bit_driver
 from chop.nn.quantizers import integer_floor_quantizer
+from chop.nn.quantized.modules import LayerNormIntegerFloor
 def quantize(x, width, frac_width, by_pass=False):
     if not by_pass:
         x = integer_floor_quantizer(x, width, frac_width)
@@ -112,10 +113,9 @@ class LayerNormTB(Testbench):
             check=True,
         )
         # Model
-        self.model = partial(
-            _fixed_group_norm_2d_model,
+        self.model = LayerNormIntegerFloor(
             normalized_shape=self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
-            q_config={
+            config={
                 "data_in_width": self.get_parameter("DATA_IN_0_PRECISION_0"),
                 "data_in_frac_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
                 "isqrt_in_width": self.get_parameter("ISQRT_IN_PRECISION_0"),
@@ -126,7 +126,6 @@ class LayerNormTB(Testbench):
                 "data_out_frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
                 "by_pass": False,
             },
-            floor=True,
         )
 
         # Set verbosity of driver and monitor loggers to debug

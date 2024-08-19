@@ -70,6 +70,7 @@ from .batch_norm2d import (
 )
 from .layer_norm import (
     LayerNormInteger,
+    LayerNormIntegerFloor,
 )
 from .group_norm import GroupNormInteger
 from .instance_norm2d import InstanceNorm2dInteger
@@ -205,6 +206,7 @@ quantized_module_map = {
     "batch_norm2d_integer": BatchNorm2dInteger,
     "batch_norm2d_binary": BatchNorm2dBinary,
     "layer_norm_integer": LayerNormInteger,
+    "layer_norm_integer_floor": LayerNormIntegerFloor,
     "group_norm_integer": GroupNormInteger,
     "instance_norm2d_integer": InstanceNorm2dInteger,
     "rms_norm_integer": RMSNormInteger,
