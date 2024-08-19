@@ -28,7 +28,7 @@ from ..ops.common import (
 
 
 logger = get_logger(__name__)
-logger.setLevel("DEBUG")
+logger.setLevel("INFO")
 
 
 def _get_computation_cost_from_strategy(
@@ -540,7 +540,7 @@ def alpa_intra_op_sharding_pass(mg, mesh, pass_args={}, debug=False):
     problem.solve(
         verbose=True,
         scipy_options={
-            "disp": True,
+            "disp": pass_args.get(f"run_checks", False),
             "time_limit": pass_args.get("time_limit", None),
             "mip_rel_gap": pass_args.get("mip_rel_gap", 0) / 100,
         },

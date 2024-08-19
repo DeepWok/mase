@@ -63,7 +63,14 @@ def _insert_resharding_nodes(mg, pass_args={}):
                 )
                 continue
 
-            if arg_specs.placements != parent_out_specs.placements:
+            arg_placements = arg_specs.placements
+            parent_out_placements = (
+                parent_out_specs[0].placements
+                if isinstance(parent_out_specs, (list, tuple))
+                else parent_out_specs.placements
+            )
+
+            if arg_placements != parent_out_placements:
                 logger.info(
                     f"Inserting resharding node along edge {arg_obj} -> {node.name} because arg {arg_name} requires placement {arg_specs.placements} but parent node {arg_obj.name} has placement {parent_out_specs.placements}."
                 )

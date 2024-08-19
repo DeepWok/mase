@@ -606,7 +606,7 @@ def get_reshape_strategy(op):
             # FIXME: this can be wrong for situations where we have
             #        [Shard(0), Shard(0)]
             input_tgt_spec = DTensorSpec(
-                placements=tuple(input_tgt_placements),
+                placements=(Replicate(), Replicate()),
                 mesh=input_src_spec.mesh,
                 tensor_meta=input_src_spec.tensor_meta,
             )
