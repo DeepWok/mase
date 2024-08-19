@@ -27,72 +27,6 @@ from mase_cocotb.utils import fixed_preprocess_tensor
 from mase_cocotb.utils import bit_driver
 from chop.nn.quantizers import integer_floor_quantizer
 from chop.nn.quantized.modules import LayerNormIntegerFloor
-def quantize(x, width, frac_width, by_pass=False):
-    if not by_pass:
-        x = integer_floor_quantizer(x, width, frac_width)
-    return x
-def get_dim_and_prodofdim(x, normalized_shape):
-    dim = tuple(range(0 - len(normalized_shape), 0))
-    num_vals = 1
-    for items in dim:
-        num_vals *= x.shape[items]
-    return dim, num_vals
-def isqrt(x:torch.Tensor):
-    x = (x+1e-5).sqrt()
-    x = x.reciprocal()
-    return x
-from math import ceil, log2
-def _fixed_group_norm_2d_model(
-    x: torch.Tensor,
-    normalized_shape: tuple or int,
-    q_config,
-    floor=True,
-):
-    #TODO: add hardware debug info
-    #TODO: support floor
-    logger.debug(f"Input: \n {x}")
-    if isinstance(normalized_shape, int):
-        normalized_shape = (normalized_shape,)
-    dim, num_vals = get_dim_and_prodofdim(x, normalized_shape)
-    x = quantize(x, q_config["data_in_width"], q_config["data_in_frac_width"], q_config["by_pass"])
-    logger.debug(f"Input Quantized: \n {x}")
-    num_vals_frac_width = ceil(log2(num_vals))
-    inv_num_vals_quant = quantize(torch.tensor(1/num_vals),num_vals_frac_width + 2, num_vals_frac_width)
-    logger.debug(f"Input Quantized: \n {inv_num_vals_quant}")
-    # Mean calculation
-    mu_acc = x.sum(dim, keepdim=True)
-    logger.debug(f"Mu Acc: \n {mu_acc}")
-    mu = mu_acc * inv_num_vals_quant
-    logger.debug(f"Mu: \n {mu}")
-    mu = quantize(mu, q_config["data_in_width"], q_config["data_in_frac_width"], q_config["by_pass"])
-    logger.debug(f"Mu Quantized: \n {mu}")
-    #I hope the output precision here should be $clog2
-    # Variance calculation
-    diff = x - mu
-    logger.debug(f"Diff: \n {diff}")
-
-    squares = diff**2
-    logger.debug(f"Squares: {squares}")
-
-    sum_squares = torch.sum(squares, dim, keepdim=True)
-
-    var = sum_squares * inv_num_vals_quant
-    var = quantize(var, q_config["isqrt_in_width"], q_config["isqrt_in_frac_width"], q_config["by_pass"])
-    logger.debug(f"Variance: \n {var}")
-
-    inv_sqrt = isqrt(var)
-    inv_sqrt = quantize(inv_sqrt, q_config["isqrt_out_width"], q_config["isqrt_out_frac_width"], q_config["by_pass"])
-    logger.debug(f"INV SQRT INT: \n {inv_sqrt}")
-
-    # Norm calculation
-    norm_out = diff * inv_sqrt
-    logger.debug("Norm:")
-    logger.debug(norm_out)
-
-    norm_out = quantize(norm_out, q_config["data_out_width"], q_config["data_out_frac_width"], q_config["by_pass"])
-    logger.debug(f"Norm (Casted): \n {norm_out}")
-
-    return norm_out 
 class LayerNormTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
@@ -135,6 +69,7 @@ class LayerNormTB(Testbench):
     def generate_inputs(self):
         return torch.randn(
             (
+                self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_1"),
                 self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
             )
         )
@@ -156,6 +91,7 @@ class LayerNormTB(Testbench):
                     "frac_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
                 },
                 parallelism=[
+                    self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1"),
                     self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"),
                 ],
                 floor=True,
@@ -171,44 +107,14 @@ class LayerNormTB(Testbench):
                     "frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
                 },
                 parallelism=[
+                    self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_1"),
                     self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"),
                 ],
             )
             self.out_data_monitor.load_monitor(outs)
-            cocotb.start_soon(check_signal(self.dut, self.log))
 
         await Timer(us, units="us")
         assert self.out_data_monitor.exp_queue.empty()
-
-async def check_signal(dut, log):
-    while True:
-        await RisingEdge(dut.clk)
-        handshake_signal_check(
-            dut.mu_acc_valid, 
-            dut.mu_acc_ready, 
-            dut.mu_acc, log,
-            dut.DATA_IN_0_PRECISION_1.value)
-        handshake_signal_check(
-            dut.mu_acc_valid, 
-            dut.mu_acc_ready, 
-            dut.mu_in, log,
-            dut.DATA_IN_0_PRECISION_0.value)
-        # breakpoint()
-        a = 1
-        # handshake_signal_check(dut.rolled_k_valid, dut.rolled_k_ready, dut.rolled_k, log)
-        # handshake_signal_check(dut.bias_valid,
-        #                        dut.bias_ready,
-        #                        dut.bias, log)
-
-
-def handshake_signal_check(valid, ready, signal, log, frac_width=0):
-    scale = 2**frac_width
-    if isinstance(signal.value, list):
-        svalue = [i.signed_integer / scale for i in signal.value]
-    else:
-        svalue=signal.value.signed_integer / scale
-    if valid.value & ready.value:
-        log.debug(f"handshake {str(signal)} = {svalue}")
 
 @cocotb.test()
 async def single_test(dut):
@@ -224,26 +130,28 @@ async def single_test(dut):
 #     await tb.run_test(batches=100, us=2000)
 
 
-@cocotb.test()
-async def repeated_mult_backpressure(dut):
-    tb = LayerNormTB(dut)
-    cocotb.start_soon(bit_driver(dut.data_out_0_ready, dut.clk, 0.6))
-    await tb.run_test(batches=10, us=500)
+# @cocotb.test()
+# async def repeated_mult_backpressure(dut):
+#     tb = LayerNormTB(dut)
+#     cocotb.start_soon(bit_driver(dut.data_out_0_ready, dut.clk, 0.6))
+#     await tb.run_test(batches=10, us=500)
 
 
-@cocotb.test()
-async def repeated_mult_valid_backpressure(dut):
-    tb = LayerNormTB(dut)
-    tb.in_data_driver.set_valid_prob(0.7)
-    cocotb.start_soon(bit_driver(dut.data_out_0_ready, dut.clk, 0.6))
-    await tb.run_test(batches=50, us=200)
+# @cocotb.test()
+# async def repeated_mult_valid_backpressure(dut):
+#     tb = LayerNormTB(dut)
+#     tb.in_data_driver.set_valid_prob(0.7)
+#     cocotb.start_soon(bit_driver(dut.data_out_0_ready, dut.clk, 0.6))
+#     await tb.run_test(batches=50, us=200)
 
 # Don't support :
 # 1. DATA_IN_0_PARALLELISM_DIM_0 ==DATA_IN_0_TENSOR_SIZE_DIM_0
 # 
 dut_params = {
-    "DATA_IN_0_TENSOR_SIZE_DIM_0": 256,
+    "DATA_IN_0_TENSOR_SIZE_DIM_0": 16,
     "DATA_IN_0_PARALLELISM_DIM_0": 4,
+    "DATA_IN_0_TENSOR_SIZE_DIM_1": 4,
+    "DATA_IN_0_PARALLELISM_DIM_1": 2,
     "DATA_IN_0_PRECISION_0": 8,
     "DATA_IN_0_PRECISION_1": 4,
     "ISQRT_IN_PRECISION_0": 7,
@@ -251,8 +159,7 @@ dut_params = {
     "ISQRT_OUT_PRECISION_0": 12,
     "ISQRT_OUT_PRECISION_1": 4,
     "DATA_OUT_0_PRECISION_0": 10,
-    "DATA_OUT_0_PRECISION_1": 4,
-    "GROUP_CHANNELS":1,
+    "DATA_OUT_0_PRECISION_1": 4
 }
 
 

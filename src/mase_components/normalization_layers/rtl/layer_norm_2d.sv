@@ -9,6 +9,9 @@ Description : This module calculates the generalised group norm.
 
               Group norm is independent of batch size, so the input shape is:
               (GROUP, DEPTH_DIM1 * DEPTH_DIM0, COMPUTE_DIM1 * COMPUTE_DIM0)
+    assume we flatten layernorm.normalized_shape to, and then calculate it
+    so it actually is dim_0 = prod(normalized_shape), x.reshape(-1, dim0), out = norm(dim_0)(x)
+    2d means parallelism here
 */
 
 `timescale 1ns / 1ps
@@ -16,8 +19,71 @@ module layer_norm_2d #(
     // Dimensions
     parameter DATA_IN_0_TENSOR_SIZE_DIM_0     = 4,
     parameter DATA_IN_0_PARALLELISM_DIM_0   = 2,
-    parameter GROUP_CHANNELS = 2,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_1     = 4,
+    parameter DATA_IN_0_PARALLELISM_DIM_1   = 2,
 
+    // Data widths
+    parameter DATA_IN_0_PRECISION_0       = 8,
+    parameter DATA_IN_0_PRECISION_1  = 4,
+    parameter ISQRT_IN_PRECISION_0 = 8,
+    parameter ISQRT_IN_PRECISION_1 = 8,
+    parameter ISQRT_OUT_PRECISION_0 = 8,
+    parameter ISQRT_OUT_PRECISION_1 = 4,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0     = DATA_IN_0_TENSOR_SIZE_DIM_0,
+    parameter DATA_OUT_0_PARALLELISM_DIM_0   = DATA_IN_0_PARALLELISM_DIM_0,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_1     = DATA_IN_0_TENSOR_SIZE_DIM_1,
+    parameter DATA_OUT_0_PARALLELISM_DIM_1   = DATA_IN_0_PARALLELISM_DIM_1,
+    parameter DATA_OUT_0_PRECISION_0      = 8,
+    parameter DATA_OUT_0_PRECISION_1 = 4
+
+) (
+    input logic clk,
+    input logic rst,
+
+    input  logic [DATA_IN_0_PRECISION_0-1:0] data_in_0 [DATA_IN_0_PARALLELISM_DIM_1*DATA_IN_0_PARALLELISM_DIM_0-1:0],
+    input  logic                data_in_0_valid,
+    output logic                data_in_0_ready,
+
+    output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_0 [DATA_IN_0_PARALLELISM_DIM_1*DATA_IN_0_PARALLELISM_DIM_0-1:0],
+    output logic                 data_out_0_valid,
+    input  logic                 data_out_0_ready
+);
+    logic [DATA_IN_0_PARALLELISM_DIM_1 - 1:0] parallel_data_in_0_ready, parallel_data_out_0_valid;
+
+    for (genvar i=0; i<DATA_IN_0_PARALLELISM_DIM_1; i++) begin: parallel_dim_1
+        layer_norm_1d #(
+            .DATA_IN_0_TENSOR_SIZE_DIM_0,
+            .DATA_IN_0_PARALLELISM_DIM_0,
+            // Data widths
+            .DATA_IN_0_PRECISION_0,
+            .DATA_IN_0_PRECISION_1,
+            .ISQRT_IN_PRECISION_0,
+            .ISQRT_IN_PRECISION_1,
+            .ISQRT_OUT_PRECISION_0,
+            .ISQRT_OUT_PRECISION_1,
+            .DATA_OUT_0_TENSOR_SIZE_DIM_0,
+            .DATA_OUT_0_PARALLELISM_DIM_0,
+            .DATA_OUT_0_PRECISION_0,
+            .DATA_OUT_0_PRECISION_1
+        ) layer_norm_inst (
+            .clk,
+            .rst,
+            .data_in_0(data_in_0[i*DATA_IN_0_PARALLELISM_DIM_0 + DATA_IN_0_PARALLELISM_DIM_0 - 1:  i*DATA_IN_0_PARALLELISM_DIM_0]),
+            .data_in_0_valid,
+            .data_in_0_ready(parallel_data_in_0_ready[i]),
+            .data_out_0(data_out_0[i*DATA_IN_0_PARALLELISM_DIM_0 + DATA_IN_0_PARALLELISM_DIM_0 - 1:  i*DATA_IN_0_PARALLELISM_DIM_0]),
+            .data_out_0_valid(parallel_data_out_0_valid[i]),
+            .data_out_0_ready
+        );
+    end
+    assign data_in_0_ready = parallel_data_in_0_ready[0];
+    assign data_out_0_valid = parallel_data_out_0_valid[0];
+endmodule
+
+module layer_norm_1d #(
+    // Dimensions
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_0     = 4,
+    parameter DATA_IN_0_PARALLELISM_DIM_0   = 2,
     // Data widths
     parameter DATA_IN_0_PRECISION_0       = 8,
     parameter DATA_IN_0_PRECISION_1  = 4,
@@ -45,9 +111,9 @@ module layer_norm_2d #(
   // Derived params
   localparam DEPTH_DIM0 = DATA_IN_0_TENSOR_SIZE_DIM_0 / DATA_IN_0_PARALLELISM_DIM_0;
 
-  localparam NUM_VALUES = DATA_IN_0_TENSOR_SIZE_DIM_0 * GROUP_CHANNELS;
+  localparam NUM_VALUES = DATA_IN_0_TENSOR_SIZE_DIM_0;
 
-  localparam NUM_ITERS = DEPTH_DIM0 * GROUP_CHANNELS;
+  localparam NUM_ITERS = DEPTH_DIM0;
   localparam ITER_WIDTH = $clog2(NUM_ITERS);
 
   // Compute Pipeline Widths
