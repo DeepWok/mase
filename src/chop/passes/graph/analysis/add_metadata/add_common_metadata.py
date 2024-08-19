@@ -232,10 +232,7 @@ def graph_iterator_for_metadata(
         elif node.op == "call_function":
             args = load_arg(node.args, env)
             kwargs = load_arg(node.kwargs, env)
-            try:
-                result = node.target(*args, **kwargs)
-            except:
-                breakpoint()
+            result = node.target(*args, **kwargs)
             analyse_fn = analyse_common_parameters_function
         elif node.op == "call_method":
             self_obj, *args = load_arg(node.args, env)
