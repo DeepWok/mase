@@ -378,7 +378,7 @@ MASE_OP_TO_ENTRIES = {
     ),
     "layer_norm": (
         ("name", "data_in_entries"),
-        ("bypass",),
+        ("bypass","isqrt_in_entries", "isqrt_out_entries", "data_out_entries"),
     ),
     "group_norm": (
         ("name", "data_in_entries"),
@@ -412,6 +412,8 @@ def parse_node_config(config: dict, mase_op: str, strict: bool = True) -> dict:
         a missing `bias_frac_width` in linear node config
     """
     assert mase_op in MASE_OP_TO_ENTRIES, f"Unknown mase op: {mase_op}"
+    if config.get("noparse", False):
+        return config
     if config.get("bypass", False):
         return config
     op_entries, op_optional_entries = MASE_OP_TO_ENTRIES[mase_op]

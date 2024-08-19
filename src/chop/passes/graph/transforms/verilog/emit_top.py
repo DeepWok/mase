@@ -784,21 +784,38 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
                 func = "exp"
             elif isinstance(module, nn.GELU):
                 func = "gelu"
+            elif isinstance(module, nn.LayerNorm):
+                func = "isqrt"
             else:
                 func = "Unknown"
             if func != "Unknown":
-                d_in_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
-                    "DATA_IN_0_PRECISION_0"
-                ]
-                d_in_f_width = node.meta["mase"].parameters["hardware"][
-                    "verilog_param"
-                ]["DATA_IN_0_PRECISION_1"]
-                d_out_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
-                    "DATA_OUT_0_PRECISION_0"
-                ]
-                d_out_f_width = node.meta["mase"].parameters["hardware"][
-                    "verilog_param"
-                ]["DATA_OUT_0_PRECISION_1"]
+                if func == "isqrt":
+                    d_in_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
+                        "ISQRT_IN_PRECISION_0"
+                    ]
+                    d_in_f_width = node.meta["mase"].parameters["hardware"][
+                        "verilog_param"
+                    ]["ISQRT_IN_PRECISION_1"]
+                    d_out_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
+                        "ISQRT_OUT_PRECISION_0"
+                    ]
+                    d_out_f_width = node.meta["mase"].parameters["hardware"][
+                        "verilog_param"
+                    ]["ISQRT_OUT_PRECISION_1"]
+                else:
+                    d_in_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
+                        "DATA_IN_0_PRECISION_0"
+                    ]
+                    d_in_f_width = node.meta["mase"].parameters["hardware"][
+                        "verilog_param"
+                    ]["DATA_IN_0_PRECISION_1"]
+                    d_out_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
+                        "DATA_OUT_0_PRECISION_0"
+                    ]
+                    d_out_f_width = node.meta["mase"].parameters["hardware"][
+                        "verilog_param"
+                    ]["DATA_OUT_0_PRECISION_1"]
+                breakpoint()
                 gen_lut.generate_sv_lut(
                     func,
                     d_in_width,

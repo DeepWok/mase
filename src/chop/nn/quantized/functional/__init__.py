@@ -1,6 +1,6 @@
 from .softermax import fixed_softermax
 from .softmax import softmax_integer
-from .layernorm import IntLayerNormFunc, _int_layer_norm
+from .layer_norm import IntLayerNormFunc, _int_layer_norm
 from .add import (
     add_block_fp,
     add_block_log,

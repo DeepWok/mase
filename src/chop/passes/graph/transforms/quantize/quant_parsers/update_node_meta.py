@@ -69,7 +69,7 @@ MASE_OP_TO_INPUT_ENTRIES_AND_ARGS = {
     "softplus": (("data_in",), ("data_in_0",)),
     "sub": (("data_in", "data_in"), ("data_in_0", "data_in_1")),
     "batch_norm2d": (("data_in", "weight", "bias"), ("data_in_0", "weight", "bias")),
-    "layer_norm": (("data_in",), ("data_in_0")),
+    "layer_norm": (("data_in",), ("data_in_0",)),
     "group_norm": (("data_in",), ("data_in_0")),
     "instance_norm2d": (("data_in",), ("data_in_0")),
     "rms_norm": (("data_in",), ("data_in_0")),

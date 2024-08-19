@@ -71,4 +71,4 @@ class LayerNormIntegerFloor(nn.LayerNorm):
         self.bypass = config.get("bypass", False)
 
     def forward(self, x: Tensor) -> Tensor:
-        return IntLayerNormFunc.apply(x, self.normalized_shape, self.weight, self.bias, self.eps, self.config)
+        return IntLayerNormFunc.apply(x, self.normalized_shape, self.weight, self.bias, self.eps, self.config, self.bypass)

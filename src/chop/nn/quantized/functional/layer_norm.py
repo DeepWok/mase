@@ -65,7 +65,7 @@ def _int_layer_norm(
 
 class IntLayerNormFunc(torch.autograd.Function):
     @staticmethod
-    def forward(ctx, input: torch.Tensor, normalized_shape, weight, bias, eps, config):
+    def forward(ctx, input: torch.Tensor, normalized_shape, weight, bias, eps, config, bypass):
         with torch.enable_grad():
             layernormed = nn.functional.layer_norm(
                 input, normalized_shape, weight, bias, eps
@@ -73,7 +73,7 @@ class IntLayerNormFunc(torch.autograd.Function):
         ctx.save_for_backward(input, layernormed)
         output = _int_layer_norm(
             input, normalized_shape, weight, bias, eps, config
-        )
+        ) if not bypass else layernormed
         return output
 
     @staticmethod
@@ -82,4 +82,4 @@ class IntLayerNormFunc(torch.autograd.Function):
         (grad_input,) = torch.autograd.grad(
             layernormed, input, grad_outputs=grad_output
         )
-        return grad_input, None, None, None, None, None
+        return grad_input, None, None, None, None, None, None

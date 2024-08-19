@@ -123,10 +123,17 @@ INTERNAL_COMP = {
         }
     ],
     "batch_norm2d": [norm],
-    "layer_norm": [norm],
     "group_norm": [norm],
     "instance_norm2d": [norm],
     "rms_norm": [norm],
+    "layer_norm": [
+        {
+            "name": "layer_norm_2d",
+            "dependence_files": [
+                "normalization_layers/rtl/layer_norm_2d.sv",
+            ],
+        },
+    ],
     "selu": [
         {
             "name": "fixed_selu",
