@@ -72,13 +72,13 @@ class LayerNormTB(Testbench):
                 "by_pass": False,
             },
             elementwise_affine=True if self.get_parameter("ELEMENTWISE_AFFINE")==1 else False,
-            bias=True if self.get_parameter("BIAS")==1 else False,
+            bias=True if self.get_parameter("HAS_BIAS")==1 else False,
         )
         if self.get_parameter("ELEMENTWISE_AFFINE")==1:
             self.model.weight = torch.nn.Parameter(
                 5 * torch.rand(self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"))
             )        
-            if self.get_parameter("BIAS")==1: 
+            if self.get_parameter("HAS_BIAS")==1: 
                 self.model.bias = torch.nn.Parameter(
                     5 * torch.rand(self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"))
                 )        
@@ -131,7 +131,7 @@ class LayerNormTB(Testbench):
                     floor=True,
                 )
                 self.weight_driver.load_driver(weights)
-                if self.get_parameter("BIAS"):
+                if self.get_parameter("HAS_BIAS"):
                     biases = fixed_preprocess_tensor(
                         tensor=self.model.bias,
                         q_config={
@@ -196,7 +196,7 @@ async def single_test(dut):
 # 
 dut_params = {
     "ELEMENTWISE_AFFINE": 1,
-    "BIAS": 1,
+    "HAS_BIAS": 1,
     "DATA_IN_0_TENSOR_SIZE_DIM_0": 16,
     "DATA_IN_0_PARALLELISM_DIM_0": 4,
     "DATA_IN_0_TENSOR_SIZE_DIM_1": 4,

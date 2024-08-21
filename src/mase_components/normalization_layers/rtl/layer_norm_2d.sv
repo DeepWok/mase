@@ -30,11 +30,19 @@ module layer_norm_2d #(
     parameter BIAS_PRECISION_0       = 8,
     parameter BIAS_PRECISION_1  = 4,
     parameter ELEMENTWISE_AFFINE  = 0 ,
-    parameter BIAS = 0,
+    parameter HAS_BIAS = 0,
     parameter ISQRT_IN_PRECISION_0 = 8,
     parameter ISQRT_IN_PRECISION_1 = 8,
     parameter ISQRT_OUT_PRECISION_0 = 8,
     parameter ISQRT_OUT_PRECISION_1 = 4,
+    parameter BIAS_TENSOR_SIZE_DIM_0     = DATA_IN_0_TENSOR_SIZE_DIM_0,
+    parameter BIAS_PARALLELISM_DIM_0   = DATA_IN_0_PARALLELISM_DIM_0,
+    parameter BIAS_TENSOR_SIZE_DIM_1     = 1,
+    parameter BIAS_PARALLELISM_DIM_1   = 1,
+    parameter WEIGHT_TENSOR_SIZE_DIM_0     = DATA_IN_0_TENSOR_SIZE_DIM_0,
+    parameter WEIGHT_PARALLELISM_DIM_0   = DATA_IN_0_PARALLELISM_DIM_0,
+    parameter WEIGHT_TENSOR_SIZE_DIM_1     = 1,
+    parameter WEIGHT_PARALLELISM_DIM_1   = 1,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_0     = DATA_IN_0_TENSOR_SIZE_DIM_0,
     parameter DATA_OUT_0_PARALLELISM_DIM_0   = DATA_IN_0_PARALLELISM_DIM_0,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_1     = DATA_IN_0_TENSOR_SIZE_DIM_1,
@@ -151,7 +159,7 @@ module layer_norm_2d #(
         for (genvar i=0; i<DATA_OUT_0_PARALLELISM_DIM_1; i++) begin: affine_parallel_dim1 
             for (genvar j=0; j<DATA_OUT_0_PARALLELISM_DIM_0; j++) begin: affine_parallel_dim0
                 localparam int k = i*DATA_IN_0_PARALLELISM_DIM_0 + j; 
-                if (BIAS == 1) begin
+                if (HAS_BIAS == 1) begin
                     join2 wd_bias_join_inst (
                         .data_in_valid ({wd_valid, bias_buffered_valid}),
                         .data_in_ready ({parallel_wd_ready[k], parallel_bias_ready[k]}),
