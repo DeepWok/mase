@@ -28,7 +28,7 @@ def excepthook(exc_type, exc_value, exc_traceback):
 logger = get_logger(__name__)
 sys.excepthook = excepthook
 
-
+torch.manual_seed(0)
 # --------------------------------------------------
 #   Model specifications
 #   prefer small models for fast test
@@ -43,7 +43,11 @@ class LAYERNORM_MODULE(torch.nn.Module):
     def __init__(self, norm_dim) -> None:
         super().__init__()
 
-        self.norm = nn.LayerNorm(norm_dim,elementwise_affine=False)
+        self.norm = nn.LayerNorm(norm_dim,elementwise_affine=True)
+        if self.norm.elementwise_affine:
+            self.norm.weight = torch.nn.Parameter(torch.rand(norm_dim))
+            if self.norm.bias is not None:
+                self.norm.bias = torch.nn.Parameter(torch.rand(norm_dim))
 
     def forward(self, x):
         x = self.norm(x)
@@ -79,6 +83,14 @@ def update_common_metadata_pass(
                     "precision"
                 ] = [node_quan_config["data_out_width"], node_quan_config["data_out_frac_width"]]
     
+    for node in mg.fx_graph.nodes:
+        mase_op = node.meta["mase"].parameters["common"]["mase_op"]
+        if mase_op in ["layer_norm"]:
+            if node.meta["mase"].parameters["common"]["args"].get("weight")!=None:
+                node.meta["mase"].parameters["common"]["args"]["elementwise_affine"] = True
+                if node.meta["mase"].parameters["common"]["args"].get("bias") !=None:
+                    node.meta["mase"].parameters["common"]["args"]["has_bias"] = True
+        
 def update_hardware_precision_param(
     mg, quan_args
 ):
@@ -118,6 +130,10 @@ quan_args = {
             # data
             "data_in_width": 8,
             "data_in_frac_width": 4,
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4,
             "isqrt_in_width": 8,
             "isqrt_in_frac_width": 4,
             "isqrt_out_width": 8,
@@ -130,19 +146,18 @@ quan_args = {
     }
 }
 @pytest.mark.dev
-def test_emit_verilog_mlp():
+def test_emit_verilog_layernorm():
+    
     batch_size = 4
     norm_dim = 8
     norm_layer = LAYERNORM_MODULE(norm_dim)
     mg = chop.MaseGraph(model=norm_layer)
-    torch.manual_seed(0)
     # Provide a dummy input for the graph so it can use for tracing
     x = torch.randn((batch_size, norm_dim))
     dummy_in = {"x": x}
 
     mg, _ = passes.init_metadata_analysis_pass(mg, None)
     mg, _ = passes.add_common_metadata_analysis_pass(mg, {"dummy_in": dummy_in})
-
     mg, _ = passes.quantize_transform_pass(mg, quan_args)
     update_common_metadata_pass(mg,quan_args)
     mg, _ = passes.add_hardware_metadata_analysis_pass(
@@ -164,4 +179,4 @@ def test_emit_verilog_mlp():
 
 
 if __name__ == "__main__":
-    test_emit_verilog_mlp()
+    test_emit_verilog_layernorm()

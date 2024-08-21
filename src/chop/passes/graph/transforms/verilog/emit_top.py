@@ -815,7 +815,6 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
                     d_out_f_width = node.meta["mase"].parameters["hardware"][
                         "verilog_param"
                     ]["DATA_OUT_0_PRECISION_1"]
-                breakpoint()
                 gen_lut.generate_sv_lut(
                     func,
                     d_in_width,
