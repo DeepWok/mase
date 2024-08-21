@@ -61,6 +61,13 @@ def _int_layer_norm(
     norm_out = diff * inv_sqrt
 
     norm_out = quantize(norm_out, q_config.get("data_out_width"), q_config.get("data_out_frac_width"), q_config.get("by_pass"))
+    if weight is not None:
+        qweight = quantize(weight, q_config.get("weight_width"), q_config.get("weight_frac_width"), q_config.get("by_pass"))
+        norm_out = norm_out*qweight 
+        if bias is not None: 
+            qbias = quantize(bias, q_config.get("bias_width"), q_config.get("bias_frac_width"), q_config.get("by_pass"))
+            norm_out = norm_out+qbias
+        norm_out = quantize(norm_out, q_config.get("data_out_width"), q_config.get("data_out_frac_width"), q_config.get("by_pass"))
     return norm_out 
 
 class IntLayerNormFunc(torch.autograd.Function):

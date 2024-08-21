@@ -38,7 +38,14 @@ class LayerNormTB(Testbench):
         self.in_data_driver = StreamDriver(
             dut.clk, dut.data_in_0, dut.data_in_0_valid, dut.data_in_0_ready
         )
-
+        if self.get_parameter("ELEMENTWISE_AFFINE"): 
+            self.weight_driver = StreamDriver(
+                dut.clk, dut.weight, dut.weight_valid, dut.weight_ready
+            )
+            if self.get_parameter("ELEMENTWISE_AFFINE"): 
+                self.bias_driver = StreamDriver(
+                    dut.clk, dut.bias, dut.bias_valid, dut.bias_ready
+                )
         self.out_data_monitor = StreamMonitor(
             dut.clk,
             dut.data_out_0,
@@ -56,12 +63,25 @@ class LayerNormTB(Testbench):
                 "isqrt_in_frac_width": self.get_parameter("ISQRT_IN_PRECISION_1"),
                 "isqrt_out_width": self.get_parameter("ISQRT_OUT_PRECISION_0"),
                 "isqrt_out_frac_width": self.get_parameter("ISQRT_OUT_PRECISION_1"),
+                "weight_width": self.get_parameter("WEIGHT_PRECISION_0"),
+                "weight_frac_width": self.get_parameter("WEIGHT_PRECISION_1"),
+                "bias_width": self.get_parameter("BIAS_PRECISION_0"),
+                "bias_frac_width": self.get_parameter("BIAS_PRECISION_1"),
                 "data_out_width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
                 "data_out_frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
                 "by_pass": False,
             },
+            elementwise_affine=True if self.get_parameter("ELEMENTWISE_AFFINE")==1 else False,
+            bias=True if self.get_parameter("BIAS")==1 else False,
         )
-
+        if self.get_parameter("ELEMENTWISE_AFFINE")==1:
+            self.model.weight = torch.nn.Parameter(
+                5 * torch.rand(self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"))
+            )        
+            if self.get_parameter("BIAS")==1: 
+                self.model.bias = torch.nn.Parameter(
+                    5 * torch.rand(self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"))
+                )        
         # Set verbosity of driver and monitor loggers to debug
         self.in_data_driver.log.setLevel(logging.DEBUG)
         self.out_data_monitor.log.setLevel(logging.DEBUG)
@@ -97,7 +117,34 @@ class LayerNormTB(Testbench):
                 floor=True,
             )
             self.in_data_driver.load_driver(inputs)
-
+            if self.get_parameter("ELEMENTWISE_AFFINE"):
+                weights = fixed_preprocess_tensor(
+                    tensor=self.model.weight,
+                    q_config={
+                        "width": self.get_parameter("WEIGHT_PRECISION_0"),
+                        "frac_width": self.get_parameter("WEIGHT_PRECISION_1"),
+                    },
+                    parallelism=[
+                        1,
+                        self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"),
+                    ],
+                    floor=True,
+                )
+                self.weight_driver.load_driver(weights)
+                if self.get_parameter("BIAS"):
+                    biases = fixed_preprocess_tensor(
+                        tensor=self.model.bias,
+                        q_config={
+                            "width": self.get_parameter("BIAS_PRECISION_0"),
+                            "frac_width": self.get_parameter("BIAS_PRECISION_1"),
+                        },
+                        parallelism=[
+                            1,
+                            self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"),
+                        ],
+                        floor=True,
+                    )
+                    self.bias_driver.load_driver(biases)
             # * Load the output monitor
             self.log.info(f"Processing outputs: {exp_out}")
             outs = fixed_preprocess_tensor(
@@ -148,12 +195,18 @@ async def single_test(dut):
 # 1. DATA_IN_0_PARALLELISM_DIM_0 ==DATA_IN_0_TENSOR_SIZE_DIM_0
 # 
 dut_params = {
+    "ELEMENTWISE_AFFINE": 1,
+    "BIAS": 1,
     "DATA_IN_0_TENSOR_SIZE_DIM_0": 16,
     "DATA_IN_0_PARALLELISM_DIM_0": 4,
     "DATA_IN_0_TENSOR_SIZE_DIM_1": 4,
     "DATA_IN_0_PARALLELISM_DIM_1": 2,
     "DATA_IN_0_PRECISION_0": 8,
     "DATA_IN_0_PRECISION_1": 4,
+    "WEIGHT_PRECISION_0":8,
+    "WEIGHT_PRECISION_1": 4,
+    "BIAS_PRECISION_0":8,
+    "BIAS_PRECISION_1": 4,
     "ISQRT_IN_PRECISION_0": 7,
     "ISQRT_IN_PRECISION_1": 4,
     "ISQRT_OUT_PRECISION_0": 12,

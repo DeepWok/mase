@@ -64,7 +64,6 @@ class LayerNormIntegerFloor(nn.LayerNorm):
         dtype=None,
         config=None,
     ) -> None:
-        assert elementwise_affine == False, "elementwise_affine not supported!"
         assert config is not None, "config is None!"
         super().__init__(normalized_shape, eps, elementwise_affine, bias, device, dtype)
         self.config = config
