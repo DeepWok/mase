@@ -11,7 +11,7 @@ import mase_components.helper.generate_memory as gen_lut
 import torch.nn as nn
 
 logger = logging.getLogger(__name__)
-
+from chop.nn.quantized.modules.layer_norm import LayerNormIntegerFloor
 from .util import get_verilog_parameters
 from pathlib import Path
 
@@ -629,8 +629,8 @@ assign {to_name}_data_in_0 = {from_name}_data_out_{select};
         nodes_in = self.graph.nodes_in
 
         wires = ""
+        fork_in = {}
         for node in self.graph.fx_graph.nodes:
-
             if (
                 # Skip implicit nodes
                 node.meta["mase"].parameters["hardware"]["is_implicit"]
@@ -645,13 +645,17 @@ assign {to_name}_data_in_0 = {from_name}_data_out_{select};
                 continue
 
             to_name = vf(node.name)
-
             for i, node_in in enumerate(node.all_input_nodes):
                 from_name = vf(node_in.name)
+                if "fork2" in from_name:
+                    fork_in[from_name] = 0 if fork_in.get(from_name) == None else fork_in[from_name] + 1
+                    j = fork_in[from_name]
+                else:
+                    j = 0
                 wires += f"""
-assign {from_name}_data_out_0_ready  = {to_name}_data_in_{i}_ready;
-assign {to_name}_data_in_{i}_valid    = {from_name}_data_out_0_valid;
-assign {to_name}_data_in_{i} = {from_name}_data_out_0;
+assign {from_name}_data_out_{j}_ready  = {to_name}_data_in_{i}_ready;
+assign {to_name}_data_in_{i}_valid    = {from_name}_data_out_{j}_valid;
+assign {to_name}_data_in_{i} = {from_name}_data_out_{j};
 """
         return wires
 
@@ -784,7 +788,7 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
                 func = "exp"
             elif isinstance(module, nn.GELU):
                 func = "gelu"
-            elif isinstance(module, nn.LayerNorm):
+            elif isinstance(module, LayerNormIntegerFloor):
                 func = "isqrt"
             else:
                 func = "Unknown"

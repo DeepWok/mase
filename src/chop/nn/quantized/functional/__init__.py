@@ -6,6 +6,7 @@ from .add import (
     add_block_log,
     add_block_minifloat,
     add_integer,
+    add_integer_floor,
     add_log,
     add_minifloat_denorm,
     add_minifloat_ieee,
@@ -139,6 +140,7 @@ from .softplus import (
 quantized_func_map = {
     "add_block_minifloat": add_block_minifloat,
     "add_integer": add_integer,
+    "add_integer_floor": add_integer_floor,
     "add_fixed": add_integer,
     "add_log": add_log,
     "add_minifloat_ieee": add_minifloat_ieee,

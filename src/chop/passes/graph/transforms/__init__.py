@@ -8,6 +8,7 @@ from .verilog import (
     emit_cocotb_transform_pass,
     emit_verilog_top_transform_pass,
     emit_vivado_project_transform_pass,
+    insert_fork_transform_pass,
 )
 from .utils import (
     conv_bn_fusion_transform_pass,

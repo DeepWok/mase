@@ -197,6 +197,12 @@ INTERNAL_COMP = {
             "dependence_files": ["common/rtl/df_split.sv", "common/rtl/split2.sv"],
         }
     ],
+    "fork2": [
+        {
+            "name": "fork2",
+            "dependence_files": ["common/rtl/fork2.sv"],
+        }
+    ],
     "getitem": [
         {
             "name": "buffer",
