@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-module fixed_roll_buffer #(
+module fixed_unroll_buffer #(
     parameter ROLL_MAX_DISTANCE = 64,
     parameter MAX_BUFFER_SIZE = 256,
     parameter DATA_IN_0_PARALLELISM_DIM_0 = 2,   
@@ -10,7 +10,6 @@ module fixed_roll_buffer #(
     parameter DATA_OUT_0_PRECISION_0 = 16,
     parameter DATA_OUT_0_PARALLELISM_DIM_0 = 2,
     parameter DATA_OUT_0_PARALLELISM_DIM_1 = 2,
-    parameter COUNTER_SIZE = 4,
 
     localparam ADDR_RANGE = $clog2(MAX_BUFFER_SIZE),
     localparam ADDR_WIDTH = $clog2(ADDR_RANGE)
@@ -28,9 +27,7 @@ module fixed_roll_buffer #(
     output logic data_in_0_ready,
     output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_0 [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0],
     output logic data_out_0_valid,
-    input logic data_out_0_ready,
-
-    output logic done
+    input logic data_out_0_ready
 );
 
  typedef struct packed {
@@ -48,10 +45,7 @@ module fixed_roll_buffer #(
     logic ram_dout_valid;  // Pulse signal for ram reads
 
     // Can't use enum becuase of reset syntax
-    logic [1:0]state;
-
-    logic [COUNTER_SIZE:0] write_counter;
-    logic [$clog2(MAX_BUFFER_SIZE):0] prev_buffer_size;
+    logic[1:0] state;
 
     // Controls the next register to be connected to output
     logic next_reg;
@@ -99,28 +93,17 @@ matrix_unflatten #(
   always_comb begin
     next_self = self;
 
-    if(self.state == 1) begin
-      next_self.prev_buffer_size = buffer_size;
-      next_self.read_ptr = 0;
-      done = 1;
-    end else
-      done = 0;
-
-    if(self.state == 2)begin
-      next_self.write_ptr = roll_distance;
-    end
-
     // Input side ready
-    data_in_0_ready = (self.write_counter <= buffer_size) && (self.state == 0);
+    data_in_0_ready = (self.size != buffer_size) && (self.state == 2'b00 || self.state == 2'b01);
 
     // Pause reading when there is (no transfer on this cycle) AND the registers are full.
-    pause_reads = (!data_out_0_ready && (self.out_reg.valid || self.extra_reg.valid)) || self.read_ptr >= self.prev_buffer_size;
+    pause_reads = !data_out_0_ready && (self.out_reg.valid || self.extra_reg.valid);
 
-    if(empty) next_self.write_ptr = roll_distance;
+    if (empty) next_self.write_ptr = roll_distance;
 
     // Write side of machine
     // Increment write pointer
-    if (data_in_0_valid && data_in_0_ready && self.state == 0) begin
+    if (data_in_0_valid && data_in_0_ready && (self.state == 2'b00 || self.state == 2'b01 )) begin
       if (self.write_ptr == buffer_size - 1) begin
         next_self.write_ptr = 0;
       end else begin
@@ -133,8 +116,13 @@ matrix_unflatten #(
     end
 
     // Read side of machine
-    if (!pause_reads && self.state == 0) begin
-      next_self.read_ptr += 1;
+    if (self.size != 0 && !pause_reads && (self.state == 2'b10 || self.state == 2'b01)) begin
+      if (self.read_ptr == buffer_size - 1) begin
+        next_self.read_ptr = 0;
+      end else begin
+        next_self.read_ptr += 1;
+      end
+      next_self.size -= 1;
       next_self.ram_dout_valid = 1;
     end else begin
       next_self.ram_dout_valid = 0;
@@ -171,10 +159,12 @@ matrix_unflatten #(
     end
 
     case(self.state) 
-      0: if(self.write_counter == buffer_size-1)  next_self.state = 1;
-                else next_self.state = 0;
-      1: next_self.state = 2;
-      2: next_self.state = 0;
+      2'b00: if(self.size == buffer_size - roll_distance)  next_self.state = 2'b01;
+                else next_self.state = 2'b00;
+      2'b01: if(self.write_ptr == roll_distance-1) next_self.state = 2'b10;
+                else next_self.state = 2'b01;
+      2'b10:  if(self.size == 0)       next_self.state = 2'b00;
+                else next_self.state = 2'b10;
     endcase
 
 
@@ -199,13 +189,6 @@ matrix_unflatten #(
     end else begin
       self <= next_self;
     end
-  end
-
-  always_ff @(posedge clk) begin
-    if(self.state == 1)
-      self.write_counter <= 0;
-    if(data_in_0_ready && data_in_0_valid)
-      self.write_counter <= self.write_counter + 1;  
   end
 
   assign empty = (self.size == 0);
