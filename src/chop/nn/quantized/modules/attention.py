@@ -58,8 +58,42 @@ class _BertSelfAttentionBase(BertSelfAttention):
             return out[0]
         return out
 
-
 class _ViTAttentionBase(nn.Module):
+    def __init__(
+        self,
+        dim: int,
+        num_heads: int = 8,
+        qkv_bias: bool = False,
+        qk_norm: bool = False,
+        attn_drop: float = 0.0,
+        proj_drop: float = 0.0,
+    ) -> None:
+        super().__init__()
+        assert dim % num_heads == 0, "dim should be divisible by num_heads"
+        self.num_heads = num_heads
+        self.head_dim = dim // num_heads
+        self.query = nn.Linear(dim, dim, bias=qkv_bias)
+        self.key = nn.Linear(dim, dim, bias=qkv_bias)
+        self.value = nn.Linear(dim, dim, bias=qkv_bias)
+        self.self_attention = _ViTSelfAttentionHeadBase(
+            dim=self.head_dim, num_heads=num_heads,attn_drop=attn_drop
+        )
+        self.proj = nn.Linear(dim, dim)
+        self.proj_drop = nn.Dropout(proj_drop)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        B, N, C = x.shape
+        def _tensor_reshape(x):
+            return x.reshape(B,-1,self.num_heads,self.head_dim).permute(0, 2,1,3)
+        q, k, v = _tensor_reshape(self.query(x)), _tensor_reshape(self.key(x)), _tensor_reshape(self.value(x)) 
+        x = self.self_attention(q,k,v)
+        x = x.transpose(1, 2).reshape(B, N, C)
+
+        x = self.proj(x)
+        x = self.proj_drop(x)
+        return x
+
+class _ViTAttentionBase_before(nn.Module):
     def __init__(
         self,
         dim: int,
@@ -89,12 +123,10 @@ class _ViTAttentionBase(nn.Module):
         )
         q, k, v = qkv[0], qkv[1], qkv[2]
         
-        print(integer_quantizer(q,10,4)* 8)
         x = self.self_attention(q,k,v)
 
         x = x.transpose(1, 2).reshape(B, N, C)
 
-        print("proj_in = ",integer_quantizer(x,10,4)* 16)
         x = self.proj(x)
         x = self.proj_drop(x)
         return x
@@ -168,14 +200,50 @@ class ViTAttentionInteger(_ViTAttentionBase):
         proj_drop: float = 0.0,
         norm_layer: nn.Module = nn.LayerNorm,
         q_config: dict = None,
-        floor=False,
+        floor=True,
     ) -> None:
         super().__init__(
             dim, num_heads,qkv_bias,qk_norm,attn_drop,proj_drop)
-
-        self.qkv = LinearInteger(
+        self.q_config = q_config
+        self.query = LinearInteger(
             dim,
-            dim*3,
+            dim,
+            bias=qkv_bias,
+            config={
+                "data_in_width": q_config["data_in_width"],
+                "data_in_frac_width": q_config["data_in_frac_width"],
+                "weight_width": q_config["qkv_weight_width"],
+                "weight_frac_width": q_config["qkv_weight_frac_width"],
+                "bias_width": q_config["qkv_bias_width"],
+                "bias_frac_width": q_config["qkv_bias_frac_width"],
+            },
+            out_config={
+                "data_out_width": q_config["qkv_width"],
+                "data_out_frac_width": q_config["qkv_frac_width"],
+            },
+            floor=floor,
+        )
+        self.key = LinearInteger(
+            dim,
+            dim,
+            bias=qkv_bias,
+            config={
+                "data_in_width": q_config["data_in_width"],
+                "data_in_frac_width": q_config["data_in_frac_width"],
+                "weight_width": q_config["qkv_weight_width"],
+                "weight_frac_width": q_config["qkv_weight_frac_width"],
+                "bias_width": q_config["qkv_bias_width"],
+                "bias_frac_width": q_config["qkv_bias_frac_width"],
+            },
+            out_config={
+                "data_out_width": q_config["qkv_width"],
+                "data_out_frac_width": q_config["qkv_frac_width"],
+            },
+            floor=floor,
+        )
+        self.value = LinearInteger(
+            dim,
+            dim,
             bias=qkv_bias,
             config={
                 "data_in_width": q_config["data_in_width"],

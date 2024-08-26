@@ -121,14 +121,19 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "softshrink"
             elif isinstance(module, nn.LogSigmoid):
                 mase_op = "logsigmoid"
+            
             else:
-                mase_op = None
-                for module_cls in graph.model.custom_ops["modules"].keys():
-                    if isinstance(module, module_cls):
-                        mase_op = "user_defined_module"
-                        break
-                if mase_op is None:
-                    raise ValueError(f"Unknown module: {module_name}")
+                from chop.nn.quantized import ViTAttentionInteger
+                if isinstance(module, ViTAttentionInteger):
+                    mase_op = "vit_self_attention_integer"
+                else:
+                    mase_op = None
+                    for module_cls in graph.model.custom_ops["modules"].keys():
+                        if isinstance(module, module_cls):
+                            mase_op = "user_defined_module"
+                            break
+                    if mase_op is None:
+                        raise ValueError(f"Unknown module: {module_name}")
             node.meta["mase"].parameters["common"]["mase_type"] = mase_type
             node.meta["mase"].parameters["common"]["mase_op"] = mase_op
 

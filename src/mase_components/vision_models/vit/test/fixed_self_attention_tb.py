@@ -19,7 +19,7 @@ from mase_cocotb.runner import mase_runner
 
 # from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner
 from chop.nn.quantized import (
-    ViTAttentionInteger
+    ViTAttentionInteger,
 )
 from mase_cocotb.utils import fixed_preprocess_tensor
 
@@ -37,36 +37,36 @@ class FixedSelfAttentionTB(Testbench):
         )
 
         # * Weight drivers
-        self.weight_query_driver = StreamDriver(
-            dut.clk, dut.weight_query, dut.weight_query_valid, dut.weight_query_ready
+        self.query_weight_driver = StreamDriver(
+            dut.clk, dut.query_weight, dut.query_weight_valid, dut.query_weight_ready
         )
-        self.weight_key_driver = StreamDriver(
-            dut.clk, dut.weight_key, dut.weight_key_valid, dut.weight_key_ready
+        self.key_weight_driver = StreamDriver(
+            dut.clk, dut.key_weight, dut.key_weight_valid, dut.key_weight_ready
         )
-        self.weight_value_driver = StreamDriver(
-            dut.clk, dut.weight_value, dut.weight_value_valid, dut.weight_value_ready
+        self.value_weight_driver = StreamDriver(
+            dut.clk, dut.value_weight, dut.value_weight_valid, dut.value_weight_ready
         )
-        self.weight_proj_driver = StreamDriver(
-            dut.clk, dut.weight_proj, dut.weight_proj_valid, dut.weight_proj_ready
+        self.proj_weight_driver = StreamDriver(
+            dut.clk, dut.proj_weight, dut.proj_weight_valid, dut.proj_weight_ready
         )
 
         if self.get_parameter("HAS_BIAS") == 1:
-            self.bias_query_driver = StreamDriver(
-                dut.clk, dut.bias_query, dut.bias_query_valid, dut.bias_query_ready
+            self.query_bias_driver = StreamDriver(
+                dut.clk, dut.query_bias, dut.query_bias_valid, dut.query_bias_ready
             )
-            self.bias_key_driver = StreamDriver(
-                dut.clk, dut.bias_key, dut.bias_key_valid, dut.bias_key_ready
+            self.key_bias_driver = StreamDriver(
+                dut.clk, dut.key_bias, dut.key_bias_valid, dut.key_bias_ready
             )
-            self.bias_value_driver = StreamDriver(
-                dut.clk, dut.bias_value, dut.bias_value_valid, dut.bias_value_ready
+            self.value_bias_driver = StreamDriver(
+                dut.clk, dut.value_bias, dut.value_bias_valid, dut.value_bias_ready
             )
-            self.bias_proj_driver = StreamDriver(
-                dut.clk, dut.bias_proj, dut.bias_proj_valid, dut.bias_proj_ready
+            self.proj_bias_driver = StreamDriver(
+                dut.clk, dut.proj_bias, dut.proj_bias_valid, dut.proj_bias_ready
             )
-            self.bias_query_driver.log.setLevel(logging.INFO)
-            self.bias_key_driver.log.setLevel(logging.INFO)
-            self.bias_value_driver.log.setLevel(logging.INFO)
-            self.bias_proj_driver.log.setLevel(logging.INFO)
+            self.query_bias_driver.log.setLevel(logging.INFO)
+            self.key_bias_driver.log.setLevel(logging.INFO)
+            self.value_bias_driver.log.setLevel(logging.INFO)
+            self.proj_bias_driver.log.setLevel(logging.INFO)
 
         self.data_out_0_monitor = StreamMonitor(
             dut.clk,
@@ -112,10 +112,10 @@ class FixedSelfAttentionTB(Testbench):
 
         # Set verbosity of driver and monitor loggers to debug
         self.data_in_0_driver.log.setLevel(logging.DEBUG)
-        self.weight_query_driver.log.setLevel(logging.INFO)
-        self.weight_key_driver.log.setLevel(logging.INFO)
-        self.weight_value_driver.log.setLevel(logging.INFO)
-        self.weight_proj_driver.log.setLevel(logging.INFO)
+        self.query_weight_driver.log.setLevel(logging.INFO)
+        self.key_weight_driver.log.setLevel(logging.INFO)
+        self.value_weight_driver.log.setLevel(logging.INFO)
+        self.proj_weight_driver.log.setLevel(logging.INFO)
         self.data_out_0_monitor.log.setLevel(logging.INFO)
 
     def generate_inputs(self, batch_size=1):
@@ -152,18 +152,10 @@ class FixedSelfAttentionTB(Testbench):
             self.data_in_0_driver.load_driver(inputs)
 
             # * Load the qkv weight driver
-            qkv_weight = self.model.qkv.weight.reshape(
-                3, self.get_parameter("WEIGHT_TENSOR_SIZE_DIM_1"), self.get_parameter("WEIGHT_TENSOR_SIZE_DIM_0"))
-            qkv_bias = self.model.qkv.bias.reshape(
-                3, self.get_parameter("BIAS_TENSOR_SIZE_DIM_1"), self.get_parameter("BIAS_TENSOR_SIZE_DIM_0"))
-            i = 0
-            for projection in ["query", "key", "value"]:
-                
-                if self.get_parameter("WEIGHTS_PRE_TRANSPOSED") == 1:
-                    weights = qkv_weight[i].transpose(0, 1)
-                else:
-                    weights = qkv_weight[i]
 
+            for projection in ["query", "key", "value"]:
+                layer = getattr(self.model, f"{projection}")
+                weights = layer.weight.transpose(0,1) if self.get_parameter("WEIGHTS_PRE_TRANSPOSED") == 1 else layer.weight 
                 self.log.info(f"Processing {projection} weights: {weights}")
                 weights = fixed_preprocess_tensor(
                     tensor=weights,
@@ -177,11 +169,11 @@ class FixedSelfAttentionTB(Testbench):
                     ],
                     floor=True,
                 )
-                getattr(self, f"weight_{projection}_driver").load_driver(weights)
+                getattr(self, f"{projection}_weight_driver").load_driver(weights)
 
                 # * Load the bias driver
                 if self.get_parameter("HAS_BIAS") == 1:
-                    bias = qkv_bias[i]
+                    bias = getattr(self.model, f"{projection}").bias
                     self.log.info(f"Processing {projection} bias: {bias}")
                     bias = fixed_preprocess_tensor(
                         tensor=bias,
@@ -195,8 +187,7 @@ class FixedSelfAttentionTB(Testbench):
                         ],
                         floor=True,
                     )
-                    getattr(self, f"bias_{projection}_driver").load_driver(bias)
-                i = i+1
+                    getattr(self, f"{projection}_bias_driver").load_driver(bias)
             
             # * Load the proj weight driver
             if self.get_parameter("WEIGHTS_PRE_TRANSPOSED") == 1:
@@ -217,7 +208,7 @@ class FixedSelfAttentionTB(Testbench):
                 ],
                 floor=True,
             )
-            self.weight_proj_driver.load_driver(proj_weight)
+            self.proj_weight_driver.load_driver(proj_weight)
 
             # * Load the bias driver
             if self.get_parameter("HAS_BIAS") == 1:
@@ -234,7 +225,7 @@ class FixedSelfAttentionTB(Testbench):
                     ],
                     floor=True,
                 )
-                self.bias_proj_driver.load_driver(proj_bias)
+                self.proj_bias_driver.load_driver(proj_bias)
             # * Load the output monitor
             self.log.info(f"Processing outputs: {exp_out}")
             outs = fixed_preprocess_tensor(
