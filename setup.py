@@ -90,6 +90,8 @@ requirements = [
     "Pillow==10.4.0",
     "mpmath==1.3.0",
     "evaluate",
+    "myst-nb",
+    "sphinx-book-theme",
 ]
 
 setup(
