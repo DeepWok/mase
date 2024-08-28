@@ -16,6 +16,7 @@ from chop.actions import simulate
 from chop.tools.logger import set_logging_verbosity
 from chop.tools import get_logger
 from chop.passes.graph.transforms.quantize import QUANTIZEABLE_OP
+
 set_logging_verbosity("debug")
 
 
@@ -35,6 +36,7 @@ torch.manual_seed(0)
 # --------------------------------------------------
 # verified test case linear(2,4)
 
+
 class LAYERNORM_MODULE(torch.nn.Module):
     """
     Toy quantized FC model for digit recognition on MNIST
@@ -43,7 +45,7 @@ class LAYERNORM_MODULE(torch.nn.Module):
     def __init__(self, norm_dim) -> None:
         super().__init__()
 
-        self.norm = nn.LayerNorm(norm_dim,elementwise_affine=True)
+        self.norm = nn.LayerNorm(norm_dim, elementwise_affine=True)
         if self.norm.elementwise_affine:
             self.norm.weight = torch.nn.Parameter(torch.rand(norm_dim))
             if self.norm.bias is not None:
@@ -53,9 +55,8 @@ class LAYERNORM_MODULE(torch.nn.Module):
         x = self.norm(x)
         return x
 
-def update_common_metadata_pass(
-    mg, quan_args
-):
+
+def update_common_metadata_pass(mg, quan_args):
     # There is a bug in the current quantization pass, where the results metadata is not updated with the precision.
     # # Here we update the metadata here so we can test the hardware back end.
     for node in mg.fx_graph.nodes:
@@ -81,19 +82,23 @@ def update_common_metadata_pass(
                 ] = "fixed"
                 node.meta["mase"].parameters["common"]["results"][result][
                     "precision"
-                ] = [node_quan_config["data_out_width"], node_quan_config["data_out_frac_width"]]
-    
+                ] = [
+                    node_quan_config["data_out_width"],
+                    node_quan_config["data_out_frac_width"],
+                ]
+
     for node in mg.fx_graph.nodes:
         mase_op = node.meta["mase"].parameters["common"]["mase_op"]
         if mase_op in ["layer_norm"]:
-            if node.meta["mase"].parameters["common"]["args"].get("weight")!=None:
-                node.meta["mase"].parameters["common"]["args"]["elementwise_affine"] = True
-                if node.meta["mase"].parameters["common"]["args"].get("bias") !=None:
+            if node.meta["mase"].parameters["common"]["args"].get("weight") != None:
+                node.meta["mase"].parameters["common"]["args"][
+                    "elementwise_affine"
+                ] = True
+                if node.meta["mase"].parameters["common"]["args"].get("bias") != None:
                     node.meta["mase"].parameters["common"]["args"]["has_bias"] = True
-        
-def update_hardware_precision_param(
-    mg, quan_args, model_args:dict = {}
-):
+
+
+def update_hardware_precision_param(mg, quan_args, model_args: dict = {}):
     # The quantization pass currently don't support any inlayer precision automatically generate
     # we only have data_in, weight.. param in common metadata
     # in order to support in layer fine grained precision tuning
@@ -103,17 +108,21 @@ def update_hardware_precision_param(
         capitalize a string
         """
         return str(name).upper()
+
     for node in mg.fx_graph.nodes:
         mase_op = node.meta["mase"].parameters["common"]["mase_op"]
-        if mase_op not in (QUANTIZEABLE_OP + ("vit_self_attention_integer", )):
+        if mase_op not in (QUANTIZEABLE_OP + ("vit_self_attention_integer",)):
             continue
         vp = node.meta["mase"]["hardware"]["verilog_param"]
         node_quan_args = quan_args.get(mase_op)["config"]
         node_model_args = model_args.get(mase_op)
-        if mase_op in ["vit_self_attention_integer","layer_norm"]:
+        if mase_op in ["vit_self_attention_integer", "layer_norm"]:
             for arg_name, arg_info in node_quan_args.items():
-                _list = ["data_in","data_out","weight","bias"]
-                if any(keyword in arg_name for keyword in ["data_in", "data_out", "weight", "bias"]):
+                _list = ["data_in", "data_out", "weight", "bias"]
+                if any(
+                    keyword in arg_name
+                    for keyword in ["data_in", "data_out", "weight", "bias"]
+                ):
                     continue
                 if "width" not in arg_name:
                     continue
@@ -126,15 +135,17 @@ def update_hardware_precision_param(
                 if type(arg_info) == bool:
                     vp[_cap(arg_name)] = 1 if arg_info else 0
                 else:
-                    vp[_cap(arg_name)] = arg_info 
-                
+                    vp[_cap(arg_name)] = arg_info
+
 
 quan_args = {
-    "by": "type", # quantize by type, name, or regex_name
-    "default": {"config": {"name": None}}, # default config, this would be used for any node that does not have a specific config
+    "by": "type",  # quantize by type, name, or regex_name
+    "default": {
+        "config": {"name": None}
+    },  # default config, this would be used for any node that does not have a specific config
     "layer_norm": {
         "config": {
-            "name": "integer_floor", 
+            "name": "integer_floor",
             # data
             "data_in_width": 8,
             "data_in_frac_width": 4,
@@ -151,11 +162,13 @@ quan_args = {
             "bypass": False,
             "noparse": True,
         }
-    }
+    },
 }
+
+
 @pytest.mark.dev
 def test_emit_verilog_layernorm():
-    
+
     batch_size = 4
     norm_dim = 8
     norm_layer = LAYERNORM_MODULE(norm_dim)
@@ -167,11 +180,11 @@ def test_emit_verilog_layernorm():
     mg, _ = passes.init_metadata_analysis_pass(mg, None)
     mg, _ = passes.add_common_metadata_analysis_pass(mg, {"dummy_in": dummy_in})
     mg, _ = passes.quantize_transform_pass(mg, quan_args)
-    update_common_metadata_pass(mg,quan_args)
+    update_common_metadata_pass(mg, quan_args)
     mg, _ = passes.add_hardware_metadata_analysis_pass(
         mg, pass_args={"max_parallelism": [2] * 4}
     )
-    update_hardware_precision_param(mg,quan_args)
+    update_hardware_precision_param(mg, quan_args)
     print(mg.meta["mase"]["common"]["args"])
     # mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
 

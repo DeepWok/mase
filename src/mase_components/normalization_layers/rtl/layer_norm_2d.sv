@@ -17,218 +17,227 @@ Description : This module calculates the generalised group norm.
 `timescale 1ns / 1ps
 module layer_norm_2d #(
     // Dimensions
-    parameter DATA_IN_0_TENSOR_SIZE_DIM_0     = 4,
-    parameter DATA_IN_0_PARALLELISM_DIM_0   = 2,
-    parameter DATA_IN_0_TENSOR_SIZE_DIM_1     = 4,
-    parameter DATA_IN_0_PARALLELISM_DIM_1   = 2,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 4,
+    parameter DATA_IN_0_PARALLELISM_DIM_0 = 2,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 4,
+    parameter DATA_IN_0_PARALLELISM_DIM_1 = 2,
 
     // Data widths
-    parameter DATA_IN_0_PRECISION_0       = 8,
-    parameter DATA_IN_0_PRECISION_1  = 4,
-    parameter WEIGHT_PRECISION_0       = 8,
-    parameter WEIGHT_PRECISION_1  = 4,
-    parameter BIAS_PRECISION_0       = 8,
-    parameter BIAS_PRECISION_1  = 4,
-    parameter ELEMENTWISE_AFFINE  = 0 ,
-    parameter HAS_BIAS = 0,
-    parameter ISQRT_IN_PRECISION_0 = 8,
-    parameter ISQRT_IN_PRECISION_1 = 8,
-    parameter ISQRT_OUT_PRECISION_0 = 8,
-    parameter ISQRT_OUT_PRECISION_1 = 4,
-    parameter BIAS_TENSOR_SIZE_DIM_0     = DATA_IN_0_TENSOR_SIZE_DIM_0,
-    parameter BIAS_PARALLELISM_DIM_0   = DATA_IN_0_PARALLELISM_DIM_0,
-    parameter BIAS_TENSOR_SIZE_DIM_1     = 1,
-    parameter BIAS_PARALLELISM_DIM_1   = 1,
+    parameter DATA_IN_0_PRECISION_0        = 8,
+    parameter DATA_IN_0_PRECISION_1        = 4,
+    parameter WEIGHT_PRECISION_0           = 8,
+    parameter WEIGHT_PRECISION_1           = 4,
+    parameter BIAS_PRECISION_0             = 8,
+    parameter BIAS_PRECISION_1             = 4,
+    parameter ELEMENTWISE_AFFINE           = 0,
+    parameter HAS_BIAS                     = 0,
+    parameter ISQRT_IN_PRECISION_0         = 8,
+    parameter ISQRT_IN_PRECISION_1         = 8,
+    parameter ISQRT_OUT_PRECISION_0        = 8,
+    parameter ISQRT_OUT_PRECISION_1        = 4,
+    parameter BIAS_TENSOR_SIZE_DIM_0       = DATA_IN_0_TENSOR_SIZE_DIM_0,
+    parameter BIAS_PARALLELISM_DIM_0       = DATA_IN_0_PARALLELISM_DIM_0,
+    parameter BIAS_TENSOR_SIZE_DIM_1       = 1,
+    parameter BIAS_PARALLELISM_DIM_1       = 1,
     parameter WEIGHT_TENSOR_SIZE_DIM_0     = DATA_IN_0_TENSOR_SIZE_DIM_0,
-    parameter WEIGHT_PARALLELISM_DIM_0   = DATA_IN_0_PARALLELISM_DIM_0,
+    parameter WEIGHT_PARALLELISM_DIM_0     = DATA_IN_0_PARALLELISM_DIM_0,
     parameter WEIGHT_TENSOR_SIZE_DIM_1     = 1,
-    parameter WEIGHT_PARALLELISM_DIM_1   = 1,
-    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0     = DATA_IN_0_TENSOR_SIZE_DIM_0,
-    parameter DATA_OUT_0_PARALLELISM_DIM_0   = DATA_IN_0_PARALLELISM_DIM_0,
-    parameter DATA_OUT_0_TENSOR_SIZE_DIM_1     = DATA_IN_0_TENSOR_SIZE_DIM_1,
-    parameter DATA_OUT_0_PARALLELISM_DIM_1   = DATA_IN_0_PARALLELISM_DIM_1,
-    parameter DATA_OUT_0_PRECISION_0      = 8,
-    parameter DATA_OUT_0_PRECISION_1 = 4
+    parameter WEIGHT_PARALLELISM_DIM_1     = 1,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = DATA_IN_0_TENSOR_SIZE_DIM_0,
+    parameter DATA_OUT_0_PARALLELISM_DIM_0 = DATA_IN_0_PARALLELISM_DIM_0,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1,
+    parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1,
+    parameter DATA_OUT_0_PRECISION_0       = 8,
+    parameter DATA_OUT_0_PRECISION_1       = 4
 ) (
     input logic clk,
     input logic rst,
 
     input  logic [DATA_IN_0_PRECISION_0-1:0] data_in_0 [DATA_IN_0_PARALLELISM_DIM_1*DATA_IN_0_PARALLELISM_DIM_0-1:0],
-    input  logic                data_in_0_valid,
-    output logic                data_in_0_ready,
+    input logic data_in_0_valid,
+    output logic data_in_0_ready,
 
-    input logic [WEIGHT_PRECISION_0-1:0] weight [DATA_IN_0_PARALLELISM_DIM_0 - 1 : 0],
-    input  logic                weight_valid,
-    output logic                weight_ready,
-    
-    input logic [BIAS_PRECISION_0-1:0] bias [DATA_IN_0_PARALLELISM_DIM_0 - 1 : 0],
-    input  logic                bias_valid,
-    output logic                bias_ready,
-     
+    input  logic [WEIGHT_PRECISION_0-1:0] weight      [DATA_IN_0_PARALLELISM_DIM_0 - 1 : 0],
+    input  logic                          weight_valid,
+    output logic                          weight_ready,
+
+    input  logic [BIAS_PRECISION_0-1:0] bias      [DATA_IN_0_PARALLELISM_DIM_0 - 1 : 0],
+    input  logic                        bias_valid,
+    output logic                        bias_ready,
+
     output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_0 [DATA_IN_0_PARALLELISM_DIM_1*DATA_IN_0_PARALLELISM_DIM_0-1:0],
-    output logic                 data_out_0_valid,
-    input  logic                 data_out_0_ready
+    output logic data_out_0_valid,
+    input logic data_out_0_ready
 );
-    logic [DATA_IN_0_PARALLELISM_DIM_1 - 1:0] parallel_norm_in_ready, parallel_norm_out_valid;
-    logic join_out_valid, join_out_ready;
-    logic [DATA_OUT_0_PRECISION_0 - 1:0] norm_out [DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1 - 1:0];
-    logic [AFFINE_PRECISION_0 -1:0] uncast_data_out_0 [DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1 - 1:0]; 
-    logic [AFFINE_PRECISION_0 - 1:0] casted_bias[DATA_OUT_0_PARALLELISM_DIM_0-1:0];
-    localparam AFFINE_PRECISION_0 = DATA_OUT_0_PRECISION_0 + WEIGHT_PRECISION_0 + 1;
-    localparam AFFINE_PRECISION_1 = DATA_OUT_0_PRECISION_1 + WEIGHT_PRECISION_1;  
-    logic [BIAS_PRECISION_0 - 1:0] bias_buffered [DATA_IN_0_PARALLELISM_DIM_0 - 1 :0];
-    logic [WEIGHT_PRECISION_0 - 1:0] weight_buffered [DATA_IN_0_PARALLELISM_DIM_0 - 1 :0];
-    logic bias_buffered_valid, bias_buffered_ready, weight_buffered_ready, weight_buffered_valid;
-    for (genvar i=0; i<DATA_IN_0_PARALLELISM_DIM_1; i++) begin: parallel_dim_1
-        layer_norm_1d #(
-            .DATA_IN_0_TENSOR_SIZE_DIM_0,
-            .DATA_IN_0_PARALLELISM_DIM_0,
-            // Data widths
-            .DATA_IN_0_PRECISION_0,
-            .DATA_IN_0_PRECISION_1,
-            .ISQRT_IN_PRECISION_0,
-            .ISQRT_IN_PRECISION_1,
-            .ISQRT_OUT_PRECISION_0,
-            .ISQRT_OUT_PRECISION_1,
-            .DATA_OUT_0_TENSOR_SIZE_DIM_0,
-            .DATA_OUT_0_PARALLELISM_DIM_0,
-            .DATA_OUT_0_PRECISION_0,
-            .DATA_OUT_0_PRECISION_1
-        ) layer_norm_inst (
-            .clk,
-            .rst,
-            .data_in_0(data_in_0[i*DATA_IN_0_PARALLELISM_DIM_0 + DATA_IN_0_PARALLELISM_DIM_0 - 1:  i*DATA_IN_0_PARALLELISM_DIM_0]),
-            .data_in_0_valid,
-            .data_in_0_ready(parallel_norm_in_ready[i]),
-            .data_out_0(norm_out[i*DATA_IN_0_PARALLELISM_DIM_0 + DATA_IN_0_PARALLELISM_DIM_0 - 1:  i*DATA_IN_0_PARALLELISM_DIM_0]),
-            .data_out_0_valid(parallel_norm_out_valid[i]),
-            .data_out_0_ready(join_out_ready)
-        );
-    end
-    assign data_in_0_ready = parallel_norm_in_ready[0];
-    assign join_out_valid = parallel_norm_out_valid[0];
-    input_buffer #(
-        .DATA_WIDTH(BIAS_PRECISION_0),
-        .IN_NUM    (DATA_IN_0_PARALLELISM_DIM_0),
-        .REPEAT    (DATA_IN_0_TENSOR_SIZE_DIM_1/DATA_IN_0_PARALLELISM_DIM_1),
-        .BUFFER_SIZE      (DATA_IN_0_TENSOR_SIZE_DIM_0 / DATA_IN_0_PARALLELISM_DIM_0)
-    ) bias_buffer_inst (
+  logic [DATA_IN_0_PARALLELISM_DIM_1 - 1:0] parallel_norm_in_ready, parallel_norm_out_valid;
+  logic join_out_valid, join_out_ready;
+  logic [DATA_OUT_0_PRECISION_0 - 1:0] norm_out [DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1 - 1:0];
+  logic [AFFINE_PRECISION_0 -1:0] uncast_data_out_0 [DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1 - 1:0];
+  logic [AFFINE_PRECISION_0 - 1:0] casted_bias[DATA_OUT_0_PARALLELISM_DIM_0-1:0];
+  localparam AFFINE_PRECISION_0 = DATA_OUT_0_PRECISION_0 + WEIGHT_PRECISION_0 + 1;
+  localparam AFFINE_PRECISION_1 = DATA_OUT_0_PRECISION_1 + WEIGHT_PRECISION_1;
+  logic [  BIAS_PRECISION_0 - 1:0] bias_buffered  [DATA_IN_0_PARALLELISM_DIM_0 - 1 : 0];
+  logic [WEIGHT_PRECISION_0 - 1:0] weight_buffered[DATA_IN_0_PARALLELISM_DIM_0 - 1 : 0];
+  logic bias_buffered_valid, bias_buffered_ready, weight_buffered_ready, weight_buffered_valid;
+  for (genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_1; i++) begin : parallel_dim_1
+    layer_norm_1d #(
+        .DATA_IN_0_TENSOR_SIZE_DIM_0,
+        .DATA_IN_0_PARALLELISM_DIM_0,
+        // Data widths
+        .DATA_IN_0_PRECISION_0,
+        .DATA_IN_0_PRECISION_1,
+        .ISQRT_IN_PRECISION_0,
+        .ISQRT_IN_PRECISION_1,
+        .ISQRT_OUT_PRECISION_0,
+        .ISQRT_OUT_PRECISION_1,
+        .DATA_OUT_0_TENSOR_SIZE_DIM_0,
+        .DATA_OUT_0_PARALLELISM_DIM_0,
+        .DATA_OUT_0_PRECISION_0,
+        .DATA_OUT_0_PRECISION_1
+    ) layer_norm_inst (
         .clk,
         .rst,
-
-        // Input streaming port
-        .data_in (bias),
-        .data_in_valid(bias_valid),
-        .data_in_ready(bias_ready),
-
-        // Output streaming port
-        .data_out (bias_buffered),
-        .data_out_valid(bias_buffered_valid),
-        .data_out_ready(bias_buffered_ready)
+        .data_in_0(data_in_0[i*DATA_IN_0_PARALLELISM_DIM_0 + DATA_IN_0_PARALLELISM_DIM_0 - 1:  i*DATA_IN_0_PARALLELISM_DIM_0]),
+        .data_in_0_valid,
+        .data_in_0_ready(parallel_norm_in_ready[i]),
+        .data_out_0(norm_out[i*DATA_IN_0_PARALLELISM_DIM_0 + DATA_IN_0_PARALLELISM_DIM_0 - 1:  i*DATA_IN_0_PARALLELISM_DIM_0]),
+        .data_out_0_valid(parallel_norm_out_valid[i]),
+        .data_out_0_ready(join_out_ready)
     );
-    input_buffer #(
-        .DATA_WIDTH(WEIGHT_PRECISION_0),
-        .IN_NUM    (DATA_IN_0_PARALLELISM_DIM_0),
-        .REPEAT    (DATA_IN_0_TENSOR_SIZE_DIM_1/DATA_IN_0_PARALLELISM_DIM_1),
-        .BUFFER_SIZE      (DATA_IN_0_TENSOR_SIZE_DIM_0 / DATA_IN_0_PARALLELISM_DIM_0)
-    ) weight_buffer_inst (
-        .clk,
-        .rst,
+  end
+  assign data_in_0_ready = parallel_norm_in_ready[0];
+  assign join_out_valid  = parallel_norm_out_valid[0];
+  input_buffer #(
+      .DATA_WIDTH (BIAS_PRECISION_0),
+      .IN_NUM     (DATA_IN_0_PARALLELISM_DIM_0),
+      .REPEAT     (DATA_IN_0_TENSOR_SIZE_DIM_1 / DATA_IN_0_PARALLELISM_DIM_1),
+      .BUFFER_SIZE(DATA_IN_0_TENSOR_SIZE_DIM_0 / DATA_IN_0_PARALLELISM_DIM_0)
+  ) bias_buffer_inst (
+      .clk,
+      .rst,
 
-        // Input streaming port
-        .data_in (weight),
-        .data_in_valid(weight_valid),
-        .data_in_ready(weight_ready),
+      // Input streaming port
+      .data_in(bias),
+      .data_in_valid(bias_valid),
+      .data_in_ready(bias_ready),
 
-        // Output streaming port
-        .data_out (weight_buffered),
-        .data_out_valid(weight_buffered_valid),
-        .data_out_ready(weight_buffered_ready)
+      // Output streaming port
+      .data_out(bias_buffered),
+      .data_out_valid(bias_buffered_valid),
+      .data_out_ready(bias_buffered_ready)
+  );
+  input_buffer #(
+      .DATA_WIDTH (WEIGHT_PRECISION_0),
+      .IN_NUM     (DATA_IN_0_PARALLELISM_DIM_0),
+      .REPEAT     (DATA_IN_0_TENSOR_SIZE_DIM_1 / DATA_IN_0_PARALLELISM_DIM_1),
+      .BUFFER_SIZE(DATA_IN_0_TENSOR_SIZE_DIM_0 / DATA_IN_0_PARALLELISM_DIM_0)
+  ) weight_buffer_inst (
+      .clk,
+      .rst,
+
+      // Input streaming port
+      .data_in(weight),
+      .data_in_valid(weight_valid),
+      .data_in_ready(weight_ready),
+
+      // Output streaming port
+      .data_out(weight_buffered),
+      .data_out_valid(weight_buffered_valid),
+      .data_out_ready(weight_buffered_ready)
+  );
+  if (ELEMENTWISE_AFFINE == 1) begin
+    logic wd_valid, wd_ready;
+    join2 weight_data_join_inst (
+        .data_in_valid ({weight_buffered_valid, join_out_valid}),
+        .data_in_ready ({weight_buffered_ready, join_out_ready}),
+        .data_out_valid(wd_valid),
+        .data_out_ready(wd_ready)
     );
-    if (ELEMENTWISE_AFFINE == 1) begin
-        logic wd_valid, wd_ready;
-        join2 weight_data_join_inst (
-            .data_in_valid ({weight_buffered_valid, join_out_valid}),
-            .data_in_ready ({weight_buffered_ready, join_out_ready}),
-            .data_out_valid(wd_valid),
-            .data_out_ready(wd_ready));
-        logic [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1 - 1:0] parallel_wd_ready, parallel_bias_ready, parallel_data_out_0_valid;
-        assign bias_buffered_ready = parallel_bias_ready[0];
-        assign wd_ready = parallel_wd_ready[0];
-        assign data_out_0_valid = parallel_data_out_0_valid[0];
-        for (genvar i=0; i<DATA_OUT_0_PARALLELISM_DIM_1; i++) begin: affine_parallel_dim1 
-            for (genvar j=0; j<DATA_OUT_0_PARALLELISM_DIM_0; j++) begin: affine_parallel_dim0
-                localparam int k = i*DATA_IN_0_PARALLELISM_DIM_0 + j; 
-                if (HAS_BIAS == 1) begin
-                    join2 wd_bias_join_inst (
-                        .data_in_valid ({wd_valid, bias_buffered_valid}),
-                        .data_in_ready ({parallel_wd_ready[k], parallel_bias_ready[k]}),
-                        .data_out_valid(parallel_data_out_0_valid[k]),
-                        .data_out_ready(data_out_0_ready));
-                    fixed_signed_cast #(
-                        .IN_WIDTH(BIAS_PRECISION_0),
-                        .IN_FRAC_WIDTH(BIAS_PRECISION_1),
-                        .OUT_WIDTH(AFFINE_PRECISION_0),
-                        .OUT_FRAC_WIDTH(AFFINE_PRECISION_1),
-                        .SYMMETRIC(0),
-                        .ROUND_FLOOR(1)
-                    ) variance_cast_i (
-                        .in_data (bias_buffered[j]),
-                        .out_data(casted_bias[j])
-                    ); 
-                    assign uncast_data_out_0[k] = $signed(norm_out[k]) * $signed(weight_buffered[j]) + $signed(casted_bias[j]);
-                end else begin
-                assign parallel_wd_ready[k] = data_out_0_ready;
-                assign parallel_data_out_0_valid[k] = wd_valid;
-                assign parallel_bias_ready[k] = 1;
-                assign uncast_data_out_0[k]= $signed(norm_out[k]) * $signed(weight_buffered[j]);
-                end 
-                fixed_signed_cast #(
-                    .IN_WIDTH(AFFINE_PRECISION_0),
-                    .IN_FRAC_WIDTH(AFFINE_PRECISION_1),
-                    .OUT_WIDTH(DATA_OUT_0_PRECISION_0),
-                    .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1),
-                    .SYMMETRIC(0),
-                    .ROUND_FLOOR(1)
-                ) variance_cast_i (
-                    .in_data (uncast_data_out_0[k]),
-                    .out_data(data_out_0[k])
-                );
-            end
+    logic [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1 - 1:0]
+        parallel_wd_ready, parallel_bias_ready, parallel_data_out_0_valid;
+    assign bias_buffered_ready = parallel_bias_ready[0];
+    assign wd_ready = parallel_wd_ready[0];
+    assign data_out_0_valid = parallel_data_out_0_valid[0];
+    for (genvar i = 0; i < DATA_OUT_0_PARALLELISM_DIM_1; i++) begin : affine_parallel_dim1
+      for (genvar j = 0; j < DATA_OUT_0_PARALLELISM_DIM_0; j++) begin : affine_parallel_dim0
+        localparam int k = i * DATA_IN_0_PARALLELISM_DIM_0 + j;
+        if (HAS_BIAS == 1) begin
+          join2 wd_bias_join_inst (
+              .data_in_valid ({wd_valid, bias_buffered_valid}),
+              .data_in_ready ({parallel_wd_ready[k], parallel_bias_ready[k]}),
+              .data_out_valid(parallel_data_out_0_valid[k]),
+              .data_out_ready(data_out_0_ready)
+          );
+          fixed_signed_cast #(
+              .IN_WIDTH(BIAS_PRECISION_0),
+              .IN_FRAC_WIDTH(BIAS_PRECISION_1),
+              .OUT_WIDTH(AFFINE_PRECISION_0),
+              .OUT_FRAC_WIDTH(AFFINE_PRECISION_1),
+              .SYMMETRIC(0),
+              .ROUND_FLOOR(1)
+          ) variance_cast_i (
+              .in_data (bias_buffered[j]),
+              .out_data(casted_bias[j])
+          );
+          assign uncast_data_out_0[k] = $signed(
+              norm_out[k]
+          ) * $signed(
+              weight_buffered[j]
+          ) + $signed(
+              casted_bias[j]
+          );
+        end else begin
+          assign parallel_wd_ready[k] = data_out_0_ready;
+          assign parallel_data_out_0_valid[k] = wd_valid;
+          assign parallel_bias_ready[k] = 1;
+          assign uncast_data_out_0[k] = $signed(norm_out[k]) * $signed(weight_buffered[j]);
         end
-    end else begin
-        assign join_out_ready = data_out_0_ready;
-        assign data_out_0_valid = join_out_valid;
-        assign data_out_0 = norm_out;
-    end 
+        fixed_signed_cast #(
+            .IN_WIDTH(AFFINE_PRECISION_0),
+            .IN_FRAC_WIDTH(AFFINE_PRECISION_1),
+            .OUT_WIDTH(DATA_OUT_0_PRECISION_0),
+            .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1),
+            .SYMMETRIC(0),
+            .ROUND_FLOOR(1)
+        ) variance_cast_i (
+            .in_data (uncast_data_out_0[k]),
+            .out_data(data_out_0[k])
+        );
+      end
+    end
+  end else begin
+    assign join_out_ready = data_out_0_ready;
+    assign data_out_0_valid = join_out_valid;
+    assign data_out_0 = norm_out;
+  end
 endmodule
 
 module layer_norm_1d #(
     // Dimensions
-    parameter DATA_IN_0_TENSOR_SIZE_DIM_0     = 4,
-    parameter DATA_IN_0_PARALLELISM_DIM_0   = 2,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_0  = 4,
+    parameter DATA_IN_0_PARALLELISM_DIM_0  = 2,
     // Data widths
-    parameter DATA_IN_0_PRECISION_0       = 8,
-    parameter DATA_IN_0_PRECISION_1  = 4,
-    parameter ISQRT_IN_PRECISION_0 = 8,
-    parameter ISQRT_IN_PRECISION_1 = 8,
-    parameter ISQRT_OUT_PRECISION_0 = 8,
-    parameter ISQRT_OUT_PRECISION_1 = 4,
-    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0     = DATA_IN_0_TENSOR_SIZE_DIM_0,
-    parameter DATA_OUT_0_PARALLELISM_DIM_0   = DATA_IN_0_PARALLELISM_DIM_0,
-    parameter DATA_OUT_0_PRECISION_0      = 8,
-    parameter DATA_OUT_0_PRECISION_1 = 4
+    parameter DATA_IN_0_PRECISION_0        = 8,
+    parameter DATA_IN_0_PRECISION_1        = 4,
+    parameter ISQRT_IN_PRECISION_0         = 8,
+    parameter ISQRT_IN_PRECISION_1         = 8,
+    parameter ISQRT_OUT_PRECISION_0        = 8,
+    parameter ISQRT_OUT_PRECISION_1        = 4,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = DATA_IN_0_TENSOR_SIZE_DIM_0,
+    parameter DATA_OUT_0_PARALLELISM_DIM_0 = DATA_IN_0_PARALLELISM_DIM_0,
+    parameter DATA_OUT_0_PRECISION_0       = 8,
+    parameter DATA_OUT_0_PRECISION_1       = 4
 ) (
     input logic clk,
     input logic rst,
 
-    input  logic [DATA_IN_0_PRECISION_0-1:0] data_in_0 [DATA_IN_0_PARALLELISM_DIM_0-1:0],
-    input  logic                data_in_0_valid,
-    output logic                data_in_0_ready,
+    input  logic [DATA_IN_0_PRECISION_0-1:0] data_in_0      [DATA_IN_0_PARALLELISM_DIM_0-1:0],
+    input  logic                             data_in_0_valid,
+    output logic                             data_in_0_ready,
 
-    output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_0 [DATA_IN_0_PARALLELISM_DIM_0-1:0],
-    output logic                 data_out_0_valid,
-    input  logic                 data_out_0_ready
+    output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_0      [DATA_IN_0_PARALLELISM_DIM_0-1:0],
+    output logic                              data_out_0_valid,
+    input  logic                              data_out_0_ready
 );
 
   // Derived params
@@ -313,8 +322,8 @@ module layer_norm_1d #(
   logic [VARIANCE_WIDTH-1:0] variance_in, variance_out;
   logic variance_out_valid, variance_out_ready;
 
-  logic [ISQRT_IN_PRECISION_0-1:0] variance_cast;
-  logic [ISQRT_IN_PRECISION_0-1:0] inv_sqrt_in;
+  logic [ ISQRT_IN_PRECISION_0-1:0] variance_cast;
+  logic [ ISQRT_IN_PRECISION_0-1:0] inv_sqrt_in;
   logic [ISQRT_OUT_PRECISION_0-1:0] inv_sqrt_out;
   // Take inverse square root of variance
   logic [ISQRT_OUT_PRECISION_0-1:0] inv_sqrt_data;
@@ -405,17 +414,17 @@ module layer_norm_1d #(
   localparam bit [ACC_OUT_WIDTH+1:0] INV_NUMVALUES_0 = ((1 << ACC_OUT_WIDTH) / NUM_VALUES);
   assign mu_acc_div = ($signed(mu_acc) * $signed(INV_NUMVALUES_0));
 
-    fixed_signed_cast #(
-        .IN_WIDTH(ACC_OUT_WIDTH+ ACC_OUT_WIDTH + 1),
-        .IN_FRAC_WIDTH(DATA_IN_0_PRECISION_1 + ACC_OUT_WIDTH),
-        .OUT_WIDTH(DATA_IN_0_PRECISION_0),
-        .OUT_FRAC_WIDTH(DATA_IN_0_PRECISION_1),
-        .SYMMETRIC(0),
-        .ROUND_FLOOR(1)
-    ) acc_div_cast_i (
-        .in_data (mu_acc_div),
-        .out_data(mu_in)
-    );
+  fixed_signed_cast #(
+      .IN_WIDTH(ACC_OUT_WIDTH + ACC_OUT_WIDTH + 1),
+      .IN_FRAC_WIDTH(DATA_IN_0_PRECISION_1 + ACC_OUT_WIDTH),
+      .OUT_WIDTH(DATA_IN_0_PRECISION_0),
+      .OUT_FRAC_WIDTH(DATA_IN_0_PRECISION_1),
+      .SYMMETRIC(0),
+      .ROUND_FLOOR(1)
+  ) acc_div_cast_i (
+      .in_data (mu_acc_div),
+      .out_data(mu_in)
+  );
 
   single_element_repeat #(
       .DATA_WIDTH(DATA_IN_0_PRECISION_0),
@@ -541,17 +550,17 @@ module layer_norm_1d #(
   );
 
 
-    fixed_signed_cast #(
-        .IN_WIDTH(VARIANCE_WIDTH),
-        .IN_FRAC_WIDTH(VARIANCE_FRAC_WIDTH),
-        .OUT_WIDTH(ISQRT_IN_PRECISION_0),
-        .OUT_FRAC_WIDTH(ISQRT_IN_PRECISION_1),
-        .SYMMETRIC(0),
-        .ROUND_FLOOR(1)
-    ) variance_cast_i (
-        .in_data (variance_out),
-        .out_data(variance_cast)
-    );
+  fixed_signed_cast #(
+      .IN_WIDTH(VARIANCE_WIDTH),
+      .IN_FRAC_WIDTH(VARIANCE_FRAC_WIDTH),
+      .OUT_WIDTH(ISQRT_IN_PRECISION_0),
+      .OUT_FRAC_WIDTH(ISQRT_IN_PRECISION_1),
+      .SYMMETRIC(0),
+      .ROUND_FLOOR(1)
+  ) variance_cast_i (
+      .in_data (variance_out),
+      .out_data(variance_cast)
+  );
   register_slice #(
       .DATA_WIDTH(ISQRT_IN_PRECISION_0)
   ) register_slice (
@@ -565,15 +574,15 @@ module layer_norm_1d #(
       .data_out      (inv_sqrt_in)
   );
 
-    isqrt_lut #(
-        .DATA_IN_0_PRECISION_0 (ISQRT_IN_PRECISION_0),
-        .DATA_IN_0_PRECISION_1 (ISQRT_IN_PRECISION_1),
-        .DATA_OUT_0_PRECISION_0(ISQRT_OUT_PRECISION_0),
-        .DATA_OUT_0_PRECISION_1(ISQRT_OUT_PRECISION_1)
-    ) exp_map (
-        .data_in_0 (inv_sqrt_in),
-        .data_out_0(inv_sqrt_data)
-    );
+  isqrt_lut #(
+      .DATA_IN_0_PRECISION_0 (ISQRT_IN_PRECISION_0),
+      .DATA_IN_0_PRECISION_1 (ISQRT_IN_PRECISION_1),
+      .DATA_OUT_0_PRECISION_0(ISQRT_OUT_PRECISION_0),
+      .DATA_OUT_0_PRECISION_1(ISQRT_OUT_PRECISION_1)
+  ) exp_map (
+      .data_in_0 (inv_sqrt_in),
+      .data_out_0(inv_sqrt_data)
+  );
 
 
   single_element_repeat #(

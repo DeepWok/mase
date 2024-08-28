@@ -209,22 +209,30 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
     param_data = node.meta["mase"].module.get_parameter(param_name).data
     param_meta = node.meta["mase"].parameters["hardware"]["verilog_param"]
     # TODO: Currently only support tranpose linear
-    
+
     if node.meta["mase"].parameters["hardware"]["interface"][verilog_param_name][
         "transpose"
     ]:
         raise NotImplementedError("only support linear with not tranposed weight")
     else:
-        assert ((param_meta[f"{_cap(verilog_param_name)}_TENSOR_SIZE_DIM_1"]%param_meta[f"{_cap(verilog_param_name)}_PARALLELISM_DIM_1"] == 0) 
-        and (param_meta[f"{_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0"]%param_meta[f"{_cap(verilog_param_name)}_PARALLELISM_DIM_0"] == 0)
-        ),"The parallesim parameter must be divisible by the tensor size parameter."
+        assert (
+            param_meta[f"{_cap(verilog_param_name)}_TENSOR_SIZE_DIM_1"]
+            % param_meta[f"{_cap(verilog_param_name)}_PARALLELISM_DIM_1"]
+            == 0
+        ) and (
+            param_meta[f"{_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0"]
+            % param_meta[f"{_cap(verilog_param_name)}_PARALLELISM_DIM_0"]
+            == 0
+        ), "The parallesim parameter must be divisible by the tensor size parameter."
         param_data = torch.reshape(
             param_data,
             (
                 -1,
-                param_meta[f"{_cap(verilog_param_name)}_TENSOR_SIZE_DIM_1"] // param_meta[f"{_cap(verilog_param_name)}_PARALLELISM_DIM_1"],
+                param_meta[f"{_cap(verilog_param_name)}_TENSOR_SIZE_DIM_1"]
+                // param_meta[f"{_cap(verilog_param_name)}_PARALLELISM_DIM_1"],
                 param_meta[f"{_cap(verilog_param_name)}_PARALLELISM_DIM_1"],
-                param_meta[f"{_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0"] // param_meta[f"{_cap(verilog_param_name)}_PARALLELISM_DIM_0"],
+                param_meta[f"{_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0"]
+                // param_meta[f"{_cap(verilog_param_name)}_PARALLELISM_DIM_0"],
                 param_meta[f"{_cap(verilog_param_name)}_PARALLELISM_DIM_0"],
             ),
         )

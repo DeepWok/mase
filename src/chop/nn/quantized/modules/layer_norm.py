@@ -4,9 +4,7 @@ import torch.nn as nn
 from torch import Tensor
 import torch.nn.functional as F
 
-from ...quantizers import (
-    integer_quantizer
-)
+from ...quantizers import integer_quantizer
 from ..functional import IntLayerNormFunc
 
 
@@ -48,10 +46,13 @@ class LayerNormInteger(_LayerNormBase):
         self.bypass = config.get("bypass", False)
         if self.bypass:
             return
-        x_width, x_frac_width = config.get("data_in_width"), config.get("data_in_frac_width")
+        x_width, x_frac_width = config.get("data_in_width"), config.get(
+            "data_in_frac_width"
+        )
         self.x_quantizer = partial(
             integer_quantizer, width=x_width, frac_width=x_frac_width
         )
+
 
 class LayerNormIntegerFloor(nn.LayerNorm):
     def __init__(
@@ -70,4 +71,12 @@ class LayerNormIntegerFloor(nn.LayerNorm):
         self.bypass = config.get("bypass", False)
 
     def forward(self, x: Tensor) -> Tensor:
-        return IntLayerNormFunc.apply(x, self.normalized_shape, self.weight, self.bias, self.eps, self.config, self.bypass)
+        return IntLayerNormFunc.apply(
+            x,
+            self.normalized_shape,
+            self.weight,
+            self.bias,
+            self.eps,
+            self.config,
+            self.bypass,
+        )

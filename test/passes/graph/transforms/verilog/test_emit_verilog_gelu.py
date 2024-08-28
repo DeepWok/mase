@@ -35,6 +35,7 @@ sys.excepthook = excepthook
 # --------------------------------------------------
 # verified test case linear(2,4)
 
+
 class GELU_MODULE(torch.nn.Module):
     """
     Toy quantized FC model for digit recognition on MNIST
@@ -51,20 +52,23 @@ class GELU_MODULE(torch.nn.Module):
 
 
 quan_args = {
-    "by": "type", # quantize by type, name, or regex_name
-    "default": {"config": {"name": None}}, # default config, this would be used for any node that does not have a specific config
+    "by": "type",  # quantize by type, name, or regex_name
+    "default": {
+        "config": {"name": None}
+    },  # default config, this would be used for any node that does not have a specific config
     "gelu": {
         "config": {
-            "name": "integer_floor", 
+            "name": "integer_floor",
             # data
             "data_in_width": 8,
             "data_in_frac_width": 4,
             "data_out_width": 8,
             "data_out_frac_width": 4,
         }
-    }
+    },
 }
-        
+
+
 @pytest.mark.dev
 def test_emit_verilog_mlp():
     in_size = 4
@@ -100,7 +104,10 @@ def test_emit_verilog_mlp():
                 ] = "fixed"
                 node.meta["mase"].parameters["common"]["results"][result][
                     "precision"
-                ] = [quan_args["gelu"]["config"]["data_out_width"], quan_args["gelu"]["config"]["data_out_frac_width"]]
+                ] = [
+                    quan_args["gelu"]["config"]["data_out_width"],
+                    quan_args["gelu"]["config"]["data_out_frac_width"],
+                ]
 
     mg, _ = passes.add_hardware_metadata_analysis_pass(
         mg, pass_args={"max_parallelism": [2] * 4}

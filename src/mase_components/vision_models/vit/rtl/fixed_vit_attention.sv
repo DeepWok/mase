@@ -3,7 +3,7 @@ module fixed_vit_attention #(
     // currently assume weights are all transposed
     // currently force weight dim keep same
 
-    parameter NUM_HEADS  = 4,
+    parameter NUM_HEADS = 4,
 
     parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 8,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 2,
@@ -45,7 +45,7 @@ module fixed_vit_attention #(
     parameter WEIGHT_PROJ_TENSOR_SIZE_DIM_1 = 8,
     parameter WEIGHT_PROJ_PARALLELISM_DIM_0 = 4,
     parameter WEIGHT_PROJ_PARALLELISM_DIM_1 = 4,
-    
+
     parameter BIAS_PROJ_PRECISION_0 = 8,
     parameter BIAS_PROJ_PRECISION_1 = 3,
     parameter BIAS_PROJ_TENSOR_SIZE_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_PROJ_TENSOR_SIZE_DIM_1: WEIGHT_PROJ_TENSOR_SIZE_DIM_0,
@@ -116,10 +116,10 @@ module fixed_vit_attention #(
   // * Declarations
   // * =================================================================
 
-    localparam HEAD_OUT_0_TENSOR_SIZE_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_TENSOR_SIZE_DIM_1: WEIGHT_TENSOR_SIZE_DIM_0;
-    localparam HEAD_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1;
-    localparam HEAD_OUT_0_PARALLELISM_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_PARALLELISM_DIM_1: WEIGHT_PARALLELISM_DIM_0;
-    localparam HEAD_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1;
+  localparam HEAD_OUT_0_TENSOR_SIZE_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_TENSOR_SIZE_DIM_1: WEIGHT_TENSOR_SIZE_DIM_0;
+  localparam HEAD_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1;
+  localparam HEAD_OUT_0_PARALLELISM_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_PARALLELISM_DIM_1: WEIGHT_PARALLELISM_DIM_0;
+  localparam HEAD_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1;
   // Query
   logic [QKV_PRECISION_0-1:0] query[DATA_IN_0_PARALLELISM_DIM_1 * HEAD_OUT_0_PARALLELISM_DIM_0-1:0];
   logic joint_query_valid, joint_query_ready;
@@ -279,7 +279,7 @@ module fixed_vit_attention #(
 
   // * Heads
 
-  for (genvar head = 0; head < NUM_HEADS; head++) begin: g_attention_head
+  for (genvar head = 0; head < NUM_HEADS; head++) begin : g_attention_head
 
     fixed_vit_attention_head #(
         .IN_DATA_TENSOR_SIZE_DIM_0   (HEAD_OUT_0_TENSOR_SIZE_DIM_0 / NUM_HEADS),

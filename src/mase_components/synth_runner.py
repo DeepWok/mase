@@ -39,7 +39,7 @@ report_timing -file detailed_timing.txt
         file.write(tcl_script_template)
 
 
-def run_synth(group, specified_name = None):
+def run_synth(group, specified_name=None):
     comp_path = COMPONENTS_PATH / group / "rtl"
     rtl_files = [
         file
@@ -71,13 +71,10 @@ def run_synth(group, specified_name = None):
         #     if group != "vivado"
         # ]
         include_groups = [
-            f"{COMPONENTS_PATH / group / 'rtl'}"
-            for group in MASE_HW_DEPS[module_path]
+            f"{COMPONENTS_PATH / group / 'rtl'}" for group in MASE_HW_DEPS[module_path]
         ]
 
-        synth_project_path = (
-            f"{COMPONENTS_PATH}/{group}/synth/"
-        )
+        synth_project_path = f"{COMPONENTS_PATH}/{group}/synth/"
 
         logger.debug(f"Include files: {include_groups}")
 

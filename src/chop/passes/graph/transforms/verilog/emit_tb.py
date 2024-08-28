@@ -19,7 +19,9 @@ from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 
 import dill
 import inspect
+
 torch.manual_seed(0)
+
 
 def _cap(name):
     """

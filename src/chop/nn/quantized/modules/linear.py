@@ -95,8 +95,11 @@ class LinearInteger(_LinearBase):
         x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
         # check bias quantizer, if not, use weight quantizer
         b_width, b_frac_width = config["bias_width"], config["bias_frac_width"]
-        if config.get('data_out_width') is not None:
-            out_width, out_frac_width = config["data_out_width"], config["data_out_frac_width"]
+        if config.get("data_out_width") is not None:
+            out_width, out_frac_width = (
+                config["data_out_width"],
+                config["data_out_frac_width"],
+            )
         if out_config is not None:
             out_width, out_frac_width = (
                 out_config["data_out_width"],
@@ -116,6 +119,7 @@ class LinearInteger(_LinearBase):
             self.out_quantizer = partial(
                 base_quantizer, width=out_width, frac_width=out_frac_width
             )
+
 
 class LinearIntegerFloor(_LinearBase):
     def __init__(
@@ -138,7 +142,10 @@ class LinearIntegerFloor(_LinearBase):
         x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
         # check bias quantizer, if not, use weight quantizer
         b_width, b_frac_width = config["bias_width"], config["bias_frac_width"]
-        out_width, out_frac_width = config["data_out_width"], config["data_out_frac_width"]
+        out_width, out_frac_width = (
+            config["data_out_width"],
+            config["data_out_frac_width"],
+        )
 
         self.w_quantizer = partial(
             integer_floor_quantizer, width=w_width, frac_width=w_frac_width
@@ -152,6 +159,7 @@ class LinearIntegerFloor(_LinearBase):
         self.out_quantizer = partial(
             integer_floor_quantizer, width=out_width, frac_width=out_frac_width
         )
+
 
 class LinearMinifloatDenorm(_LinearBase):
     def __init__(

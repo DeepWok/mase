@@ -23,6 +23,8 @@ from mase_components.helper import generate_memory
 
 import pytest
 import math
+
+
 class FixedSelfAttentionHeadTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
@@ -51,21 +53,22 @@ class FixedSelfAttentionHeadTB(Testbench):
         # Model
         self.head_size = self.get_parameter("IN_DATA_TENSOR_SIZE_DIM_0")
 
-        
         self.q_config = {
-            "query_width":self.get_parameter("IN_DATA_PRECISION_0"),
-            "query_frac_width":self.get_parameter("IN_DATA_PRECISION_1"),
-            "key_width":self.get_parameter("IN_DATA_PRECISION_0"),
-            "key_frac_width":self.get_parameter("IN_DATA_PRECISION_1"),
-            "value_width":self.get_parameter("IN_DATA_PRECISION_0"),
-            "value_frac_width":self.get_parameter("IN_DATA_PRECISION_1"),
-            "qkmm_out_width":self.get_parameter("QKMM_OUT_PRECISION_0"),
-            "qkmm_out_frac_width":self.get_parameter("QKMM_OUT_PRECISION_1"),
-            "softmax_exp_width":self.get_parameter("SOFTMAX_EXP_PRECISION_0"),
-            "softmax_exp_frac_width":self.get_parameter("SOFTMAX_EXP_PRECISION_1"),
-            "softmax_out_frac_width":self.get_parameter("SOFTMAX_OUT_DATA_PRECISION_1"),
-            "svmm_out_width":self.get_parameter("OUT_DATA_PRECISION_0"),
-            "svmm_out_frac_width":self.get_parameter("OUT_DATA_PRECISION_1"),
+            "query_width": self.get_parameter("IN_DATA_PRECISION_0"),
+            "query_frac_width": self.get_parameter("IN_DATA_PRECISION_1"),
+            "key_width": self.get_parameter("IN_DATA_PRECISION_0"),
+            "key_frac_width": self.get_parameter("IN_DATA_PRECISION_1"),
+            "value_width": self.get_parameter("IN_DATA_PRECISION_0"),
+            "value_frac_width": self.get_parameter("IN_DATA_PRECISION_1"),
+            "qkmm_out_width": self.get_parameter("QKMM_OUT_PRECISION_0"),
+            "qkmm_out_frac_width": self.get_parameter("QKMM_OUT_PRECISION_1"),
+            "softmax_exp_width": self.get_parameter("SOFTMAX_EXP_PRECISION_0"),
+            "softmax_exp_frac_width": self.get_parameter("SOFTMAX_EXP_PRECISION_1"),
+            "softmax_out_frac_width": self.get_parameter(
+                "SOFTMAX_OUT_DATA_PRECISION_1"
+            ),
+            "svmm_out_width": self.get_parameter("OUT_DATA_PRECISION_0"),
+            "svmm_out_frac_width": self.get_parameter("OUT_DATA_PRECISION_1"),
         }
         self.model = ViTSelfAttentionHeadInteger(
             dim=self.get_parameter("IN_DATA_TENSOR_SIZE_DIM_0"),
@@ -131,8 +134,8 @@ class FixedSelfAttentionHeadTB(Testbench):
         query_inputs = self.preprocess_tensor(
             tensor=inputs["query_layer"],
             config={
-                "width":self.q_config["query_width"],
-                "frac_width":self.q_config["query_frac_width"]
+                "width": self.q_config["query_width"],
+                "frac_width": self.q_config["query_frac_width"],
             },
             parallelism=parallelism,
         )
@@ -143,8 +146,8 @@ class FixedSelfAttentionHeadTB(Testbench):
         key_inputs = self.preprocess_tensor(
             tensor=inputs["key_layer"],
             config={
-                "width":self.q_config["key_width"],
-                "frac_width":self.q_config["key_frac_width"]
+                "width": self.q_config["key_width"],
+                "frac_width": self.q_config["key_frac_width"],
             },
             parallelism=parallelism,
         )
@@ -155,8 +158,8 @@ class FixedSelfAttentionHeadTB(Testbench):
         value_inputs = self.preprocess_tensor(
             tensor=inputs["value_layer"],
             config={
-                "width":self.q_config["value_width"],
-                "frac_width":self.q_config["value_frac_width"]
+                "width": self.q_config["value_width"],
+                "frac_width": self.q_config["value_frac_width"],
             },
             parallelism=parallelism,
         )
@@ -190,24 +193,23 @@ async def cocotb_test(dut):
     tb = FixedSelfAttentionHeadTB(dut)
     await tb.run_test()
 
+
 default_config = {
-        "IN_DATA_TENSOR_SIZE_DIM_0": 128,
-        "IN_DATA_TENSOR_SIZE_DIM_1": 64,
-        "IN_DATA_PARALLELISM_DIM_0": 4,
-        "IN_DATA_PARALLELISM_DIM_1": 2,
-        "IN_DATA_PRECISION_0": 8,
-        "IN_DATA_PRECISION_1": 4,
-        "ACTIVATION": 1,
-        "QKMM_OUT_PRECISION_0": 8,
-        "QKMM_OUT_PRECISION_1": 4,
-        "SOFTMAX_EXP_PRECISION_0": 16,
-        "SOFTMAX_EXP_PRECISION_1": 4,
-
-        "SOFTMAX_OUT_DATA_PRECISION_1": 7,
-
-        "OUT_DATA_PRECISION_0": 12,
-        "OUT_DATA_PRECISION_1": 4,
-    }
+    "IN_DATA_TENSOR_SIZE_DIM_0": 128,
+    "IN_DATA_TENSOR_SIZE_DIM_1": 64,
+    "IN_DATA_PARALLELISM_DIM_0": 4,
+    "IN_DATA_PARALLELISM_DIM_1": 2,
+    "IN_DATA_PRECISION_0": 8,
+    "IN_DATA_PRECISION_1": 4,
+    "ACTIVATION": 1,
+    "QKMM_OUT_PRECISION_0": 8,
+    "QKMM_OUT_PRECISION_1": 4,
+    "SOFTMAX_EXP_PRECISION_0": 16,
+    "SOFTMAX_EXP_PRECISION_1": 4,
+    "SOFTMAX_OUT_DATA_PRECISION_1": 7,
+    "OUT_DATA_PRECISION_0": 12,
+    "OUT_DATA_PRECISION_1": 4,
+}
 # default_config = {
 #         "IN_DATA_TENSOR_SIZE_DIM_0": 4,
 #         "IN_DATA_TENSOR_SIZE_DIM_1": 2,
@@ -223,6 +225,7 @@ default_config = {
 
 #         "SOFTMAX_OUT_DATA_PRECISION_1": 7,
 
+
 #         "OUT_DATA_PRECISION_0": 12,
 #         "OUT_DATA_PRECISION_1": 4,
 #     }
@@ -231,14 +234,19 @@ def get_fixed_self_attention_head_config(kwargs={}):
     config.update(kwargs)
     return config
 
+
 torch.manual_seed(1)
+
+
 async def check_signal(dut, log):
     while True:
         await RisingEdge(dut.clk)
         handshake_signal_check(
-            dut.attention_scores_valid, 
-            dut.attention_scores_ready, 
-            dut.attention_scores, log)
+            dut.attention_scores_valid,
+            dut.attention_scores_ready,
+            dut.attention_scores,
+            log,
+        )
         # handshake_signal_check(dut.rolled_k_valid, dut.rolled_k_ready, dut.rolled_k, log)
         # handshake_signal_check(dut.bias_valid,
         #                        dut.bias_ready,
@@ -252,6 +260,8 @@ def handshake_signal_check(valid, ready, signal, log):
 
 
 MULT_DATA = 1 / math.sqrt(default_config["IN_DATA_TENSOR_SIZE_DIM_0"])
+
+
 @pytest.mark.dev
 def test_fixed_self_attention_head_smoke():
     """

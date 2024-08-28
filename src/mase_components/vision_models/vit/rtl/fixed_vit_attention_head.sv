@@ -182,29 +182,29 @@ module fixed_vit_attention_head #(
   );
 
 
-    fixed_softmax #(
-        .DATA_IN_0_PRECISION_0      (QKMM_OUT_PRECISION_0),
-        .DATA_IN_0_PRECISION_1      (QKMM_OUT_PRECISION_1),
-        .DATA_EXP_0_PRECISION_0     (SOFTMAX_EXP_PRECISION_0),
-        .DATA_EXP_0_PRECISION_1     (SOFTMAX_EXP_PRECISION_1),
-        .DATA_OUT_0_PRECISION_1     (SOFTMAX_OUT_DATA_PRECISION_1),
-        .DATA_IN_0_TENSOR_SIZE_DIM_0(IN_DATA_TENSOR_SIZE_DIM_1),
-        .DATA_IN_0_TENSOR_SIZE_DIM_1(IN_DATA_TENSOR_SIZE_DIM_1),
-        .DATA_IN_0_PARALLELISM_DIM_0(IN_DATA_PARALLELISM_DIM_1),
-        .DATA_IN_0_PARALLELISM_DIM_1(IN_DATA_PARALLELISM_DIM_1)
-    ) fixed_softmax_i (
-        .clk,
-        .rst,
+  fixed_softmax #(
+      .DATA_IN_0_PRECISION_0      (QKMM_OUT_PRECISION_0),
+      .DATA_IN_0_PRECISION_1      (QKMM_OUT_PRECISION_1),
+      .DATA_EXP_0_PRECISION_0     (SOFTMAX_EXP_PRECISION_0),
+      .DATA_EXP_0_PRECISION_1     (SOFTMAX_EXP_PRECISION_1),
+      .DATA_OUT_0_PRECISION_1     (SOFTMAX_OUT_DATA_PRECISION_1),
+      .DATA_IN_0_TENSOR_SIZE_DIM_0(IN_DATA_TENSOR_SIZE_DIM_1),
+      .DATA_IN_0_TENSOR_SIZE_DIM_1(IN_DATA_TENSOR_SIZE_DIM_1),
+      .DATA_IN_0_PARALLELISM_DIM_0(IN_DATA_PARALLELISM_DIM_1),
+      .DATA_IN_0_PARALLELISM_DIM_1(IN_DATA_PARALLELISM_DIM_1)
+  ) fixed_softmax_i (
+      .clk,
+      .rst,
 
-        .data_in_0      (query_key_transpose),
-        .data_in_0_valid(query_key_transpose_valid),
-        .data_in_0_ready(query_key_transpose_ready),
+      .data_in_0      (query_key_transpose),
+      .data_in_0_valid(query_key_transpose_valid),
+      .data_in_0_ready(query_key_transpose_ready),
 
-        .data_out_0      (attention_scores),
-        .data_out_0_valid(attention_scores_valid),
-        .data_out_0_ready(attention_scores_ready)
-    );
-//   end
+      .data_out_0      (attention_scores),
+      .data_out_0_valid(attention_scores_valid),
+      .data_out_0_ready(attention_scores_ready)
+  );
+  //   end
 
   // * Output: Attention scores x Value
 

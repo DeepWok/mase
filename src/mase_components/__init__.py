@@ -13,7 +13,7 @@ def get_modules():
     detailed_mods = []
     for mod in mods:
         new_dir = os.path.join(current_dir, mod)
-        if ("rtl" in os.listdir(new_dir)):
+        if "rtl" in os.listdir(new_dir):
             detailed_mods.append(mod)
         else:
             update_mods = [

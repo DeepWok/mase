@@ -15,7 +15,11 @@ from pathlib import Path
 from chop.actions import simulate
 from chop.tools.logger import set_logging_verbosity
 from chop.tools import get_logger
-from test_emit_verilog_layernorm import update_common_metadata_pass, update_hardware_precision_param
+from test_emit_verilog_layernorm import (
+    update_common_metadata_pass,
+    update_hardware_precision_param,
+)
+
 set_logging_verbosity("debug")
 
 
@@ -35,6 +39,7 @@ sys.excepthook = excepthook
 # --------------------------------------------------
 # verified test case linear(2,4)
 
+
 class MLP(torch.nn.Module):
     """
     Toy quantized FC model for digit recognition on MNIST
@@ -53,9 +58,11 @@ class MLP(torch.nn.Module):
 
 
 quan_args = {
-    "by": "type", # quantize by type, name, or regex_name
-    "default": {"config": {"name": None}}, # default config, this would be used for any node that does not have a specific config
-    "fork2": [8,4],
+    "by": "type",  # quantize by type, name, or regex_name
+    "default": {
+        "config": {"name": None}
+    },  # default config, this would be used for any node that does not have a specific config
+    "fork2": [8, 4],
     "linear": {
         "config": {
             "name": "integer_floor",  # quantization scheme name supported are ["integer", "fixed" (equivalent to integer), "lutnet" (dev mode), "logicnets" (dev mode), "binary", "binary_residual", "ternary", "minifloat_ieee", "minifloat_denorm", "log", "block_fp", "block_minifloat", "block_log"]
@@ -68,7 +75,6 @@ quan_args = {
             # bias
             "bias_width": 5,
             "bias_frac_width": 2,
-            
             # optional
             "data_out_width": 8,
             "data_out_frac_width": 4,
@@ -76,7 +82,7 @@ quan_args = {
     },
     "gelu": {
         "config": {
-            "name": "integer_floor", 
+            "name": "integer_floor",
             # data
             "data_in_width": 8,
             "data_in_frac_width": 4,
@@ -86,7 +92,7 @@ quan_args = {
     },
     "layer_norm": {
         "config": {
-            "name": "integer_floor", 
+            "name": "integer_floor",
             # data
             "data_in_width": 8,
             "data_in_frac_width": 4,
@@ -106,7 +112,7 @@ quan_args = {
     },
     "add": {
         "config": {
-            "name": "integer_floor",  
+            "name": "integer_floor",
             # data
             "data_in_width": 8,
             "data_in_frac_width": 4,
@@ -115,7 +121,8 @@ quan_args = {
         },
     },
 }
-        
+
+
 @pytest.mark.dev
 def test_emit_verilog_vit():
     in_features = 4
@@ -134,7 +141,7 @@ def test_emit_verilog_vit():
 
     mg, _ = passes.quantize_transform_pass(mg, quan_args)
     mg, _ = passes.graph.transforms.insert_fork_transform_pass(mg, quan_args)
-    update_common_metadata_pass(mg,quan_args)
+    update_common_metadata_pass(mg, quan_args)
     mg, _ = passes.add_hardware_metadata_analysis_pass(
         mg, pass_args={"max_parallelism": [2] * 4}
     )

@@ -72,7 +72,7 @@ module softermax_lpw_reciprocal #(
   // Recip width calculation: Need to pad extra 2 * max(intwidth, fracwidth) to
   // make sure recip is not shifted out
   localparam IN_INT_WIDTH = IN_WIDTH - IN_FRAC_WIDTH;
-  localparam EXTRA_WIDTH = (IN_INT_WIDTH>=IN_FRAC_WIDTH)? IN_INT_WIDTH: IN_FRAC_WIDTH;
+  localparam EXTRA_WIDTH = (IN_INT_WIDTH >= IN_FRAC_WIDTH) ? IN_INT_WIDTH : IN_FRAC_WIDTH;
   localparam RECIP_WIDTH = LPW_WIDTH + EXTRA_WIDTH;
   localparam RECIP_FRAC_WIDTH = LPW_FRAC_WIDTH;
 

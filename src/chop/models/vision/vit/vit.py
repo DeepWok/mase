@@ -6,13 +6,14 @@ from timm.layers import (
     get_act_layer,
     get_norm_layer,
     LayerType,
-    DropPath, 
-    to_2tuple, 
-    trunc_normal_
+    DropPath,
+    to_2tuple,
+    trunc_normal_,
 )
 from timm.models._hub import load_state_dict_from_hf
 import numpy as np
 from .utils import load_weights_from_npz
+
 logger = getLogger(__name__)
 
 try:
@@ -32,6 +33,7 @@ from typing import (
     Union,
     List,
 )
+
 
 class PatchEmbed(nn.Module):
     """Image to Patch Embedding"""
@@ -86,6 +88,7 @@ class Mlp(nn.Module):
         x = self.fc2(x)
         # x = self.drop(x)
         return x
+
 
 class Attention(nn.Module):
 

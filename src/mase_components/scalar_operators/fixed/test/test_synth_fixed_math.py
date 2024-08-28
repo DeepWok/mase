@@ -1,6 +1,7 @@
 import pytest
 from mase_components.synth_runner import run_synth
 import logging
+
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(f"linter")
 

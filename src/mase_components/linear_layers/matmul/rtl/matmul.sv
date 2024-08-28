@@ -211,24 +211,24 @@ module matmul #(
 
     // A matrix Buffers
 
-    if (A_DEPTH_DIM1 > 1) begin: g_circular_buffer
-      
+    if (A_DEPTH_DIM1 > 1) begin : g_circular_buffer
+
       input_buffer #(
-          .DATA_WIDTH(B_WIDTH),
-          .IN_NUM    (B_COMPUTE_DIM0 * B_COMPUTE_DIM1),
-          .REPEAT    (A_DEPTH_DIM1),
-          .BUFFER_SIZE      (B_DEPTH_DIM0 * B_DEPTH_DIM1)
+          .DATA_WIDTH (B_WIDTH),
+          .IN_NUM     (B_COMPUTE_DIM0 * B_COMPUTE_DIM1),
+          .REPEAT     (A_DEPTH_DIM1),
+          .BUFFER_SIZE(B_DEPTH_DIM0 * B_DEPTH_DIM1)
       ) weight_buffer (
           .clk,
           .rst,
 
           // Input streaming port
-          .data_in (b_data),
+          .data_in(b_data),
           .data_in_valid(b_valid),
           .data_in_ready(b_ready),
 
           // Output streaming port
-          .data_out (b_buffer_out_data),
+          .data_out(b_buffer_out_data),
           .data_out_valid(b_buffer_out_valid),
           .data_out_ready(b_buffer_out_ready)
       );

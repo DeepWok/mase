@@ -78,37 +78,37 @@ class FixedSelfAttentionTB(Testbench):
 
         # Model
         self.q_config = {
-            "data_in_width":self.get_parameter("DATA_IN_0_PRECISION_0"),
-            "data_in_frac_width":self.get_parameter("DATA_IN_0_PRECISION_1"),
-            "qkv_weight_width":self.get_parameter("WEIGHT_PRECISION_0"),
-            "qkv_weight_frac_width":self.get_parameter("WEIGHT_PRECISION_1"),
-            "qkv_bias_width":self.get_parameter("BIAS_PRECISION_0"),
-            "qkv_bias_frac_width":self.get_parameter("BIAS_PRECISION_1"),
-            "qkv_width":self.get_parameter("QKV_PRECISION_0"),
-            "qkv_frac_width":self.get_parameter("QKV_PRECISION_1"),
-            "qkmm_out_width":self.get_parameter("QKMM_OUT_PRECISION_0"),
-            "qkmm_out_frac_width":self.get_parameter("QKMM_OUT_PRECISION_1"),
-            "softmax_exp_width":self.get_parameter("SOFTMAX_EXP_PRECISION_0"),
-            "softmax_exp_frac_width":self.get_parameter("SOFTMAX_EXP_PRECISION_1"),
-            "softmax_out_frac_width":self.get_parameter("SOFTMAX_OUT_DATA_PRECISION_1"),
-            "svmm_out_width":self.get_parameter("SVMM_OUT_PRECISION_0"),
-            "svmm_out_frac_width":self.get_parameter("SVMM_OUT_PRECISION_1"),
-
-            "proj_weight_width":self.get_parameter("WEIGHT_PROJ_PRECISION_0"),
-            "proj_weight_frac_width":self.get_parameter("WEIGHT_PROJ_PRECISION_1"),
-            "proj_bias_width":self.get_parameter("BIAS_PROJ_PRECISION_0"),
-            "proj_bias_frac_width":self.get_parameter("BIAS_PROJ_PRECISION_1"),
-            "data_out_width":self.get_parameter("DATA_OUT_0_PRECISION_0"),
-            "data_out_frac_width":self.get_parameter("DATA_OUT_0_PRECISION_1"),
+            "data_in_width": self.get_parameter("DATA_IN_0_PRECISION_0"),
+            "data_in_frac_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
+            "qkv_weight_width": self.get_parameter("WEIGHT_PRECISION_0"),
+            "qkv_weight_frac_width": self.get_parameter("WEIGHT_PRECISION_1"),
+            "qkv_bias_width": self.get_parameter("BIAS_PRECISION_0"),
+            "qkv_bias_frac_width": self.get_parameter("BIAS_PRECISION_1"),
+            "qkv_width": self.get_parameter("QKV_PRECISION_0"),
+            "qkv_frac_width": self.get_parameter("QKV_PRECISION_1"),
+            "qkmm_out_width": self.get_parameter("QKMM_OUT_PRECISION_0"),
+            "qkmm_out_frac_width": self.get_parameter("QKMM_OUT_PRECISION_1"),
+            "softmax_exp_width": self.get_parameter("SOFTMAX_EXP_PRECISION_0"),
+            "softmax_exp_frac_width": self.get_parameter("SOFTMAX_EXP_PRECISION_1"),
+            "softmax_out_frac_width": self.get_parameter(
+                "SOFTMAX_OUT_DATA_PRECISION_1"
+            ),
+            "svmm_out_width": self.get_parameter("SVMM_OUT_PRECISION_0"),
+            "svmm_out_frac_width": self.get_parameter("SVMM_OUT_PRECISION_1"),
+            "proj_weight_width": self.get_parameter("WEIGHT_PROJ_PRECISION_0"),
+            "proj_weight_frac_width": self.get_parameter("WEIGHT_PROJ_PRECISION_1"),
+            "proj_bias_width": self.get_parameter("BIAS_PROJ_PRECISION_0"),
+            "proj_bias_frac_width": self.get_parameter("BIAS_PROJ_PRECISION_1"),
+            "data_out_width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
+            "data_out_frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
         }
         self.model = ViTAttentionInteger(
-                dim=self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
-                num_heads=self.get_parameter("NUM_HEADS"),
-                qkv_bias=True if self.get_parameter("HAS_BIAS") else False,
-                q_config=self.q_config,
-                floor=True,
-            )
-
+            dim=self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
+            num_heads=self.get_parameter("NUM_HEADS"),
+            qkv_bias=True if self.get_parameter("HAS_BIAS") else False,
+            q_config=self.q_config,
+            floor=True,
+        )
 
         # Set verbosity of driver and monitor loggers to debug
         self.data_in_0_driver.log.setLevel(logging.DEBUG)
@@ -127,9 +127,9 @@ class FixedSelfAttentionTB(Testbench):
             )
         )
 
-    async def run_test(self, batches = 1, us=100):
+    async def run_test(self, batches=1, us=100):
         await self.reset()
-        self.log.info(f"Reset finished") 
+        self.log.info(f"Reset finished")
         self.data_out_0_monitor.ready.value = 1
         for _ in range(batches):
             inputs = self.generate_inputs()
@@ -155,7 +155,11 @@ class FixedSelfAttentionTB(Testbench):
 
             for projection in ["query", "key", "value"]:
                 layer = getattr(self.model, f"{projection}")
-                weights = layer.weight.transpose(0,1) if self.get_parameter("WEIGHTS_PRE_TRANSPOSED") == 1 else layer.weight 
+                weights = (
+                    layer.weight.transpose(0, 1)
+                    if self.get_parameter("WEIGHTS_PRE_TRANSPOSED") == 1
+                    else layer.weight
+                )
                 self.log.info(f"Processing {projection} weights: {weights}")
                 weights = fixed_preprocess_tensor(
                     tensor=weights,
@@ -188,7 +192,7 @@ class FixedSelfAttentionTB(Testbench):
                         floor=True,
                     )
                     getattr(self, f"{projection}_bias_driver").load_driver(bias)
-            
+
             # * Load the proj weight driver
             if self.get_parameter("WEIGHTS_PRE_TRANSPOSED") == 1:
                 proj_weight = self.model.proj.weight.transpose(0, 1)
@@ -242,7 +246,7 @@ class FixedSelfAttentionTB(Testbench):
             )
             self.data_out_0_monitor.load_monitor(outs)
         cocotb.start_soon(check_signal(self.dut, self.log))
-        
+
         await Timer(us, units="us")
         assert self.data_out_0_monitor.exp_queue.empty()
 
@@ -250,7 +254,8 @@ class FixedSelfAttentionTB(Testbench):
 @cocotb.test()
 async def cocotb_test(dut):
     tb = FixedSelfAttentionTB(dut)
-    await tb.run_test(batches= 5, us=100)
+    await tb.run_test(batches=5, us=100)
+
 
 default_config = {
     "NUM_HEADS": 4,
@@ -265,12 +270,10 @@ default_config = {
     "WEIGHT_TENSOR_SIZE_DIM_1": 16,
     "WEIGHT_PARALLELISM_DIM_0": 4,
     "WEIGHT_PARALLELISM_DIM_1": 4,
-
     "WEIGHT_PROJ_TENSOR_SIZE_DIM_0": 16,
     "WEIGHT_PROJ_TENSOR_SIZE_DIM_1": 16,
     "WEIGHT_PROJ_PARALLELISM_DIM_0": 4,
     "WEIGHT_PROJ_PARALLELISM_DIM_1": 4,
-    
     "DATA_IN_0_PRECISION_0": 8,
     "DATA_IN_0_PRECISION_1": 3,
     "WEIGHT_PRECISION_0": 16,
@@ -311,7 +314,7 @@ default_config = {
 #     "WEIGHT_PROJ_TENSOR_SIZE_DIM_1": 128,
 #     "WEIGHT_PROJ_PARALLELISM_DIM_0": 4,
 #     "WEIGHT_PROJ_PARALLELISM_DIM_1": 2,
-    
+
 #     "DATA_IN_0_PRECISION_0": 8,
 #     "DATA_IN_0_PRECISION_1": 3,
 #     "WEIGHT_PRECISION_0": 16,
@@ -334,13 +337,20 @@ default_config = {
 #     "DATA_OUT_0_PRECISION_0": 10,
 #     "DATA_OUT_0_PRECISION_1": 4,
 # }
-MULT_DATA = 1 / math.sqrt(default_config["DATA_IN_0_TENSOR_SIZE_DIM_0"] // default_config["NUM_HEADS"])
+MULT_DATA = 1 / math.sqrt(
+    default_config["DATA_IN_0_TENSOR_SIZE_DIM_0"] // default_config["NUM_HEADS"]
+)
+
+
 def get_config(kwargs={}):
     config = default_config
     config.update(kwargs)
     return config
 
+
 torch.manual_seed(1)
+
+
 async def check_signal(dut, log):
     while True:
         await RisingEdge(dut.clk)
@@ -348,13 +358,12 @@ async def check_signal(dut, log):
 
 
 def handshake_signal_check(dut, log, signal_base, valid=None, ready=None):
-    data_valid = getattr(dut, f'{signal_base}_valid') if valid is None else valid
-    data_ready = getattr(dut, f'{signal_base}_ready') if ready is None else ready
+    data_valid = getattr(dut, f"{signal_base}_valid") if valid is None else valid
+    data_ready = getattr(dut, f"{signal_base}_ready") if ready is None else ready
     data = getattr(dut, signal_base)
     svalue = [i.signed_integer for i in data.value]
     if data_valid.value & data_ready.value:
         log.debug(f"handshake {signal_base} = {svalue}")
-
 
 
 def test_fixed_linear_smoke():
@@ -370,11 +379,15 @@ def test_fixed_linear_smoke():
         constant_mult=MULT_DATA,
         floor=True,
     )
-    mase_runner(trace=True, 
-                module_param_list=[
-                    get_config(),
-                    # get_config(),
-                    ], skip_build=False)
+    mase_runner(
+        trace=True,
+        module_param_list=[
+            get_config(),
+            # get_config(),
+        ],
+        skip_build=False,
+    )
+
 
 torch.manual_seed(0)
 if __name__ == "__main__":

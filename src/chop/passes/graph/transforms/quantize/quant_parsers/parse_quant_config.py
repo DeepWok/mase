@@ -267,8 +267,10 @@ def cp_name(config: dict, p_config: dict, entries=None, strict: bool = True):
 def cp_bypass(config: dict, p_config: dict, entries=None, strict: bool = True):
     cp_multi_values(config, p_config, ("bypass",), strict=strict)
 
+
 def cp_floor(config: dict, p_config: dict, entries=None, strict: bool = True):
     cp_multi_values(config, p_config, ("floor",), strict=strict)
+
 
 def cp_weight_entries(config: dict, p_config: dict, entries: dict, strict: bool = True):
     cp_multi_values(config, p_config, entries["weight_entries"], strict=strict)
@@ -359,7 +361,13 @@ MASE_OP_TO_ENTRIES = {
     "mul": (("name", "data_in_entries"), ("bypass",)),
     "linear": (
         ("name", "data_in_entries", "weight_entries"),
-        ("bias_entries", "bypass", "data_out_entries", "additional_layers_entries", "floor"),
+        (
+            "bias_entries",
+            "bypass",
+            "data_out_entries",
+            "additional_layers_entries",
+            "floor",
+        ),
     ),
     "relu": (("name", "data_in_entries"), ("bypass",)),
     "selu": (("name", "data_in_entries"), ("bypass",)),
@@ -378,7 +386,7 @@ MASE_OP_TO_ENTRIES = {
     ),
     "layer_norm": (
         ("name", "data_in_entries"),
-        ("bypass","isqrt_in_entries", "isqrt_out_entries", "data_out_entries"),
+        ("bypass", "isqrt_in_entries", "isqrt_out_entries", "data_out_entries"),
     ),
     "group_norm": (
         ("name", "data_in_entries"),

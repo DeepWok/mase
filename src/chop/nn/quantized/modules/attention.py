@@ -58,6 +58,7 @@ class _BertSelfAttentionBase(BertSelfAttention):
             return out[0]
         return out
 
+
 class _ViTAttentionBase(nn.Module):
     def __init__(
         self,
@@ -76,22 +77,29 @@ class _ViTAttentionBase(nn.Module):
         self.key = nn.Linear(dim, dim, bias=qkv_bias)
         self.value = nn.Linear(dim, dim, bias=qkv_bias)
         self.self_attention = _ViTSelfAttentionHeadBase(
-            dim=self.head_dim, num_heads=num_heads,attn_drop=attn_drop
+            dim=self.head_dim, num_heads=num_heads, attn_drop=attn_drop
         )
         self.proj = nn.Linear(dim, dim)
         self.proj_drop = nn.Dropout(proj_drop)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         B, N, C = x.shape
+
         def _tensor_reshape(x):
-            return x.reshape(B,-1,self.num_heads,self.head_dim).permute(0, 2,1,3)
-        q, k, v = _tensor_reshape(self.query(x)), _tensor_reshape(self.key(x)), _tensor_reshape(self.value(x)) 
-        x = self.self_attention(q,k,v)
+            return x.reshape(B, -1, self.num_heads, self.head_dim).permute(0, 2, 1, 3)
+
+        q, k, v = (
+            _tensor_reshape(self.query(x)),
+            _tensor_reshape(self.key(x)),
+            _tensor_reshape(self.value(x)),
+        )
+        x = self.self_attention(q, k, v)
         x = x.transpose(1, 2).reshape(B, N, C)
 
         x = self.proj(x)
         x = self.proj_drop(x)
         return x
+
 
 class _ViTAttentionBase_before(nn.Module):
     def __init__(
@@ -109,7 +117,7 @@ class _ViTAttentionBase_before(nn.Module):
         self.head_dim = dim // num_heads
         self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
         self.self_attention = _ViTSelfAttentionHeadBase(
-            dim=self.head_dim, num_heads=num_heads,attn_drop=attn_drop
+            dim=self.head_dim, num_heads=num_heads, attn_drop=attn_drop
         )
         self.proj = nn.Linear(dim, dim)
         self.proj_drop = nn.Dropout(proj_drop)
@@ -122,14 +130,15 @@ class _ViTAttentionBase_before(nn.Module):
             .permute(2, 0, 3, 1, 4)
         )
         q, k, v = qkv[0], qkv[1], qkv[2]
-        
-        x = self.self_attention(q,k,v)
+
+        x = self.self_attention(q, k, v)
 
         x = x.transpose(1, 2).reshape(B, N, C)
 
         x = self.proj(x)
         x = self.proj_drop(x)
         return x
+
 
 class BertSelfAttentionInteger(_BertSelfAttentionBase):
     def __init__(
@@ -189,6 +198,7 @@ class BertSelfAttentionInteger(_BertSelfAttentionBase):
             floor=floor,
         )
 
+
 class ViTAttentionInteger(_ViTAttentionBase):
     def __init__(
         self,
@@ -202,8 +212,7 @@ class ViTAttentionInteger(_ViTAttentionBase):
         q_config: dict = None,
         floor=True,
     ) -> None:
-        super().__init__(
-            dim, num_heads,qkv_bias,qk_norm,attn_drop,proj_drop)
+        super().__init__(dim, num_heads, qkv_bias, qk_norm, attn_drop, proj_drop)
         self.q_config = q_config
         self.query = LinearInteger(
             dim,
@@ -264,19 +273,19 @@ class ViTAttentionInteger(_ViTAttentionBase):
             num_heads=num_heads,
             attn_drop=attn_drop,
             q_config={
-                "query_width":q_config["qkv_width"],
-                "query_frac_width":q_config["qkv_frac_width"],
-                "key_width":q_config["qkv_width"],
-                "key_frac_width":q_config["qkv_frac_width"],
-                "value_width":q_config["qkv_width"],
-                "value_frac_width":q_config["qkv_frac_width"],
-                "qkmm_out_width":q_config["qkmm_out_width"],
-                "qkmm_out_frac_width":q_config["qkmm_out_frac_width"],
-                "softmax_exp_width":q_config["softmax_exp_width"],
-                "softmax_exp_frac_width":q_config["softmax_exp_frac_width"],
-                "softmax_out_frac_width":q_config["softmax_out_frac_width"],
-                "svmm_out_width":q_config["svmm_out_width"],
-                "svmm_out_frac_width":q_config["svmm_out_frac_width"],
+                "query_width": q_config["qkv_width"],
+                "query_frac_width": q_config["qkv_frac_width"],
+                "key_width": q_config["qkv_width"],
+                "key_frac_width": q_config["qkv_frac_width"],
+                "value_width": q_config["qkv_width"],
+                "value_frac_width": q_config["qkv_frac_width"],
+                "qkmm_out_width": q_config["qkmm_out_width"],
+                "qkmm_out_frac_width": q_config["qkmm_out_frac_width"],
+                "softmax_exp_width": q_config["softmax_exp_width"],
+                "softmax_exp_frac_width": q_config["softmax_exp_frac_width"],
+                "softmax_out_frac_width": q_config["softmax_out_frac_width"],
+                "svmm_out_width": q_config["svmm_out_width"],
+                "svmm_out_frac_width": q_config["svmm_out_frac_width"],
             },
             floor=floor,
         )

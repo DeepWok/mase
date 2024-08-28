@@ -35,8 +35,7 @@ module comparator_tree #(
     logic [DATA_WIDTH-1:0] data[(2**(LEVELS-level))-1:0];
     logic valid;
     logic ready;
-    if (level == 0)
-      assign data = in_data;
+    if (level == 0) assign data = in_data;
   end
 
 

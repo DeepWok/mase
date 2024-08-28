@@ -27,6 +27,8 @@ from mase_cocotb.utils import fixed_preprocess_tensor
 from mase_cocotb.utils import bit_driver
 from chop.nn.quantizers import integer_floor_quantizer
 from chop.nn.quantized.modules import LayerNormIntegerFloor
+
+
 class LayerNormTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
@@ -38,11 +40,11 @@ class LayerNormTB(Testbench):
         self.in_data_driver = StreamDriver(
             dut.clk, dut.data_in_0, dut.data_in_0_valid, dut.data_in_0_ready
         )
-        if self.get_parameter("ELEMENTWISE_AFFINE"): 
+        if self.get_parameter("ELEMENTWISE_AFFINE"):
             self.weight_driver = StreamDriver(
                 dut.clk, dut.weight, dut.weight_valid, dut.weight_ready
             )
-            if self.get_parameter("ELEMENTWISE_AFFINE"): 
+            if self.get_parameter("ELEMENTWISE_AFFINE"):
                 self.bias_driver = StreamDriver(
                     dut.clk, dut.bias, dut.bias_valid, dut.bias_ready
                 )
@@ -71,17 +73,19 @@ class LayerNormTB(Testbench):
                 "data_out_frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
                 "by_pass": False,
             },
-            elementwise_affine=True if self.get_parameter("ELEMENTWISE_AFFINE")==1 else False,
-            bias=True if self.get_parameter("HAS_BIAS")==1 else False,
+            elementwise_affine=(
+                True if self.get_parameter("ELEMENTWISE_AFFINE") == 1 else False
+            ),
+            bias=True if self.get_parameter("HAS_BIAS") == 1 else False,
         )
-        if self.get_parameter("ELEMENTWISE_AFFINE")==1:
+        if self.get_parameter("ELEMENTWISE_AFFINE") == 1:
             self.model.weight = torch.nn.Parameter(
                 5 * torch.rand(self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"))
-            )        
-            if self.get_parameter("HAS_BIAS")==1: 
+            )
+            if self.get_parameter("HAS_BIAS") == 1:
                 self.model.bias = torch.nn.Parameter(
                     5 * torch.rand(self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"))
-                )        
+                )
         # Set verbosity of driver and monitor loggers to debug
         self.in_data_driver.log.setLevel(logging.DEBUG)
         self.out_data_monitor.log.setLevel(logging.DEBUG)
@@ -163,6 +167,7 @@ class LayerNormTB(Testbench):
         await Timer(us, units="us")
         assert self.out_data_monitor.exp_queue.empty()
 
+
 @cocotb.test()
 async def single_test(dut):
     tb = LayerNormTB(dut)
@@ -193,7 +198,7 @@ async def single_test(dut):
 
 # Don't support :
 # 1. DATA_IN_0_PARALLELISM_DIM_0 ==DATA_IN_0_TENSOR_SIZE_DIM_0
-# 
+#
 dut_params = {
     "ELEMENTWISE_AFFINE": 1,
     "HAS_BIAS": 1,
@@ -203,16 +208,16 @@ dut_params = {
     "DATA_IN_0_PARALLELISM_DIM_1": 2,
     "DATA_IN_0_PRECISION_0": 8,
     "DATA_IN_0_PRECISION_1": 4,
-    "WEIGHT_PRECISION_0":8,
+    "WEIGHT_PRECISION_0": 8,
     "WEIGHT_PRECISION_1": 4,
-    "BIAS_PRECISION_0":8,
+    "BIAS_PRECISION_0": 8,
     "BIAS_PRECISION_1": 4,
     "ISQRT_IN_PRECISION_0": 7,
     "ISQRT_IN_PRECISION_1": 4,
     "ISQRT_OUT_PRECISION_0": 12,
     "ISQRT_OUT_PRECISION_1": 4,
     "DATA_OUT_0_PRECISION_0": 10,
-    "DATA_OUT_0_PRECISION_1": 4
+    "DATA_OUT_0_PRECISION_1": 4,
 }
 
 
@@ -223,6 +228,8 @@ def get_fixed_softmax_config(kwargs={}):
 
 
 torch.manual_seed(1)
+
+
 @pytest.mark.dev
 def test_fixed_softmax_smoke():
     """

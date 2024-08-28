@@ -88,12 +88,12 @@ class FixedSelfAttentionTB(Testbench):
             "data_out_frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
         }
         self.model = BertSelfAttentionInteger(
-                config=self.config,
-                q_config=self.q_config,
-                out_q_config=self.out_q_config,
-                bias=self.get_parameter("HAS_BIAS"),
-                floor=True,
-            )
+            config=self.config,
+            q_config=self.q_config,
+            out_q_config=self.out_q_config,
+            bias=self.get_parameter("HAS_BIAS"),
+            floor=True,
+        )
         # * Replace softmax with fixed softermax
         if self.get_parameter("ACTIVATION") == 0:
             self.model.softmax = partial(

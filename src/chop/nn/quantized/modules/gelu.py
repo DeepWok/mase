@@ -66,6 +66,7 @@ class GELUInteger(_GELUBase):
 
 class GELUIntegerFloor(_GELUBase):
     bypass = None
+
     def __init__(self, inplace: bool = False, config: dict = None):
         super().__init__(inplace)
         assert config is not None, "config is None!"
@@ -76,7 +77,10 @@ class GELUIntegerFloor(_GELUBase):
             return
         # establish quantizers
         x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
-        out_width, out_frac_width = config["data_out_width"], config["data_out_frac_width"]
+        out_width, out_frac_width = (
+            config["data_out_width"],
+            config["data_out_frac_width"],
+        )
         self.x_quantizer = partial(
             integer_floor_quantizer, width=x_width, frac_width=x_frac_width
         )
@@ -85,6 +89,7 @@ class GELUIntegerFloor(_GELUBase):
         )
         self.x_width = x_width
         self.x_frac_width = x_frac_width
+
 
 class GELUMinifloatDenorm(_GELUBase):
     def __init__(self, inplace: bool = False, config: dict = None):

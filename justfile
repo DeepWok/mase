@@ -22,7 +22,7 @@ test-hw:
 	# python3 src/mase_components/activation_layers/test/fixed_sigmoid_tb.py
 	# python3 src/mase_components/activation_layers/test/fixed_softermax_1d_tb.py
 	# python3 src/mase_components/activation_layers/test/fixed_softermax_tb.py
-	# python3 src/mase_components/activation_layers/test/fixed_softmax_tb.py
+	python3 src/mase_components/activation_layers/test/fixed_softmax_tb.py
 	python3 src/mase_components/activation_layers/test/fixed_softplus_tb.py
 	python3 src/mase_components/activation_layers/test/fixed_softsign_tb.py
 	python3 src/mase_components/activation_layers/test/fixed_tanh_tb.py
@@ -138,6 +138,10 @@ test-hw:
 	# python3 src/mase_components/transformer_layers/test/fixed_gqa_head_tb.py
 	# python3 src/mase_components/transformer_layers/test/fixed_self_attention_tb.py
 	# python3 src/mase_components/transformer_layers/test/test_lint_attention.py
+
+	# ViT layers
+	python3 src/mase_components/vision_models/test/fixed_self_attention_head_tb.py
+
 
 reformat:
 	# format python files

@@ -20,6 +20,7 @@ from mase_cocotb.utils import fixed_preprocess_tensor
 from mase_cocotb.utils import bit_driver
 from chop.nn.quantized.functional import softmax_integer
 
+
 class SoftmaxTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
@@ -108,6 +109,7 @@ class SoftmaxTB(Testbench):
         await Timer(us, units="us")
         assert self.out_data_monitor.exp_queue.empty()
 
+
 @cocotb.test()
 async def single_test(dut):
     tb = SoftmaxTB(dut)
@@ -157,6 +159,8 @@ def get_fixed_softmax_config(kwargs={}):
 
 torch.manual_seed(1)
 CONSTANT_MULT = 0.19
+
+
 @pytest.mark.dev
 def test_fixed_softmax_smoke():
     """

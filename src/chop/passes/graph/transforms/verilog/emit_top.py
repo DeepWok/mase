@@ -649,7 +649,9 @@ assign {to_name}_data_in_0 = {from_name}_data_out_{select};
             for i, node_in in enumerate(node.all_input_nodes):
                 from_name = vf(node_in.name)
                 if "fork2" in from_name:
-                    fork_in[from_name] = 0 if fork_in.get(from_name) == None else fork_in[from_name] + 1
+                    fork_in[from_name] = (
+                        0 if fork_in.get(from_name) == None else fork_in[from_name] + 1
+                    )
                     j = fork_in[from_name]
                 else:
                     j = 0
@@ -796,43 +798,51 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
             mult = 1
             if func != "Unknown":
                 if isinstance(module, ViTAttentionInteger):
-                    d_in_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
-                        "QKMM_OUT_PRECISION_0"
-                    ]
+                    d_in_width = node.meta["mase"].parameters["hardware"][
+                        "verilog_param"
+                    ]["QKMM_OUT_PRECISION_0"]
                     d_in_f_width = node.meta["mase"].parameters["hardware"][
                         "verilog_param"
                     ]["QKMM_OUT_PRECISION_1"]
-                    d_out_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
-                        "SOFTMAX_EXP_PRECISION_0"
-                    ]
+                    d_out_width = node.meta["mase"].parameters["hardware"][
+                        "verilog_param"
+                    ]["SOFTMAX_EXP_PRECISION_0"]
                     d_out_f_width = node.meta["mase"].parameters["hardware"][
                         "verilog_param"
-                    ]["SOFTMAX_EXP_PRECISION_1"]       
+                    ]["SOFTMAX_EXP_PRECISION_1"]
                     from math import sqrt
-                    mult = 1 / sqrt(node.meta["mase"].parameters["hardware"]["verilog_param"]["DATA_IN_0_TENSOR_SIZE_DIM_0"] // node.meta["mase"].parameters["hardware"]["verilog_param"]["NUM_HEADS"])
+
+                    mult = 1 / sqrt(
+                        node.meta["mase"].parameters["hardware"]["verilog_param"][
+                            "DATA_IN_0_TENSOR_SIZE_DIM_0"
+                        ]
+                        // node.meta["mase"].parameters["hardware"]["verilog_param"][
+                            "NUM_HEADS"
+                        ]
+                    )
                 elif isinstance(module, LayerNormIntegerFloor):
-                    d_in_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
-                        "ISQRT_IN_PRECISION_0"
-                    ]
+                    d_in_width = node.meta["mase"].parameters["hardware"][
+                        "verilog_param"
+                    ]["ISQRT_IN_PRECISION_0"]
                     d_in_f_width = node.meta["mase"].parameters["hardware"][
                         "verilog_param"
                     ]["ISQRT_IN_PRECISION_1"]
-                    d_out_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
-                        "ISQRT_OUT_PRECISION_0"
-                    ]
+                    d_out_width = node.meta["mase"].parameters["hardware"][
+                        "verilog_param"
+                    ]["ISQRT_OUT_PRECISION_0"]
                     d_out_f_width = node.meta["mase"].parameters["hardware"][
                         "verilog_param"
                     ]["ISQRT_OUT_PRECISION_1"]
                 else:
-                    d_in_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
-                        "DATA_IN_0_PRECISION_0"
-                    ]
+                    d_in_width = node.meta["mase"].parameters["hardware"][
+                        "verilog_param"
+                    ]["DATA_IN_0_PRECISION_0"]
                     d_in_f_width = node.meta["mase"].parameters["hardware"][
                         "verilog_param"
                     ]["DATA_IN_0_PRECISION_1"]
-                    d_out_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
-                        "DATA_OUT_0_PRECISION_0"
-                    ]
+                    d_out_width = node.meta["mase"].parameters["hardware"][
+                        "verilog_param"
+                    ]["DATA_OUT_0_PRECISION_0"]
                     d_out_f_width = node.meta["mase"].parameters["hardware"][
                         "verilog_param"
                     ]["DATA_OUT_0_PRECISION_1"]

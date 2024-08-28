@@ -35,6 +35,7 @@ sys.excepthook = excepthook
 # --------------------------------------------------
 # verified test case linear(2,4)
 
+
 class MLP(torch.nn.Module):
     """
     Toy quantized FC model for digit recognition on MNIST
@@ -53,8 +54,10 @@ class MLP(torch.nn.Module):
 
 
 quan_args = {
-    "by": "type", # quantize by type, name, or regex_name
-    "default": {"config": {"name": None}}, # default config, this would be used for any node that does not have a specific config
+    "by": "type",  # quantize by type, name, or regex_name
+    "default": {
+        "config": {"name": None}
+    },  # default config, this would be used for any node that does not have a specific config
     "linear": {
         "config": {
             "name": "integer_floor",  # quantization scheme name supported are ["integer", "fixed" (equivalent to integer), "lutnet" (dev mode), "logicnets" (dev mode), "binary", "binary_residual", "ternary", "minifloat_ieee", "minifloat_denorm", "log", "block_fp", "block_minifloat", "block_log"]
@@ -67,14 +70,13 @@ quan_args = {
             # bias
             "bias_width": 5,
             "bias_frac_width": 2,
-            
             "data_out_width": 8,
             "data_out_frac_width": 4,
-
         },
     },
 }
-        
+
+
 @pytest.mark.dev
 def test_emit_verilog_linear():
     in_features = 4
@@ -112,7 +114,10 @@ def test_emit_verilog_linear():
                 ] = "fixed"
                 node.meta["mase"].parameters["common"]["results"][result][
                     "precision"
-                ] = [quan_args["linear"]["config"]["data_out_width"], quan_args["linear"]["config"]["data_out_frac_width"]]
+                ] = [
+                    quan_args["linear"]["config"]["data_out_width"],
+                    quan_args["linear"]["config"]["data_out_frac_width"],
+                ]
 
     # Increase weight range
     mg.model.fc1.weight = torch.nn.Parameter(

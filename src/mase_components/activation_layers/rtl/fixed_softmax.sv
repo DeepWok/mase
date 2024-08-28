@@ -97,7 +97,7 @@ module fixed_softmax #(
   end
 
   unpacked_fifo #(
-      .DEPTH(OUT_0_DEPTH*8),
+      .DEPTH(OUT_0_DEPTH * 8),
       .DATA_WIDTH(DATA_EXP_0_PRECISION_0),
       .IN_NUM(DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1)
   ) out_roller_buffer (

@@ -15,9 +15,11 @@ def make_quantizer(data_width: int, f_width: int, floor):
     base_quantizer = integer_floor_quantizer if floor else integer_quantizer
     return partial(base_quantizer, width=data_width, frac_width=f_width)
 
+
 def isqrt(x):
     x = (x + 1e-5).sqrt().reciprocal()
     return x
+
 
 FUNCTION_TABLE = {
     "silu": nn.SiLU(),
@@ -28,12 +30,13 @@ FUNCTION_TABLE = {
     "gelu": nn.GELU(),
     "exp": torch.exp,
     "softmax": torch.exp,
-    "isqrt": isqrt
+    "isqrt": isqrt,
 }
+
 
 def fxtodouble(data_width: int, f_width: int, fx_num: str):
     intstr, fracstr = fx_num[: data_width - f_width], fx_num[data_width - f_width :]
-    intval = float(BitArray(bin=intstr).int)    
+    intval = float(BitArray(bin=intstr).int)
     fracval = float(BitArray(bin=fracstr).uint) / 2 ** (f_width)
 
     return intval + fracval
@@ -74,7 +77,14 @@ def generate_lookup(data_width: int, f_width: int, function: str, type="hex"):
 
 
 def aligned_generate_lookup(
-    in_data_width, in_f_width, data_width: int, f_width: int, function: str, type="hex",constant_mult=1,floor=False
+    in_data_width,
+    in_f_width,
+    data_width: int,
+    f_width: int,
+    function: str,
+    type="hex",
+    constant_mult=1,
+    floor=False,
 ):
     f = FUNCTION_TABLE[function]
     lut = {
@@ -95,7 +105,7 @@ def aligned_generate_lookup(
     while pi <= maxval:
         count += 1
         iarr.append(pi)
-        val = quanter(f(torch.tensor(pi*constant_mult)))  # entry in the lookup table
+        val = quanter(f(torch.tensor(pi * constant_mult)))  # entry in the lookup table
         lut[
             doubletofx(data_width=in_data_width, f_width=in_f_width, num=pi, type=type)
         ] = doubletofx(
@@ -108,9 +118,13 @@ def aligned_generate_lookup(
         while i <= -1 * 2 ** -(in_f_width):
             count += 1
             iarr.append(i)
-            val = quanter(f(torch.tensor(i*constant_mult)))  # entry in the lookup table
+            val = quanter(
+                f(torch.tensor(i * constant_mult))
+            )  # entry in the lookup table
             lut[
-                doubletofx(data_width=in_data_width, f_width=in_f_width, num=i, type=type)
+                doubletofx(
+                    data_width=in_data_width, f_width=in_f_width, num=i, type=type
+                )
             ] = doubletofx(
                 data_width=data_width, f_width=f_width, num=val.item(), type=type
             )
@@ -286,7 +300,7 @@ def generate_sv_lut(
     in_f_width,
     data_width,
     f_width,
-    path=None,# maybe not accept path as a parameter due to redundantly-generated exp_lut
+    path=None,  # maybe not accept path as a parameter due to redundantly-generated exp_lut
     path_with_dtype=False,
     constant_mult=1,
     floor=False,
@@ -300,7 +314,7 @@ def generate_sv_lut(
     else:
         end = ""
 
-    p = Path(__file__).parents[1] / "generated_lut"/ "rtl"
+    p = Path(__file__).parents[1] / "generated_lut" / "rtl"
     lookup_to_sv_file(
         in_data_width,
         in_f_width,

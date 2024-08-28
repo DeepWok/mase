@@ -90,7 +90,12 @@ class LinearTB(Testbench):
         self.data_out_0_monitor.log.setLevel(logging.DEBUG)
 
     def generate_inputs(self):
-        return torch.randn((self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_1"), self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0")))
+        return torch.randn(
+            (
+                self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_1"),
+                self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
+            )
+        )
 
     def preprocess_tensor(self, tensor, config, parallelism):
         if len(tensor.shape) == 1:
@@ -116,7 +121,7 @@ class LinearTB(Testbench):
                 blocks.append(dim_1_split[i][j].flatten().tolist())
         return blocks
 
-    async def run_test(self, batches = 1, us = 100):
+    async def run_test(self, batches=1, us=100):
         await self.reset()
         self.log.info(f"Reset finished")
         self.data_out_0_monitor.ready.value = 1
@@ -199,28 +204,25 @@ class LinearTB(Testbench):
 @cocotb.test()
 async def cocotb_test(dut):
     tb = LinearTB(dut)
-    await tb.run_test(batches = 10,us=100)
+    await tb.run_test(batches=10, us=100)
+
 
 async def check_signal(dut, log):
-    num = {
-        "data_out_0": 0,
-        "data_in_0": 0
-    }
+    num = {"data_out_0": 0, "data_in_0": 0}
     while True:
         await RisingEdge(dut.clk)
-        handshake_signal_check(dut, log, "data_out_0", num = num)
-
+        handshake_signal_check(dut, log, "data_out_0", num=num)
 
 
 # verified case
-# weight per transpoed = 0
+# weight per transpoed = 0
 # weight pre transposed = 1
 # has bias = 0
 # has bias = 1
 def get_fixed_linear_config(kwargs={}):
     # if pretranspose
     #   weight1 = in0
-    # else 
+    # else
     #   weight0 = in0
     config = {
         "HAS_BIAS": 1,
@@ -233,7 +235,6 @@ def get_fixed_linear_config(kwargs={}):
         "WEIGHT_TENSOR_SIZE_DIM_1": 16,
         "WEIGHT_PARALLELISM_DIM_0": 8,
         "WEIGHT_PARALLELISM_DIM_1": 4,
-
         "DATA_IN_0_PRECISION_0": 8,
         "DATA_IN_0_PRECISION_1": 4,
         "WEIGHT_PRECISION_0": 10,

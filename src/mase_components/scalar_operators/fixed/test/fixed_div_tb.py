@@ -50,9 +50,9 @@ class FixedDivTB(Testbench):
 
     def generate_inputs(self):
         return torch.randint(
-            low = 1, 
+            low=1,
             high=100,
-            size = (
+            size=(
                 1,
                 self.get_parameter("IN_NUM"),
             ),
@@ -83,6 +83,7 @@ class FixedDivTB(Testbench):
         await Timer(us, units="us")
         assert self.quotient_monitor.exp_queue.empty()
 
+
 # @cocotb.test()
 # async def single_test(dut):
 #     tb = FixedDivTB(dut)
@@ -96,6 +97,7 @@ class FixedDivTB(Testbench):
 #     tb.quotient_monitor.ready.value = 1
 #     await tb.run_test(batches=100, us=200)
 
+
 @cocotb.test()
 async def repeated_backpressure(dut):
     tb = FixedDivTB(dut)
@@ -105,6 +107,7 @@ async def repeated_backpressure(dut):
 
     cocotb.start_soon(bit_driver(dut.quotient_data_ready, dut.clk, 0.5))
     await tb.run_test(batches=10, us=200)
+
 
 dut_params = {
     "IN_NUM": 1,
