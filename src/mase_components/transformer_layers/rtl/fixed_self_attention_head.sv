@@ -17,8 +17,11 @@ module fixed_self_attention_head #(
     parameter OUT_DATA_PARALLELISM_DIM_0 = IN_DATA_PARALLELISM_DIM_0,
     parameter OUT_DATA_PARALLELISM_DIM_1 = IN_DATA_PARALLELISM_DIM_1,
     parameter OUT_DATA_PRECISION_0 = 16,
-    parameter OUT_DATA_PRECISION_1 = 3
+    parameter OUT_DATA_PRECISION_1 = 3,
 
+    // * Extra params
+    parameter KEY_PRE_TRANSPOSED = 0,  // Skip transpose for K
+    parameter VALUE_BUFFER = 0  // Instantiates large buffer on value path
 ) (
     input logic clk,
     input logic rst,
@@ -39,7 +42,7 @@ module fixed_self_attention_head #(
     output logic out_valid,
     input logic out_ready
 );
-
+  /*verilator hier_block*/
   initial begin
     assert (OUT_DATA_TENSOR_SIZE_DIM_0 == IN_DATA_TENSOR_SIZE_DIM_0)
     else
@@ -68,6 +71,7 @@ module fixed_self_attention_head #(
 
   parameter IN_DATA_DEPTH_0 = IN_DATA_TENSOR_SIZE_DIM_0 / IN_DATA_PARALLELISM_DIM_0;
   parameter IN_DATA_DEPTH_1 = IN_DATA_TENSOR_SIZE_DIM_1 / IN_DATA_PARALLELISM_DIM_1;
+  parameter IN_DATA_NUM_ITERS = IN_DATA_DEPTH_0 * IN_DATA_DEPTH_1;
 
   // Query key transpose
   parameter QUERY_TRANSPOSE_PRECISION_0 = 2 * IN_DATA_PRECISION_0 + $clog2(
@@ -96,6 +100,10 @@ module fixed_self_attention_head #(
   logic key_transpose_valid;
   logic key_transpose_ready;
 
+  logic [IN_DATA_PRECISION_0-1:0] value_fifo [IN_DATA_PARALLELISM_DIM_0*IN_DATA_PARALLELISM_DIM_1-1:0];
+  logic value_fifo_valid;
+  logic value_fifo_ready;
+
   logic [OUT_DATA_PRECISION_0-1:0] query_key_transpose [IN_DATA_PARALLELISM_DIM_1 * IN_DATA_PARALLELISM_DIM_1-1:0];
   logic query_key_transpose_valid;
   logic query_key_transpose_ready;
@@ -114,27 +122,53 @@ module fixed_self_attention_head #(
 
   // * Transpose projected keys
 
-  matrix_stream_transpose #(
-      .TOTAL_DIM0  (IN_DATA_TENSOR_SIZE_DIM_0),
-      .TOTAL_DIM1  (IN_DATA_TENSOR_SIZE_DIM_1),
-      .COMPUTE_DIM0(IN_DATA_PARALLELISM_DIM_0),
-      .COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_1),
+  generate
+    if (KEY_PRE_TRANSPOSED) begin : gen_passthrough_keys
+      assign key_transpose = key;
+      assign key_transpose_valid = key_valid;
+      assign key_ready = key_transpose_ready;
+    end else begin : gen_transpose_keys
+      matrix_stream_transpose #(
+          .DATA_WIDTH  (IN_DATA_PRECISION_0),
+          .TOTAL_DIM0  (IN_DATA_TENSOR_SIZE_DIM_0),
+          .TOTAL_DIM1  (IN_DATA_TENSOR_SIZE_DIM_1),
+          .COMPUTE_DIM0(IN_DATA_PARALLELISM_DIM_0),
+          .COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_1)
+      ) key_transpose_i (
+          .clk      (clk),
+          .rst      (rst),
+          .in_data  (key),
+          .in_valid (key_valid),
+          .in_ready (key_ready),
+          .out_data (key_transpose),
+          .out_valid(key_transpose_valid),
+          .out_ready(key_transpose_ready)
+      );
+    end
 
-      .DATA_WIDTH(IN_DATA_PRECISION_0)
-  ) key_transpose_i (
-      .clk,
-      .rst,
 
-      // In Matrix
-      .in_data (key),
-      .in_valid(key_valid),
-      .in_ready(key_ready),
-
-      // Out Matrix
-      .out_data (key_transpose),
-      .out_valid(key_transpose_valid),
-      .out_ready(key_transpose_ready)
-  );
+    if (VALUE_BUFFER) begin : gen_value_buffer
+      matrix_fifo #(
+          .DATA_WIDTH(IN_DATA_PRECISION_0),
+          .DIM0      (IN_DATA_PARALLELISM_DIM_0),
+          .DIM1      (IN_DATA_PARALLELISM_DIM_1),
+          .FIFO_SIZE (4 * IN_DATA_NUM_ITERS)
+      ) value_buffer (
+          .clk      (clk),
+          .rst      (rst),
+          .in_data  (value),
+          .in_valid (value_valid),
+          .in_ready (value_ready),
+          .out_data (value_fifo),
+          .out_valid(value_fifo_valid),
+          .out_ready(value_fifo_ready)
+      );
+    end else begin : no_value_buffer
+      assign value_fifo = value;
+      assign value_fifo_valid = value_valid;
+      assign value_ready = value_fifo_ready;
+    end
+  endgenerate
 
   // * Query x Key^T
 
@@ -146,7 +180,7 @@ module fixed_self_attention_head #(
       .B_TOTAL_DIM1(IN_DATA_TENSOR_SIZE_DIM_0),
 
       .A_COMPUTE_DIM0(IN_DATA_PARALLELISM_DIM_0),
-      .A_COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_0),
+      .A_COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_1),
       .B_COMPUTE_DIM0(IN_DATA_PARALLELISM_DIM_1),
       .B_COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_0),
 
@@ -263,9 +297,9 @@ module fixed_self_attention_head #(
       .a_valid(attention_scores_valid),
       .a_ready(attention_scores_ready),
 
-      .b_data (value),
-      .b_valid(value_valid),
-      .b_ready(value_ready),
+      .b_data (value_fifo),
+      .b_valid(value_fifo_valid),
+      .b_ready(value_fifo_ready),
 
       .out_data (out_pre_cast),
       .out_valid(out_cast_valid),

@@ -42,7 +42,6 @@ module comparator_tree #(
   for (genvar level = 0; level < LEVELS; level++) begin : element_handshake
     logic [2 ** (LEVELS - level - 1) - 1 : 0] element_input_valid;
     logic [2 ** (LEVELS - level - 1) - 1 : 0] element_input_ready;
-
     logic [2 ** (LEVELS - level - 1) - 1 : 0] element_output_valid;
     logic [2 ** (LEVELS - level - 1) - 1 : 0] element_output_ready;
   end : element_handshake
@@ -83,7 +82,7 @@ module comparator_tree #(
       );
     end
 
-    // Join handshake signals from each skid buffer into a single 
+    // Join handshake signals from each skid buffer into a single
     // handshake interface to drive the next level
     split_n #(
         .N(2 ** (LEVELS - i - 1))

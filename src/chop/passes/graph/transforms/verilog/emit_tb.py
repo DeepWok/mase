@@ -159,7 +159,6 @@ def _emit_cocotb_tb(graph):
                 block_size = self.get_parameter(
                     "DATA_IN_0_PARALLELISM_DIM_0"
                 ) * self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1")
-
                 for block in in_data_blocks:
                     if len(block) < block_size:
                         block = block + [0] * (block_size - len(block))

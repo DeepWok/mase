@@ -10,10 +10,9 @@ def softermax(input: Tensor, dim: int) -> Tensor:
     Returns:
         Tensor: Output tensor
     """
-    input = input.squeeze()
-    out = input - input.max(dim=1).values.floor()
+    out = input - input.max(dim=dim, keepdim=True).values.floor()
     out = 2**out
-    row_sum = out.sum(dim=1).reshape((-1, 1)).expand(input.shape)
+    row_sum = out.sum(dim=dim, keepdim=True)
     # Elementwise division
     out = out / row_sum
     return out

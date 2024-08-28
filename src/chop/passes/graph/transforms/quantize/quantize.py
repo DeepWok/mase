@@ -40,6 +40,7 @@ QUANTIZEABLE_OP = (
     "gelu",
     "softsign",
     "softplus",
+    "grouped_query_attention",
 )
 
 

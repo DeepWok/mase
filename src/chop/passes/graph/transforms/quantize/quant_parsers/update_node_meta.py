@@ -73,6 +73,13 @@ MASE_OP_TO_INPUT_ENTRIES_AND_ARGS = {
     "group_norm": (("data_in",), ("data_in_0")),
     "instance_norm2d": (("data_in",), ("data_in_0")),
     "rms_norm": (("data_in",), ("data_in_0")),
+    "group_norm": (("data_in",), ("data_in_0",)),
+    "instance_norm2d": (("data_in",), ("data_in_0",)),
+    "rms_norm": (("data_in",), ("data_in_0",)),
+    "grouped_query_attention": (
+        ("data_in", "weight", "bias"),
+        ("data_in_0", "weight", "bias"),
+    ),
 }
 
 
@@ -108,6 +115,7 @@ MASE_OP_TO_OUTPUT_ENTRIES = {
     "group_norm": (("data_out",), ("data_out_0",)),
     "instance_norm2d": (("data_out",), ("data_out_0",)),
     "rms_norm": (("data_out",), ("data_out_0")),
+    "grouped_query_attention": (("data_out",), ("data_out_0")),
 }
 
 

@@ -78,7 +78,6 @@ module matmul #(
     output logic                 out_valid,
     input  logic                 out_ready
 );
-
   initial begin
     // Check dimension constraint not violated
     assert (A_TOTAL_DIM0 == B_TOTAL_DIM1)
@@ -166,9 +165,9 @@ module matmul #(
 
   generate
 
-    // B matrix Buffers
+    // A matrix Buffers
 
-    if (B_DEPTH_DIM0 > 1) begin
+    if (B_DEPTH_DIM0 > 1) begin : gen_a_buffer
 
       matrix_flatten #(
           .DATA_WIDTH(A_WIDTH),
@@ -203,10 +202,22 @@ module matmul #(
           .data_out(a_buffer_out_data)
       );
 
-    end else begin
-      assign a_buffer_out_data = a_data;
-      assign a_buffer_out_valid = a_valid;
-      assign a_ready = a_buffer_out_ready;
+    end else begin : gen_a_reg_slice
+
+      // Add a register stage to cut any combinatoral paths to simple matmul
+      unpacked_skid_buffer #(
+          .DATA_WIDTH(A_WIDTH),
+          .IN_NUM    (A_COMPUTE_DIM0 * A_COMPUTE_DIM1)
+      ) input_stream_reg_slice (
+          .clk           (clk),
+          .rst           (rst),
+          .data_in       (a_data),
+          .data_in_valid (a_valid),
+          .data_in_ready (a_ready),
+          .data_out      (a_buffer_out_data),
+          .data_out_valid(a_buffer_out_valid),
+          .data_out_ready(a_buffer_out_ready)
+      );
     end
 
     // A matrix Buffers
@@ -246,16 +257,15 @@ module matmul #(
   // and round ourselves after the output accumulation in this matmul module.
 
   simple_matmul #(
-      .N              (A_COMPUTE_DIM1),
-      .M              (A_COMPUTE_DIM0),    // == B_COMPUTE_DIM1
-      .K              (B_COMPUTE_DIM0),
-      .X_WIDTH        (A_WIDTH),
-      .X_FRAC_WIDTH   (A_FRAC_WIDTH),
-      .Y_WIDTH        (B_WIDTH),
-      .Y_FRAC_WIDTH   (B_FRAC_WIDTH),
-      .OUTPUT_ROUNDING(0),
-      .OUT_WIDTH      (SM_OUT_WIDTH),
-      .OUT_FRAC_WIDTH (SM_OUT_FRAC_WIDTH)
+      .N             (A_COMPUTE_DIM1),
+      .M             (A_COMPUTE_DIM0),    // == B_COMPUTE_DIM1
+      .K             (B_COMPUTE_DIM0),
+      .X_WIDTH       (A_WIDTH),
+      .X_FRAC_WIDTH  (A_FRAC_WIDTH),
+      .Y_WIDTH       (B_WIDTH),
+      .Y_FRAC_WIDTH  (B_FRAC_WIDTH),
+      .OUT_WIDTH     (SM_OUT_WIDTH),
+      .OUT_FRAC_WIDTH(SM_OUT_FRAC_WIDTH)
   ) simple_matmul_inst (
       .clk      (clk),
       .rst      (rst),
@@ -272,7 +282,7 @@ module matmul #(
 
   // Direct the result of the simple matmul to the correct matrix_accumulator
 
-  for (genvar i = 0; i < C_DEPTH_DIM0; i++) begin : accumulators
+  for (genvar i = 0; i < C_DEPTH_DIM0; i++) begin : gen_acc
     matrix_accumulator #(
         .IN_DEPTH(B_DEPTH_DIM1),
         .IN_WIDTH(SM_OUT_WIDTH),
@@ -290,7 +300,7 @@ module matmul #(
     );
   end
 
-  for (genvar i = 0; i < C_DEPTH_DIM0; i++) begin
+  for (genvar i = 0; i < C_DEPTH_DIM0; i++) begin : gen_handshake
     // Change which accumulator the output of simple_matmul goes to
     assign acc_in_valid[i]  = self.matrix_acc_ptr == i ? sm_out_valid : 0;
 
@@ -300,7 +310,7 @@ module matmul #(
 
   assign sm_out_ready = acc_in_ready[self.matrix_acc_ptr];
 
-  for (genvar i = 0; i < C_COMPUTE_DIM0 * C_COMPUTE_DIM1; i++) begin
+  for (genvar i = 0; i < C_COMPUTE_DIM0 * C_COMPUTE_DIM1; i++) begin : gen_cast
     fixed_signed_cast #(
         .IN_WIDTH      (MAT_ACC_OUT_WIDTH),
         .IN_FRAC_WIDTH (SM_OUT_FRAC_WIDTH),

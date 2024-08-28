@@ -196,7 +196,6 @@ class LinearTB(Testbench):
             )
             self.data_out_0_monitor.load_monitor(outs)
 
-        cocotb.start_soon(check_signal(self.dut, self.log))
         await Timer(us, units="us")
         assert self.data_out_0_monitor.exp_queue.empty()
 
@@ -205,7 +204,6 @@ class LinearTB(Testbench):
 async def cocotb_test(dut):
     tb = LinearTB(dut)
     await tb.run_test(batches=10, us=100)
-
 
 async def check_signal(dut, log):
     num = {"data_out_0": 0, "data_in_0": 0}
@@ -257,9 +255,16 @@ def test_fixed_linear_smoke():
         trace=True,
         module_param_list=[
             get_fixed_linear_config(),
-            # get_fixed_linear_config({"WEIGHTS_PRE_TRANSPOSED": 0}),
-            # get_fixed_linear_config({"HAS_BIAS": 1}),
-            # get_fixed_linear_config({"HAS_BIAS": 1, "WEIGHTS_PRE_TRANSPOSED": 0}),
+            # noticed here if change WEIGHT_PRE_TRANSPOSED also need to change the DIM_SIZE to match ACTIVATION
+            get_fixed_linear_config(
+                {
+                    "WEIGHTS_PRE_TRANSPOSED": 0,
+                    "WEIGHT_TENSOR_SIZE_DIM_0": 32,
+                    "WEIGHT_TENSOR_SIZE_DIM_1": 16,
+                    "WEIGHT_PARALLELISM_DIM_0": 4,
+                    "WEIGHT_PARALLELISM_DIM_1": 2,
+                },
+            ),
         ],
     )
 

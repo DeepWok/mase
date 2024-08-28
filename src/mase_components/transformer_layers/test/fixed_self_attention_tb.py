@@ -266,7 +266,7 @@ def test_fixed_linear_smoke():
     """
     Some quick tests to check if the module is working.
     """
-    mase_runner(trace=True, module_param_list=[get_config()], skip_build=False)
+    mase_runner(trace=True, module_param_list=[get_config()])
 
 
 if __name__ == "__main__":
