@@ -205,6 +205,7 @@ async def cocotb_test(dut):
     tb = LinearTB(dut)
     await tb.run_test(batches=10, us=100)
 
+
 async def check_signal(dut, log):
     num = {"data_out_0": 0, "data_in_0": 0}
     while True:
