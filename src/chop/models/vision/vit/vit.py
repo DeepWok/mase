@@ -133,7 +133,6 @@ class Attention(nn.Module):
         x = attn @ v
 
         x = x.transpose(1, 2).reshape(B, N, C)
-        breakpoint()
         x = self.proj(x)
         x = self.proj_drop(x)
         return x

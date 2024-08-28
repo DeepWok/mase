@@ -1,1 +1,1 @@
-# from .autosharding import autosharding_analysis_pass
+from .autosharding import autosharding_analysis_pass

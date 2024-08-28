@@ -215,7 +215,10 @@ INTERNAL_COMP = {
         {
             "name": "fixed_vit_attention_single_precision_wrapper",
             "dependence_files": [
-                "vision_models/vit/rtl/fixed_vit_attention_single_precision_wrapper.sv"
+                "vision_models/vit/rtl/fixed_vit_attention_single_precision_wrapper.sv",
+                ]
+        }
+    ],
     "grouped_query_attention": [
         {
             "name": "fixed_gqa_wrapper",
