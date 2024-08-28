@@ -8,7 +8,7 @@ from functools import partial
 
 import cocotb
 from cocotb.log import SimLog
-from cocotb.triggers import Timer
+from cocotb.triggers import Timer, RisingEdge
 
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import (
@@ -20,7 +20,7 @@ from mase_cocotb.runner import mase_runner
 
 # from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner
 from chop.nn.quantized.modules.linear import LinearInteger
-from chop.nn.quantizers import integer_quantizer
+from chop.nn.quantizers import integer_floor_quantizer
 
 
 class LinearTB(Testbench):
@@ -44,22 +44,11 @@ class LinearTB(Testbench):
             )
             self.bias_driver.log.setLevel(logging.DEBUG)
 
-        # self.data_out_0_monitor = StreamMonitor(
-        #     dut.clk,
-        #     dut.data_out_0,
-        #     dut.data_out_0_valid,
-        #     dut.data_out_0_ready,
-        #     check=True,
-        # )
-
-        self.data_out_0_monitor = ErrorThresholdStreamMonitor(
+        self.data_out_0_monitor = StreamMonitor(
             dut.clk,
             dut.data_out_0,
             dut.data_out_0_valid,
             dut.data_out_0_ready,
-            width=self.get_parameter("DATA_OUT_0_PRECISION_0"),
-            signed=True,
-            error_bits=1,
             check=True,
         )
 
@@ -76,6 +65,11 @@ class LinearTB(Testbench):
                 "bias_width": self.get_parameter("BIAS_PRECISION_0"),
                 "bias_frac_width": self.get_parameter("BIAS_PRECISION_1"),
             },
+            out_config={
+                "data_out_width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
+                "data_out_frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
+            },
+            floor=True,
         )
 
         # Set verbosity of driver and monitor loggers to debug
@@ -84,14 +78,19 @@ class LinearTB(Testbench):
         self.data_out_0_monitor.log.setLevel(logging.DEBUG)
 
     def generate_inputs(self):
-        return torch.randn((1, self.model.in_features))
+        return torch.randn(
+            (
+                self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_1"),
+                self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
+            )
+        )
 
     def preprocess_tensor(self, tensor, config, parallelism):
         if len(tensor.shape) == 1:
             tensor = tensor.unsqueeze(0)
 
         # Quantize
-        quantizer = partial(integer_quantizer, **config)
+        quantizer = partial(integer_floor_quantizer, **config)
         q_tensor = quantizer(tensor)
         self.log.debug(f"Quantized tensor: {q_tensor}")
 
@@ -110,7 +109,7 @@ class LinearTB(Testbench):
                 blocks.append(dim_1_split[i][j].flatten().tolist())
         return blocks
 
-    async def run_test(self):
+    async def run_test(self, us):
         await self.reset()
         self.log.info(f"Reset finished")
         self.data_out_0_monitor.ready.value = 1
@@ -185,30 +184,40 @@ class LinearTB(Testbench):
         )
         self.data_out_0_monitor.load_monitor(outs)
 
-        await Timer(1, units="ms")
+        await Timer(us, units="us")
         assert self.data_out_0_monitor.exp_queue.empty()
 
 
 @cocotb.test()
 async def cocotb_test(dut):
     tb = LinearTB(dut)
-    await tb.run_test()
+    await tb.run_test(us=100)
 
 
 def get_fixed_linear_config(kwargs={}):
+    # if pretranspose
+    #   weight1 = in0
+    # else
+    #   weight0 = in0
     config = {
-        "HAS_BIAS": 0,
+        "HAS_BIAS": 1,
         "WEIGHTS_PRE_TRANSPOSED": 1,
-        "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
-        "DATA_IN_0_TENSOR_SIZE_DIM_1": 1,
+        "DATA_IN_0_TENSOR_SIZE_DIM_0": 32,
+        "DATA_IN_0_TENSOR_SIZE_DIM_1": 16,
         "DATA_IN_0_PARALLELISM_DIM_0": 4,
-        "DATA_IN_0_PARALLELISM_DIM_1": 1,
-        "WEIGHT_TENSOR_SIZE_DIM_0": 20,
-        "WEIGHT_TENSOR_SIZE_DIM_1": 20,
-        "WEIGHT_PARALLELISM_DIM_0": 4,
+        "DATA_IN_0_PARALLELISM_DIM_1": 4,
+        "WEIGHT_TENSOR_SIZE_DIM_0": 16,
+        "WEIGHT_TENSOR_SIZE_DIM_1": 32,
+        "WEIGHT_PARALLELISM_DIM_0": 2,
         "WEIGHT_PARALLELISM_DIM_1": 4,
-        "BIAS_TENSOR_SIZE_DIM_0": 20,
-        "BIAS_PARALLELISM_DIM_0": 4,
+        "DATA_IN_0_PRECISION_0": 8,
+        "DATA_IN_0_PRECISION_1": 4,
+        "WEIGHT_PRECISION_0": 8,
+        "WEIGHT_PRECISION_1": 4,
+        "BIAS_PRECISION_0": 8,
+        "BIAS_PRECISION_1": 4,
+        "DATA_OUT_0_PRECISION_0": 10,
+        "DATA_OUT_0_PRECISION_1": 4,
     }
     config.update(kwargs)
     return config
@@ -223,10 +232,16 @@ def test_fixed_linear_smoke():
         trace=True,
         module_param_list=[
             get_fixed_linear_config(),
-            get_fixed_linear_config({"WEIGHTS_PRE_TRANSPOSED": 0}),
-            # TODO: fix these two cases
-            # get_fixed_linear_config({"HAS_BIAS": 1}),
-            # get_fixed_linear_config({"HAS_BIAS": 1, "WEIGHTS_PRE_TRANSPOSED": 0}),
+            # noticed here if change WEIGHT_PRE_TRANSPOSED also need to change the DIM_SIZE to match ACTIVATION
+            get_fixed_linear_config(
+                {
+                    "WEIGHTS_PRE_TRANSPOSED": 0,
+                    "WEIGHT_TENSOR_SIZE_DIM_0": 32,
+                    "WEIGHT_TENSOR_SIZE_DIM_1": 16,
+                    "WEIGHT_PARALLELISM_DIM_0": 4,
+                    "WEIGHT_PARALLELISM_DIM_1": 2,
+                },
+            ),
         ],
     )
 
