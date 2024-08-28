@@ -92,7 +92,7 @@ def update_common_metadata_pass(
                     node.meta["mase"].parameters["common"]["args"]["has_bias"] = True
         
 def update_hardware_precision_param(
-    mg, quan_args
+    mg, quan_args, model_args:dict = {}
 ):
     # The quantization pass currently don't support any inlayer precision automatically generate
     # we only have data_in, weight.. param in common metadata
@@ -105,21 +105,29 @@ def update_hardware_precision_param(
         return str(name).upper()
     for node in mg.fx_graph.nodes:
         mase_op = node.meta["mase"].parameters["common"]["mase_op"]
-        if mase_op not in QUANTIZEABLE_OP:
+        if mase_op not in (QUANTIZEABLE_OP + ("vit_self_attention_integer", )):
             continue
         vp = node.meta["mase"]["hardware"]["verilog_param"]
-        node_quan_config = quan_args.get(mase_op)["config"]
-        if mase_op not in ["layer_norm"]:
-            continue
-        for config_name, config_info in node_quan_config.items():
-            _list = ["data_in","data_out","weight","bias"]
-            if any(keyword in config_name for keyword in ["data_in", "data_out", "weight", "bias"]):
+        node_quan_args = quan_args.get(mase_op)["config"]
+        node_model_args = model_args.get(mase_op)
+        if mase_op in ["vit_self_attention_integer","layer_norm"]:
+            for arg_name, arg_info in node_quan_args.items():
+                _list = ["data_in","data_out","weight","bias"]
+                if any(keyword in arg_name for keyword in ["data_in", "data_out", "weight", "bias"]):
+                    continue
+                if "width" not in arg_name:
+                    continue
+                cofig_str = arg_name.replace("frac_width", "precision_1")
+                cofig_str = cofig_str.replace("width", "precision_0")
+                vp[_cap(cofig_str)] = arg_info
+            if node_model_args == None:
                 continue
-            if "width" not in config_name:
-                continue
-            cofig_str = config_name.replace("frac_width", "precision_1")
-            cofig_str = cofig_str.replace("width", "precision_0")
-            vp[_cap(cofig_str)] = config_info
+            for arg_name, arg_info in node_model_args.items():
+                if type(arg_info) == bool:
+                    vp[_cap(arg_name)] = 1 if arg_info else 0
+                else:
+                    vp[_cap(arg_name)] = arg_info 
+                
 
 quan_args = {
     "by": "type", # quantize by type, name, or regex_name

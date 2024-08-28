@@ -276,6 +276,6 @@ quantized_module_map = {
     "bert_self_attention_head_integer": BertSelfAttentionHeadInteger,
     "bert_self_attention_integer": BertSelfAttentionInteger,
     "bert_self_attention_head_integer": ViTSelfAttentionHeadInteger,
-    "bert_self_attention_integer": ViTAttentionInteger,
+    "vit_self_attention_integer": ViTAttentionInteger,
 }
 

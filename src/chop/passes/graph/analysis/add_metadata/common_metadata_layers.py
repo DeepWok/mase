@@ -359,7 +359,6 @@ def match_args_and_kwargs(meta, args, kwargs, data, add_value):
     ordered_func_data = [(k, v) for k, v in data.items()]
     meta.parameters["common"]["args"] = {}
     meta_kwargs = {}
-    breakpoint()
     arg_type, arg_precision = get_type_and_precision(meta)
 
     # * Assign metadata for each argument

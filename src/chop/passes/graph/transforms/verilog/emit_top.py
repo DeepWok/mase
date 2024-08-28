@@ -12,6 +12,7 @@ import torch.nn as nn
 
 logger = logging.getLogger(__name__)
 from chop.nn.quantized.modules.layer_norm import LayerNormIntegerFloor
+from chop.nn.quantized.modules.attention import ViTAttentionInteger
 from .util import get_verilog_parameters
 from pathlib import Path
 
@@ -772,8 +773,6 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
     # Alternatively, add a class to the emitter that can be called to generate LUTs, for LUT based implementations of activation functions,
     # or other functions that require LUTs such as PolyLUT or LUTnet neurons.
     for node in graph.fx_graph.nodes:
-        # print(vars(node))
-        # print(type(node))
         if node.op == "call_module":
             module = dict(graph.model.named_modules())[node.target]
             if isinstance(module, nn.SiLU):
@@ -790,10 +789,28 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
                 func = "gelu"
             elif isinstance(module, LayerNormIntegerFloor):
                 func = "isqrt"
+            elif isinstance(module, ViTAttentionInteger):
+                func = "exp"
             else:
                 func = "Unknown"
+            mult = 1
             if func != "Unknown":
-                if func == "isqrt":
+                if isinstance(module, ViTAttentionInteger):
+                    d_in_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
+                        "QKMM_OUT_PRECISION_0"
+                    ]
+                    d_in_f_width = node.meta["mase"].parameters["hardware"][
+                        "verilog_param"
+                    ]["QKMM_OUT_PRECISION_1"]
+                    d_out_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
+                        "SOFTMAX_EXP_PRECISION_0"
+                    ]
+                    d_out_f_width = node.meta["mase"].parameters["hardware"][
+                        "verilog_param"
+                    ]["SOFTMAX_EXP_PRECISION_1"]       
+                    from math import sqrt
+                    mult = 1 / sqrt(node.meta["mase"].parameters["hardware"]["verilog_param"]["DATA_IN_0_TENSOR_SIZE_DIM_0"] // node.meta["mase"].parameters["hardware"]["verilog_param"]["NUM_HEADS"])
+                elif isinstance(module, LayerNormIntegerFloor):
                     d_in_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
                         "ISQRT_IN_PRECISION_0"
                     ]
@@ -827,6 +844,7 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
                     d_out_f_width,
                     path=rtl_dir,
                     path_with_dtype=False,
+                    constant_mult=mult,
                     floor=True,
                 )
     return graph, {}

@@ -6,11 +6,9 @@
  * emitted for each model submodule.
  */
 
-module fixed_self_attention_single_precision_wrapper #(
+module fixed_vit_attention_single_precision_wrapper #(
     parameter NUM_HEADS = 12,
-    parameter ACTIVATION = 0,
     parameter CHOSEN_PRECISION = "QUERY",
-    parameter OUTPUT_ATTENTIONS = 0,
 
     parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 768,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 128,
@@ -84,6 +82,28 @@ module fixed_self_attention_single_precision_wrapper #(
     parameter CHOSEN_BIAS_PRECISION_0 = QUERY_BIAS_PRECISION_0,
     parameter CHOSEN_BIAS_PRECISION_1 = QUERY_BIAS_PRECISION_1,
 
+    parameter QKV_PRECISION_0 = -1, 
+    parameter QKV_PRECISION_1 = -1, 
+    parameter QKMM_OUT_PRECISION_0 = -1, 
+    parameter QKMM_OUT_PRECISION_1 = -1, 
+    parameter SOFTMAX_EXP_PRECISION_0 = -1, 
+    parameter SOFTMAX_EXP_PRECISION_1 = -1, 
+    parameter SOFTMAX_OUT_PRECISION_1 = -1, 
+    parameter SVMM_OUT_PRECISION_0 = -1, 
+    parameter SVMM_OUT_PRECISION_1 = -1, 
+
+    parameter PROJ_WEIGHT_TENSOR_SIZE_DIM_0 = -1, 
+    parameter PROJ_WEIGHT_TENSOR_SIZE_DIM_1 = -1, 
+    parameter PROJ_WEIGHT_PARALLELISM_DIM_0 = -1, 
+    parameter PROJ_WEIGHT_PARALLELISM_DIM_1 = -1, 
+    parameter PROJ_WEIGHT_PRECISION_0 = -1, 
+    parameter PROJ_WEIGHT_PRECISION_1 = -1,
+    parameter PROJ_BIAS_TENSOR_SIZE_DIM_0 = -1, 
+    parameter PROJ_BIAS_TENSOR_SIZE_DIM_1 = -1, 
+    parameter PROJ_BIAS_PARALLELISM_DIM_0 = -1, 
+    parameter PROJ_BIAS_PARALLELISM_DIM_1 = -1,  
+    parameter PROJ_BIAS_PRECISION_0 = -1, 
+    parameter PROJ_BIAS_PRECISION_1 = -1, 
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = CHOSEN_WEIGHT_TENSOR_SIZE_DIM_0,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_2 = DATA_IN_0_TENSOR_SIZE_DIM_2,
@@ -131,14 +151,23 @@ module fixed_self_attention_single_precision_wrapper #(
     input logic value_bias_valid,
     output logic value_bias_ready,
 
+    // Proj weights
+    input logic [PROJ_WEIGHT_PRECISION_0-1:0] proj_weight [PROJ_WEIGHT_PARALLELISM_DIM_0 * PROJ_WEIGHT_PARALLELISM_DIM_1-1:0],
+    input logic proj_weight_valid,
+    output logic proj_weight_ready,
+
+    // Proj bias
+    input logic [PROJ_BIAS_PRECISION_0-1:0] proj_bias [PROJ_BIAS_PARALLELISM_DIM_0 * PROJ_BIAS_PARALLELISM_DIM_1 -1:0],
+    input logic proj_bias_valid,
+    output logic proj_bias_ready,
+
     output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_0 [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0],
     output logic data_out_0_valid,
     input logic data_out_0_ready
 );
 
-  fixed_self_attention #(
+  fixed_vit_attention #(
       .NUM_HEADS (NUM_HEADS),
-      .ACTIVATION(ACTIVATION),
 
       .DATA_IN_0_TENSOR_SIZE_DIM_0(DATA_IN_0_TENSOR_SIZE_DIM_0),
       .DATA_IN_0_TENSOR_SIZE_DIM_1(DATA_IN_0_TENSOR_SIZE_DIM_1),
@@ -156,12 +185,28 @@ module fixed_self_attention_single_precision_wrapper #(
       .WEIGHT_PRECISION_1(CHOSEN_WEIGHT_PRECISION_1),
 
       .HAS_BIAS   (CHOSEN_HAS_BIAS),
-      .BIAS_TENSOR_SIZE_DIM_0 (CHOSEN_BIAS_TENSOR_SIZE_DIM_0),
-      .BIAS_TENSOR_SIZE_DIM_1 (CHOSEN_BIAS_TENSOR_SIZE_DIM_1),
-      .BIAS_PARALLELISM_DIM_0 (CHOSEN_BIAS_PARALLELISM_DIM_0),
-      .BIAS_PARALLELISM_DIM_1 (CHOSEN_BIAS_PARALLELISM_DIM_1),
       .BIAS_PRECISION_0   (CHOSEN_BIAS_PRECISION_0),
       .BIAS_PRECISION_1   (CHOSEN_BIAS_PRECISION_1),
+
+      .QKV_PRECISION_0(QKV_PRECISION_0),
+      .QKV_PRECISION_1(QKV_PRECISION_1),
+      .QKMM_OUT_PRECISION_0(QKMM_OUT_PRECISION_0),
+      .QKMM_OUT_PRECISION_1(QKMM_OUT_PRECISION_1),
+      .SOFTMAX_EXP_PRECISION_0(SOFTMAX_EXP_PRECISION_0),
+      .SOFTMAX_EXP_PRECISION_1(SOFTMAX_EXP_PRECISION_1),
+      .SOFTMAX_OUT_DATA_PRECISION_1(SOFTMAX_OUT_PRECISION_1),
+      .SVMM_OUT_PRECISION_0(SVMM_OUT_PRECISION_0),
+      .SVMM_OUT_PRECISION_1(SVMM_OUT_PRECISION_1),
+
+      .WEIGHT_PROJ_TENSOR_SIZE_DIM_0(PROJ_WEIGHT_TENSOR_SIZE_DIM_0),
+      .WEIGHT_PROJ_TENSOR_SIZE_DIM_1(PROJ_WEIGHT_TENSOR_SIZE_DIM_1),
+      .WEIGHT_PROJ_PARALLELISM_DIM_0(PROJ_WEIGHT_PARALLELISM_DIM_0),
+      .WEIGHT_PROJ_PARALLELISM_DIM_1(PROJ_WEIGHT_PARALLELISM_DIM_1),
+      .WEIGHT_PROJ_PRECISION_0(PROJ_WEIGHT_PRECISION_0),
+      .WEIGHT_PROJ_PRECISION_1(PROJ_WEIGHT_PRECISION_1),
+      .BIAS_PROJ_PRECISION_0(PROJ_BIAS_PRECISION_0),
+      .BIAS_PROJ_PRECISION_1(PROJ_BIAS_PRECISION_1),
+
 
       .DATA_OUT_0_TENSOR_SIZE_DIM_0   (DATA_OUT_0_TENSOR_SIZE_DIM_0),
       .DATA_OUT_0_TENSOR_SIZE_DIM_1   (DATA_OUT_0_TENSOR_SIZE_DIM_1),
@@ -177,29 +222,37 @@ module fixed_self_attention_single_precision_wrapper #(
       .data_in_0_valid(data_in_0_valid),
       .data_in_0_ready(data_in_0_ready),
 
-      .weight_query      (query_weight),
-      .weight_query_valid(query_weight_valid),
-      .weight_query_ready(query_weight_ready),
+      .query_weight      (query_weight),
+      .query_weight_valid(query_weight_valid),
+      .query_weight_ready(query_weight_ready),
 
-      .bias_query      (query_bias),
-      .bias_query_valid(query_bias_valid),
-      .bias_query_ready(query_bias_ready),
+      .query_bias      (query_bias),
+      .query_bias_valid(query_bias_valid),
+      .query_bias_ready(query_bias_ready),
 
-      .weight_key      (key_weight),
-      .weight_key_valid(key_weight_valid),
-      .weight_key_ready(key_weight_ready),
+      .key_weight      (key_weight),
+      .key_weight_valid(key_weight_valid),
+      .key_weight_ready(key_weight_ready),
 
-      .bias_key      (key_bias),
-      .bias_key_valid(key_bias_valid),
-      .bias_key_ready(key_bias_ready),
+      .key_bias      (key_bias),
+      .key_bias_valid(key_bias_valid),
+      .key_bias_ready(key_bias_ready),
 
-      .weight_value      (value_weight),
-      .weight_value_valid(value_weight_valid),
-      .weight_value_ready(value_weight_ready),
+      .value_weight      (value_weight),
+      .value_weight_valid(value_weight_valid),
+      .value_weight_ready(value_weight_ready),
 
-      .bias_value      (value_bias),
-      .bias_value_valid(value_bias_valid),
-      .bias_value_ready(value_bias_ready),
+      .value_bias      (value_bias),
+      .value_bias_valid(value_bias_valid),
+      .value_bias_ready(value_bias_ready),
+
+      .proj_weight(proj_weight),
+      .proj_weight_valid(proj_weight_valid),
+      .proj_weight_ready(proj_weight_ready),
+
+      .proj_bias(proj_bias),
+      .proj_bias_valid(proj_bias_valid),
+      .proj_bias_ready(proj_bias_ready),
 
       .data_out_0      (data_out_0),
       .data_out_0_valid(data_out_0_valid),

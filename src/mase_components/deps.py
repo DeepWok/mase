@@ -352,7 +352,7 @@ MASE_HW_DEPS = {
     ],
     "arithmetic/mac": ["fixed_arithmetic", "float_arithmetic"],
     # ViT
-    "vision_models/vit/fixed_self_attention_head": [
+    "vision_models/vit/fixed_vit_attention_head": [
         "vision_models/attention",
         "cast",
         "memory",
@@ -364,8 +364,9 @@ MASE_HW_DEPS = {
         "scalar_operators/fixed",
         "generated_lut",
     ],
-    "vision_models/vit/fixed_self_attention": [
+    "vision_models/vit/fixed_vit_attention": [
         "vision_models/vit",
+        "transformer_layers",
         "cast",
         "memory",
         "common",

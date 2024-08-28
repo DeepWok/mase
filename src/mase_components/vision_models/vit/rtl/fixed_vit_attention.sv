@@ -1,10 +1,9 @@
 `timescale 1ns / 1ps
-module fixed_self_attention #(
+module fixed_vit_attention #(
     // currently assume weights are all transposed
     // currently force weight dim keep same
 
     parameter NUM_HEADS  = 4,
-    parameter ACTIVATION = 0,
 
     parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 8,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 2,
@@ -282,12 +281,11 @@ module fixed_self_attention #(
 
   for (genvar head = 0; head < NUM_HEADS; head++) begin: g_attention_head
 
-    fixed_self_attention_head #(
+    fixed_vit_attention_head #(
         .IN_DATA_TENSOR_SIZE_DIM_0   (HEAD_OUT_0_TENSOR_SIZE_DIM_0 / NUM_HEADS),
         .IN_DATA_TENSOR_SIZE_DIM_1   (HEAD_OUT_0_TENSOR_SIZE_DIM_1),
         .IN_DATA_PARALLELISM_DIM_0   (HEAD_OUT_0_PARALLELISM_DIM_0),
         .IN_DATA_PARALLELISM_DIM_1   (HEAD_OUT_0_PARALLELISM_DIM_1),
-        .ACTIVATION                  (ACTIVATION),
         .IN_DATA_PRECISION_0         (QKV_PRECISION_0),
         .IN_DATA_PRECISION_1         (QKV_PRECISION_1),
         .QKMM_OUT_PRECISION_0        (QKMM_OUT_PRECISION_0),

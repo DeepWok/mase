@@ -211,4 +211,10 @@ INTERNAL_COMP = {
             ],
         }
     ],
+    "vit_self_attention_integer": [
+        {
+            "name": "fixed_vit_attention_single_precision_wrapper",
+            "dependence_files": ["vision_models/vit/rtl/fixed_vit_attention_single_precision_wrapper.sv"],
+        }
+    ],
 }
