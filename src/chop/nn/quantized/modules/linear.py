@@ -115,7 +115,7 @@ class LinearInteger(_LinearBase):
         self.b_quantizer = partial(
             base_quantizer, width=b_width, frac_width=b_frac_width
         )
-        if (out_config is not None) or (out_width is not None):
+        if (out_config is not None):
             self.out_quantizer = partial(
                 base_quantizer, width=out_width, frac_width=out_frac_width
             )
