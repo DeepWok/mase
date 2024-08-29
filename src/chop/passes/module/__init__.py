@@ -1,4 +1,4 @@
-from .analysis import calculate_avg_bits_module_analysis_pass
+from .analysis import calculate_avg_bits_module_analysis_pass, autosharding_module_analysis_pass
 from .transforms import quantize_module_transform_pass
 
 ANALYSIS_PASSES = ["calculate_avg_bits_module_analysis_pass"]
