@@ -17,18 +17,18 @@ from typing import (
 
 import torch
 from torch import Tensor
-from torch.distributed.tensor._op_schema import (
+from torch.distributed._tensor._op_schema import (
     OpStrategy,
     PlacementStrategy,
 )
-from torch.distributed.tensor.api import Shard
-from torch.distributed.tensor._ops.utils import (
+from torch.distributed._tensor.api import Shard
+from torch.distributed._tensor.ops.utils import (
     generate_redistribute_costs,
     normalize_dim,
     normalize_dims,
     prod,
 )
-from torch.distributed.tensor.placement_types import (
+from torch.distributed._tensor.placement_types import (
     DTensorSpec,
     Placement,
     Replicate,

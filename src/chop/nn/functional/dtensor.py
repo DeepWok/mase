@@ -3,10 +3,10 @@ from typing import Tuple
 import torch
 import torch.fx as fx
 from torch.distributed.device_mesh import DeviceMesh
-from torch.distributed.tensor.placement_types import DTensorSpec, TensorMeta
-from torch.distributed.tensor._redistribute import redistribute_local_tensor
+from torch.distributed._tensor.placement_types import DTensorSpec, TensorMeta
+from torch.distributed._tensor._redistribute import redistribute_local_tensor
 
-from torch.distributed.tensor.placement_types import Placement
+from torch.distributed._tensor.placement_types import Placement
 
 from chop.ir.graph import MaseMetadata
 from chop.distributed.tensor import DTensor

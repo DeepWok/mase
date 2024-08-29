@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.distributed as dist
-from torch.distributed.tensor import DeviceMesh
+from torch.distributed._tensor import DeviceMesh
 
 from chop.tools import get_logger
 from chop.distributed.tensor import distribute_tensor
@@ -80,7 +80,7 @@ def dist_model_fn(
     tensor_sharding_map={},
 ) -> None:
     """
-    This function gets called by torch.distributed.tensor.distribute_module on each module in the model.
+    This function gets called by torch.distributed._tensor.distribute_module on each module in the model.
     Each tensor in each module is distributed according to the sharding configuration in tensor_sharding_map.
 
     Args:

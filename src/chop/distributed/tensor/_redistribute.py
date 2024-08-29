@@ -5,8 +5,8 @@ from typing import cast, Dict, List, NamedTuple, Tuple
 
 import torch
 import torch.distributed._functional_collectives as funcol
-from torch.distributed.tensor.device_mesh import DeviceMesh
-from torch.distributed.tensor.placement_types import (
+from torch.distributed._tensor.device_mesh import DeviceMesh
+from torch.distributed._tensor.placement_types import (
     DTensorSpec,
     Partial,
     Placement,

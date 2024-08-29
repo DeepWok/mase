@@ -4,9 +4,9 @@ from typing import List, Sequence, Tuple
 import numpy as np
 
 from torch._prims_common import ShapeType
-from torch.distributed.tensor import DeviceMesh
+from torch.distributed._tensor import DeviceMesh
 
-from torch.distributed.tensor.placement_types import Placement, Shard
+from torch.distributed._tensor.placement_types import Placement, Shard
 
 
 def _mesh_to_coordinate(mesh, device_type):
@@ -90,7 +90,7 @@ def compute_local_shape_and_global_offset(
     my_coordinate: List[int],
 ) -> Tuple[Tuple[int, ...], Tuple[int, ...]]:
     """
-    Same as torch.distributed.tensor._utils.compute_local_shape_and_global_offset but
+    Same as torch.distributed._tensor._utils.compute_local_shape_and_global_offset but
     with custom my_coordinate input. This is the modified implementation for visualize_sharding.
     """
 

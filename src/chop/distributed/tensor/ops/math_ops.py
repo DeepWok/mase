@@ -6,7 +6,7 @@ from enum import Enum
 from typing import cast, List, Optional, Sequence, Tuple, Union
 
 import torch
-from torch.distributed.tensor._op_schema import (
+from torch.distributed._tensor._op_schema import (
     OpSchema,
     OpStrategy,
     PlacementList,
@@ -14,7 +14,7 @@ from torch.distributed.tensor._op_schema import (
     RuntimeSchemaInfo,
     TupleStrategy,
 )
-from torch.distributed.tensor._ops.utils import (
+from torch.distributed._tensor.ops.utils import (
     as_list,
     expand_to_full_mesh_op_strategy,
     generate_redistribute_costs,
@@ -26,7 +26,7 @@ from torch.distributed.tensor._ops.utils import (
 from torch.distributed.utils import (
     normalize_to_torch_size,
 )
-from torch.distributed.tensor.placement_types import (
+from torch.distributed._tensor.placement_types import (
     DTensorSpec,
     Partial,
     Placement,

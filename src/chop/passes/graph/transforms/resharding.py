@@ -2,7 +2,7 @@ import operator
 
 import torch
 import torch.fx as fx
-from torch.distributed.tensor.placement_types import Replicate, Shard
+from torch.distributed._tensor.placement_types import Replicate, Shard
 
 from chop.tools import get_logger
 from chop.nn.functional.dtensor import redistribute_dtensor
@@ -115,7 +115,7 @@ def _insert_resharding_nodes(mg, pass_args={}):
     # Insert DTensor import at the top of code
     def insert_imports(body):
         return [
-            "from torch.distributed.tensor.placement_types import Replicate, Shard, Partial; sum = 'sum' \n",
+            "from torch.distributed._tensor.placement_types import Replicate, Shard, Partial; sum = 'sum' \n",
             *body,
         ]
 

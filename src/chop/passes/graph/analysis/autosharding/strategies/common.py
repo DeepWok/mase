@@ -2,8 +2,8 @@ import itertools
 
 import torch
 import torch.nn.functional as F
-from torch.distributed.tensor._op_schema import OpStrategy, PlacementStrategy
-from torch.distributed.tensor.placement_types import (
+from torch.distributed._tensor._op_schema import OpStrategy, PlacementStrategy
+from torch.distributed._tensor.placement_types import (
     Replicate,
     Shard,
     DTensorSpec,

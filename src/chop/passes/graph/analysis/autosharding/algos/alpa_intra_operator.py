@@ -5,13 +5,13 @@ from copy import copy
 
 import torch
 import torch.fx as fx
-from torch.distributed.tensor._collective_utils import redistribute_cost
-from torch.distributed.tensor._op_schema import (
+from torch.distributed._tensor._collective_utils import redistribute_cost
+from torch.distributed._tensor._op_schema import (
     DTensorSpec,
     OpStrategy,
     PlacementStrategy,
 )
-from torch.distributed.tensor.placement_types import Shard, Replicate
+from torch.distributed._tensor.placement_types import Shard, Replicate
 
 from chop.tools import get_logger
 from ..mesh_model import MeshModel

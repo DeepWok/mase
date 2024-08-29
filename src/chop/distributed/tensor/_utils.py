@@ -1,9 +1,9 @@
 from typing import cast, List, Sequence, Tuple
 
 import torch
-import torch.distributed.tensor.api as dtensor
+import torch.distributed._tensor.api as dtensor
 from torch._prims_common import ShapeType
-from torch.distributed.tensor.placement_types import (
+from torch.distributed._tensor.placement_types import (
     DTensorSpec,
     Partial,
     Placement,

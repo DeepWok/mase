@@ -2,14 +2,14 @@
 from typing import cast, Dict, List, Optional, Sequence, Tuple, TYPE_CHECKING
 
 import torch
-from torch.distributed.tensor._op_schema import (
+from torch.distributed._tensor._op_schema import (
     OutputSpecType,
 )
-from torch.distributed.tensor._tp_conv import (
+from torch.distributed._tensor._tp_conv import (
     convolution_backward_handler,
     convolution_handler,
 )
-from torch.distributed.tensor.placement_types import (
+from torch.distributed._tensor.placement_types import (
     DTensorSpec,
     Replicate,
     TensorMeta,

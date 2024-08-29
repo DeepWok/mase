@@ -1,5 +1,5 @@
 from typing import Sequence, cast
-from torch.distributed.tensor.placement_types import DTensorSpec, Shard
+from torch.distributed._tensor.placement_types import DTensorSpec, Shard
 
 
 def is_tensor_shardable(shape: Sequence[int], spec: DTensorSpec) -> bool:

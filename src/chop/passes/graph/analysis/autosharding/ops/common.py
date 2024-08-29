@@ -6,15 +6,15 @@ import torch
 import torch.nn.functional as F
 
 from torch.distributed.device_mesh import DeviceMesh
-from torch.distributed.tensor._op_schema import OpStrategy, PlacementStrategy
-from torch.distributed.tensor.placement_types import (
+from torch.distributed._tensor._op_schema import OpStrategy, PlacementStrategy
+from torch.distributed._tensor.placement_types import (
     Placement,
     Replicate,
     Shard,
     DTensorSpec,
     TensorMeta,
 )
-from torch.distributed.tensor._ops.utils import (
+from torch.distributed._tensor.ops.utils import (
     is_tensor_shardable,
     generate_redistribute_costs,
 )
