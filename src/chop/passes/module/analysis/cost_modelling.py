@@ -1,3 +1,4 @@
+import os
 import math
 import numpy as np
 from copy import copy
@@ -5,9 +6,26 @@ from functools import lru_cache
 
 import torch
 from torch.nn import functional as F
+import torch.distributed as dist
+import torch.multiprocessing as mp
+from torch.multiprocessing import Queue, set_start_method
 
 import vllm
 from vllm.attention import Attention as VllmAttention
+
+VllmLinear = vllm.model_executor.layers.linear.LinearBase
+
+_ALL_REDUCE_COST_DB = {
+    (8, 1536): 0.2580975145101547,
+    (8, 4608): 0.4603813052177429,
+    (8, 6144): 0.5322111986185375,
+}
+
+_ALL_GATHER_COST_DB = {
+    (8, 1536): 0.26789389503629585,
+    (8, 4608): 0.24845608441453232,
+    (8, 6144): 0.3390117042943051,
+}
 
 # Utilities
 # ================================
@@ -37,43 +55,105 @@ def _profile_op(
     return out, np.mean(elapsed[warmup_iters:])
 
 
-def allreduce_cost(
-    bytes_gb: float,
-    intra_device_latency: float,
-    intra_device_bandwidth: float,
-) -> float:
-    world_size = torch.distributed.get_world_size()
-    mesh_dim_bandwidth = intra_device_bandwidth
-    # allreduce have almost 2x comm bytes compare to allgather/reduce_scatter
-    num_hops = 2 * world_size - 1
+def _profile_distributed_op(
+    rank,
+    world_size,
+    result_queue,
+    repeat,
+    warmup_iters,
+    op,
+    global_shape,
+):
+    os.environ["MASTER_ADDR"] = "localhost"
+    os.environ["MASTER_PORT"] = "12356"
+    os.environ["RANK"] = str(rank)
 
-    latency = 6.6 + num_hops * intra_device_latency
-    bw = (bytes_gb * num_hops / world_size) / mesh_dim_bandwidth
-    return latency + bw * 1e6
+    # Initialize
+    device = torch.device("cuda", rank)
+    dist.init_process_group("nccl", rank=rank, world_size=world_size, device_id=device)
+    torch.cuda.set_device(device)
+
+    start_event = [
+        torch.cuda.Event(enable_timing=True, blocking=True) for _ in range(repeat)
+    ]
+    end_event = [
+        torch.cuda.Event(enable_timing=True, blocking=True) for _ in range(repeat)
+    ]
+
+    for idx in range(repeat):
+        if op == "allgather":
+            output_tensor = torch.zeros(global_shape, device=device)
+            local_shape = [global_shape[0], global_shape[1] // world_size]
+            local_tensor = torch.randn(local_shape, device=device)
+
+            dist.barrier()
+            start_event[idx].record()
+
+            dist.all_gather_into_tensor(output_tensor, local_tensor)
+            output_tensor = output_tensor.movedim(0, 1)
+            output_tensor = output_tensor.reshape(global_shape)
+
+        elif op == "allreduce":
+            local_tensor = torch.randn(global_shape, device=device)
+
+            dist.barrier()
+            start_event[idx].record()
+
+            dist.all_reduce(local_tensor)
+
+        dist.barrier()
+        end_event[idx].record()
+
+        torch.cuda.synchronize(device=device)
+
+    elapsed = [start_event[idx].elapsed_time(end_event[idx]) for idx in range(repeat)]
+
+    avg = sum(elapsed[warmup_iters:]) / len(elapsed[warmup_iters:])
+
+    if rank == 0:
+        result_queue.put(avg)
+
+    dist.barrier()
+    dist.destroy_process_group()
+
+
+# @lru_cache(maxsize=128, typed=False)
+def allreduce_cost(
+    output_shape: list,
+    repeat: int = 100,
+    warmup_iters: int = 5,
+) -> float:
+    cost = _ALL_REDUCE_COST_DB.get(tuple(output_shape), None)
+    if cost is None:
+        raise ValueError(f"Unknown allreduce cost for shape: {output_shape}")
+
+    return cost
 
 
 def allgather_cost(
-    bytes_gb: float,
-    intra_device_latency: float,
-    intra_device_bandwidth: float,
+    output_shape: list,
+    repeat: int = 100,
+    warmup_iters: int = 5,
 ) -> float:
-    world_size = torch.distributed.get_world_size()
-    num_hops = world_size - 1
-    latency = 6.6 + num_hops * intra_device_latency
-    bw = (bytes_gb * num_hops / world_size) / intra_device_bandwidth
-    return latency + bw * 1e6
+    cost = _ALL_GATHER_COST_DB.get(tuple(output_shape), None)
+    if cost is None:
+        raise ValueError(f"Unknown allgather cost for shape: {output_shape}")
+
+    return cost
 
 
 def _get_output_shape_from_layer_type(
     layer: torch.nn.Module,
     data_size: int,
 ):
-    if isinstance(layer, vllm.model_executor.layers.linear.LinearBase):
-        return torch.Size([data_size, layer.weight.shape[0]])
-    if isinstance(layer, VllmAttention):
-        return torch.Size([data_size, layer.impl.head_size * layer.impl.num_heads])
+    if isinstance(layer, VllmLinear):
+        size = torch.Size([data_size, layer.weight.shape[0]])
+    elif isinstance(layer, VllmAttention):
+        size = torch.Size([data_size, layer.impl.head_size * layer.impl.num_heads])
     else:
         raise ValueError(f"Unsupported layer type: {layer.__class__.__name__}")
+
+    return list(size)
 
 
 # Compute cost
@@ -214,7 +294,7 @@ def _get_attention_compute_cost(
 
 
 def _get_compute_cost_from_layer(layer, layer_strategies, data_size):
-    if isinstance(layer, vllm.model_executor.layers.linear.LinearBase):
+    if isinstance(layer, VllmLinear):
         return _get_linear_compute_cost(
             layer,
             layer_strategies,
@@ -249,13 +329,8 @@ def _get_intra_op_comms_cost(
     comms_cost = np.zeros(len(layer_strategies))
     for idx, strategy in enumerate(layer_strategies):
         if strategy == "row":
-            comms_cost[idx] = allreduce_cost(
-                bytes_gb=math.prod(_get_output_shape_from_layer_type(layer, data_size))
-                * 4
-                / 1e9,
-                intra_device_latency=lat,
-                intra_device_bandwidth=bw,
-            )
+            out_shape = _get_output_shape_from_layer_type(layer, data_size)
+            comms_cost[idx] = allreduce_cost(output_shape=out_shape)
 
     return comms_cost * 1e-6  # convert back to seconds
 
@@ -313,14 +388,8 @@ def _get_resharding_cost(
     )
 
     if not skip_allgather:
-        cost = allgather_cost(
-            bytes_gb=world_size
-            * math.prod(_get_output_shape_from_layer_type(parent_module, data_size))
-            * 4
-            / 1e9,
-            intra_device_latency=lat,
-            intra_device_bandwidth=bw,
-        )
+        out_shape = _get_output_shape_from_layer_type(parent_module, data_size)
+        cost = allgather_cost(output_shape=out_shape)
     # elif...
     else:
         cost = 0
