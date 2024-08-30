@@ -555,10 +555,6 @@ def _annotate_arg_metadata(
 
     # * Handle kwargs
     for k, v in kwargs.items():
-        try:
-            asdf = func_data[k]
-        except:
-            breakpoint()
         if func_data[k] == "data_in":
             # rename this to mase data_in_number
             shape = get_shape(v)
