@@ -18,8 +18,8 @@ def add_common_metadata(model_cls_name: str) -> MaseGraph:
     _CONFIG_FOR_DOC = importlib.import_module(model_module_name)._CONFIG_FOR_DOC
     config = getattr(transformers, _CONFIG_FOR_DOC)()
 
-    with init_empty_weights():
-        model = AutoModel.from_config(config)
+    # with init_empty_weights():
+    model = AutoModel.from_config(config)
 
     mg = MaseGraph(model)
     mg, _ = passes.init_metadata_analysis_pass(mg)
@@ -34,7 +34,7 @@ def add_common_metadata(model_cls_name: str) -> MaseGraph:
             128,
             config.hidden_size,
         ),
-        device="meta",
+        # device="meta",
     )
     mg, _ = passes.add_common_metadata_analysis_pass(
         mg,
@@ -56,5 +56,3 @@ for model_cls_name in _SUPPORTED_MODELS:
     fn.__name__ = f"test_add_common_metadata_{model_cls_name}"
 
     globals()[fn.__name__] = fn
-
-# test_add_common_metadata_AlbertForMaskedLM()

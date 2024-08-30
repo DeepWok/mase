@@ -289,6 +289,13 @@ func_data = {
     "tensor": {
         "data": "data_in",
     },
+    # https://pytorch.org/docs/stable/generated/torch.nn.functional.dropout.html
+    "dropout": {
+        "input": "data_in",
+        "p": "config",
+        "training": "config",
+        "inplace": "config",
+    },
 }
 
 module_data = {
@@ -548,6 +555,10 @@ def _annotate_arg_metadata(
 
     # * Handle kwargs
     for k, v in kwargs.items():
+        try:
+            asdf = func_data[k]
+        except:
+            breakpoint()
         if func_data[k] == "data_in":
             # rename this to mase data_in_number
             shape = get_shape(v)
