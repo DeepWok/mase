@@ -15,12 +15,14 @@ from vllm.attention import Attention as VllmAttention
 
 VllmLinear = vllm.model_executor.layers.linear.LinearBase
 
+# costs are in ms
 _ALL_REDUCE_COST_DB = {
     (8, 1536): 0.2580975145101547,
     (8, 4608): 0.4603813052177429,
     (8, 6144): 0.5322111986185375,
 }
 
+# costs are in ms
 _ALL_GATHER_COST_DB = {
     (8, 1536): 0.26789389503629585,
     (8, 4608): 0.24845608441453232,
@@ -52,7 +54,7 @@ def _profile_op(
 
     elapsed = [start_event[idx].elapsed_time(end_event[idx]) for idx in range(repeat)]
 
-    return out, np.mean(elapsed[warmup_iters:])
+    return out, np.mean(elapsed[warmup_iters:]) * 1e-3  # convert back to seconds
 
 
 def _profile_distributed_op(
@@ -127,7 +129,7 @@ def allreduce_cost(
     if cost is None:
         raise ValueError(f"Unknown allreduce cost for shape: {output_shape}")
 
-    return cost
+    return cost * 1e-3  # convert back to seconds
 
 
 def allgather_cost(
@@ -139,7 +141,7 @@ def allgather_cost(
     if cost is None:
         raise ValueError(f"Unknown allgather cost for shape: {output_shape}")
 
-    return cost
+    return cost * 1e-3  # convert back to seconds
 
 
 def _get_output_shape_from_layer_type(
@@ -275,12 +277,13 @@ def _get_attention_compute_cost(
 
     cost_vector = []
     for strategy in layer_strategies:
-        local_shape = copy(global_shape)
 
         if strategy == "replicated":
-            pass
-        elif strategy == "column":
+            local_shape = copy(global_shape)
+        elif strategy == "head":
             local_shape = torch.Size([global_shape[0], global_shape[1] // world_size])
+        else:
+            raise ValueError(f"Unknown strategy: {strategy}")
 
         elapsed = _cached_attention_cost_from_local_shapes(
             local_shape,
@@ -332,7 +335,7 @@ def _get_intra_op_comms_cost(
             out_shape = _get_output_shape_from_layer_type(layer, data_size)
             comms_cost[idx] = allreduce_cost(output_shape=out_shape)
 
-    return comms_cost * 1e-6  # convert back to seconds
+    return comms_cost
 
 
 # Resharding cost
@@ -414,4 +417,4 @@ def _get_resharding_cost_matrix(
                 )
             )
 
-    return resharding_costs * 1e-6  # convert back to seconds
+    return resharding_costs
