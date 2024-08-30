@@ -1,4 +1,3 @@
-import torch
 import pytest
 import importlib
 
@@ -12,7 +11,7 @@ from chop import MaseGraph
 import chop.passes as passes
 
 
-def add_common_metadata(model_cls_name: str) -> MaseGraph:
+def create_masegraph(model_cls_name: str) -> MaseGraph:
     model_cls = getattr(transformers, model_cls_name)
     model_module_name = model_cls.__module__
     _CONFIG_FOR_DOC = importlib.import_module(model_module_name)._CONFIG_FOR_DOC
@@ -23,38 +22,15 @@ def add_common_metadata(model_cls_name: str) -> MaseGraph:
 
     mg = MaseGraph(model)
     mg, _ = passes.init_metadata_analysis_pass(mg)
-
-    # mg.fx_graph.print_tabular()
-
-    input_ids = torch.randint(
-        0,
-        config.vocab_size,
-        (
-            1,
-            128,
-            config.hidden_size,
-        ),
-        device="meta",
-    )
-    mg, _ = passes.add_common_metadata_analysis_pass(
-        mg,
-        pass_args={
-            "dummy_in": {
-                "input_ids": input_ids,
-            },
-        },
-    )
     return mg
 
 
 for model_cls_name in _SUPPORTED_MODELS:
 
-    def test_add_common_metadata():
-        mg = add_common_metadata(model_cls_name)
+    def test_create_masegraph():
+        mg = create_masegraph(model_cls_name)
 
-    fn = test_add_common_metadata
-    fn.__name__ = f"test_add_common_metadata_{model_cls_name}"
+    fn = test_create_masegraph
+    fn.__name__ = f"test_create_masegraph_{model_cls_name}"
 
     globals()[fn.__name__] = fn
-
-# test_add_common_metadata_AlbertForMaskedLM()

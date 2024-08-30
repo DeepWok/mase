@@ -285,6 +285,10 @@ func_data = {
         "device": "config",
         "requires_grad": "config",
     },
+    # tensor constructor
+    "tensor": {
+        "data": "data_in",
+    },
 }
 
 module_data = {
@@ -403,6 +407,14 @@ method_data = {
     "long": {"memory_format": "config"},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.type_as.html
     "type_as": {"tensor": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.index_select.html
+    "index_select": {
+        "input": "data_in",
+        "dim": "config",
+        "index": "data_in",
+    },
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.detach.html
+    "detach": {"input": "data_in"},
 }
 
 # ----------------------------------------------------------

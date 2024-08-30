@@ -34,6 +34,7 @@ requirements = [
     "timm",
     "pytorch-nlp",
     "datasets",
+    "evaluate",
     "ipython",
     "ipdb",
     "sentencepiece",
