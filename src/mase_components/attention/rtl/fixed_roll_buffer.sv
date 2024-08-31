@@ -99,6 +99,11 @@ matrix_unflatten #(
   always_comb begin
     next_self = self;
 
+    if(self.state == 1)
+      next_self.write_counter <= 0;
+    if(data_in_0_ready && data_in_0_valid)
+      next_self.write_counter <= next_self.write_counter + 1;  
+
     if(self.state == 1) begin
       next_self.prev_buffer_size = buffer_size;
       next_self.read_ptr = 0;
@@ -201,12 +206,6 @@ matrix_unflatten #(
     end
   end
 
-  always_ff @(posedge clk) begin
-    if(self.state == 1)
-      self.write_counter <= 0;
-    if(data_in_0_ready && data_in_0_valid)
-      self.write_counter <= self.write_counter + 1;  
-  end
 
   assign empty = (self.size == 0);
   assign full  = (self.size == buffer_size);

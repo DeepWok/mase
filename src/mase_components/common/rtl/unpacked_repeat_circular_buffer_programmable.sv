@@ -9,7 +9,10 @@ module unpacked_repeat_circular_buffer_programmable #(
     parameter DATA_WIDTH = 32,
     parameter IN_NUM = 1,
     parameter MAX_REPEAT = 2,
-    parameter MAX_SIZE = 4
+    parameter MAX_SIZE = 4,
+
+    localparam SIZE_WIDTH = $clog2(MAX_SIZE),
+    localparam REPS_WIDTH = $clog2(MAX_REPEAT)
 ) (
     input logic clk,
     input logic rst,
@@ -28,8 +31,7 @@ module unpacked_repeat_circular_buffer_programmable #(
     input  logic                  out_ready
 );
   
-  localparam SIZE_WIDTH = $clog2(MAX_SIZE);
-  localparam REPS_WIDTH = $clog2(MAX_REPEAT);
+
 
   logic [DATA_WIDTH * IN_NUM - 1:0] data_in_flatten;
   logic [DATA_WIDTH * IN_NUM - 1:0] data_out_flatten;

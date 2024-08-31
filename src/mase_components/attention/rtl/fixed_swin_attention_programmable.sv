@@ -16,8 +16,6 @@ module fixed_swin_attention_programmable #(
     localparam DATA_IN_0_MAX_TENSOR_SIZE_DIM_0_WIDTH = $clog2(DATA_IN_0_MAX_TENSOR_SIZE_DIM_0),
     localparam DATA_IN_0_MAX_TENSOR_SIZE_DIM_1_WIDTH = $clog2(DATA_IN_0_MAX_TENSOR_SIZE_DIM_1),
 
-    localparam IN_DATA_MAX_BLOCK_PER_HEAD = DATA_IN_0_MAX_DEPTH_DIM_0/NUM_HEADS,
-    localparam IN_DATA_MAX_BLOCK_PER_HEAD_WIDTH = $clog2(IN_DATA_MAX_BLOCK_PER_HEAD),
 
     parameter WEIGHTS_PRE_TRANSPOSED = 0,
     parameter WEIGHT_MAX_TENSOR_SIZE_DIM_0 = 768,
@@ -35,8 +33,11 @@ module fixed_swin_attention_programmable #(
     localparam WEIGHT_MAX_DEPTH_MULT_WIDTH = $clog2(WEIGHT_MAX_DEPTH_DIM_1) + $clog2(WEIGHT_MAX_DEPTH_DIM_0),
 
     
+    localparam IN_DATA_MAX_BLOCK_PER_HEAD = WEIGHT_MAX_DEPTH_DIM_0/NUM_HEADS,
+    localparam IN_DATA_MAX_BLOCK_PER_HEAD_WIDTH = $clog2(IN_DATA_MAX_BLOCK_PER_HEAD),
 
-    parameter HAS_BIAS = 1,
+
+    parameter HAS_BIAS = 0,
     parameter BIAS_MAX_TENSOR_SIZE_DIM_0 = 64,
     parameter BIAS_MAX_TENSOR_SIZE_DIM_1 = 20,
     parameter BIAS_PARALLELISM_DIM_0 = 4,
@@ -55,21 +56,24 @@ module fixed_swin_attention_programmable #(
     parameter DATA_OUT_0_PARALLELISM_DIM_0 = WEIGHT_PARALLELISM_DIM_0,
     parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1,
     parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0,
-    parameter DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1
+    parameter DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1,
+
+    localparam  Q_DIM_MAX_WIDTH = (WEIGHT_MAX_DEPTH_DIM_0_WIDTH > DATA_IN_0_MAX_DEPTH_DIM_1_WIDTH) ? WEIGHT_MAX_DEPTH_DIM_0_WIDTH : DATA_IN_0_MAX_DEPTH_DIM_1_WIDTH,
+    localparam  Q_MAX_DIM = (WEIGHT_MAX_TENSOR_SIZE_DIM_0/NUM_HEADS > DATA_IN_0_MAX_TENSOR_SIZE_DIM_1) ? WEIGHT_MAX_TENSOR_SIZE_DIM_0/NUM_HEADS : DATA_IN_0_MAX_TENSOR_SIZE_DIM_1
 
 ) (
     input logic clk,
     input logic rst,
 
-    input logic [DATA_IN_0_MAX_DEPTH_DIM_0_WIDTH:0] data_in_0_depth_dim_1,
+    input logic [DATA_IN_0_MAX_DEPTH_DIM_1_WIDTH:0] data_in_0_depth_dim_1,
     input logic [WEIGHT_MAX_TENSOR_SIZE_DIM_0_WIDTH:0] weight_tensor_size_dim0,
     input logic [WEIGHT_MAX_DEPTH_DIM_0_WIDTH:0] weight_depth_dim_0,
     input logic [WEIGHT_MAX_DEPTH_DIM_1_WIDTH:0] weight_depth_dim_1,  
     input logic [WEIGHT_MAX_DEPTH_MULT_WIDTH:0] weight_depth_mult,
-    input logic [IN_DATA_MAX_BLOCK_PER_HEAD_WIDTH:0] block_per_head,
-    input logic [DATA_IN_0_MAX_DEPTH_DIM_0_WIDTH:0] q_depth_dim_0,
-    input logic [WEIGHT_MAX_DEPTH_DIM_1_WIDTH:0] q_depth_dim_1,
-    input logic [WEIGHT_MAX_DEPTH_DIM_1_WIDTH + DATA_IN_0_MAX_DEPTH_DIM_0_WIDTH:0] q_depth_mult,
+    input logic [IN_DATA_MAX_BLOCK_PER_HEAD_WIDTH+1:0] block_per_head,
+    input logic [Q_DIM_MAX_WIDTH:0] q_depth_dim_0,
+    input logic [Q_DIM_MAX_WIDTH:0] q_depth_dim_1,
+    input logic [WEIGHT_MAX_DEPTH_DIM_0_WIDTH + DATA_IN_0_MAX_DEPTH_DIM_1_WIDTH:0] q_depth_mult,
     input logic [WEIGHT_MAX_DEPTH_DIM_1_WIDTH:0] weight_out_depth_dim_1,
 
 
@@ -141,7 +145,8 @@ module fixed_swin_attention_programmable #(
 
   // Query
   logic [DATA_OUT_0_PRECISION_0-1:0] query[DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0-1:0];
-  logic joint_query_valid, joint_query_ready;
+  logic joint_query_valid;
+  logic [1:0]joint_query_ready;
   logic [NUM_HEADS-1:0] split_query_valid, split_query_ready;
 
   // Key
@@ -301,7 +306,7 @@ module fixed_swin_attention_programmable #(
 
       .data_in_0(query),
       .data_in_0_valid(query_adders_valid),
-      .data_in_0_ready(joint_query_ready),
+      .data_in_0_ready(joint_query_ready[0]),
 
       .data_in_1(bias_con),
       .data_in_1_valid(bias_con_valid),
@@ -339,7 +344,7 @@ module fixed_swin_attention_programmable #(
 
       .data_in_0(query),
       .data_in_0_valid(query_adders_valid),
-      .data_in_0_ready(joint_query_ready),
+      .data_in_0_ready(joint_query_ready[1]),
 
       .data_in_1(bias_pos),
       .data_in_1_valid(bias_pos_valid),
@@ -402,16 +407,16 @@ module fixed_swin_attention_programmable #(
   for (genvar head = 0; head < NUM_HEADS; head++) begin
 
     fixed_swin_attention_head_programmable #(
-        .IN_DATA_MAX_TENSOR_SIZE_DIM_0(DATA_IN_0_MAX_TENSOR_SIZE_DIM_0 / NUM_HEADS),
-        .IN_DATA_MAX_TENSOR_SIZE_DIM_1(DATA_IN_0_MAX_TENSOR_SIZE_DIM_1),
+        .IN_DATA_MAX_TENSOR_SIZE_DIM_0(Q_MAX_DIM),
+        .IN_DATA_MAX_TENSOR_SIZE_DIM_1(Q_MAX_DIM),
         .IN_DATA_PARALLELISM_DIM_0(WEIGHT_PARALLELISM_DIM_0),
         .IN_DATA_PARALLELISM_DIM_1(DATA_IN_0_PARALLELISM_DIM_1),
         .IN_DATA_PRECISION_0      (DATA_OUT_0_PRECISION_0),
         .IN_DATA_PRECISION_1      (DATA_OUT_0_PRECISION_1),
 
 
-        .OUT_DATA_MAX_TENSOR_SIZE_DIM_0(DATA_OUT_0_MAX_TENSOR_SIZE_DIM_0 / NUM_HEADS),
-        .OUT_DATA_MAX_TENSOR_SIZE_DIM_1(DATA_OUT_0_MAX_TENSOR_SIZE_DIM_1),
+        .OUT_DATA_MAX_TENSOR_SIZE_DIM_0(Q_MAX_DIM),
+        .OUT_DATA_MAX_TENSOR_SIZE_DIM_1(Q_MAX_DIM),
         .OUT_DATA_PARALLELISM_DIM_0(DATA_OUT_0_PARALLELISM_DIM_0),
         .OUT_DATA_PARALLELISM_DIM_1(DATA_OUT_0_PARALLELISM_DIM_1),
         .OUT_DATA_PRECISION_0      (DATA_OUT_0_PRECISION_0),

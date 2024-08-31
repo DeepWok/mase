@@ -18,7 +18,7 @@ module fixed_softermax_1d #(
     parameter  POW2_WIDTH      = 16,
     // POW2_FRAC_WIDTH should always be POW2_WIDTH - 1, since local values are
     // two to the power of a number in the range of (-inf, 0].
-    localparam POW2_FRAC_WIDTH = 15,
+    localparam POW2_FRAC_WIDTH = POW2_WIDTH - 1,
     parameter  OUT_WIDTH       = 8,
     parameter  OUT_FRAC_WIDTH  = 7
 ) (

@@ -21,7 +21,21 @@ module matrix_stream_transpose_programmable #(
     parameter COMPUTE_DIM1 = 2,
 
     // Other params
-    parameter DATA_WIDTH = 8
+    parameter DATA_WIDTH = 8,
+
+    localparam IN_MAX_DEPTH_DIM0 = TOTAL_MAX_DIM0 / COMPUTE_DIM0,
+    localparam IN_MAX_DEPTH_DIM1 = TOTAL_MAX_DIM1 / COMPUTE_DIM1,
+    localparam IN_MAX_DEPTH_DIM0_WIDTH = $clog2(IN_MAX_DEPTH_DIM0),
+    localparam IN_MAX_DEPTH_DIM1_WIDTH = $clog2(IN_MAX_DEPTH_DIM1),
+    localparam OUT_MAX_DEPTH_DIM0 = IN_MAX_DEPTH_DIM1,
+    localparam OUT_MAX_DEPTH_DIM1 = IN_MAX_DEPTH_DIM0,
+    localparam IN_ROW_COUNTER_WIDTH = $clog2(IN_MAX_DEPTH_DIM1) > 1 ? $clog2(IN_MAX_DEPTH_DIM1) : 1,
+    localparam IN_COL_COUNTER_WIDTH = $clog2(IN_MAX_DEPTH_DIM0) > 1 ? $clog2(IN_MAX_DEPTH_DIM0) : 1,
+    localparam OUT_ROW_COUNTER_WIDTH = $clog2(OUT_MAX_DEPTH_DIM1) > 1 ? $clog2(OUT_MAX_DEPTH_DIM1) : 1,
+    localparam OUT_COL_COUNTER_WIDTH = $clog2(OUT_MAX_DEPTH_DIM0) > 1 ? $clog2(OUT_MAX_DEPTH_DIM0) : 1,
+
+    localparam FIFO_DEPTH = IN_MAX_DEPTH_DIM1,
+    localparam FIFO_DATA_WIDTH = DATA_WIDTH * COMPUTE_DIM0 * COMPUTE_DIM1
 ) (
     input logic clk,
     input logic rst,
@@ -54,19 +68,7 @@ module matrix_stream_transpose_programmable #(
   // -----
   // let max(a, b) = (a > b) ? a : b;
 
-  localparam IN_MAX_DEPTH_DIM0 = TOTAL_MAX_DIM0 / COMPUTE_DIM0;
-  localparam IN_MAX_DEPTH_DIM1 = TOTAL_MAX_DIM1 / COMPUTE_DIM1;
-  localparam IN_MAX_DEPTH_DIM0_WIDTH = $clog2(IN_MAX_DEPTH_DIM0);
-  localparam IN_MAX_DEPTH_DIM1_WIDTH = $clog2(IN_MAX_DEPTH_DIM1);
-  localparam OUT_MAX_DEPTH_DIM0 = IN_MAX_DEPTH_DIM1;
-  localparam OUT_MAX_DEPTH_DIM1 = IN_MAX_DEPTH_DIM0;
-  localparam IN_ROW_COUNTER_WIDTH = $clog2(IN_MAX_DEPTH_DIM1) > 1 ? $clog2(IN_MAX_DEPTH_DIM1) : 1;
-  localparam IN_COL_COUNTER_WIDTH = $clog2(IN_MAX_DEPTH_DIM0) > 1 ? $clog2(IN_MAX_DEPTH_DIM0) : 1;
-  localparam OUT_ROW_COUNTER_WIDTH = $clog2(OUT_MAX_DEPTH_DIM1) > 1 ? $clog2(OUT_MAX_DEPTH_DIM1) : 1;
-  localparam OUT_COL_COUNTER_WIDTH = $clog2(OUT_MAX_DEPTH_DIM0) > 1 ? $clog2(OUT_MAX_DEPTH_DIM0) : 1;
 
-  localparam FIFO_DEPTH = IN_MAX_DEPTH_DIM1;
-  localparam FIFO_DATA_WIDTH = DATA_WIDTH * COMPUTE_DIM0 * COMPUTE_DIM1;
 
   // -----
   // State

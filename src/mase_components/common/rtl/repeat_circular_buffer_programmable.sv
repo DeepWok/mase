@@ -8,7 +8,12 @@ Description : This module is a repeating circular buffer.
 module repeat_circular_buffer_programmable #(
     parameter DATA_WIDTH = 32,
     parameter MAX_REPEAT = 2,
-    parameter MAX_SIZE = 4
+    parameter MAX_SIZE = 4,
+
+    localparam SIZE_WIDTH = $clog2(MAX_SIZE),
+    localparam REPS_WIDTH = $clog2(MAX_REPEAT),
+    localparam ADDR_WIDTH = MAX_SIZE == 1 ? 1 : $clog2(MAX_SIZE),
+    localparam PTR_WIDTH = ADDR_WIDTH + 1
 ) (
     input logic clk,
     input logic rst,
@@ -29,10 +34,7 @@ module repeat_circular_buffer_programmable #(
 );
 
 
-  localparam SIZE_WIDTH = $clog2(MAX_SIZE);
-  localparam REPS_WIDTH = $clog2(MAX_REPEAT);
-  localparam ADDR_WIDTH = MAX_SIZE == 1 ? 1 : $clog2(MAX_SIZE);
-  localparam PTR_WIDTH = ADDR_WIDTH + 1;
+
 
   typedef struct {
     logic [DATA_WIDTH-1:0] data;

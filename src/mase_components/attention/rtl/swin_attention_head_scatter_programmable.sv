@@ -15,7 +15,7 @@ module swin_attention_head_scatter_programmable #(
     input logic clk,
     input logic rst,
 
-    input logic [IN_DATA_MAX_BLOCK_PER_HEAD_WIDTH:0] block_per_head,
+    input logic [IN_DATA_MAX_BLOCK_PER_HEAD_WIDTH+1:0] block_per_head,
 
     input logic query_con_valid,
     output logic query_con_ready,

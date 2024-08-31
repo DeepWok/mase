@@ -70,36 +70,40 @@ module softermax_lpw_pow2 #(
   logic [OUT_WIDTH-1:0] result_data;
   logic result_valid, result_ready;
 
+  typedef bit [OUT_WIDTH-1:0] pow2_func_t;
+  typedef bit [SLOPE_WIDTH-1:0] slope_t;
+  typedef bit [INTERCEPT_WIDTH-1:0] intercept_t;
 
   // Function to generate LUT (Only used 1/2-bit case)
-  function automatic logic [OUT_WIDTH-1:0] pow2_func(real x);
+  function automatic pow2_func_t pow2_func(real x);
     real res, res_shifted;
-    bit [OUT_WIDTH-1:0] return_val;
+    pow2_func_t return_val;
     res = 2.0 ** x;
 
     // Output cast
     res_shifted = res * (2.0 ** OUT_FRAC_WIDTH);
-    return_val = logic'(res_shifted);
+    return_val = pow2_func_t'(res_shifted);
     return return_val;
   endfunction
 
   // Function to generate slope variable (m)
-  function automatic logic [SLOPE_WIDTH-1:0] slope(real x1, real x2);
+  function automatic slope_t slope(real x1, real x2);
     real y1, y2, res, res_shifted;
-    bit [SLOPE_WIDTH-1:0] return_val;
+    slope_t return_val;
     y1 = 2.0 ** x1;
     y2 = 2.0 ** x2;
     res = (y2 - y1) / (x2 - x1);
 
     // Output cast
     res_shifted = res * (2.0 ** SLOPE_FRAC_WIDTH);
-    return res_shifted;
+    return_val = slope_t'(res_shifted);
+    return return_val;
   endfunction
 
   // Function to intercept variable (c)
-  function automatic logic [INTERCEPT_WIDTH-1:0] intercept(real x1, real x2);
+  function automatic intercept_t intercept(real x1, real x2);
     real m, y1, y2, res, res_shifted;
-    bit [INTERCEPT_WIDTH-1:0] return_val;
+    intercept_t return_val;
     y1 = 2.0 ** x1;
     y2 = 2.0 ** x2;
     m = (y2 - y1) / (x2 - x1);
@@ -107,7 +111,8 @@ module softermax_lpw_pow2 #(
 
     // Output cast
     res_shifted = res * (2 ** INTERCEPT_FRAC_WIDTH);
-    return res_shifted;
+    return_val = intercept_t'(res_shifted);
+    return return_val;
   endfunction
 
   // -----
@@ -165,20 +170,15 @@ module softermax_lpw_pow2 #(
       logic lpw_out_valid, lpw_out_ready;
 
       logic [OUT_WIDTH:0] lpw_cast_out;
-      logic [SLOPE_WIDTH-1:0] slope_temp;
 
       always_comb begin
         // Multiplication Stage
         case (frac_top_in)
-          2'b00: slope_temp = slope(0.00, 0.25);
-          2'b01: slope_temp = slope(0.25, 0.50);
-          2'b10: slope_temp = slope(0.50, 0.75);
-          2'b11: slope_temp = slope(0.75, 1.00);
+          2'b00: mult_in = in_data_frac * slope(0.00, 0.25);
+          2'b01: mult_in = in_data_frac * slope(0.25, 0.50);
+          2'b10: mult_in = in_data_frac * slope(0.50, 0.75);
+          2'b11: mult_in = in_data_frac * slope(0.75, 1.00);
         endcase
-      end
-
-      always_comb begin
-        mult_in = in_data_frac * slope_temp;
       end
 
       // Buffer multiplication, top frac bits, and int part

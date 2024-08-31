@@ -15,6 +15,7 @@ module lut #(
 
     // Memfile
     parameter string MEM_FILE = "",
+    //parameter  MEM_FILE,
 
     // Derived params
     localparam ADDR_WIDTH = SIZE == 1 ? 1 : $clog2(SIZE)

@@ -63,13 +63,18 @@ logic fifo_in_ready;
 logic fifo_in_valid;
 logic fifo_out_valid;
 logic fifo_out_ready;
+logic fifo_in_valid_stall;
+logic fifo_out_ready_stall;
+
 logic ctrl_output_fifo;
 logic ctrl_run_counter;
 logic ctrl_input_fifo;
 logic ctrl_data_out_valid;
+
 logic data_in_0_valid_delayed; 
 logic data_in_0_ready_delayed;
 logic fifo_out_valid_delayed;
+logic fifo_activity;
 
 
 matrix_fifo #(
@@ -82,26 +87,28 @@ matrix_fifo #(
     .clk(clk),
     .rst(rst),
     .in_data(fifo_in),
-    .in_valid(fifo_in_valid),
+    .in_valid(fifo_in_valid_stall),
     .in_ready(fifo_in_ready),
     .out_data(fifo_out),
     .out_valid(fifo_out_valid),
-    .out_ready(fifo_out_ready)
+    .out_ready(fifo_out_ready_stall)
 );
 
 
 //split incoming data into fifo input, data_output
-always_comb begin
-    data_in_0_out = data_in_0 [DATA_IN_0_PARALLELISM_DIM_0-1:0];
+always_comb 
     data_in_0_fifo = data_in_0 [DATA_IN_0_PARALLELISM_DIM_0* DATA_IN_0_PARALLELISM_DIM_1-1:DATA_IN_0_PARALLELISM_DIM_0];
-end
+
+
+always_ff @(posedge clk)
+    data_in_0_out <= data_in_0 [DATA_IN_0_PARALLELISM_DIM_0-1:0];
 
 //direct the correct signal to the output
-always_ff @(posedge clk) begin
+always_comb begin
     if (ctrl_output_fifo)
-        data_out_0 <= fifo_out[DATA_IN_0_PARALLELISM_DIM_0-1:0];
+        data_out_0 = fifo_out[DATA_IN_0_PARALLELISM_DIM_0-1:0];
     else 
-        data_out_0 <= data_in_0_out;
+        data_out_0 = data_in_0_out;
 end
 
 //direct the correct signal to fifo input
@@ -121,7 +128,7 @@ always_ff@(posedge clk) begin
         counter <= 0;
     else if (counter == counter_max) 
         counter <= 0;
-    else if (fifo_activity)
+    else if (fifo_activity && data_out_0_ready)
         counter <= counter + 1;
     else 
         counter <= counter;
@@ -156,8 +163,8 @@ always_comb begin
                         if (data_in_0_depth_dim0 == 1)                                                         next = PROCESS;
                         else                                                                                   next = LOAD; 
                   end
-        LOAD:     if (counter == (counter_max - data_in_0_depth_dim0 - 1) && fifo_activity)                    next = LAST;     
-                  else if (counter >= (data_in_0_depth_dim0-1) && fifo_activity)                               next = PROCESS;
+        LOAD:     if (counter == (counter_max - data_in_0_depth_dim0))                    next = LAST;     
+                  else if (counter >= (data_in_0_depth_dim0))                               next = PROCESS;
                   
         PROCESS:  if (counter == counter_max - data_in_0_depth_dim0)                                           next = LAST;
         LAST:     if (counter == counter_max)                                                                  next = FINISHED;
@@ -172,7 +179,7 @@ end
 
 always_comb  begin
     case(state)
-        IDLE: begin       data_in_0_ready  = fifo_in_ready;
+        IDLE: begin       data_in_0_ready  = fifo_in_ready && data_out_0_ready;
                           fifo_out_ready      = 0;
                           ctrl_output_fifo    = 0;
                           ctrl_run_counter    = 1;
@@ -180,7 +187,7 @@ always_comb  begin
                           ctrl_data_out_valid = 0;
                           fifo_in_valid       = data_in_0_valid;
         end
-        LOAD: begin       data_in_0_ready     = fifo_in_ready;
+        LOAD: begin       data_in_0_ready     = fifo_in_ready && data_out_0_ready;
                           fifo_out_ready      = 0;
                           ctrl_output_fifo    = 0;
                           ctrl_run_counter    = 1;
@@ -205,7 +212,7 @@ always_comb  begin
                           ctrl_data_out_valid = 1;
                           fifo_in_valid       = 0;
         end
-        FINISHED: begin   data_in_0_ready     = 1;
+        FINISHED: begin   data_in_0_ready     = data_out_0_ready;
                           fifo_out_ready      = 1;
                           ctrl_output_fifo    = 0;
                           ctrl_run_counter    = 1;
@@ -225,5 +232,7 @@ end
 
 
 assign fifo_activity = (fifo_in_ready && fifo_in_valid) || (fifo_out_ready && fifo_out_valid);
+assign fifo_in_valid_stall = fifo_in_valid && data_out_0_ready;
+assign fifo_out_ready_stall = fifo_out_ready && data_out_0_ready;
 
 endmodule

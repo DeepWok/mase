@@ -59,6 +59,9 @@ module softermax_global_norm #(
   localparam RECIP_WIDTH = 2 * ACC_WIDTH;
   localparam RECIP_FRAC_WIDTH = 2 * ACC_FRAC_WIDTH;
 
+  // LUT for Recip will have 8 entries max
+  localparam RECIP_ENTRIES = ACC_FRAC_WIDTH < 3 ? (2 ** ACC_FRAC_WIDTH) : 8;
+
   localparam MULT_WIDTH = IN_VALUE_WIDTH + RECIP_WIDTH;
   localparam MULT_FRAC_WIDTH = IN_VALUE_FRAC_WIDTH + RECIP_FRAC_WIDTH;
 
@@ -155,7 +158,7 @@ module softermax_global_norm #(
 
   fifo #(
       .DATA_WIDTH(IN_MAX_WIDTH),
-      .DEPTH (4 * DEPTH)  // TODO: resize +1 ?
+      .DEPTH(4 * DEPTH)  // TODO: resize +1 ?
   ) local_max_buffer (
       .clk(clk),
       .rst(rst),
@@ -330,7 +333,7 @@ module softermax_global_norm #(
   );
 
   softermax_lpw_reciprocal #(
-      .ENTRIES(8),
+      .ENTRIES(RECIP_ENTRIES),
       .IN_WIDTH(ACC_WIDTH),
       .IN_FRAC_WIDTH(ACC_FRAC_WIDTH),
       .OUT_WIDTH(RECIP_WIDTH),

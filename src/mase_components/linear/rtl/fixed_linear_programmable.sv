@@ -171,7 +171,7 @@ module fixed_linear_programmable #(
         .DATA_WIDTH (BIAS_PRECISION_0),
         .IN_NUM     (BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1),
         .MAX_REPEAT     (DATA_IN_0_MAX_DEPTH_DIM_1),
-        .MAX_SIZE       (BIAS_MAX_DEPTH_DIM_0)
+        .MAX_SIZE       (WEIGHT_MAX_TENSOR_SIZE_DIM_0)
     ) bias_buffer_inst (
         .clk,
         .rst,

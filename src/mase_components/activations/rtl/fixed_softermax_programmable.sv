@@ -7,23 +7,25 @@ Description : This module implements softermax.
               "softermax_global_norm" modules.
 */
 `timescale 1ns / 1ps
-module fixed_softermax #(
+module fixed_softermax_programmable #(
     parameter DATA_IN_0_PRECISION_0 = 8,
     parameter DATA_IN_0_PRECISION_1 = 4,
-    parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 10,
-    parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 1,
+    parameter DATA_IN_0_MAX_TENSOR_SIZE_DIM_0 = 10,
+    parameter DATA_IN_0_MAX_TENSOR_SIZE_DIM_1 = 1,
     parameter DATA_IN_0_PARALLELISM_DIM_0 = 1,
     parameter DATA_IN_0_PARALLELISM_DIM_1 = 1,
 
     parameter DATA_OUT_0_PRECISION_0 = 8,
     parameter DATA_OUT_0_PRECISION_1 = 4,
-    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = 10,
-    parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = 1,
+    parameter DATA_OUT_0_MAX_TENSOR_SIZE_DIM_0 = 10,
+    parameter DATA_OUT_0_MAX_TENSOR_SIZE_DIM_1 = 1,
     parameter DATA_OUT_0_PARALLELISM_DIM_0 = 1,
     parameter DATA_OUT_0_PARALLELISM_DIM_1 = 1
 ) (
     input logic clk,
     input logic rst,
+
+    input logic [$clog2(DATA_IN_0_MAX_TENSOR_SIZE_DIM_0/DATA_IN_0_PARALLELISM_DIM_0):0] depth,
 
     input  logic [DATA_IN_0_PRECISION_0-1:0]  data_in_0 [DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1-1:0],
     input logic data_in_0_valid,
@@ -63,8 +65,8 @@ module fixed_softermax #(
 
     assign in_data_unflattened [i] = data_in_0 [(i + 1) * DATA_IN_0_PARALLELISM_DIM_0 - 1 : i * DATA_IN_0_PARALLELISM_DIM_0];
 
-    fixed_softermax_1d #(
-        .TOTAL_DIM     (DATA_IN_0_TENSOR_SIZE_DIM_0),
+    fixed_softermax_1d_programmable #(
+        .TOTAL_MAX_DIM     (DATA_IN_0_MAX_TENSOR_SIZE_DIM_0),
         .PARALLELISM   (DATA_IN_0_PARALLELISM_DIM_0),
         .IN_WIDTH      (DATA_IN_0_PRECISION_0),
         .IN_FRAC_WIDTH (DATA_IN_0_PRECISION_1),
@@ -74,6 +76,8 @@ module fixed_softermax #(
     ) fixed_softermax_1d_i (
         .clk,
         .rst,
+
+        .depth(depth),
 
         .in_data (in_data_unflattened[i]),
         .in_valid(in_data_valid[i]),

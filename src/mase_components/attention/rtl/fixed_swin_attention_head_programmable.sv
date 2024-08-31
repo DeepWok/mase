@@ -117,7 +117,7 @@ module fixed_swin_attention_head_programmable #(
   logic content_att_ready;
 
   logic [OUT_DATA_PRECISION_0-1:0] positional_att [IN_DATA_PARALLELISM_DIM_0 *IN_DATA_PARALLELISM_DIM_1-1:0];
-  logic positional_att_valid;
+  logic positional_att_valid [IN_DATA_PARALLELISM_DIM_1:0];
   logic positional_att_ready;
 
   logic [OUT_DATA_PRECISION_0-1:0] sum_att [IN_DATA_PARALLELISM_DIM_1 * IN_DATA_PARALLELISM_DIM_0-1:0];
@@ -136,6 +136,9 @@ module fixed_swin_attention_head_programmable #(
   logic [OUT_DATA_PRECISION_0-1:0] query_pos_rows [IN_DATA_PARALLELISM_DIM_0][IN_DATA_PARALLELISM_DIM_1]; 
   logic [OUT_DATA_PRECISION_0-1:0] pos_embed_rows [IN_DATA_PARALLELISM_DIM_0][IN_DATA_PARALLELISM_DIM_1*IN_DATA_PARALLELISM_DIM_0];
   logic [OUT_DATA_PRECISION_0-1:0] positional_att_rows [IN_DATA_PARALLELISM_DIM_0][IN_DATA_PARALLELISM_DIM_1];
+
+  logic [IN_DATA_PARALLELISM_DIM_1:0] query_pos_ready_array;
+  logic [IN_DATA_PARALLELISM_DIM_1:0] pos_embed_ready_array;
 
 
   // * Instances
@@ -198,8 +201,8 @@ module fixed_swin_attention_head_programmable #(
       .rst,
 
       .a_depth_dim1(in_depth_dim_1),
-      .b_depth_dim0(in_depth_dim_0),
-      .b_depth_dim1(in_depth_dim_1),
+      .b_depth_dim0(in_depth_dim_1),
+      .b_depth_dim1(in_depth_dim_0),
       .b_depth_mult(in_depth_mult),
 
       .a_data (query_con),
@@ -273,8 +276,8 @@ module fixed_swin_attention_head_programmable #(
   
   always_comb begin
     for (int i = 0; i < IN_DATA_PARALLELISM_DIM_1; i++) begin
-      for (int j = 0; j < IN_DATA_PARALLELISM_DIM_0*IN_DATA_PARALLELISM_DIM_0; j++) begin
-        positional_att[i * IN_DATA_PARALLELISM_DIM_0*IN_DATA_PARALLELISM_DIM_0 + j] = positional_att_rows[i][j];
+      for (int j = 0; j < IN_DATA_PARALLELISM_DIM_0; j++) begin
+        positional_att[i * IN_DATA_PARALLELISM_DIM_0 + j] = positional_att_rows[i][j];
       end
     end 
   end
@@ -312,13 +315,13 @@ module fixed_swin_attention_head_programmable #(
 
       .a_data (query_pos_rows[i]),
       .a_valid(query_pos_valid),
-      .a_ready(query_pos_ready),
+      .a_ready(query_pos_ready_array[i]),
 
       .b_data (pos_embed_rows[i]),
       .b_valid(pos_embed_valid),
-      .b_ready(pos_embed_ready),
+      .b_ready(pos_embed_ready_array[i]),
       .out_data (positional_att_rows[i]),
-      .out_valid(positional_att_valid),
+      .out_valid(positional_att_valid[i]),
       .out_ready(positional_att_ready)
       // 
     );
@@ -352,7 +355,7 @@ module fixed_swin_attention_head_programmable #(
       .rst(rst),
 
       .data_in_0(positional_att),
-      .data_in_0_valid(positional_att_valid),
+      .data_in_0_valid(positional_att_valid[0]),
       .data_in_0_ready(positional_att_ready),
 
       .data_in_1(content_att),
@@ -368,24 +371,26 @@ module fixed_swin_attention_head_programmable #(
 
   // * Attention scores: softmax(Query x Key^T)
 
-  fixed_softermax #(
+  fixed_softermax_programmable #(
       .DATA_IN_0_PRECISION_0      (OUT_DATA_PRECISION_0),
       .DATA_IN_0_PRECISION_1      (OUT_DATA_PRECISION_1),
-      .DATA_IN_0_TENSOR_SIZE_DIM_0(IN_DATA_MAX_TENSOR_SIZE_DIM_1),
-      .DATA_IN_0_TENSOR_SIZE_DIM_1(IN_DATA_MAX_TENSOR_SIZE_DIM_1),
+      .DATA_IN_0_MAX_TENSOR_SIZE_DIM_0(IN_DATA_MAX_TENSOR_SIZE_DIM_1),
+      .DATA_IN_0_MAX_TENSOR_SIZE_DIM_1(IN_DATA_MAX_TENSOR_SIZE_DIM_1),
       .DATA_IN_0_PARALLELISM_DIM_0(IN_DATA_PARALLELISM_DIM_0),
       .DATA_IN_0_PARALLELISM_DIM_1(IN_DATA_PARALLELISM_DIM_1),
 
       .DATA_OUT_0_PRECISION_0      (OUT_DATA_PRECISION_0),
       .DATA_OUT_0_PRECISION_1      (OUT_DATA_PRECISION_1),
-      .DATA_OUT_0_TENSOR_SIZE_DIM_0(IN_DATA_MAX_TENSOR_SIZE_DIM_1),
-      .DATA_OUT_0_TENSOR_SIZE_DIM_1(IN_DATA_MAX_TENSOR_SIZE_DIM_1),
+      .DATA_OUT_0_MAX_TENSOR_SIZE_DIM_0(IN_DATA_MAX_TENSOR_SIZE_DIM_1),
+      .DATA_OUT_0_MAX_TENSOR_SIZE_DIM_1(IN_DATA_MAX_TENSOR_SIZE_DIM_1),
       .DATA_OUT_0_PARALLELISM_DIM_0(IN_DATA_PARALLELISM_DIM_0),
       .DATA_OUT_0_PARALLELISM_DIM_1(IN_DATA_PARALLELISM_DIM_1)
 
   ) fixed_softermax_i (
       .clk,
       .rst,
+
+      .depth(in_depth_dim_0),
 
       .data_in_0      (sum_att),
       .data_in_0_valid(sum_att_valid),
@@ -471,5 +476,8 @@ module fixed_swin_attention_head_programmable #(
       .data_out_valid(out_valid),
       .data_out_ready(out_ready)
   );
+
+  assign query_pos_ready = query_pos_ready_array[0];
+  assign pos_embed_ready = pos_embed_ready_array[0];
 
 endmodule
