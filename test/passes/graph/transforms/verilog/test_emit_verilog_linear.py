@@ -17,7 +17,7 @@ from chop.tools.logger import set_logging_verbosity
 from chop.tools import get_logger
 
 set_logging_verbosity("debug")
-
+from utils import update_common_metadata_pass
 
 def excepthook(exc_type, exc_value, exc_traceback):
     traceback.print_exception(exc_type, exc_value, exc_traceback)
@@ -94,31 +94,8 @@ def test_emit_verilog_linear():
     mg, _ = passes.add_common_metadata_analysis_pass(mg, {"dummy_in": dummy_in})
 
     mg, _ = passes.quantize_transform_pass(mg, quan_args)
-    # There is a bug in the current quantization pass, where the results metadata is not uppdated with the precision.
-    # Here we temporarily update the metadata here so we can test the hardware back end.
-    for node in mg.fx_graph.nodes:
-        for arg, _ in node.meta["mase"].parameters["common"]["args"].items():
-            if (
-                type(node.meta["mase"].parameters["common"]["args"][arg]) == dict
-                and "type" in node.meta["mase"].parameters["common"]["args"][arg].keys()
-            ):
-                node.meta["mase"].parameters["common"]["args"][arg]["type"] = "fixed"
-        for result, _ in node.meta["mase"].parameters["common"]["results"].items():
-            if (
-                type(node.meta["mase"].parameters["common"]["results"][result]) == dict
-                and "type"
-                in node.meta["mase"].parameters["common"]["results"][result].keys()
-            ):
-                node.meta["mase"].parameters["common"]["results"][result][
-                    "type"
-                ] = "fixed"
-                node.meta["mase"].parameters["common"]["results"][result][
-                    "precision"
-                ] = [
-                    quan_args["linear"]["config"]["data_out_width"],
-                    quan_args["linear"]["config"]["data_out_frac_width"],
-                ]
 
+    update_common_metadata_pass(mg, quan_args)
     # Increase weight range
     mg.model.fc1.weight = torch.nn.Parameter(
         10 * torch.randn(mg.model.fc1.weight.shape)
@@ -136,7 +113,7 @@ def test_emit_verilog_linear():
     )
     mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
-    simulate(skip_build=False, skip_test=False, simulator="verilator", waves=True)
+    simulate(skip_build=False, skip_test=False, simulator="questa", waves=True)
 
 
 if __name__ == "__main__":

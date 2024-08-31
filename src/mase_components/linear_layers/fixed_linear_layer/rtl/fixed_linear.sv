@@ -245,7 +245,7 @@ module fixed_linear #(
 
   // * Add bias
   if (HAS_BIAS == 1) begin
-    fixed_cast #(
+    fixed_rounding #(
         .IN_SIZE       (BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1),
         .IN_WIDTH      (BIAS_PRECISION_0),
         .IN_FRAC_WIDTH (BIAS_PRECISION_1),

@@ -39,7 +39,7 @@ def get_group_files(group):
 
 
 def get_module_dependencies(module):
-    group, mod = module.split("/")
+    # group, mod = module.split("/")
     group_deps = MASE_HW_DEPS.get(module, [])
     file_deps = []
     for group_dep in group_deps:

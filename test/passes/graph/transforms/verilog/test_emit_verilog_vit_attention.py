@@ -146,10 +146,10 @@ def vit_module_level_quantize(model, model_config, q_config):
 
 @pytest.mark.dev
 def test_emit_verilog_vit_attention():
-    dim = 80
+    dim = 40
     num_heads = 4
     batch_size = 1
-    n = 40
+    n = 20
     model_config = {
         "dim": dim,
         "num_heads": num_heads,

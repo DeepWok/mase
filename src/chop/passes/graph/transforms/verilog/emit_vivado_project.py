@@ -18,8 +18,8 @@ def generate_tcl_script(top_name, vivado_project_path, include_groups, project_d
     )
 
     tcl_script_template = f"""
-set_param board.repoPaths {{{str(Path.home())}/shared/board-files}}
-create_project  {top_name}_build_project {vivado_project_path} -part xcu280-fsvh2892-2L-e
+# set_param board.repoPaths {{{str(Path.home())}/shared/board-files}}
+create_project -force {top_name}_build_project {vivado_project_path} -part xcu280-fsvh2892-2L-e
 set_property board_part xilinx.com:au280:part0:1.1 [current_project]
 """
     for include_group in include_groups:
@@ -30,7 +30,14 @@ set_property board_part xilinx.com:au280:part0:1.1 [current_project]
     tcl_script_template += f"""
 update_compile_order -fileset sources_1
 """
+    # syth and impl
+    tcl_script_template += f"""
+launch_runs synth_1
+wait_on_run synth_1
 
+launch_runs impl_1
+wait_on_run impl_1
+"""
     # * Package IP
     tcl_script_template += f"""
 ipx::package_project -root_dir {project_dir}/hardware/ip_repo -vendor user.org -library user -taxonomy /UserIP -import_files
@@ -87,11 +94,12 @@ def emit_vivado_project_transform_pass(graph, pass_args={}):
     os.makedirs(vivado_project_path, exist_ok=True)
 
     # * List include files
-    include_groups = [
-        f"{COMPONENTS_PATH / group / 'rtl'}"
-        for group in mase_components.get_modules()
-        if group != "vivado"
-    ] + [project_dir / "hardware" / "rtl"]
+    include_groups = [project_dir / "hardware" / "rtl"]
+    # include_groups = [
+    #     f"{COMPONENTS_PATH / group / 'rtl'}"
+    #     for group in mase_components.get_modules()
+    #     if group != "vivado"
+    # ] + [project_dir / "hardware" / "rtl"]
 
     generate_tcl_script(top_name, vivado_project_path, include_groups, project_dir)
 
@@ -105,6 +113,6 @@ def emit_vivado_project_transform_pass(graph, pass_args={}):
         "-source",
         f"{vivado_project_path}/build.tcl",
     ]
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    # result = subprocess.run(cmd, capture_output=True, text=True)
 
     return graph, {}
