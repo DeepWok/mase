@@ -15,7 +15,7 @@ from pathlib import Path
 from chop.actions import simulate
 from chop.tools.logger import set_logging_verbosity
 from chop.tools import get_logger
-from test_emit_verilog_layernorm import (
+from utils import (
     update_common_metadata_pass,
     update_hardware_precision_param,
 )
@@ -35,24 +35,7 @@ def excepthook(exc_type, exc_value, exc_traceback):
 logger = get_logger(__name__)
 sys.excepthook = excepthook
 VIT_CUSTOM_OPS = {
-    "modules": {
-        ViTAttentionInteger: {
-            "args": {
-                "hidden_states": "data_in",
-                "attention_mask": None,
-                "head_mask": None,
-                "encoder_hidden_states": None,
-                "encoder_attention_mask": None,
-                "past_key_value": None,
-                "output_attentions": "config",
-            },
-            "toolchain": "INTERNAL_RTL",
-            "module": "fixed_self_attention",
-            "dependence_files": get_module_dependencies(
-                "vision_models/vit/rtl/fixed_vit_attention_single_precision_wrapper"
-            ),
-        },
-    }
+    "modules": {ViTAttentionInteger: {}}
 }
 
 # --------------------------------------------------
@@ -90,7 +73,7 @@ attention_quant_config = {
     "qkmm_out_frac_width": 5,
     "softmax_exp_width": 8,
     "softmax_exp_frac_width": 3,
-    "softmax_out_frac_width": 9,
+    "softmax_out_frac_width": 7,
     "svmm_out_width": 8,
     "svmm_out_frac_width": 4,
     "proj_weight_width": 6,
@@ -146,10 +129,10 @@ def vit_module_level_quantize(model, model_config, q_config):
 
 @pytest.mark.dev
 def test_emit_verilog_vit_attention():
-    dim = 40
+    dim = 16
     num_heads = 4
     batch_size = 1
-    n = 20
+    n = 10
     model_config = {
         "dim": dim,
         "num_heads": num_heads,
@@ -191,7 +174,7 @@ def test_emit_verilog_vit_attention():
     mg, _ = passes.emit_cocotb_transform_pass(
         mg, pass_args={"wait_time": 10, "wait_units": "ms", "batch_size": batch_size}
     )
-    # mg, _ = passes.emit_vivado_project_transform_pass(mg)
+    mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
     simulate(
         skip_build=False, skip_test=False, simulator="questa", trace_depth=5, waves=True

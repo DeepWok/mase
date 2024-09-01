@@ -60,12 +60,14 @@ def update_hardware_precision_param(mg, quan_args, model_args: dict = {}):
         capitalize a string
         """
         return str(name).upper()
-
-    for node in mg.fx_graph.nodes:
+    for node in list(mg.fx_graph.nodes):
         mase_op = node.meta["mase"].parameters["common"]["mase_op"]
+        vp = node.meta["mase"]["hardware"].get("verilog_param")
+        if vp == None:
+            continue
+        delete_dim_of_batch_size(vp)
         if mase_op not in (QUANTIZEABLE_OP + ("vit_self_attention_integer",)):
             continue
-        vp = node.meta["mase"]["hardware"]["verilog_param"]
         node_quan_args = quan_args.get(mase_op)["config"]
         node_model_args = model_args.get(mase_op)
         if mase_op in ["vit_self_attention_integer", "layer_norm"]:
@@ -88,4 +90,15 @@ def update_hardware_precision_param(mg, quan_args, model_args: dict = {}):
                     vp[_cap(arg_name)] = 1 if arg_info else 0
                 else:
                     vp[_cap(arg_name)] = arg_info
+
+        
+
+def delete_dim_of_batch_size(vp):
+    pop_list = []
+    for key, item in vp.items():
+        if any(keyword in key for keyword in ["DATA_IN", "DATA_OUT"]):
+            if key.endswith("2"):
+                pop_list.append(key)
+    [vp.pop(key) for key in pop_list]
+
 

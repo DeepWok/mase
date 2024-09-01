@@ -72,28 +72,28 @@ module layer_norm_2d #(
   logic [DATA_IN_0_PARALLELISM_DIM_1 - 1:0] parallel_norm_in_ready, parallel_norm_out_valid;
   logic join_out_valid, join_out_ready;
   logic [DATA_OUT_0_PRECISION_0 - 1:0] norm_out [DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1 - 1:0];
-  logic [AFFINE_PRECISION_0 -1:0] uncast_data_out_0 [DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1 - 1:0];
-  logic [AFFINE_PRECISION_0 - 1:0] casted_bias[DATA_OUT_0_PARALLELISM_DIM_0-1:0];
   localparam AFFINE_PRECISION_0 = DATA_OUT_0_PRECISION_0 + WEIGHT_PRECISION_0 + 1;
   localparam AFFINE_PRECISION_1 = DATA_OUT_0_PRECISION_1 + WEIGHT_PRECISION_1;
+  logic [AFFINE_PRECISION_0 -1:0] uncast_data_out_0 [DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1 - 1:0];
+  logic [AFFINE_PRECISION_0 - 1:0] casted_bias[DATA_OUT_0_PARALLELISM_DIM_0-1:0];
   logic [  BIAS_PRECISION_0 - 1:0] bias_buffered  [DATA_IN_0_PARALLELISM_DIM_0 - 1 : 0];
   logic [WEIGHT_PRECISION_0 - 1:0] weight_buffered[DATA_IN_0_PARALLELISM_DIM_0 - 1 : 0];
   logic bias_buffered_valid, bias_buffered_ready, weight_buffered_ready, weight_buffered_valid;
   for (genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_1; i++) begin : parallel_dim_1
     layer_norm_1d #(
-        .DATA_IN_0_TENSOR_SIZE_DIM_0,
-        .DATA_IN_0_PARALLELISM_DIM_0,
+        .DATA_IN_0_TENSOR_SIZE_DIM_0(DATA_IN_0_TENSOR_SIZE_DIM_0),
+        .DATA_IN_0_PARALLELISM_DIM_0(DATA_IN_0_PARALLELISM_DIM_0),
         // Data widths
-        .DATA_IN_0_PRECISION_0,
-        .DATA_IN_0_PRECISION_1,
-        .ISQRT_IN_PRECISION_0,
-        .ISQRT_IN_PRECISION_1,
-        .ISQRT_OUT_PRECISION_0,
-        .ISQRT_OUT_PRECISION_1,
-        .DATA_OUT_0_TENSOR_SIZE_DIM_0,
-        .DATA_OUT_0_PARALLELISM_DIM_0,
-        .DATA_OUT_0_PRECISION_0,
-        .DATA_OUT_0_PRECISION_1
+        .DATA_IN_0_PRECISION_0(DATA_IN_0_PRECISION_0),
+        .DATA_IN_0_PRECISION_1(DATA_IN_0_PRECISION_1),
+        .ISQRT_IN_PRECISION_0(ISQRT_IN_PRECISION_0),
+        .ISQRT_IN_PRECISION_1(ISQRT_IN_PRECISION_1),
+        .ISQRT_OUT_PRECISION_0(ISQRT_OUT_PRECISION_0),
+        .ISQRT_OUT_PRECISION_1(ISQRT_OUT_PRECISION_1),
+        .DATA_OUT_0_TENSOR_SIZE_DIM_0(DATA_OUT_0_TENSOR_SIZE_DIM_0),
+        .DATA_OUT_0_PARALLELISM_DIM_0(DATA_OUT_0_PARALLELISM_DIM_0),
+        .DATA_OUT_0_PRECISION_0(DATA_OUT_0_PRECISION_0),
+        .DATA_OUT_0_PRECISION_1(DATA_OUT_0_PRECISION_1)
     ) layer_norm_inst (
         .clk,
         .rst,
@@ -168,17 +168,19 @@ module layer_norm_2d #(
               .data_out_valid(parallel_data_out_0_valid[k]),
               .data_out_ready(data_out_0_ready)
           );
-          fixed_signed_cast #(
-              .IN_WIDTH(BIAS_PRECISION_0),
-              .IN_FRAC_WIDTH(BIAS_PRECISION_1),
-              .OUT_WIDTH(AFFINE_PRECISION_0),
-              .OUT_FRAC_WIDTH(AFFINE_PRECISION_1),
-              .SYMMETRIC(0),
-              .ROUND_FLOOR(1)
-          ) variance_cast_i (
-              .in_data (bias_buffered[j]),
-              .out_data(casted_bias[j])
-          );
+          if (i==0) begin
+            fixed_signed_cast #(
+                .IN_WIDTH(BIAS_PRECISION_0),
+                .IN_FRAC_WIDTH(BIAS_PRECISION_1),
+                .OUT_WIDTH(AFFINE_PRECISION_0),
+                .OUT_FRAC_WIDTH(AFFINE_PRECISION_1),
+                .SYMMETRIC(0),
+                .ROUND_FLOOR(1)
+            ) variance_cast_i (
+                .in_data (bias_buffered[j]),
+                .out_data(casted_bias[j])
+            );
+          end
           assign uncast_data_out_0[k] = $signed(
               norm_out[k]
           ) * $signed(

@@ -3,7 +3,6 @@ import torch.nn as nn
 from copy import copy, deepcopy
 from chop.ir.graph import MaseMetadata
 
-
 class ForkIdentity(torch.nn.Module):
     """
     Toy quantized FC model for digit recognition on MNIST
@@ -25,30 +24,17 @@ def fork2(x):
     out = x
     return out
 
-
-def updata_common_metadata(node, quan_args):
-    node.meta["mase"].parameters["common"]["mase_type"] = "call_function"
-    node.meta["mase"].parameters["common"]["mase_op"] = "fork2"
-
-    common_results = node.meta["mase"].parameters["common"]["results"]["data_out_0"]
-    common_results["precision"] = quan_args
-    node.meta["mase"].parameters["common"]["results"]["data_out_0"] = common_results
-    node.meta["mase"].parameters["common"]["results"]["data_out_1"] = common_results
-    node.meta["mase"].parameters["common"]["args"]["data_in_0"] = common_results
-
-    node.meta["mase"].parameters["hardware"]["is_implicit"] = False
-
-
-def deepcopy_mase_metadata(new_node, node):
+def generating_mase_metadata(new_node, node, quan_args):
     new_node.meta["mase"] = MaseMetadata(new_node, node.meta["mase"].model)
-    new_node.meta["mase"] = MaseMetadata(new_node, node.meta["mase"].model)
-    new_node.meta["mase"].parameters["common"] = deepcopy(node.meta["mase"]["common"])
-    new_node.meta["mase"].parameters["hardware"] = deepcopy(
-        node.meta["mase"]["hardware"]
-    )
-    new_node.meta["mase"].parameters["software"] = deepcopy(
-        node.meta["mase"]["software"]
-    )
+    new_node.meta["mase"].parameters["common"]["mase_type"] = "call_function"
+    new_node.meta["mase"].parameters["common"]["mase_op"] = "fork2"
+    inherited_metadata = deepcopy(node.meta["mase"]["common"]["results"]["data_out_0"])
+    inherited_metadata["precision"] = quan_args
+    new_node.meta["mase"].parameters["common"]["args"] = {"data_in_0": inherited_metadata}
+    new_node.meta["mase"].parameters["common"]["results"] = {"data_out_0": inherited_metadata, "data_out_1": inherited_metadata}
+
+    new_node.meta["mase"].parameters["hardware"]["is_implicit"] = False
+
 
 
 def insert_fork_transform_pass(graph, pass_args={}):
@@ -62,20 +48,32 @@ def insert_fork_transform_pass(graph, pass_args={}):
     """
 
     nodes_to_fork = []
+    from chop.tools.utils import to_numpy_if_tensor,to_tensor_if_numpy
+    from chop.passes.graph.transforms.utils import metadata_value_type_cast_transform_pass
+    graph, _ = metadata_value_type_cast_transform_pass(
+        graph, pass_args={"fn": to_numpy_if_tensor}
+    )
     for node in graph.fx_graph.nodes:
         user_count = 0
         for u in node.users.keys():
             user_count += 1
         if user_count > 1:
             nodes_to_fork.append(node)
-
     for node in nodes_to_fork:
         with graph.fx_graph.inserting_after(node):
             new_node = graph.fx_graph.call_function(fork2, args=(node,))
             node.replace_all_uses_with(new_node)
             new_node.args = (node,)
-            deepcopy_mase_metadata(new_node, node)
-            updata_common_metadata(new_node, quan_args=pass_args[new_node.name])
+            by = pass_args.get("by", "type")
+            if by == "type":
+                generating_mase_metadata(new_node, node, quan_args=pass_args["fork2"])
+            else:
+                generating_mase_metadata(new_node, node, quan_args=pass_args[new_node.name])
 
+    graph, _ = metadata_value_type_cast_transform_pass(
+        graph, pass_args={"fn": to_tensor_if_numpy}
+    ) 
+    # test whether the new graph works
     graph.fx_graph.lint()
+
     return graph, None
