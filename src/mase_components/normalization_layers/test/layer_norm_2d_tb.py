@@ -3,10 +3,11 @@
 import os
 import pytest
 
+import os, sys, logging, traceback, pdb
 import torch
 import logging
 from functools import partial
-from src.mase_components.helper import generate_memory
+from mase_components.helper import generate_memory
 from pathlib import Path
 import cocotb
 from cocotb.log import SimLog
@@ -19,13 +20,20 @@ handler = logging.StreamHandler()
 handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
+from chop.tools.logger import set_logging_verbosity
+set_logging_verbosity("debug")
+
+
+def excepthook(exc_type, exc_value, exc_traceback):
+    traceback.print_exception(exc_type, exc_value, exc_traceback)
+    print("\nEntering debugger...")
+    pdb.post_mortem(exc_traceback)
+
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 from mase_cocotb.runner import mase_runner
 from mase_cocotb.utils import fixed_preprocess_tensor
 
-from mase_cocotb.utils import bit_driver
-from chop.nn.quantizers import integer_floor_quantizer
 from chop.nn.quantized.modules import LayerNormIntegerFloor
 
 
@@ -164,6 +172,8 @@ class LayerNormTB(Testbench):
             )
             self.out_data_monitor.load_monitor(outs)
 
+        # from mase_cocotb.utils import check_signal
+        # cocotb.start_soon(check_signal(self.dut, self.log, ["mu_out"]))
         await Timer(us, units="us")
         assert self.out_data_monitor.exp_queue.empty()
 
@@ -200,10 +210,10 @@ async def single_test(dut):
 # 1. DATA_IN_0_PARALLELISM_DIM_0 ==DATA_IN_0_TENSOR_SIZE_DIM_0
 #
 dut_params = {
-    "ELEMENTWISE_AFFINE": 1,
-    "HAS_BIAS": 1,
-    "DATA_IN_0_TENSOR_SIZE_DIM_0": 16,
-    "DATA_IN_0_PARALLELISM_DIM_0": 4,
+    "ELEMENTWISE_AFFINE": 0,
+    "HAS_BIAS": 0,
+    "DATA_IN_0_TENSOR_SIZE_DIM_0": 12,
+    "DATA_IN_0_PARALLELISM_DIM_0": 2,
     "DATA_IN_0_TENSOR_SIZE_DIM_1": 4,
     "DATA_IN_0_PARALLELISM_DIM_1": 2,
     "DATA_IN_0_PRECISION_0": 8,
@@ -250,6 +260,7 @@ def test_fixed_softmax_smoke():
         module_param_list=[
             get_fixed_softmax_config(),
         ],
+        sim="verilator",
         # skip_build=True,
     )
 

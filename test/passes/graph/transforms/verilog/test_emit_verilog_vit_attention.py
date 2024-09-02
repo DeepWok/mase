@@ -129,8 +129,8 @@ def vit_module_level_quantize(model, model_config, q_config):
 
 @pytest.mark.dev
 def test_emit_verilog_vit_attention():
-    dim = 16
-    num_heads = 4
+    dim = 12
+    num_heads = 3
     batch_size = 1
     n = 10
     model_config = {
@@ -177,7 +177,7 @@ def test_emit_verilog_vit_attention():
     mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
     simulate(
-        skip_build=False, skip_test=False, simulator="questa", trace_depth=5, waves=True
+        skip_build=False, skip_test=False, simulator="questa", trace_depth=3, waves=True
     )
 
 

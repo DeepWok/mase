@@ -180,15 +180,25 @@ def fixed_cast(val, in_width, in_frac_width, out_width, out_frac_width):
     return val  # << out_frac_width  # treat data<out_width, out_frac_width> as data<out_width, 0>
 
 
-def handshake_signal_check(
-    dut, log, signal_base, valid=None, ready=None, num: dict = {}
-):
-    data_valid = getattr(dut, f"{signal_base}_valid") if valid is None else valid
-    data_ready = getattr(dut, f"{signal_base}_ready") if ready is None else ready
-    data = getattr(dut, signal_base)
-    svalue = [i.signed_integer for i in data.value]
-    if data_valid.value & data_ready.value:
-        num[signal_base] = (
-            num[signal_base] + 1 if num.get(signal_base) is not None else " "
-        )
-        log.debug(f"handshake {num[signal_base]} {signal_base} = {svalue}")
+
+async def check_signal(dut, log, signal_list):
+    #TODO: support count start
+    #TODO: support checking signal with different name in valid and ready signal
+    def handshake_signal_check(
+        dut, log, signal_base, valid=None, ready=None, count_start: dict = {}
+    ):
+        data_valid = getattr(dut, f"{signal_base}_valid") if valid is None else valid
+        data_ready = getattr(dut, f"{signal_base}_ready") if ready is None else ready
+        data = getattr(dut, signal_base)
+        svalue = [i.signed_integer for i in data.value]
+        if data_valid.value & data_ready.value:
+            count_start[signal_base] = (
+                count_start[signal_base] + 1 if count_start.get(signal_base) is not None else " "
+            )
+            log.debug(f"handshake {count_start[signal_base]} {signal_base} = {svalue}")
+
+    while True:
+        await RisingEdge(dut.clk)
+        for signal in signal_list:
+            handshake_signal_check(dut, log, signal)
+

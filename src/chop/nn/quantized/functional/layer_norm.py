@@ -33,35 +33,37 @@ def _int_layer_norm(
     if isinstance(normalized_shape, int):
         normalized_shape = (normalized_shape,)
     dim, num_vals = get_dim_and_prodofdim(x, normalized_shape)
-
     x = quantize(
         x,
         q_config.get("data_in_width"),
         q_config.get("data_in_frac_width"),
         q_config.get("by_pass"),
     )
-    num_vals_frac_width = ceil(log2(num_vals))
-    inv_num_vals_quant = quantize(
-        torch.tensor(1 / num_vals), num_vals_frac_width + 2, num_vals_frac_width
+    acc_out_width = ceil(log2(num_vals))+ q_config.get("data_in_width") 
+    inv_num_vals_quant_0 = quantize(
+        torch.tensor(1 / num_vals), acc_out_width + 2, acc_out_width
     )
     # Mean calculation
     mu_acc = x.sum(dim, keepdim=True)
-    mu = mu_acc * inv_num_vals_quant
+    mu = mu_acc * inv_num_vals_quant_0
     mu = quantize(
         mu,
         q_config.get("data_in_width"),
         q_config.get("data_in_frac_width"),
         q_config.get("by_pass"),
     )
+    print("mu", mu*2**q_config.get("data_in_frac_width"))
     # I hope the output precision here should be $clog2
     # Variance calculation
     diff = x - mu
 
     squares = diff**2
-
     sum_squares = torch.sum(squares, dim, keepdim=True)
-
-    var = sum_squares * inv_num_vals_quant
+    squares_adder_tree_width = 2 * q_config.get("data_in_width") + ceil(log2(num_vals))
+    inv_num_vals_quant_1 = quantize(
+        torch.tensor(1 / num_vals), squares_adder_tree_width + 2, squares_adder_tree_width
+    )
+    var = sum_squares * inv_num_vals_quant_1
     var = quantize(
         var,
         q_config.get("isqrt_in_width"),

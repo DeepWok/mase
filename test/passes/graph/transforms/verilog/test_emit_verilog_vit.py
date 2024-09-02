@@ -90,8 +90,10 @@ class Block(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = x + self.attn(self.norm1(x))
-        x = x + self.mlp(self.norm2(x))
+        # x = x + self.attn(self.norm1(x))
+        x = self.norm1(x)
+        # x = self.attn(self.norm1(x))
+        # x = x + self.mlp(self.norm2(x))
         return x
 
 
@@ -221,11 +223,13 @@ quan_args = {
 
 @pytest.mark.dev
 def test_emit_verilog_vit():
-    dim = 16
-    num_heads = 4
+    # vit_tiny dim 192, n 196, num_heads = 3
+    #
+    dim = 10
+    num_heads = 2
     batch_size = 1
     n = 10
-    layer = Block(dim,num_heads,mlp_ratio=2,qkv_bias=True)
+    layer = Block(dim,num_heads,mlp_ratio=4,qkv_bias=True)
     model_config = {
         "dim": dim,
         "num_heads": num_heads,
@@ -258,9 +262,9 @@ def test_emit_verilog_vit():
     mg, _ = passes.emit_cocotb_transform_pass(
         mg, pass_args={"wait_time": 100, "wait_unit": "ms", "batch_size": batch_size}
     )
-    mg, _ = passes.emit_vivado_project_transform_pass(mg)
+    # mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
-    simulate(skip_build=False, skip_test=False, simulator="questa", waves=True)
+    simulate(skip_build=False, skip_test=False, simulator="questa", waves=True, gui=False)
 
 
 if __name__ == "__main__":

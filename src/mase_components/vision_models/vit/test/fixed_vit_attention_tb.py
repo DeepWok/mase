@@ -245,7 +245,6 @@ class FixedSelfAttentionTB(Testbench):
                 floor=True,
             )
             self.data_out_0_monitor.load_monitor(outs)
-        cocotb.start_soon(check_signal(self.dut, self.log))
 
         await Timer(us, units="us")
         assert self.data_out_0_monitor.exp_queue.empty()
@@ -350,20 +349,6 @@ def get_config(kwargs={}):
 
 torch.manual_seed(1)
 
-
-async def check_signal(dut, log):
-    while True:
-        await RisingEdge(dut.clk)
-        handshake_signal_check(dut, log, "data_out_0")
-
-
-def handshake_signal_check(dut, log, signal_base, valid=None, ready=None):
-    data_valid = getattr(dut, f"{signal_base}_valid") if valid is None else valid
-    data_ready = getattr(dut, f"{signal_base}_ready") if ready is None else ready
-    data = getattr(dut, signal_base)
-    svalue = [i.signed_integer for i in data.value]
-    if data_valid.value & data_ready.value:
-        log.debug(f"handshake {signal_base} = {svalue}")
 
 
 def test_fixed_linear_smoke():

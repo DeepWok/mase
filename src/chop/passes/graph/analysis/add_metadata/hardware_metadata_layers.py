@@ -250,6 +250,7 @@ INTERNAL_COMP = {
                 "common/rtl/split2.sv",
                 "common/rtl/split_n.sv",
                 "memory/rtl/unpacked_fifo.sv",
+                "memory/rtl/unpacked_skid_buffer.sv",
             ],
         }
     ],

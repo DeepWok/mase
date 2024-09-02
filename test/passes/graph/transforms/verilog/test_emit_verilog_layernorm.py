@@ -87,8 +87,8 @@ quan_args = {
 @pytest.mark.dev
 def test_emit_verilog_layernorm():
 
-    batch_size = 4
-    norm_dim = 8
+    batch_size = 1
+    norm_dim = 12
     norm_layer = LAYERNORM_MODULE(norm_dim)
     mg = chop.MaseGraph(model=norm_layer)
     # Provide a dummy input for the graph so it can use for tracing
