@@ -9,33 +9,33 @@ module swintop_simple #(
     parameter ADDER_FIFO_PL0_0_DATA_WIDTH = PRECISION_0,
     parameter ADDER_FIFO_PL0_0_DIM0 = PARALLELISM_DIM0,
     parameter ADDER_FIFO_PL0_0_DIM1 = PARALLELISM_DIM1,
-    parameter ADDER_FIFO_PL0_0_FIFO_SIZE = 16,
-    parameter LAYER_NORM_PL0_0_TOTAL_MAX_DIM0 = 16,
-    parameter LAYER_NORM_PL0_0_TOTAL_MAX_DIM1 = 16,
+    parameter ADDER_FIFO_PL0_0_FIFO_SIZE = 256,
+    parameter LAYER_NORM_PL0_0_TOTAL_MAX_DIM0 = 256,
+    parameter LAYER_NORM_PL0_0_TOTAL_MAX_DIM1 = 256,
     parameter LAYER_NORM_PL0_0_PARALLELISM_DIM0 = PARALLELISM_DIM0,
     parameter LAYER_NORM_PL0_0_PARALLELISM_DIM1 = PARALLELISM_DIM1,
     parameter LAYER_NORM_PL0_0_PRECISION_0 = PRECISION_0,
     parameter LAYER_NORM_PL0_0_PRECISION_1 = PRECISION_1,
-    parameter MHA_PL0_0_DATA_IN_0_MAX_TENSOR_SIZE_DIM_0 = 16,
-    parameter MHA_PL0_0_DATA_IN_0_MAX_TENSOR_SIZE_DIM_1 = 16,
+    parameter MHA_PL0_0_DATA_IN_0_MAX_TENSOR_SIZE_DIM_0 = 256,
+    parameter MHA_PL0_0_DATA_IN_0_MAX_TENSOR_SIZE_DIM_1 = 256,
     parameter MHA_PL0_0_DATA_IN_0_PARALLELISM_DIM_0 = PARALLELISM_DIM0,
     parameter MHA_PL0_0_DATA_IN_0_PARALLELISM_DIM_1 = PARALLELISM_DIM1,
     parameter MHA_PL0_0_DATA_IN_0_PRECISION_0 = PRECISION_0,
     parameter MHA_PL0_0_DATA_IN_0_PRECISION_1 = PRECISION_1,
-    parameter MHA_PL0_0_WEIGHT_MAX_TENSOR_SIZE_DIM_0 = 16,
-    parameter MHA_PL0_0_WEIGHT_MAX_TENSOR_SIZE_DIM_1 = 16,
+    parameter MHA_PL0_0_WEIGHT_MAX_TENSOR_SIZE_DIM_0 = 256,
+    parameter MHA_PL0_0_WEIGHT_MAX_TENSOR_SIZE_DIM_1 = 256,
     parameter MHA_PL0_0_WEIGHT_PARALLELISM_DIM_0 = PARALLELISM_DIM0,
     parameter MHA_PL0_0_WEIGHT_PARALLELISM_DIM_1 = PARALLELISM_DIM1,
     parameter MHA_PL0_0_WEIGHT_PRECISION_0 = PRECISION_0,
     parameter MHA_PL0_0_WEIGHT_PRECISION_1 = PRECISION_1,
-    parameter MHA_PL0_0_BIAS_MAX_TENSOR_SIZE_DIM_0 = 16,
-    parameter MHA_PL0_0_BIAS_MAX_TENSOR_SIZE_DIM_1 = 16,
+    parameter MHA_PL0_0_BIAS_MAX_TENSOR_SIZE_DIM_0 = 256,
+    parameter MHA_PL0_0_BIAS_MAX_TENSOR_SIZE_DIM_1 = 256,
     parameter MHA_PL0_0_BIAS_PARALLELISM_DIM_0 = PARALLELISM_DIM0,
     parameter MHA_PL0_0_BIAS_PARALLELISM_DIM_1 = PARALLELISM_DIM1,
     parameter MHA_PL0_0_BIAS_PRECISION_0 = PRECISION_0,
     parameter MHA_PL0_0_BIAS_PRECISION_1 = PRECISION_1,
-    parameter MHA_PL0_0_DATA_OUT_0_MAX_TENSOR_SIZE_DIM_0 = 16,
-    parameter MHA_PL0_0_DATA_OUT_0_MAX_TENSOR_SIZE_DIM_1 = 16,
+    parameter MHA_PL0_0_DATA_OUT_0_MAX_TENSOR_SIZE_DIM_0 = 256,
+    parameter MHA_PL0_0_DATA_OUT_0_MAX_TENSOR_SIZE_DIM_1 = 256,
     parameter MHA_PL0_0_DATA_OUT_0_PARALLELISM_DIM_0 = PARALLELISM_DIM0,
     parameter MHA_PL0_0_DATA_OUT_0_PARALLELISM_DIM_1 = PARALLELISM_DIM1,
     parameter MHA_PL0_0_DATA_OUT_0_PRECISION_0 = PRECISION_0,
@@ -392,10 +392,18 @@ logic [PRECISION_0-1:0] input_buffer_data_out_0 [PARALLELISM_DIM0*PARALLELISM_DI
 logic input_buffer_data_out_0_ready;
 logic input_buffer_data_out_0_valid;
 
-logic [14:0] max_input_counter;
-logic [14:0] max_output_counter;
+logic [14:0] counter_0_max_input_counter;
+logic [14:0] counter_0_max_output_counter;
+logic [14:0] counter_1_max_input_counter;
+logic [14:0] counter_1_max_output_counter;
+logic [14:0] counter_2_max_input_counter;
+logic [14:0] counter_2_max_output_counter;
+logic [14:0] counter_3_max_input_counter;
+logic [14:0] counter_3_max_output_counter;
 
 swin_controller control(
+    .clk(clk),
+    .rst(rst),
     .layer_norm_pl0_0_n_iters(layer_norm_pl0_0_n_iters),
     .layer_norm_pl0_0_inv_numvalues_0(layer_norm_pl0_0_inv_numvalues_0),
     .layer_norm_pl0_0_inv_numvalues_1(layer_norm_pl0_0_inv_numvalues_1),
@@ -430,15 +438,25 @@ swin_controller control(
     .load_input_seq(load_input_seq),
     .input_mux_ctrl(input_mux_ctrl),
     .output_mux_ctrl(output_mux_ctrl),
-    .max_input_counter(max_input_counter),
-    .max_output_counter(max_output_counter)
+    .counter_0_max_input_counter(counter_0_max_input_counter),
+    .counter_0_max_output_counter(counter_0_max_output_counter),
+    .counter_0_counter_max(counter_0_counter_max),
+    .counter_1_max_input_counter(counter_1_max_input_counter),
+    .counter_1_max_output_counter(counter_1_max_output_counter),
+    .counter_1_counter_max(counter_1_counter_max),
+    .counter_2_max_input_counter(counter_2_max_input_counter),
+    .counter_2_max_output_counter(counter_2_max_output_counter),
+    .counter_2_counter_max(counter_2_counter_max),
+    .counter_3_max_input_counter(counter_3_max_input_counter),
+    .counter_3_max_output_counter(counter_3_max_output_counter),
+    .counter_3_counter_max(counter_3_counter_max)
 );
 
 split2 split_pl0_0(
     .data_in_valid(input_signal_valid),
     .data_in_ready(input_signal_ready),
     .data_out_valid({layer_norm_pl0_0_in_valid, adder_fifo_pl0_0_in_valid}),
-    .data_out_ready({layer_norm_pl0_0_in_ready, adder_fifo_pl0_0_in_ready})
+    .data_out_ready({layer_norm_pl0_0_in_ready&&counter_0_input_ready, adder_fifo_pl0_0_in_ready})
 );
 
 
@@ -490,7 +508,10 @@ swin_counter counter_0
     .data_in_0_valid(layer_norm_pl0_0_in_valid),
     .data_in_0_ready(layer_norm_pl0_0_in_ready),
     .data_out_0_valid(layer_norm_pl0_0_out_valid),
-    .data_out_0_ready(layer_norm_pl0_0_out_ready)
+    .data_out_0_ready(layer_norm_pl0_0_out_ready),
+
+    .input_ready(counter_0_input_ready),
+    .counter_max(counter_0_counter_max)
 );
 
 //pipeline 0 - layer norm 0
@@ -524,6 +545,26 @@ group_norm_2d_programmable #(
 );
 
 //pipeline 0 - mha 0 
+
+
+swin_counter counter_1
+(
+
+    .clk(clk),
+    .rst(rst),
+
+    .max_input_counter(counter_1_max_input_counter),
+    .max_output_counter(counter_1_max_output_counter),
+
+    .data_in_0_valid(mha_pl0_0_data_in_0_valid),
+    .data_in_0_ready(mha_pl0_0_data_in_0_ready),
+    .data_out_0_valid(mha_pl0_0_data_out_0_valid),
+    .data_out_0_ready(mha_pl0_0_data_out_0_ready),
+
+    .input_ready(counter_1_input_ready),
+    .counter_max(counter_1_counter_max)
+);
+
 
 fixed_swin_attention_programmable #(
     .NUM_HEADS(1),
@@ -634,7 +675,25 @@ split2 split_pl0_1(
     .data_in_valid(residual_pl0_0_data_out_0_valid),
     .data_in_ready(residual_pl0_0_data_out_0_ready),
     .data_out_valid({layer_norm_pl0_1_in_valid, adder_fifo_pl0_1_in_valid}),
-    .data_out_ready({layer_norm_pl0_1_in_ready, adder_fifo_pl0_1_in_ready})
+    .data_out_ready({layer_norm_pl0_1_in_ready&&counter_2_input_ready, adder_fifo_pl0_1_in_ready})
+);
+
+swin_counter counter_2
+(
+
+    .clk(clk),
+    .rst(rst),
+
+    .max_input_counter(counter_2_max_input_counter),
+    .max_output_counter(counter_2_max_output_counter),
+
+    .data_in_0_valid(layer_norm_pl0_1_in_valid),
+    .data_in_0_ready(layer_norm_pl0_1_in_ready),
+    .data_out_0_valid(layer_norm_pl0_1_out_valid),
+    .data_out_0_ready(layer_norm_pl0_1_out_ready),
+
+    .input_ready(counter_2_input_ready),
+    .counter_max(counter_2_counter_max)
 );
 
 matrix_fifo #(
@@ -683,6 +742,25 @@ group_norm_2d_programmable #(
     .out_valid (layer_norm_pl0_1_out_valid),
     .out_ready (layer_norm_pl0_1_out_ready)
 
+);
+
+
+swin_counter counter_3
+(
+
+    .clk(clk),
+    .rst(rst),
+
+    .max_input_counter(counter_3_max_input_counter),
+    .max_output_counter(counter_3_max_output_counter),
+
+    .data_in_0_valid(linear_pl0_0_data_in_0_valid),
+    .data_in_0_ready(linear_pl0_0_data_in_0_ready),
+    .data_out_0_valid(linear_pl0_1_data_out_0_valid),
+    .data_out_0_ready(linear_pl0_1_data_out_0_ready),
+
+    .input_ready(counter_3_input_ready),
+    .counter_max(counter_3_counter_max)
 );
 
 fixed_linear_programmable #(
@@ -905,7 +983,7 @@ assign layer_norm_pl0_0_in_data = input_signal;
 
 //layernorm0_0 -> mha0_0
 //1st module
-assign layer_norm_pl0_0_out_ready = mha_pl0_0_data_in_0_ready;
+assign layer_norm_pl0_0_out_ready = mha_pl0_0_data_in_0_ready && counter_1_input_ready;
 //2nd module
 assign mha_pl0_0_data_in_0_valid = layer_norm_pl0_0_out_valid;
 assign mha_pl0_0_data_in_0 = layer_norm_pl0_0_out_data;
@@ -935,7 +1013,7 @@ assign adder_fifo_pl0_1_in_data = residual_pl0_0_data_out_0;
 
 //layernorm0_1 -> linear0_0
 //1st module
-assign layer_norm_pl0_1_out_ready = linear_pl0_0_data_in_0_ready;
+assign layer_norm_pl0_1_out_ready = linear_pl0_0_data_in_0_ready &&counter_3_input_ready;
 //2nd module
 assign linear_pl0_0_data_in_0_valid = layer_norm_pl0_1_out_valid;
 assign linear_pl0_0_data_in_0 = layer_norm_pl0_1_out_data;
