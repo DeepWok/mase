@@ -119,7 +119,6 @@ def _formulate_ilp(
             layer_strategies,
             data_size=data_size,
         )
-        expr += compute_cost @ opt_var
 
         # Consider intra operator comms cost
         # ============================
@@ -128,7 +127,9 @@ def _formulate_ilp(
             layer_strategies,
             pass_args=pass_args,
         )
-        expr += comms_cost @ opt_var
+
+        expr += (compute_cost + comms_cost) @ opt_var
+
 
         # Consider resharding cost
         # ============================

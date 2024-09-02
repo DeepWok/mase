@@ -15,19 +15,6 @@ from vllm.attention import Attention as VllmAttention
 
 VllmLinear = vllm.model_executor.layers.linear.LinearBase
 
-# costs are in ms
-_ALL_REDUCE_COST_DB = {
-    (8, 1536): 0.2580975145101547,
-    (8, 4608): 0.4603813052177429,
-    (8, 6144): 0.5322111986185375,
-}
-
-# costs are in ms
-_ALL_GATHER_COST_DB = {
-    (8, 1536): 0.26789389503629585,
-    (8, 4608): 0.24845608441453232,
-    (8, 6144): 0.3390117042943051,
-}
 
 # Utilities
 # ================================
@@ -119,17 +106,35 @@ def _profile_distributed_op(
     dist.destroy_process_group()
 
 
-# @lru_cache(maxsize=128, typed=False)
 def allreduce_cost(
     output_shape: list,
     repeat: int = 100,
     warmup_iters: int = 5,
 ) -> float:
-    cost = _ALL_REDUCE_COST_DB.get(tuple(output_shape), None)
-    if cost is None:
-        raise ValueError(f"Unknown allreduce cost for shape: {output_shape}")
+    ds, hs = output_shape
 
-    return cost * 1e-3  # convert back to seconds
+    intercept = 0.40594790939481484
+
+    coeff = [
+        0.0,
+        -0.00019876370905316763,
+        -4.174260473864464e-06,
+        4.019442387061491e-08,
+        6.210839534401708e-07,
+        4.909228531291631e-11,
+    ]
+
+    cost = (
+        intercept
+        + coeff[0]
+        + (coeff[1] * ds)
+        + (coeff[2] * hs)
+        + (coeff[3] * ds**2)
+        + (coeff[4] * ds * hs)
+        + (coeff[5] * hs**2)
+    )
+
+    return cost * 1e-3
 
 
 def allgather_cost(
@@ -137,9 +142,28 @@ def allgather_cost(
     repeat: int = 100,
     warmup_iters: int = 5,
 ) -> float:
-    cost = _ALL_GATHER_COST_DB.get(tuple(output_shape), None)
-    if cost is None:
-        raise ValueError(f"Unknown allgather cost for shape: {output_shape}")
+    ds, hs = output_shape
+
+    intercept = 0.478361915750253
+
+    coeff = [
+        0,
+        -0.00025625419990716485,
+        -1.9612017748514218e-05,
+        4.892589021040619e-08,
+        3.375990357833703e-07,
+        5.192329766543819e-10,
+    ]
+
+    cost = (
+        intercept
+        + coeff[0]
+        + (coeff[1] * ds)
+        + (coeff[2] * hs)
+        + (coeff[3] * ds**2)
+        + (coeff[4] * ds * hs)
+        + (coeff[5] * hs**2)
+    )
 
     return cost * 1e-3  # convert back to seconds
 
@@ -318,14 +342,8 @@ def _get_intra_op_comms_cost(
     layer_strategies: list,
     pass_args: dict,
 ):
-    bw = pass_args.get("intra_device_bandwidth", None)
-    lat = pass_args.get("intra_device_latency", None)
     data_size = pass_args.get("data_size", None)
 
-    if bw is None:
-        raise ValueError("intra_device_bandwidth is not provided")
-    if lat is None:
-        raise ValueError("intra_device_latency is not provided")
     if data_size is None:
         raise ValueError("data_size is not provided")
 
@@ -355,14 +373,8 @@ def _get_resharding_cost(
         return 0
 
     world_size = torch.distributed.get_world_size()
-    bw = pass_args.get("intra_device_bandwidth", None)
-    lat = pass_args.get("intra_device_latency", None)
     data_size = pass_args.get("data_size", None)
 
-    if bw is None:
-        raise ValueError("intra_device_bandwidth is not provided")
-    if lat is None:
-        raise ValueError("intra_device_latency is not provided")
     if data_size is None:
         raise ValueError("data_size is not provided")
 
