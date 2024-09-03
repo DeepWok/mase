@@ -20,7 +20,7 @@ from test_emit_verilog_layernorm import (
     update_hardware_precision_param,
 )
 import operator
-
+from utils import update_common_metadata_pass
 set_logging_verbosity("debug")
 from chop.passes.graph.transforms.verilog.insert_fork import insert_fork_transform_pass
 
@@ -107,7 +107,6 @@ def test_emit_verilog_fork_add():
     mg, _ = passes.quantize_transform_pass(mg, quan_args)
 
     mg, _ = insert_fork_transform_pass(mg, quan_args)
-    from test_emit_verilog_layernorm import update_common_metadata_pass
 
     update_common_metadata_pass(mg, quan_args)
     mg, _ = passes.add_hardware_metadata_analysis_pass(
@@ -128,7 +127,7 @@ def test_emit_verilog_fork_add():
     )
     mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
-    simulate(skip_build=False, skip_test=False, simulator="verilator", waves=True)
+    simulate(skip_build=False, skip_test=False, simulator="questa", waves=True, gui=False)
 
 
 if __name__ == "__main__":

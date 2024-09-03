@@ -91,20 +91,20 @@ def test_emit_verilog_linear():
     dummy_in = {"x": x}
 
     mg, _ = passes.init_metadata_analysis_pass(mg, None)
+    # Increase weight range
+    mg.model.fc1.weight = torch.nn.Parameter(
+        10 * torch.randn(mg.model.fc1.weight.shape)
+    )
     mg, _ = passes.add_common_metadata_analysis_pass(mg, {"dummy_in": dummy_in})
 
     mg, _ = passes.quantize_transform_pass(mg, quan_args)
 
     update_common_metadata_pass(mg, quan_args)
-    # Increase weight range
-    mg.model.fc1.weight = torch.nn.Parameter(
-        10 * torch.randn(mg.model.fc1.weight.shape)
-    )
+
     mg, _ = passes.add_hardware_metadata_analysis_pass(
         mg, pass_args={"max_parallelism": [2] * 4}
     )
     mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
-
     mg, _ = passes.emit_verilog_top_transform_pass(mg)
     mg, _ = passes.emit_bram_transform_pass(mg)
     mg, _ = passes.emit_internal_rtl_transform_pass(mg)

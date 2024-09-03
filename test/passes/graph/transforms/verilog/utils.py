@@ -11,6 +11,8 @@ set_logging_verbosity("debug")
 def update_common_metadata_pass(mg, quan_args):
     # There is a bug in the current quantization pass, where the results metadata is not updated with the precision.
     # # Here we update the metadata here so we can test the hardware back end.
+
+    # update precision
     for node in mg.fx_graph.nodes:
         mase_op = node.meta["mase"].parameters["common"]["mase_op"]
         if mase_op not in QUANTIZEABLE_OP:
@@ -38,7 +40,7 @@ def update_common_metadata_pass(mg, quan_args):
                     node_quan_config["data_out_width"],
                     node_quan_config["data_out_frac_width"],
                 ]
-
+    # update parameters
     for node in mg.fx_graph.nodes:
         mase_op = node.meta["mase"].parameters["common"]["mase_op"]
         if mase_op in ["layer_norm"]:
@@ -48,6 +50,19 @@ def update_common_metadata_pass(mg, quan_args):
                 ] = True
                 if node.meta["mase"].parameters["common"]["args"].get("bias") != None:
                     node.meta["mase"].parameters["common"]["args"]["has_bias"] = True
+    
+    # update for transpose
+    for node in mg.fx_graph.nodes:
+        mase_op = node.meta["mase"].parameters["common"]["mase_op"]
+        if mase_op in ["vit_self_attention_integer", "linear"]:
+            args = node.meta["mase"].parameters["common"]["args"] 
+            if args != None:
+                for key, _ in args.items():
+                    if "weight" in key:
+                        args[key]["value"] = args[key]["value"].transpose(0,1)
+                        args[key]["shape"].reverse()
+                
+    
 
 
 def update_hardware_precision_param(mg, quan_args, model_args: dict = {}):

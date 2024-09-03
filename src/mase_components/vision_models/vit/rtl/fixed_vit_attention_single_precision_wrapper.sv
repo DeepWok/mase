@@ -19,7 +19,7 @@ module fixed_vit_attention_single_precision_wrapper #(
     parameter DATA_IN_0_PRECISION_0 = 16,
     parameter DATA_IN_0_PRECISION_1 = 3,
 
-    parameter QUERY_WEIGHTS_PRE_TRANSPOSED = 0,
+    parameter QUERY_WEIGHTS_PRE_TRANSPOSED = 1,
     parameter QUERY_WEIGHT_TENSOR_SIZE_DIM_0 = 768,
     parameter QUERY_WEIGHT_TENSOR_SIZE_DIM_1 = 768,
     parameter QUERY_WEIGHT_PARALLELISM_DIM_0 = 4,
@@ -27,7 +27,7 @@ module fixed_vit_attention_single_precision_wrapper #(
     parameter QUERY_WEIGHT_PRECISION_0 = 16,
     parameter QUERY_WEIGHT_PRECISION_1 = 3,
 
-    parameter KEY_WEIGHTS_PRE_TRANSPOSED = 0,
+    parameter KEY_WEIGHTS_PRE_TRANSPOSED = 1,
     parameter KEY_WEIGHT_TENSOR_SIZE_DIM_0 = 768,
     parameter KEY_WEIGHT_TENSOR_SIZE_DIM_1 = 768,
     parameter KEY_WEIGHT_PARALLELISM_DIM_0 = 4,
@@ -35,7 +35,7 @@ module fixed_vit_attention_single_precision_wrapper #(
     parameter KEY_WEIGHT_PRECISION_0 = 16,
     parameter KEY_WEIGHT_PRECISION_1 = 3,
 
-    parameter VALUE_WEIGHTS_PRE_TRANSPOSED = 0,
+    parameter VALUE_WEIGHTS_PRE_TRANSPOSED = 1,
     parameter VALUE_WEIGHT_TENSOR_SIZE_DIM_0 = 768,
     parameter VALUE_WEIGHT_TENSOR_SIZE_DIM_1 = 768,
     parameter VALUE_WEIGHT_PARALLELISM_DIM_0 = 4,
@@ -43,7 +43,7 @@ module fixed_vit_attention_single_precision_wrapper #(
     parameter VALUE_WEIGHT_PRECISION_0 = 16,
     parameter VALUE_WEIGHT_PRECISION_1 = 3,
 
-    parameter QUERY_HAS_BIAS = 0,
+    parameter QUERY_HAS_BIAS = 1,
     parameter QUERY_BIAS_TENSOR_SIZE_DIM_0 = 64,
     parameter QUERY_BIAS_TENSOR_SIZE_DIM_1 = 1,
     parameter QUERY_BIAS_PARALLELISM_DIM_0 = 4,
@@ -51,7 +51,7 @@ module fixed_vit_attention_single_precision_wrapper #(
     parameter QUERY_BIAS_PRECISION_0 = 16,
     parameter QUERY_BIAS_PRECISION_1 = 3,
 
-    parameter KEY_HAS_BIAS = 0,
+    parameter KEY_HAS_BIAS = 1,
     parameter KEY_BIAS_TENSOR_SIZE_DIM_0 = 64,
     parameter KEY_BIAS_TENSOR_SIZE_DIM_1 = 20,
     parameter KEY_BIAS_PARALLELISM_DIM_0 = 4,
@@ -59,7 +59,7 @@ module fixed_vit_attention_single_precision_wrapper #(
     parameter KEY_BIAS_PRECISION_0 = 16,
     parameter KEY_BIAS_PRECISION_1 = 3,
 
-    parameter VALUE_HAS_BIAS = 0,
+    parameter VALUE_HAS_BIAS = 1,
     parameter VALUE_BIAS_TENSOR_SIZE_DIM_0 = 64,
     parameter VALUE_BIAS_TENSOR_SIZE_DIM_1 = 20,
     parameter VALUE_BIAS_PARALLELISM_DIM_0 = 4,

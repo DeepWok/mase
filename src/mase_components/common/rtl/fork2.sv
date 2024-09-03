@@ -41,41 +41,43 @@ module fork2 #(
     output logic data_out_1_valid,
     input logic data_out_1_ready
 );
-  logic buffered_data_out_1_valid, buffered_data_out_0_valid;
-  logic buffered_data_out_1_ready, buffered_data_out_0_ready;
+//   logic buffered_data_out_1_valid, buffered_data_out_0_valid;
+//   logic buffered_data_out_1_ready, buffered_data_out_0_ready;
 
   split2 #() split2_inst (
-      .data_out_valid({buffered_data_out_1_valid, buffered_data_out_0_valid}),
-      .data_out_ready({buffered_data_out_1_ready, buffered_data_out_0_ready}),
+      .data_out_valid({data_out_1_valid, data_out_0_valid}),
+      .data_out_ready({data_out_1_ready, data_out_0_ready}),
       .data_in_valid (data_in_0_valid),
       .data_in_ready (data_in_0_ready)
   );
-  unpacked_fifo #(
-      .DEPTH(DATA_OUT_0_FIFO_DEPTH),
-      .DATA_WIDTH(DATA_IN_0_PRECISION_0),
-      .IN_NUM(DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1)
-  ) data_out_0_buffer (
-      .clk(clk),
-      .rst(rst),
-      .data_in(data_in_0),
-      .data_in_valid(buffered_data_out_0_valid),
-      .data_in_ready(buffered_data_out_0_ready),  // write enable
-      .data_out(data_out_0),
-      .data_out_valid(data_out_0_valid),
-      .data_out_ready(data_out_0_ready)  // read enable
-  );
-  unpacked_fifo #(
-      .DEPTH(DATA_OUT_1_FIFO_DEPTH),
-      .DATA_WIDTH(DATA_IN_0_PRECISION_0),
-      .IN_NUM(DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1)
-  ) data_out_1_buffer (
-      .clk(clk),
-      .rst(rst),
-      .data_in(data_in_0),
-      .data_in_valid(buffered_data_out_1_valid),
-      .data_in_ready(buffered_data_out_1_ready),  // write enable
-      .data_out(data_out_1),
-      .data_out_valid(data_out_1_valid),
-      .data_out_ready(data_out_1_ready)  // read enable
-  );
+  assign data_out_0 = data_in_0;
+  assign data_out_1 = data_in_0;
+//   unpacked_fifo #(
+//       .DEPTH(DATA_OUT_0_FIFO_DEPTH),
+//       .DATA_WIDTH(DATA_IN_0_PRECISION_0),
+//       .IN_NUM(DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1)
+//   ) data_out_0_buffer (
+//       .clk(clk),
+//       .rst(rst),
+//       .data_in(data_in_0),
+//       .data_in_valid(buffered_data_out_0_valid),
+//       .data_in_ready(buffered_data_out_0_ready),  // write enable
+//       .data_out(data_out_0),
+//       .data_out_valid(data_out_0_valid),
+//       .data_out_ready(data_out_0_ready)  // read enable
+//   );
+//   unpacked_fifo #(
+//       .DEPTH(DATA_OUT_1_FIFO_DEPTH),
+//       .DATA_WIDTH(DATA_IN_0_PRECISION_0),
+//       .IN_NUM(DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1)
+//   ) data_out_1_buffer (
+//       .clk(clk),
+//       .rst(rst),
+//       .data_in(data_in_0),
+//       .data_in_valid(buffered_data_out_1_valid),
+//       .data_in_ready(buffered_data_out_1_ready),  // write enable
+//       .data_out(data_out_1),
+//       .data_out_valid(data_out_1_valid),
+//       .data_out_ready(data_out_1_ready)  // read enable
+//   );
 endmodule

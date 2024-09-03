@@ -136,7 +136,6 @@ def test_emit_verilog_vit_attention():
     model_config = {
         "dim": dim,
         "num_heads": num_heads,
-        "QUERY_WEIGHTS_PRE_TRANSPOSED": False,
         "query_has_bias": True,
     }
     layer = Layer(dim, num_heads)

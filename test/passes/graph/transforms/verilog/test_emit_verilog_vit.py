@@ -90,10 +90,8 @@ class Block(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # x = x + self.attn(self.norm1(x))
-        x = self.norm1(x)
-        # x = self.attn(self.norm1(x))
-        # x = x + self.mlp(self.norm2(x))
+        x = x + self.attn(self.norm1(x))
+        x = x + self.mlp(self.norm2(x))
         return x
 
 
@@ -225,15 +223,14 @@ quan_args = {
 def test_emit_verilog_vit():
     # vit_tiny dim 192, n 196, num_heads = 3
     #
-    dim = 10
-    num_heads = 2
+    dim = 12
+    num_heads = 3
     batch_size = 1
     n = 10
     layer = Block(dim,num_heads,mlp_ratio=4,qkv_bias=True)
     model_config = {
         "dim": dim,
         "num_heads": num_heads,
-        "QUERY_WEIGHTS_PRE_TRANSPOSED": False,
         "query_has_bias": True,
     }
     qlayer = vit_module_level_quantize(layer, model_config, attention_quant_config)
@@ -260,9 +257,9 @@ def test_emit_verilog_vit():
     mg, _ = passes.emit_bram_transform_pass(mg)
     mg, _ = passes.emit_internal_rtl_transform_pass(mg)
     mg, _ = passes.emit_cocotb_transform_pass(
-        mg, pass_args={"wait_time": 100, "wait_unit": "ms", "batch_size": batch_size}
+        mg, pass_args={"wait_time": 100, "wait_unit": "us", "batch_size": batch_size}
     )
-    # mg, _ = passes.emit_vivado_project_transform_pass(mg)
+    mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
     simulate(skip_build=False, skip_test=False, simulator="questa", waves=True, gui=False)
 

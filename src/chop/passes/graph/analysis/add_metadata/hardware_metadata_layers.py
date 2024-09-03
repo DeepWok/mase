@@ -70,6 +70,18 @@ linear = {
 }
 INTERNAL_COMP = {
     "linear": [linear],
+    "fifo": [
+        {
+            "name": "fifo_for_autogen",
+            "dependence_files": [
+                "memory/rtl/fifo_for_autogen.sv",
+                "memory/rtl/unpacked_fifo.sv",
+                "memory/rtl/skid_buffer.sv",
+                "memory/rtl/simple_dual_port_ram.sv",
+                "memory/rtl/fifo.sv",
+            ]
+        }
+    ],
     "relu": [
         {
             "name": "fixed_relu",
