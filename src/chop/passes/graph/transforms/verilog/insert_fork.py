@@ -94,3 +94,40 @@ def insert_fifo_after_fork_pass(graph, pass_args = {}):
                     node_args[i] = new_node
                     node.args = tuple(node_args)
     return graph, None
+
+def insert_fifo_after_specified_modules(graph, pass_args = {}):
+    def generating_mase_metadata(new_node, node, parallelism):
+        new_node.meta["mase"] = MaseMetadata(new_node, node.meta["mase"].model)
+        new_node.meta["mase"].parameters["common"]["mase_type"] = "call_function"
+        new_node.meta["mase"].parameters["common"]["mase_op"] = "fifo"
+        inherited_metadata = deepcopy(node.meta["mase"]["common"]["results"][f"data_out_0"])
+        new_node.meta["mase"].parameters["common"]["args"] = {
+            "data_in_0": inherited_metadata, 
+            "depth": inherited_metadata["shape"][-1]//parallelism,
+            }
+        new_node.meta["mase"].parameters["common"]["results"] = {"data_out_0": inherited_metadata}
+
+        new_node.meta["mase"].parameters["hardware"]["is_implicit"] = False
+    
+    from chop.tools.utils import to_numpy_if_tensor,to_tensor_if_numpy
+    from chop.passes.graph.transforms.utils import metadata_value_type_cast_transform_pass
+    graph, _ = metadata_value_type_cast_transform_pass(
+        graph, pass_args={"fn": to_numpy_if_tensor}
+    )
+    record_list = []
+    for node in graph.fx_graph.nodes: 
+        if node.meta["mase"].parameters["common"]["mase_op"] in pass_args["insert_fifo"]:
+            record_list.append(node)
+    for node in record_list:
+        with graph.fx_graph.inserting_after(node):
+            new_node = graph.fx_graph.call_function(fifo, args=(node,))
+            node.replace_all_uses_with(new_node)
+            new_node.args = (node,)
+            generating_mase_metadata(new_node, node, pass_args["max_parallelism"])
+
+    graph, _ = metadata_value_type_cast_transform_pass(
+        graph, pass_args={"fn": to_tensor_if_numpy}
+    ) 
+    graph.fx_graph.lint()
+    return graph, None
+    

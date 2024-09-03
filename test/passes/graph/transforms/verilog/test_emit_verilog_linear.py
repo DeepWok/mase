@@ -17,7 +17,7 @@ from chop.tools.logger import set_logging_verbosity
 from chop.tools import get_logger
 
 set_logging_verbosity("debug")
-from utils import update_common_metadata_pass
+from utils import update_common_metadata_pass, update_hardware_precision_param
 
 def excepthook(exc_type, exc_value, exc_traceback):
     traceback.print_exception(exc_type, exc_value, exc_traceback)
@@ -79,15 +79,16 @@ quan_args = {
 
 @pytest.mark.dev
 def test_emit_verilog_linear():
-    in_features = 4
+    in_features = 40
     hidden_features = 20
-    out_features = 10
-    batch_size = 4
+    out_features = 20
+    n = 4
+    batch_size = 100
     linear = MLP(in_features, hidden_features, out_features)
     mg = chop.MaseGraph(model=linear)
     torch.manual_seed(0)
     # Provide a dummy input for the graph so it can use for tracing
-    x = torch.randn((batch_size, in_features))
+    x = torch.randn((batch_size, n, in_features))
     dummy_in = {"x": x}
 
     mg, _ = passes.init_metadata_analysis_pass(mg, None)
@@ -100,10 +101,17 @@ def test_emit_verilog_linear():
     mg, _ = passes.quantize_transform_pass(mg, quan_args)
 
     update_common_metadata_pass(mg, quan_args)
-
+    from chop.passes.graph.transforms.verilog.insert_fork import insert_fifo_after_specified_modules
+    mg, _ = insert_fifo_after_specified_modules(
+        mg, pass_args = {
+        "insert_fifo": ["linear"],
+        "max_parallelism": 2 # used for generating the fifo depth
+        }
+    )
     mg, _ = passes.add_hardware_metadata_analysis_pass(
         mg, pass_args={"max_parallelism": [2] * 4}
     )
+    update_hardware_precision_param(mg, quan_args)
     mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
     mg, _ = passes.emit_verilog_top_transform_pass(mg)
     mg, _ = passes.emit_bram_transform_pass(mg)
@@ -113,7 +121,7 @@ def test_emit_verilog_linear():
     )
     mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
-    simulate(skip_build=False, skip_test=False, simulator="questa", waves=True)
+    simulate(skip_build=False, skip_test=False, simulator="questa", waves=True, gui=False)
 
 
 if __name__ == "__main__":
