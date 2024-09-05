@@ -21,6 +21,9 @@ from torch.distributed._tensor.ops.utils import (
     is_tensor_evenly_shardable,
     normalize_dim,
     normalize_dims,
+)
+
+from torch.distributed.utils import (
     normalize_to_torch_size,
 )
 from torch.distributed._tensor.placement_types import (

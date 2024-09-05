@@ -20,3 +20,8 @@ from .dse import partition_to_multi_device_transform_pass
 
 from .granularity import raise_granularity_transform_pass
 from .patching import patch_metadata_transform_pass
+
+from .resharding import resharding_transform_pass
+from .insert_dtensor_wrapper import insert_dtensor_wrapper_transform_pass
+
+from .find_replace.method_to_function import replace_method_with_function

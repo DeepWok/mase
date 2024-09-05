@@ -33,9 +33,12 @@ from .graph.transforms import (
     emit_vivado_project_transform_pass,
     raise_granularity_transform_pass,
     patch_metadata_transform_pass,
+    resharding_transform_pass,
+    replace_method_with_function,
+    insert_dtensor_wrapper_transform_pass,
 )
-from .module.analysis import calculate_avg_bits_module_analysis_pass
-from .module.transforms import quantize_module_transform_pass, resharding_transform_pass
+from .module.analysis import calculate_avg_bits_module_analysis_pass, autosharding_module_analysis_pass
+from .module.transforms import quantize_module_transform_pass
 
 from .onnx.analysis import (
     export_fx_graph_analysis_pass,

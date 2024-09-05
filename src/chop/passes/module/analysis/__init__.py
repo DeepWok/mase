@@ -1,1 +1,3 @@
 from .quantize import calculate_avg_bits_module_analysis_pass
+
+from .autosharding import autosharding_module_analysis_pass

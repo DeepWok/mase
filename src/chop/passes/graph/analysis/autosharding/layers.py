@@ -4,26 +4,33 @@ import torch
 import torch.nn.functional as F
 
 from chop.tools import get_logger
+from chop.nn.functional.tensor import (
+    torch_size,
+    torch_expand,
+    torch_view,
+    torch_contiguous,
+    torch_reshape,
+    torch_split,
+    torch_permute,
+    torch_transpose,
+)
 
-from .strategies.common import fully_replicated_strategy
-from .strategies.matrix_ops import (
+from .ops.common import fully_replicated_strategy
+from .ops.matrix_ops import (
     transpose_strategy,
     mm_strategy,
     addmm_strategy,
     bmm_strategy,
     baddmm_strategy,
+    scaled_dot_product_strategy,
 )
-from .strategies.view_ops import get_reshape_strategy
-from .strategies.pointwise_ops import pointwise_strategy, linear_pointwise_strategy
-from .strategies.math_ops import softmax_strategy, layer_norm_strategy
-from .strategies.embedding_ops import embedding_strategy
-from .strategies.tensor_ops import tensor_op_strategy, tensor_equal_strategy
+from .ops.view_ops import get_reshape_strategy
+from .ops.pointwise_ops import pointwise_strategy, linear_pointwise_strategy
+from .ops.math_ops import softmax_strategy, layer_norm_strategy
+from .ops.embedding_ops import embedding_strategy
+from .ops.tensor_ops import tensor_op_strategy, tensor_equal_strategy
 
 logger = get_logger(__name__)
-
-AUTOSHARDING_MODULES = {
-    torch.nn.ReLU: pointwise_strategy,
-}
 
 AUTOSHARDING_FUNCTIONS = {
     # embedding_ops.py
@@ -242,27 +249,29 @@ AUTOSHARDING_FUNCTIONS = {
     torch.Tensor.zero_: tensor_op_strategy,
     torch.Tensor.equal: tensor_equal_strategy,
     torch.Tensor.is_same_size: tensor_equal_strategy,
+    # chop.nn.functional.tensor functions
+    torch_expand: get_reshape_strategy(torch.Tensor.expand),
+    torch_view: get_reshape_strategy(torch.Tensor.view),
+    torch_contiguous: tensor_op_strategy,
+    torch_reshape: get_reshape_strategy(torch.Tensor.reshape),
+    # torch_split:
+    torch_permute: get_reshape_strategy(torch.Tensor.permute),
+    torch_transpose: transpose_strategy,
+    torch.unsqueeze: get_reshape_strategy(torch.unsqueeze),
+    # SDPA
+    F.scaled_dot_product_attention: scaled_dot_product_strategy,
 }
 
-AUTOSHARDING_METHODS = {
-    # view_ops.py
-    "view": get_reshape_strategy(torch.Tensor.view),
-    "reshape": get_reshape_strategy(torch.Tensor.reshape),
-    "expand": get_reshape_strategy(torch.Tensor.expand),
-    "permute": get_reshape_strategy(torch.Tensor.permute),
-    "transpose": get_reshape_strategy(torch.Tensor.transpose),
-    "masked_fill": pointwise_strategy,
-    "masked_fill_": pointwise_strategy,
-    "contiguous": tensor_op_strategy,
-}
+FULLY_REPLICATED_FUNCS = [
+    F.embedding,
+    torch.arange,
+]
 
+# Implicit functions inherit their parent's strategy
+# and do not change the sharding profile of their input tensors
 IMPLICIT_FUNCS = [
     operator.getitem,
     getattr,
     torch.finfo,
-    torch.arange,
-]
-
-IMPLICIT_METHODS = [
-    "size",
+    torch_size,
 ]

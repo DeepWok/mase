@@ -1,10 +1,15 @@
-import numpy as np
-import cvxpy as cp
+import os
 from time import time
 import dill
 
+from torch.distributed._tensor._op_schema import DTensorSpec
+from torch.distributed._tensor.placement_types import Replicate
+
 from chop.tools import get_logger
 from .mesh_model import MeshModel
+from .algos.alpa import alpa_autosharding_pass
+from .algos.megatron import megatron_autosharding_pass
+from .algos.fully_replicated import fully_replicated_autosharding_pass
 
 logger = get_logger(__name__)
 logger.setLevel("INFO")
@@ -24,7 +29,7 @@ def _import_solution(
     mg,
     solution: dict,
     mesh: MeshModel,
-    extrapolate_sharding: bool = True,
+    extrapolate_sharding: bool = False,
 ):
     """Import an autosharding solution into the metadata of the MaseGraph.
 
@@ -40,12 +45,6 @@ def _import_solution(
     for node in mg.fx_graph.nodes:
         logger.debug(f"Importing solution for node: {node.name}")
 
-        # Only import solution for getattr nodes
-        # TO DO: this is hard-coded for GPT2
-        # Figure out how to generalize
-        if not node.name.startswith("transformer_"):
-            continue
-
         # Extrapolate from first layer by string matching
         if node.name not in solution.keys() and extrapolate_sharding:
 
@@ -56,7 +55,7 @@ def _import_solution(
             extrapolate_node = node.name.replace(f"_{layer_num}_", "_0_", 1)
 
             if extrapolate_node in solution.keys():
-                logger.warning(
+                logger.debug(
                     f"Node: {node.name} not found in solution. Extrapolating from solution for: {extrapolate_node}"
                 )
                 solution[node.name] = solution[extrapolate_node]
@@ -136,6 +135,8 @@ def _export_solution(mg, export_file: str = "ilp_solution.pkl"):
                 )
             else:
                 spec = result_info["dtensor_spec"]
+                if isinstance(spec, tuple):
+                    spec = spec[0]
             out_dict[node_name]["results"][result] = spec.placements
 
     with open(export_file, "wb") as file:
@@ -208,6 +209,9 @@ def _get_sharding_map(mg):
 def autosharding_analysis_pass(mg, pass_args: dict = {}):
     """Annotate the metadata of each operator in the graph with a parallelization strategy.
 
+    For the autosharding pass to work, the fx graph must contain only placeholder, get_attr,
+    call_functional and output nodes. call_method and call_module nodes are not allowed.
+
     Args:
         mg (MaseGraph): input mase graph.
         pass_args (dict, optional): pass arguments. Defaults to {}.
@@ -233,11 +237,6 @@ def autosharding_analysis_pass(mg, pass_args: dict = {}):
     - ilp_solution_file (optional) -> str : File to export the autosharding solution to. Defaults to: "ilp_solution.pkl".
     """
 
-    from torch.distributed._tensor._op_schema import DTensorSpec
-    from torch.distributed._tensor.placement_types import Replicate
-    from .alpa import alpa_autosharding_pass
-    from .megatron import megatron_autosharding_pass
-
     assert (
         "mesh_shape" in pass_args
     ), "Logical description for device cluster was not specified."
@@ -248,8 +247,12 @@ def autosharding_analysis_pass(mg, pass_args: dict = {}):
     mesh = MeshModel(pass_args["mesh_shape"])
 
     # Preload autosharding solution
+    fname = pass_args.get("ilp_solution_file", "ilp_solution.pkl")
+    # check if solution file exists
     if pass_args.get("preload_solution", False):
-        fname = pass_args.get("ilp_solution_file", "ilp_solution.pkl")
+        if not os.path.exists(fname):
+            raise FileNotFoundError(f"Solution file {fname} not found.")
+
         logger.info(f"Preloading autosharding solution from: {fname}")
         with open(fname, "rb") as file:
             solution = dill.load(file)
@@ -272,7 +275,9 @@ def autosharding_analysis_pass(mg, pass_args: dict = {}):
 
         # Run intra-operator pass
         start_time = time()
-        if algo == "alpa":
+        if algo == "fully_replicated":
+            mg, pass_outs = fully_replicated_autosharding_pass(mg, mesh, pass_args)
+        elif algo == "alpa":
             mg, pass_outs = alpa_autosharding_pass(mg, mesh, pass_args)
         elif algo == "megatron":
             mg, pass_outs = megatron_autosharding_pass(mg, mesh, pass_args)

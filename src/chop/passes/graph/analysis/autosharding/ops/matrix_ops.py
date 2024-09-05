@@ -19,10 +19,9 @@ from torch.distributed._tensor.placement_types import (
     TensorMeta,
 )
 
-from ..utils import is_tensor_shardable
-
 from chop.ir.graph import MaseMetadata
 from .common import expand_to_full_mesh_op_strategy
+from ..utils import is_tensor_shardable
 
 
 def _other(meta, dim):

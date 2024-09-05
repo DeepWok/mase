@@ -36,4 +36,6 @@ class AutoPipeline:
             mg, pass_output = pass_fn(mg, pass_args=args)
             self.pass_outputs[pass_fn.__name__] = pass_output
 
+        mg.model.recompile()
+
         return mg, self.pass_outputs

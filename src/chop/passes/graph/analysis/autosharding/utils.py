@@ -1,4 +1,4 @@
-from typing import cast, Iterable, List, Sequence, Tuple, Union
+from typing import Sequence, cast
 from torch.distributed._tensor.placement_types import DTensorSpec, Shard
 
 

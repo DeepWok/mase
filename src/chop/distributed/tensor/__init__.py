@@ -14,10 +14,8 @@ from torch.distributed._tensor.placement_types import (
 )
 from torch.distributed.device_mesh import _mesh_resources, DeviceMesh, init_device_mesh
 
-import chop.distributed.tensor.ops
 from chop.distributed.tensor._utils import compute_local_shape
 from chop.distributed.tensor.api import distribute_module, distribute_tensor, DTensor
-from chop.distributed.tensor.ops.utils import normalize_to_torch_size
 
 
 # All public APIs from dtensor package
@@ -31,6 +29,25 @@ __all__ = [
     "Replicate",
     "Partial",
 ]
+
+
+def normalize_to_torch_size(size) -> torch.Size:
+    """
+    Unify variable types of size argument to torch.Size
+    Acceptable types include:
+        int, Sequence[int], Tuple[int], Tuple[Sequence[int]],
+        or torch.Size
+    """
+    if isinstance(size, torch.Size):
+        return size
+
+    if isinstance(size, int):
+        torch_size = [size]
+    elif len(size) == 1 and isinstance(size[0], Sequence):
+        torch_size = list(size[0])
+    else:
+        torch_size = list(size)
+    return torch.Size(torch_size)
 
 
 def _dtensor_init_helper(

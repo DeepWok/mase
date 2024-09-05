@@ -463,6 +463,7 @@ dim_maps: Dict[Callable[..., torch.Tensor], Callable[..., DimMap]] = {
     ),
     Tensor.transpose: lambda input, dim0, dim1: dim_transpose(input.ndim, dim0, dim1),
     Tensor.view: lambda input, *shape: view_groups(input.shape, shape),
+    Tensor.unsqueeze: lambda input, dim: dim_unsqueeze(input.ndim, dim),
 }
 
 
@@ -575,19 +576,15 @@ def propagate_shape_and_sharding(
 def get_reshape_strategy(op):
     dim_map = dim_maps[op]
 
-    # def reshape_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> StrategyType:
     def reshape_strategy(meta, mesh):
-        assert meta.node.op == "call_method", "Node should have call_method op."
-        args_schema = [meta["common"]["self"]] + [
-            i for i in meta["common"]["args"].values()
-        ]
+        args_schema = [i["value"] for i in meta["common"]["args"].values()]
         rules = dim_map(*args_schema)
         parent_node = meta.node.args[0]
         # input_strategy = cast(OpStrategy, op_schema.args_schema[0])
         input_strategy = parent_node.meta["mase"]["software"]["autosharding"][
             "op_strategy"
         ]
-        global_in_shape = meta["common"]["self"].shape
+        global_in_shape = meta["common"]["args"]["data_in_0"]["shape"]
         assert global_in_shape is not None, "Shape required."
 
         output_strategy = OpStrategy([])
@@ -606,10 +603,19 @@ def get_reshape_strategy(op):
             # FIXME: this can be wrong for situations where we have
             #        [Shard(0), Shard(0)]
             input_tgt_spec = DTensorSpec(
-                placements=(Replicate(), Replicate()),
+                placements=tuple(input_tgt_placements),
                 mesh=input_src_spec.mesh,
                 tensor_meta=input_src_spec.tensor_meta,
             )
+
+            replicate_spec = DTensorSpec(
+                placements=(Replicate(), Replicate()),
+                mesh=input_src_spec.mesh,
+                # todo: may need to set tensor meta
+                tensor_meta=None,
+            )
+            # add fully replicated spec for all constant args
+            input_specs = (input_tgt_spec,) + (replicate_spec,) * (len(args_schema) - 1)
 
             output_spec = DTensorSpec(
                 mesh=mesh,
@@ -623,7 +629,7 @@ def get_reshape_strategy(op):
             output_strategy.strategies.append(
                 PlacementStrategy(
                     output_specs=output_spec,
-                    input_specs=(input_tgt_spec,),
+                    input_specs=input_specs,
                 )
             )
 

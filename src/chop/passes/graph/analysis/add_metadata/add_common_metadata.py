@@ -204,7 +204,10 @@ def graph_iterator_for_mase_ops(graph):
 
 
 def graph_iterator_for_metadata(
-    graph, dummy_in=None, add_value=True, force_device_meta=False
+    graph,
+    dummy_in=None,
+    add_value=True,
+    force_device_meta=False,
 ):
     """
     largely apated from https://pytorch.org/docs/stable/fx.html
@@ -212,14 +215,13 @@ def graph_iterator_for_metadata(
 
     model, fx_graph, modules = graph.model, graph.fx_graph, graph.modules
     env = {}
-    prev_result = None
 
     # force everything to be on device="meta"
     if force_device_meta:
         dummy_in = {k: v.to("meta") for k, v in dummy_in.items()}
         model = model.to("meta")
 
-    for node in graph.fx_graph.nodes:
+    for node in fx_graph.nodes:
         args, kwargs = None, None
         if node.op == "placeholder":
             result = dummy_in[node.name]

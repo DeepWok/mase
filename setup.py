@@ -80,7 +80,6 @@ requirements = [
     "sphinx-glpi-theme",
     "prettytable",
     "pyyaml",
-    "pynvml",
     "bitstring>=4.2",
     "myst_parser",
     "cvxpy",
@@ -98,7 +97,7 @@ setup(
     author="Aaron Zhao, Jianyi Cheng, Cheng Zhang, Pedro Gimenes",
     author_email="a.zhao@imperial.ac.uk, jianyi.cheng17@imperial.ac.uk, chengzhang98@outlook.com, pedro.gimenes19@imperial.ac.uk",
     license_files=("LICENSE",),
-    python_requires=">=3.11.9",
+    python_requires=">=3.11.4",
     package_dir={
         "": "src",
     },

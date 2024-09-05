@@ -64,7 +64,13 @@ Network overview:
 {count}
 
 Layer types:
-{layer_types}"""
+{layer_types}
+
+===================== Code Gen =====================
+
+{graph.model.code}
+
+"""
     if file_name is None:
         print(buff)
     else:
