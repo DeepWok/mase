@@ -80,7 +80,6 @@ requirements = [
     "sphinx-glpi-theme",
     "prettytable",
     "pyyaml",
-    "pynvml",
     "bitstring>=4.2",
     "myst_parser",
     "cvxpy",
