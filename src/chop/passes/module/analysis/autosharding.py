@@ -129,6 +129,7 @@ def _formulate_ilp(
 
     module_list = []
     module_strategies = []
+    last_residual = None
 
     # ILP variables
     constr = []
@@ -156,6 +157,8 @@ def _formulate_ilp(
 
         if layer_type is None or layer_strategies is None:
             continue
+
+        layer.strategies = layer_strategies
 
         # Register layer and instantiate optimization variable
         # ============================
@@ -265,7 +268,7 @@ def _formulate_ilp(
         )
         expr += resharding_term
         constr += resharding_constraints
-
+        
         # Add Megatron solution for comparison
         megatron_resharding_term = (
             parent_module.megatron_opt_var @ resharding_costs @ megatron_opt_var
@@ -276,6 +279,31 @@ def _formulate_ilp(
             parent_module.bad_soln_opt_var @ resharding_costs @ bad_soln_opt_var
         )
         bad_soln += bad_soln_resharding_term
+
+        # Residual layers may have an additional resharding cost for the residual path
+        if isinstance(layer, VllmResidual) and last_residual is not None:
+            last_residual_shape = _get_output_shape_from_layer_type(
+                last_residual,
+                data_size,
+            )
+
+            resharding_costs = _get_resharding_cost_matrix(
+                layer_strategies=layer_strategies,
+                parent_strategies=last_residual.strategies,
+                parent_out_shape=last_residual_shape,
+                benchmarking_device=self_rank,
+            )
+
+            resharding_term, resharding_constraints = _linearize_resharding_cost(
+                opt_var,
+                last_residual.opt_var,
+                resharding_costs,
+            )
+            expr += resharding_term
+            constr += resharding_constraints
+        
+        if isinstance(layer, VllmResidual):
+            last_residual = layer
 
     # After processing all layers, consider memory constraints
     # ============================
@@ -295,8 +323,6 @@ def _formulate_ilp(
 
 
 def _get_sharding_config(model):
-    self_rank = torch.distributed.get_rank()
-
     sharding_config = {}
     for layer in model.modules():
 
