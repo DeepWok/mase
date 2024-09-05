@@ -21,6 +21,9 @@ from .cost_modelling import (
 
 VllmLinear = vllm.model_executor.layers.linear.LinearBase
 
+from vllm.model_executor.layers.layer_norm import LayerNormBase as VllmLayerNorm
+from vllm.model_executor.layers.residual import ResidualBase as VllmResidual
+
 logger = get_logger(__name__)
 logger.setLevel("WARNING")
 
@@ -36,6 +39,14 @@ STRATEGY_MAP = OrderedDict(
             "replicated",
             "head",
         ),
+        VllmLayerNorm: (
+            "replicated",
+            "data",
+        ),
+        VllmResidual: (
+            "replicated",
+            "data",
+        ),
         type(None): None,
     }
 )
@@ -49,6 +60,10 @@ def _get_output_shape_from_layer_type(
         size = torch.Size([data_size, layer.weight.shape[0]])
     elif isinstance(layer, VllmAttention):
         size = torch.Size([data_size, layer.impl.head_size * layer.impl.num_heads])
+    elif isinstance(layer, VllmLayerNorm):
+        size = torch.Size([data_size, layer.normalized_shape[0]])
+    elif isinstance(layer, VllmResidual):
+        size = torch.Size([data_size, 1])        
     else:
         raise ValueError(f"Unsupported layer type: {layer.__class__.__name__}")
 
@@ -172,6 +187,10 @@ def _formulate_ilp(
         elif "mlp.c_proj" in name:
             megatron_opt_var[2] = 1  # row
             bad_soln_opt_var[2] = 1  # column
+        elif "ln" in name:
+            megatron_opt_var[0] = 1
+        elif "res" in name:
+            megatron_opt_var[0] = 1
         else:
             raise ValueError(f"Unsupported layer name: {name}")
 

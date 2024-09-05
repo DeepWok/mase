@@ -13,7 +13,7 @@ from torch.multiprocessing import Queue, set_start_method
 
 
 import vllm
-from vllm.attention import Attention as VllmAttention
+
 from vllm.attention import AttentionMetadata
 from vllm.model_executor.layers.linear import (
     ReplicatedLinear,
@@ -21,11 +21,23 @@ from vllm.model_executor.layers.linear import (
     RowParallelLinear,
     DataParallelLinear,
 )
+from vllm.model_executor.layers.layer_norm import (
+    ReplicatedLayerNorm,
+    DataParallelLayerNorm,
+)
+from vllm.model_executor.layers.residual import (
+    ReplicatedResidual,
+    DataParallelResidual,
+)
+
 from vllm.distributed.communication_op import (
     tensor_model_parallel_all_gather,
     tensor_model_parallel_all_reduce,
 )
 
+from vllm.attention import Attention as VllmAttention
+from vllm.model_executor.layers.layer_norm import LayerNormBase as VllmLayerNorm
+from vllm.model_executor.layers.residual import ResidualBase as VllmResidual
 VllmLinear = vllm.model_executor.layers.linear.LinearBase
 
 
@@ -45,6 +57,21 @@ def _linear_cls_from_config(config: str):
 
     raise ValueError(f"Unknown linear config: {config}")
 
+def _layer_norm_cls_from_config(config: str):
+    if config == "replicated":
+        return ReplicatedLayerNorm
+    if config == "data":
+        return DataParallelLayerNorm
+
+    raise ValueError(f"Unknown layer norm config: {config}")
+
+def _residual_cls_from_config(config: str):
+    if config == "replicated":
+        return ReplicatedResidual
+    if config == "data":
+        return DataParallelResidual
+
+    raise ValueError(f"Unknown residual config: {config}")
 
 def _profile_op(
     op: str,
@@ -79,7 +106,7 @@ def _profile_op(
     ]
 
     for idx in range(repeat):
-        if op == "linear":
+        if op in ["linear", "layer_norm"]:
             input_ = torch.randn(shape).to(f"cuda:{benchmarking_device}")
             args = [input_] + extra_args
         elif op == "attention":
@@ -92,6 +119,10 @@ def _profile_op(
                 local_value,
                 None,  # benchmark without KV cache
             ] + extra_args
+        elif op == "residual":
+            input_ = torch.randn(shape).to(f"cuda:{benchmarking_device}")
+            residual = torch.randn(shape).to(f"cuda:{benchmarking_device}")
+            args = [input_, residual] + extra_args
         elif op == "allreduce":
             local_tensor = torch.randn(shape).to(f"cuda:{benchmarking_device}")
             args = [local_tensor]
@@ -160,7 +191,7 @@ def _cached_linear_cost_from_local_shapes(
     input_size: int,
     output_size: int,
     repeat: int = 100,
-    warmup_iters: int = 2,
+    warmup_iters: int = 5,
     benchmarking_device: int = 0,
 ):
     cls = _linear_cls_from_config(type)
@@ -197,7 +228,7 @@ def _get_linear_compute_cost(
     layer_strategies: tuple,
     data_size: int,
     repeat: int = 100,
-    warmup_iters: int = 2,
+    warmup_iters: int = 5,
     benchmarking_device: int = 0,
 ):
 
@@ -229,7 +260,7 @@ def _cached_attention_cost_from_local_shapes(
     num_heads: int,
     head_size: int,
     repeat: int = 100,
-    warmup_iters: int = 2,
+    warmup_iters: int = 5,
     benchmarking_device: int = 0,
 ):
     local_shape = torch.Size([data_size, head_size * num_heads])
@@ -258,13 +289,12 @@ def _cached_attention_cost_from_local_shapes(
 
     return elapsed
 
-
 def _get_attention_compute_cost(
     layer: torch.nn.Module,
     layer_strategies: tuple,
     data_size: int,
     repeat: int = 100,
-    warmup_iters: int = 2,
+    warmup_iters: int = 5,
     benchmarking_device: int = 0,
 ):
 
@@ -291,6 +321,133 @@ def _get_attention_compute_cost(
         cost_vector.append(elapsed)
 
     return np.array(cost_vector)
+    
+@lru_cache(maxsize=128, typed=False)
+def _cached_layer_norm_cost_from_local_shapes(
+    type: str,
+    normalized_shape: tuple,
+    eps: float,
+    elementwise_affine: bool,
+    bias: bool,
+    data_size: int,
+    repeat: int = 100,
+    warmup_iters: int = 5,
+    benchmarking_device: int = 0,
+):
+    
+    layer = _layer_norm_cls_from_config(type)(
+        normalized_shape=normalized_shape,
+        eps=eps,
+        elementwise_affine=elementwise_affine,
+        bias=bias,
+    )
+
+    local_shape = torch.Size([data_size, normalized_shape[0]])
+
+    _, elapsed, elapsed_list = _profile_op(
+        op="layer_norm",
+        fn=layer,
+        shape=local_shape,
+        repeat=repeat,
+        warmup_iters=warmup_iters,
+        benchmarking_device=benchmarking_device,
+    )
+
+    return elapsed
+
+def _get_layer_norm_compute_cost(
+    layer: torch.nn.Module,
+    layer_strategies: tuple,
+    data_size: int,
+    repeat: int = 100,
+    warmup_iters: int = 5,
+    benchmarking_device: int = 0,
+):
+
+    cost_vector = []
+    for strategy in layer_strategies:
+
+        if strategy == "replicated":
+            real_data_size = data_size
+        elif strategy == "data":
+            real_data_size = data_size // torch.distributed.get_world_size()
+        else:
+            raise ValueError(f"Unknown strategy: {strategy}")
+
+        elapsed = _cached_layer_norm_cost_from_local_shapes(
+            type=strategy,
+            normalized_shape=layer.normalized_shape,
+            eps=layer.eps,
+            elementwise_affine=layer.elementwise_affine,
+            bias=layer.bias is not None,
+            data_size=real_data_size,
+            repeat=repeat,
+            warmup_iters=warmup_iters,
+            benchmarking_device=benchmarking_device,
+        )
+
+        cost_vector.append(elapsed)
+
+    return np.array(cost_vector)
+
+@lru_cache(maxsize=128, typed=False)
+def _cached_residual_cost_from_local_shapes(
+    type: str,
+    data_size: int,
+    hidden_size: int,
+    repeat: int = 100,
+    warmup_iters: int = 5,
+    benchmarking_device: int = 0,
+):
+    cls = _residual_cls_from_config(type)
+
+    layer = cls(
+        hidden_size=hidden_size,
+    )
+
+    local_shape = torch.Size([data_size, hidden_size])
+
+    _, elapsed, elapsed_list = _profile_op(
+        op="residual",
+        fn=layer,
+        shape=local_shape,
+        repeat=repeat,
+        warmup_iters=warmup_iters,
+        benchmarking_device=benchmarking_device,
+    )
+
+    return elapsed
+
+def _get_residual_compute_cost(
+    layer: torch.nn.Module,
+    layer_strategies: tuple,
+    data_size: int,
+    repeat: int = 100,
+    warmup_iters: int = 5,
+    benchmarking_device: int = 0,
+):
+    cost_vector = []
+    for strategy in layer_strategies:
+
+        if strategy == "replicated":
+            real_data_size = data_size
+        elif strategy == "data":
+            real_data_size = data_size // torch.distributed.get_world_size()
+        else:
+            raise ValueError(f"Unknown strategy: {strategy}")
+
+        elapsed = _cached_residual_cost_from_local_shapes(
+            type=strategy,
+            data_size=real_data_size,
+            hidden_size=layer.hidden_size,
+            repeat=repeat,
+            warmup_iters=warmup_iters,
+            benchmarking_device=benchmarking_device,
+        )
+
+        cost_vector.append(elapsed)
+
+    return np.array(cost_vector)
 
 
 def _get_compute_cost_from_layer(
@@ -299,20 +456,20 @@ def _get_compute_cost_from_layer(
     data_size,
     benchmarking_device: int = 0,
 ):
+    profile_kwargs = {
+        "layer": layer,
+        "layer_strategies": layer_strategies,
+        "data_size": data_size,
+        "benchmarking_device": benchmarking_device,
+    }
     if isinstance(layer, VllmLinear):
-        return _get_linear_compute_cost(
-            layer,
-            layer_strategies,
-            data_size,
-            benchmarking_device=benchmarking_device,
-        )
-    if isinstance(layer, VllmAttention):
-        return _get_attention_compute_cost(
-            layer,
-            layer_strategies,
-            data_size,
-            benchmarking_device=benchmarking_device,
-        )
+        return _get_linear_compute_cost(**profile_kwargs)
+    elif isinstance(layer, VllmAttention):
+        return _get_attention_compute_cost(**profile_kwargs)
+    elif isinstance(layer, VllmResidual):
+        return _get_residual_compute_cost(**profile_kwargs)
+    elif isinstance(layer, VllmLayerNorm):
+        return _get_layer_norm_compute_cost(**profile_kwargs)
     else:
         raise ValueError(f"Unsupported layer type: {layer.__class__.__name__}")
 
@@ -421,12 +578,12 @@ def _get_gpu_memory_usage():
 
 @lru_cache(maxsize=128, typed=False)
 def _cached_get_linear_memory_cost(
-    input_size,
-    output_size,
-    bias,
-    strategies,
+    input_size: int,
+    output_size: int,
+    bias: bool,
+    strategies: tuple,
     benchmarking_device: int = 0,
-):
+) -> list:
     cost_vector = []
     peak_mems = []
     for strategy in strategies:
@@ -452,6 +609,33 @@ def _cached_get_linear_memory_cost(
 
     return cost_vector
 
+@lru_cache(maxsize=128, typed=False)
+def _cached_get_layer_norm_memory_cost(
+    normalized_shape: tuple,
+    elementwise_affine: bool,
+    bias: bool,
+    strategies: tuple,
+    benchmarking_device: int = 0,
+) -> list:
+    cls = _layer_norm_cls_from_config("replicated")
+
+    # Clear cache and reset stats
+    torch.cuda.empty_cache()
+    gc.collect()
+    torch.cuda.reset_peak_memory_stats()
+
+    # Instantiate layer to measure memory usage
+    start_memory = _get_gpu_memory_usage()
+    _ = cls(
+        normalized_shape=normalized_shape,
+        elementwise_affine=elementwise_affine,
+        bias=bias is not None,
+    ).to(f"cuda:{benchmarking_device}")
+    end_memory = _get_gpu_memory_usage()
+
+    cost = end_memory - start_memory
+
+    return [cost] * len(strategies)
 
 def _get_memory_cost_from_layer(
     layer,
@@ -466,7 +650,15 @@ def _get_memory_cost_from_layer(
             strategies=tuple(layer_strategies),
             benchmarking_device=benchmarking_device,
         )
-    elif isinstance(layer, VllmAttention):
+    elif isinstance(layer, VllmLayerNorm):
+        return _cached_get_layer_norm_memory_cost(
+            normalized_shape=layer.normalized_shape,
+            elementwise_affine=layer.elementwise_affine,
+            bias=layer.bias is not None,
+            strategies=tuple(layer_strategies),
+            benchmarking_device=benchmarking_device,
+        )
+    elif isinstance(layer, (VllmAttention, VllmResidual)):
         return np.zeros(len(layer_strategies))
     else:
         raise ValueError(f"Unsupported layer type: {layer.__class__.__name__}")
