@@ -49,6 +49,13 @@ MASE_IMPLICIT_FUNCS = [
     "finfo",
     "masked_fill",
     "masked_fill_",
+    "float",
+    "type",
+    "detach",
+    "call",
+    "sum",
+    "unbind",
+    "zeros_like"
 ]
 
 MASE_MODULE_RELATED_FUNCS = [
@@ -125,6 +132,8 @@ MASE_BUILTIN_FUNCS = [
     "embedding",
     "df_split",
     "getitem",
+    "exp",
+    "normalize",
 ]
 
 

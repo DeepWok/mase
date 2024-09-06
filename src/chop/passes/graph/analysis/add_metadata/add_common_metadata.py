@@ -142,6 +142,7 @@ def graph_iterator_for_mase_ops(graph):
                 + graph.model.patched_op_names,
             )
             if not matching:
+                # breakpoint()
                 raise ValueError(
                     f"Unknown call_function node: {node.target} with name {node.name}"
                 )
@@ -168,6 +169,7 @@ def graph_iterator_for_mase_ops(graph):
             # ! TODO: might need to add this for others as well.
             matching, matched_name = match_and_filter(node.name, MASE_IMPLICIT_FUNCS)
             if not matching:
+                # breakpoint()
                 raise ValueError(f"Unknown node type: {node.name}")
             if matched_name in MASE_IMPLICIT_FUNCS:
                 node.meta["mase"].parameters["common"]["mase_type"] = "implicit_func"
@@ -219,6 +221,7 @@ def graph_iterator_for_metadata(
     for node in graph.fx_graph.nodes:
         args, kwargs = None, None
         if node.op == "placeholder":
+            # breakpoint()
             result = dummy_in[node.name]
             analyse_fn = analyse_common_parameters_placeholder
         elif node.op == "get_attr":
@@ -232,6 +235,13 @@ def graph_iterator_for_metadata(
         elif node.op == "call_method":
             self_obj, *args = load_arg(node.args, env)
             kwargs = load_arg(node.kwargs, env)
+            # if isinstance(self_obj, torch.nn.Parameter):
+            #     # Directly return the parameter tensor
+            #     result = self_obj
+            # else:
+            #     # Original method call
+            #     result = getattr(self_obj, node.target)(*args, **kwargs)
+            # breakpoint()
             result = getattr(self_obj, node.target)(*args, **kwargs)
             analyse_fn = analyse_common_parameters_method
         elif node.op == "call_module":

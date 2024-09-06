@@ -332,6 +332,10 @@ method_data = {
     "long": {"memory_format": "config"},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.type_as.html
     "type_as": {"tensor": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.float.html
+    "float": {"memory_format": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.type.html
+    "type": {"dtype": "config"},
 }
 
 

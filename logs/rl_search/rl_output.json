@@ -1,0 +1,80 @@
+{
+    "best_configurations": [
+        {
+            "seq_blocks_0": {
+                "config": {
+                    "name": "integer",
+                    "data_in_width": 8,
+                    "data_in_frac_width": 4,
+                    "weight_width": 8,
+                    "weight_frac_width": 4,
+                    "bias_width": 8,
+                    "bias_frac_width": 4
+                }
+            },
+            "seq_blocks_1": {
+                "config": {
+                    "name": "integer",
+                    "data_in_width": 8,
+                    "data_in_frac_width": 4,
+                    "weight_width": 8,
+                    "weight_frac_width": 4,
+                    "bias_width": 8,
+                    "bias_frac_width": 4
+                }
+            },
+            "seq_blocks_2": {
+                "config": {
+                    "name": "integer",
+                    "data_in_width": 8,
+                    "data_in_frac_width": 4,
+                    "weight_width": 8,
+                    "weight_frac_width": 4,
+                    "bias_width": 8,
+                    "bias_frac_width": 4
+                }
+            },
+            "seq_blocks_3": {
+                "config": {
+                    "name": "integer",
+                    "data_in_width": 8,
+                    "data_in_frac_width": 4,
+                    "weight_width": 8,
+                    "weight_frac_width": 4,
+                    "bias_width": 8,
+                    "bias_frac_width": 4
+                }
+            },
+            "seq_blocks_4": {
+                "config": {
+                    "name": "integer",
+                    "data_in_width": 8,
+                    "data_in_frac_width": 4,
+                    "weight_width": 8,
+                    "weight_frac_width": 4,
+                    "bias_width": 8,
+                    "bias_frac_width": 4
+                }
+            },
+            "default": {
+                "config": {
+                    "name": "integer",
+                    "bypass": true,
+                    "bias_frac_width": 5,
+                    "bias_width": 8,
+                    "data_in_frac_width": 5,
+                    "data_in_width": 8,
+                    "weight_frac_width": 3,
+                    "weight_width": 8
+                }
+            }
+        }
+    ],
+    "metrics": [
+        {
+            "reward": 0.5499999999999999,
+            "accuracy": 0.5,
+            "average_bitwidth": 8.0
+        }
+    ]
+}
