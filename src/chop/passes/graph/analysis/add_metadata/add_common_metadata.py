@@ -235,14 +235,16 @@ def graph_iterator_for_metadata(
         elif node.op == "call_method":
             self_obj, *args = load_arg(node.args, env)
             kwargs = load_arg(node.kwargs, env)
+
             # if isinstance(self_obj, torch.nn.Parameter):
             #     # Directly return the parameter tensor
             #     result = self_obj
             # else:
             #     # Original method call
             #     result = getattr(self_obj, node.target)(*args, **kwargs)
-            # breakpoint()
+
             result = getattr(self_obj, node.target)(*args, **kwargs)
+            
             analyse_fn = analyse_common_parameters_method
         elif node.op == "call_module":
             args = load_arg(node.args, env)

@@ -221,6 +221,16 @@ func_data = {
         "scale_grad_by_freq": "config",
         "sparse": "config",
     },
+    # https://pytorch.org/docs/stable/generated/torch.exp.html
+    "exp": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.functional.normalize.html#torch.nn.functional.normalize
+    "normalize": {"input": "data_in", "p": "config", "dim": "config", "eps": "config", "out": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.sum.html
+    "sum": {"input": "data_in", "dim": "config", "keepdim": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.stack.html
+    "stack": {"tensors": "data_in", "dim": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.zeros_like.html
+    "zeros_like": {"input": "data_in"},
 }
 
 module_data = {
@@ -336,6 +346,10 @@ method_data = {
     "float": {"memory_format": "config"},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.type.html
     "type": {"dtype": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.new_zeros.html
+    "new_zeros": {"size": "config", "dtype": "config", "device": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.unbind.html
+    "unbind": {"dim": "config"},
 }
 
 
