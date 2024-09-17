@@ -231,7 +231,7 @@ module fixed_vit_attention #(
   );
 
   unpacked_fifo #(
-      .DEPTH(64),
+      .DEPTH(DATA_IN_0_TENSOR_SIZE_DIM_0 * DATA_IN_0_TENSOR_SIZE_DIM_1 / (DATA_IN_0_PARALLELISM_DIM_1 * HEAD_OUT_0_PARALLELISM_DIM_0)),
       .DATA_WIDTH(QKV_PRECISION_0),
       .IN_NUM(DATA_IN_0_PARALLELISM_DIM_1 * HEAD_OUT_0_PARALLELISM_DIM_0)
   ) value_in_buffer (

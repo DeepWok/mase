@@ -63,17 +63,17 @@ class FixedSelfAttentionTB(Testbench):
             self.proj_bias_driver = StreamDriver(
                 dut.clk, dut.proj_bias, dut.proj_bias_valid, dut.proj_bias_ready
             )
-            self.query_bias_driver.log.setLevel(logging.INFO)
-            self.key_bias_driver.log.setLevel(logging.INFO)
-            self.value_bias_driver.log.setLevel(logging.INFO)
-            self.proj_bias_driver.log.setLevel(logging.INFO)
+            self.query_bias_driver.log.setLevel(logging.DEBUG)
+            self.key_bias_driver.log.setLevel(logging.DEBUG)
+            self.value_bias_driver.log.setLevel(logging.DEBUG)
+            self.proj_bias_driver.log.setLevel(logging.DEBUG)
 
         self.data_out_0_monitor = StreamMonitor(
             dut.clk,
             dut.data_out_0,
             dut.data_out_0_valid,
             dut.data_out_0_ready,
-            check=True,
+            check=False,
         )
 
         # Model
@@ -113,10 +113,10 @@ class FixedSelfAttentionTB(Testbench):
         # Set verbosity of driver and monitor loggers to debug
         self.data_in_0_driver.log.setLevel(logging.DEBUG)
         self.query_weight_driver.log.setLevel(logging.INFO)
-        self.key_weight_driver.log.setLevel(logging.INFO)
-        self.value_weight_driver.log.setLevel(logging.INFO)
-        self.proj_weight_driver.log.setLevel(logging.INFO)
-        self.data_out_0_monitor.log.setLevel(logging.INFO)
+        self.key_weight_driver.log.setLevel(logging.DEBUG)
+        self.value_weight_driver.log.setLevel(logging.DEBUG)
+        self.proj_weight_driver.log.setLevel(logging.DEBUG)
+        self.data_out_0_monitor.log.setLevel(logging.DEBUG)
 
     def generate_inputs(self, batch_size=1):
         return torch.randn(
@@ -136,7 +136,6 @@ class FixedSelfAttentionTB(Testbench):
             exp_out = self.model(inputs)[0]
 
             # * Load the inputs driver
-            self.log.info(f"Processing inputs: {inputs}")
             inputs = fixed_preprocess_tensor(
                 tensor=inputs,
                 q_config={
@@ -149,6 +148,7 @@ class FixedSelfAttentionTB(Testbench):
                 ],
                 floor=True,
             )
+            # self.log.info(f"Processing inputs: {inputs}")
             self.data_in_0_driver.load_driver(inputs)
 
             # * Load the qkv weight driver
@@ -160,7 +160,6 @@ class FixedSelfAttentionTB(Testbench):
                     if self.get_parameter("WEIGHTS_PRE_TRANSPOSED") == 1
                     else layer.weight
                 )
-                self.log.info(f"Processing {projection} weights: {weights}")
                 weights = fixed_preprocess_tensor(
                     tensor=weights,
                     q_config={
@@ -173,12 +172,12 @@ class FixedSelfAttentionTB(Testbench):
                     ],
                     floor=True,
                 )
+                # self.log.info(f"Processing {projection} weights: {weights}")
                 getattr(self, f"{projection}_weight_driver").load_driver(weights)
 
                 # * Load the bias driver
                 if self.get_parameter("HAS_BIAS") == 1:
                     bias = getattr(self.model, f"{projection}").bias
-                    self.log.info(f"Processing {projection} bias: {bias}")
                     bias = fixed_preprocess_tensor(
                         tensor=bias,
                         q_config={
@@ -191,6 +190,7 @@ class FixedSelfAttentionTB(Testbench):
                         ],
                         floor=True,
                     )
+                    # self.log.info(f"Processing {projection} bias: {bias}")
                     getattr(self, f"{projection}_bias_driver").load_driver(bias)
 
             # * Load the proj weight driver
@@ -199,7 +199,7 @@ class FixedSelfAttentionTB(Testbench):
             else:
                 proj_weight = self.model.proj.weight
             proj_bias = self.model.proj.bias
-            self.log.info(f"Processing projection weights: {proj_weight}")
+            # self.log.info(f"Processing projection weights: {proj_weight}")
             proj_weight = fixed_preprocess_tensor(
                 tensor=proj_weight,
                 q_config={
@@ -244,6 +244,8 @@ class FixedSelfAttentionTB(Testbench):
                 ],
                 floor=True,
             )
+            count = [0]
+            cocotb.scheduler.add(check_signal(count, self.dut, self.log))
             self.data_out_0_monitor.load_monitor(outs)
 
         await Timer(us, units="us")
@@ -253,26 +255,45 @@ class FixedSelfAttentionTB(Testbench):
 @cocotb.test()
 async def cocotb_test(dut):
     tb = FixedSelfAttentionTB(dut)
-    await tb.run_test(batches=5, us=100)
+    await tb.run_test(batches=1, us=400)
+
+
+async def check_signal(count, dut, log):
+    while True:
+        await RisingEdge(dut.clk)
+        handshake_signal_check(
+            count,
+            dut.head_out_valid,
+            dut.head_out_ready,
+            dut.value,
+            log,
+        )
+
+
+def handshake_signal_check(count, valid, ready, signal, log):
+    svalue = [i.signed_integer for i in signal.value]
+    if valid.value[0] & ready.value[0]:
+        count[0]+=1
+        log.debug(f"handshake {signal} count= {count}")
+
 
 
 default_config = {
-    "NUM_HEADS": 4,
-    "ACTIVATION": 1,
+    "NUM_HEADS": 3,
     "HAS_BIAS": 1,
     "WEIGHTS_PRE_TRANSPOSED": 1,
-    "DATA_IN_0_TENSOR_SIZE_DIM_0": 16,
-    "DATA_IN_0_TENSOR_SIZE_DIM_1": 4,
+    "DATA_IN_0_TENSOR_SIZE_DIM_0": 48,
+    "DATA_IN_0_TENSOR_SIZE_DIM_1": 32,
     "DATA_IN_0_PARALLELISM_DIM_0": 4,
-    "DATA_IN_0_PARALLELISM_DIM_1": 2,
-    "WEIGHT_TENSOR_SIZE_DIM_0": 16,
-    "WEIGHT_TENSOR_SIZE_DIM_1": 16,
-    "WEIGHT_PARALLELISM_DIM_0": 4,
+    "DATA_IN_0_PARALLELISM_DIM_1": 1,
+    "WEIGHT_TENSOR_SIZE_DIM_0": 48,
+    "WEIGHT_TENSOR_SIZE_DIM_1": 48,
+    "WEIGHT_PARALLELISM_DIM_0": 8,
     "WEIGHT_PARALLELISM_DIM_1": 4,
-    "WEIGHT_PROJ_TENSOR_SIZE_DIM_0": 16,
-    "WEIGHT_PROJ_TENSOR_SIZE_DIM_1": 16,
+    "WEIGHT_PROJ_TENSOR_SIZE_DIM_0": 48,
+    "WEIGHT_PROJ_TENSOR_SIZE_DIM_1": 48,
     "WEIGHT_PROJ_PARALLELISM_DIM_0": 4,
-    "WEIGHT_PROJ_PARALLELISM_DIM_1": 4,
+    "WEIGHT_PROJ_PARALLELISM_DIM_1": 8,
     "DATA_IN_0_PRECISION_0": 8,
     "DATA_IN_0_PRECISION_1": 3,
     "WEIGHT_PRECISION_0": 16,

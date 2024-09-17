@@ -19,6 +19,7 @@ module fixed_linear #(
     /* verilator lint_off UNUSEDPARAM */
     parameter HAS_BIAS = 1,
     parameter WEIGHTS_PRE_TRANSPOSED = 1,
+    parameter FIFO = 1,
 
     parameter DATA_IN_0_PRECISION_0 = 16,
     parameter DATA_IN_0_PRECISION_1 = 3,
@@ -112,7 +113,10 @@ module fixed_linear #(
   logic [DATA_OUT_0_PRECISION_0 - 1:0] add_bias_in_casted [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0];
   logic add_bias_in_valid;
   logic add_bias_in_ready;
-
+  
+  logic [DATA_OUT_0_PRECISION_0 - 1:0] rounding_out [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0];
+  logic rounding_out_valid;
+  logic rounding_out_ready;
   // * Instances
   // * ---------------------------------------------------------------------------------------------------
 
@@ -223,9 +227,9 @@ module fixed_linear #(
         .data_in_valid(add_bias_in_valid),
         .data_in_ready(add_bias_in_ready),
 
-        .data_out(data_out_0),
-        .data_out_valid(data_out_0_valid),
-        .data_out_ready(data_out_0_ready)
+        .data_out(rounding_out),
+        .data_out_valid(rounding_out_valid),
+        .data_out_ready(rounding_out_ready)
     );
   end
 
@@ -275,10 +279,46 @@ module fixed_linear #(
         .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1)
     ) output_cast (
         .data_in (matmul_out),
-        .data_out(data_out_0)
+        .data_out(rounding_out)
     );
-    assign data_out_0_valid = matmul_out_valid;
-    assign matmul_out_ready = data_out_0_ready;
+    assign rounding_out_valid = matmul_out_valid;
+    assign matmul_out_ready = rounding_out_ready;
   end
 
+  if (FIFO == 1) begin
+    localparam FIFO_DEPTH = DATA_OUT_0_TENSOR_SIZE_DIM_0 / DATA_OUT_0_PARALLELISM_DIM_0;
+    
+    fifo_for_autogen #(
+        .DATA_IN_0_PRECISION_0(DATA_OUT_0_PRECISION_0), // = 8
+        .DATA_IN_0_PRECISION_1(DATA_OUT_0_PRECISION_1), // = 4
+        .DATA_IN_0_TENSOR_SIZE_DIM_0(DATA_OUT_0_TENSOR_SIZE_DIM_0), // = 20
+        .DATA_IN_0_PARALLELISM_DIM_0(DATA_OUT_0_PARALLELISM_DIM_0), // = 2
+        .DATA_IN_0_TENSOR_SIZE_DIM_1(DATA_OUT_0_TENSOR_SIZE_DIM_1), // = 4
+        .DATA_IN_0_PARALLELISM_DIM_1(DATA_OUT_0_PARALLELISM_DIM_1), // = 2
+        .DEPTH(FIFO_DEPTH), 
+        .DATA_OUT_0_PRECISION_0(DATA_OUT_0_PRECISION_0), 
+        .DATA_OUT_0_PRECISION_1(DATA_OUT_0_PRECISION_1),
+        .DATA_OUT_0_TENSOR_SIZE_DIM_0(DATA_OUT_0_TENSOR_SIZE_DIM_0), 
+        .DATA_OUT_0_PARALLELISM_DIM_0(DATA_OUT_0_PARALLELISM_DIM_0), 
+        .DATA_OUT_0_TENSOR_SIZE_DIM_1(DATA_OUT_0_TENSOR_SIZE_DIM_1), 
+        .DATA_OUT_0_PARALLELISM_DIM_1(DATA_OUT_0_PARALLELISM_DIM_1)
+    ) fifo_1_inst (
+        .clk(clk),
+        .rst(rst),
+
+        .data_in_0(rounding_out),
+        .data_in_0_valid(rounding_out_valid),
+        .data_in_0_ready(rounding_out_ready),
+        .data_out_0(data_out_0),
+        .data_out_0_valid(data_out_0_valid),
+        .data_out_0_ready(data_out_0_ready)
+    );
+  end
+  else begin
+    always_comb begin
+        data_out_0 = rounding_out;
+        data_out_0_valid = rounding_out_valid;
+        rounding_out_ready = data_out_0_ready;
+    end
+  end
 endmodule

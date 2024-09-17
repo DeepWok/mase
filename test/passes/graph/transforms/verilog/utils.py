@@ -8,6 +8,12 @@ from chop.passes.graph.transforms.quantize import QUANTIZEABLE_OP
 
 set_logging_verbosity("debug")
 
+
+def _cap(name):
+    """
+    capitalize a string
+    """
+    return str(name).upper()
 def update_common_metadata_pass(mg, quan_args):
     # There is a bug in the current quantization pass, where the results metadata is not updated with the precision.
     # # Here we update the metadata here so we can test the hardware back end.
@@ -65,6 +71,80 @@ def update_common_metadata_pass(mg, quan_args):
     
 
 
+def manually_update_hardware_parallelism_param(mg, pass_args: dict = {}):
+    # The quantization pass currently don't support any inlayer precision automatically generate
+    # we only have data_in, weight.. param in common metadata
+    # in order to support in layer fine grained precision tuning
+    # we just update the hardware metadata directly.
+    for node in list(mg.fx_graph.nodes) + mg.nodes_in + mg.nodes_out:
+        mase_op = node.meta["mase"].parameters["common"]["mase_op"]
+        vp = node.meta["mase"]["hardware"].get("verilog_param")
+        if vp == None:
+            continue
+        for key, value in pass_args.items():
+           if key in node.name:
+                if mase_op == "linear":
+                    # weight1 = in0
+                    vp["DATA_IN_0_PARALLELISM_DIM_0"] = value["din"][1]
+                    vp["DATA_IN_0_PARALLELISM_DIM_1"] = value["din"][0]
+                    vp["WEIGHT_PARALLELISM_DIM_0"] = value["dout"][1]
+                    vp["WEIGHT_PARALLELISM_DIM_1"] = value["din"][1]
+                    vp["BIAS_PARALLELISM_DIM_0"] = value["dout"][1]
+                    vp["BIAS_PARALLELISM_DIM_1"] = 1
+                    vp["DATA_OUT_0_PARALLELISM_DIM_0"] = value["dout"][1]
+                    vp["DATA_OUT_0_PARALLELISM_DIM_1"] = value["dout"][0]
+                elif mase_op == "fork2":
+                    vp["DATA_IN_0_PARALLELISM_DIM_0"] = value["din"][1]
+                    vp["DATA_IN_0_PARALLELISM_DIM_1"] = value["din"][0]
+                    vp["DATA_OUT_0_PARALLELISM_DIM_0"] = value["dout"][0][1]
+                    vp["DATA_OUT_0_PARALLELISM_DIM_1"] = value["dout"][0][0]
+                    vp["DATA_OUT_1_PARALLELISM_DIM_0"] = value["dout"][1][1]
+                    vp["DATA_OUT_1_PARALLELISM_DIM_1"] = value["dout"][1][0]
+                elif mase_op == "add":
+                    vp["DATA_IN_0_PARALLELISM_DIM_0"] = value["din"][0][1]
+                    vp["DATA_IN_0_PARALLELISM_DIM_1"] = value["din"][0][0]
+                    vp["DATA_IN_1_PARALLELISM_DIM_0"] = value["din"][1][1]
+                    vp["DATA_IN_1_PARALLELISM_DIM_1"] = value["din"][1][0]
+                    vp["DATA_OUT_0_PARALLELISM_DIM_0"] = value["dout"][1]
+                    vp["DATA_OUT_0_PARALLELISM_DIM_1"] = value["dout"][0]
+                elif mase_op == "vit_self_attention_integer":
+                    num_heads = vp["NUM_HEADS"] 
+                    vp["DATA_IN_0_PARALLELISM_DIM_0"] = value["din"][1]
+                    vp["DATA_IN_0_PARALLELISM_DIM_1"] = value["din"][0]
+                    vp["QUERY_WEIGHT_PARALLELISM_DIM_0"] = value["dattn"][1]//num_heads
+                    vp["QUERY_WEIGHT_PARALLELISM_DIM_1"] = value["din"][1]
+                    vp["QUERY_BIAS_PARALLELISM_DIM_0"] = value["dattn"][1]//num_heads
+                    vp["QUERY_BIAS_PARALLELISM_DIM_1"] = 1
+                    vp["KEY_WEIGHT_PARALLELISM_DIM_0"] = value["dattn"][1]//num_heads
+                    vp["KEY_WEIGHT_PARALLELISM_DIM_1"] = value["din"][1]
+                    vp["KEY_BIAS_PARALLELISM_DIM_0"] = value["dattn"][1]//num_heads
+                    vp["KEY_BIAS_PARALLELISM_DIM_1"] = 1
+                    vp["VALUE_WEIGHT_PARALLELISM_DIM_0"] = value["dattn"][1]//num_heads
+                    vp["VALUE_WEIGHT_PARALLELISM_DIM_1"] = value["din"][1]
+                    vp["VALUE_BIAS_PARALLELISM_DIM_0"] = value["dattn"][1]//num_heads
+                    vp["VALUE_BIAS_PARALLELISM_DIM_1"] = 1
+                    vp["PROJ_WEIGHT_PARALLELISM_DIM_0"] = value["dout"][1] 
+                    vp["PROJ_WEIGHT_PARALLELISM_DIM_1"] = value["dattn"][1]//num_heads
+                    vp["PROJ_BIAS_PARALLELISM_DIM_0"] = value["dout"][1]
+                    vp["PROJ_BIAS_PARALLELISM_DIM_1"] = 1
+                    vp["DATA_OUT_0_PARALLELISM_DIM_0"] = value["dout"][1]
+                    vp["DATA_OUT_0_PARALLELISM_DIM_1"] = value["dout"][0]
+                elif mase_op == "layer_norm":
+                    vp["DATA_IN_0_PARALLELISM_DIM_0"] = value["din"][1]
+                    vp["DATA_IN_0_PARALLELISM_DIM_1"] = value["din"][0]
+                    vp["WEIGHT_PARALLELISM_DIM_0"] = value["dout"][1]
+                    vp["WEIGHT_PARALLELISM_DIM_1"] = 1
+                    vp["BIAS_PARALLELISM_DIM_0"] = value["dout"][1]
+                    vp["BIAS_PARALLELISM_DIM_1"] = 1
+                    vp["DATA_OUT_0_PARALLELISM_DIM_0"] = value["dout"][1]
+                    vp["DATA_OUT_0_PARALLELISM_DIM_1"] = value["dout"][0]
+                else:
+                    vp["DATA_IN_0_PARALLELISM_DIM_0"] = value["din"][1]
+                    vp["DATA_IN_0_PARALLELISM_DIM_1"] = value["din"][0]
+                    vp["DATA_OUT_0_PARALLELISM_DIM_0"] = value["dout"][1]
+                    vp["DATA_OUT_0_PARALLELISM_DIM_1"] = value["dout"][0]
+
+    return mg, {}
 def update_hardware_precision_param(mg, quan_args, model_args: dict = {}):
     # The quantization pass currently don't support any inlayer precision automatically generate
     # we only have data_in, weight.. param in common metadata

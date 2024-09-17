@@ -735,6 +735,224 @@ endmodule
         )
         return module_inst
 
+def emit_folded_bram(folded_gragh, reuse_name, reuse_times):
+    def _emit_module_parameters_top_internal(key, node, reuse_name, reuse_times):
+        node_name = vf(node.name).replace(reuse_name + "_0", reuse_name)
+        component_name = f"{node_name}_{key}_source"
+        component_name_inst = f"{component_name}_0"
+        # verilog_param = node_name+"_"+_cap(key)
+        def get_image_depth(key,param_list,node_name):
+            if "weight" in key:
+                image_depth = param_list[f"{_cap(key)}_TENSOR_SIZE_DIM_0"] * param_list[f"{_cap(key)}_TENSOR_SIZE_DIM_1"] / (param_list[f"{_cap(key)}_PARALLELISM_DIM_0"] * param_list[f"{_cap(key)}_PARALLELISM_DIM_1"])
+            elif "bias" in key:
+                if "norm" in node_name:
+                    image_depth = param_list[f"{_cap(key)}_TENSOR_SIZE_DIM_0"] * param_list[f"{_cap(key)}_TENSOR_SIZE_DIM_1"] / (param_list[f"{_cap(key)}_PARALLELISM_DIM_0"] * param_list[f"{_cap(key)}_PARALLELISM_DIM_1"])
+                else:
+                    image_depth = param_list[f"{_cap(key)}_TENSOR_SIZE_DIM_0"] / param_list[f"{_cap(key)}_PARALLELISM_DIM_0"]
+            else:
+                raise NotImplementedError
+            return image_depth
+        image_depth = get_image_depth(key, node.meta["mase"].parameters["hardware"]["verilog_param"], node.name)
+        parameters = ""
+        for param in node.meta["mase"].parameters["hardware"]["verilog_param"].keys():
+            if f"{_cap(key)}_" in param:
+                parameters += f"    .{param}({param}),\n"
+        parameters = _remove_last_comma(parameters)
+        modules = ""
+        signal = ""
+        for i in range(reuse_times):
+            new_node_name = node_name.replace(reuse_name, reuse_name + f"_{i}")
+            new_componet_name = component_name.replace(reuse_name, reuse_name + f"_{i}")
+            new_component_name_inst = component_name_inst.replace(reuse_name, reuse_name + f"_{i}")
+            signal += f"""
+logic [{_cap(key)}_PRECISION_0 - 1:0] {new_node_name}_{key} [{_cap(key)}_PARALLELISM_DIM_0*{_cap(key)}_PARALLELISM_DIM_1 - 1:0];
+logic {new_node_name}_{key}_valid, {new_node_name}_{key}_ready;
+"""
+            modules += f"""
+{new_componet_name} #(
+{parameters}
+) {new_component_name_inst} (
+    .clk(clk),
+    .rst(rst),
+    .data_out({new_node_name}_{key}),
+    .data_out_ready({new_node_name}_{key}_ready),
+    .data_out_valid({new_node_name}_{key}_valid)
+);
+
+    """
+    
+        output_connections = f"""
+always_comb begin"""
+        for item in ["", f"_valid"]:
+            output_connections+=f"""
+    data_out{item} = (counter<IMAGE_DEPTH)?"""
+            for i in range(reuse_times - 1):
+                new_node_name = node_name.replace(reuse_name, reuse_name + f"_{i}")
+                output_connections +=f"""
+    {node_name.replace(reuse_name, reuse_name + f"_{i}")}_{key}{item}: (counter<{i+2}*IMAGE_DEPTH)?"""
+            output_connections +=f"""
+    {node_name.replace(reuse_name, reuse_name + f"_{reuse_times - 1}")}_{key}{item}: {node_name.replace(reuse_name, reuse_name + f"_{0}")}_{key}{item};
+"""
+        output_connections +=f"end \n"
+        input_connections = """
+always_comb begin
+    """ 
+        for i in range(reuse_times):
+            input_connections +=f"""
+{node_name.replace(reuse_name, reuse_name + f"_{i}")}_{key}_ready = (({i}*IMAGE_DEPTH<=counter) && (counter<{i+1}*IMAGE_DEPTH))? data_out_ready:0; """
+        input_connections +="""
+end
+    """
+        connections = input_connections + output_connections
+
+        new_module = f"""
+`timescale 1ns / 1ps
+module {component_name} #(
+    parameter {_cap(key)}_TENSOR_SIZE_DIM_0  = -1,
+    parameter {_cap(key)}_TENSOR_SIZE_DIM_1  = -1,
+    parameter {_cap(key)}_PRECISION_0 = -1,
+    parameter {_cap(key)}_PRECISION_1 = -1,
+
+    parameter {_cap(key)}_PARALLELISM_DIM_0 = -1,
+    parameter {_cap(key)}_PARALLELISM_DIM_1 = -1
+) (
+    input clk,
+    input rst,
+
+    output logic [{_cap(key)}_PRECISION_0-1:0] data_out      [{_cap(key)}_PARALLELISM_DIM_0 * {_cap(key)}_PARALLELISM_DIM_1-1:0],
+    output logic                 data_out_valid,
+    input                        data_out_ready
+);
+localparam REPEAT_TIMES = {reuse_times};
+localparam IMAGE_DEPTH = {int(image_depth)};
+localparam COUNTER_DEPTH = REPEAT_TIMES*IMAGE_DEPTH;
+logic [$clog2(COUNTER_DEPTH) - 1 : 0] counter;
+{signal}
+always_ff @(posedge clk)
+    if (rst) counter <= 0;
+    else
+        if (counter == COUNTER_DEPTH) counter <= 0;
+        else if (data_out_valid && data_out_ready) counter <= counter + 1;
+
+{modules}
+
+{connections}
+
+endmodule
+        """
+        return new_module
+    top_bram = ""
+    for node in folded_gragh.fx_graph.nodes:
+        if node.meta["mase"].parameters["hardware"]["is_implicit"] == False:
+            for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
+                if "data_in" in arg:
+                    continue
+                if not isinstance(arg_info, dict):
+                    continue
+                top_bram += _emit_module_parameters_top_internal(arg,node,reuse_name, reuse_times)
+    return top_bram
+
+def emit_verilog_folded_top(graph,reuse_times, top_name):
+    parameter_map = get_verilog_parameters(graph)
+    
+
+    # get_top_map
+    parameters = f"""    parameter REPEAT_TIMES = {reuse_times},\n"""
+    parameters += VerilogParameterEmitter(graph).emit(
+        graph, parameter_map
+    )
+    top = f"""
+`timescale 1ns/1ps
+module {top_name} #(
+{parameters}
+) (
+    input clk,
+    input rst,
+    input logic [DATA_IN_0_PRECISION_0-1:0]  data_in_0       [DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0],
+    input logic                             data_in_0_valid,
+    output logic                             data_in_0_ready,
+    output logic [DATA_IN_0_PRECISION_0-1:0]  data_out_0       [DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0],
+    output logic                             data_out_0_valid,
+    input logic                             data_out_0_ready
+);
+logic [DATA_IN_0_PRECISION_0-1:0]  top_block_data_in_0       [DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0];
+logic                             top_block_data_in_0_valid;
+logic                             top_block_data_in_0_ready;
+logic [DATA_IN_0_PRECISION_0-1:0]  top_block_data_out_0       [DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0];
+logic                             top_block_data_out_0_valid;
+logic                             top_block_data_out_0_ready;
+logic [DATA_IN_0_PRECISION_0-1:0]  a_fifo_data_out_0       [DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0];
+logic                             a_fifo_data_out_0_valid;
+logic                             a_fifo_data_out_0_ready;
+localparam IMAGE_DEPTH = DATA_IN_0_TENSOR_SIZE_DIM_0 * DATA_IN_0_TENSOR_SIZE_DIM_1 / (DATA_IN_0_PARALLELISM_DIM_1*DATA_IN_0_PARALLELISM_DIM_0);
+localparam COUNTER_DEPTH = REPEAT_TIMES*IMAGE_DEPTH;
+logic [$clog2(COUNTER_DEPTH) - 1 : 0] counter_in, counter_out;
+always_ff @(posedge clk)
+    if (rst) counter_in <= 0;
+    else
+        if (counter_in == COUNTER_DEPTH) counter_in <= 0;
+        else if (top_block_data_in_0_valid && top_block_data_in_0_ready) counter_in <= counter_in + 1;
+
+always_ff @(posedge clk)
+    if (rst) counter_out <= 0;
+    else
+        if (counter_out == COUNTER_DEPTH) counter_out <= 0;
+        else if (a_fifo_data_out_0_valid && a_fifo_data_out_0_ready) counter_out <= counter_out + 1;
+top_block top_block_inst (
+    .clk(clk),
+    .rst(rst),
+    .data_in_0(top_block_data_in_0),
+    .data_in_0_valid(top_block_data_in_0_valid),
+    .data_in_0_ready(top_block_data_in_0_ready),
+    .data_out_0(top_block_data_out_0),
+    .data_out_0_valid(top_block_data_out_0_valid),
+    .data_out_0_ready(top_block_data_out_0_ready)
+);
+fifo_for_autogen #(
+    .DATA_IN_0_PRECISION_0(DATA_IN_0_PRECISION_0), // = 8
+    .DATA_IN_0_PRECISION_1(DATA_IN_0_PRECISION_1), // = 4
+    .DATA_IN_0_TENSOR_SIZE_DIM_0(DATA_IN_0_TENSOR_SIZE_DIM_0), // = 20
+    .DATA_IN_0_PARALLELISM_DIM_0(DATA_IN_0_PARALLELISM_DIM_0), // = 2
+    .DATA_IN_0_TENSOR_SIZE_DIM_1(DATA_IN_0_TENSOR_SIZE_DIM_1), // = 4
+    .DATA_IN_0_PARALLELISM_DIM_1(DATA_IN_0_PARALLELISM_DIM_1), // = 2
+    .DEPTH(IMAGE_DEPTH) // = 10
+) a_fifo_out_inst (
+    .clk(clk),
+    .rst(rst),
+    .data_in_0(top_block_data_out_0),
+    .data_in_0_valid(top_block_data_out_0_valid),
+    .data_in_0_ready(top_block_data_out_0_ready),
+    .data_out_0(a_fifo_data_out_0),
+    .data_out_0_valid(a_fifo_data_out_0_valid),
+    .data_out_0_ready(a_fifo_data_out_0_ready)
+);
+always_comb begin
+    top_block_data_in_0_valid = (counter_in < IMAGE_DEPTH)? data_in_0_valid: a_fifo_data_out_0_valid;
+    top_block_data_in_0 = (counter_in < IMAGE_DEPTH)? data_in_0: a_fifo_data_out_0;
+    data_in_0_ready = (counter_in < IMAGE_DEPTH)? top_block_data_in_0_ready: 1'b0;
+end
+always_comb begin
+    data_out_0 = a_fifo_data_out_0;
+    data_out_0_valid = (counter_out < (REPEAT_TIMES - 1)*IMAGE_DEPTH)? 0: a_fifo_data_out_0_valid;
+    a_fifo_data_out_0_ready = (counter_out >= (REPEAT_TIMES - 1)*IMAGE_DEPTH)? data_out_0_ready: (counter_in < IMAGE_DEPTH) ? 0 : top_block_data_in_0_ready; 
+end
+endmodule
+    """
+    return top
+
+def emit_verilog_folded_top_file(graph, top_name, pass_args):
+    folded_graph = pass_args["folded_graph"]
+    folded_node_name = pass_args["folded_node_name"]
+    reuse_times = pass_args["reuse_times"]
+    top_block = VerilogEmitter(folded_graph).emit(folded_graph, "top_block").replace(f"{folded_node_name}_0", folded_node_name)
+    top_bram = emit_folded_bram(folded_graph, folded_node_name, reuse_times)
+    top = emit_verilog_folded_top(graph, reuse_times, top_name)
+    top_file = f"""
+    {top}
+    {top_block}
+    {top_bram}
+    """
+    return top_file
 
 def emit_verilog_top_transform_pass(graph, pass_args={}):
     """Emit the top-level model design in Verilog
@@ -763,8 +981,10 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
     top_name = pass_args["top_name"] if "top_name" in pass_args.keys() else "top"
     init_project(project_dir)
     rtl_dir = os.path.join(project_dir, "hardware", "rtl")
-
-    top = VerilogEmitter(graph).emit(graph, top_name)
+    if pass_args.get("folded_graph", False):
+        top = emit_verilog_folded_top_file(graph, top_name, pass_args)
+    else:
+        top = VerilogEmitter(graph).emit(graph, top_name)
 
     top_file = os.path.join(rtl_dir, f"{top_name}.sv")
     with open(top_file, "w") as top_design:

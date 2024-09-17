@@ -180,7 +180,7 @@ class FixedSelfAttentionHeadTB(Testbench):
         )
         self.out_monitor.load_monitor(outs)
 
-        cocotb.start_soon(check_signal(self.dut, self.log))
+        # cocotb.start_soon(check_signal(self.dut, self.log))
         await Timer(1, units="ms")
         if not self.out_monitor.exp_queue.empty():
             raise RuntimeError(
@@ -195,13 +195,12 @@ async def cocotb_test(dut):
 
 
 default_config = {
-    "IN_DATA_TENSOR_SIZE_DIM_0": 128,
-    "IN_DATA_TENSOR_SIZE_DIM_1": 64,
+    "IN_DATA_TENSOR_SIZE_DIM_0": 16,
+    "IN_DATA_TENSOR_SIZE_DIM_1": 32,
     "IN_DATA_PARALLELISM_DIM_0": 4,
-    "IN_DATA_PARALLELISM_DIM_1": 2,
+    "IN_DATA_PARALLELISM_DIM_1": 1,
     "IN_DATA_PRECISION_0": 8,
     "IN_DATA_PRECISION_1": 4,
-    "ACTIVATION": 1,
     "QKMM_OUT_PRECISION_0": 8,
     "QKMM_OUT_PRECISION_1": 4,
     "SOFTMAX_EXP_PRECISION_0": 16,

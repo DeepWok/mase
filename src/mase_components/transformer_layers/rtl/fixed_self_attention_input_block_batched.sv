@@ -171,9 +171,9 @@ module fixed_self_attention_input_block_batched #(
   // * since the matmul for QK^T buffers K^T but streams Q
   matrix_fifo #(
       .DATA_WIDTH(DATA_OUT_0_PRECISION_0),
-      .DIM0      (WEIGHT_PARALLELISM_DIM_0),
+      .DIM0      (DATA_OUT_0_PARALLELISM_DIM_0),
       .DIM1      (DATA_IN_0_PARALLELISM_DIM_1),
-      .FIFO_SIZE (DATA_IN_0_DEPTH_DIM_1 * WEIGHT_DEPTH_DIM_0)
+      .FIFO_SIZE (DATA_IN_0_DEPTH_DIM_1 * DATA_OUT_0_TENSOR_SIZE_DIM_0 / DATA_OUT_0_PARALLELISM_DIM_0)
   ) query_buffer_i (
       .clk,
       .rst,

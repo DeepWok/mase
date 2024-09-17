@@ -252,7 +252,7 @@ def quantize_transform_pass(graph, pass_args=None):
         - by -> str : different quantization schemes choose from ["type", "name", "regx_name"]
     """
 
-    by = pass_args.pop("by")
+    by = pass_args.get("by")
     match by:
         case "type":
             graph = graph_iterator_quantize_by_type(graph, pass_args)
