@@ -49,7 +49,7 @@ class RandomSource:
         elif arithmetic in ["llm-fp16-weight"]:
             self.rand_gen = lambda: random.randint(-5, 5)
         else:
-            self.rand_gen = lambda: random.randint(0, 30)
+            self.rand_gen = lambda: random.randint(-30, 30)
             # self.rand_gen = lambda: random.randint(-random.randint(15, 30), random.randint(15, 30))
 
         if len(data_specify) == 0:
@@ -104,7 +104,7 @@ class RandomSource:
         if (not self.random_buff) or self.stall_count > self.max_stalls:
             self.logger.debug(
                 "source {} feeds a token {}. Current depth = {}/{}".format(
-                    self.name, int(self.data[-1]), len(self.data) - 1, self.samples
+                    self.name, self.data[-1], len(self.data) - 1, self.samples
                 )
             )
             self.data.pop()
