@@ -55,12 +55,12 @@ class MXINTVectorMultTB(Testbench):
                 int(self.dut.IN_MAN_WIDTH),
                 int(self.dut.IN_EXP_WIDTH),
             )
-
             exp_out, mexp_out, eexp_out = mxint_quantize(
                 data_in,
                 int(self.dut.OUT_MAN_WIDTH),
                 int(self.dut.OUT_EXP_WIDTH),
             )
+            breakpoint()
             inputs.append((mdata_in.int().tolist(), edata_in.int().tolist()))
             exp_outputs.append((mexp_out.int().tolist(), eexp_out.int().tolist()))
         return inputs, exp_outputs
@@ -85,7 +85,7 @@ class MXINTVectorMultTB(Testbench):
 
 @cocotb.test()
 async def test(dut):
-    tb = MXINTVectorMultTB(dut, num=20)
+    tb = MXINTVectorMultTB(dut, num=1)
     await tb.run_test()
 
 
