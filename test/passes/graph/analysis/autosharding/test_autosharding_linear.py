@@ -39,6 +39,7 @@ class MLP(nn.Module):
 @pytest.mark.skip(reason="Fixing needed")
 def test_autosharding():
     from chop.distributed import MaseLauncher
+
     # Initialize model and MaseGraph
     model = MLP()
     mg = MaseGraph(model)

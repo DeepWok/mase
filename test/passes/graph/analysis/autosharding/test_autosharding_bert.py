@@ -20,6 +20,7 @@ DEVICE_MESH = [[0, 1, 2, 3], [4, 5, 6, 7]]
 @pytest.mark.skip(reason="Fixing needed")
 def test_autosharding():
     from chop.distributed import MaseLauncher
+
     # Define config
     config = BertConfig()
     config.num_hidden_layers = 3
