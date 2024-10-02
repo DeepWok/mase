@@ -109,6 +109,7 @@ test-hw:
 	# MxInt
 	python3 src/mase_components/linear_layers/mxint_operators/test/mxint_cast_tb.py
 	python3 src/mase_components/linear_layers/mxint_operators/test/mxint_matmul_tb.py
+	python3 src/mase_components/linear_layers/mxint_operators/test/mxint_linear_tb.py
 	python3 src/mase_components/linear_layers/mxint_operators/test/mxint_accumulator_tb.py
 	# Memory
 	python3 src/mase_components/memory/test/fifo_tb.py
