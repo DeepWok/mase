@@ -21,9 +21,7 @@ module mxint_cast #(
 );
   //get max_abs_value of input
   logic data_for_max_valid, data_for_max_ready, data_for_out_valid, data_for_out_ready;
-  split_n #(
-      .N(2)
-  ) split_i (
+  split2 #() split_i (
       .data_in_valid (data_in_valid),
       .data_in_ready (data_in_ready),
       .data_out_valid({data_for_max_valid, data_for_out_valid}),
@@ -32,7 +30,7 @@ module mxint_cast #(
   logic [IN_MAN_WIDTH-1:0] mbuffer_data_for_out [BLOCK_SIZE-1:0];
   logic [IN_EXP_WIDTH-1:0] ebuffer_data_for_out;
   logic buffer_data_for_out_valid, buffer_data_for_out_ready;
-  
+
   localparam LOG2_WIDTH = $clog2(IN_MAN_WIDTH) + 1;
   logic [LOG2_WIDTH - 1:0] log2_max_value;
   logic log2_max_value_valid, log2_max_value_ready;
@@ -57,29 +55,29 @@ module mxint_cast #(
   localparam FIFO_DEPTH = $clog2(BLOCK_SIZE);
   if (FIFO_DEPTH == 0) begin
     always_comb begin
-        mbuffer_data_for_out = mdata_in;
-        ebuffer_data_for_out = edata_in;
-        buffer_data_for_out_valid = data_for_out_valid;
-        data_for_out_ready = buffer_data_for_out_ready;
+      mbuffer_data_for_out = mdata_in;
+      ebuffer_data_for_out = edata_in;
+      buffer_data_for_out_valid = data_for_out_valid;
+      data_for_out_ready = buffer_data_for_out_ready;
     end
   end else begin
-  unpacked_mx_fifo #(
-      .DEPTH(FIFO_DEPTH),
-      .MAN_WIDTH(IN_MAN_WIDTH),
-      .EXP_WIDTH(IN_EXP_WIDTH),
-      .IN_SIZE(BLOCK_SIZE)
-  ) ff_inst (
-      .clk(clk),
-      .rst(rst),
-      .mdata_in(mdata_in),
-      .edata_in(edata_in),
-      .data_in_valid(data_for_out_valid),
-      .data_in_ready(data_for_out_ready),
-      .mdata_out(mbuffer_data_for_out),
-      .edata_out(ebuffer_data_for_out),
-      .data_out_valid(buffer_data_for_out_valid),
-      .data_out_ready(buffer_data_for_out_ready)
-  );
+    unpacked_mx_fifo #(
+        .DEPTH(FIFO_DEPTH),
+        .MAN_WIDTH(IN_MAN_WIDTH),
+        .EXP_WIDTH(IN_EXP_WIDTH),
+        .IN_SIZE(BLOCK_SIZE)
+    ) ff_inst (
+        .clk(clk),
+        .rst(rst),
+        .mdata_in(mdata_in),
+        .edata_in(edata_in),
+        .data_in_valid(data_for_out_valid),
+        .data_in_ready(data_for_out_ready),
+        .mdata_out(mbuffer_data_for_out),
+        .edata_out(ebuffer_data_for_out),
+        .data_out_valid(buffer_data_for_out_valid),
+        .data_out_ready(buffer_data_for_out_ready)
+    );
   end
   join2 #() join_inst (
       .data_in_ready ({buffer_data_for_out_ready, log2_max_value_ready}),
@@ -100,11 +98,15 @@ module mxint_cast #(
   logic [SHIFT_WIDTH - 1:0] shift_value;
   assign shift_value = $signed(edata_out) - $signed(ebuffer_data_for_out);
   logic [SHIFT_WIDTH - 1:0] abs_shift_value;
-  assign abs_shift_value = (shift_value[SHIFT_WIDTH - 1])?(~shift_value + 1) :shift_value; 
+  assign abs_shift_value = (shift_value[SHIFT_WIDTH-1]) ? (~shift_value + 1) : shift_value;
 
   logic [IN_MAN_WIDTH + EBIAS - 1:0] shift_buffer_data_for_out[BLOCK_SIZE - 1:0];
   for (genvar i = 0; i < BLOCK_SIZE; i++) begin
-    assign shift_buffer_data_for_out[i] = (shift_value[SHIFT_WIDTH - 1])?  mbuffer_data_for_out[i] <<< abs_shift_value : mbuffer_data_for_out[i] >>> abs_shift_value;
+    assign shift_buffer_data_for_out[i] = (shift_value[SHIFT_WIDTH-1]) ? $signed(
+        mbuffer_data_for_out[i]
+    ) <<< abs_shift_value : $signed(
+        mbuffer_data_for_out[i]
+    ) >>> abs_shift_value;
     signed_clamp #(
         .IN_WIDTH (IN_MAN_WIDTH + EBIAS),
         .OUT_WIDTH(OUT_MAN_WIDTH)

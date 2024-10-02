@@ -52,9 +52,10 @@ module mxint_accumulator #(
   assign no_value_in_register =(counter == 0 || (data_out_0_valid && data_out_0_ready && data_in_0_valid));
   for (genvar i = 0; i < BLOCK_SIZE; i++) begin : mantissa_block
     always_comb begin
-      shifted_mdata_in_0[i] = no_value_in_register ? mdata_in_0[i] :
-          mdata_in_0[i] <<< ($signed(edata_in_0) - $signed(exp_min));
-      shifted_mdata_out_0[i] = mdata_out_0[i] <<< ($signed(edata_out_0) - $signed(exp_min));
+      shifted_mdata_in_0[i] = no_value_in_register ? $signed(mdata_in_0[i]) :
+          $signed(mdata_in_0[i]) <<< ($signed(edata_in_0) - $signed(exp_min));
+      shifted_mdata_out_0[i] = $signed(mdata_out_0[i]) <<<
+          ($signed(edata_out_0) - $signed(exp_min));
     end
     // add
     always_ff @(posedge clk)

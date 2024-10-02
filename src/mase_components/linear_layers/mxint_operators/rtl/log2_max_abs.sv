@@ -48,10 +48,10 @@ module log2_value #(
     output logic [OUT_WIDTH-1:0] data_out  // 5-bit output log2 result, since log2(32-bit) is max 31 (5-bit)
 );
   integer i;
-  logic [OUT_WIDTH - 1 - 1:0] unsigned_log_out;
-  always @* begin
+  logic [$clog2(IN_WIDTH) - 1:0] unsigned_log_out;
+  always_comb begin
     for (i = IN_WIDTH - 1; i >= 0; i = i - 1) begin
-      if (data_in > (1 << i)) begin
+      if ((data_in > (1 << i))) begin
         unsigned_log_out = i + 1;
         break;
       end

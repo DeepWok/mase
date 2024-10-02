@@ -109,9 +109,9 @@ if __name__ == "__main__":
             # },
             {
                 "IN_MAN_WIDTH": 8,
-                "IN_EXP_WIDTH": 3,
-                "OUT_MAN_WIDTH": 8,
-                "OUT_EXP_WIDTH": 4,
+                "IN_EXP_WIDTH": 4,
+                "OUT_MAN_WIDTH": 49,
+                "OUT_EXP_WIDTH": 5,
                 "BLOCK_SIZE": 4,
             },
             # {

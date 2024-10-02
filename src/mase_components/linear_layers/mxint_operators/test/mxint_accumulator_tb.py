@@ -128,8 +128,8 @@ if __name__ == "__main__":
             {
                 "DATA_IN_0_PRECISION_0": 8,
                 "DATA_IN_0_PRECISION_1": 4,
-                "BLOCK_SIZE": 4,
-                "IN_DEPTH": 2,
+                "BLOCK_SIZE": 1,
+                "IN_DEPTH": 1,
             },
         ],
     )

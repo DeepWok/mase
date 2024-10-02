@@ -154,7 +154,7 @@ def test_abs_max_tree():
     mase_runner(
         module_param_list=[
             # Power of 2's
-            {"IN_SIZE": 8, "IN_WIDTH": 8},
+            {"IN_SIZE": 2, "IN_WIDTH": 8},
         ],
         trace=True,
     )

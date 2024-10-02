@@ -27,20 +27,17 @@ def mxint_quantize(x, width: int = 12, exponent_width: int = 6, exponent: int = 
     exponent_max = 2**exponent_width - 1 - exponent_bias
     exponent_min = -exponent_bias
 
-    # sign
-    sign = torch.sign(x + 1e-9)
     # exponent
-    value = torch.abs(x) + 1e-9
     if exponent == None:
         exponent = torch.ceil(torch.log2(x.abs().max())) - exponent_bias
         exponent = torch.clamp(exponent, exponent_min, exponent_max)
     # mantissa
     int_min = -(2 ** (width - 1))
     int_max = 2 ** (width - 1) - 1
-    mantissa = value / 2**exponent
+    mantissa = x / 2**exponent
     mantissa = torch.clamp(mantissa.floor(), int_min, int_max)
-    msfp_x = sign * (2**exponent) * mantissa
-    return msfp_x, sign * mantissa, exponent
+    msfp_x = (2**exponent) * mantissa
+    return msfp_x, mantissa, exponent
 
 
 def block_mxint_quant(tensor, q_config, parallelism):
@@ -178,12 +175,14 @@ class MXIntLinear(_LinearBase):
         else:
             x, mx, ex = self.x_quantizer(x)
             w, mw, ew = self.w_quantizer(self.weight)
-            bias, mb, eb = (
-                self.b_quantizer(self.bias) if self.bias is not None else None
-            )
-            out = F.linear(x, w, bias)
+            print((mx @ mw.transpose(0, 1)).int())
+            if self.bias is not None:
+                bias, mb, eb = self.b_quantizer(self.bias)
+            else:
+                bias = None
             breakpoint()
-            print(f"mout = {F.linear(mx, mw, mb*2**(ex+ew - eb).floor())}")
+            out = F.linear(x, w, bias)
+            # print(f"mout = {F.linear(mx, mw, mb*2**(ex+ew - eb).floor())}")
             if self.out_quantizer is None:
                 return out
             return self.out_quantizer(out)
