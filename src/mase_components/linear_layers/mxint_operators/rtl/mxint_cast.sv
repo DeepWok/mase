@@ -37,6 +37,7 @@ module mxint_cast #(
 
   localparam EBIAS = 2 ** (OUT_EXP_WIDTH - 1);
   localparam LOSSLESSS_EDATA_WIDTH = max(LOG2_WIDTH, IN_EXP_WIDTH, OUT_EXP_WIDTH) + 2;
+  localparam FIFO_DEPTH = $clog2(BLOCK_SIZE);
   logic [LOSSLESSS_EDATA_WIDTH - 1:0] edata_out_full;
   log2_max_abs #(
       .IN_SIZE (BLOCK_SIZE),
@@ -52,7 +53,6 @@ module mxint_cast #(
       .data_out_ready(log2_max_value_ready)
   );
 
-  localparam FIFO_DEPTH = $clog2(BLOCK_SIZE);
   if (FIFO_DEPTH == 0) begin
     always_comb begin
       mbuffer_data_for_out = mdata_in;

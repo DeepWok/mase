@@ -28,12 +28,14 @@ module mxint_circular #(
     assert (DATA_PRECISION_0 >= DATA_PRECISION_1)
     else $fatal("DATA_PRECISION_0 must larger than PRECISION_1");
   end
-  logic [DATA_PRECISION_0 - 1:0] packed_data_in[IN_NUM:0];
-  assign packed_data_in[IN_NUM-1:0] = mdata_in;
-  assign packed_data_in[IN_NUM] = $signed(edata_in);
+  logic [DATA_PRECISION_0 - 1:0] packed_data_in [IN_NUM:0];
   logic [DATA_PRECISION_0 - 1:0] packed_data_out[IN_NUM:0];
-  assign mdata_out = packed_data_out[IN_NUM-1:0];
-  assign edata_out = packed_data_out[IN_NUM];
+  always_comb begin : data_pack
+    packed_data_in[IN_NUM-1:0] = mdata_in;
+    packed_data_in[IN_NUM] = $signed(edata_in);
+    mdata_out = packed_data_out[IN_NUM-1:0];
+    edata_out = packed_data_out[IN_NUM];
+  end
   input_buffer #(
       .DATA_WIDTH (DATA_PRECISION_0),
       .IN_NUM     (IN_NUM + 1),

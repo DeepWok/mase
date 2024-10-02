@@ -51,7 +51,7 @@ module mxint_vector_mult #(
   mxint_register_slice #(
       .DATA_PRECISION_0($bits(mdata_out_0_reg_in[0])),
       .DATA_PRECISION_1($bits(edata_out_0_reg_in)),
-      .BLOCK_SIZE(BLOCK_SIZE)
+      .IN_NUM(BLOCK_SIZE)
   ) register_slice (
       .clk           (clk),
       .rst           (rst),

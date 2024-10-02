@@ -33,10 +33,14 @@ module mxint_accumulator #(
   /* verilator lint_on WIDTH */
 
   // mantissa shift
-  logic [DATA_OUT_0_PRECISION_0 - 1:0] shifted_mdata_in_0 [BLOCK_SIZE - 1:0];
+  logic [DATA_OUT_0_PRECISION_0 - 1:0] shifted_mdata_in_0[BLOCK_SIZE - 1:0];
   logic [DATA_OUT_0_PRECISION_0 - 1:0] shifted_mdata_out_0[BLOCK_SIZE - 1:0];
 
-  localparam signed [DATA_IN_0_PRECISION_1 - 1:0] MAXIMUM_EXPONENTIAL = 2**(DATA_IN_0_PRECISION_1 - 1) - 1;
+  logic no_value_in_register;
+  logic [DATA_IN_0_PRECISION_1 - 1:0] exp_min;
+
+  assign no_value_in_register =(counter == 0 || (data_out_0_valid && data_out_0_ready && data_in_0_valid));
+  assign exp_min = ($signed(edata_out_0) > $signed(edata_in_0)) ? edata_in_0 : edata_out_0;
   // counter
   always_ff @(posedge clk)
     if (rst) counter <= 0;
@@ -48,16 +52,16 @@ module mxint_accumulator #(
         end
       end else if (data_in_0_valid && data_in_0_ready) counter <= counter + 1;
     end
-  logic no_value_in_register;
-  assign no_value_in_register =(counter == 0 || (data_out_0_valid && data_out_0_ready && data_in_0_valid));
+  // mantissa
   for (genvar i = 0; i < BLOCK_SIZE; i++) begin : mantissa_block
+    // mantissa shift
     always_comb begin
       shifted_mdata_in_0[i] = no_value_in_register ? $signed(mdata_in_0[i]) :
           $signed(mdata_in_0[i]) <<< ($signed(edata_in_0) - $signed(exp_min));
       shifted_mdata_out_0[i] = $signed(mdata_out_0[i]) <<<
           ($signed(edata_out_0) - $signed(exp_min));
     end
-    // add
+    // mantissa out
     always_ff @(posedge clk)
       if (rst) mdata_out_0[i] <= '0;
       else begin
@@ -70,8 +74,8 @@ module mxint_accumulator #(
           mdata_out_0[i] <= $signed(shifted_mdata_out_0[i]) + $signed(shifted_mdata_in_0[i]);
       end
   end
-  logic [DATA_IN_0_PRECISION_1 - 1:0] exp_min;
-  assign exp_min = ($signed(edata_out_0) > $signed(edata_in_0)) ? edata_in_0 : edata_out_0;
+  localparam signed [DATA_IN_0_PRECISION_1 - 1:0] MAXIMUM_EXPONENTIAL = 2**(DATA_IN_0_PRECISION_1 - 1) - 1;
+  // exponent
   always_ff @(posedge clk)
     if (rst) edata_out_0 <= MAXIMUM_EXPONENTIAL;
     else if (data_out_0_valid) begin
