@@ -5,7 +5,6 @@ import torch
 import torch.nn as nn
 
 from chop.ir import MaseGraph
-from chop.distributed import MaseLauncher
 import chop.passes as passes
 from chop.tools import get_logger
 
@@ -39,7 +38,7 @@ class MLP(nn.Module):
 
 @pytest.mark.skip(reason="Fixing needed")
 def test_autosharding():
-
+    from chop.distributed import MaseLauncher
     # Initialize model and MaseGraph
     model = MLP()
     mg = MaseGraph(model)
