@@ -82,6 +82,15 @@ module fixed_linear #(
     input logic data_out_0_ready
 );
 
+  initial begin
+    if (HAS_BIAS) begin
+      assert (BIAS_PARALLELISM_DIM_0 == DATA_OUT_0_PARALLELISM_DIM_0)
+      else $fatal("Input bias and output data must have the same parallelism.");
+      assert (BIAS_PARALLELISM_DIM_1 == DATA_OUT_0_PARALLELISM_DIM_1)
+      else $fatal("Input bias and output data must have the same parallelism.");
+    end
+  end
+
   // The TENSOR_SIZE and PARALLELISM parameters for the weights are set by emit verilog according to the real
   // tensor values. Here we account for the change when the weights are pre-transposed
   localparam REAL_WEIGHT_TENSOR_SIZE_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0) ? WEIGHT_TENSOR_SIZE_DIM_1 : WEIGHT_TENSOR_SIZE_DIM_0;

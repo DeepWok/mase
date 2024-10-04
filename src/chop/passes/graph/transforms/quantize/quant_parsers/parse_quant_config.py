@@ -382,6 +382,10 @@ MASE_OP_TO_ENTRIES = {
         ("name", "data_in_entries"),
         ("bypass",),
     ),
+    "grouped_query_attention": (
+        ("name", "data_in_entries", "weight_entries"),
+        ("bypass", "bias_entries"),
+    ),
 }
 
 

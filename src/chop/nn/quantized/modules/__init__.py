@@ -146,6 +146,9 @@ from .softplus import (
 from .batch_norm1d import (
     BatchNorm1dInteger,
 )
+from .gqa import (
+    GroupedQueryAttentionInteger,
+)
 
 quantized_module_map = {
     "conv1d_block_minifloat": Conv1dBlockMinifloat,
@@ -266,4 +269,5 @@ quantized_module_map = {
     "batch_norm1d_linear": BatchNorm1dInteger,
     "bert_self_attention_head_integer": BertSelfAttentionHeadInteger,
     "bert_self_attention_integer": BertSelfAttentionInteger,
+    "grouped_query_attention_integer": GroupedQueryAttentionInteger,
 }

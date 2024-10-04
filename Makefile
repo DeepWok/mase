@@ -51,8 +51,8 @@ sync:
 # Only needed if you are using the MLIR flow - it will be slow!
 sync-mlir:
 	bash mlir-air/utils/github-clone-build-libxaie.sh
-	bash mlir-air/utils/clone-llvm.sh 
-	bash mlir-air/utils/clone-mlir-aie.sh 
+	bash mlir-air/utils/clone-llvm.sh
+	bash mlir-air/utils/clone-mlir-aie.sh
 
 # Build Docker container
 build-docker:

@@ -93,6 +93,7 @@ requirements = [
     "evaluate",
     "myst-nb",
     "sphinx-book-theme",
+    "pydot",
 ]
 
 setup(

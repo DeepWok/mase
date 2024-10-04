@@ -92,6 +92,7 @@ func_data = {
     "gather": {"input": "data_in", "index": "config", "dim": "config"},
     # https://pytorch.org/docs/stable/generated/torch.mean.html
     "mean": {"input": "data_in"},
+    "floor": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.pow.html
     "pow": {"input": "data_in", "exponent": "config"},
     # https://pytorch.org/docs/stable/generated/torch.sqrt.html
@@ -353,6 +354,7 @@ module_data = {
     },
     # chop.nn.modules.lora.LoRALinear
     "loralinear": {"input": "data_in"},
+    "grouped_query_attention": {"input": "data_in"},
 }
 
 
@@ -386,6 +388,33 @@ method_data = {
         "size_1": "config",
         "size_2": "config",
         "size_3": "config",
+        "size_4": "config",
+    },
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.reshape.html
+    "reshape": {
+        "size_0": "config",
+        "size_1": "config",
+        "size_2": "config",
+        "size_3": "config",
+    },
+    # Tensor.max(dim=None, keepdim=False)
+    "max": {
+        "dim": "config",
+        "keepdim": "config",
+    },
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.sum.html
+    "sum": {
+        "dim": "config",
+        "keepdim": "config",
+    },
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.round.html
+    "round": {},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.floor.html
+    "floor": {},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.clamp.html
+    "clamp": {
+        "min": "config",
+        "max": "config",
     },
     # https://pytorch.org/docs/stable/generated/torch.Tensor.dim.html
     "dim": {},

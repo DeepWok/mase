@@ -3,6 +3,7 @@ from copy import copy
 import itertools
 
 from cocotb.triggers import RisingEdge
+from cocotb.result import TestComplete
 import torch
 from torch import Tensor
 import sys

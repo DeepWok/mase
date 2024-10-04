@@ -10,7 +10,7 @@ module fixed_activation_binary_vector_mult #(
     input clk,
     input rst,
 
-    // input port for activations 
+    // input port for activations
     input  logic [IN_WIDTH-1:0] data_in      [IN_SIZE-1:0],
     input                       data_in_valid,
     output                      data_in_ready,
@@ -56,7 +56,7 @@ module fixed_activation_binary_vector_mult #(
   // Cocotb/verilator does not support array flattening, so
   // we need to manually add some reshaping process.
 
-  // Casting array for product vector 
+  // Casting array for product vector
   for (genvar i = 0; i < IN_SIZE; i++)
     assign product_data_in[PRODUCT_WIDTH*i+PRODUCT_WIDTH-1:PRODUCT_WIDTH*i] = product_vector[i];
 
@@ -73,7 +73,7 @@ module fixed_activation_binary_vector_mult #(
       .data_out      (product_data_out)
   );
 
-  // Casting array for product vector 
+  // Casting array for product vector
   for (genvar i = 0; i < IN_SIZE; i++)
     assign data_out[i] = product_data_out[PRODUCT_WIDTH*i+PRODUCT_WIDTH-1:PRODUCT_WIDTH*i];
 
