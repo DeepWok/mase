@@ -1,4 +1,4 @@
-# MaseModule Passes
+# Module Passes
 
 `Modules` in `torch` can be seen as composable building blocks for neural networks. They are defined by subclassing `torch.nn.Module` and implementing the `forward` method. More detail on `torch.nn.Module` can be found [here](https://pytorch.org/docs/stable/notes/modules.html).
 

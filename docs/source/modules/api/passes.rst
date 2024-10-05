@@ -247,5 +247,3 @@ Additional Documentation
 	:maxdepth: 1
 
 	transform/quantize_further_doc
-
-.. test-results:: ../../software_report.xml

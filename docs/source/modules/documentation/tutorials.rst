@@ -20,43 +20,6 @@ You can directly import MASE as a package using `import mase` after installation
     tutorials/common/interactive
     tutorials/common/interactive_quantize
 
-The MASE Command Line System
-----------------------------
-
-MASE supported a range of `actions` (eg. `train`, `test`, `transform` ...), these are designed to help you to quickly spin things in your command line without touching the source code.
-
-.. toctree::
-    :maxdepth: 1
-
-    tutorials/actions/train/simple_train_flow
-    tutorials/actions/transform/cli_transform
-    tutorials/actions/search/mixed_precision_search_on_mase_graph
-    tutorials/actions/search/mixed_precision_search_on_manual_model
-
-For simplicity, we summarized the following commands for you to quickly start with MASE Command Line System:
-
-.. code-block:: bash
-
-    # Basic training and testing
-    ## training
-    ./ch train jsc-tiny jsc --max-epochs 3 --batch-size 256 --accelerator cpu --project tmp --debug
-    ## test
-    ./ch test jsc-tiny jsc --accelerator cpu --debug --load ../mase_output/tmp/software/training_ckpts/best.ckpt --load-type pl
-
-    # Graph-level
-    ## transfrom on graph level
-    ./ch transform --config $MASE/configs/examples/jsc_toy_by_type.toml --task cls --accelerator=cpu --load ../mase_output/tmp/software/training_ckpts/best.ckpt --load-type pl
-    ## search command
-    ./ch search --config $MASE/configs/examples/jsc_toy_by_type.toml --task cls --accelerator=cpu --load ../mase_output/tmp/software/training_ckpts/best.ckpt --load-type pl
-    ## train searched network
-    ./ch train jsc-tiny jsc --max-epochs 3 --batch-size 256 --accelerator cpu --project tmp --debug --load ../mase_output/jsc-tiny/software/transform/transformed_ckpt/graph_module.mz --load-type mz
-
-    # Module-level
-    ## transfrom on module level
-    ./ch transform --config $MASE/configs/examples/jsc_toy_by_type_module.toml --task cls --accelerator=cpu --load ../mase_output/tmp/software/training_ckpts/best.ckpt --load-type pl
-    ## train the transformed network
-    ./ch train jsc-tiny jsc --max-epochs 3 --batch-size 256 --accelerator cpu --project tmp --debug --load ../mase_output/jsc-tiny/software/transform/transformed_ckpt/state_dict.pt --load-type pt
-
 The MASE Pass System
 --------------------
 
@@ -75,6 +38,14 @@ These tutorials will guide you through the process of creating and applying pass
 
     tutorials/passes/module_and_pass
     tutorials/passes/graph_and_pass
+
+You may have realized that MASE, especially when used with the pass system on the graph-level, has a few customized terminologies. We call this the MASE IR system. The following tutorial will guide you through the MASE IR system.
+
+.. toctree::
+    :maxdepth: 1
+
+    tutorials/passes/mase_ir
+
 
 Advanced Topics
 ---------------

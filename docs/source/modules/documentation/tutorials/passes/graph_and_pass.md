@@ -1,4 +1,4 @@
-# MaseGraph and MaseGraph Passes
+# Graph Passes
 
 ## MASE OPs and MASE Types
 
