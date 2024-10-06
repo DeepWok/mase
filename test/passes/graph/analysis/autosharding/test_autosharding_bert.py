@@ -5,7 +5,6 @@ import torch
 import torch.nn as nn
 
 from chop.ir import MaseGraph
-from chop.distributed import MaseLauncher
 import chop.passes as passes
 from chop.tools import get_logger
 
@@ -20,6 +19,7 @@ DEVICE_MESH = [[0, 1, 2, 3], [4, 5, 6, 7]]
 
 @pytest.mark.skip(reason="Fixing needed")
 def test_autosharding():
+    from chop.distributed import MaseLauncher
 
     # Define config
     config = BertConfig()
