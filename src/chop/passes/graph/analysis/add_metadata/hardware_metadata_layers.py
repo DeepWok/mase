@@ -33,36 +33,36 @@ norm = {
     ],
 }
 linear = {
-        "name": "fixed_linear_with_input_circular",
-        "dependence_files": [
-            "cast/rtl/fixed_round.sv",
-            "cast/rtl/fixed_rounding.sv",
-            "cast/rtl/floor_round.sv",
-            "cast/rtl/signed_clamp.sv",
-            "cast/rtl/fixed_signed_cast.sv",
-            "linear_layers/fixed_operators/rtl/fixed_dot_product.sv",
-            "linear_layers/fixed_operators/rtl/fixed_vector_mult.sv",
-            "linear_layers/fixed_operators/rtl/fixed_accumulator.sv",
-            "linear_layers/fixed_operators/rtl/fixed_adder_tree.sv",
-            "linear_layers/fixed_operators/rtl/fixed_adder_tree_layer.sv",
-            "linear_layers/fixed_operators/rtl/fixed_mult.sv",
-            "common/rtl/register_slice.sv",
-            "common/rtl/join2.sv",
-            "common/rtl/mux.sv",
-            "common/rtl/unpacked_register_slice.sv",
-            "common/rtl/single_element_repeat.sv",
-            "memory/rtl/unpacked_repeat_circular_buffer.sv",
-            "memory/rtl/input_buffer.sv",
-            "memory/rtl/blk_mem_gen_0.sv",
-            "memory/rtl/simple_dual_port_ram.sv",
-            "linear_layers/fixed_linear_layer/rtl/fixed_linear_with_input_circular.sv",
-            "memory/rtl/fifo_for_autogen.sv",
-            "memory/rtl/unpacked_fifo.sv",
-            "memory/rtl/skid_buffer.sv",
-            "memory/rtl/unpacked_skid_buffer.sv",
-            "memory/rtl/simple_dual_port_ram.sv",
-            "memory/rtl/fifo.sv",
-        ],
+    "name": "fixed_linear_with_input_circular",
+    "dependence_files": [
+        "cast/rtl/fixed_round.sv",
+        "cast/rtl/fixed_rounding.sv",
+        "cast/rtl/floor_round.sv",
+        "cast/rtl/signed_clamp.sv",
+        "cast/rtl/fixed_signed_cast.sv",
+        "linear_layers/fixed_operators/rtl/fixed_dot_product.sv",
+        "linear_layers/fixed_operators/rtl/fixed_vector_mult.sv",
+        "linear_layers/fixed_operators/rtl/fixed_accumulator.sv",
+        "linear_layers/fixed_operators/rtl/fixed_adder_tree.sv",
+        "linear_layers/fixed_operators/rtl/fixed_adder_tree_layer.sv",
+        "linear_layers/fixed_operators/rtl/fixed_mult.sv",
+        "common/rtl/register_slice.sv",
+        "common/rtl/join2.sv",
+        "common/rtl/mux.sv",
+        "common/rtl/unpacked_register_slice.sv",
+        "common/rtl/single_element_repeat.sv",
+        "memory/rtl/unpacked_repeat_circular_buffer.sv",
+        "memory/rtl/input_buffer.sv",
+        "memory/rtl/blk_mem_gen_0.sv",
+        "memory/rtl/simple_dual_port_ram.sv",
+        "linear_layers/fixed_linear_layer/rtl/fixed_linear_with_input_circular.sv",
+        "memory/rtl/fifo_for_autogen.sv",
+        "memory/rtl/unpacked_fifo.sv",
+        "memory/rtl/skid_buffer.sv",
+        "memory/rtl/unpacked_skid_buffer.sv",
+        "memory/rtl/simple_dual_port_ram.sv",
+        "memory/rtl/fifo.sv",
+    ],
 }
 INTERNAL_COMP = {
     "linear": [linear],
@@ -75,7 +75,7 @@ INTERNAL_COMP = {
                 "memory/rtl/skid_buffer.sv",
                 "memory/rtl/simple_dual_port_ram.sv",
                 "memory/rtl/fifo.sv",
-            ]
+            ],
         }
     ],
     "relu": [
@@ -154,9 +154,10 @@ INTERNAL_COMP = {
     "layer_norm": [
         {
             "name": "layer_norm_2d",
-            "dependence_files": norm["dependence_files"]+ [
+            "dependence_files": norm["dependence_files"]
+            + [
                 "normalization_layers/rtl/layer_norm_2d.sv",
-                "generated_lut/rtl/isqrt_lut.sv"
+                "generated_lut/rtl/isqrt_lut.sv",
             ],
         },
     ],
@@ -242,10 +243,11 @@ INTERNAL_COMP = {
     "vit_self_attention_integer": [
         {
             "name": "fixed_vit_attention_single_precision_wrapper",
-            "dependence_files": linear["dependence_files"] + [
+            "dependence_files": linear["dependence_files"]
+            + [
                 "vision_models/vit/rtl/fixed_vit_attention_single_precision_wrapper.sv",
                 "vision_models/vit/rtl/fixed_vit_attention.sv",
-                "vision_models/vit/rtl/fixed_vit_attention_head.sv", 
+                "vision_models/vit/rtl/fixed_vit_attention_head.sv",
                 "transformer_layers/rtl/self_attention_head_single_scatter.sv",
                 "transformer_layers/rtl/gqa_head_scatter_control.sv",
                 "transformer_layers/rtl/self_attention_head_gather.sv",

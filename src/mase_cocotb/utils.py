@@ -180,10 +180,9 @@ def fixed_cast(val, in_width, in_frac_width, out_width, out_frac_width):
     return val  # << out_frac_width  # treat data<out_width, out_frac_width> as data<out_width, 0>
 
 
-
 async def check_signal(dut, log, signal_list):
-    #TODO: support count start
-    #TODO: support checking signal with different name in valid and ready signal
+    # TODO: support count start
+    # TODO: support checking signal with different name in valid and ready signal
     def handshake_signal_check(
         dut, log, signal_base, valid=None, ready=None, count_start: dict = {}
     ):
@@ -193,7 +192,9 @@ async def check_signal(dut, log, signal_list):
         svalue = [i.signed_integer for i in data.value]
         if data_valid.value & data_ready.value:
             count_start[signal_base] = (
-                count_start[signal_base] + 1 if count_start.get(signal_base) is not None else " "
+                count_start[signal_base] + 1
+                if count_start.get(signal_base) is not None
+                else " "
             )
             log.debug(f"handshake {count_start[signal_base]} {signal_base} = {svalue}")
 
@@ -201,4 +202,3 @@ async def check_signal(dut, log, signal_list):
         await RisingEdge(dut.clk)
         for signal in signal_list:
             handshake_signal_check(dut, log, signal)
-

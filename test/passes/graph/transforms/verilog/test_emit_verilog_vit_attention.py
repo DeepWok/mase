@@ -34,9 +34,7 @@ def excepthook(exc_type, exc_value, exc_traceback):
 
 logger = get_logger(__name__)
 sys.excepthook = excepthook
-VIT_CUSTOM_OPS = {
-    "modules": {ViTAttentionInteger: {}}
-}
+VIT_CUSTOM_OPS = {"modules": {ViTAttentionInteger: {}}}
 
 # --------------------------------------------------
 #   Model specifications

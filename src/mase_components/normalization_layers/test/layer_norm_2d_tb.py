@@ -21,6 +21,7 @@ handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
 from chop.tools.logger import set_logging_verbosity
+
 set_logging_verbosity("debug")
 
 
@@ -28,6 +29,7 @@ def excepthook(exc_type, exc_value, exc_traceback):
     traceback.print_exception(exc_type, exc_value, exc_traceback)
     print("\nEntering debugger...")
     pdb.post_mortem(exc_traceback)
+
 
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor

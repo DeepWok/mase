@@ -206,7 +206,9 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
     out_depth = int(total_size / out_size)
 
     data_buff = ""
-    param_data = node.meta["mase"].parameters["common"]["args"][verilog_param_name]["value"].data
+    param_data = (
+        node.meta["mase"].parameters["common"]["args"][verilog_param_name]["value"].data
+    )
     param_meta = node.meta["mase"].parameters["hardware"]["verilog_param"]
     # TODO: Currently only support tranpose linear
 

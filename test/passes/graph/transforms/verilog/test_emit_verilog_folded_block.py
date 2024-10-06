@@ -42,9 +42,10 @@ from chop.models.vision.vit.vit import Attention
 
 from chop.nn.quantized.modules.attention import ViTAttentionInteger
 from mase_components import get_module_dependencies
-VIT_CUSTOM_OPS = {
-    "modules": {ViTAttentionInteger: {}}
-}
+
+VIT_CUSTOM_OPS = {"modules": {ViTAttentionInteger: {}}}
+
+
 class MLP(torch.nn.Module):
     """
     Toy quantized FC model for digit recognition on MNIST
@@ -59,6 +60,8 @@ class MLP(torch.nn.Module):
     def forward(self, x):
         x = self.fc2(self.act(self.fc1(x)))
         return x
+
+
 class Block(nn.Module):
     def __init__(
         self,
@@ -129,9 +132,11 @@ class ViTAttention(nn.Module):
                 for i in range(depth)
             ]
         )
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.blocks(x)
         return x
+
 
 from chop.passes.graph.utils import deepsetattr
 
@@ -165,6 +170,7 @@ def vit_module_level_quantize(model, model_config, q_config):
             new_module.proj.bias = ori_module.proj.bias
             deepsetattr(model, module[0], new_module)
     return model
+
 
 attention_quant_config = {
     "name": "integer_floor",
@@ -256,6 +262,8 @@ quan_args = {
     },
     "vit_self_attention_integer": {"config": attention_quant_config},
 }
+
+
 @pytest.mark.dev
 def test_emit_verilog_vit():
     # vit_tiny dim 192, n 196, num_heads = 3
@@ -282,8 +290,10 @@ def test_emit_verilog_vit():
             "query_has_bias": True,
         }
     }
-    layer = ViTAttention(dim,num_heads,mlp_ratio=4,qkv_bias=True, depth=depth)
-    qlayer = vit_module_level_quantize(layer, model_config_for_quantize, attention_quant_config)
+    layer = ViTAttention(dim, num_heads, mlp_ratio=4, qkv_bias=True, depth=depth)
+    qlayer = vit_module_level_quantize(
+        layer, model_config_for_quantize, attention_quant_config
+    )
     mg = chop.MaseGraph(model=qlayer)
     torch.manual_seed(0)
     # Provide a dummy input for the graph so it can use for tracing
@@ -296,42 +306,57 @@ def test_emit_verilog_vit():
     mg, _ = passes.graph.transforms.insert_fork_transform_pass(mg, quan_args)
     update_common_metadata_pass(mg, quan_args)
     mg, _ = passes.add_hardware_metadata_analysis_pass(
-        mg, pass_args={"max_parallelism": [parallelism]*4}
+        mg, pass_args={"max_parallelism": [parallelism] * 4}
     )
     update_hardware_precision_param(mg, quan_args, model_args_for_hardware_param)
-    #mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
+    # mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
 
-    layer_for_block = ViTAttention(dim,num_heads,mlp_ratio=4,qkv_bias=True, depth=1)
-    qlayer_for_block = vit_module_level_quantize(layer_for_block, model_config_for_quantize, attention_quant_config)
+    layer_for_block = ViTAttention(dim, num_heads, mlp_ratio=4, qkv_bias=True, depth=1)
+    qlayer_for_block = vit_module_level_quantize(
+        layer_for_block, model_config_for_quantize, attention_quant_config
+    )
     mg_for_block = chop.MaseGraph(qlayer_for_block)
     mg_for_block, _ = passes.init_metadata_analysis_pass(mg_for_block, None)
-    mg_for_block, _ = passes.add_common_metadata_analysis_pass(mg_for_block, {"dummy_in": dummy_in})
+    mg_for_block, _ = passes.add_common_metadata_analysis_pass(
+        mg_for_block, {"dummy_in": dummy_in}
+    )
     mg_for_block, _ = passes.quantize_transform_pass(mg_for_block, quan_args)
-    mg_for_block, _ = passes.graph.transforms.insert_fork_transform_pass(mg_for_block, quan_args)
+    mg_for_block, _ = passes.graph.transforms.insert_fork_transform_pass(
+        mg_for_block, quan_args
+    )
     update_common_metadata_pass(mg_for_block, quan_args)
     mg_for_block, _ = passes.add_hardware_metadata_analysis_pass(
-        mg_for_block, pass_args={"max_parallelism": [parallelism] * 4})
-    update_hardware_precision_param(mg_for_block, quan_args, model_args_for_hardware_param)
+        mg_for_block, pass_args={"max_parallelism": [parallelism] * 4}
+    )
+    update_hardware_precision_param(
+        mg_for_block, quan_args, model_args_for_hardware_param
+    )
 
-
-    pqkv = pqkv*num_heads
+    pqkv = pqkv * num_heads
     pass_args = {
-            "fork2": {"din": [1, px], "dout": ([1, px], [1, px])},
-            "norm1": {"din": [1, px], "dout": [1, px]},
-            "attn": {"din": [1, px], "dattn": [1, pqkv], "dout": [1, p_proj]},
-            "fifo": {"din": [1, px], "dout": [1, px]},
-            "add": {"din": ([1, px], [1, px]), "dout": [1, px]},
-            "norm2": {"din": [1, px], "dout": [1, px]},
-            "mlp_fc1": {"din": [1, px], "dout": [1, p_w1]},
-            "mlp_act": {"din": [1, p_w1], "dout": [1, p_w1]},
-            "mlp_fc2": {"din": [1, p_w1], "dout": [1, px]},
-            "fifo": {"din": [1, px], "dout": [1, px]},
+        "fork2": {"din": [1, px], "dout": ([1, px], [1, px])},
+        "norm1": {"din": [1, px], "dout": [1, px]},
+        "attn": {"din": [1, px], "dattn": [1, pqkv], "dout": [1, p_proj]},
+        "fifo": {"din": [1, px], "dout": [1, px]},
+        "add": {"din": ([1, px], [1, px]), "dout": [1, px]},
+        "norm2": {"din": [1, px], "dout": [1, px]},
+        "mlp_fc1": {"din": [1, px], "dout": [1, p_w1]},
+        "mlp_act": {"din": [1, p_w1], "dout": [1, p_w1]},
+        "mlp_fc2": {"din": [1, p_w1], "dout": [1, px]},
+        "fifo": {"din": [1, px], "dout": [1, px]},
     }
     from utils import manually_update_hardware_parallelism_param
 
     manually_update_hardware_parallelism_param(mg, pass_args)
     manually_update_hardware_parallelism_param(mg_for_block, pass_args)
-    mg, _ = passes.emit_verilog_top_transform_pass(mg, pass_args={"folded_graph": mg_for_block, "folded_node_name": "blocks", "reuse_times": depth})
+    mg, _ = passes.emit_verilog_top_transform_pass(
+        mg,
+        pass_args={
+            "folded_graph": mg_for_block,
+            "folded_node_name": "blocks",
+            "reuse_times": depth,
+        },
+    )
     # mg, _ = passes.emit_bram_transform_pass(mg)
     mg, _ = passes.emit_internal_rtl_transform_pass(mg)
     mg, _ = passes.emit_cocotb_transform_pass(

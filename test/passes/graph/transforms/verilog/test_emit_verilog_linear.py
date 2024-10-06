@@ -17,7 +17,12 @@ from chop.tools.logger import set_logging_verbosity
 from chop.tools import get_logger
 
 set_logging_verbosity("debug")
-from utils import update_common_metadata_pass, update_hardware_precision_param, manually_update_hardware_parallelism_param
+from utils import (
+    update_common_metadata_pass,
+    update_hardware_precision_param,
+    manually_update_hardware_parallelism_param,
+)
+
 
 def excepthook(exc_type, exc_value, exc_traceback):
     traceback.print_exception(exc_type, exc_value, exc_traceback)
@@ -79,7 +84,7 @@ quan_args = {
 
 @pytest.mark.dev
 def test_emit_verilog_linear():
-    in_features = 192   
+    in_features = 192
     hidden_features = 192
     out_features = 192
     n = 196
@@ -115,17 +120,12 @@ def test_emit_verilog_linear():
     wp1 = 8
     wp2 = 1
     manually_update_hardware_parallelism_param(
-        mg, 
+        mg,
         pass_args={
-            "fc1": {
-                "din": [1, 2],
-                "dout": [1, wp1]
-            },
-            "fc2": {
-                "din": [1, wp1],
-                "dout": [1, wp2]
-            }
-        })
+            "fc1": {"din": [1, 2], "dout": [1, wp1]},
+            "fc2": {"din": [1, wp1], "dout": [1, wp2]},
+        },
+    )
     mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
     mg, _ = passes.emit_verilog_top_transform_pass(mg)
     mg, _ = passes.emit_bram_transform_pass(mg)

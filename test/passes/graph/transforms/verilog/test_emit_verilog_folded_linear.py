@@ -22,6 +22,7 @@ from chop.tools import get_logger
 set_logging_verbosity("debug")
 from utils import update_common_metadata_pass, update_hardware_precision_param
 
+
 def excepthook(exc_type, exc_value, exc_traceback):
     traceback.print_exception(exc_type, exc_value, exc_traceback)
     print("\nentering debugger...")
@@ -44,15 +45,12 @@ class MLP(torch.nn.Module):
     Toy quantized FC model for digit recognition on MNIST
     """
 
-    def __init__(self, in_features, depth=3)-> None:
+    def __init__(self, in_features, depth=3) -> None:
         super().__init__()
         self.linears = nn.Sequential(
-                *[
-                    nn.Linear(in_features, in_features, bias=True)
-                    for i in range(depth)
-                ]
-            )
-        
+            *[nn.Linear(in_features, in_features, bias=True) for i in range(depth)]
+        )
+
     def forward(self, x):
         out = self.linears(x)
         return out
@@ -82,9 +80,6 @@ quan_args = {
 }
 
 
-
-
-
 @pytest.mark.dev
 def test_emit_verilog_folded_linear():
     in_features = 10
@@ -106,24 +101,35 @@ def test_emit_verilog_folded_linear():
 
     update_common_metadata_pass(mg, quan_args)
     mg, _ = passes.add_hardware_metadata_analysis_pass(
-        mg, pass_args={"max_parallelism": [2] * 4})
+        mg, pass_args={"max_parallelism": [2] * 4}
+    )
     update_hardware_precision_param(mg, quan_args)
-    
-    linear_for_block = MLP(in_features, depth = 1)
+
+    linear_for_block = MLP(in_features, depth=1)
     mg_for_block = chop.MaseGraph(linear_for_block)
     mg_for_block, _ = passes.init_metadata_analysis_pass(mg_for_block, None)
     # Increase weight range
-    mg_for_block, _ = passes.add_common_metadata_analysis_pass(mg_for_block, {"dummy_in": dummy_in})
+    mg_for_block, _ = passes.add_common_metadata_analysis_pass(
+        mg_for_block, {"dummy_in": dummy_in}
+    )
 
     mg_for_block, _ = passes.quantize_transform_pass(mg_for_block, quan_args)
 
     update_common_metadata_pass(mg_for_block, quan_args)
     mg_for_block, _ = passes.add_hardware_metadata_analysis_pass(
-        mg_for_block, pass_args={"max_parallelism": [2] * 4})
+        mg_for_block, pass_args={"max_parallelism": [2] * 4}
+    )
     update_hardware_precision_param(mg_for_block, quan_args)
 
     mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
-    mg, _ = passes.emit_verilog_top_transform_pass(mg, pass_args={"folded_graph": mg_for_block, "folded_node_name": "linears", "reuse_times": depth})
+    mg, _ = passes.emit_verilog_top_transform_pass(
+        mg,
+        pass_args={
+            "folded_graph": mg_for_block,
+            "folded_node_name": "linears",
+            "reuse_times": depth,
+        },
+    )
     mg, _ = passes.emit_bram_transform_pass(mg)
     mg, _ = passes.emit_internal_rtl_transform_pass(mg)
     mg, _ = passes.emit_cocotb_transform_pass(
@@ -131,8 +137,10 @@ def test_emit_verilog_folded_linear():
     )
     mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
-    simulate(skip_build=False, skip_test=False, simulator="questa", waves=True, gui=False)
+    simulate(
+        skip_build=False, skip_test=False, simulator="questa", waves=True, gui=False
+    )
 
-    
+
 if __name__ == "__main__":
     test_emit_verilog_folded_linear()

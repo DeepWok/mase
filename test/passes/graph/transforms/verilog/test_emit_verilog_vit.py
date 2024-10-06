@@ -95,7 +95,7 @@ class Block(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = x + self.attn(self.norm1(x))
         x = x + self.mlp(self.norm2(x))
-        #x = self.attn(x)
+        # x = self.attn(x)
         return x
 
 
@@ -310,7 +310,7 @@ def test_emit_verilog_vit():
     p_w1 = 64
     p_w2 = px
 
-    pqkv = pqkv*num_heads
+    pqkv = pqkv * num_heads
 
     from utils import manually_update_hardware_parallelism_param
 

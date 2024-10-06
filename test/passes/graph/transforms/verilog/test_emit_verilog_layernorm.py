@@ -56,6 +56,7 @@ class LAYERNORM_MODULE(torch.nn.Module):
         x = self.norm(x)
         return x
 
+
 quan_args = {
     "by": "type",  # quantize by type, name, or regex_name
     "default": {

@@ -273,9 +273,8 @@ async def check_signal(count, dut, log):
 def handshake_signal_check(count, valid, ready, signal, log):
     svalue = [i.signed_integer for i in signal.value]
     if valid.value[0] & ready.value[0]:
-        count[0]+=1
+        count[0] += 1
         log.debug(f"handshake {signal} count= {count}")
-
 
 
 default_config = {
@@ -369,7 +368,6 @@ def get_config(kwargs={}):
 
 
 torch.manual_seed(1)
-
 
 
 def test_fixed_linear_smoke():

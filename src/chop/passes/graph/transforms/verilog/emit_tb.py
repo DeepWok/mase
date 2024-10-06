@@ -199,6 +199,7 @@ def _emit_cocotb_tb(graph):
     tb_path.mkdir(parents=True, exist_ok=True)
     with open(tb_path / "tb_obj.dill", "wb") as file:
         import sys
+
         sys.setrecursionlimit(10000)  # Increase recursion limit
         dill.dump(cls_obj, file)
     with open(tb_path / "__init__.py", "w") as file:

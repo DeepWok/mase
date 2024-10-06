@@ -26,7 +26,7 @@ set_property board_part xilinx.com:au280:part0:1.1 [current_project]
         tcl_script_template += f"""\nadd_files {include_group}"""
 
     tcl_script_template += f"\n\nset_property top top [current_fileset]"
-    
+
     tcl_script_template += f"""
 add_files /scratch/cx922/mase/src/mase_components/vivado/constraints.xdc
 read_xdc /scratch/cx922/mase/src/mase_components/vivado/constraints.xdc

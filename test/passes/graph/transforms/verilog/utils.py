@@ -1,5 +1,3 @@
-
-
 import chop as chop
 
 
@@ -14,6 +12,8 @@ def _cap(name):
     capitalize a string
     """
     return str(name).upper()
+
+
 def update_common_metadata_pass(mg, quan_args):
     # There is a bug in the current quantization pass, where the results metadata is not updated with the precision.
     # # Here we update the metadata here so we can test the hardware back end.
@@ -56,19 +56,17 @@ def update_common_metadata_pass(mg, quan_args):
                 ] = True
                 if node.meta["mase"].parameters["common"]["args"].get("bias") != None:
                     node.meta["mase"].parameters["common"]["args"]["has_bias"] = True
-    
+
     # update for transpose
     for node in mg.fx_graph.nodes:
         mase_op = node.meta["mase"].parameters["common"]["mase_op"]
         if mase_op in ["vit_self_attention_integer", "linear"]:
-            args = node.meta["mase"].parameters["common"]["args"] 
+            args = node.meta["mase"].parameters["common"]["args"]
             if args != None:
                 for key, _ in args.items():
                     if "weight" in key:
-                        args[key]["value"] = args[key]["value"].transpose(0,1)
+                        args[key]["value"] = args[key]["value"].transpose(0, 1)
                         args[key]["shape"].reverse()
-                
-    
 
 
 def manually_update_hardware_parallelism_param(graph, pass_args: dict = {}):
@@ -82,7 +80,7 @@ def manually_update_hardware_parallelism_param(graph, pass_args: dict = {}):
         if vp == None:
             continue
         for key, value in pass_args.items():
-           if key in node.name:
+            if key in node.name:
                 if mase_op == "linear":
                     # weight1 = in0
                     vp["DATA_IN_0_PARALLELISM_DIM_0"] = value["din"][1]
@@ -108,23 +106,27 @@ def manually_update_hardware_parallelism_param(graph, pass_args: dict = {}):
                     vp["DATA_OUT_0_PARALLELISM_DIM_0"] = value["dout"][1]
                     vp["DATA_OUT_0_PARALLELISM_DIM_1"] = value["dout"][0]
                 elif mase_op == "vit_self_attention_integer":
-                    num_heads = vp["NUM_HEADS"] 
+                    num_heads = vp["NUM_HEADS"]
                     vp["DATA_IN_0_PARALLELISM_DIM_0"] = value["din"][1]
                     vp["DATA_IN_0_PARALLELISM_DIM_1"] = value["din"][0]
-                    vp["QUERY_WEIGHT_PARALLELISM_DIM_0"] = value["dattn"][1]//num_heads
+                    vp["QUERY_WEIGHT_PARALLELISM_DIM_0"] = (
+                        value["dattn"][1] // num_heads
+                    )
                     vp["QUERY_WEIGHT_PARALLELISM_DIM_1"] = value["din"][1]
-                    vp["QUERY_BIAS_PARALLELISM_DIM_0"] = value["dattn"][1]//num_heads
+                    vp["QUERY_BIAS_PARALLELISM_DIM_0"] = value["dattn"][1] // num_heads
                     vp["QUERY_BIAS_PARALLELISM_DIM_1"] = 1
-                    vp["KEY_WEIGHT_PARALLELISM_DIM_0"] = value["dattn"][1]//num_heads
+                    vp["KEY_WEIGHT_PARALLELISM_DIM_0"] = value["dattn"][1] // num_heads
                     vp["KEY_WEIGHT_PARALLELISM_DIM_1"] = value["din"][1]
-                    vp["KEY_BIAS_PARALLELISM_DIM_0"] = value["dattn"][1]//num_heads
+                    vp["KEY_BIAS_PARALLELISM_DIM_0"] = value["dattn"][1] // num_heads
                     vp["KEY_BIAS_PARALLELISM_DIM_1"] = 1
-                    vp["VALUE_WEIGHT_PARALLELISM_DIM_0"] = value["dattn"][1]//num_heads
+                    vp["VALUE_WEIGHT_PARALLELISM_DIM_0"] = (
+                        value["dattn"][1] // num_heads
+                    )
                     vp["VALUE_WEIGHT_PARALLELISM_DIM_1"] = value["din"][1]
-                    vp["VALUE_BIAS_PARALLELISM_DIM_0"] = value["dattn"][1]//num_heads
+                    vp["VALUE_BIAS_PARALLELISM_DIM_0"] = value["dattn"][1] // num_heads
                     vp["VALUE_BIAS_PARALLELISM_DIM_1"] = 1
-                    vp["PROJ_WEIGHT_PARALLELISM_DIM_0"] = value["dout"][1] 
-                    vp["PROJ_WEIGHT_PARALLELISM_DIM_1"] = value["dattn"][1]//num_heads
+                    vp["PROJ_WEIGHT_PARALLELISM_DIM_0"] = value["dout"][1]
+                    vp["PROJ_WEIGHT_PARALLELISM_DIM_1"] = value["dattn"][1] // num_heads
                     vp["PROJ_BIAS_PARALLELISM_DIM_0"] = value["dout"][1]
                     vp["PROJ_BIAS_PARALLELISM_DIM_1"] = 1
                     vp["DATA_OUT_0_PARALLELISM_DIM_0"] = value["dout"][1]
@@ -145,6 +147,8 @@ def manually_update_hardware_parallelism_param(graph, pass_args: dict = {}):
                     vp["DATA_OUT_0_PARALLELISM_DIM_1"] = value["dout"][0]
 
     return graph, {}
+
+
 def update_hardware_precision_param(mg, quan_args, model_args: dict = {}):
     # The quantization pass currently don't support any inlayer precision automatically generate
     # we only have data_in, weight.. param in common metadata
@@ -155,6 +159,7 @@ def update_hardware_precision_param(mg, quan_args, model_args: dict = {}):
         capitalize a string
         """
         return str(name).upper()
+
     for node in list(mg.fx_graph.nodes):
         mase_op = node.meta["mase"].parameters["common"]["mase_op"]
         vp = node.meta["mase"]["hardware"].get("verilog_param")
@@ -186,7 +191,6 @@ def update_hardware_precision_param(mg, quan_args, model_args: dict = {}):
                 else:
                     vp[_cap(arg_name)] = arg_info
 
-        
 
 def delete_dim_of_batch_size(vp):
     pop_list = []
@@ -195,5 +199,3 @@ def delete_dim_of_batch_size(vp):
             if key.endswith("2"):
                 pop_list.append(key)
     [vp.pop(key) for key in pop_list]
-
-
