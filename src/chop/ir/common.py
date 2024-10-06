@@ -8,6 +8,7 @@ MASE_TYPES = [
     "output",
 ]
 
+
 MASE_IMPLICIT_FUNCS = [
     # possibly are just constants
     "size",
@@ -127,43 +128,14 @@ MASE_BUILTIN_FUNCS = [
     "getitem",
 ]
 
-
 MASE_TYPE_MAP = {
-    "adaptive_avg_pool1d": {"type": "module_related_func"},
-    "adaptive_avg_pool2d": {"type": "module_related_func"},
-    "adaptive_max_pool1d": {"type": "module_related_func"},
-    "adaptive_max_pool2d": {"type": "module_related_func"},
-    "avg_pool1d": {"type": "module_related_func"},
-    "avg_pool2d": {"type": "module_related_func"},
-    "batch_norm": {"type": "module_related_func"},
-    "batch_norm1d": {"type": "module"},
-    "batch_norm2d": {"type": "module"},
-    "conv1d": {"type": "module_related_func"},
-    "conv2d": {"type": "module_related_func"},
-    "layer_norm": {"type": "module_related_func"},
-    "linear": {"type": "module_related_func"},
-    "max_pool1d": {"type": "module_related_func"},
-    "max_pool2d": {"type": "module_related_func"},
-    "relu": {"type": "module_related_func"},
-    "hardshrink": {"type": "module_related_func"},
-    "silu": {"type": "module_related_func"},
-    "elu": {"type": "module_related_func"},
-    "sigmoid": {"type": "module_related_func"},
-    "softshrink": {"type": "module_related_func"},
-    "logsigmoid": {"type": "module_related_func"},
-    "softmax": {"type": "module_related_func"},
-    "selu": {"type": "module_related_func"},
-    "tanh": {"type": "module_related_func"},
-    "gelu": {"type": "module_related_func"},
-    "softsign": {"type": "module_related_func"},
-    "softplus": {"type": "module_related_func"},
-    "sub": {"type": "builtin_func"},
-    "add": {"type": "builtin_func"},
-    "size": {"type": "implicit_func"},
-    "view": {"type": "implicit_func"},
-    "placeholder": {"type": "placeholder"},
-    "get_attr": {"type": "get_attr"},
-    "output": {"type": "output"},
+    **{t: {"type": "module"} for t in MASE_MODULES},
+    **{t: {"type": "module_related_func"} for t in MASE_MODULE_RELATED_FUNCS},
+    **{t: {"type": "builtin_func"} for t in MASE_BUILTIN_FUNCS},
+    **{t: {"type": "implicit_func"} for t in MASE_IMPLICIT_FUNCS},
+    **{"placeholder": {"type": "placeholder"}},
+    **{"get_attr": {"type": "get_attr"}},
+    **{"output": {"type": "output"}},
 }
 
 MASE_HARDWARE_TOOLCHAIN = [

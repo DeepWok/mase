@@ -11,22 +11,33 @@ from pathlib import Path
 
 sys.path.append(Path(__file__).resolve().parents[5].as_posix())
 
-from chop.passes.graph.analysis import (
-    add_common_metadata_analysis_pass,
-    init_metadata_analysis_pass,
-    report,
-    verify_common_metadata_analysis_pass,
-)
-from chop.ir.graph.mase_graph import MaseGraph
-from chop.passes.graph.transforms import (
-    quantize_transform_pass,
-    summarize_quantization_analysis_pass,
-)
-from chop.passes.graph.utils import deepcopy_mase_graph
 from chop.tools.logger import set_logging_verbosity
+from chop.ir.graph.mase_graph import MaseGraph
+
+from chop.passes.graph.analysis import (
+    init_metadata_analysis_pass,
+    add_common_metadata_analysis_pass,
+    report_graph_analysis_pass,
+    report_node_type_analysis_pass,
+)
+
+from chop.passes.graph.transforms.training.base import SparseLinear
+from chop.passes.graph.transforms.training.base import backward_pass_base
 
 set_logging_verbosity("debug")
 
+# short snippet to test SparseLinear
+def test_sparse_linear():
+    fc = SparseLinear(28 * 28, 28 * 28)
+    x = torch.randn((4, 28, 28))
+    x = torch.flatten(x, start_dim=1, end_dim=-1)
+    y = fc(x)
+
+    # test backward
+    target = torch.randn((4, 784))
+    loss = torch.nn.functional.mse_loss(y, target)
+    optimizer = torch.optim.SGD(fc.parameters(), lr=0.01)
+    loss.backward()
 
 # --------------------------------------------------
 #   Model specifications
@@ -53,7 +64,7 @@ class MLP(torch.nn.Module):
         return x
 
 
-def test_quantize():
+def test_transformed_training():
     mlp = MLP()
     mg = MaseGraph(model=mlp)
 
@@ -66,36 +77,25 @@ def test_quantize():
     mg, _ = add_common_metadata_analysis_pass(
         mg, {"dummy_in": dummy_in, "add_value": False}
     )
+
     # Sanity check and report
-    # mg = verify_common_metadata_analysis_pass(mg)
-    quan_args = {
+    args = {
         "by": "type",
-        "default": {"config": {"name": None}},
         "linear": {
             "config": {
-                "name": "integer",
-                # data
-                "data_in_width": 8,
-                "data_in_frac_width": 4,
-                # weight
-                "weight_width": 8,
-                "weight_frac_width": 4,
-                # bias
-                "bias_width": 8,
-                "bias_frac_width": 4,
+                "name": "l1_norm_sparsity",
+                # forward
+                "forward_w_sparsity": 0.2,
+                "forward_x_sparsity": 0.5,
+                # backward 
+                "backward_x_sparsity": 4,
+                "backward_w_sparsity": 8,
+                "backward_grad_y_sparsity": 4,
             }
         },
     }
+    mg, _ = backward_pass_base(mg, args)
+    mg, _ = report_node_type_analysis_pass(mg, {})
+    print(mg.model)
 
-    # deep copy is only possible if we put "add_value" to False
-    ori_mg = deepcopy_mase_graph(mg)
-    mg, _ = quantize_transform_pass(mg, quan_args)
-
-    pass_args = {
-        "original_graph": ori_mg,
-        "save_dir": "quantize_summary",
-    }
-    summarize_quantization_analysis_pass(mg, pass_args)
-
-
-test_quantize()
+test_transformed_training()
