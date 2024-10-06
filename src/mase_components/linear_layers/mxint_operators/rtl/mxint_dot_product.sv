@@ -1,5 +1,4 @@
 `timescale 1ns / 1ps
-// block floating point add
 module mxint_dot_product #(
     // precision_0 represent mantissa width
     // precision_1 represent exponent width

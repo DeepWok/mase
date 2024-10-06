@@ -1,5 +1,9 @@
 `timescale 1ns / 1ps
-// block floating point mult
+/*
+Module      : mxint_register_slice
+Description : This module does the same function as register slice
+              But for datatype mxint.
+*/
 
 module mxint_register_slice #(
     // precision represent mantissa width

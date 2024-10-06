@@ -1,5 +1,9 @@
 `timescale 1ns / 1ps
-
+/*
+Module      : log2_max_abs
+Description : For any given input, this module will calculate ceil(log2(abs(input + 1e-9))).
+              The 1e-9 is for hardware convenience, for example, if input = 4, this module will output ceil(log2(abs(4 + 1e-9)) = 3
+*/
 module log2_max_abs #(
     parameter IN_SIZE   = 2,
     parameter IN_WIDTH  = 32,
@@ -17,13 +21,13 @@ module log2_max_abs #(
     input  logic                 data_out_ready
 );
   logic [IN_WIDTH - 1:0] or_result;
-  logic [IN_WIDTH - 1:0] abs_data_in [IN_SIZE - 1:0];
-  for (genvar i=0; i< IN_SIZE; i++) begin
+  logic [IN_WIDTH - 1:0] abs_data_in[IN_SIZE - 1:0];
+  for (genvar i = 0; i < IN_SIZE; i++) begin
     abs #(
-      .IN_WIDTH(IN_WIDTH)
+        .IN_WIDTH(IN_WIDTH)
     ) abs_i (
-      .data_in(data_in[i]),
-      .data_out(abs_data_in[i])
+        .data_in (data_in[i]),
+        .data_out(abs_data_in[i])
     );
   end
   or_tree #(

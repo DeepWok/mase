@@ -1,5 +1,5 @@
 /*
-Module      : simple_matmul
+Module      : mxint_matmul
 Description : This module does a matrix multiplcation between matrices X & Y.
 
               The dimensions for the matrix multiplcation are:

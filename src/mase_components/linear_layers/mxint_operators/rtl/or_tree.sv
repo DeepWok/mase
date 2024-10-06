@@ -1,6 +1,8 @@
 `timescale 1ns / 1ps
-
-// TODO: Add signed param. fixed_adder_tree_layer already supports signedness
+/*
+Module      : or_tree
+Description : This module actually implement the tree structure of or logic.
+*/
 
 module or_tree #(
     parameter IN_SIZE   = 2,
@@ -52,8 +54,8 @@ module or_tree #(
             .IN_SIZE (LEVEL_IN_SIZE),
             .IN_WIDTH(LEVEL_IN_WIDTH)
         ) layer (
-            .data_in (data[i]),  // flattened LEVEL_IN_SIZE * LEVEL_IN_WIDTH
-            .data_out(or_result[i])    // flattened LEVEL_OUT_SIZE * LEVEL_OUT_WIDTH
+            .data_in(data[i]),  // flattened LEVEL_IN_SIZE * LEVEL_IN_WIDTH
+            .data_out(or_result[i])  // flattened LEVEL_OUT_SIZE * LEVEL_OUT_WIDTH
         );
 
         register_slice #(

@@ -1,5 +1,8 @@
 `timescale 1ns / 1ps
-// block floating point mult
+/*
+Module      : Mxint circular
+Description : Cicular buffer for mxint datatype.
+*/
 
 module mxint_circular #(
     // precision represent mantissa width

@@ -1,7 +1,4 @@
 `timescale 1ns / 1ps
-// block floating point mult
-
-
 module mxint_vector_mult #(
     // precision_0 represent mantissa width
     // precision_1 represent exponent width

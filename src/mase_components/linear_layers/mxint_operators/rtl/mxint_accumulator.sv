@@ -1,4 +1,9 @@
 `timescale 1ns / 1ps
+/*
+Module      : mxint_accumulator
+Description : The accumulator for mxint.
+              When inputing different exponent, the mantissa will cast to the same bitwidth then accumulate.
+*/
 module mxint_accumulator #(
     parameter DATA_IN_0_PRECISION_0 = 8,
     parameter DATA_IN_0_PRECISION_1 = 4,
@@ -53,13 +58,20 @@ module mxint_accumulator #(
       end else if (data_in_0_valid && data_in_0_ready) counter <= counter + 1;
     end
   // mantissa
+
   for (genvar i = 0; i < BLOCK_SIZE; i++) begin : mantissa_block
     // mantissa shift
-    always_comb begin
-      shifted_mdata_in_0[i] = no_value_in_register ? $signed(mdata_in_0[i]) :
-          $signed(mdata_in_0[i]) <<< ($signed(edata_in_0) - $signed(exp_min));
-      shifted_mdata_out_0[i] = $signed(mdata_out_0[i]) <<<
-          ($signed(edata_out_0) - $signed(exp_min));
+    for (genvar j = 0; j < 2 ** DATA_IN_0_PRECISION_1; j++) begin : static_shift
+      always_comb begin
+        if (($signed(edata_in_0) - $signed(exp_min)) == j)
+          shifted_mdata_in_0[i] = no_value_in_register ? $signed(
+              mdata_in_0[i]
+          ) : $signed(
+              mdata_in_0[i]
+          ) <<< j;
+        if (($signed(edata_out_0) - $signed(exp_min)) == j)
+          shifted_mdata_out_0[i] = $signed(mdata_out_0[i]) <<< j;
+      end
     end
     // mantissa out
     always_ff @(posedge clk)

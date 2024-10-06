@@ -18,7 +18,7 @@ module or_tree_layer #(
   end
 
   for (genvar i = 0; i < IN_SIZE / 2; i++) begin : pair
-    assign data_out_unflat[i] = data_in_unflat[2*i] | data_in_unflat[2*i + 1];
+    assign data_out_unflat[i] = data_in_unflat[2*i] | data_in_unflat[2*i+1];
   end
 
   if (IN_SIZE % 2 != 0) begin : left

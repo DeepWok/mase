@@ -1,4 +1,8 @@
 `timescale 1ns / 1ps
+/*
+Module      : Mxint cast
+Description : MxInt Cast between Layers.
+*/
 module mxint_cast #(
     parameter IN_MAN_WIDTH = 1,
     parameter IN_EXP_WIDTH = 1,
@@ -102,11 +106,14 @@ module mxint_cast #(
 
   logic [IN_MAN_WIDTH + EBIAS - 1:0] shift_buffer_data_for_out[BLOCK_SIZE - 1:0];
   for (genvar i = 0; i < BLOCK_SIZE; i++) begin
-    assign shift_buffer_data_for_out[i] = (shift_value[SHIFT_WIDTH-1]) ? $signed(
-        mbuffer_data_for_out[i]
-    ) <<< abs_shift_value : $signed(
-        mbuffer_data_for_out[i]
-    ) >>> abs_shift_value;
+    for (genvar j = 0; j < 2 ** SHIFT_WIDTH; j++)
+    always_comb
+      if (abs_shift_value == j)
+        shift_buffer_data_for_out[i] = (shift_value[SHIFT_WIDTH-1]) ? $signed(
+            mbuffer_data_for_out[i]
+        ) <<< j : $signed(
+            mbuffer_data_for_out[i]
+        ) >>> j;
     signed_clamp #(
         .IN_WIDTH (IN_MAN_WIDTH + EBIAS),
         .OUT_WIDTH(OUT_MAN_WIDTH)
@@ -115,7 +122,6 @@ module mxint_cast #(
         .out_data(mdata_out[i])
     );
   end
-
 endmodule
 function [31:0] max;
   input [31:0] x, y, z;

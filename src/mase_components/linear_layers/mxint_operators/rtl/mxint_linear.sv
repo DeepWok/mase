@@ -1,15 +1,15 @@
 /*
-Module      : simple_matmul
+Module      : mxint_linear
 Description : This module does a matrix multiplcation between matrices X & Y.
 
-              The dimensions for the matrix multiplcation are:
-              n x m * m x k
-
-              or in MASE naming convention
-              a_dim1 x a_dim0 * b_dim1 x bdim_0
-
               Python equivalent:
-              out = np.matmul(X, Y)
+              out = torch.nn.functional.linear(x, w, bias)
+
+              x should be the dimension of (DATA_IN_0_TENSOR_SIZE_DIM_1, DATA_IN_0_TENSOR_SIZE_DIM_0)
+              w should be the dimension of (WEIGHT_TENSOR_SIZE_DIM_1, WEIGHT_TENSOR_SIZE_DIM_0)
+              bias should be the dimension of (BIAS_TENSOR_SIZE_DIM_1, BIAS_TENSOR_SIZE_DIM_0)
+              output will be (DATA_IN_0_TENSOR_SIZE_DIM_1, WEIGHT_TENSOR_SIZE_DIM_1)
+              so the WEIGHT_TENSOR_SIZE_DIM_0 should be equal to TENSOR_SIZE_DIM_0
 */
 `timescale 1ns / 1ps
 
