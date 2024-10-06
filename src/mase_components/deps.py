@@ -137,6 +137,13 @@ MASE_HW_DEPS = {
         "common",
     ],
     # Linear
+    "linear_layers/fixed_linear_layer/fixed_linear_with_input_circular": [
+        "cast",
+        "common",
+        "memory",
+        "linear_layers/fixed_operators",
+        "scalar_operators/fixed",
+    ],
     "linear_layers/fixed_linear_layer/fixed_linear": [
         "cast",
         "common",

@@ -266,6 +266,11 @@ def test_emit_verilog_vit():
     n = 196
     parallelism = 8
     depth = 12
+    px = 2
+    pqkv = 64
+    p_proj = px
+    p_w1 = 128
+    p_w2 = px
     model_config_for_quantize = {
         "dim": dim,
         "num_heads": num_heads,
@@ -308,40 +313,33 @@ def test_emit_verilog_vit():
         mg_for_block, pass_args={"max_parallelism": [parallelism] * 4})
     update_hardware_precision_param(mg_for_block, quan_args, model_args_for_hardware_param)
 
-    px = 2
-    pqkv = 32
-    p_proj = px
-    p_w1 = 64
-    p_w2 = px
 
     pqkv = pqkv*num_heads
     pass_args = {
             "fork2": {"din": [1, px], "dout": ([1, px], [1, px])},
-            "blocks_0_norm1": {"din": [1, px], "dout": [1, px]},
-            "blocks_0_attn": {"din": [1, px], "dattn": [1, pqkv], "dout": [1, p_proj]},
+            "norm1": {"din": [1, px], "dout": [1, px]},
+            "attn": {"din": [1, px], "dattn": [1, pqkv], "dout": [1, p_proj]},
             "fifo": {"din": [1, px], "dout": [1, px]},
             "add": {"din": ([1, px], [1, px]), "dout": [1, px]},
-            "fork2_1": {"din": [1, px], "dout": ([1, px], [1, px])},
-            "blocks_0_norm2": {"din": [1, px], "dout": [1, px]},
-            "blocks_0_mlp_fc1": {"din": [1, px], "dout": [1, p_w1]},
-            "blocks_0_mlp_act": {"din": [1, p_w1], "dout": [1, p_w1]},
-            "blocks_0_mlp_fc2": {"din": [1, p_w1], "dout": [1, px]},
-            "fifo_1": {"din": [1, px], "dout": [1, px]},
-            "add_1": {"din": ([1, px], [1, px]), "dout": [1, px]},
+            "norm2": {"din": [1, px], "dout": [1, px]},
+            "mlp_fc1": {"din": [1, px], "dout": [1, p_w1]},
+            "mlp_act": {"din": [1, p_w1], "dout": [1, p_w1]},
+            "mlp_fc2": {"din": [1, p_w1], "dout": [1, px]},
+            "fifo": {"din": [1, px], "dout": [1, px]},
     }
     from utils import manually_update_hardware_parallelism_param
 
     manually_update_hardware_parallelism_param(mg, pass_args)
     manually_update_hardware_parallelism_param(mg_for_block, pass_args)
-    # mg, _ = passes.emit_verilog_top_transform_pass(mg, pass_args={"folded_graph": mg_for_block, "folded_node_name": "blocks", "reuse_times": depth})
+    mg, _ = passes.emit_verilog_top_transform_pass(mg, pass_args={"folded_graph": mg_for_block, "folded_node_name": "blocks", "reuse_times": depth})
     # mg, _ = passes.emit_bram_transform_pass(mg)
-    # mg, _ = passes.emit_internal_rtl_transform_pass(mg)
-    # mg, _ = passes.emit_cocotb_transform_pass(
-        # mg, pass_args={"wait_time": 100, "wait_unit": "us", "batch_size": batch_size}
-    # )
-    # mg, _ = passes.emit_vivado_project_transform_pass(mg)
+    mg, _ = passes.emit_internal_rtl_transform_pass(mg)
+    mg, _ = passes.emit_cocotb_transform_pass(
+        mg, pass_args={"wait_time": 100, "wait_unit": "us", "batch_size": batch_size}
+    )
+    mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
-    simulate(skip_build=False, skip_test=False, simulator="questa", waves=True, gui=False)
+    # simulate(skip_build=False, skip_test=False, simulator="questa", waves=True, gui=True)
 
 
 if __name__ == "__main__":

@@ -106,6 +106,10 @@ module fixed_vit_attention_head #(
   logic query_key_transpose_valid;
   logic query_key_transpose_ready;
 
+  logic [QKMM_OUT_PRECISION_0-1:0] buffered_query_key_transpose [IN_DATA_PARALLELISM_DIM_1 * IN_DATA_PARALLELISM_DIM_1-1:0];
+  logic buffered_query_key_transpose_valid;
+  logic buffered_query_key_transpose_ready;
+
   logic [SOFTMAX_OUT_DATA_PRECISION_0 - 1:0] attention_scores [IN_DATA_PARALLELISM_DIM_1 * IN_DATA_PARALLELISM_DIM_1-1:0];
   logic attention_scores_valid;
   logic attention_scores_ready;
@@ -186,6 +190,20 @@ module fixed_vit_attention_head #(
   );
 
 
+    //cut the long ready path
+    unpacked_skid_buffer #(
+        .DATA_WIDTH(QKMM_OUT_PRECISION_0),
+        .IN_NUM    (IN_DATA_PARALLELISM_DIM_1 * IN_DATA_PARALLELISM_DIM_1)
+    ) input_stream_reg_slice (
+        .clk           (clk),
+        .rst           (rst),
+        .data_in       (query_key_transpose),
+        .data_in_valid (query_key_transpose_valid),
+        .data_in_ready (query_key_transpose_ready),
+        .data_out      (buffered_query_key_transpose),
+        .data_out_valid(buffered_query_key_transpose_valid),
+        .data_out_ready(buffered_query_key_transpose_ready)
+    );
   fixed_softmax #(
       .DATA_IN_0_PRECISION_0      (QKMM_OUT_PRECISION_0),
       .DATA_IN_0_PRECISION_1      (QKMM_OUT_PRECISION_1),
@@ -200,9 +218,9 @@ module fixed_vit_attention_head #(
       .clk,
       .rst,
 
-      .data_in_0      (query_key_transpose),
-      .data_in_0_valid(query_key_transpose_valid),
-      .data_in_0_ready(query_key_transpose_ready),
+      .data_in_0      (buffered_query_key_transpose),
+      .data_in_0_valid(buffered_query_key_transpose_valid),
+      .data_in_0_ready(buffered_query_key_transpose_ready),
 
       .data_out_0      (attention_scores),
       .data_out_0_valid(attention_scores_valid),

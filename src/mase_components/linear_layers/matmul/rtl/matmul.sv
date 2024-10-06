@@ -134,6 +134,9 @@ module matmul #(
   // Matrix unflatten output
   logic [B_WIDTH-1:0] b_buffer_out_data[B_COMPUTE_DIM0*B_COMPUTE_DIM1-1:0];
 
+  logic [SM_OUT_WIDTH-1:0] buffered_sm_out_data[C_COMPUTE_DIM0*C_COMPUTE_DIM1];
+  logic buffered_sm_out_valid, buffered_sm_out_ready;
+
   logic [SM_OUT_WIDTH-1:0] sm_out_data[C_COMPUTE_DIM0*C_COMPUTE_DIM1];
   logic sm_out_valid, sm_out_ready;
 
@@ -275,10 +278,24 @@ module matmul #(
       .y_data   (b_buffer_out_data),
       .y_valid  (b_buffer_out_valid),
       .y_ready  (b_buffer_out_ready),
-      .out_data (sm_out_data),
-      .out_valid(sm_out_valid),
-      .out_ready(sm_out_ready)
+      .out_data (buffered_sm_out_data),
+      .out_valid(buffered_sm_out_valid),
+      .out_ready(buffered_sm_out_ready)
   );
+    //cut the long ready path
+    unpacked_skid_buffer #(
+        .DATA_WIDTH(SM_OUT_WIDTH),
+        .IN_NUM    (C_COMPUTE_DIM0 * C_COMPUTE_DIM1)
+    ) sm_out_reg_slice (
+        .clk           (clk),
+        .rst           (rst),
+        .data_in       (buffered_sm_out_data),
+        .data_in_valid (buffered_sm_out_valid),
+        .data_in_ready (buffered_sm_out_ready),
+        .data_out      (sm_out_data),
+        .data_out_valid(sm_out_valid),
+        .data_out_ready(sm_out_ready)
+    );
 
   // Direct the result of the simple matmul to the correct matrix_accumulator
 

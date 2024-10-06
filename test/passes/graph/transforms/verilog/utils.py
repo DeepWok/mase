@@ -71,12 +71,12 @@ def update_common_metadata_pass(mg, quan_args):
     
 
 
-def manually_update_hardware_parallelism_param(mg, pass_args: dict = {}):
+def manually_update_hardware_parallelism_param(graph, pass_args: dict = {}):
     # The quantization pass currently don't support any inlayer precision automatically generate
     # we only have data_in, weight.. param in common metadata
     # in order to support in layer fine grained precision tuning
     # we just update the hardware metadata directly.
-    for node in list(mg.fx_graph.nodes) + mg.nodes_in + mg.nodes_out:
+    for node in list(graph.fx_graph.nodes) + graph.nodes_in + graph.nodes_out:
         mase_op = node.meta["mase"].parameters["common"]["mase_op"]
         vp = node.meta["mase"]["hardware"].get("verilog_param")
         if vp == None:
@@ -87,8 +87,8 @@ def manually_update_hardware_parallelism_param(mg, pass_args: dict = {}):
                     # weight1 = in0
                     vp["DATA_IN_0_PARALLELISM_DIM_0"] = value["din"][1]
                     vp["DATA_IN_0_PARALLELISM_DIM_1"] = value["din"][0]
-                    vp["WEIGHT_PARALLELISM_DIM_0"] = value["dout"][1]
-                    vp["WEIGHT_PARALLELISM_DIM_1"] = value["din"][1]
+                    vp["WEIGHT_PARALLELISM_DIM_0"] = value["din"][1]
+                    vp["WEIGHT_PARALLELISM_DIM_1"] = value["dout"][1]
                     vp["BIAS_PARALLELISM_DIM_0"] = value["dout"][1]
                     vp["BIAS_PARALLELISM_DIM_1"] = 1
                     vp["DATA_OUT_0_PARALLELISM_DIM_0"] = value["dout"][1]
@@ -144,7 +144,7 @@ def manually_update_hardware_parallelism_param(mg, pass_args: dict = {}):
                     vp["DATA_OUT_0_PARALLELISM_DIM_0"] = value["dout"][1]
                     vp["DATA_OUT_0_PARALLELISM_DIM_1"] = value["dout"][0]
 
-    return mg, {}
+    return graph, {}
 def update_hardware_precision_param(mg, quan_args, model_args: dict = {}):
     # The quantization pass currently don't support any inlayer precision automatically generate
     # we only have data_in, weight.. param in common metadata

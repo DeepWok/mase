@@ -79,11 +79,11 @@ quan_args = {
 
 @pytest.mark.dev
 def test_emit_verilog_linear():
-    in_features = 32
-    hidden_features = 32
-    out_features = 32
-    n = 4
-    batch_size = 100
+    in_features = 192   
+    hidden_features = 192
+    out_features = 192
+    n = 196
+    batch_size = 10
     linear = MLP(in_features, hidden_features, out_features)
     mg = chop.MaseGraph(model=linear)
     torch.manual_seed(0)
@@ -135,7 +135,7 @@ def test_emit_verilog_linear():
     )
     mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
-    simulate(skip_build=False, skip_test=False, simulator="questa", waves=True, gui=True)
+    # simulate(skip_build=False, skip_test=False, simulator="questa", waves=True, gui=False)
 
 
 if __name__ == "__main__":

@@ -72,8 +72,6 @@ module fixed_softmax #(
 
   logic ff_acc_valid;
   logic ff_acc_ready;
-
-
   split2 #() input_handshake_split (
       .data_in_valid (data_in_0_valid),
       .data_in_ready (data_in_0_ready),
