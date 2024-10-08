@@ -1027,6 +1027,7 @@ class LinearLogicNets(_LinearBase):
         else:
             return self.math_forward(x)
 
+
 class LinearMXIntHardware(_LinearBase):
     def __init__(
         self,

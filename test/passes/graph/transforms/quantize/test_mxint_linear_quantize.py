@@ -67,6 +67,7 @@ def test_quantize():
     )
     # Sanity check and report
     # mg = verify_common_metadata_analysis_pass(mg)
+    # torch.manual_seed(0)
     quan_args = {
         "by": "type",
         "default": {"config": {"name": None}},
@@ -74,17 +75,17 @@ def test_quantize():
             "config": {
                 "name": "mxint_hardware",
                 # data
-                "data_in_width": 8,
+                "data_in_width": 12,
                 "data_in_exponent_width": 4,
-                "data_in_parallelism": [1,2],
+                "data_in_parallelism": [1, 2],
                 # weight
-                "weight_width": 8,
+                "weight_width": 12,
                 "weight_exponent_width": 4,
-                "weight_parallelism": [2,2],
+                "weight_parallelism": [2, 2],
                 # bias
-                "bias_width": 8,
+                "bias_width": 12,
                 "bias_exponent_width": 4,
-                "bias_parallelism": [1,2],
+                "bias_parallelism": [1, 2],
             }
         },
     }
