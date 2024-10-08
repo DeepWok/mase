@@ -18,6 +18,7 @@ from mase_cocotb.interfaces.streaming import (
 )
 from mase_cocotb.runner import mase_runner
 
+from mase_cocotb.utils import bit_driver
 # from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner
 from chop.nn.quantized.modules.linear import LinearInteger
 from chop.nn.quantizers import integer_floor_quantizer
@@ -190,6 +191,13 @@ async def cocotb_test(dut):
     tb = LinearTB(dut)
     await tb.run_test(us=100)
 
+@cocotb.test()
+async def repeated_mult_valid_backpressure(dut):
+    tb = LinearTB(dut)
+    tb.data_in_0_driver.set_valid_prob(0.7)
+    tb.weight_driver.set_valid_prob(0.7)
+    cocotb.start_soon(bit_driver(dut.data_out_0_ready, dut.clk, 0.6))
+    await tb.run_test(us=200)
 
 def get_fixed_linear_config(kwargs={}):
     # if pretranspose

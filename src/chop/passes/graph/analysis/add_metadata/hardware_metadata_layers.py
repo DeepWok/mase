@@ -251,7 +251,7 @@ INTERNAL_COMP = {
                 "transformer_layers/rtl/self_attention_head_single_scatter.sv",
                 "transformer_layers/rtl/gqa_head_scatter_control.sv",
                 "transformer_layers/rtl/self_attention_head_gather.sv",
-                "transformer_layers/rtl/fixed_self_attention_input_block_batched.sv",
+                "vision_models/vit/rtl/fixed_vit_attention_input_block_batched.sv",
                 "transformer_layers/rtl/self_attention_head_scatter.sv",
                 "activation_layers/rtl/fixed_softmax.sv",
                 "scalar_operators/fixed/rtl/fixed_div.sv",

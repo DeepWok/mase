@@ -155,11 +155,7 @@ class FixedSelfAttentionTB(Testbench):
 
             for projection in ["query", "key", "value"]:
                 layer = getattr(self.model, f"{projection}")
-                weights = (
-                    layer.weight.transpose(0, 1)
-                    if self.get_parameter("WEIGHTS_PRE_TRANSPOSED") == 1
-                    else layer.weight
-                )
+                weights = layer.weight
                 weights = fixed_preprocess_tensor(
                     tensor=weights,
                     q_config={
@@ -194,10 +190,7 @@ class FixedSelfAttentionTB(Testbench):
                     getattr(self, f"{projection}_bias_driver").load_driver(bias)
 
             # * Load the proj weight driver
-            if self.get_parameter("WEIGHTS_PRE_TRANSPOSED") == 1:
-                proj_weight = self.model.proj.weight.transpose(0, 1)
-            else:
-                proj_weight = self.model.proj.weight
+            proj_weight = self.model.proj.weight
             proj_bias = self.model.proj.bias
             # self.log.info(f"Processing projection weights: {proj_weight}")
             proj_weight = fixed_preprocess_tensor(
@@ -261,13 +254,20 @@ async def cocotb_test(dut):
 async def check_signal(count, dut, log):
     while True:
         await RisingEdge(dut.clk)
-        handshake_signal_check(
-            count,
-            dut.head_out_valid,
-            dut.head_out_ready,
-            dut.value,
-            log,
-        )
+        # handshake_signal_check(
+        #     count,
+        #     dut.split_query_valid[0],
+        #     dut.split_query_ready[0],
+        #     dut.query,
+        #     log,
+        # )
+        # handshake_signal_check(
+        #     count,
+            # dut.g_attention_head[0].head_i.out_valid,
+            # dut.g_attention_head[0].head_i.out_ready,
+            # dut.g_attention_head[0].head_i.out,
+        #     log,
+        # )
 
 
 def handshake_signal_check(count, valid, ready, signal, log):
@@ -280,19 +280,18 @@ def handshake_signal_check(count, valid, ready, signal, log):
 default_config = {
     "NUM_HEADS": 3,
     "HAS_BIAS": 1,
-    "WEIGHTS_PRE_TRANSPOSED": 1,
-    "DATA_IN_0_TENSOR_SIZE_DIM_0": 48,
-    "DATA_IN_0_TENSOR_SIZE_DIM_1": 32,
-    "DATA_IN_0_PARALLELISM_DIM_0": 4,
-    "DATA_IN_0_PARALLELISM_DIM_1": 1,
-    "WEIGHT_TENSOR_SIZE_DIM_0": 48,
-    "WEIGHT_TENSOR_SIZE_DIM_1": 48,
-    "WEIGHT_PARALLELISM_DIM_0": 8,
-    "WEIGHT_PARALLELISM_DIM_1": 4,
-    "WEIGHT_PROJ_TENSOR_SIZE_DIM_0": 48,
-    "WEIGHT_PROJ_TENSOR_SIZE_DIM_1": 48,
-    "WEIGHT_PROJ_PARALLELISM_DIM_0": 4,
-    "WEIGHT_PROJ_PARALLELISM_DIM_1": 8,
+    "DATA_IN_0_TENSOR_SIZE_DIM_0": 12,
+    "DATA_IN_0_PARALLELISM_DIM_0": 2,
+    "DATA_IN_0_TENSOR_SIZE_DIM_1": 12,
+    "DATA_IN_0_PARALLELISM_DIM_1": 2,
+    "WEIGHT_TENSOR_SIZE_DIM_0": 12,
+    "WEIGHT_PARALLELISM_DIM_0": 2,
+    "WEIGHT_TENSOR_SIZE_DIM_1": 12,
+    "WEIGHT_PARALLELISM_DIM_1": 2,
+    "WEIGHT_PROJ_TENSOR_SIZE_DIM_0": 12,
+    "WEIGHT_PROJ_PARALLELISM_DIM_0": 2,
+    "WEIGHT_PROJ_TENSOR_SIZE_DIM_1": 12,
+    "WEIGHT_PROJ_PARALLELISM_DIM_1": 2,
     "DATA_IN_0_PRECISION_0": 8,
     "DATA_IN_0_PRECISION_1": 3,
     "WEIGHT_PRECISION_0": 16,
@@ -389,7 +388,9 @@ def test_fixed_linear_smoke():
             get_config(),
             # get_config(),
         ],
+        sim="verilator",
         skip_build=False,
+        # trace=True,
     )
 
 

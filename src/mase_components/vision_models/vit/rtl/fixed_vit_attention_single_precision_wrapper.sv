@@ -19,7 +19,6 @@ module fixed_vit_attention_single_precision_wrapper #(
     parameter DATA_IN_0_PRECISION_0 = 16,
     parameter DATA_IN_0_PRECISION_1 = 3,
 
-    parameter QUERY_WEIGHTS_PRE_TRANSPOSED = 1,
     parameter QUERY_WEIGHT_TENSOR_SIZE_DIM_0 = 768,
     parameter QUERY_WEIGHT_TENSOR_SIZE_DIM_1 = 768,
     parameter QUERY_WEIGHT_PARALLELISM_DIM_0 = 4,
@@ -27,7 +26,6 @@ module fixed_vit_attention_single_precision_wrapper #(
     parameter QUERY_WEIGHT_PRECISION_0 = 16,
     parameter QUERY_WEIGHT_PRECISION_1 = 3,
 
-    parameter KEY_WEIGHTS_PRE_TRANSPOSED = 1,
     parameter KEY_WEIGHT_TENSOR_SIZE_DIM_0 = 768,
     parameter KEY_WEIGHT_TENSOR_SIZE_DIM_1 = 768,
     parameter KEY_WEIGHT_PARALLELISM_DIM_0 = 4,
@@ -35,7 +33,6 @@ module fixed_vit_attention_single_precision_wrapper #(
     parameter KEY_WEIGHT_PRECISION_0 = 16,
     parameter KEY_WEIGHT_PRECISION_1 = 3,
 
-    parameter VALUE_WEIGHTS_PRE_TRANSPOSED = 1,
     parameter VALUE_WEIGHT_TENSOR_SIZE_DIM_0 = 768,
     parameter VALUE_WEIGHT_TENSOR_SIZE_DIM_1 = 768,
     parameter VALUE_WEIGHT_PARALLELISM_DIM_0 = 4,
@@ -67,7 +64,6 @@ module fixed_vit_attention_single_precision_wrapper #(
     parameter VALUE_BIAS_PRECISION_0 = 16,
     parameter VALUE_BIAS_PRECISION_1 = 3,
 
-    parameter CHOSEN_WEIGHTS_PRE_TRANSPOSED = QUERY_WEIGHTS_PRE_TRANSPOSED,
     parameter CHOSEN_WEIGHT_TENSOR_SIZE_DIM_0 = QUERY_WEIGHT_TENSOR_SIZE_DIM_0,
     parameter CHOSEN_WEIGHT_TENSOR_SIZE_DIM_1 = QUERY_WEIGHT_TENSOR_SIZE_DIM_1,
     parameter CHOSEN_WEIGHT_PARALLELISM_DIM_0 = QUERY_WEIGHT_PARALLELISM_DIM_0,
@@ -176,7 +172,6 @@ module fixed_vit_attention_single_precision_wrapper #(
       .DATA_IN_0_PRECISION_0      (DATA_IN_0_PRECISION_0),
       .DATA_IN_0_PRECISION_1      (DATA_IN_0_PRECISION_1),
 
-      .WEIGHTS_PRE_TRANSPOSED(CHOSEN_WEIGHTS_PRE_TRANSPOSED),
       .WEIGHT_TENSOR_SIZE_DIM_0(CHOSEN_WEIGHT_TENSOR_SIZE_DIM_0),
       .WEIGHT_TENSOR_SIZE_DIM_1(CHOSEN_WEIGHT_TENSOR_SIZE_DIM_1),
       .WEIGHT_PARALLELISM_DIM_0(CHOSEN_WEIGHT_PARALLELISM_DIM_0),

@@ -209,6 +209,7 @@ module fixed_vit_attention_head #(
       .DATA_IN_0_PRECISION_1      (QKMM_OUT_PRECISION_1),
       .DATA_EXP_0_PRECISION_0     (SOFTMAX_EXP_PRECISION_0),
       .DATA_EXP_0_PRECISION_1     (SOFTMAX_EXP_PRECISION_1),
+      .DATA_OUT_0_PRECISION_0     (SOFTMAX_OUT_DATA_PRECISION_0),
       .DATA_OUT_0_PRECISION_1     (SOFTMAX_OUT_DATA_PRECISION_1),
       .DATA_IN_0_TENSOR_SIZE_DIM_0(IN_DATA_TENSOR_SIZE_DIM_1),
       .DATA_IN_0_TENSOR_SIZE_DIM_1(IN_DATA_TENSOR_SIZE_DIM_1),
@@ -268,21 +269,6 @@ module fixed_vit_attention_head #(
       .out_ready(out_cast_ready)
   );
 
-  unpacked_register_slice #(
-      .DATA_WIDTH(OUT_DATA_PRECISION_0),
-      .IN_SIZE   (OUT_DATA_PARALLELISM_DIM_0 * OUT_DATA_PARALLELISM_DIM_1)
-  ) out_cast_register_slice_i (
-      .clk(clk),
-      .rst(rst),
-
-      .data_in(out_casted),
-      .data_in_valid(out_cast_valid),
-      .data_in_ready(out_cast_ready),
-
-      .data_out(buffer_out),
-      .data_out_valid(buffer_out_valid),
-      .data_out_ready(buffer_out_ready)
-  );
 
     fifo_for_autogen #(
         .DATA_IN_0_PRECISION_0(OUT_DATA_PRECISION_0), // = 8
@@ -302,9 +288,9 @@ module fixed_vit_attention_head #(
         .clk(clk),
         .rst(rst),
 
-        .data_in_0(buffer_out),
-        .data_in_0_valid(buffer_out_valid),
-        .data_in_0_ready(buffer_out_ready),
+        .data_in_0(out_casted),
+        .data_in_0_valid(out_cast_valid),
+        .data_in_0_ready(out_cast_ready),
         .data_out_0(out),
         .data_out_0_valid(out_valid),
         .data_out_0_ready(out_ready)

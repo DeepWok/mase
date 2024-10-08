@@ -101,9 +101,9 @@ module input_buffer #(
   end
   assign reg_in_valid  = (mode == STRAIGHT) ? data_in_valid : (!(delay2_bos || delay1_bos));
   assign data_in_ready = (mode == STRAIGHT) ? reg_in_ready : 0;
-  unpacked_skid_buffer #(
+  unpacked_register_slice #(
       .DATA_WIDTH(DATA_WIDTH),
-      .IN_NUM(IN_NUM)
+      .IN_SIZE(IN_NUM)
   ) reg_inst (
       .data_in(reg_in),
       .data_in_valid(reg_in_valid),

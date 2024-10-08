@@ -12,7 +12,6 @@ module fixed_vit_attention #(
     parameter DATA_IN_0_PRECISION_0 = 8,
     parameter DATA_IN_0_PRECISION_1 = 3,
 
-    parameter WEIGHTS_PRE_TRANSPOSED = 1,
     parameter WEIGHT_TENSOR_SIZE_DIM_0 = 8,
     parameter WEIGHT_TENSOR_SIZE_DIM_1 = 8,
     parameter WEIGHT_PARALLELISM_DIM_0 = 4,
@@ -21,9 +20,9 @@ module fixed_vit_attention #(
     parameter WEIGHT_PRECISION_1 = 3,
 
     parameter HAS_BIAS = 1,
-    parameter BIAS_TENSOR_SIZE_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_TENSOR_SIZE_DIM_1: WEIGHT_TENSOR_SIZE_DIM_0,
+    parameter BIAS_TENSOR_SIZE_DIM_0 = WEIGHT_TENSOR_SIZE_DIM_1,
     parameter BIAS_TENSOR_SIZE_DIM_1 = 1,
-    parameter BIAS_PARALLELISM_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_PARALLELISM_DIM_1: WEIGHT_PARALLELISM_DIM_0,
+    parameter BIAS_PARALLELISM_DIM_0 = WEIGHT_PARALLELISM_DIM_1,
     parameter BIAS_PARALLELISM_DIM_1 = 1,
     parameter BIAS_PRECISION_0 = 8,
     parameter BIAS_PRECISION_1 = 3,
@@ -48,14 +47,14 @@ module fixed_vit_attention #(
 
     parameter BIAS_PROJ_PRECISION_0 = 8,
     parameter BIAS_PROJ_PRECISION_1 = 3,
-    parameter BIAS_PROJ_TENSOR_SIZE_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_PROJ_TENSOR_SIZE_DIM_1: WEIGHT_PROJ_TENSOR_SIZE_DIM_0,
+    parameter BIAS_PROJ_TENSOR_SIZE_DIM_0 = WEIGHT_PROJ_TENSOR_SIZE_DIM_1,
     parameter BIAS_PROJ_TENSOR_SIZE_DIM_1 = 1,
-    parameter BIAS_PROJ_PARALLELISM_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_PROJ_PARALLELISM_DIM_1: WEIGHT_PROJ_PARALLELISM_DIM_0,
+    parameter BIAS_PROJ_PARALLELISM_DIM_0 = WEIGHT_PROJ_PARALLELISM_DIM_1,
     parameter BIAS_PROJ_PARALLELISM_DIM_1 = 1,
 
-    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_PROJ_TENSOR_SIZE_DIM_1: WEIGHT_PROJ_TENSOR_SIZE_DIM_0,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = WEIGHT_PROJ_TENSOR_SIZE_DIM_1,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1,
-    parameter DATA_OUT_0_PARALLELISM_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_PROJ_PARALLELISM_DIM_1: WEIGHT_PROJ_PARALLELISM_DIM_0,
+    parameter DATA_OUT_0_PARALLELISM_DIM_0 = WEIGHT_PROJ_PARALLELISM_DIM_1,
     parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1,
     parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0,
     parameter DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1
@@ -116,9 +115,9 @@ module fixed_vit_attention #(
   // * Declarations
   // * =================================================================
 
-  localparam HEAD_OUT_0_TENSOR_SIZE_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_TENSOR_SIZE_DIM_1: WEIGHT_TENSOR_SIZE_DIM_0;
+  localparam HEAD_OUT_0_TENSOR_SIZE_DIM_0 = WEIGHT_TENSOR_SIZE_DIM_1;
   localparam HEAD_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1;
-  localparam HEAD_OUT_0_PARALLELISM_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_PARALLELISM_DIM_1: WEIGHT_PARALLELISM_DIM_0;
+  localparam HEAD_OUT_0_PARALLELISM_DIM_0 = WEIGHT_PARALLELISM_DIM_1;
   localparam HEAD_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1;
   // Query
   logic [QKV_PRECISION_0-1:0] query[DATA_IN_0_PARALLELISM_DIM_1 * HEAD_OUT_0_PARALLELISM_DIM_0-1:0];
@@ -135,8 +134,6 @@ module fixed_vit_attention #(
   logic joint_value_valid, joint_value_ready;
   logic [NUM_HEADS-1:0] split_value_valid, split_value_ready;
 
-  logic [QKV_PRECISION_0-1:0] fifo_query[DATA_IN_0_PARALLELISM_DIM_1 * HEAD_OUT_0_PARALLELISM_DIM_0-1:0];
-  logic fifo_query_valid, fifo_query_ready;
   logic [QKV_PRECISION_0-1:0] fifo_key[DATA_IN_0_PARALLELISM_DIM_1 * HEAD_OUT_0_PARALLELISM_DIM_0-1:0];
   logic fifo_key_valid, fifo_key_ready;
   logic [QKV_PRECISION_0-1:0] fifo_value[DATA_IN_0_PARALLELISM_DIM_1 * HEAD_OUT_0_PARALLELISM_DIM_0-1:0];
@@ -153,7 +150,7 @@ module fixed_vit_attention #(
   // * Instances
   // * =================================================================
 
-  fixed_self_attention_input_block_batched #(
+  fixed_vit_attention_input_block_batched #(
       .DATA_IN_0_TENSOR_SIZE_DIM_0(DATA_IN_0_TENSOR_SIZE_DIM_0),
       .DATA_IN_0_TENSOR_SIZE_DIM_1(DATA_IN_0_TENSOR_SIZE_DIM_1),
       .DATA_IN_0_PARALLELISM_DIM_0(DATA_IN_0_PARALLELISM_DIM_0),
@@ -161,7 +158,6 @@ module fixed_vit_attention #(
       .DATA_IN_0_PRECISION_0      (DATA_IN_0_PRECISION_0),
       .DATA_IN_0_PRECISION_1      (DATA_IN_0_PRECISION_1),
 
-      .WEIGHTS_PRE_TRANSPOSED  (WEIGHTS_PRE_TRANSPOSED),
       .WEIGHT_TENSOR_SIZE_DIM_0(WEIGHT_TENSOR_SIZE_DIM_0),
       .WEIGHT_TENSOR_SIZE_DIM_1(WEIGHT_TENSOR_SIZE_DIM_1),
       .WEIGHT_PARALLELISM_DIM_0(WEIGHT_PARALLELISM_DIM_0),
@@ -343,9 +339,8 @@ module fixed_vit_attention #(
       .updated_tokens_ready(proj_in_ready)
   );
 
-  fixed_linear #(
+  fixed_linear_with_input_circular #(
       .HAS_BIAS              (HAS_BIAS),
-      .WEIGHTS_PRE_TRANSPOSED(WEIGHTS_PRE_TRANSPOSED),
 
       .DATA_IN_0_PRECISION_0      (SVMM_OUT_PRECISION_0),
       .DATA_IN_0_PRECISION_1      (SVMM_OUT_PRECISION_1),

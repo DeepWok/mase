@@ -2,6 +2,7 @@ package matrix_bank_pkg;
 
   parameter AXI_ADDRESS_WIDTH = 32;
   parameter MAX_DIMENSION = 1024;
+  parameter MAX_FEATURE_COUNT = 32;
 
   typedef struct packed {
     logic [AXI_ADDRESS_WIDTH-1:0]   start_address;

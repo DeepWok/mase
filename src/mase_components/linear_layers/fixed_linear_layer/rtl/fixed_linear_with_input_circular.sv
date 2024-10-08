@@ -73,7 +73,7 @@ module fixed_linear_with_input_circular #(
   logic [DATA_IN_0_PRECISION_0-1:0] data_in_0_reg [DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0];
   logic data_in_0_reg_valid, data_in_0_reg_ready;
   if (FIFO == 1) begin
-    localparam FIFO_DEPTH = DATA_OUT_0_TENSOR_SIZE_DIM_0 / DATA_OUT_0_PARALLELISM_DIM_0;
+    localparam FIFO_DEPTH = DATA_IN_0_TENSOR_SIZE_DIM_0 / DATA_IN_0_PARALLELISM_DIM_0;
     
     fifo_for_autogen #(
         .DATA_IN_0_PRECISION_0(DATA_IN_0_PRECISION_0), // = 8

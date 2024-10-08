@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-module fixed_self_attention_input_block_batched #(
+module fixed_vit_attention_input_block_batched #(
     parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 768,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 20,
     parameter DATA_IN_0_PARALLELISM_DIM_0 = 4,
@@ -7,7 +7,6 @@ module fixed_self_attention_input_block_batched #(
     parameter DATA_IN_0_PRECISION_0 = 16,
     parameter DATA_IN_0_PRECISION_1 = 3,
 
-    parameter WEIGHTS_PRE_TRANSPOSED = 0,
     parameter WEIGHT_TENSOR_SIZE_DIM_0 = 768,
     parameter WEIGHT_TENSOR_SIZE_DIM_1 = 768,
     parameter WEIGHT_PARALLELISM_DIM_0 = 4,
@@ -23,9 +22,9 @@ module fixed_self_attention_input_block_batched #(
     parameter BIAS_PRECISION_0 = 16,
     parameter BIAS_PRECISION_1 = 3,
 
-    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_TENSOR_SIZE_DIM_1: WEIGHT_TENSOR_SIZE_DIM_0,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = WEIGHT_TENSOR_SIZE_DIM_1,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1,
-    parameter DATA_OUT_0_PARALLELISM_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_PARALLELISM_DIM_1: WEIGHT_PARALLELISM_DIM_0,
+    parameter DATA_OUT_0_PARALLELISM_DIM_0 = WEIGHT_PARALLELISM_DIM_1,
     parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1,
     parameter DATA_OUT_0_PRECISION_0 = 16,
     parameter DATA_OUT_0_PRECISION_1 = 3
@@ -97,7 +96,7 @@ module fixed_self_attention_input_block_batched #(
   logic key_data_in_valid, key_data_in_ready;
   logic value_data_in_valid, value_data_in_ready;
 
-  logic [DATA_OUT_0_PRECISION_0-1:0] query_buffer [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0-1:0];
+  logic [DATA_OUT_0_PRECISION_0-1:0] query_buffer [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_1-1:0];
   logic query_buffer_valid;
   logic query_buffer_ready;
 
@@ -118,7 +117,6 @@ module fixed_self_attention_input_block_batched #(
 
   fixed_linear_with_input_circular #(
       .HAS_BIAS              (HAS_BIAS),
-      .WEIGHTS_PRE_TRANSPOSED(WEIGHTS_PRE_TRANSPOSED),
 
       .DATA_IN_0_PRECISION_0      (DATA_IN_0_PRECISION_0),
       .DATA_IN_0_PRECISION_1      (DATA_IN_0_PRECISION_1),
@@ -187,9 +185,8 @@ module fixed_self_attention_input_block_batched #(
 
   // * Key linear
 
-  fixed_linear #(
+  fixed_linear_with_input_circular #(
       .HAS_BIAS              (HAS_BIAS),
-      .WEIGHTS_PRE_TRANSPOSED(WEIGHTS_PRE_TRANSPOSED),
 
       .DATA_IN_0_PRECISION_0      (DATA_IN_0_PRECISION_0),
       .DATA_IN_0_PRECISION_1      (DATA_IN_0_PRECISION_1),
@@ -240,9 +237,8 @@ module fixed_self_attention_input_block_batched #(
 
   // * Value linear
 
-  fixed_linear #(
+  fixed_linear_with_input_circular #(
       .HAS_BIAS              (HAS_BIAS),
-      .WEIGHTS_PRE_TRANSPOSED(WEIGHTS_PRE_TRANSPOSED),
 
       .DATA_IN_0_PRECISION_0      (DATA_IN_0_PRECISION_0),
       .DATA_IN_0_PRECISION_1      (DATA_IN_0_PRECISION_1),

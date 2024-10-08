@@ -251,7 +251,7 @@ module fixed_self_attention_head #(
         .DATA_IN_0_PARALLELISM_DIM_0(IN_DATA_PARALLELISM_DIM_1),
         .DATA_IN_0_PARALLELISM_DIM_1(IN_DATA_PARALLELISM_DIM_1),
         .DATA_OUT_0_PRECISION_0     (OUT_DATA_PRECISION_0),
-        .DATA_OUT_0_PRECISION_1     (OUT_DATA_PRECISION_1),
+        .DATA_OUT_0_PRECISION_1     (OUT_DATA_PRECISION_1)
     ) fixed_softmax_i (
         .clk,
         .rst,

@@ -93,7 +93,7 @@ class Block(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = x + self.attn(self.norm1(x))
+        # x = x + self.attn(self.norm1(x))
         x = x + self.mlp(self.norm2(x))
         # x = self.attn(x)
         return x
@@ -332,16 +332,16 @@ def test_emit_verilog_vit():
         },
     )
     mg, _ = passes.emit_verilog_top_transform_pass(mg)
-    # mg, _ = passes.emit_bram_transform_pass(mg)
+    mg, _ = passes.emit_bram_transform_pass(mg)
     mg, _ = passes.emit_internal_rtl_transform_pass(mg)
     mg, _ = passes.emit_cocotb_transform_pass(
         mg, pass_args={"wait_time": 100, "wait_units": "ms", "batch_size": batch_size}
     )
     mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
-    simulate(
-        skip_build=False, skip_test=False, simulator="questa", waves=True, gui=False
-    )
+    # simulate(
+    #     skip_build=False, skip_test=False, simulator="questa", waves=True, gui=False
+    # )
 
 
 if __name__ == "__main__":
