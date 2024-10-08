@@ -56,7 +56,7 @@ print(transformed_model)
 
 Transforming a MaseGraph
 
-To support manipulation on a finer-level, eg. graph-level, MASE has provided built-in functionality to transformer any arbitrary `torch.nn.Module` into `MaseGraph`. This is because the ordinary `torch.Module` level view is normally not enough for finer manipulation -- many details are omitted at this level, we thus provide this `MaseGraph` to capture these detail. Correspondingly, we have provided a series of passes on the graph-level.
+To support manipulation on a finer-level, eg. graph-level, MASE has provided built-in functionality to transforme any arbitrary `torch.nn.Module` into `MaseGraph`. This is because the ordinary `torch.Module` level view is normally not enough for finer manipulation -- many details are omitted at this level, we thus provide this `MaseGraph` to capture these detail. Correspondingly, we have provided a series of passes on the graph-level.
 
 
 The following example is applying a MASE graph-level pass to a `vgg7` network. It also tries to use many MASE built-in functions to fetch the data, fetch the model, transform the model to `MaseGraph` land and then apply graph-level passes. 
@@ -149,5 +149,5 @@ quan_args = {
 ori_mg = deepcopy_mase_graph(mg)
 mg, _ = quantize_transform_pass(mg, quan_args)
 
-summarize_quantization_analysis_pass(mg, pass_args={"save_dir": "quantize_summary", "original_mg": ori_mg})
+summarize_quantization_analysis_pass(mg, pass_args={"save_dir": "quantize_summary", "original_graph": ori_mg})
 ```
