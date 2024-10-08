@@ -108,17 +108,17 @@ class LinearInteger(_LinearBase):
             )
         base_quantizer = integer_floor_quantizer if floor else integer_quantizer
         self.w_quantizer = partial(
-            integer_quantizer, width=w_width, frac_width=w_frac_width
+            base_quantizer, width=w_width, frac_width=w_frac_width
         )
         self.x_quantizer = partial(
-            integer_quantizer, width=x_width, frac_width=x_frac_width
+            base_quantizer, width=x_width, frac_width=x_frac_width
         )
         self.b_quantizer = partial(
-            integer_quantizer, width=b_width, frac_width=b_frac_width
+            base_quantizer, width=b_width, frac_width=b_frac_width
         )
         if out_config is not None:
             self.out_quantizer = partial(
-                integer_floor_quantizer, width=out_width, frac_width=out_frac_width
+                base_quantizer, width=out_width, frac_width=out_frac_width
             )
 
 
