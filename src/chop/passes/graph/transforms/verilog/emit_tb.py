@@ -20,6 +20,8 @@ from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 import dill
 import inspect
 
+torch.manual_seed(0)
+
 
 def _cap(name):
     """
@@ -145,6 +147,7 @@ def _emit_cocotb_tb(graph):
                             self.get_parameter(f"{_cap(arg)}_PARALLELISM_DIM_1"),
                             self.get_parameter(f"{_cap(arg)}_PARALLELISM_DIM_0"),
                         ],
+                        floor=True,
                     )
 
                 else:
@@ -175,6 +178,7 @@ def _emit_cocotb_tb(graph):
                     self.get_parameter(f"DATA_OUT_0_PARALLELISM_DIM_1"),
                     self.get_parameter(f"DATA_OUT_0_PARALLELISM_DIM_0"),
                 ],
+                floor=True,
             )
 
             # Set expectation for each monitor
@@ -194,6 +198,9 @@ def _emit_cocotb_tb(graph):
     tb_path = Path.home() / ".mase" / "top" / "hardware" / "test" / "mase_top_tb"
     tb_path.mkdir(parents=True, exist_ok=True)
     with open(tb_path / "tb_obj.dill", "wb") as file:
+        import sys
+
+        sys.setrecursionlimit(10000)  # Increase recursion limit
         dill.dump(cls_obj, file)
     with open(tb_path / "__init__.py", "w") as file:
         file.write("from .test import test")

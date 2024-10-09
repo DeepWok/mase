@@ -150,6 +150,7 @@ module sliding_window_buffer #(
   end
 
 
+
 endmodule
 
 module sliding_window_stride #(
@@ -199,13 +200,14 @@ module sliding_window_stride #(
       .DATA_WIDTH(DATA_WIDTH),
       .CHANNELS(CHANNELS)
   ) buffer (
-      .data_out      (buffer_data),
       .out_x         (buffer_x),
       .out_y         (buffer_y),
       .out_c         (buffer_c),
       .data_out_valid(buffer_valid),
       .data_out_ready(buffer_ready),
-      .*
+      .data_out      (buffer_data),
+      .clk           (clk),
+      .rst           (rst)
   );
   // enable stride == 1
   logic in_range;

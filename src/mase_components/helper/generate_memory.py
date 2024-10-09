@@ -11,8 +11,14 @@ import mase_components
 from pathlib import Path
 
 
-def make_quantizer(data_width: int, f_width: int):
-    return partial(integer_quantizer, width=data_width, frac_width=f_width)
+def make_quantizer(data_width: int, f_width: int, floor):
+    base_quantizer = integer_floor_quantizer if floor else integer_quantizer
+    return partial(base_quantizer, width=data_width, frac_width=f_width)
+
+
+def isqrt(x):
+    x = (x + 1e-5).sqrt().reciprocal()
+    return x
 
 
 FUNCTION_TABLE = {
@@ -24,6 +30,7 @@ FUNCTION_TABLE = {
     "gelu": nn.GELU(),
     "exp": torch.exp,
     "softmax": torch.exp,
+    "isqrt": isqrt,
 }
 
 
@@ -70,7 +77,14 @@ def generate_lookup(data_width: int, f_width: int, function: str, type="hex"):
 
 
 def aligned_generate_lookup(
-    in_data_width, in_f_width, data_width: int, f_width: int, function: str, type="hex"
+    in_data_width,
+    in_f_width,
+    data_width: int,
+    f_width: int,
+    function: str,
+    type="hex",
+    constant_mult=1,
+    floor=False,
 ):
     f = FUNCTION_TABLE[function]
     lut = {
@@ -83,15 +97,15 @@ def aligned_generate_lookup(
     # entries = 2 ** data_width
     minval = float(-(2 ** (in_data_width - in_f_width - 1)))
     maxval = (2 ** (in_data_width - 1) - 1) * 2 ** (-in_f_width)
-    inp_quanter = make_quantizer(in_data_width, in_f_width)
-    quanter = make_quantizer(data_width, f_width)
+    inp_quanter = make_quantizer(in_data_width, in_f_width, floor)
+    quanter = make_quantizer(data_width, f_width, floor)
     count = 0
     iarr = []
     pi = float(0)
     while pi <= maxval:
         count += 1
         iarr.append(pi)
-        val = quanter(f(torch.tensor(pi)))  # entry in the lookup table
+        val = quanter(f(torch.tensor(pi * constant_mult)))  # entry in the lookup table
         lut[
             doubletofx(data_width=in_data_width, f_width=in_f_width, num=pi, type=type)
         ] = doubletofx(
@@ -99,17 +113,22 @@ def aligned_generate_lookup(
         )
         pi += 2 ** -(in_f_width)
 
-    i = minval
-    while i <= -1 * 2 ** -(in_f_width):
-        count += 1
-        iarr.append(i)
-        val = quanter(f(torch.tensor(i)))  # entry in the lookup table
-        lut[
-            doubletofx(data_width=in_data_width, f_width=in_f_width, num=i, type=type)
-        ] = doubletofx(
-            data_width=data_width, f_width=f_width, num=val.item(), type=type
-        )
-        i += 2 ** -(in_f_width)
+    if function not in ["isqrt"]:
+        i = minval
+        while i <= -1 * 2 ** -(in_f_width):
+            count += 1
+            iarr.append(i)
+            val = quanter(
+                f(torch.tensor(i * constant_mult))
+            )  # entry in the lookup table
+            lut[
+                doubletofx(
+                    data_width=in_data_width, f_width=in_f_width, num=i, type=type
+                )
+            ] = doubletofx(
+                data_width=data_width, f_width=f_width, num=val.item(), type=type
+            )
+            i += 2 ** -(in_f_width)
 
     iarr = [(x * 2 ** (in_f_width)) for x in iarr]
     # print(iarr)
@@ -211,6 +230,8 @@ def lookup_to_sv_file(
     function: str,
     file_path=None,
     path_with_dtype=False,
+    constant_mult=1,
+    floor=False,
 ):
     dicto = aligned_generate_lookup(
         in_data_width=in_data_width,
@@ -219,6 +240,8 @@ def lookup_to_sv_file(
         f_width=f_width,
         function=function,
         type="bin",
+        constant_mult=constant_mult,
+        floor=floor,
     )
     dicto = {
         k: v
@@ -277,8 +300,10 @@ def generate_sv_lut(
     in_f_width,
     data_width,
     f_width,
-    path=None,
+    path=None,  # maybe not accept path as a parameter due to redundantly-generated exp_lut
     path_with_dtype=False,
+    constant_mult=1,
+    floor=False,
 ):
     assert (
         function_name in FUNCTION_TABLE
@@ -289,27 +314,18 @@ def generate_sv_lut(
     else:
         end = ""
 
-    if path is None:
-        p = Path(__file__).parents[1] / "rtl"
-        lookup_to_sv_file(
-            in_data_width,
-            in_f_width,
-            data_width,
-            f_width,
-            function_name,
-            str(p / f"{function_name}_lut{end}.sv"),
-            path_with_dtype=path_with_dtype,
-        )
-    else:
-        lookup_to_sv_file(
-            in_data_width,
-            in_f_width,
-            data_width,
-            f_width,
-            function_name,
-            f"{path}/{function_name}_lut{end}.sv",
-            path_with_dtype=path_with_dtype,
-        )
+    p = Path(__file__).parents[1] / "generated_lut" / "rtl"
+    lookup_to_sv_file(
+        in_data_width,
+        in_f_width,
+        data_width,
+        f_width,
+        function_name,
+        str(p / f"{function_name}_lut{end}.sv"),
+        path_with_dtype=path_with_dtype,
+        constant_mult=constant_mult,
+        floor=floor,
+    )
 
 
 if __name__ == "__main__":

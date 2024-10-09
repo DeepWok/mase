@@ -35,6 +35,7 @@ module comparator_tree #(
     logic [DATA_WIDTH-1:0] data[(2**(LEVELS-level))-1:0];
     logic valid;
     logic ready;
+    if (level == 0) assign data = in_data;
   end
 
 
@@ -103,7 +104,7 @@ module comparator_tree #(
   end
 
   // Connect up first and last layer wires
-  assign vars[0].data = in_data;
+  // assign vars[0].data = in_data;
   assign vars[0].valid = in_valid;
   assign in_ready = vars[0].ready;
 

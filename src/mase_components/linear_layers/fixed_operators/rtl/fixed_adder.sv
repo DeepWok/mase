@@ -76,16 +76,17 @@ module fixed_adder #(
   );
 
   // * Cast the sum to the requested output precision
-  fixed_cast #(
+  fixed_rounding #(
       .IN_SIZE       (DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1),
       .IN_WIDTH      (SUM_PRECISION_0),
       .IN_FRAC_WIDTH (SUM_PRECISION_1),
       .OUT_WIDTH     (DATA_OUT_0_PRECISION_0),
       .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1)
-  ) bias_cast_i (
+  ) output_cast (
       .data_in (add_result),
       .data_out(cast_out)
   );
+
 
   // * Register the output
   unpacked_register_slice #(
@@ -109,7 +110,7 @@ module fixed_adder #(
 
   // * Do the sum
   for (genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1; i++) begin
-    assign add_result[i] = data_in_0[i] + data_in_1[i];
+    assign add_result[i] = $signed(data_in_0[i]) + $signed(data_in_1[i]);
   end
 
 endmodule

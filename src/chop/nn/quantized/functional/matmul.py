@@ -28,7 +28,7 @@ def generic_matmul_integer(x, y, config, style="matmul", out_config=None, floor=
     if bypass:
         return matmul(x, y)
     else:
-        base_quantizer = integer_quantizer
+        base_quantizer = integer_floor_quantizer if floor else integer_quantizer
 
         x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
         y_width, y_frac_width = config["weight_width"], config["weight_frac_width"]

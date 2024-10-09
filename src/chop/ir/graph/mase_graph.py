@@ -187,6 +187,8 @@ class MaseGraph:
             custom_leaf_layers = ()
             # quantized functions/layers
             custom_leaf_functions += tuple(quantized_func_map.values())
+            if custom_ops != None:
+                custom_leaf_layers += tuple(custom_ops.get("modules", {}).keys())
             custom_leaf_layers += tuple(quantized_module_map.values())
             # patched functions/layers
             patched_nodes = getattr(model, "patched_nodes", None)

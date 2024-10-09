@@ -21,6 +21,7 @@ MASE_HW_DEPS = {
         "common",
         "memory",
         "activation_layers",
+        "generated_lut",
     ],
     "activation_layers/fixed_softsign": [
         "common",
@@ -38,9 +39,12 @@ MASE_HW_DEPS = {
     "activation_layers/fixed_softmax": [
         "common",
         "cast",
-        "fixed_arithmetic",
-        "conv",
         "activation_layers",
+        "convolution_layers",
+        "memory",
+        "linear_layers/fixed_operators",
+        "scalar_operators/fixed",
+        "generated_lut",
     ],
     "activation_layers/fixed_softermax_1d": [
         "common",
@@ -133,6 +137,13 @@ MASE_HW_DEPS = {
         "common",
     ],
     # Linear
+    "linear_layers/fixed_linear_layer/fixed_linear_with_input_circular": [
+        "cast",
+        "common",
+        "memory",
+        "linear_layers/fixed_operators",
+        "scalar_operators/fixed",
+    ],
     "linear_layers/fixed_linear_layer/fixed_linear": [
         "cast",
         "common",
@@ -316,6 +327,7 @@ MASE_HW_DEPS = {
     "memory/ram_block": [],
     "memory/unpacked_fifo": ["memory"],
     "memory/unpacked_skid_buffer": ["memory"],
+    "memory/weight_source": ["memory"],
     # Normalization Layers
     "normalization_layers/batch_norm_2d": [
         "normalization_layers",
@@ -343,6 +355,16 @@ MASE_HW_DEPS = {
         "cast",
         "memory",
     ],
+    "normalization_layers/layer_norm_2d": [
+        "common",
+        "linear_layers/matmul",
+        "linear_layers/fixed_operators",
+        "scalar_operators/fixed",
+        "normalization_layers",
+        "cast",
+        "memory",
+        "generated_lut",
+    ],
     # Scalar Operators
     "scalar_operators/fixed/fixed_isqrt": [
         "memory",
@@ -355,6 +377,12 @@ MASE_HW_DEPS = {
         "common",
         "scalar_operators/fixed",
         "linear_layers/fixed_operators",
+    ],
+    "scalar_operators/fixed/fixed_div": [
+        "scalar_operators/fixed",
+        "memory",
+        "cast",
+        "common",
     ],
     # Transformer Layers
     "transformer_layers/fixed_self_attention": [
@@ -399,6 +427,31 @@ MASE_HW_DEPS = {
     ],
     "arithmetic/mac": ["fixed_arithmetic", "float_arithmetic"],
     # ViT
+    "vision_models/vit/fixed_vit_attention_head": [
+        "vision_models/attention",
+        "cast",
+        "memory",
+        "common",
+        "linear_layers/fixed_operators",
+        "linear_layers/fixed_linear_layer",
+        "linear_layers/matmul",
+        "activation_layers",
+        "scalar_operators/fixed",
+        "generated_lut",
+    ],
+    "vision_models/vit/fixed_vit_attention": [
+        "vision_models/vit",
+        "transformer_layers",
+        "cast",
+        "memory",
+        "common",
+        "linear_layers/fixed_operators",
+        "linear_layers/fixed_linear_layer",
+        "linear_layers/matmul",
+        "activation_layers",
+        "scalar_operators/fixed",
+        "generated_lut",
+    ],
     "ViT/fixed_patch_embed": [
         "conv",
         "ViT",

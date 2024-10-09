@@ -12,7 +12,7 @@ sys.path.append("../")
 from mase_cocotb.z_qlayers import quantize_to_int
 
 from functools import partial
-from chop.nn.quantizers import integer_quantizer
+from chop.nn.quantizers import integer_quantizer, integer_floor_quantizer
 
 
 # Apparently this function only exists in Python 3.12 ...
@@ -101,7 +101,9 @@ def product_dict(**kwargs):
         yield dict(zip(keys, instance))
 
 
-def fixed_preprocess_tensor(tensor: Tensor, q_config: dict, parallelism: list) -> list:
+def fixed_preprocess_tensor(
+    tensor: Tensor, q_config: dict, parallelism: list, floor=False
+) -> list:
     """Preprocess a tensor before driving it into the DUT.
     1. Quantize to requested fixed-point precision.
     2. Convert to integer format to be compatible with Cocotb drivers.
@@ -125,12 +127,13 @@ def fixed_preprocess_tensor(tensor: Tensor, q_config: dict, parallelism: list) -
     tensor = tensor.view((-1, tensor.shape[-1]))
 
     # Quantize
-    quantizer = partial(integer_quantizer, **q_config)
+    base_quantizer = integer_floor_quantizer if floor else integer_quantizer
+    quantizer = partial(base_quantizer, **q_config)
     q_tensor = quantizer(tensor)
-
+    # breakpoint()
     # Convert to integer format
     q_tensor = (q_tensor * 2 ** q_config["frac_width"]).int()
-    q_tensor = signed_to_unsigned(q_tensor, bits=q_config["width"])
+    # q_tensor = signed_to_unsigned(q_tensor, bits=q_config["width"])
 
     # Split into chunks according to parallelism in each dimension
     # parallelism[0]: along rows, parallelism[1]: along columns
@@ -175,3 +178,27 @@ def fixed_cast(val, in_width, in_frac_width, out_width, out_frac_width):
             val = val
             # val = int(val % (1 << out_width))
     return val  # << out_frac_width  # treat data<out_width, out_frac_width> as data<out_width, 0>
+
+
+async def check_signal(dut, log, signal_list):
+    # TODO: support count start
+    # TODO: support checking signal with different name in valid and ready signal
+    def handshake_signal_check(
+        dut, log, signal_base, valid=None, ready=None, count_start: dict = {}
+    ):
+        data_valid = getattr(dut, f"{signal_base}_valid") if valid is None else valid
+        data_ready = getattr(dut, f"{signal_base}_ready") if ready is None else ready
+        data = getattr(dut, signal_base)
+        svalue = [i.signed_integer for i in data.value]
+        if data_valid.value & data_ready.value:
+            count_start[signal_base] = (
+                count_start[signal_base] + 1
+                if count_start.get(signal_base) is not None
+                else " "
+            )
+            log.debug(f"handshake {count_start[signal_base]} {signal_base} = {svalue}")
+
+    while True:
+        await RisingEdge(dut.clk)
+        for signal in signal_list:
+            handshake_signal_check(dut, log, signal)

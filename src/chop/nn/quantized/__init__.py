@@ -2,6 +2,8 @@ from .modules import (
     quantized_module_map,
     BertSelfAttentionInteger,
     BertSelfAttentionHeadInteger,
+    ViTSelfAttentionHeadInteger,
+    ViTAttentionInteger,
     LinearInteger,
     LayerNormInteger,
     GELUInteger,

@@ -11,19 +11,23 @@ from cocotb.log import SimLog
 from cocotb.triggers import Timer
 
 from transformers.models.bert.configuration_bert import BertConfig
+from transformers.models.vit.configuration_vit import ViTConfig
 
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 from mase_cocotb.runner import mase_runner
 
 # from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner
-from chop.nn.quantized import BertSelfAttentionInteger, fixed_softermax
-
+from chop.nn.quantized import (
+    BertSelfAttentionInteger,
+    fixed_softermax,
+)
+from chop.nn.quantized.functional import softmax_integer
 from mase_cocotb.utils import fixed_preprocess_tensor
 
 
 class FixedSelfAttentionTB(Testbench):
-    def __init__(self, dut) -> None:
+    def __init__(self, dut, model_name) -> None:
         super().__init__(dut, dut.clk, dut.rst)
 
         if not hasattr(self, "log"):
@@ -68,7 +72,7 @@ class FixedSelfAttentionTB(Testbench):
         )
 
         # Model
-        self.config = BertConfig()
+        self.config = ViTConfig() if "vit" in model_name else BertConfig()
         self.config.hidden_size = self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0")
         self.config.num_attention_heads = self.get_parameter("NUM_HEADS")
         self.q_config = {
@@ -102,6 +106,22 @@ class FixedSelfAttentionTB(Testbench):
                     "width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
                     "frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
                 },
+            )
+        else:
+            self.model.softmax = partial(
+                softmax_integer,
+                config={
+                    "data_in_width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
+                    "data_in_frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
+                    "data_in_exp_width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
+                    "data_in_exp_frac_width": self.get_parameter(
+                        "DATA_OUT_0_PRECISION_1"
+                    ),
+                    "data_in_div_frac_width": self.get_parameter(
+                        "DATA_OUT_0_PRECISION_1"
+                    ),
+                },
+                dim=-1,
             )
 
         # Set verbosity of driver and monitor loggers to debug
@@ -203,40 +223,40 @@ class FixedSelfAttentionTB(Testbench):
 
 @cocotb.test()
 async def cocotb_test(dut):
-    tb = FixedSelfAttentionTB(dut)
+    tb = FixedSelfAttentionTB(dut, "vit")
     await tb.run_test()
 
 
 def get_config(kwargs={}):
     config = {
-        "NUM_HEADS": 1,
+        "NUM_HEADS": 3,
         "ACTIVATION": 0,
-        "DATA_IN_0_TENSOR_SIZE_DIM_0": 4,
-        "DATA_IN_0_TENSOR_SIZE_DIM_1": 4,
-        "DATA_IN_0_PARALLELISM_DIM_0": 2,
-        "DATA_IN_0_PARALLELISM_DIM_1": 2,
-        "DATA_IN_0_PRECISION_0": 16,
-        "DATA_IN_0_PRECISION_1": 8,
+        "DATA_IN_0_TENSOR_SIZE_DIM_0": 32,
+        "DATA_IN_0_TENSOR_SIZE_DIM_1": 16,
+        "DATA_IN_0_PARALLELISM_DIM_0": 4,
+        "DATA_IN_0_PARALLELISM_DIM_1": 4,
+        "DATA_IN_0_PRECISION_0": 8,
+        "DATA_IN_0_PRECISION_1": 4,
         "WEIGHTS_PRE_TRANSPOSED": 1,
-        "WEIGHT_TENSOR_SIZE_DIM_0": 4,
-        "WEIGHT_TENSOR_SIZE_DIM_1": 4,
-        "WEIGHT_PARALLELISM_DIM_0": 2,
-        "WEIGHT_PARALLELISM_DIM_1": 2,
+        "WEIGHT_TENSOR_SIZE_DIM_0": 32,
+        "WEIGHT_TENSOR_SIZE_DIM_1": 32,
+        "WEIGHT_PARALLELISM_DIM_0": 4,
+        "WEIGHT_PARALLELISM_DIM_1": 4,
         "WEIGHT_PRECISION_0": 16,
         "WEIGHT_PRECISION_1": 8,
-        "HAS_BIAS": 0,
-        "BIAS_TENSOR_SIZE_DIM_0": 4,
-        "BIAS_TENSOR_SIZE_DIM_1": 4,
-        "BIAS_PARALLELISM_DIM_0": 2,
-        "BIAS_PARALLELISM_DIM_1": 2,
+        "HAS_BIAS": 1,
+        "BIAS_TENSOR_SIZE_DIM_0": 32,
+        "BIAS_TENSOR_SIZE_DIM_1": 1,
+        "BIAS_PARALLELISM_DIM_0": 4,
+        "BIAS_PARALLELISM_DIM_1": 1,
         "BIAS_PRECISION_0": 16,
         "BIAS_PRECISION_1": 8,
-        "DATA_OUT_0_TENSOR_SIZE_DIM_0": 4,
-        "DATA_OUT_0_TENSOR_SIZE_DIM_1": 4,
-        "DATA_OUT_0_PARALLELISM_DIM_0": 2,
-        "DATA_OUT_0_PARALLELISM_DIM_1": 2,
-        "DATA_OUT_0_PRECISION_0": 16,
-        "DATA_OUT_0_PRECISION_1": 8,
+        "DATA_OUT_0_TENSOR_SIZE_DIM_0": 32,
+        "DATA_OUT_0_TENSOR_SIZE_DIM_1": 16,
+        "DATA_OUT_0_PARALLELISM_DIM_0": 4,
+        "DATA_OUT_0_PARALLELISM_DIM_1": 4,
+        "DATA_OUT_0_PRECISION_0": 10,
+        "DATA_OUT_0_PRECISION_1": 4,
     }
     config.update(kwargs)
     return config

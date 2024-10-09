@@ -48,6 +48,8 @@ module self_attention_head_gather #(
 
         if (block_counter[head] != BLOCKS_PER_HEAD) begin
           block_counter[head] <= block_counter[head] + 1'b1;
+        end else begin
+          block_counter[head] <= 1'b1;
         end
 
         // * Reset counter when all heads done

@@ -20,7 +20,6 @@ module convolution #(
     parameter UNROLL_KERNEL_OUT = 4,
     parameter UNROLL_OUT_C = 2,
 
-    parameter SLIDING_NUM = 8,
 
     parameter BIAS_SIZE = UNROLL_OUT_C,
     parameter STRIDE    = 1,
@@ -28,6 +27,10 @@ module convolution #(
     parameter PADDING_Y = 1,
     parameter PADDING_X = 2,
     parameter HAS_BIAS  = 1,
+
+    parameter OUT_Y = (IN_Y - KERNEL_Y + 2 * PADDING_Y + 1) / (STRIDE),
+    parameter OUT_X = (IN_X - KERNEL_X + 2 * PADDING_X + 1) / (STRIDE),
+    parameter SLIDING_NUM = OUT_Y * OUT_X,
 
     parameter DATA_OUT_0_PRECISION_0 = 8,
     parameter DATA_OUT_0_PRECISION_1 = 4
@@ -77,6 +80,11 @@ module convolution #(
   logic [DATA_IN_0_PRECISION_0 - 1:0] kernel[KERNEL_Y * KERNEL_X * UNROLL_IN_C - 1:0];
   logic kernel_valid;
   logic kernel_ready;
+  localparam ROUND_PRECISION_0 = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 + $clog2(
+      KERNEL_X * KERNEL_Y * IN_C
+  );
+  localparam ROUND_PRECISION_1 = DATA_IN_0_PRECISION_1 + WEIGHT_PRECISION_1;
+  logic [ROUND_PRECISION_0 -1:0] round_in[UNROLL_OUT_C-1:0];
   sliding_window #(
       .IMG_WIDTH     (IN_X),
       .IMG_HEIGHT    (IN_Y),
@@ -89,14 +97,15 @@ module convolution #(
       .STRIDE        (STRIDE)
       /* verilator lint_off PINMISSING */
   ) sw_inst (
+      .clk(clk),
+      .rst(rst),
       .data_in(packed_data_in),
       .data_in_valid(data_in_0_valid),
       .data_in_ready(data_in_0_ready),
 
       .data_out(packed_kernel),
       .data_out_valid(kernel_valid),
-      .data_out_ready(kernel_ready),
-      .*
+      .data_out_ready(kernel_ready)
   );
   /* verilator lint_on PINMISSING */
   for (genvar i = 0; i < KERNEL_Y * KERNEL_X; i++)
@@ -109,21 +118,17 @@ module convolution #(
       .NUM(ROLL_IN_NUM),
       .ROLL_NUM(UNROLL_KERNEL_OUT)
   ) roller_inst (
+      .clk(clk),
+      .rst(rst),
       .data_in(kernel),
       .data_in_valid(kernel_valid),
       .data_in_ready(kernel_ready),
       .data_out(rolled_k),
       .data_out_valid(rolled_k_valid),
-      .data_out_ready(rolled_k_ready),
-      .*
+      .data_out_ready(rolled_k_ready)
   );
 
-  localparam ROUND_PRECISION_0 = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 + $clog2(
-      KERNEL_X * KERNEL_Y * IN_C
-  );
-  localparam ROUND_PRECISION_1 = DATA_IN_0_PRECISION_1 + WEIGHT_PRECISION_1;
-  logic [ROUND_PRECISION_0 -1:0] round_in[UNROLL_OUT_C-1:0];
-  convolution_arith #(
+  convolution_compute_core #(
       // assume output will only unroll_out_channels
       .DATA_IN_0_PRECISION_0(DATA_IN_0_PRECISION_0),
       .DATA_IN_0_PRECISION_1(DATA_IN_0_PRECISION_1),
@@ -138,12 +143,21 @@ module convolution #(
       .OUT_CHANNELS_DEPTH(OUT_C / UNROLL_OUT_C),
       .WEIGHT_REPEATS(SLIDING_NUM),
       .HAS_BIAS(HAS_BIAS)
-  ) convolution_arith_inst (
+  ) ccc_inst (
+      .clk(clk),
+      .rst(rst),
       .data_in_0(rolled_k),
       .data_in_0_valid(rolled_k_valid),
       .data_in_0_ready(rolled_k_ready),
+      .weight(weight),
+      .weight_valid(weight_valid),
+      .weight_ready(weight_ready),
+      .bias(bias),
+      .bias_valid(bias_valid),
+      .bias_ready(bias_ready),
       .data_out_0(round_in),
-      .*
+      .data_out_0_valid(data_out_0_valid),
+      .data_out_0_ready(data_out_0_ready)
   );
 
   fixed_rounding #(
