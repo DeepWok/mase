@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>chop.passes.graph.transforms.verilog.emit_tb &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common_css/need_style.css?v=678fb11e" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/modern.css?v=803738c0" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-test-results/common.css?v=9ec2c1d5" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../../../../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+        <script src="../../../../../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+        <script src="../../../../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+        <script src="../../../../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+        <script src="../../../../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script src="../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/actions.html">chop.actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/datasets.html">chop.datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/distributed.html">chop.distributed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/ir.html">chop.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/models.html">chop.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/nn.html">chop.nn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/passes.html">chop.passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/tools.html">chop.tools</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">chop.passes.graph.transforms.verilog.emit_tb</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for chop.passes.graph.transforms.verilog.emit_tb</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span><span class="o">,</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">textwrap</span> <span class="kn">import</span> <span class="n">indent</span>
+
+<span class="kn">from</span> <span class="nn">chop.passes.graph.utils</span> <span class="kn">import</span> <span class="n">vf</span><span class="p">,</span> <span class="n">v2p</span><span class="p">,</span> <span class="n">init_project</span>
+<span class="kn">from</span> <span class="nn">chop.nn.quantizers</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">integer_quantizer_for_hw</span><span class="p">,</span>
+    <span class="n">integer_quantizer</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span> <span class="nn">cocotb</span>
+<span class="kn">from</span> <span class="nn">mase_cocotb.testbench</span> <span class="kn">import</span> <span class="n">Testbench</span>
+<span class="kn">from</span> <span class="nn">mase_cocotb.interfaces.streaming</span> <span class="kn">import</span> <span class="n">StreamDriver</span><span class="p">,</span> <span class="n">StreamMonitor</span>
+
+
+<span class="kn">import</span> <span class="nn">dill</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+
+
+<span class="k">def</span> <span class="nf">_cap</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    capitalize a string</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">_emit_cocotb_test</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="p">{}):</span>
+
+    <span class="n">wait_time</span> <span class="o">=</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;wait_time&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">wait_unit</span> <span class="o">=</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;wait_units&quot;</span><span class="p">,</span> <span class="s2">&quot;ms&quot;</span><span class="p">)</span>
+    <span class="n">batch_size</span> <span class="o">=</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;batch_size&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">test_template</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">import cocotb</span>
+
+<span class="s2">@cocotb.test()</span>
+<span class="s2">async def test(dut):</span>
+<span class="s2">    from pathlib import Path</span>
+<span class="s2">    import dill</span>
+<span class="s2">    from cocotb.triggers import Timer</span>
+
+<span class="s2">    tb_path = Path.home() / &quot;.mase&quot; / &quot;top&quot; / &quot;hardware&quot; / &quot;test&quot; / &quot;mase_top_tb&quot;</span>
+<span class="s2">    with open(tb_path / &quot;tb_obj.dill&quot;, &quot;rb&quot;) as f:</span>
+<span class="s2">        tb = dill.load(f)(dut, fail_on_checks=True)</span>
+
+<span class="s2">    await tb.initialize()</span>
+
+<span class="s2">    in_tensors = tb.generate_inputs(batches=</span><span class="si">{</span><span class="n">batch_size</span><span class="si">}</span><span class="s2">)</span>
+<span class="s2">    exp_out = tb.model(*list(in_tensors.values()))</span>
+
+<span class="s2">    tb.load_drivers(in_tensors)</span>
+<span class="s2">    tb.load_monitors(exp_out)</span>
+
+<span class="s2">    await tb.wait_end(timeout=</span><span class="si">{</span><span class="n">wait_time</span><span class="si">}</span><span class="s2">, timeout_unit=&quot;</span><span class="si">{</span><span class="n">wait_unit</span><span class="si">}</span><span class="s2">&quot;)</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+    <span class="n">tb_path</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;.mase&quot;</span> <span class="o">/</span> <span class="s2">&quot;top&quot;</span> <span class="o">/</span> <span class="s2">&quot;hardware&quot;</span> <span class="o">/</span> <span class="s2">&quot;test&quot;</span> <span class="o">/</span> <span class="s2">&quot;mase_top_tb&quot;</span>
+    <span class="n">tb_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">tb_path</span> <span class="o">/</span> <span class="s2">&quot;test.py&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">test_template</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_emit_cocotb_tb</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">MaseGraphTB</span><span class="p">(</span><span class="n">Testbench</span><span class="p">):</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dut</span><span class="p">,</span> <span class="n">fail_on_checks</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dut</span><span class="p">,</span> <span class="n">dut</span><span class="o">.</span><span class="n">clk</span><span class="p">,</span> <span class="n">dut</span><span class="o">.</span><span class="n">rst</span><span class="p">,</span> <span class="n">fail_on_checks</span><span class="o">=</span><span class="n">fail_on_checks</span><span class="p">)</span>
+
+            <span class="c1"># Instantiate as many drivers as required inputs to the model</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input_drivers</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_monitors</span> <span class="o">=</span> <span class="p">{}</span>
+
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes_in</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="s2">&quot;data_in&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">arg</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">input_drivers</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span> <span class="o">=</span> <span class="n">StreamDriver</span><span class="p">(</span>
+                        <span class="n">dut</span><span class="o">.</span><span class="n">clk</span><span class="p">,</span>
+                        <span class="nb">getattr</span><span class="p">(</span><span class="n">dut</span><span class="p">,</span> <span class="n">arg</span><span class="p">),</span>
+                        <span class="nb">getattr</span><span class="p">(</span><span class="n">dut</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2">_valid&quot;</span><span class="p">),</span>
+                        <span class="nb">getattr</span><span class="p">(</span><span class="n">dut</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2">_ready&quot;</span><span class="p">),</span>
+                    <span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">input_drivers</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+
+            <span class="c1"># Instantiate as many monitors as required outputs</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes_out</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;results&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="s2">&quot;data_out&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">output_monitors</span><span class="p">[</span><span class="n">result</span><span class="p">]</span> <span class="o">=</span> <span class="n">StreamMonitor</span><span class="p">(</span>
+                        <span class="n">dut</span><span class="o">.</span><span class="n">clk</span><span class="p">,</span>
+                        <span class="nb">getattr</span><span class="p">(</span><span class="n">dut</span><span class="p">,</span> <span class="n">result</span><span class="p">),</span>
+                        <span class="nb">getattr</span><span class="p">(</span><span class="n">dut</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">_valid&quot;</span><span class="p">),</span>
+                        <span class="nb">getattr</span><span class="p">(</span><span class="n">dut</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">_ready&quot;</span><span class="p">),</span>
+                        <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">output_monitors</span><span class="p">[</span><span class="n">result</span><span class="p">]</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">model</span>
+
+            <span class="c1"># To do: precision per input argument</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input_precision</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="s2">&quot;data_in_0&quot;</span><span class="p">][</span>
+                <span class="s2">&quot;precision&quot;</span>
+            <span class="p">]</span>
+
+        <span class="k">def</span> <span class="nf">generate_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batches</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Generate inputs for the model by sampling a random tensor</span>
+<span class="sd">            for each input argument, according to its shape</span>
+
+<span class="sd">            :param batches: number of batches to generate for each argument</span>
+<span class="sd">            :type batches: int</span>
+<span class="sd">            :return: a dictionary of input arguments and their corresponding tensors</span>
+<span class="sd">            :rtype: Dict</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="c1"># ! TO DO: iterate through graph.args instead to generalize</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes_in</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">arg</span><span class="p">,</span> <span class="n">arg_info</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="c1"># Batch dimension always set to 1 in metadata</span>
+                    <span class="k">if</span> <span class="s2">&quot;data_in&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">arg</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="c1"># print(f&quot;Generating data for node {node}, arg {arg}: {arg_info}&quot;)</span>
+                    <span class="n">inputs</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(([</span><span class="n">batches</span><span class="p">]</span> <span class="o">+</span> <span class="n">arg_info</span><span class="p">[</span><span class="s2">&quot;shape&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">:]))</span>
+            <span class="k">return</span> <span class="n">inputs</span>
+
+        <span class="k">def</span> <span class="nf">load_drivers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_tensors</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">arg</span><span class="p">,</span> <span class="n">arg_batches</span> <span class="ow">in</span> <span class="n">in_tensors</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="c1"># Quantize input tensor according to precision</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_precision</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="kn">from</span> <span class="nn">mase_cocotb.utils</span> <span class="kn">import</span> <span class="n">fixed_preprocess_tensor</span>
+
+                    <span class="n">in_data_blocks</span> <span class="o">=</span> <span class="n">fixed_preprocess_tensor</span><span class="p">(</span>
+                        <span class="n">tensor</span><span class="o">=</span><span class="n">arg_batches</span><span class="p">,</span>
+                        <span class="n">q_config</span><span class="o">=</span><span class="p">{</span>
+                            <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span><span class="si">}</span><span class="s2">_PRECISION_0&quot;</span><span class="p">),</span>
+                            <span class="s2">&quot;frac_width&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span>
+                                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span><span class="si">}</span><span class="s2">_PRECISION_1&quot;</span>
+                            <span class="p">),</span>
+                        <span class="p">},</span>
+                        <span class="n">parallelism</span><span class="o">=</span><span class="p">[</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span><span class="si">}</span><span class="s2">_PARALLELISM_DIM_1&quot;</span><span class="p">),</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span><span class="si">}</span><span class="s2">_PARALLELISM_DIM_0&quot;</span><span class="p">),</span>
+                        <span class="p">],</span>
+                    <span class="p">)</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># TO DO: convert to integer equivalent of floating point representation</span>
+                    <span class="k">pass</span>
+
+                <span class="c1"># Append all input blocks to input driver</span>
+                <span class="c1"># ! TO DO: generalize</span>
+                <span class="n">block_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span>
+                    <span class="s2">&quot;DATA_IN_0_PARALLELISM_DIM_0&quot;</span>
+                <span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="s2">&quot;DATA_IN_0_PARALLELISM_DIM_1&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">in_data_blocks</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">block_size</span><span class="p">:</span>
+                        <span class="n">block</span> <span class="o">=</span> <span class="n">block</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">block_size</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="p">))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">input_drivers</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">load_monitors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expectation</span><span class="p">):</span>
+            <span class="kn">from</span> <span class="nn">mase_cocotb.utils</span> <span class="kn">import</span> <span class="n">fixed_preprocess_tensor</span>
+
+            <span class="c1"># Process the expectation tensor</span>
+            <span class="n">output_blocks</span> <span class="o">=</span> <span class="n">fixed_preprocess_tensor</span><span class="p">(</span>
+                <span class="n">tensor</span><span class="o">=</span><span class="n">expectation</span><span class="p">,</span>
+                <span class="n">q_config</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DATA_OUT_0_PRECISION_0&quot;</span><span class="p">),</span>
+                    <span class="s2">&quot;frac_width&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DATA_OUT_0_PRECISION_1&quot;</span><span class="p">),</span>
+                <span class="p">},</span>
+                <span class="n">parallelism</span><span class="o">=</span><span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DATA_OUT_0_PARALLELISM_DIM_1&quot;</span><span class="p">),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DATA_OUT_0_PARALLELISM_DIM_0&quot;</span><span class="p">),</span>
+                <span class="p">],</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Set expectation for each monitor</span>
+            <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">output_blocks</span><span class="p">:</span>
+                <span class="c1"># ! TO DO: generalize to multi-output models</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="s2">&quot;DATA_OUT_0_PARALLELISM_DIM_0&quot;</span><span class="p">):</span>
+                    <span class="n">block</span> <span class="o">=</span> <span class="n">block</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="s2">&quot;DATA_OUT_0_PARALLELISM_DIM_0&quot;</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">output_monitors</span><span class="p">[</span><span class="s2">&quot;data_out_0&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+
+            <span class="c1"># Drive the in-flight flag for each monitor</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_monitors</span><span class="p">[</span><span class="s2">&quot;data_out_0&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">in_flight</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># Serialize testbench object to be instantiated within test by cocotb runner</span>
+    <span class="n">cls_obj</span> <span class="o">=</span> <span class="n">MaseGraphTB</span>
+    <span class="n">tb_path</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;.mase&quot;</span> <span class="o">/</span> <span class="s2">&quot;top&quot;</span> <span class="o">/</span> <span class="s2">&quot;hardware&quot;</span> <span class="o">/</span> <span class="s2">&quot;test&quot;</span> <span class="o">/</span> <span class="s2">&quot;mase_top_tb&quot;</span>
+    <span class="n">tb_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">tb_path</span> <span class="o">/</span> <span class="s2">&quot;tb_obj.dill&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">dill</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">cls_obj</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">tb_path</span> <span class="o">/</span> <span class="s2">&quot;__init__.py&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;from .test import test&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="emit_cocotb_transform_pass">
+<a class="viewcode-back" href="../../../../../../modules/api/transform/verilog.html#chop.passes.graph.transforms.verilog.emit_cocotb_transform_pass">[docs]</a>
+<span class="k">def</span> <span class="nf">emit_cocotb_transform_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="p">{}):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Emit test bench and related files for simulation</span>
+
+<span class="sd">    :param graph: a MaseGraph</span>
+<span class="sd">    :type graph: MaseGraph</span>
+<span class="sd">    :param pass_args: this pass requires additional arguments which is explained below, defaults to {}</span>
+<span class="sd">    :type pass_args: _type_, optional</span>
+<span class="sd">    :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)</span>
+<span class="sd">    :rtype: tuple(MaseGraph, Dict)</span>
+
+<span class="sd">    - pass_args</span>
+<span class="sd">        - project_dir -&gt; str : the directory of the project</span>
+<span class="sd">        - trace -&gt; bool : trace waves in the simulation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Emitting testbench...&quot;</span><span class="p">)</span>
+    <span class="n">project_dir</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">pass_args</span><span class="p">[</span><span class="s2">&quot;project_dir&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;project_dir&quot;</span> <span class="ow">in</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">else</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;.mase&quot;</span> <span class="o">/</span> <span class="s2">&quot;top&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">init_project</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span>
+
+    <span class="n">_emit_cocotb_test</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_args</span><span class="p">)</span>
+    <span class="n">_emit_cocotb_tb</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">graph</span><span class="p">,</span> <span class="kc">None</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

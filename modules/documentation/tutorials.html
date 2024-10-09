@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tutorials &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_style.css?v=678fb11e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/modern.css?v=803738c0" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-test-results/common.css?v=9ec2c1d5" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+        <script src="../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+        <script src="../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+        <script src="../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+        <script src="../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Deploy a BERT model on an FPGA" href="tutorials/common/bert_emit.html" />
+    <link rel="prev" title="Additional Instructions for Imperial College Students" href="getting_started/Get-started-students.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#common-usage-examples">Common Usage Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/common/bert_emit.html">Deploy a BERT model on an FPGA</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#interactive-usage-with-python">Interactive Usage with Python</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/common/interactive.html">Importing MASE as a Python package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/common/interactive_quantize.html">Importing MASE Quantizers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#the-mase-command-line-system">The MASE Command Line System</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/actions/train/simple_train_flow.html">Run the train action with the CLI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/actions/transform/cli_transform.html">Run the transform action with the CLI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/actions/search/mixed_precision_search_on_mase_graph.html">Mixed-precision search on MASE Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/actions/search/mixed_precision_search_on_manual_model.html">Mixed-precision search on manual model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#the-mase-pass-system">The MASE Pass System</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/passes/module_and_pass.html">MaseModule Passes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/passes/graph_and_pass.html">MaseGraph and MaseGraph Passes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#advanced-topics">Advanced Topics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/Add-model-to-machop.html">Guide on how to add a new model into Machop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/stat_to_ternary_q_config.html">How to use the Statistics Pass Combined with the Ternary Quantiser</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/doc_writing.html">How to write documentations in MASE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/passes/interface/masert/tensorrt/tensorRT_quantization_tutorial.html">TensorRT Quantization Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/passes/interface/masert/onnxrt/onnxrt_quantization_tutorial.html">ONNX Runtime Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/actions/search/how_to_extend_search.html">How to extend search</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/accelerate_fsdp.html">Accelerate FSDP</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/actions.html">chop.actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/datasets.html">chop.datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/distributed.html">chop.distributed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/ir.html">chop.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/models.html">chop.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/nn.html">chop.nn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/passes.html">chop.passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/tools.html">chop.tools</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Tutorials</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/modules/documentation/tutorials.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="tutorials">
+<h1>Tutorials<a class="headerlink" href="#tutorials" title="Link to this heading"></a></h1>
+<section id="common-usage-examples">
+<h2>Common Usage Examples<a class="headerlink" href="#common-usage-examples" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/common/bert_emit.html">Deploy a BERT model on an FPGA</a></li>
+</ul>
+</div>
+</section>
+<section id="interactive-usage-with-python">
+<h2>Interactive Usage with Python<a class="headerlink" href="#interactive-usage-with-python" title="Link to this heading"></a></h2>
+<p>You can directly import MASE as a package using <cite>import mase</cite> after installation</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/common/interactive.html">Importing MASE as a Python package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/common/interactive_quantize.html">Importing MASE Quantizers</a></li>
+</ul>
+</div>
+</section>
+<section id="the-mase-command-line-system">
+<h2>The MASE Command Line System<a class="headerlink" href="#the-mase-command-line-system" title="Link to this heading"></a></h2>
+<p>MASE supported a range of <cite>actions</cite> (eg. <cite>train</cite>, <cite>test</cite>, <cite>transform</cite> …), these are designed to help you to quickly spin things in your command line without touching the source code.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/actions/train/simple_train_flow.html">Run the train action with the CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/actions/transform/cli_transform.html">Run the transform action with the CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/actions/search/mixed_precision_search_on_mase_graph.html">Mixed-precision search on MASE Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/actions/search/mixed_precision_search_on_manual_model.html">Mixed-precision search on manual model</a></li>
+</ul>
+</div>
+<p>For simplicity, we summarized the following commands for you to quickly start with MASE Command Line System:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Basic training and testing</span>
+<span class="c1">## training</span>
+./ch<span class="w"> </span>train<span class="w"> </span>jsc-tiny<span class="w"> </span>jsc<span class="w"> </span>--max-epochs<span class="w"> </span><span class="m">3</span><span class="w"> </span>--batch-size<span class="w"> </span><span class="m">256</span><span class="w"> </span>--accelerator<span class="w"> </span>cpu<span class="w"> </span>--project<span class="w"> </span>tmp<span class="w"> </span>--debug
+<span class="c1">## test</span>
+./ch<span class="w"> </span><span class="nb">test</span><span class="w"> </span>jsc-tiny<span class="w"> </span>jsc<span class="w"> </span>--accelerator<span class="w"> </span>cpu<span class="w"> </span>--debug<span class="w"> </span>--load<span class="w"> </span>../mase_output/tmp/software/training_ckpts/best.ckpt<span class="w"> </span>--load-type<span class="w"> </span>pl
+
+<span class="c1"># Graph-level</span>
+<span class="c1">## transfrom on graph level</span>
+./ch<span class="w"> </span>transform<span class="w"> </span>--config<span class="w"> </span><span class="nv">$MASE</span>/configs/examples/jsc_toy_by_type.toml<span class="w"> </span>--task<span class="w"> </span>cls<span class="w"> </span>--accelerator<span class="o">=</span>cpu<span class="w"> </span>--load<span class="w"> </span>../mase_output/tmp/software/training_ckpts/best.ckpt<span class="w"> </span>--load-type<span class="w"> </span>pl
+<span class="c1">## search command</span>
+./ch<span class="w"> </span>search<span class="w"> </span>--config<span class="w"> </span><span class="nv">$MASE</span>/configs/examples/jsc_toy_by_type.toml<span class="w"> </span>--task<span class="w"> </span>cls<span class="w"> </span>--accelerator<span class="o">=</span>cpu<span class="w"> </span>--load<span class="w"> </span>../mase_output/tmp/software/training_ckpts/best.ckpt<span class="w"> </span>--load-type<span class="w"> </span>pl
+<span class="c1">## train searched network</span>
+./ch<span class="w"> </span>train<span class="w"> </span>jsc-tiny<span class="w"> </span>jsc<span class="w"> </span>--max-epochs<span class="w"> </span><span class="m">3</span><span class="w"> </span>--batch-size<span class="w"> </span><span class="m">256</span><span class="w"> </span>--accelerator<span class="w"> </span>cpu<span class="w"> </span>--project<span class="w"> </span>tmp<span class="w"> </span>--debug<span class="w"> </span>--load<span class="w"> </span>../mase_output/jsc-tiny/software/transform/transformed_ckpt/graph_module.mz<span class="w"> </span>--load-type<span class="w"> </span>mz
+
+<span class="c1"># Module-level</span>
+<span class="c1">## transfrom on module level</span>
+./ch<span class="w"> </span>transform<span class="w"> </span>--config<span class="w"> </span><span class="nv">$MASE</span>/configs/examples/jsc_toy_by_type_module.toml<span class="w"> </span>--task<span class="w"> </span>cls<span class="w"> </span>--accelerator<span class="o">=</span>cpu<span class="w"> </span>--load<span class="w"> </span>../mase_output/tmp/software/training_ckpts/best.ckpt<span class="w"> </span>--load-type<span class="w"> </span>pl
+<span class="c1">## train the transformed network</span>
+./ch<span class="w"> </span>train<span class="w"> </span>jsc-tiny<span class="w"> </span>jsc<span class="w"> </span>--max-epochs<span class="w"> </span><span class="m">3</span><span class="w"> </span>--batch-size<span class="w"> </span><span class="m">256</span><span class="w"> </span>--accelerator<span class="w"> </span>cpu<span class="w"> </span>--project<span class="w"> </span>tmp<span class="w"> </span>--debug<span class="w"> </span>--load<span class="w"> </span>../mase_output/jsc-tiny/software/transform/transformed_ckpt/state_dict.pt<span class="w"> </span>--load-type<span class="w"> </span>pt
+</pre></div>
+</div>
+</section>
+<section id="the-mase-pass-system">
+<h2>The MASE Pass System<a class="headerlink" href="#the-mase-pass-system" title="Link to this heading"></a></h2>
+<p>One specific feature of MASE is its capability to transform DL models to a computation graph and apply analysis or transformation passes on the graph.</p>
+<p>In MASE, we support two granularities on these passes, namely <cite>module</cite> level and <cite>graph</cite> level:</p>
+<ul class="simple">
+<li><p><cite>module</cite> level passes: this only provides coarse-grained control over any <cite>torch.nn.Module</cite> in the model. We refer this as Module Passes.</p></li>
+<li><p><cite>graph</cite> level passes: this provides fine-grained control over the computation graph of the model using the <a class="reference external" href="https://pytorch.org/docs/stable/fx.html">torch.fx</a> framework. This also nessitates the use of <cite>torch.fx</cite> to represent the computation graph.  We provide a set of APIs to convert a model to a <cite>MASEGraph</cite>, starting from the <a class="reference external" href="https://github.com/DeepWok/mase/blob/main/docs/labs/lab2_transform_no_CLI.ipynb">Notebook</a>.</p></li>
+</ul>
+<p>These tutorials will guide you through the process of creating and applying passes.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/passes/module_and_pass.html">MaseModule Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/passes/graph_and_pass.html">MaseGraph and MaseGraph Passes</a></li>
+</ul>
+</div>
+</section>
+<section id="advanced-topics">
+<h2>Advanced Topics<a class="headerlink" href="#advanced-topics" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/Add-model-to-machop.html">Guide on how to add a new model into Machop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/stat_to_ternary_q_config.html">How to use the Statistics Pass Combined with the Ternary Quantiser</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/doc_writing.html">How to write documentations in MASE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/passes/interface/masert/tensorrt/tensorRT_quantization_tutorial.html">TensorRT Quantization Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/passes/interface/masert/onnxrt/onnxrt_quantization_tutorial.html">ONNX Runtime Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/actions/search/how_to_extend_search.html">How to extend search</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/accelerate_fsdp.html">Accelerate FSDP</a></li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="getting_started/Get-started-students.html" class="btn btn-neutral float-left" title="Additional Instructions for Imperial College Students" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tutorials/common/bert_emit.html" class="btn btn-neutral float-right" title="Deploy a BERT model on an FPGA" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

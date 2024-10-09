@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Getting Started &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_style.css?v=678fb11e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/modern.css?v=803738c0" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-test-results/common.css?v=9ec2c1d5" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+        <script src="../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+        <script src="../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+        <script src="../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+        <script src="../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Getting Started using Nix (Suggested, includes Common Troubleshooting)" href="getting_started/Get-started-using-Nix.html" />
+    <link rel="prev" title="Welcome to Machop’s documentation!" href="../../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting_started/Get-started-using-Nix.html">Getting Started using Nix (Suggested, includes Common Troubleshooting)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started/Get-started-using-Docker.html">Getting Started using Docker (Suggested)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started/Get-started-using-Anaconda.html">Getting Started using Conda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started/Get-started-students.html">Additional Instructions for Imperial College Students</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#import-a-model">Import a model</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/actions.html">chop.actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/datasets.html">chop.datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/distributed.html">chop.distributed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/ir.html">chop.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/models.html">chop.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/nn.html">chop.nn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/passes.html">chop.passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/tools.html">chop.tools</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Getting Started</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/modules/documentation/getting_started.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h1>
+<p>To use MASE, you can easily create an environment with all required dependendies using Docker or Anaconda. Follow the instructions on the links below according to your preferred method.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Some parts of the flow may assume you have a version of Vivado/Vitis installed. Other parts, such as the emit verilog flow, require Verilator, which is included in the Docker container, but not on the Conda environment. If you prefer using Conda, you can just install Verilator locally.</p>
+</div>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started/Get-started-using-Nix.html">Getting Started using Nix (Suggested, includes Common Troubleshooting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started/Get-started-using-Docker.html">Getting Started using Docker (Suggested)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started/Get-started-using-Anaconda.html">Getting Started using Conda</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started/Get-started-students.html">Additional Instructions for Imperial College Students</a></li>
+</ul>
+</div>
+<section id="import-a-model">
+<h2>Import a model<a class="headerlink" href="#import-a-model" title="Link to this heading"></a></h2>
+<p>To import a model into MASE and use all its features, the following options are available.</p>
+<ul>
+<li><p>Generate a MaseGraph from a torch.nn.Module instance.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Since the MASE IR is based on <a class="reference external" href="https://pytorch.org/docs/stable/fx.html">Torch FX</a>, symbolic tracing limitations apply to this method, namely models with control flow cannot be traced (see <a class="reference external" href="https://pytorch.org/docs/stable/fx.html#limitations-of-symbolic-tracing">documentation</a>).</p></li>
+<li><p>Exising Pytorch models can be patched to remove control and run symbolic tracing (see <a class="reference external" href="https://github.com/DeepWok/mase/tree/main/machop/chop/models/patched">here</a> for examples).</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">from</span> <span class="nn">chop</span> <span class="kn">import</span> <span class="n">MaseGraph</span>
+
+<span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="o">...</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">MyModel</span><span class="p">()</span>
+<span class="n">mg</span> <span class="o">=</span> <span class="n">MaseGraph</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul>
+<li><p>Import a model using the ONNX backend.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>HuggingFace models can be imported using the <code class="code docutils literal notranslate"><span class="pre">MaseOnnxGraph.from_pretrained</span></code> method, which first exports an ONNX representation of the model, then imports it into MASE. See list of supported models <a class="reference external" href="https://huggingface.co/docs/optimum/en/exporters/onnx/overview">here</a>.</p></li>
+<li><p>Any other ONNX models can be directly imported using the <code class="code docutils literal notranslate"><span class="pre">export_fx_graph</span></code> analysis pass.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">chop</span> <span class="kn">import</span> <span class="n">MaseOnnxGraph</span>
+<span class="kn">from</span> <span class="nn">chop.passes</span> <span class="n">export_fx_graph_analysis_pass</span>
+
+<span class="n">pretrained</span> <span class="o">=</span> <span class="s2">&quot;bert-base-uncased&quot;</span>
+<span class="n">og</span> <span class="o">=</span> <span class="n">MaseOnnxGraph</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">pretrained</span><span class="p">)</span>
+<span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">export_fx_graph_analysis_pass</span><span class="p">(</span><span class="n">og</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../../index.html" class="btn btn-neutral float-left" title="Welcome to Machop’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="getting_started/Get-started-using-Nix.html" class="btn btn-neutral float-right" title="Getting Started using Nix (Suggested, includes Common Troubleshooting)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

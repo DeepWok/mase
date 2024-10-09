@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fixed-Point ELU Layer &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_style.css?v=678fb11e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/modern.css?v=803738c0" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-test-results/common.css?v=9ec2c1d5" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+        <script src="../../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+        <script src="../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+        <script src="../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+        <script src="../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+        <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../documentation/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../documentation/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../documentation/roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../documentation/specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/actions.html">chop.actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/datasets.html">chop.datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/distributed.html">chop.distributed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/ir.html">chop.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/models.html">chop.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/nn.html">chop.nn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/passes.html">chop.passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/tools.html">chop.tools</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Fixed-Point ELU Layer</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/modules/hardware/activations/fixed_elu.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="fixed-point-elu-layer">
+<h1>Fixed-Point ELU Layer<a class="headerlink" href="#fixed-point-elu-layer" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">fixed_elu</span></code> module implements the <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.ELU.html">Pytorch ELU</a> layer. Given the input tensor <span class="math notranslate nohighlight">\(x \in \R^{m x n}\)</span>, <code class="docutils literal notranslate"><span class="pre">fixed_ELU</span></code> returns <span class="math notranslate nohighlight">\(y \in \R^{m x n}\)</span>.</p>
+<p><span class="math notranslate nohighlight">\(
+\text{ELU}(x) = \begin{cases}
+x, \text{ if } x \gt 0\\
+\alpha * (\exp(x) - 1), \text{ if } x \leq 0
+\end{cases}
+\)</span></p>
+<p>This function is applied elementwise to the input tensor. For example, taking <span class="math notranslate nohighlight">\(m = n = 2\)</span>:</p>
+<p>ELU(<span class="math notranslate nohighlight">\(x\)</span>) = <span class="math notranslate nohighlight">\( ELU(\begin{bmatrix}
+x_1 &amp; x_2 \\
+x_3 &amp; x_4 \\
+\end{bmatrix})\)</span> = <span class="math notranslate nohighlight">\( \begin{bmatrix} ELU(x_1) &amp; ELU(x_2) \\
+ELU(x_3) &amp; ELU(x_4) \\
+\end{bmatrix}\)</span></p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">fixed_ELU</span></code> module follows the dataflow streaming protocol and works by employing a table mapping which is used to compute the ELU function. The table is generated during the emit verilog pass and is used to compute the ELU function in a single cycle with input and output quantization to the desired precision. This can be instantiated using LUTs or BRAM (memory).</p>
+<p>The module has the following parameters, following the hardware metadata standard (see <a class="reference external" href="https://deepwok.github.io/mase/modules/api/analysis/add_metadata.html#add-hardware-metadata-analysis-pass">here</a>). Besides <code class="docutils literal notranslate"><span class="pre">PRECISION_DIM_*</span></code> parameters, which dictate the numerical precision, and <code class="docutils literal notranslate"><span class="pre">TENSOR_SIZE_DIM_*</span></code>, which is directly inferred from Pytorch tensor shapes, the following parameters can be adjusted to affect hardware performance.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Default Value</p></th>
+<th class="head"><p>Definition</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>DATA_IN_0_PARALLELISM_DIM_0</p></td>
+<td><p>4</p></td>
+<td><p>Number of elements per transaction at the input interface. Impacts the area usage by increasing the required FIFO length (only required with different input and output parallelisms)</p></td>
+</tr>
+<tr class="row-odd"><td><p>DATA_IN_0_PARALLELISM_DIM_1</p></td>
+<td><p>4</p></td>
+<td><p>Number of elements per transaction at the input interface. Impacts the area usage by increasing the required FIFO length (only required with different input and output parallelisms)</p></td>
+</tr>
+<tr class="row-even"><td><p>DATA_IN_0_PARALLELISM_DIM_0</p></td>
+<td><p>DATA_IN_0_PARALLELISM_DIM_0</p></td>
+<td><p>Number of elements per transaction at the output interface, this is what controls the number of read-only memories or LUTs that are instantiated.</p></td>
+</tr>
+<tr class="row-odd"><td><p>DATA_OUT_0_PARALLELISM_DIM_1</p></td>
+<td><p>DATA_IN_0_PARALLELISM_DIM_1</p></td>
+<td><p>Number of elements per transaction at the output interface, this is what controls the number of read-only memories or LUTs that are instantiated.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="latency-analysis">
+<h2><a name="latency_analaysis"></a> Latency Analysis<a class="headerlink" href="#latency-analysis" title="Link to this heading"></a></h2>
+<p>The time taken to compute a ELU layer using the <code class="docutils literal notranslate"><span class="pre">fixed_ELU</span></code> module, <span class="math notranslate nohighlight">\(L_{ELU}\)</span> depends entirely on the operating frequency of the hardware. The implemented designs operate combinatorially, this will be ideal in the majority of cases due to the read only nature of the memories and lack of arithemtic logic resulting in a short critical path. The latency can be calculated as follows: <span class="math notranslate nohighlight">\(\frac{1}{f_{clk}}\)</span> where <span class="math notranslate nohighlight">\(f_{clk}\)</span> is the operating frequency of the hardware.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>chop.passes.graph.interface.onnxrt.onnx_runtime &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common_css/need_style.css?v=678fb11e" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/modern.css?v=803738c0" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-test-results/common.css?v=9ec2c1d5" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../../../../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+        <script src="../../../../../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+        <script src="../../../../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+        <script src="../../../../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+        <script src="../../../../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script src="../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/actions.html">chop.actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/datasets.html">chop.datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/distributed.html">chop.distributed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/ir.html">chop.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/models.html">chop.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/nn.html">chop.nn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/passes.html">chop.passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/tools.html">chop.tools</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">chop.passes.graph.interface.onnxrt.onnx_runtime</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for chop.passes.graph.interface.onnxrt.onnx_runtime</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">prettytable</span> <span class="kn">import</span> <span class="n">PrettyTable</span>
+<span class="kn">import</span> <span class="nn">onnx</span>
+<span class="kn">import</span> <span class="nn">onnxruntime</span> <span class="k">as</span> <span class="nn">ort</span>
+<span class="kn">from</span> <span class="nn">...transforms.onnxrt.quantize</span> <span class="kn">import</span> <span class="n">Quantizer</span>
+
+
+<div class="viewcode-block" id="onnx_runtime_interface_pass">
+<a class="viewcode-back" href="../../../../../../modules/api/interface/onnxrt.html#chop.passes.graph.interface.onnxrt.onnx_runtime.onnx_runtime_interface_pass">[docs]</a>
+<span class="k">def</span> <span class="nf">onnx_runtime_interface_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a PyTorch model within a MaseGraph to ONNX format and performs quantization as specified in the configuration.</span>
+
+<span class="sd">    This function facilitates the conversion of a PyTorch model to ONNX format, leveraging ONNX Runtime (ONNXRT) for potential quantization and optimization. Depending on the `precision` parameter set in `passes.onnxruntime.default.config`, the model can be quantized to various numeric precisions including INT8, UINT8, INT16, UINT16, or FP16, affecting the model&#39;s performance and latency. Notably, INT8 and UINT8 quantization typically yield significant latency improvements at the potential cost of reduced model performance.</span>
+
+<span class="sd">    :param graph: The model graph to be processed and quantized.</span>
+<span class="sd">    :type graph: MaseGraph</span>
+<span class="sd">    :param pass_args: Configuration arguments for the ONNX Runtime session, specifying details such as quantization type, precision, and calibration data.</span>
+<span class="sd">    :type pass_args: dict, optional</span>
+<span class="sd">    :return: A tuple containing the original graph and a dictionary with the path to the quantized ONNX model and quantization metadata.</span>
+<span class="sd">    :rtype: tuple(MaseGraph, dict)</span>
+
+<span class="sd">    The quantization process supports three methodologies:</span>
+<span class="sd">    - **Static Quantization**: Utilizes a calibration dataset to calculate scale and zero points for activations offline, providing consistent quantization parameters across all forward passes. Requires setting `num_calibration_batches` to define the calibration dataset size.</span>
+<span class="sd">    - **Dynamic Quantization**: Calculates scale and zero points on-the-fly during each forward pass, offering potentially higher accuracy at the cost of additional computational overhead.</span>
+<span class="sd">    - **Auto Mixed Precision Quantization**: Automatically balances FP16 and FP32 precisions to maintain accuracy levels, particularly suitable for GPU execution. This process is automatic and requires no specific precision setting in the configuration.</span>
+
+<span class="sd">    Please note that not all modules may be supported for the specified quantization types. Refer to the [ONNX Runtime documentation](https://onnxruntime.ai/docs/) for more information.</span>
+
+<span class="sd">    The function also prepares the model by applying pre-processing optimizations before quantization, storing intermediate models in a designated `pre_processed` directory. The final quantized models are stored in a structured directory format under `mase_output/onnxrt`.</span>
+
+<span class="sd">    Directory structure for model storage:</span>
+<span class="sd">    ```</span>
+<span class="sd">    mase_output</span>
+<span class="sd">    └── onnxrt</span>
+<span class="sd">        └── model_task_dataset_date</span>
+<span class="sd">            ├── optimized</span>
+<span class="sd">            ├── pre_processed</span>
+<span class="sd">            ├── static_quantized</span>
+<span class="sd">            └── dynamic_quantized</span>
+<span class="sd">    ```</span>
+
+<span class="sd">    Example of usage:</span>
+
+<span class="sd">        graph = MaseGraph(...)</span>
+<span class="sd">        processed_graph, metadata = onnx_runtime_interface_pass(graph, {&#39;precision&#39;: &#39;int8&#39;, &#39;quantization_type&#39;: &#39;static&#39;})</span>
+
+<span class="sd">    This example demonstrates how to invoke the ONNX Runtime interface pass, specifying INT8 precision and static quantization type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">onnx_runtime_session</span> <span class="o">=</span> <span class="n">ONNXRuntime</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">pass_args</span><span class="p">)</span>
+    <span class="n">pytorch_model</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">model</span>
+
+    <span class="n">onnx_model_path</span> <span class="o">=</span> <span class="n">onnx_runtime_session</span><span class="o">.</span><span class="n">pytorch_to_onnx</span><span class="p">(</span><span class="n">pytorch_model</span><span class="p">)</span>
+    <span class="n">onnx_model_graph</span> <span class="o">=</span> <span class="n">onnx_runtime_session</span><span class="o">.</span><span class="n">load_onnx</span><span class="p">(</span><span class="n">onnx_model_path</span><span class="p">)</span><span class="o">.</span><span class="n">graph</span>
+    <span class="n">onnx_runtime_session</span><span class="o">.</span><span class="n">summarize_ONNX_graph</span><span class="p">(</span><span class="n">onnx_model_graph</span><span class="p">)</span>
+    <span class="n">quant_meta</span> <span class="o">=</span> <span class="n">onnx_runtime_session</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">onnx_model_path</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">graph</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;onnx_path&quot;</span><span class="p">:</span> <span class="n">onnx_model_path</span><span class="p">,</span> <span class="o">**</span><span class="n">quant_meta</span><span class="p">}</span></div>
+
+
+
+<span class="k">class</span> <span class="nc">ONNXRuntime</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_prepare_save_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">quantized_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates and returns a save path for the model.&quot;&quot;&quot;</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+        <span class="n">current_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">model_dir</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;task&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;dataset&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">current_date</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="n">save_dir</span> <span class="o">=</span> <span class="n">root</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;mase_output/onnxrt/</span><span class="si">{</span><span class="n">model_dir</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">quantized_type</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">save_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">existing_versions</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">save_dir</span><span class="p">))</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;version_0&quot;</span> <span class="k">if</span> <span class="n">existing_versions</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;version_</span><span class="si">{</span><span class="n">existing_versions</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">save_dir</span> <span class="o">=</span> <span class="n">save_dir</span> <span class="o">/</span> <span class="n">version</span>
+        <span class="n">save_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">save_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;model.onnx&quot;</span>
+
+    <span class="k">def</span> <span class="nf">pytorch_to_onnx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Converts PyTorch model to ONNX format and saves it.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Converting PyTorch model to ONNX...&quot;</span><span class="p">)</span>
+        <span class="n">save_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_save_path</span><span class="p">(</span><span class="s2">&quot;optimized&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Project will be created at </span><span class="si">{</span><span class="n">save_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># ensure model is on the appropriate device</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;accelerator&quot;</span><span class="p">])</span>
+
+        <span class="n">dataloader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_module&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">train_dataloader</span><span class="p">()</span>
+        <span class="n">train_sample</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">dataloader</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">train_sample</span> <span class="o">=</span> <span class="n">train_sample</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;accelerator&quot;</span><span class="p">])</span>
+
+        <span class="n">torch</span><span class="o">.</span><span class="n">onnx</span><span class="o">.</span><span class="n">export</span><span class="p">(</span>
+            <span class="n">model</span><span class="p">,</span>
+            <span class="n">train_sample</span><span class="p">,</span>
+            <span class="n">save_path</span><span class="p">,</span>
+            <span class="n">export_params</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">opset_version</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span>
+            <span class="n">do_constant_folding</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;input&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ONNX Conversion Complete. Stored ONNX model to </span><span class="si">{</span><span class="n">save_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">onnx_path</span> <span class="o">=</span> <span class="n">save_path</span>
+
+        <span class="k">return</span> <span class="n">save_path</span>
+
+    <span class="k">def</span> <span class="nf">summarize_ONNX_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="c1"># Initialize a PrettyTable to display the summary</span>
+        <span class="n">summary_table</span> <span class="o">=</span> <span class="n">PrettyTable</span><span class="p">()</span>
+        <span class="n">summary_table</span><span class="o">.</span><span class="n">field_names</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;Index&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Name&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Type&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Inputs&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Outputs&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Attributes&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="c1"># Parse through the model&#39;s graph</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">):</span>
+            <span class="c1"># Gather node information</span>
+            <span class="n">node_name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">&quot;Node_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="c1"># Some nodes might not have names</span>
+            <span class="n">node_type</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">op_type</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span> <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">input</span><span class="p">]</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">output</span><span class="p">]</span>
+            <span class="n">attributes</span> <span class="o">=</span> <span class="p">[</span><span class="n">attr</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">attribute</span><span class="p">]</span>
+
+            <span class="c1"># Add information to the table</span>
+            <span class="n">summary_table</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">index</span><span class="p">,</span>
+                    <span class="n">node_name</span><span class="p">,</span>
+                    <span class="n">node_type</span><span class="p">,</span>
+                    <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span>
+                    <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
+                    <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">attributes</span><span class="p">),</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ONNX Model Summary: </span><span class="se">\n</span><span class="si">{</span><span class="n">summary_table</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="c1"># only quantize is set in the default config</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">][</span><span class="s2">&quot;config&quot;</span><span class="p">][</span><span class="s2">&quot;quantize&quot;</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Quantization is not set in default config. Skipping quantization.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">][</span><span class="s2">&quot;config&quot;</span><span class="p">][</span><span class="s2">&quot;quantize&quot;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+
+        <span class="n">quantizer</span> <span class="o">=</span> <span class="n">Quantizer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">quant_types</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">][</span><span class="s2">&quot;config&quot;</span><span class="p">][</span><span class="s2">&quot;quantize_types&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
+            <span class="n">quant_types</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;static&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Pre-process the model adding further optimizations and store to prep_path</span>
+        <span class="n">prep_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_save_path</span><span class="p">(</span><span class="s2">&quot;pre_processed&quot;</span><span class="p">)</span>
+        <span class="n">quantizer</span><span class="o">.</span><span class="n">pre_process</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span> <span class="n">prep_path</span><span class="p">)</span>
+        <span class="n">quant_models</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">quant_type</span> <span class="ow">in</span> <span class="n">quant_types</span><span class="p">:</span>
+            <span class="k">match</span> <span class="n">quant_type</span><span class="p">:</span>
+                <span class="k">case</span> <span class="s2">&quot;static&quot;</span><span class="p">:</span>
+                    <span class="n">quantized_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_save_path</span><span class="p">(</span><span class="s2">&quot;static_quantized&quot;</span><span class="p">)</span>
+                    <span class="n">quantizer</span><span class="o">.</span><span class="n">quantize_static</span><span class="p">(</span><span class="n">prep_path</span><span class="p">,</span> <span class="n">quantized_path</span><span class="p">)</span>
+                    <span class="n">quant_models</span><span class="p">[</span><span class="s2">&quot;onnx_static_quantized_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">quantized_path</span>
+                <span class="k">case</span> <span class="s2">&quot;dynamic&quot;</span><span class="p">:</span>
+                    <span class="n">quantized_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_save_path</span><span class="p">(</span><span class="s2">&quot;dynamic_quantized&quot;</span><span class="p">)</span>
+                    <span class="n">quantizer</span><span class="o">.</span><span class="n">quantize_dynamic</span><span class="p">(</span><span class="n">prep_path</span><span class="p">,</span> <span class="n">quantized_path</span><span class="p">)</span>
+                    <span class="n">quant_models</span><span class="p">[</span><span class="s2">&quot;onnx_dynamic_quantized_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">quantized_path</span>
+                <span class="k">case</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
+                    <span class="n">quantized_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_save_path</span><span class="p">(</span><span class="s2">&quot;auto_quantized&quot;</span><span class="p">)</span>
+                    <span class="n">quantizer</span><span class="o">.</span><span class="n">quantize_auto_mixed_precision</span><span class="p">(</span><span class="n">prep_path</span><span class="p">,</span> <span class="n">quantized_path</span><span class="p">)</span>
+                    <span class="n">quant_models</span><span class="p">[</span><span class="s2">&quot;onnx_auto_mixed_precision_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">quantized_path</span>
+                <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid quantization type: </span><span class="si">{</span><span class="n">quant_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">quant_models</span>
+
+    <span class="k">def</span> <span class="nf">load_onnx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">onnx_model_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load .onnx model&quot;&quot;&quot;</span>
+
+        <span class="n">onnx_model</span> <span class="o">=</span> <span class="n">onnx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">onnx_model_path</span><span class="p">)</span>
+        <span class="n">onnx</span><span class="o">.</span><span class="n">checker</span><span class="o">.</span><span class="n">check_model</span><span class="p">(</span><span class="n">onnx_model</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">onnx_model</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

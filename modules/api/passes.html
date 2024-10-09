@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>chop.passes &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_style.css?v=678fb11e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/modern.css?v=803738c0" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-test-results/common.css?v=9ec2c1d5" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+        <script src="../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+        <script src="../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+        <script src="../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+        <script src="../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="chop.passes.module.transform.quantize" href="module_analysis/quantization.html" />
+    <link rel="prev" title="chop.nn" href="nn.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="actions.html">chop.actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets.html">chop.datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributed.html">chop.distributed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ir.html">chop.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">chop.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nn.html">chop.nn</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">chop.passes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#mase-module-analysis-passes">Mase Module Analysis Passes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="module_analysis/quantization.html">chop.passes.module.transform.quantize</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#mase-module-transform-passes">Mase Module Transform Passes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="module_transform/quantization.html">chop.passes.module.transform.quantize</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#masegraph-analysis-passes">MaseGraph Analysis Passes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="analysis/add_metadata.html">chop.passes.graph.analysis.add_metadata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis/autosharding.html">chop.passes.graph.analysis.autosharding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis/init_metadata.html">chop.passes.graph.analysis.init_metadata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis/report.html">chop.passes.graph.analysis.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis/statistical_profiler.html">chop.passes.graph.analysis.statistical_profiler.profile_statistics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis/verify.html">chop.passes.graph.analysis.verify.verify</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis/quantization.html">chop.passes.graph.calculate_avg_bits_mg_analysis_pass</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis/pruning.html">chop.passes.graph.pruning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis/runtime.html">chop.passes.graph.analysis.runtime</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#masegraph-transform-passes">MaseGraph Transform Passes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="transform/pruning.html">chop.passes.transform.pruning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="transform/quantize.html">chop.passes.transform.quantize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="transform/verilog.html">chop.passes.transform.verilog</a></li>
+<li class="toctree-l3"><a class="reference internal" href="transform/utils.html">chop.passes.transform.utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="transform/tensorrt.html">chop.passes.transform.tensorrt</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#masegraph-interface-passes">MaseGraph Interface Passes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="interface/save_and_load.html">chop.passes.interface.save_and_load</a></li>
+<li class="toctree-l3"><a class="reference internal" href="interface/tensorrt.html">chop.passes.interface.tensorrt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="interface/onnxrt.html">chop.passes.interface.onnxrt</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#additional-documentation">Additional Documentation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="transform/quantize_further_doc.html">Further Documentation on Quantization</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">chop.tools</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">chop.passes</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/modules/api/passes.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="chop-passes">
+<h1>chop.passes<a class="headerlink" href="#chop-passes" title="Link to this heading"></a></h1>
+<p>All passes, no matter analysis or transform, take a standard form:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># pass_args is a dict</span>
+<span class="k">def</span> <span class="nf">pass</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">):</span>
+    <span class="o">...</span>
+<span class="c1"># info a a dict</span>
+<span class="k">return</span> <span class="n">m</span><span class="p">,</span> <span class="n">info</span>
+</pre></div>
+</div>
+<section id="mase-module-analysis-passes">
+<h2>Mase Module Analysis Passes<a class="headerlink" href="#mase-module-analysis-passes" title="Link to this heading"></a></h2>
+<table class="docutils align-default" id="id8">
+<caption><span class="caption-text">MASE module-level analysis passes</span><a class="headerlink" href="#id8" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 40.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Pass Name</p></th>
+<th class="head"><p>Usage Example</p></th>
+<th class="head"><p>Summary</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="module_analysis/quantization.html#chop.passes.module.analysis.quantize.calculate_avg_bits_module_analysis_pass" title="chop.passes.module.analysis.quantize.calculate_avg_bits_module_analysis_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">calculate_avg_bits_module_analysis_pass()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/module/analysis/quantize/test_calcualte_avg_bits_module.py">test_calcualte_avg_bits_module</a></p></td>
+<td><p>Analyzes the averaged bitwidth of a given module.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="module_analysis/quantization.html">chop.passes.module.transform.quantize</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_analysis/quantization.html#calculate-avg-bits-module-analysis-pass">calculate_avg_bits_module_analysis_pass</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="mase-module-transform-passes">
+<h2>Mase Module Transform Passes<a class="headerlink" href="#mase-module-transform-passes" title="Link to this heading"></a></h2>
+<table class="docutils align-default" id="id9">
+<caption><span class="caption-text">MASE module-level transform passes</span><a class="headerlink" href="#id9" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 40.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Pass Name</p></th>
+<th class="head"><p>Usage Example</p></th>
+<th class="head"><p>Summary</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="module_transform/quantization.html#chop.passes.module.transforms.quantize.quantize_module_transform_pass" title="chop.passes.module.transforms.quantize.quantize_module_transform_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">quantize_module_transform_pass()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/module/transforms/quantize/test_quantize_module.py">test_module_quantize</a></p></td>
+<td><p>Apply quantization transformation to the given nn.Module</p></td>
+</tr>
+</tbody>
+</table>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="module_transform/quantization.html">chop.passes.module.transform.quantize</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_transform/quantization.html#quantize-module-transform-pass">quantize_module_transform_pass</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="masegraph-analysis-passes">
+<h2>MaseGraph Analysis Passes<a class="headerlink" href="#masegraph-analysis-passes" title="Link to this heading"></a></h2>
+<table class="docutils align-default" id="id10">
+<caption><span class="caption-text">MaseGraph graph analysis passes</span><a class="headerlink" href="#id10" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 40.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Pass Name</p></th>
+<th class="head"><p>Usage Example</p></th>
+<th class="head"><p>Summary</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="analysis/init_metadata.html#chop.passes.graph.analysis.init_metadata.init_metadata_analysis_pass" title="chop.passes.graph.analysis.init_metadata.init_metadata_analysis_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">init_metadata_analysis_pass()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/add_metadata/test_add_common_metadata.py">test_add_common_metadata</a></p></td>
+<td><p>Initialize each node with the MaseMetadata, this needs to run first before adding any metadata</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="analysis/add_metadata.html#chop.passes.graph.analysis.add_metadata.add_common_metadata.add_common_metadata_analysis_pass" title="chop.passes.graph.analysis.add_metadata.add_common_metadata.add_common_metadata_analysis_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_common_metadata_analysis_pass()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/add_metadata/test_add_common_metadata.py">test_add_common_metadata</a></p></td>
+<td><p>Add metadata used for both software and hardware, this needs to run first before calling to add_software_metadata or add_hardware_metadata</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="analysis/add_metadata.html#chop.passes.graph.analysis.add_metadata.add_software_metadata.add_software_metadata_analysis_pass" title="chop.passes.graph.analysis.add_metadata.add_software_metadata.add_software_metadata_analysis_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_software_metadata_analysis_pass()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/add_metadata/test_add_software_metadata.py">test_add_software_metadata</a></p></td>
+<td><p>Add hardware-specific metadata, such as which hardware IPs to map and hardware parameters. Details see the pass page</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="analysis/add_metadata.html#chop.passes.graph.analysis.add_metadata.add_hardware_metadata.add_hardware_metadata_analysis_pass" title="chop.passes.graph.analysis.add_metadata.add_hardware_metadata.add_hardware_metadata_analysis_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_hardware_metadata_analysis_pass()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/add_metadata/test_add_hardware_metadata.py">test_add_hardware_metadata</a></p></td>
+<td><p>Add software-specific metadata, such as sparsity. Details see the pass page</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="analysis/report.html#chop.passes.graph.analysis.report.report_graph.report_graph_analysis_pass" title="chop.passes.graph.analysis.report.report_graph.report_graph_analysis_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">report_graph_analysis_pass()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/report/test_report_graph_analysis_pass.py">test_report_graph</a></p></td>
+<td><p>Generates a report for the graph analysis and prints out an over the model in a table.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="analysis/report.html#chop.passes.graph.analysis.report.report_node.report_node_hardware_type_analysis_pass" title="chop.passes.graph.analysis.report.report_node.report_node_hardware_type_analysis_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">report_node_hardware_type_analysis_pass()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/report/test_report_node_hardware_type_analysis_pass.py">test_report_node_hardware_type</a></p></td>
+<td><p>Generate a report on the hardware type of the nodes in the graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="analysis/report.html#chop.passes.graph.analysis.report.report_node.report_node_meta_param_analysis_pass" title="chop.passes.graph.analysis.report.report_node.report_node_meta_param_analysis_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">report_node_meta_param_analysis_pass()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/report/test_report_node_meta_param_analysis_pass.py">test_report_node_meta_param</a></p></td>
+<td><p>Generate a report on the meta parameters of the nodes in the graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="analysis/report.html#chop.passes.graph.analysis.report.report_node.report_node_shape_analysis_pass" title="chop.passes.graph.analysis.report.report_node.report_node_shape_analysis_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">report_node_shape_analysis_pass()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/report/test_report_node_shape_analysis_pass.py">test_report_node_shape</a></p></td>
+<td><p>Generate a report on the shape of the nodes in the graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="analysis/report.html#chop.passes.graph.analysis.report.report_node.report_node_type_analysis_pass" title="chop.passes.graph.analysis.report.report_node.report_node_type_analysis_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">report_node_type_analysis_pass()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/report/test_report_node_type_analysis_pass.py">test_report_node_type</a></p></td>
+<td><p>Generate a report on the type of the nodes in the graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="analysis/statistical_profiler.html#chop.passes.graph.analysis.statistical_profiler.profile_statistics.profile_statistics_analysis_pass" title="chop.passes.graph.analysis.statistical_profiler.profile_statistics.profile_statistics_analysis_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">profile_statistics_analysis_pass()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/statistic_profiler/test_statistic_profiler.py">test_profile_statistics</a></p></td>
+<td><p>Perform profile statistics analysis on the given graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="analysis/quantization.html#chop.passes.graph.analysis.quantization.calculate_avg_bits.calculate_avg_bits_mg_analysis_pass" title="chop.passes.graph.analysis.quantization.calculate_avg_bits.calculate_avg_bits_mg_analysis_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">calculate_avg_bits_mg_analysis_pass()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/quantization/calculate_avg_bits_mg_analysis_pass.py">calculate_avg_bits_mg_analysis_pass</a></p></td>
+<td><p>Calculate, on average, how many bits are spent on weights and activations</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="analysis/pruning.html#chop.passes.graph.analysis.pruning.calculate_natural_sparsity.add_natural_sparsity_metadata_analysis_pass" title="chop.passes.graph.analysis.pruning.calculate_natural_sparsity.add_natural_sparsity_metadata_analysis_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_natural_sparsity_metadata_analysis_pass()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/pruning/test_calculate_natural_sparsity.py">test_calculate_natural_sparsity</a></p></td>
+<td><p>Add natural sparsity metadata analysis pass to the given MaseGraph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="analysis/pruning.html#chop.passes.graph.analysis.pruning.calculate_sparsity.add_pruning_metadata_analysis_pass" title="chop.passes.graph.analysis.pruning.calculate_sparsity.add_pruning_metadata_analysis_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_pruning_metadata_analysis_pass()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/prune/test_prune.py">test_prune</a></p></td>
+<td><p>This pass computes weight and activation sparsity based on pruning masks</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="analysis/pruning.html#chop.passes.graph.analysis.pruning.hook_inspector.hook_inspection_analysis_pass" title="chop.passes.graph.analysis.pruning.hook_inspector.hook_inspection_analysis_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">hook_inspection_analysis_pass()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/anlysis/pruning/test_hook_inspect.py">test_hook_inspection_analysis_pass</a></p></td>
+<td><p>Provide hook information of the modules</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">runtime_analysis_pass()</span></code></p></td>
+<td><p>fill me</p></td>
+<td><p>Perform runtime analysis on the given graph (MaseGraph, TensorRT, ONNX models)</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="analysis/verify.html#chop.passes.graph.analysis.verify.verify.verify_metadata_analysis_pass" title="chop.passes.graph.analysis.verify.verify.verify_metadata_analysis_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">verify_metadata_analysis_pass()</span></code></a></p></td>
+<td><p>fill me</p></td>
+<td><p>fill me</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="analysis/verify.html#chop.passes.graph.analysis.verify.verify.verify_common_metadata_analysis_pass" title="chop.passes.graph.analysis.verify.verify.verify_common_metadata_analysis_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">verify_common_metadata_analysis_pass()</span></code></a></p></td>
+<td><p>fill me</p></td>
+<td><p>fill me</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="analysis/verify.html#chop.passes.graph.analysis.verify.verify.verify_software_metadata_analysis_pass" title="chop.passes.graph.analysis.verify.verify.verify_software_metadata_analysis_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">verify_software_metadata_analysis_pass()</span></code></a></p></td>
+<td><p>fill me</p></td>
+<td><p>fill me</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="analysis/verify.html#chop.passes.graph.analysis.verify.verify.verify_hardware_metadata_analysis_pass" title="chop.passes.graph.analysis.verify.verify.verify_hardware_metadata_analysis_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">verify_hardware_metadata_analysis_pass()</span></code></a></p></td>
+<td><p>fill me</p></td>
+<td><p>fill me</p></td>
+</tr>
+</tbody>
+</table>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="analysis/add_metadata.html">chop.passes.graph.analysis.add_metadata</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="analysis/add_metadata.html#add-common-metadata-analysis-pass">add_common_metadata_analysis_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis/add_metadata.html#add-software-metadata-analysis-pass">add_software_metadata_analysis_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis/add_metadata.html#add-hardware-metadata-analysis-pass">add_hardware_metadata_analysis_pass</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="analysis/autosharding.html">chop.passes.graph.analysis.autosharding</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="analysis/autosharding.html#autosharding-analysis-pass">autosharding_analysis_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis/autosharding.html#alpa-autosharding-pass">alpa_autosharding_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis/autosharding.html#alpa-intra-op-sharding-pass">alpa_intra_op_sharding_pass</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="analysis/init_metadata.html">chop.passes.graph.analysis.init_metadata</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="analysis/init_metadata.html#init-metadata-analysis-pass">init_metadata_analysis_pass</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="analysis/report.html">chop.passes.graph.analysis.report</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="analysis/report.html#report-graph-analysis-pass">report_graph_analysis_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis/report.html#report-node-hardware-type-analysis-pass">report_node_hardware_type_analysis_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis/report.html#report-node-meta-param-analysis-pass">report_node_meta_param_analysis_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis/report.html#report-node-shape-analysis-pass">report_node_shape_analysis_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis/report.html#report-node-type-analysis-pass">report_node_type_analysis_pass</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="analysis/statistical_profiler.html">chop.passes.graph.analysis.statistical_profiler.profile_statistics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="analysis/statistical_profiler.html#profile-statistics-analysis-pass">profile_statistics_analysis_pass</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="analysis/verify.html">chop.passes.graph.analysis.verify.verify</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="analysis/verify.html#verify-metadata-analysis-pass">verify_metadata_analysis_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis/verify.html#verify-common-metadata-analysis-pass">verify_common_metadata_analysis_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis/verify.html#verify-software-metadata-analysis-pass">verify_software_metadata_analysis_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis/verify.html#id1">verify_metadata_analysis_pass</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="analysis/quantization.html">chop.passes.graph.calculate_avg_bits_mg_analysis_pass</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="analysis/quantization.html#calculate-avg-bits-mg-analysis-pass">calculate_avg_bits_mg_analysis_pass</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="analysis/pruning.html">chop.passes.graph.pruning</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="analysis/pruning.html#add-pruning-metadata-analysis-pass">add_pruning_metadata_analysis_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis/pruning.html#add-natural-sparsity-metadata-analysis-pass">add_natural_sparsity_metadata_analysis_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis/pruning.html#hook-inspection-analysis-pass">hook_inspection_analysis_pass</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="analysis/runtime.html">chop.passes.graph.analysis.runtime</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="analysis/runtime.html#runtime-analysis-pass">runtime_analysis_pass</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="masegraph-transform-passes">
+<h2>MaseGraph Transform Passes<a class="headerlink" href="#masegraph-transform-passes" title="Link to this heading"></a></h2>
+<table class="docutils align-default" id="id11">
+<caption><span class="caption-text">MaseGraph graph transform passes</span><a class="headerlink" href="#id11" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 40.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Pass Name</p></th>
+<th class="head"><p>Usage Example</p></th>
+<th class="head"><p>Summary</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="transform/pruning.html#chop.passes.graph.transforms.pruning.prune.prune_transform_pass" title="chop.passes.graph.transforms.pruning.prune.prune_transform_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prune_transform_pass()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/prune/test_prune.py">test_prune</a></p></td>
+<td><p>Prune the given graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="transform/pruning.html#chop.passes.graph.transforms.pruning.prune_detach_hook.prune_detach_hook_transform_pass" title="chop.passes.graph.transforms.pruning.prune_detach_hook.prune_detach_hook_transform_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prune_detach_hook_transform_pass()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/prune/test_prune_detach_hook.py">test_prune_detach_hook</a></p></td>
+<td><p>Remove all pruning hooks</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="transform/quantize.html#chop.passes.graph.transforms.quantize.quantize_transform_pass" title="chop.passes.graph.transforms.quantize.quantize_transform_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">quantize_transform_pass()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/quantize/test_quantize.py">test_quantize</a></p></td>
+<td><p>Apply quantization, check the further documentation below</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="transform/quantize.html#chop.passes.graph.transforms.quantize.summarize_quantization_analysis_pass" title="chop.passes.graph.transforms.quantize.summarize_quantization_analysis_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">summarize_quantization_analysis_pass()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/quantize/test_quantize.py">test_quantize</a></p></td>
+<td><p>Summarizes the quantization with respect to the original graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="transform/utils.html#chop.passes.graph.transforms.utils.conv_bn_fusion_transform_pass" title="chop.passes.graph.transforms.utils.conv_bn_fusion_transform_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">conv_bn_fusion_transform_pass()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/utils/test_conv_bn_fusion.py">test_conv_bn_fusion</a></p></td>
+<td><p>Perform Conv-BN fusion on the given graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="transform/utils.html#chop.passes.graph.transforms.utils.logicnets_fusion_transform_pass" title="chop.passes.graph.transforms.utils.logicnets_fusion_transform_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">logicnets_fusion_transform_pass()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/utils/test_conv_bn_fusion.py">test_logicnets_fusion</a> (DEV, Disabled)</p></td>
+<td><p>Perform LogicNets fusion on the given graph (DEV, Disabled)</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="transform/utils.html#chop.passes.graph.transforms.utils.onnx_annotate_transform_pass" title="chop.passes.graph.transforms.utils.onnx_annotate_transform_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">onnx_annotate_transform_pass()</span></code></a></p></td>
+<td><p>NA (DEV, Disabled)</p></td>
+<td><p>Convert MaseGraph to ONNX and annotate the relevant layers with sparsity information (DEV, Disabled)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">emit_verilog_top_transform_pass()</span></code></p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/verilog/test_test_emit_verilog_linear.py">test_emit_verilog_linear</a></p></td>
+<td><p>Emit the top-level model design in Verilog.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">emit_verilog_tb_transform_pass()</span></code></p></td>
+<td><p>Emit test bench and related files for simulation.</p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/verilog/test_test_emit_verilog_linear.py">test_emit_verilog_linear</a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">emit_bram_transform_pass()</span></code></p></td>
+<td><p>Enumerate input parameters of the node and emit a ROM block with handshake interface for each parameter</p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/verilog/test_test_emit_verilog_linear.py">test_emit_verilog_linear</a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">emit_mlir_hls_transform_pass()</span></code></p></td>
+<td><p>Emit the hardware components that generated from MLIR-HLS tools.</p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/verilog/test_test_emit_verilog_linear.py">test_emit_verilog_linear</a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">emit_internal_rtl_transform_pass()</span></code></p></td>
+<td><p>Emit the hardware components that pre-defined in the mase internal library.</p></td>
+<td><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/verilog/test_test_emit_verilog_linear.py">test_emit_verilog_linear</a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">tensorrt_fake_quantize_transform_pass()</span></code></p></td>
+<td><p>Apply TensorRT fake quantization to the given graph for INT8 quantization calibration</p></td>
+<td><p>fille me</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">tensorrt_calibrate_transform_pass()</span></code></p></td>
+<td><p>Apply TensorRT calibration to the given graph for INT8 quantization</p></td>
+<td><p>fille me</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">tensorrt_fine_tune_transform_pass()</span></code></p></td>
+<td><p>Apply TensorRT fine tune to the given graph for quantization aware training</p></td>
+<td><p>fille me</p></td>
+</tr>
+</tbody>
+</table>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="transform/pruning.html">chop.passes.transform.pruning</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="transform/pruning.html#prune-transform-pass">prune_transform_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transform/pruning.html#prune-detach-hook-transform-pass">prune_detach_hook_transform_pass</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="transform/quantize.html">chop.passes.transform.quantize</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="transform/quantize.html#quantize-transform-pass">quantize_transform_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transform/quantize.html#summarize-quantization-analysis-pass">summarize_quantization_analysis_pass</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="transform/verilog.html">chop.passes.transform.verilog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="transform/verilog.html#emit-verilog-top-transform-pass">emit_verilog_top_transform_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transform/verilog.html#emit-verilog-tb-transform-pass">emit_verilog_tb_transform_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transform/verilog.html#emit-bram-transform-pass">emit_bram_transform_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transform/verilog.html#emit-mlir-hls-transform-pass">emit_mlir_hls_transform_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transform/verilog.html#emit-internal-rtl-transform-pass">emit_internal_rtl_transform_pass</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="transform/utils.html">chop.passes.transform.utils</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="transform/utils.html#conv-bn-fusion-transform-pass">conv_bn_fusion_transform_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transform/utils.html#logicnets-fusion-transform-pass">logicnets_fusion_transform_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transform/utils.html#onnx-annotate-transform-pass">onnx_annotate_transform_pass</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="transform/tensorrt.html">chop.passes.transform.tensorrt</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="transform/tensorrt.html#tensorrt-fake-quantization-transform-pass">tensorrt_fake_quantization_transform_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transform/tensorrt.html#tensorrt-calibrate-transform-pass">tensorrt_calibrate_transform_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transform/tensorrt.html#tensorrt-fine-tune-transform-pass">tensorrt_fine_tune_transform_pass</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="masegraph-interface-passes">
+<h2>MaseGraph Interface Passes<a class="headerlink" href="#masegraph-interface-passes" title="Link to this heading"></a></h2>
+<table class="docutils align-default" id="id12">
+<caption><span class="caption-text">A summary of all MaseGraph interface passes</span><a class="headerlink" href="#id12" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 40.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Pass Name</p></th>
+<th class="head"><p>Usage Example</p></th>
+<th class="head"><p>Summary</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="interface/save_and_load.html#chop.passes.graph.interface.save_and_load.load_mase_graph_interface_pass" title="chop.passes.graph.interface.save_and_load.load_mase_graph_interface_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_mase_graph_interface_pass()</span></code></a></p></td>
+<td><p>fill me</p></td>
+<td><p>fill me</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="interface/save_and_load.html#chop.passes.graph.interface.save_and_load.save_mase_graph_interface_pass" title="chop.passes.graph.interface.save_and_load.save_mase_graph_interface_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save_mase_graph_interface_pass()</span></code></a></p></td>
+<td><p>fill me</p></td>
+<td><p>fill me</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">save_node_meta_param_interface_pass()</span></code></p></td>
+<td><p>fill me</p></td>
+<td><p>fill me</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_node_meta_param_interface_pass()</span></code></p></td>
+<td><p>fill me</p></td>
+<td><p>fill me</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="interface/tensorrt.html#chop.passes.graph.interface.tensorrt.quantize.tensorrt_engine_interface_pass" title="chop.passes.graph.interface.tensorrt.quantize.tensorrt_engine_interface_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">tensorrt_engine_interface_pass()</span></code></a></p></td>
+<td><p>Converts the given graph to a TensorRT engine model</p></td>
+<td><p>fill me</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="interface/onnxrt.html#chop.passes.graph.interface.onnxrt.onnx_runtime.onnx_runtime_interface_pass" title="chop.passes.graph.interface.onnxrt.onnx_runtime.onnx_runtime_interface_pass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">onnx_runtime_interface_pass()</span></code></a></p></td>
+<td><p>Converts the given graph to a ONNXRuntime model</p></td>
+<td><p>fill me</p></td>
+</tr>
+</tbody>
+</table>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="interface/save_and_load.html">chop.passes.interface.save_and_load</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="interface/save_and_load.html#load-mase-graph-interface-pass">load_mase_graph_interface_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interface/save_and_load.html#save-mase-graph-interface-pass">save_mase_graph_interface_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interface/save_and_load.html#load-node-graph-interface-pass">load_node_graph_interface_pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interface/save_and_load.html#save-node-graph-interface-pass">save_node_graph_interface_pass</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="interface/tensorrt.html">chop.passes.interface.tensorrt</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="interface/tensorrt.html#tensorrt-engine-interface-pass">tensorrt_engine_interface_pass</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="interface/onnxrt.html">chop.passes.interface.onnxrt</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="interface/onnxrt.html#onnx-runtime-interface-pass">onnx_runtime_interface_pass</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="additional-documentation">
+<h2>Additional Documentation<a class="headerlink" href="#additional-documentation" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="transform/quantize_further_doc.html">Further Documentation on Quantization</a></li>
+</ul>
+</div>
+<h2>pytest<a class="headerlink" href="#additional-documentation" title="Link to this heading"></a></h2>
+<p>Tests: 50, Failures: 0, Errors: 0, Skips: 17</p>
+<p>Time: 533.974</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>class</p></th>
+<th class="head"><p>name</p></th>
+<th class="head"><p>status</p></th>
+<th class="head"><p>reason</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="tr_passed row-even"><td class="tr_passed class"><p class="tr_passed">test.actions.test_rl_search</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_rl_search</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_skipped row-odd"><td class="tr_skipped class"><p class="tr_skipped">test.actions.test_test</p></td>
+<td class="tr_skipped name"><p class="tr_skipped">test</p></td>
+<td class="tr_skipped status"><p class="tr_skipped">skipped</p></td>
+<td class="tr_skipped reason"><p class="tr_skipped">This isn’t a test
+
+/__w/mase/mase/src/chop/actions/test.py:16: This isn’t a test</p></td>
+</tr>
+<tr class="tr_passed row-even"><td class="tr_passed class"><p class="tr_passed">test.actions.test_test</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_test</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-odd"><td class="tr_passed class"><p class="tr_passed">test.actions.test_train</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_train</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-even"><td class="tr_passed class"><p class="tr_passed">test.models.test_bert</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_bert</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-odd"><td class="tr_passed class"><p class="tr_passed">test.models.test_mobilenetv2</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_mobilenetv2</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-even"><td class="tr_passed class"><p class="tr_passed">test.models.test_pvt</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_pvt</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-odd"><td class="tr_passed class"><p class="tr_passed">test.models.test_resnet18</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_resnet18</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-even"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.analysis.add_metadata.test_add_common_metadata</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_add_common_metadata</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-odd"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.analysis.add_metadata.test_add_software_metadata</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_add_software_metadata_analysis_pass</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_skipped row-even"><td class="tr_skipped class"><p class="tr_skipped">test.passes.graph.analysis.autosharding.test_autosharding_bert</p></td>
+<td class="tr_skipped name"><p class="tr_skipped">test_autosharding</p></td>
+<td class="tr_skipped status"><p class="tr_skipped">skipped</p></td>
+<td class="tr_skipped reason"><p class="tr_skipped">Fixing needed
+
+/__w/mase/mase/test/passes/graph/analysis/autosharding/test_autosharding_bert.py:20: Fixing needed</p></td>
+</tr>
+<tr class="tr_skipped row-odd"><td class="tr_skipped class"><p class="tr_skipped">test.passes.graph.analysis.autosharding.test_autosharding_linear</p></td>
+<td class="tr_skipped name"><p class="tr_skipped">test_autosharding</p></td>
+<td class="tr_skipped status"><p class="tr_skipped">skipped</p></td>
+<td class="tr_skipped reason"><p class="tr_skipped">Fixing needed
+
+/__w/mase/mase/test/passes/graph/analysis/autosharding/test_autosharding_linear.py:39: Fixing needed</p></td>
+</tr>
+<tr class="tr_passed row-even"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.analysis.pruning.test_calculate_natural_sparsity</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_calculate_natural_sparsity</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-odd"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.analysis.pruning.test_hook_inspect</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_hook_inspection_analysis_pass</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-even"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.analysis.report.test_report_graph_analysis_pass</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_report_graph</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-odd"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.analysis.report.test_report_node_hardware_type_analysis_pass</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_add_hardware_metadata_analysis_pass</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-even"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.analysis.report.test_report_node_meta_param_analysis_pass</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_report_node_meta_param_analysis_pass</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-odd"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.analysis.report.test_report_node_shape_analysis_pass</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_report_node_shape_analysis_pass</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-even"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.analysis.report.test_report_node_type_analysis_pass</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_report_node_type_analysis</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-odd"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.analysis.statistic_profiler.test_statistic_profiler</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_statistic_profiler</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-even"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.analysis.verify.test_verify_metadata_analysis_passes</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_verify_metadata</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-odd"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.transforms.dse.test_apply_random_partition</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_apply_random_partition</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-even"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.transforms.prune.test_prune</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_prune</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-odd"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.transforms.prune.test_prune_detach_hook</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_prune_detach_hook</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-even"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.transforms.quantize.test_complex_quantize</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_complex_quantize</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-odd"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.transforms.quantize.test_mxint_linear_quantize</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_quantize</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-even"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.transforms.quantize.test_quantize</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_quantize</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-odd"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.transforms.quantize.test_quantize_debug</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_quantize_debug</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-even"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.transforms.quantize.test_quantize_lutnet_conv2d</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_quantize_lutnet_conv2d</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-odd"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.transforms.quantize.test_quantize_lutnet_linear</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_quantize_lutnet_linear</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-even"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.transforms.quantize.test_quantize_lutnet_linear_2</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_quantize_lutnet_linear_2</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-odd"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.transforms.utils.test_conv_bn_fusion</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_conv_bn_fusion</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_skipped row-even"><td class="tr_skipped class"><p class="tr_skipped">test.passes.graph.transforms.verilog.test_emit_activation_gelu</p></td>
+<td class="tr_skipped name"><p class="tr_skipped">test_emit_activation_gelu</p></td>
+<td class="tr_skipped status"><p class="tr_skipped">skipped</p></td>
+<td class="tr_skipped reason"><p class="tr_skipped">Not working
+
+/__w/mase/mase/test/passes/graph/transforms/verilog/test_emit_activation_gelu.py:63: Not working</p></td>
+</tr>
+<tr class="tr_skipped row-odd"><td class="tr_skipped class"><p class="tr_skipped">test.passes.graph.transforms.verilog.test_emit_activation_selu</p></td>
+<td class="tr_skipped name"><p class="tr_skipped">test_emit_activation_selu</p></td>
+<td class="tr_skipped status"><p class="tr_skipped">skipped</p></td>
+<td class="tr_skipped reason"><p class="tr_skipped">Not working
+
+/__w/mase/mase/test/passes/graph/transforms/verilog/test_emit_activation_selu.py:63: Not working</p></td>
+</tr>
+<tr class="tr_skipped row-even"><td class="tr_skipped class"><p class="tr_skipped">test.passes.graph.transforms.verilog.test_emit_activation_softplus</p></td>
+<td class="tr_skipped name"><p class="tr_skipped">test_emit_activation_softplus</p></td>
+<td class="tr_skipped status"><p class="tr_skipped">skipped</p></td>
+<td class="tr_skipped reason"><p class="tr_skipped">Not working
+
+/__w/mase/mase/test/passes/graph/transforms/verilog/test_emit_activation_softplus.py:63: Not working</p></td>
+</tr>
+<tr class="tr_skipped row-odd"><td class="tr_skipped class"><p class="tr_skipped">test.passes.graph.transforms.verilog.test_emit_activation_softsign</p></td>
+<td class="tr_skipped name"><p class="tr_skipped">test_emit_activation_softsign</p></td>
+<td class="tr_skipped status"><p class="tr_skipped">skipped</p></td>
+<td class="tr_skipped reason"><p class="tr_skipped">Not working
+
+/__w/mase/mase/test/passes/graph/transforms/verilog/test_emit_activation_softsign.py:63: Not working</p></td>
+</tr>
+<tr class="tr_skipped row-even"><td class="tr_skipped class"><p class="tr_skipped">test.passes.graph.transforms.verilog.test_emit_activation_tanh</p></td>
+<td class="tr_skipped name"><p class="tr_skipped">test_emit_activation_tanh</p></td>
+<td class="tr_skipped status"><p class="tr_skipped">skipped</p></td>
+<td class="tr_skipped reason"><p class="tr_skipped">Not working
+
+/__w/mase/mase/test/passes/graph/transforms/verilog/test_emit_activation_tanh.py:64: Not working</p></td>
+</tr>
+<tr class="tr_skipped row-odd"><td class="tr_skipped class"><p class="tr_skipped">test.passes.graph.transforms.verilog.test_emit_verilog_bert</p></td>
+<td class="tr_skipped name"><p class="tr_skipped">test_emit_verilog_bert_smoke</p></td>
+<td class="tr_skipped status"><p class="tr_skipped">skipped</p></td>
+<td class="tr_skipped reason"><p class="tr_skipped">need –runlarge option to run
+
+/__w/mase/mase/test/passes/graph/transforms/verilog/test_emit_verilog_bert.py:232: need –runlarge option to run</p></td>
+</tr>
+<tr class="tr_skipped row-even"><td class="tr_skipped class"><p class="tr_skipped">test.passes.graph.transforms.verilog.test_emit_verilog_bert</p></td>
+<td class="tr_skipped name"><p class="tr_skipped">test_emit_verilog_bert_regression</p></td>
+<td class="tr_skipped status"><p class="tr_skipped">skipped</p></td>
+<td class="tr_skipped reason"><p class="tr_skipped">need –runlarge option to run
+
+/__w/mase/mase/test/passes/graph/transforms/verilog/test_emit_verilog_bert.py:245: need –runlarge option to run</p></td>
+</tr>
+<tr class="tr_skipped row-odd"><td class="tr_skipped class"><p class="tr_skipped">test.passes.graph.transforms.verilog.test_emit_verilog_linear</p></td>
+<td class="tr_skipped name"><p class="tr_skipped">test_emit_verilog_linear</p></td>
+<td class="tr_skipped status"><p class="tr_skipped">skipped</p></td>
+<td class="tr_skipped reason"><p class="tr_skipped">need –rundev option to run
+
+/__w/mase/mase/test/passes/graph/transforms/verilog/test_emit_verilog_linear.py:51: need –rundev option to run</p></td>
+</tr>
+<tr class="tr_skipped row-even"><td class="tr_skipped class"><p class="tr_skipped">test.passes.graph.transforms.verilog.test_emit_verilog_llama</p></td>
+<td class="tr_skipped name"><p class="tr_skipped">test_emit_verilog_llama_smoke</p></td>
+<td class="tr_skipped status"><p class="tr_skipped">skipped</p></td>
+<td class="tr_skipped reason"><p class="tr_skipped">Not working
+
+/__w/mase/mase/test/passes/graph/transforms/verilog/test_emit_verilog_llama.py:137: Not working</p></td>
+</tr>
+<tr class="tr_skipped row-odd"><td class="tr_skipped class"><p class="tr_skipped">test.passes.graph.transforms.verilog.test_emit_verilog_mistral</p></td>
+<td class="tr_skipped name"><p class="tr_skipped">test_emit_verilog_mistral_smoke</p></td>
+<td class="tr_skipped status"><p class="tr_skipped">skipped</p></td>
+<td class="tr_skipped reason"><p class="tr_skipped">Not working
+
+/__w/mase/mase/test/passes/graph/transforms/verilog/test_emit_verilog_mistral.py:138: Not working</p></td>
+</tr>
+<tr class="tr_passed row-even"><td class="tr_passed class"><p class="tr_passed">test.passes.graph.transforms.verilog.test_emit_verilog_norm</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_emit_verilog_norm</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_skipped row-odd"><td class="tr_skipped class"><p class="tr_skipped">test.passes.graph.transforms.verilog.test_emit_verilog_partition_linear</p></td>
+<td class="tr_skipped name"><p class="tr_skipped">test_emit_verilog_partition_linear</p></td>
+<td class="tr_skipped status"><p class="tr_skipped">skipped</p></td>
+<td class="tr_skipped reason"><p class="tr_skipped">Fixing needed
+
+/__w/mase/mase/test/passes/graph/transforms/verilog/test_emit_verilog_partition_linear.py:47: Fixing needed</p></td>
+</tr>
+<tr class="tr_passed row-even"><td class="tr_passed class"><p class="tr_passed">test.passes.module.transforms.quantize.test_quantize_module</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_quantize_module_transform_pass</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_skipped row-odd"><td class="tr_skipped class"><p class="tr_skipped">test.passes.onnx.analysis.test_export_fx_graph</p></td>
+<td class="tr_skipped name"><p class="tr_skipped">test_export_fx_graph_bert</p></td>
+<td class="tr_skipped status"><p class="tr_skipped">skipped</p></td>
+<td class="tr_skipped reason"><p class="tr_skipped">unconditional skip
+
+/__w/mase/mase/test/passes/onnx/analysis/test_export_fx_graph.py:73: unconditional skip</p></td>
+</tr>
+<tr class="tr_skipped row-even"><td class="tr_skipped class"><p class="tr_skipped">test.passes.onnx.analysis.test_export_fx_graph</p></td>
+<td class="tr_skipped name"><p class="tr_skipped">test_export_fx_graph_mistral</p></td>
+<td class="tr_skipped status"><p class="tr_skipped">skipped</p></td>
+<td class="tr_skipped reason"><p class="tr_skipped">unconditional skip
+
+/__w/mase/mase/test/passes/onnx/analysis/test_export_fx_graph.py:79: unconditional skip</p></td>
+</tr>
+<tr class="tr_skipped row-odd"><td class="tr_skipped class"><p class="tr_skipped">test.passes.onnx.analysis.test_export_fx_graph</p></td>
+<td class="tr_skipped name"><p class="tr_skipped">test_export_fx_graph_whisper</p></td>
+<td class="tr_skipped status"><p class="tr_skipped">skipped</p></td>
+<td class="tr_skipped reason"><p class="tr_skipped">unconditional skip
+
+/__w/mase/mase/test/passes/onnx/analysis/test_export_fx_graph.py:86: unconditional skip</p></td>
+</tr>
+<tr class="tr_passed row-even"><td class="tr_passed class"><p class="tr_passed">test.tools.test_onnx_operators</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_gather</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+<tr class="tr_passed row-odd"><td class="tr_passed class"><p class="tr_passed">test.tools.test_onnx_operators</p></td>
+<td class="tr_passed name"><p class="tr_passed">test_slice</p></td>
+<td class="tr_passed status"><p class="tr_passed">passed</p></td>
+<td class="tr_passed reason"><p class="tr_passed">
+
+</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="nn.html" class="btn btn-neutral float-left" title="chop.nn" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="module_analysis/quantization.html" class="btn btn-neutral float-right" title="chop.passes.module.transform.quantize" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
