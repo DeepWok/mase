@@ -104,7 +104,6 @@ def get_trainer(
     use_mps_device: bool = False,
     report_to: str = "none",
     num_train_epochs: int = 1,
-    checkpoint: str = None,
 ):
     """
     Returns a Trainer object for a given model and tokenized dataset.
@@ -133,13 +132,6 @@ def get_trainer(
     - trainer: Trainer
         Trainer object for training
     """
-    if checkpoint is None:
-        try:
-            checkpoint = model.config._name_or_path
-        except:
-            raise ValueError("Checkpoint not provided and model does not have one.")
-
-    logger.info(f"Getting trainer for {checkpoint}.")
 
     # Handle requested metric
     metric = evaluate.load(evaluate_metric)
