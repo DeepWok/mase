@@ -22,8 +22,9 @@ Lab 2: Model Compression (Quantization and Pruning)
    </p>
    </div>
 
+
 General introduction
-====================
+=====================
 
 In this lab, you will learn how to use Mase to compress a Bert model using quantization and pruning. You will build off the checkpoint from Lab 2, where we fine tuned a Bert model for sequence classification using the LoRA adapter. You will quantize the model to fixed-point precision and then prune the model to reduce the number of parameters. After each stage, you'll run further fine tuning to recover the performance lost during compression.
 

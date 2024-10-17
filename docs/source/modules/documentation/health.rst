@@ -1,4 +1,4 @@
 Repository Health
 ==================================
 
-.. test-results:: ../../software_report.xml
+.. test-results:: ../../report.xml

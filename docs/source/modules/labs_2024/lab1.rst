@@ -31,10 +31,10 @@ In this lab, you will learn how to use the basic functionalities of Mase. You wi
 2. Understanding the Mase IR and its benefit over other ways of representing Machine Learning workloads
 3. Writing and executing Torch FX passes to optimize a model
 
-You will start by generating a MaseGraph for a Bert model. You will then fine tune this model using a LoRA adapter to achieve high performance on the IMDB sequence classification dataset. In future labs, you will build off this work to explore more advanced features of the MASE framework.
+You will start by generating a MaseGraph for a Bert model. You will then fine-tune this model using a LoRA adapter to achieve high performance on the IMDB sequence classification dataset. In future labs, you will build off this work to explore more advanced features of the MASE framework.
 
 Learning tasks
-=============================
+==============
 
 1. Make sure you have read and understood the installation of the framework, detailed `here <https://deepwok.github.io/mase/modules/documentation/getting_started.html>`__.
 
@@ -43,7 +43,7 @@ Learning tasks
 3. Go through `"Tutorial 2: Insert a LoRA adapter to Finetune Bert for Sequence Classification" <https://github.com/DeepWok/mase/blob/adls_2024/docs/source/modules/documentation/tutorials/tutorial_2_lora_finetune.ipynb>`__ to understand how to fine-tune a model using the LoRA adapter.
 
 Implementation tasks
-=============================
+=====================
 
 1. In Tutorial 1, you saw how to a transform pass to remove dropout nodes. Now, write another transform pass to insert...
 
@@ -51,4 +51,4 @@ Implementation tasks
 
       - RoBERTa
 
-      - ...
+      - TinyLLaMA
