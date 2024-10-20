@@ -6,8 +6,8 @@
    :alt: logo
    :align: center
 
-Lab 2: Model Compression (Quantization and Pruning)
-~~~~~
+Lab 1: Model Compression (Quantization and Pruning)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. raw:: html
 
@@ -16,9 +16,8 @@ Lab 2: Model Compression (Quantization and Pruning)
       ELEC70109/EE9-AML3-10/EE9-AO25
       <br />
    Written by
-      <a href="https://aaron-zhao123.github.io/">Aaron Zhao </a>,
-      <a href="https://www.pedrogimenes.co.uk/">Pedro Gimenes </a>,
-      <a href="https://chengzhang-98.github.io/blog/">Cheng Zhang </a>
+      <a href="https://aaron-zhao123.github.io/">Aaron Zhao </a> and
+      <a href="https://www.pedrogimenes.co.uk/">Pedro Gimenes </a>
    </p>
    </div>
 

@@ -6,8 +6,8 @@
    :alt: logo
    :align: center
 
-Lab 1: Introduction to Mase
-~~~~~
+Lab 0: Introduction to Mase
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. raw:: html
 
@@ -16,9 +16,8 @@ Lab 1: Introduction to Mase
       ELEC70109/EE9-AML3-10/EE9-AO25
       <br />
    Written by
-      <a href="https://aaron-zhao123.github.io/">Aaron Zhao </a>,
-      <a href="https://www.pedrogimenes.co.uk/">Pedro Gimenes </a>,
-      <a href="https://chengzhang-98.github.io/blog/">Cheng Zhang </a>
+      <a href="https://aaron-zhao123.github.io/">Aaron Zhao </a> and
+      <a href="https://www.pedrogimenes.co.uk/">Pedro Gimenes </a>
    </p>
    </div>
 
@@ -41,14 +40,3 @@ Learning tasks
 2. Go through `"Tutorial 1: Introduction to the Mase IR, MaseGraph and Torch FX passes" <https://github.com/DeepWok/mase/blob/adls_2024/docs/source/modules/documentation/tutorials/tutorial_1_introduction_to_mase.ipynb>`__ to understand the basic concepts of the framework.
 
 3. Go through `"Tutorial 2: Insert a LoRA adapter to Finetune Bert for Sequence Classification" <https://github.com/DeepWok/mase/blob/adls_2024/docs/source/modules/documentation/tutorials/tutorial_2_lora_finetune.ipynb>`__ to understand how to fine-tune a model using the LoRA adapter.
-
-Implementation tasks
-=====================
-
-1. In Tutorial 1, you saw how to a transform pass to remove dropout nodes. Now, write another transform pass to insert...
-
-2. In Tutorial 2, you saw how to fine-tune a Bert model using the LoRA adapter. Now, extend the `insert_lora_adapter_transform_pass` to support one of the following models. Repeat the procedure in the tutorial to evaluate the model on the IMDB dataset.
-
-      - RoBERTa
-
-      - TinyLLaMA
