@@ -29,15 +29,16 @@ def mxint_quantize(x, width: int = 12, exponent_width: int = 6, exponent: int = 
 
     # exponent
     if exponent == None:
-        exponent = torch.ceil(torch.log2(x.abs().max())) - exponent_bias
+        exponent = torch.ceil(torch.log2(x.abs().max()))
         exponent = torch.clamp(exponent, exponent_min, exponent_max)
     # mantissa
     int_min = -(2 ** (width - 1))
     int_max = 2 ** (width - 1) - 1
-    mantissa = x / 2**exponent
+    mantissa = x * (2**(width - 1)) / 2**exponent
+    # print(mantissa, int_min, int_max)
     mantissa = torch.clamp(mantissa.floor(), int_min, int_max)
-    msfp_x = (2**exponent) * mantissa
-    return msfp_x, mantissa, exponent
+    q_x = (2**exponent) * mantissa /((2**(width - 1)))
+    return q_x, mantissa, exponent
 
 
 def block_mxint_quant(tensor, q_config, parallelism):
