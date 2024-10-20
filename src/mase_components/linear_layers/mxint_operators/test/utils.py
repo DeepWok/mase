@@ -187,3 +187,86 @@ class MXIntLinear(_LinearBase):
             if self.out_quantizer is None:
                 return out
             return self.out_quantizer(out)
+
+def MXIntMatmulHardware(man_x, exp_x, man_y, exp_y, x_config, y_config):
+    """
+    assume 2 dimensional input
+    config = {
+        "width": ,
+        "exp_width" ,
+        "parallism_dim_0",
+        "parallism_dim_1",
+        "depth_dim_0", 
+        "depth_dim_1", 
+        "dim_0", 
+        "dim_1", 
+    }
+    man.shape = [dim_1 * dim_0]
+    exp.shape = [depth_dim_1,  depth_dim_0]
+    """
+    # assume 2 dimensional input
+    assert x_config["depth_dim_0"] == y_config["depth_dim_1"], "need to check the setting of dim"
+    assert x_config["depth_dim_0"] == y_config["depth_dim_1"], "need to check the setting of dim"
+    def block_wise_reshape_tensor(x, exp_x, x_config):
+        reshaped_x = x.reshape(x_config["depth_dim_1"],x_config["parallism_dim_1"], x_config["depth_dim_0"],x_config["parallism_dim_0"]).permute(0,1,3,2)
+        reshaped_x = reshaped_x.reshape(x_config["depth_dim_1"] * x_config["depth_dim_0"], x_config["parallism_dim_1"], x_config["parallism_dim_0"])
+        return reshaped_x
+    reshaped_exp_x = exp_x.reshape(-1)
+    reshaped_man_x = block_wise_reshape_tensor(man_x)
+    reshaped_exp_y = exp_y.reshape(-1)
+    reshaped_man_y = block_wise_reshape_tensor(man_y)
+    for i in range(x_config["depth_dim_1"]):
+        for j in range(y_config["depth_dim_0"]):
+            partial_man_out = torch.zeros(y_config["depth_dim_1"], x_config["parallism_dim_1"], y_config["parallism_dim_0"])
+            partial_exp_out = torch.zeros(y_config["depth_dim_1"])
+            for k in range(y_config["depth_dim_1"]):
+                man_x_block = reshaped_man_x[i*x_config["depth_dim_1"] + k]
+                exp_x_block = reshaped_exp_x[i*x_config["depth_dim_1"] + k]
+                man_y_block = reshaped_man_y[k*y_config["depth_dim_0"] + j]
+                exp_y_block = reshaped_exp_y[k*y_config["depth_dim_0"] + j]
+                partial_man_out[k], partial_exp_out[k] = MatmulCore(man_x_block, exp_x_block, man_y_block,exp_y_block)
+            acc_man_out, acc_exp_out = MxIntAccumulator(partial_man_out.reshape(y_config["depth_dim_1"], -1), partial_exp_out)
+                
+    # config 
+
+def MxIntCast(man_in, exp_in, param):
+    # In Man Width
+    max_in = torch.ceil(torch.log2(man_in.abs().max()))
+    out_width = param["out_width"]
+    out_exponent_width = param["out_exponent_width"]
+    in_width = param["in_width"]
+    in_frac_width = param["in_frac_width"]
+    in_exponent_width = param["in_exponent_width"]
+
+    out_exponent_max = 2**(out_exponent_width - 1) - 1
+    out_exponent_min = -2**(out_exponent_width - 1)
+    
+    out_min = -(2 ** (out_width - 1))
+    out_max = 2 ** (out_width - 1) - 1
+    lma_in = torch.ceil(torch.log2(man_in.abs().max() + 1e-3))
+    out_exp_full = lma_in + exp_in -  in_frac_width
+    out_exp = torch.clamp(out_exp_full, out_exponent_min, out_exponent_max)
+    out_man = man_in / 2**(in_frac_width - exp_in + out_exp - (out_width - 1))
+    out_man = torch.clamp(out_man, out_min, out_max)
+
+    return out_man, out_exp
+    
+    
+    
+
+def MatmulCore(man_x, exp_x, man_y, exp_y):
+    return man_x @ man_y, exp_x + exp_y
+    
+def MxIntAccumulator(man, exp):
+    IN_DEPTH, BLOCK_SIZE = man.shape[0],man.shape[1]
+    max_exp = torch.Tensor([-999])
+    mout = torch.zeros(BLOCK_SIZE)
+    out_exp = torch.Tensor([-999])
+    for i in range(IN_DEPTH):
+        max_exp = exp[i] if exp[i]>max_exp else max_exp
+        mout = mout // 2**(max_exp - out_exp)
+        out_exp = max_exp
+        shifted_man = man[i] // 2**(max_exp - exp[i])
+        mout = mout + shifted_man
+    
+    return mout, out_exp

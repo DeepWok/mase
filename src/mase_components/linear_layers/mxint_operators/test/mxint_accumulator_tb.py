@@ -14,7 +14,7 @@ from mase_cocotb.interfaces.streaming import (
 )
 
 from mase_cocotb.runner import mase_runner
-from utils import mxint_quantize
+from utils import mxint_quantize, MXINTAccumulator
 
 import torch
 from math import ceil, log2
@@ -65,17 +65,8 @@ class MXIntAccumulatorTB(Testbench):
         (qtensor, mtensor, etensor) = block_mxint_quant(data_in, config, parallelism)
         mtensor = mtensor.reshape(self.get_parameter("IN_DEPTH"), self.get_parameter("BLOCK_SIZE"))
         etensor = etensor.reshape(self.get_parameter("IN_DEPTH"))
-        max_etensor = torch.Tensor([-999])
-        mout = torch.zeros(self.get_parameter("BLOCK_SIZE"))
-        out_etensor = torch.Tensor([-999])
-        for i in range(self.get_parameter("IN_DEPTH")):
-            max_etensor = etensor[i] if etensor[i]>max_etensor else max_etensor
-            mout = mout // 2**(max_etensor - out_etensor)
-            out_etensor = max_etensor
-            shifted_mtensor = mtensor[i] // 2**(max_etensor - etensor[i])
-            mout = mout + shifted_mtensor
+        mout, eout = MXINTAccumulator(mtensor, etensor)
             
-        eout = max_etensor
         tensor_inputs = pack_tensor_to_mx_listed_chunk(mtensor, etensor, parallelism)
         exp_outs = [(mout.int().tolist(), int(eout))]
 

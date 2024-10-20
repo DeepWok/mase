@@ -5,11 +5,13 @@ Description : The accumulator for mxint.
               When inputing different exponent, the mantissa will cast to the same bitwidth then accumulate.
 */
 module mxint_accumulator #(
-    parameter DATA_IN_0_PRECISION_0 = 8,
-    parameter DATA_IN_0_PRECISION_1 = 4,
+    // precision_0 = mantissa_width
+    // precision_1 = exponent_width
+    parameter DATA_IN_0_PRECISION_0 = 4,
+    parameter DATA_IN_0_PRECISION_1 = 8,
     parameter BLOCK_SIZE = 4,
     parameter IN_DEPTH = 2,
-    parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0 + 2 ** DATA_IN_0_PRECISION_1 + $clog2(
+    parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0 + $clog2(
         IN_DEPTH
     ),
     parameter DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1
@@ -37,15 +39,15 @@ module mxint_accumulator #(
   assign data_out_0_valid = (counter == IN_DEPTH);
   /* verilator lint_on WIDTH */
 
-  // mantissa shift
-  logic [DATA_OUT_0_PRECISION_0 - 1:0] shifted_mdata_in_0[BLOCK_SIZE - 1:0];
+  // lossless shift
+  logic [DATA_IN_0_PRECISION_0 - 1:0] shifted_mdata_in_0[BLOCK_SIZE - 1:0];
   logic [DATA_OUT_0_PRECISION_0 - 1:0] shifted_mdata_out_0[BLOCK_SIZE - 1:0];
 
   logic no_value_in_register;
-  logic [DATA_IN_0_PRECISION_1 - 1:0] exp_min;
+  logic [DATA_IN_0_PRECISION_1 - 1:0] exp_max;
 
   assign no_value_in_register =(counter == 0 || (data_out_0_valid && data_out_0_ready && data_in_0_valid));
-  assign exp_min = ($signed(edata_out_0) > $signed(edata_in_0)) ? edata_in_0 : edata_out_0;
+  assign exp_max = ($signed(edata_out_0) < $signed(edata_in_0)) ? edata_in_0 : edata_out_0;
   // counter
   always_ff @(posedge clk)
     if (rst) counter <= 0;
@@ -58,43 +60,48 @@ module mxint_accumulator #(
       end else if (data_in_0_valid && data_in_0_ready) counter <= counter + 1;
     end
   // mantissa
-
   for (genvar i = 0; i < BLOCK_SIZE; i++) begin : mantissa_block
     // mantissa shift
-    for (genvar j = 0; j < 2 ** DATA_IN_0_PRECISION_1; j++) begin : static_shift
       always_comb begin
-        if (($signed(edata_in_0) - $signed(exp_min)) == j)
-          shifted_mdata_in_0[i] = no_value_in_register ? $signed(
-              mdata_in_0[i]
-          ) : $signed(
-              mdata_in_0[i]
-          ) <<< j;
-        if (($signed(edata_out_0) - $signed(exp_min)) == j)
-          shifted_mdata_out_0[i] = $signed(mdata_out_0[i]) <<< j;
+          shifted_mdata_in_0[i] = no_value_in_register ? $signed( mdata_in_0[i]) : $signed( mdata_in_0[i]) >>> ($signed(exp_max) - $signed(edata_in_0));
+          shifted_mdata_out_0[i] = $signed(mdata_out_0[i]) >>> ($signed(exp_max) - $signed(edata_out_0));
       end
-    end
+  // for (genvar i = 0; i < BLOCK_SIZE; i++) begin : mantissa_block
+  //   // mantissa shift
+  //   for (genvar j = 0; j < 2 ** DATA_IN_0_PRECISION_1; j++) begin : static_shift
+  //     always_comb begin
+  //       if (($signed(edata_in_0) - $signed(exp_min)) == j)
+  //         shifted_mdata_in_0[i] = no_value_in_register ? $signed(
+  //             mdata_in_0[i]
+  //         ) : $signed(
+  //             mdata_in_0[i]
+  //         ) <<< j;
+  //       if (($signed(edata_out_0) - $signed(exp_min)) == j)
+  //         shifted_mdata_out_0[i] = $signed(mdata_out_0[i]) <<< j;
+  //     end
+  //   end
     // mantissa out
     always_ff @(posedge clk)
       if (rst) mdata_out_0[i] <= '0;
       else begin
         if (data_out_0_valid) begin
           if (data_out_0_ready) begin
-            if (data_in_0_valid) mdata_out_0[i] <= shifted_mdata_in_0[i];
+            if (data_in_0_valid) mdata_out_0[i] <= $signed(shifted_mdata_in_0[i]);
             else mdata_out_0[i] <= '0;
           end
         end else if (data_in_0_valid && data_in_0_ready)
           mdata_out_0[i] <= $signed(shifted_mdata_out_0[i]) + $signed(shifted_mdata_in_0[i]);
       end
   end
-  localparam signed [DATA_IN_0_PRECISION_1 - 1:0] MAXIMUM_EXPONENTIAL = 2**(DATA_IN_0_PRECISION_1 - 1) - 1;
+  localparam signed [DATA_IN_0_PRECISION_1 - 1:0] MINIMUM_EXPONENTIAL =  - 2**(DATA_IN_0_PRECISION_1 - 1);
   // exponent
   always_ff @(posedge clk)
-    if (rst) edata_out_0 <= MAXIMUM_EXPONENTIAL;
+    if (rst) edata_out_0 <= MINIMUM_EXPONENTIAL;
     else if (data_out_0_valid) begin
       if (data_out_0_ready) begin
         if (data_in_0_valid) edata_out_0 <= edata_in_0;
-        else edata_out_0 <= MAXIMUM_EXPONENTIAL;
+        else edata_out_0 <= MINIMUM_EXPONENTIAL;
       end
-    end else if (data_in_0_valid && data_in_0_ready) edata_out_0 <= exp_min;
+    end else if (data_in_0_valid && data_in_0_ready) edata_out_0 <= exp_max;
 
 endmodule

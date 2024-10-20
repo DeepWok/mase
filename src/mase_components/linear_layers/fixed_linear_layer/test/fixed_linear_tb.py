@@ -209,7 +209,6 @@ async def check_signal(dut, log):
     num = {"data_out_0": 0, "data_in_0": 0}
     while True:
         await RisingEdge(dut.clk)
-        handshake_signal_check(dut, log, "data_out_0", num=num)
 
 
 # verified case

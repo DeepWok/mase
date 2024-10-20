@@ -5,6 +5,7 @@ Description : MxInt Cast between Layers.
 */
 module mxint_cast #(
     parameter IN_MAN_WIDTH = 1,
+    parameter IN_MAN_FRAC_WIDTH = IN_MAN_WIDTH - 1,
     parameter IN_EXP_WIDTH = 1,
     parameter OUT_MAN_WIDTH = 1,
     parameter OUT_EXP_WIDTH = 1,
@@ -40,21 +41,25 @@ module mxint_cast #(
   logic log2_max_value_valid, log2_max_value_ready;
 
   localparam EBIAS = 2 ** (OUT_EXP_WIDTH - 1);
-  localparam LOSSLESSS_EDATA_WIDTH = max(LOG2_WIDTH, IN_EXP_WIDTH, OUT_EXP_WIDTH) + 2;
+localparam LOSSLESSS_EDATA_WIDTH = 
+    (LOG2_WIDTH > IN_EXP_WIDTH && LOG2_WIDTH > OUT_EXP_WIDTH) ? LOG2_WIDTH + 2 :
+    (IN_EXP_WIDTH > OUT_EXP_WIDTH) ? IN_EXP_WIDTH + 2:
+    OUT_EXP_WIDTH + 2;
+
   localparam FIFO_DEPTH = $clog2(BLOCK_SIZE);
   logic [LOSSLESSS_EDATA_WIDTH - 1:0] edata_out_full;
   log2_max_abs #(
       .IN_SIZE (BLOCK_SIZE),
-      .IN_WIDTH(IN_MAN_WIDTH),
+      .IN_WIDTH(IN_MAN_WIDTH)
   ) max_bas_i (
       .clk,
       .rst,
-      .data_in(mdata_in),
-      .data_in_valid(data_for_max_valid),
-      .data_in_ready(data_for_max_ready),
-      .data_out(log2_max_value),
-      .data_out_valid(log2_max_value_valid),
-      .data_out_ready(log2_max_value_ready)
+      .data_in_0(mdata_in),
+      .data_in_0_valid(data_for_max_valid),
+      .data_in_0_ready(data_for_max_ready),
+      .data_out_0(log2_max_value),
+      .data_out_0_valid(log2_max_value_valid),
+      .data_out_0_ready(log2_max_value_ready)
   );
 
   if (FIFO_DEPTH == 0) begin
@@ -64,7 +69,7 @@ module mxint_cast #(
       buffer_data_for_out_valid = data_for_out_valid;
       data_for_out_ready = buffer_data_for_out_ready;
     end
-  end else begin
+  end else begin: data_buffer
     unpacked_mx_fifo #(
         .DEPTH(FIFO_DEPTH),
         .MAN_WIDTH(IN_MAN_WIDTH),
@@ -89,7 +94,7 @@ module mxint_cast #(
       .data_out_valid(data_out_valid),
       .data_out_ready(data_out_ready)
   );
-  assign edata_out_full = $signed(log2_max_value) + $signed(ebuffer_data_for_out) - EBIAS;
+  assign edata_out_full = $signed(log2_max_value) + $signed(ebuffer_data_for_out) - IN_MAN_FRAC_WIDTH;
   // clamp 
   signed_clamp #(
       .IN_WIDTH (LOSSLESSS_EDATA_WIDTH),
@@ -98,22 +103,34 @@ module mxint_cast #(
       .in_data (edata_out_full),
       .out_data(edata_out)
   );
-  localparam SHIFT_WIDTH = max(OUT_EXP_WIDTH, IN_EXP_WIDTH, 0) + 1;
+  localparam SHIFT_WIDTH = (OUT_EXP_WIDTH > IN_EXP_WIDTH)? OUT_EXP_WIDTH + 1 : IN_EXP_WIDTH + 1;
   logic [SHIFT_WIDTH - 1:0] shift_value;
-  assign shift_value = $signed(edata_out) - $signed(ebuffer_data_for_out);
+  assign shift_value = $signed(edata_out) - $signed(ebuffer_data_for_out) + IN_MAN_FRAC_WIDTH - (OUT_MAN_WIDTH - 1);
   logic [SHIFT_WIDTH - 1:0] abs_shift_value;
   assign abs_shift_value = (shift_value[SHIFT_WIDTH-1]) ? (~shift_value + 1) : shift_value;
-
   logic [IN_MAN_WIDTH + EBIAS - 1:0] shift_buffer_data_for_out[BLOCK_SIZE - 1:0];
+  logic [IN_MAN_WIDTH + EBIAS - 1:0] shift_data [BLOCK_SIZE - 1:0][2**SHIFT_WIDTH - 1:0];
   for (genvar i = 0; i < BLOCK_SIZE; i++) begin
-    for (genvar j = 0; j < 2 ** SHIFT_WIDTH; j++)
-    always_comb
-      if (abs_shift_value == j)
-        shift_buffer_data_for_out[i] = (shift_value[SHIFT_WIDTH-1]) ? $signed(
+    for (genvar j = 0; j < 2 ** SHIFT_WIDTH; j++) begin
+      always_comb begin
+        shift_data[i][j] = (shift_value[SHIFT_WIDTH-1]) ? $signed(
             mbuffer_data_for_out[i]
         ) <<< j : $signed(
             mbuffer_data_for_out[i]
         ) >>> j;
+      end
+    end
+    assign shift_buffer_data_for_out[i] = shift_data[i][abs_shift_value];
+  end
+  // for (genvar i = 0; i < BLOCK_SIZE; i++) begin
+  //   always_comb begin
+  //       if (shift_value[SHIFT_WIDTH-1]) begin
+  //       shift_buffer_data_for_out[i] = $signed(mbuffer_data_for_out[i]) <<< abs_shift_value;
+  //       end else begin
+  //       shift_buffer_data_for_out[i] = $signed(mbuffer_data_for_out[i]) >>> abs_shift_value;
+  //       end
+  //   end
+  for(genvar i = 0; i < BLOCK_SIZE; i++)begin
     signed_clamp #(
         .IN_WIDTH (IN_MAN_WIDTH + EBIAS),
         .OUT_WIDTH(OUT_MAN_WIDTH)
@@ -121,13 +138,12 @@ module mxint_cast #(
         .in_data (shift_buffer_data_for_out[i]),
         .out_data(mdata_out[i])
     );
-  end
+  end 
 endmodule
-function [31:0] max;
-  input [31:0] x, y, z;
-  begin
-    if (x > y && x > z) max = x;
-    else if (y > z) max = y;
-    else max = z;
-  end
-endfunction
+// function int max(input int x, y, z);
+//   begin
+//     if (x > y && x > z) max = x;
+//     else if (y > z) max = y;
+//     else max = z;
+//   end
+// endfunction
