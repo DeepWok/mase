@@ -13,7 +13,12 @@ def _cap(name):
     """
     return str(name).upper()
 
-
+def parse_arg(arg):
+    if "data_in" in arg:
+        new_arg = 'data_in'
+    else:
+        new_arg = arg
+    return new_arg
 def update_common_metadata_pass(mg, quan_args):
     # There is a bug in the current quantization pass, where the results metadata is not updated with the precision.
     # # Here we update the metadata here so we can test the hardware back end.
@@ -30,22 +35,38 @@ def update_common_metadata_pass(mg, quan_args):
                 type(node.meta["mase"].parameters["common"]["args"][arg]) == dict
                 and "type" in node.meta["mase"].parameters["common"]["args"][arg].keys()
             ):
-                node.meta["mase"].parameters["common"]["args"][arg]["type"] = "fixed"
+                if node_quan_config["name"] == "mxint_hardware": 
+                    node.meta["mase"].parameters["common"]["args"][arg]["parallelism"] = node_quan_config[parse_arg(arg) + "_parallelism"]
+                else:
+                    node.meta["mase"].parameters["common"]["args"][arg]["type"] = "fixed"
         for result, _ in node.meta["mase"].parameters["common"]["results"].items():
             if (
                 type(node.meta["mase"].parameters["common"]["results"][result]) == dict
                 and "type"
                 in node.meta["mase"].parameters["common"]["results"][result].keys()
-            ):
-                node.meta["mase"].parameters["common"]["results"][result][
-                    "type"
-                ] = "fixed"
-                node.meta["mase"].parameters["common"]["results"][result][
-                    "precision"
-                ] = [
-                    node_quan_config["data_out_width"],
-                    node_quan_config["data_out_frac_width"],
-                ]
+            ): 
+                if node_quan_config["name"] == "mxint_hardware": 
+                    node.meta["mase"].parameters["common"]["results"][result][
+                        "type"
+                    ] = "mxint_hardware"
+                    node.meta["mase"].parameters["common"]["results"][result][
+                        "precision"
+                    ] = [
+                        node_quan_config["data_out_width"],
+                        node_quan_config["data_out_exponent_width"],
+                    ]
+                    node.meta["mase"].parameters["common"]["results"][result]["parallelism"] = node_quan_config[parse_arg(arg) + "_parallelism"]
+                else:
+                    node.meta["mase"].parameters["common"]["results"][result][
+                        "type"
+                    ] = "fixed"
+                    node.meta["mase"].parameters["common"]["results"][result][
+                        "precision"
+                    ] = [
+                        node_quan_config["data_out_width"],
+                        node_quan_config["data_out_frac_width"],
+                    ]
+        node.meta["mase"].parameters["common"]["quant_type"] = node_quan_config["name"]
     # update parameters
     for node in mg.fx_graph.nodes:
         mase_op = node.meta["mase"].parameters["common"]["mase_op"]
@@ -56,18 +77,6 @@ def update_common_metadata_pass(mg, quan_args):
                 ] = True
                 if node.meta["mase"].parameters["common"]["args"].get("bias") != None:
                     node.meta["mase"].parameters["common"]["args"]["has_bias"] = True
-
-    # update for transpose
-    for node in mg.fx_graph.nodes:
-        mase_op = node.meta["mase"].parameters["common"]["mase_op"]
-        if mase_op in ["vit_self_attention_integer", "linear"]:
-            args = node.meta["mase"].parameters["common"]["args"]
-            if args != None:
-                for key, _ in args.items():
-                    if "weight" in key:
-                        args[key]["value"] = args[key]["value"].transpose(0, 1)
-                        args[key]["shape"].reverse()
-
 
 def manually_update_hardware_parallelism_param(graph, pass_args: dict = {}):
     # The quantization pass currently don't support any inlayer precision automatically generate
