@@ -6,8 +6,8 @@
    :alt: logo
    :align: center
 
-Lab 2: Neural Architecture Search
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Lab 3: Mixed Precision Search
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. raw:: html
 
@@ -24,7 +24,7 @@ Lab 2: Neural Architecture Search
 General introduction
 ====================
 
-In this lab, you will learn how to use Mase and 
+You have looked at how to quantize models in lab0 and how to search for optimal architectures in lab2. In this lab, you will learn how to use Mase to search for optimal quantization schemes for a model.
 
 Learning tasks
 =============================

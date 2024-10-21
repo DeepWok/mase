@@ -7,7 +7,7 @@
    :align: center
 
 Lab 1 for Advanced Deep Learning Systems (ADLS)
-~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. raw:: html
 

@@ -19,15 +19,20 @@ On successful completion of this module, you'll be able to :
 Syllabus
 ------------------------------
 
-This module covers the introduction to modern ML systems and frameworks, ML models and their characteristics (Transformers, Convolutional Networks, 3D CNNs, Vision Transformers, Graph Neural Networks and Generative models such as VAEs and Diffusion Models) (3 hours), Modern ML Compilers (including the concept of Computational Graphs, Parallelism and Graph-level optimization) (2 hours), Model Compression (including Low Rank Approximation, Pruning, Quantization and Adaptive Compute), Hardware acceleration (including Commodity hardware, Custom hardware and MLPerf), Automated Machine Learning (including Network Architecture Search, Reinforcement Learning based NAS, Gradient-based NAS and Weight-sharing) (4 hours), Deep Learning Training (including Backpropagation, Scalability, Data parallel vs. Model parallel and Multi-GPU/Node training) (2 hours) and Systems for various Deep Learning paradigms (including Federated Learning and Large Scale ML on the Cloud) (1 hour).
+This module covers the following topics:
+    1. Introduction to modern ML systems and frameworks, ML models and their characteristics (Transformers, Convolutional Networks, 3D CNNs, Vision Transformers, Graph Neural Networks and Generative models such as VAEs and Diffusion Models) (3 hours)
+    2. Modern ML Compilers (including the concept of Computational Graphs, Parallelism and Graph-level optimization) (2 hours)
+    3. Model Compression (including Low Rank Approximation, Pruning, Quantization and Adaptive Compute), Hardware acceleration (including Commodity hardware, Custom hardware and MLPerf), Automated Machine Learning (including Network Architecture Search, Reinforcement Learning based NAS, Gradient-based NAS and Weight-sharing) (4 hours)
+    4. Deep Learning Training (including Backpropagation, Scalability, Data parallel vs. Model parallel and Multi-GPU/Node training) (2 hours) and Systems for various Deep Learning paradigms (including Federated Learning and Large Scale ML on the Cloud) (1 hour).
 
 .. toctree::
     :maxdepth: 1
     :caption: Lab Materials
 
-    labs_2024/lab1
-    labs_2024/lab2
-    labs_2024/lab3
+    labs_2024/lab_0_introduction
+    labs_2024/lab_1_compression
+    labs_2024/lab_2_nas
+    labs_2024/lab_3_mixed_precision_search
     labs_2024/lab4-hardware
     labs_2024/lab4-software
 

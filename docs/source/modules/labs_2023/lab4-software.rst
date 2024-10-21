@@ -7,7 +7,7 @@
    :align: center
 
 Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)
-~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. raw:: html
 
