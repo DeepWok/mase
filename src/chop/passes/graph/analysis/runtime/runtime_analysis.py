@@ -13,10 +13,20 @@ from datetime import datetime
 from pathlib import Path
 import time
 
-import tensorrt as trt
-from cuda import cudart
+
+from chop.passes.utils import register_mase_pass
 
 
+@register_mase_pass(
+    "runtime_analysis_pass",
+    dependencies=[
+        "pytorch_quantization",
+        "tensorrt",
+        "pynvml",
+        "pycuda",
+        "cuda",
+    ],
+)
 def runtime_analysis_pass(model, pass_args=None):
     """
     Evaluates the performance of a model by analyzing its inference speed, accuracy, and other relevant metrics.
@@ -51,6 +61,9 @@ def runtime_analysis_pass(model, pass_args=None):
 
     These metrics provide valuable insights into the model's efficiency, effectiveness, and operational cost, crucial for informed decision-making regarding model deployment in production environments.
     """
+    import tensorrt as trt
+    from cuda import cudart
+
     analysis = RuntimeAnalysis(model, pass_args)
     results = analysis.evaluate()
     analysis.store(results)

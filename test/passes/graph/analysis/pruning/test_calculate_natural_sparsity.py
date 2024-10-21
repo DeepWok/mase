@@ -5,19 +5,6 @@ import os
 import sys
 import pprint
 
-sys.path.append(
-    os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "..",
-        "..",
-        "..",
-        "..",
-        "..",
-        "..",
-        "machop",
-    )
-)
-
 from chop.dataset import MaseDataModule, get_dataset_info
 from chop.models import get_model, get_model_info
 from chop.passes.graph import (

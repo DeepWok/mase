@@ -33,8 +33,8 @@ from transformers.utils import (
 )
 from transformers.models.bert.configuration_bert import BertConfig
 
-import nni
-from nni.nas.nn.pytorch import ModelSpace, LayerChoice, ParametrizedModule
+# import nni
+# from nni.nas.nn.pytorch import ModelSpace, LayerChoice, ParametrizedModule
 
 logger = logging.get_logger(__name__)
 

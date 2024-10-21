@@ -1,4 +1,4 @@
-# Getting Started using Nix (Suggested, includes Common Troubleshooting)
+# Getting Started using Nix
 
 ## Install Nix (for the first time)
 

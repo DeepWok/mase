@@ -49,6 +49,9 @@ MASE_IMPLICIT_FUNCS = [
     "finfo",
     "masked_fill",
     "masked_fill_",
+    "index_select",
+    "detach",
+    "tensor",
 ]
 
 MASE_MODULE_RELATED_FUNCS = [

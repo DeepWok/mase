@@ -4,6 +4,8 @@ from time import time
 import dill
 
 from chop.tools import get_logger
+from chop.passes.utils import register_mase_pass
+
 from .mesh_model import MeshModel
 
 logger = get_logger(__name__)
@@ -205,6 +207,11 @@ def _get_sharding_map(mg):
     return tensor_sharding_map
 
 
+@register_mase_pass(
+    name="autosharding_analysis_pass",
+    dependencies=["torch"],
+    requires_nightly_torch=True,
+)
 def autosharding_analysis_pass(mg, pass_args: dict = {}):
     """Annotate the metadata of each operator in the graph with a parallelization strategy.
 
@@ -232,6 +239,8 @@ def autosharding_analysis_pass(mg, pass_args: dict = {}):
     - preload_solution (optional) -> bool : If set to true, preload autosharding solution from file.
     - ilp_solution_file (optional) -> str : File to export the autosharding solution to. Defaults to: "ilp_solution.pkl".
     """
+    from .alpa import alpa_autosharding_pass
+    from .megatron import megatron_autosharding_pass
 
     from torch.distributed._tensor._op_schema import DTensorSpec
     from torch.distributed._tensor.placement_types import Replicate

@@ -16,7 +16,6 @@ from ...utils import (
 
 from .modify import create_new_fn, create_new_module
 from .quant_parsers import parse_node_config, relink_node_meta, update_quant_meta_param
-from .summary import graph_iterator_compare_nodes, graph_iterator_node_histogram
 
 logger = logging.getLogger(__name__)
 
@@ -51,11 +50,6 @@ def get_config(config: dict, name: str):
         return config["default"]["config"]
 
 
-# def update_quant_meta_param(*args, **kwargs):
-#     # TODO: remove this function when the add_common_metadata is fixed
-#     pass
-
-
 def graph_iterator_quantize_by_type(graph, config: dict):
     # Some modules might need information from two graphs to be initilized
     if (
@@ -69,6 +63,11 @@ def graph_iterator_quantize_by_type(graph, config: dict):
     else:
         bl_graph = None
     for node in graph.fx_graph.nodes:
+        if node.meta["mase"]["common"].get("mase_op", None) is None:
+            logger.debug(
+                f"Skipping node: {node.name} because mase op was not found. This may be a serialization issue with checkpoint export/load."
+            )
+            continue
         if get_mase_op(node) not in QUANTIZEABLE_OP:
             continue
         node_config = get_config(config, get_mase_op(node))

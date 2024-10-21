@@ -1,3 +1,5 @@
+from chop.tools.check_dependency import check_dependencies
+
 from .analysis import (
     add_common_metadata_analysis_pass,
     add_hardware_metadata_analysis_pass,
@@ -43,6 +45,16 @@ from .interface import (
 
 from .transforms.quantize.quant_parsers import parse_node_config
 
+from chop.passes.graph.analysis.runtime.runtime_analysis import (
+    runtime_analysis_pass,
+)
+
+from .interface import tensorrt_engine_interface_pass
+
+from .transforms.tensorrt import (
+    tensorrt_calibrate_transform_pass,
+    tensorrt_fake_quantize_transform_pass,
+)
 
 ANALYSIS_PASSES = [
     "init_metadata",
@@ -123,33 +135,20 @@ PASSES = {
     "onnx_annotate": onnx_annotate_transform_pass,
 }
 
-
-from chop.tools.check_dependency import check_deps_tensorRT_pass
-
-
-# add tensorrt passes if dependencies are correctly installed
-if check_deps_tensorRT_pass(silent=True):
-    from chop.passes.graph.analysis.runtime.runtime_analysis import (
-        runtime_analysis_pass,
-    )
-
+if check_dependencies("runtime_analysis_pass"):
     ANALYSIS_PASSES.append("runtime_analysis_pass")
     PASSES["runtime_analysis_pass"] = runtime_analysis_pass
 
-    from .interface import tensorrt_engine_interface_pass
-
-    from .transforms.tensorrt import (
-        tensorrt_calibrate_transform_pass,
-        tensorrt_fake_quantize_transform_pass,
-    )
-
+if check_dependencies("tensorrt_engine_interface_pass"):
     INTERFACE_PASSES.append("tensorrt_engine_interface_pass")
     PASSES["tensorrt_engine_interface_pass"] = tensorrt_engine_interface_pass
 
+if check_dependencies("tensorrt_calibrate_transform_pass"):
     TRANSFORM_PASSES.append("tensorrt_calibrate_transform_pass")
-    TRANSFORM_PASSES.append("tensorrt_fake_quantize_transform_pass")
-
     PASSES["tensorrt_calibrate_transform_pass"] = tensorrt_calibrate_transform_pass
+
+if check_dependencies("tensorrt_fake_quantize_transform_pass"):
+    TRANSFORM_PASSES.append("tensorrt_fake_quantize_transform_pass")
     PASSES["tensorrt_fake_quantize_transform_pass"] = (
         tensorrt_fake_quantize_transform_pass
     )
