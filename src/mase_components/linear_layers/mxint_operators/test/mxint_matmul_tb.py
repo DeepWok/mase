@@ -70,9 +70,8 @@ class MXIntMatmulTB(Testbench):
         self.input_drivers = {
             "a": self.a_driver,
             "b": self.b_driver,
-            }
-        self.output_monitors = {
-            "out": self.output_monitor}
+        }
+        self.output_monitors = {"out": self.output_monitor}
         self.output_monitor.log.setLevel(logging.DEBUG)
 
     def generate_inputs(self):
@@ -108,39 +107,43 @@ class MXIntMatmulTB(Testbench):
 
             self.log.debug(f"hardware_out = {ma @ mb}")
             (mout, eout) = MXIntMatmulHardware(
-                ma, ea, mb, eb, 
+                ma,
+                ea,
+                mb,
+                eb,
                 {
                     "width": self.get_parameter("A_MAN_WIDTH"),
                     "exponent_width": self.get_parameter("A_EXP_WIDTH"),
                     "parallism_dim_0": self.get_parameter("A_COMPUTE_DIM0"),
                     "parallism_dim_1": self.get_parameter("A_COMPUTE_DIM1"),
-                    "depth_dim_0": self.get_parameter("A_DEPTH_DIM0"), 
-                    "depth_dim_1": self.get_parameter("A_DEPTH_DIM1"), 
-                    "dim_0": self.get_parameter("A_TOTAL_DIM0"), 
-                    "dim_1": self.get_parameter("A_TOTAL_DIM1"), 
-                }, 
+                    "depth_dim_0": self.get_parameter("A_DEPTH_DIM0"),
+                    "depth_dim_1": self.get_parameter("A_DEPTH_DIM1"),
+                    "dim_0": self.get_parameter("A_TOTAL_DIM0"),
+                    "dim_1": self.get_parameter("A_TOTAL_DIM1"),
+                },
                 {
                     "width": self.get_parameter("B_MAN_WIDTH"),
                     "exponent_width": self.get_parameter("B_EXP_WIDTH"),
                     "parallism_dim_0": self.get_parameter("B_COMPUTE_DIM0"),
                     "parallism_dim_1": self.get_parameter("B_COMPUTE_DIM1"),
-                    "depth_dim_0": self.get_parameter("B_DEPTH_DIM0"), 
-                    "depth_dim_1": self.get_parameter("B_DEPTH_DIM1"), 
-                    "dim_0": self.get_parameter("B_TOTAL_DIM0"), 
-                    "dim_1": self.get_parameter("B_TOTAL_DIM1"), 
-                }, 
+                    "depth_dim_0": self.get_parameter("B_DEPTH_DIM0"),
+                    "depth_dim_1": self.get_parameter("B_DEPTH_DIM1"),
+                    "dim_0": self.get_parameter("B_TOTAL_DIM0"),
+                    "dim_1": self.get_parameter("B_TOTAL_DIM1"),
+                },
                 {
                     "width": self.get_parameter("OUT_MAN_WIDTH"),
                     "exponent_width": self.get_parameter("OUT_EXP_WIDTH"),
                     "parallism_dim_0": self.get_parameter("C_COMPUTE_DIM0"),
                     "parallism_dim_1": self.get_parameter("C_COMPUTE_DIM1"),
-                    "depth_dim_0": self.get_parameter("C_DEPTH_DIM0"), 
-                    "depth_dim_1": self.get_parameter("C_DEPTH_DIM1"), 
-                    "dim_0": self.get_parameter("C_TOTAL_DIM0"), 
-                    "dim_1": self.get_parameter("C_TOTAL_DIM1"), 
-                }, 
+                    "depth_dim_0": self.get_parameter("C_DEPTH_DIM0"),
+                    "depth_dim_1": self.get_parameter("C_DEPTH_DIM1"),
+                    "dim_0": self.get_parameter("C_TOTAL_DIM0"),
+                    "dim_1": self.get_parameter("C_TOTAL_DIM1"),
+                },
             )
             from utils import pack_tensor_to_mx_listed_chunk
+
             a_inputs = pack_tensor_to_mx_listed_chunk(
                 ma,
                 ea,

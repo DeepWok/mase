@@ -58,14 +58,17 @@ class MxIntCastTB(Testbench):
                 int(self.dut.IN_MAN_WIDTH),
                 int(self.dut.IN_EXP_WIDTH),
             )
-            mexp_out, eexp_out = MxIntCast(mdata_in, edata_in, 
+            mexp_out, eexp_out = MxIntCast(
+                mdata_in,
+                edata_in,
                 {
-                    "in_width": int(self.dut.IN_MAN_WIDTH), 
-                    "in_frac_width": int(self.dut.IN_MAN_FRAC_WIDTH), 
-                    "in_exponent_width": int(self.dut.IN_EXP_WIDTH), 
-                    "out_width": int(self.dut.OUT_MAN_WIDTH), 
-                    "out_exponent_width": int(self.dut.OUT_EXP_WIDTH), 
-                })
+                    "in_width": int(self.dut.IN_MAN_WIDTH),
+                    "in_frac_width": int(self.dut.IN_MAN_FRAC_WIDTH),
+                    "in_exponent_width": int(self.dut.IN_EXP_WIDTH),
+                    "out_width": int(self.dut.OUT_MAN_WIDTH),
+                    "out_exponent_width": int(self.dut.OUT_EXP_WIDTH),
+                },
+            )
             inputs.append((mdata_in.int().tolist(), edata_in.int().tolist()))
             exp_outputs.append((mexp_out.int().tolist(), eexp_out.int().tolist()))
         return inputs, exp_outputs
@@ -92,6 +95,7 @@ async def test(dut):
     tb = MxIntCastTB(dut, num=1)
     await tb.run_test()
 
+
 async def check_signal(dut):
     num = {"data_out_0": 0, "data_in_0": 0}
     while True:
@@ -111,6 +115,7 @@ async def check_signal(dut):
         # print(dut.store_the_data.ff_inst.data_out_ready)
         # print(dut.max_bas_i.or_tree_i.data_out_valid)
         # print("end")
+
 
 if __name__ == "__main__":
     mase_runner(
@@ -147,6 +152,6 @@ if __name__ == "__main__":
             #     "BLOCK_SIZE": 4,
             # },
         ],
-        sim="questa"
+        sim="questa",
         # gui=True
     )

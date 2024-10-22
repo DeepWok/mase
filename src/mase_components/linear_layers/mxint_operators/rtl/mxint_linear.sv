@@ -254,7 +254,11 @@ module mxint_linear #(
         .data_out_valid(cast_data_out_0_valid),
         .data_out_ready(cast_data_out_0_ready)
     );
-    assign exp_difference = $signed(circular_ebias) - $signed(acc_edata_out) + DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 - 2 - (BIAS_PRECISION_0 - 1);
+    assign exp_difference = $signed(
+        circular_ebias
+    ) - $signed(
+        acc_edata_out
+    ) + DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 - 2 - (BIAS_PRECISION_0 - 1);
     assign abs_shift_value = exp_difference[FDP_EXP_WIDTH - 1]? (~exp_difference + 1): exp_difference;
     for (genvar m = 0; m < DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1; m++) begin
       assign shifted_mbias[m] = exp_difference[FDP_EXP_WIDTH-1] ? $signed(

@@ -54,19 +54,25 @@ class MXIntAccumulatorTB(Testbench):
         from utils import mxint_quantize
         from math import ceil, log2
 
-        data_in = 20 * torch.rand(
-            self.get_parameter("IN_DEPTH"), self.get_parameter("BLOCK_SIZE")
-        ) - 20
+        data_in = (
+            20
+            * torch.rand(
+                self.get_parameter("IN_DEPTH"), self.get_parameter("BLOCK_SIZE")
+            )
+            - 20
+        )
         config = {
             "width": self.get_parameter("DATA_IN_0_PRECISION_0"),
             "exponent_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
         }
         parallelism = [1, self.get_parameter("BLOCK_SIZE")]
         (qtensor, mtensor, etensor) = block_mxint_quant(data_in, config, parallelism)
-        mtensor = mtensor.reshape(self.get_parameter("IN_DEPTH"), self.get_parameter("BLOCK_SIZE"))
+        mtensor = mtensor.reshape(
+            self.get_parameter("IN_DEPTH"), self.get_parameter("BLOCK_SIZE")
+        )
         etensor = etensor.reshape(self.get_parameter("IN_DEPTH"))
         mout, eout = MxIntAccumulator(mtensor, etensor)
-            
+
         tensor_inputs = pack_tensor_to_mx_listed_chunk(mtensor, etensor, parallelism)
         exp_outs = [(mout.int().tolist(), int(eout))]
 
@@ -89,16 +95,21 @@ class MXIntAccumulatorTB(Testbench):
         assert self.data_out_0_monitor.exp_queue.empty()
 
 
-
 async def check_signal(dut):
     await Timer(40, units="ns")
     while True:
         await RisingEdge(dut.clk)
         await ReadOnly()
         if dut.data_in_0_valid.value == 1 and dut.data_in_0_valid.value == 1:
-            print("data_in_0 = ",[x.signed_integer for x in dut.shifted_mdata_in_0.value])
-            print("data_out_0 = ",[x.signed_integer for x in dut.shifted_mdata_out_0.value])
+            print(
+                "data_in_0 = ", [x.signed_integer for x in dut.shifted_mdata_in_0.value]
+            )
+            print(
+                "data_out_0 = ",
+                [x.signed_integer for x in dut.shifted_mdata_out_0.value],
+            )
         print("end")
+
 
 # @cocotb.test()
 # async def test(dut):
@@ -151,5 +162,5 @@ if __name__ == "__main__":
             #     "IN_DEPTH": 4,
             # },
         ],
-        sim="questa"
+        sim="questa",
     )

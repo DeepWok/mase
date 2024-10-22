@@ -5,19 +5,19 @@ Description : This module actually implement the tree structure of or logic.
 */
 
 module or_tree #(
-    parameter IN_SIZE   = 2,
-    parameter IN_WIDTH  = 32
+    parameter IN_SIZE  = 2,
+    parameter IN_WIDTH = 32
 ) (
     /* verilator lint_off UNUSEDSIGNAL */
-    input  logic                 clk,
-    input  logic                 rst,
+    input  logic                clk,
+    input  logic                rst,
     /* verilator lint_on UNUSEDSIGNAL */
-    input  logic [ IN_WIDTH-1:0] data_in       [IN_SIZE-1:0],
-    input  logic                 data_in_valid,
-    output logic                 data_in_ready,
+    input  logic [IN_WIDTH-1:0] data_in       [IN_SIZE-1:0],
+    input  logic                data_in_valid,
+    output logic                data_in_ready,
     output logic [IN_WIDTH-1:0] data_out,
-    output logic                 data_out_valid,
-    input  logic                 data_out_ready
+    output logic                data_out_valid,
+    input  logic                data_out_ready
 );
 
   localparam LEVELS = $clog2(IN_SIZE);
@@ -65,7 +65,7 @@ module or_tree #(
             .IN_SIZE (LEVEL_IN_SIZE),
             .IN_WIDTH(LEVEL_IN_WIDTH)
         ) layer (
-            .data_in(data[i]),  // flattened LEVEL_IN_SIZE * LEVEL_IN_WIDTH
+            .data_in (data[i]),  // flattened LEVEL_IN_SIZE * LEVEL_IN_WIDTH
             .data_out(or_result[i])  // flattened LEVEL_OUT_SIZE * LEVEL_OUT_WIDTH
         );
 

@@ -54,7 +54,7 @@ class MLP(torch.nn.Module):
 
     def forward(self, x):
         x = self.fc1(x)
-        x = self.fc2(x)
+        # x = self.fc2(x)
         return x
 
 
@@ -65,29 +65,33 @@ quan_args = {
     },  # default config, this would be used for any node that does not have a specific config
     "linear": {
         "config": {
-            "name": "integer_floor",  # quantization scheme name supported are ["integer", "fixed" (equivalent to integer), "lutnet" (dev mode), "logicnets" (dev mode), "binary", "binary_residual", "ternary", "minifloat_ieee", "minifloat_denorm", "log", "block_fp", "block_minifloat", "block_log"]
+            "name": "mxint_hardware",
             # data
-            "data_in_width": 8,
-            "data_in_frac_width": 4,
+            "data_in_width": 4,
+            "data_in_exponent_width": 8,
+            "data_in_parallelism": [1, 2],
             # weight
-            "weight_width": 10,
-            "weight_frac_width": 3,
+            "weight_width": 4,
+            "weight_exponent_width": 8,
+            "weight_parallelism": [2, 2],
             # bias
-            "bias_width": 5,
-            "bias_frac_width": 2,
-            "data_out_width": 8,
-            "data_out_frac_width": 4,
-        },
+            "bias_width": 4,
+            "bias_exponent_width": 8,
+            "bias_parallelism": [1, 2],
+            "data_out_width": 4,
+            "data_out_exponent_width": 8,
+            "data_out_parallelism": [1, 2],
+        }
     },
 }
 
 
 @pytest.mark.dev
 def test_emit_verilog_linear():
-    in_features = 192
-    hidden_features = 192
-    out_features = 192
-    n = 196
+    in_features = 8
+    hidden_features = 32
+    out_features = 8
+    n = 2
     batch_size = 10
     linear = MLP(in_features, hidden_features, out_features)
     mg = chop.MaseGraph(model=linear)
@@ -117,15 +121,15 @@ def test_emit_verilog_linear():
         mg, pass_args={"max_parallelism": [2] * 4}
     )
     update_hardware_precision_param(mg, quan_args)
-    wp1 = 8
-    wp2 = 1
-    manually_update_hardware_parallelism_param(
-        mg,
-        pass_args={
-            "fc1": {"din": [1, 2], "dout": [1, wp1]},
-            "fc2": {"din": [1, wp1], "dout": [1, wp2]},
-        },
-    )
+    # wp1 = 8
+    # wp2 = 1
+    # manually_update_hardware_parallelism_param(
+    #     mg,
+    #     pass_args={
+    #         "fc1": {"din": [1, 2], "dout": [1, wp1]},
+    #         "fc2": {"din": [1, wp1], "dout": [1, wp2]},
+    #     },
+    # )
     mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
     mg, _ = passes.emit_verilog_top_transform_pass(mg)
     mg, _ = passes.emit_bram_transform_pass(mg)
@@ -135,8 +139,13 @@ def test_emit_verilog_linear():
     )
     mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
-    # simulate(skip_build=False, skip_test=False, simulator="questa", waves=True, gui=False)
+
+def _simulate():
+    simulate(
+        skip_build=False, skip_test=False, simulator="questa", waves=True, gui=False
+    )
 
 
 if __name__ == "__main__":
     test_emit_verilog_linear()
+    _simulate()

@@ -62,7 +62,7 @@ module mxint_cast #(
       .data_out_0_ready(log2_max_value_ready)
   );
 
-  if (FIFO_DEPTH == 0) begin: register
+  if (FIFO_DEPTH == 0) begin : register
     mxint_register_slice #(
         .DATA_PRECISION_0($bits(mbuffer_data_for_out[0])),
         .DATA_PRECISION_1($bits(ebuffer_data_for_out)),
@@ -79,7 +79,7 @@ module mxint_cast #(
         .data_out_valid(buffer_data_for_out_valid),
         .data_out_ready(buffer_data_for_out_ready)
     );
-  end else begin: data_buffer
+  end else begin : data_buffer
     unpacked_mx_fifo #(
         .DEPTH(FIFO_DEPTH),
         .MAN_WIDTH(IN_MAN_WIDTH),
@@ -104,7 +104,11 @@ module mxint_cast #(
       .data_out_valid(data_out_valid),
       .data_out_ready(data_out_ready)
   );
-  assign edata_out_full = $signed(log2_max_value) + $signed(ebuffer_data_for_out) - IN_MAN_FRAC_WIDTH;
+  assign edata_out_full = $signed(
+      log2_max_value
+  ) + $signed(
+      ebuffer_data_for_out
+  ) - IN_MAN_FRAC_WIDTH;
   // clamp 
   signed_clamp #(
       .IN_WIDTH (LOSSLESSS_EDATA_WIDTH),
@@ -113,13 +117,17 @@ module mxint_cast #(
       .in_data (edata_out_full),
       .out_data(edata_out)
   );
-  localparam SHIFT_WIDTH = (OUT_EXP_WIDTH > IN_EXP_WIDTH)? OUT_EXP_WIDTH + 1 : IN_EXP_WIDTH + 1;
+  localparam SHIFT_WIDTH = (OUT_EXP_WIDTH > IN_EXP_WIDTH) ? OUT_EXP_WIDTH + 1 : IN_EXP_WIDTH + 1;
   logic [SHIFT_WIDTH - 1:0] shift_value;
-  assign shift_value = $signed(edata_out) - $signed(ebuffer_data_for_out) + IN_MAN_FRAC_WIDTH - (OUT_MAN_WIDTH - 1);
+  assign shift_value = $signed(
+      edata_out
+  ) - $signed(
+      ebuffer_data_for_out
+  ) + IN_MAN_FRAC_WIDTH - (OUT_MAN_WIDTH - 1);
   logic [SHIFT_WIDTH - 1:0] abs_shift_value;
   assign abs_shift_value = (shift_value[SHIFT_WIDTH-1]) ? (~shift_value + 1) : shift_value;
   logic [IN_MAN_WIDTH + EBIAS - 1:0] shift_buffer_data_for_out[BLOCK_SIZE - 1:0];
-  logic [IN_MAN_WIDTH + EBIAS - 1:0] shift_data [BLOCK_SIZE - 1:0][2**SHIFT_WIDTH - 1:0];
+  logic [IN_MAN_WIDTH + EBIAS - 1:0] shift_data[BLOCK_SIZE - 1:0][2**SHIFT_WIDTH - 1:0];
   for (genvar i = 0; i < BLOCK_SIZE; i++) begin
     for (genvar j = 0; j < 2 ** SHIFT_WIDTH; j++) begin
       always_comb begin
@@ -140,7 +148,7 @@ module mxint_cast #(
   //       shift_buffer_data_for_out[i] = $signed(mbuffer_data_for_out[i]) >>> abs_shift_value;
   //       end
   //   end
-  for(genvar i = 0; i < BLOCK_SIZE; i++)begin
+  for (genvar i = 0; i < BLOCK_SIZE; i++) begin
     signed_clamp #(
         .IN_WIDTH (IN_MAN_WIDTH + EBIAS),
         .OUT_WIDTH(OUT_MAN_WIDTH)
@@ -148,7 +156,7 @@ module mxint_cast #(
         .in_data (shift_buffer_data_for_out[i]),
         .out_data(mdata_out[i])
     );
-  end 
+  end
 endmodule
 // function int max(input int x, y, z);
 //   begin

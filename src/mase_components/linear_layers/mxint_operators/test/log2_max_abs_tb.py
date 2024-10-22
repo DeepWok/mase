@@ -56,7 +56,7 @@ class Log2_max_abs_tb(Testbench):
     def generate_inputs(self):
         from math import ceil, log2
 
-        data_in = torch.randint(-20, 20, size = (self.get_parameter("IN_SIZE"),))
+        data_in = torch.randint(-20, 20, size=(self.get_parameter("IN_SIZE"),))
         log2_max = ceil(log2((int(data_in.abs().max()) + 1e-6)))
         inputs = [data_in.tolist()]
         outputs = [log2_max]
@@ -89,6 +89,7 @@ async def check_signal(dut, log):
         if str(dut.data_out_0_valid) == "1" and str(dut.data_out_0_ready) == "1":
             print(dut.or_result.value)
         # print("end")
+
 
 # @cocotb.test()
 # async def test(dut):
@@ -141,6 +142,6 @@ if __name__ == "__main__":
                 "IN_SIZE": 4,
             },
         ],
-        sim="questa"
+        sim="questa",
         # gui=True
     )

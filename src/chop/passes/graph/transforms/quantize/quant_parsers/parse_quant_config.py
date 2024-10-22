@@ -268,6 +268,11 @@ QUANT_ARITH_ENTRIES = {
             "bias_exponent_width",
             "bias_parallelism",
         ),
+        "data_out_entries": (
+            "data_out_width",
+            "data_out_exponent_width",
+            "data_out_parallelism",
+        ),
     },
 }
 

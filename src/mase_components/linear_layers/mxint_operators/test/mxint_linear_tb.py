@@ -30,7 +30,7 @@ class LinearTB(Testbench):
             self.log = SimLog("%s" % (type(self).__qualname__))
             self.log.setLevel(logging.DEBUG)
 
-        cocotb.start_soon(check_signal(dut))
+        # cocotb.start_soon(check_signal(dut))
         self.data_in_0_driver = MultiSignalStreamDriver(
             dut.clk,
             (dut.mdata_in_0, dut.edata_in_0),
@@ -44,7 +44,7 @@ class LinearTB(Testbench):
         self.input_drivers = {
             "a": self.data_in_0_driver,
             "b": self.weight_driver,
-            }
+        }
         if self.get_parameter("HAS_BIAS") == 1:
             self.bias_driver = MultiSignalStreamDriver(
                 dut.clk, (dut.mbias, dut.ebias), dut.bias_valid, dut.bias_ready
@@ -60,8 +60,7 @@ class LinearTB(Testbench):
             check=True,
         )
 
-        self.output_monitors = {
-            "out": self.data_out_0_monitor}
+        self.output_monitors = {"out": self.data_out_0_monitor}
         # Model
         self.model = MXIntLinearHardware(
             in_features=self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
@@ -70,32 +69,28 @@ class LinearTB(Testbench):
             config={
                 "data_in_width": self.get_parameter("DATA_IN_0_PRECISION_0"),
                 "data_in_exponent_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
-                "data_in_parallelism_dim_1": self.get_parameter(
-                    "DATA_IN_0_PARALLELISM_DIM_1"
-                ),
-                "data_in_parallelism_dim_0": self.get_parameter(
-                    "DATA_IN_0_PARALLELISM_DIM_0"
-                ),
+                "data_in_parallelism": [
+                    self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1"),
+                    self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"),
+                ],
                 "weight_width": self.get_parameter("WEIGHT_PRECISION_0"),
                 "weight_exponent_width": self.get_parameter("WEIGHT_PRECISION_1"),
-                "weight_parallelism_dim_1": self.get_parameter(
-                    "WEIGHT_PARALLELISM_DIM_1"
-                ),
-                "weight_parallelism_dim_0": self.get_parameter(
-                    "WEIGHT_PARALLELISM_DIM_0"
-                ),
+                "weight_parallelism": [
+                    self.get_parameter("WEIGHT_PARALLELISM_DIM_1"),
+                    self.get_parameter("WEIGHT_PARALLELISM_DIM_0"),
+                ],
                 "bias_width": self.get_parameter("BIAS_PRECISION_0"),
                 "bias_exponent_width": self.get_parameter("BIAS_PRECISION_1"),
-                "bias_parallelism_dim_1": self.get_parameter("BIAS_PARALLELISM_DIM_1"),
-                "bias_parallelism_dim_0": self.get_parameter("BIAS_PARALLELISM_DIM_0"),
+                "bias_parallelism": [
+                    self.get_parameter("BIAS_PARALLELISM_DIM_1"),
+                    self.get_parameter("BIAS_PARALLELISM_DIM_0"),
+                ],
                 "data_out_width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
                 "data_out_exponent_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
-                "data_out_parallelism_dim_1": self.get_parameter(
-                    "DATA_OUT_0_PARALLELISM_DIM_1"
-                ),
-                "data_out_parallelism_dim_0": self.get_parameter(
-                    "DATA_OUT_0_PARALLELISM_DIM_0"
-                ),
+                "data_out_parallelism": [
+                    self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_1"),
+                    self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"),
+                ],
             },
         )
 
@@ -127,7 +122,7 @@ class LinearTB(Testbench):
 
         inputs = self.generate_inputs()
         exp_out = self.model(inputs)
-        
+
         # * Load the inputs driver
         self.log.info(f"Processing inputs: {inputs}")
         inputs = self.preprocess_tensor_for_mxint(
@@ -201,15 +196,16 @@ async def cocotb_test(dut):
     tb = LinearTB(dut)
     await tb.run_test(us=100)
 
-async def check_signal(dut):
-    await Timer(40, units="ns")
-    while True:
-        await RisingEdge(dut.clk)
-        await ReadOnly()
-        # if dut.acc_data_out_valid.value == 1 and dut.acc_data_out_ready.value == 1:
-        #     print("mdata_out = ",[x.signed_integer for x in dut.acc_mdata_out.value])
-        #     print("edata_out = ",dut.acc_edata_out.value.signed_integer)
-        # print("end")
+
+# async def check_signal(dut):
+#     await Timer(40, units="ns")
+#     while True:
+#         await RisingEdge(dut.clk)
+#         await ReadOnly()
+#         # if dut.acc_data_out_valid.value == 1 and dut.acc_data_out_ready.value == 1:
+#         #     print("mdata_out = ",[x.signed_integer for x in dut.acc_mdata_out.value])
+#         #     print("edata_out = ",dut.acc_edata_out.value.signed_integer)
+#         # print("end")
 def get_fixed_linear_config(kwargs={}):
     # if pretranspose
     #   weight1 = in0

@@ -66,6 +66,25 @@ linear = {
 }
 INTERNAL_COMP = {
     "linear": [linear],
+    "linear_mxint_hardware": [
+        {
+            "name": "mxint_linear",
+            "dependence_files": linear["dependence_files"]
+            + [
+                "linear_layers/mxint_operators/rtl/mxint_linear.sv",
+                "linear_layers/mxint_operators/rtl/mxint_register_slice.sv",
+                "linear_layers/mxint_operators/rtl/or_tree_layer.sv",
+                "linear_layers/mxint_operators/rtl/or_tree.sv",
+                "linear_layers/mxint_operators/rtl/log2_max_abs.sv",
+                "linear_layers/mxint_operators/rtl/mxint_accumulator.sv",
+                "linear_layers/mxint_operators/rtl/mxint_cast.sv",
+                "linear_layers/mxint_operators/rtl/mxint_circular.sv",
+                "linear_layers/mxint_operators/rtl/mxint_dot_product.sv",
+                "linear_layers/mxint_operators/rtl/unpacked_mx_fifo.sv",
+                "common/rtl/join_n.sv",
+            ],
+        }
+    ],
     "fifo": [
         {
             "name": "fifo_for_autogen",

@@ -126,6 +126,7 @@ class VerilogInterfaceEmitter:
         i = 0
         for node in nodes_in:
             node_name = vf(node.name)
+            quant_type = node.meta["mase"].parameters["common"]["quant_type"]
             for arg_idx, arg in enumerate(
                 node.meta["mase"].parameters["common"]["args"].keys()
             ):
@@ -137,7 +138,14 @@ class VerilogInterfaceEmitter:
                         for param in parameter_map
                         if param.startswith(f"{arg_name}_PARALLELISM_DIM")
                     ]
-                    interface += f"""
+                    if quant_type == "mxint_hardware":
+                        interface += f"""
+    input  [{arg_name}_PRECISION_0-1:0] mdata_in_{i} [{'*'.join(parallelism_params)}-1:0],
+    input  [{arg_name}_PRECISION_1-1:0] edata_in_{i},
+    input  data_in_{i}_valid,
+    output data_in_{i}_ready,"""
+                    else:
+                        interface += f"""
     input  [{arg_name}_PRECISION_0-1:0] data_in_{i} [{'*'.join(parallelism_params)}-1:0],
     input  data_in_{i}_valid,
     output data_in_{i}_ready,"""
@@ -146,6 +154,7 @@ class VerilogInterfaceEmitter:
         i = 0
         for node in nodes_out:
             node_name = vf(node.name)
+            quant_type = node.meta["mase"].parameters["common"]["quant_type"]
             for result in node.meta["mase"].parameters["common"]["results"].keys():
                 if "data_out" in result:
                     result_name = _cap(result)
@@ -154,7 +163,14 @@ class VerilogInterfaceEmitter:
                         for param in parameter_map
                         if param.startswith(f"{result_name}_PARALLELISM_DIM")
                     ]
-                    interface += f"""
+                    if quant_type == "mxint_hardware":
+                        interface += f"""
+    output  [{result_name}_PRECISION_0-1:0] mdata_out_{i} [{'*'.join(parallelism_params)}-1:0],
+    output  [{result_name}_PRECISION_1-1:0] edata_out_{i},
+    output  data_out_{i}_valid,
+    input data_out_{i}_ready,"""
+                    else:
+                        interface += f"""
     output  [{result_name}_PRECISION_0-1:0] data_out_{i} [{'*'.join(parallelism_params)}-1:0],
     output  data_out_{i}_valid,
     input data_out_{i}_ready,"""
@@ -178,6 +194,7 @@ class VerilogSignalEmitter:
         signals = ""
         node_name = vf(node.name)
         # Input signals
+        quant_type = node.meta["mase"].parameters["common"]["quant_type"]
         for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
             if not isinstance(arg_info, dict):
                 continue
@@ -200,7 +217,14 @@ class VerilogSignalEmitter:
                 if node.meta["mase"]["common"]["mase_op"] == "getitem":
                     arg = "data_in_0"
 
-                signals += f"""
+                if quant_type == "mxint_hardware":
+                    signals += f"""
+logic [{node_name}_{arg_name}_PRECISION_0-1:0]  {node_name}_m{arg}        [{'*'.join(parallelism_params)}-1:0];
+logic [{node_name}_{arg_name}_PRECISION_1-1:0]  {node_name}_e{arg};
+logic                             {node_name}_{arg}_valid;
+logic                             {node_name}_{arg}_ready;"""
+                else:
+                    signals += f"""
 logic [{node_name}_{arg_name}_PRECISION_0-1:0]  {node_name}_{arg}        [{'*'.join(parallelism_params)}-1:0];
 logic                             {node_name}_{arg}_valid;
 logic                             {node_name}_{arg}_ready;"""
@@ -226,7 +250,14 @@ logic                             {node_name}_{arg}_ready;"""
                     for param in parameter_map
                     if f"{node_name}_{result_name}_PARALLELISM_DIM" in param
                 ]
-                signals += f"""
+                if quant_type == "mxint_hardware":
+                    signals += f"""
+logic [{node_name}_{result_name}_PRECISION_0-1:0]  {node_name}_m{result}        [{'*'.join(parallelism_params)}-1:0];
+logic [{node_name}_{result_name}_PRECISION_1-1:0]  {node_name}_e{result};
+logic                             {node_name}_{result}_valid;
+logic                             {node_name}_{result}_ready;"""
+                else:
+                    signals += f"""
 logic [{node_name}_{result_name}_PRECISION_0-1:0]  {node_name}_{result}        [{'*'.join(parallelism_params)}-1:0];
 logic                             {node_name}_{result}_valid;
 logic                             {node_name}_{result}_ready;"""
@@ -322,12 +353,27 @@ class VerilogInternalComponentEmitter:
         component_name_inst = f"{component_name}_0"
 
         parameters = ""
+        quant_type = node.meta["mase"].parameters["common"]["quant_type"]
         for param in node.meta["mase"].parameters["hardware"]["verilog_param"].keys():
             if f"{_cap(key)}_" in param:
                 parameters += f"    .{param}({node_name}_{param}),\n"
         parameters = _remove_last_comma(parameters)
 
-        return f"""
+        if quant_type == "mxint_hardware":
+            top_component = f"""
+{component_name} #(
+{parameters}
+) {component_name_inst} (
+    .clk(clk),
+    .rst(rst),
+    .mdata_out({node_name}_m{key}),
+    .edata_out({node_name}_e{key}),
+    .data_out_ready({node_name}_{key}_ready),
+    .data_out_valid({node_name}_{key}_valid)
+);
+"""
+        else:
+            top_component = f"""
 {component_name} #(
 {parameters}
 ) {component_name_inst} (
@@ -339,6 +385,8 @@ class VerilogInternalComponentEmitter:
 );
 """
 
+        return top_component
+
     def _emit_getitem_signals(self, node):
         """
         Getitem nodes have arg list like (None, None, None, Arg, None, None)
@@ -347,8 +395,22 @@ class VerilogInternalComponentEmitter:
         """
 
         node_name = vf(node.name)
+        quant_type = node.meta["mase"].parameters["common"]["quant_type"]
 
-        return f"""
+        if quant_type == "mxint_hardware":
+            component_interface = f"""
+    .mdata_in_0       ({node_name}_mdata_in_0),
+    .edata_in_0       ({node_name}_edata_in_0),
+    .data_in_0_valid ({node_name}_data_in_0_valid),
+    .data_in_0_ready ({node_name}_data_in_0_ready),
+    
+    .mdata_out_0       ({node_name}_mdata_out_0),
+    .edata_out_0       ({node_name}_edata_out_0),
+    .data_out_0_valid ({node_name}_data_out_0_valid),
+    .data_out_0_ready ({node_name}_data_out_0_ready),
+        """
+        else:
+            component_interface = f"""
     .data_in_0       ({node_name}_data_in_0),
     .data_in_0_valid ({node_name}_data_in_0_valid),
     .data_in_0_ready ({node_name}_data_in_0_ready),
@@ -358,10 +420,13 @@ class VerilogInternalComponentEmitter:
     .data_out_0_ready ({node_name}_data_out_0_ready),
         """
 
+        return component_interface
+
     def emit(self, node, parameter_map):
         node_name = vf(node.name)
         component_name = node.meta["mase"].parameters["hardware"]["module"]
         signals = ""
+        quant_type = node.meta["mase"].parameters["common"]["quant_type"]
 
         # Emit component instantiation parameters
         parameters = ""
@@ -386,7 +451,15 @@ class VerilogInternalComponentEmitter:
             for key, value in node.meta["mase"].parameters["common"]["args"].items():
                 if "inplace" in key or not isinstance(value, dict):
                     continue
-                signals += f"""
+                if quant_type == "mxint_hardware":
+                    signals += f"""
+    .m{key}({node_name}_m{key}),
+    .e{key}({node_name}_e{key}),
+    .{key}_valid({node_name}_{key}_valid),
+    .{key}_ready({node_name}_{key}_ready),
+        """
+                else:
+                    signals += f"""
     .{key}({node_name}_{key}),
     .{key}_valid({node_name}_{key}_valid),
     .{key}_ready({node_name}_{key}_ready),
@@ -394,7 +467,15 @@ class VerilogInternalComponentEmitter:
 
             # Emit component instantiation output signals
             for key, value in node.meta["mase"].parameters["common"]["results"].items():
-                signals += f"""
+                if quant_type == "mxint_hardware":
+                    signals += f"""
+    .m{key}({node_name}_m{key}),
+    .e{key}({node_name}_e{key}),
+    .{key}_valid({node_name}_{key}_valid),
+    .{key}_ready({node_name}_{key}_ready),
+        """
+                else:
+                    signals += f"""
     .{key}({node_name}_{key}),
     .{key}_valid({node_name}_{key}_valid),
     .{key}_ready({node_name}_{key}_ready),
@@ -584,10 +665,20 @@ class VerilogWireEmitter:
         i = 0
         for node in nodes_in:
             node_name = vf(node.name)
+            quant_type = node.meta["mase"].parameters["common"]["quant_type"]
             for arg_idx, arg in enumerate(
                 node.meta["mase"].parameters["common"]["args"].keys()
             ):
-                if is_real_input_arg(node, arg_idx):
+                if not is_real_input_arg(node, arg_idx):
+                    continue
+                if quant_type == "mxint_hardware":
+                    wires += f"""
+assign data_in_{i}_ready = {node_name}_{arg}_ready;
+assign {node_name}_{arg}_valid    = data_in_{i}_valid;
+assign {node_name}_m{arg}    = mdata_in_{i};
+assign {node_name}_e{arg}    = edata_in_{i};
+"""
+                else:
                     wires += f"""
 assign data_in_{i}_ready = {node_name}_{arg}_ready;
 assign {node_name}_{arg}_valid    = data_in_{i}_valid;
@@ -599,14 +690,20 @@ assign {node_name}_{arg}    = data_in_{i};
             node_name = vf(node.name)
             for result in node.meta["mase"].parameters["common"]["results"].keys():
                 if "data_out" in result:
-                    wires += f"""
+                    if quant_type == "mxint_hardware":
+                        wires += f"""
+assign data_out_{i}_valid = {node_name}_{result}_valid;
+assign {node_name}_{result}_ready    = data_out_{i}_ready;
+assign mdata_out_{i} = {node_name}_m{result};
+assign edata_out_{i} = {node_name}_e{result};
+"""
+                    else:
+                        wires += f"""
 assign data_out_{i}_valid = {node_name}_{result}_valid;
 assign {node_name}_{result}_ready    = data_out_{i}_ready;
 assign data_out_{i} = {node_name}_{result};
 """
                     i += 1
-
-        # TODO: emit off-chip parameter interface
 
         return wires
 
@@ -619,12 +716,23 @@ assign data_out_{i} = {node_name}_{result};
         from_name = vf(node.args[0].name)
         to_name = vf(node.name)
         select = node.args[1]
+        quant_type = node.meta["mase"].parameters["common"]["quant_type"]
+        if quant_type == "mxint_hardware":
+            getitem_wires = f"""
+assign {from_name}_data_out_{select}_ready  = {to_name}_data_in_0_ready;
+assign {to_name}_data_in_0_valid    = {from_name}_data_out_{select}_valid;
+assign {to_name}_mdata_in_0 = {from_name}_mdata_out_{select};
+assign {to_name}_edata_in_0 = {from_name}_edata_out_{select};
+"""
 
-        return f"""
+        else:
+            getitem_wires = f"""
 assign {from_name}_data_out_{select}_ready  = {to_name}_data_in_0_ready;
 assign {to_name}_data_in_0_valid    = {from_name}_data_out_{select}_valid;
 assign {to_name}_data_in_0 = {from_name}_data_out_{select};
 """
+
+        return getitem_wires
 
     def _emit_node2node_wires(self):
         nodes_in = self.graph.nodes_in
@@ -646,6 +754,7 @@ assign {to_name}_data_in_0 = {from_name}_data_out_{select};
                 continue
 
             to_name = vf(node.name)
+            quant_type = node.meta["mase"].parameters["common"]["quant_type"]
             for i, node_in in enumerate(node.all_input_nodes):
                 from_name = vf(node_in.name)
                 if "fork2" in from_name:
@@ -655,7 +764,15 @@ assign {to_name}_data_in_0 = {from_name}_data_out_{select};
                     j = fork_in[from_name]
                 else:
                     j = 0
-                wires += f"""
+                if quant_type == "mxint_hardware":
+                    wires += f"""
+assign {from_name}_data_out_{j}_ready  = {to_name}_data_in_{i}_ready;
+assign {to_name}_data_in_{i}_valid    = {from_name}_data_out_{j}_valid;
+assign {to_name}_mdata_in_{i} = {from_name}_mdata_out_{j};
+assign {to_name}_edata_in_{i} = {from_name}_edata_out_{j};
+"""
+                else:
+                    wires += f"""
 assign {from_name}_data_out_{j}_ready  = {to_name}_data_in_{i}_ready;
 assign {to_name}_data_in_{i}_valid    = {from_name}_data_out_{j}_valid;
 assign {to_name}_data_in_{i} = {from_name}_data_out_{j};

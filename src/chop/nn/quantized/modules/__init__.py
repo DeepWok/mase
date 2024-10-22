@@ -154,6 +154,8 @@ from .gqa import (
     GroupedQueryAttentionInteger,
 )
 
+from mase_components.linear_layers.mxint_operators.test.utils import MXIntLinearHardware
+
 quantized_module_map = {
     "conv1d_block_minifloat": Conv1dBlockMinifloat,
     "conv1d_integer": Conv1dInteger,
@@ -181,7 +183,7 @@ quantized_module_map = {
     "linear_fixed": LinearInteger,
     "linear_integer_floor": LinearIntegerFloor,
     "linear_log": LinearLog,
-    "linear_mxint_hardware": LinearMXIntHardware,
+    "linear_mxint_hardware": MXIntLinearHardware,
     "linear_block_log": LinearBlockLog,
     "linear_minifloat_ieee": LinearMinifloatIEEE,
     "linear_minifloat_denorm": LinearMinifloatDenorm,

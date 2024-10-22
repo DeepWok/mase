@@ -263,9 +263,9 @@ async def check_signal(count, dut, log):
         # )
         # handshake_signal_check(
         #     count,
-            # dut.g_attention_head[0].head_i.out_valid,
-            # dut.g_attention_head[0].head_i.out_ready,
-            # dut.g_attention_head[0].head_i.out,
+        # dut.g_attention_head[0].head_i.out_valid,
+        # dut.g_attention_head[0].head_i.out_ready,
+        # dut.g_attention_head[0].head_i.out,
         #     log,
         # )
 
