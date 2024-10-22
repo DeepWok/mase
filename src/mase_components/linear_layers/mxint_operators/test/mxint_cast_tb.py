@@ -82,7 +82,7 @@ class MxIntCastTB(Testbench):
 
         # Load the output monitor
         self.data_out_0_monitor.load_monitor(exp_outputs)
-        await Timer(5, units="us")
+        await Timer(1, units="us")
         assert self.data_out_0_monitor.exp_queue.empty()
 
 
@@ -97,7 +97,11 @@ async def check_signal(dut):
     while True:
         await RisingEdge(dut.clk)
         await ReadOnly()
-        # print(dut.max_bas_i.or_tree_i.gen_adder_tree.level[0].register_slice.data_out_valid)
+        print(dut.data_for_max_valid.value)
+        print(dut.data_for_max_ready.value)
+        print(dut.data_for_out_valid.value)
+        print(dut.data_for_out_ready.value)
+        print("end")
         # print(dut.max_bas_i.or_tree_i.gen_adder_tree.level[0].register_slice.data_out_ready)
         # print(dut.max_bas_i.or_tree_i.gen_adder_tree.level[0].register_slice.data_in_valid)
         # print(dut.max_bas_i.or_tree_i.gen_adder_tree.level[0].register_slice.shift_reg)
@@ -133,7 +137,7 @@ if __name__ == "__main__":
                 "IN_EXP_WIDTH": 4,
                 "OUT_MAN_WIDTH": 16,
                 "OUT_EXP_WIDTH": 5,
-                "BLOCK_SIZE": 4,
+                "BLOCK_SIZE": 1,
             },
             # {
             #     "IN_MAN_WIDTH": 12,
@@ -144,4 +148,5 @@ if __name__ == "__main__":
             # },
         ],
         sim="questa"
+        # gui=True
     )

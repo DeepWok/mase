@@ -8,7 +8,7 @@ from functools import partial
 
 import cocotb
 from cocotb.log import SimLog
-from cocotb.triggers import Timer, RisingEdge
+from cocotb.triggers import Timer, RisingEdge, ReadOnly
 
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import (
@@ -19,7 +19,7 @@ from mase_cocotb.runner import mase_runner
 
 torch.manual_seed(0)
 # from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner
-from utils import MXIntLinear
+from utils import MXIntLinear, MXIntLinearHardware
 
 
 class LinearTB(Testbench):
@@ -30,6 +30,7 @@ class LinearTB(Testbench):
             self.log = SimLog("%s" % (type(self).__qualname__))
             self.log.setLevel(logging.DEBUG)
 
+        cocotb.start_soon(check_signal(dut))
         self.data_in_0_driver = MultiSignalStreamDriver(
             dut.clk,
             (dut.mdata_in_0, dut.edata_in_0),
@@ -40,11 +41,16 @@ class LinearTB(Testbench):
             dut.clk, (dut.mweight, dut.eweight), dut.weight_valid, dut.weight_ready
         )
 
+        self.input_drivers = {
+            "a": self.data_in_0_driver,
+            "b": self.weight_driver,
+            }
         if self.get_parameter("HAS_BIAS") == 1:
             self.bias_driver = MultiSignalStreamDriver(
                 dut.clk, (dut.mbias, dut.ebias), dut.bias_valid, dut.bias_ready
             )
             self.bias_driver.log.setLevel(logging.DEBUG)
+            self.input_drivers["bias"] = self.bias_driver
 
         self.data_out_0_monitor = MultiSignalStreamMonitor(
             dut.clk,
@@ -54,8 +60,10 @@ class LinearTB(Testbench):
             check=True,
         )
 
+        self.output_monitors = {
+            "out": self.data_out_0_monitor}
         # Model
-        self.model = MXIntLinear(
+        self.model = MXIntLinearHardware(
             in_features=self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
             out_features=self.get_parameter("DATA_OUT_0_TENSOR_SIZE_DIM_0"),
             bias=True if self.get_parameter("HAS_BIAS") == 1 else False,
@@ -119,7 +127,7 @@ class LinearTB(Testbench):
 
         inputs = self.generate_inputs()
         exp_out = self.model(inputs)
-
+        
         # * Load the inputs driver
         self.log.info(f"Processing inputs: {inputs}")
         inputs = self.preprocess_tensor_for_mxint(
@@ -182,7 +190,6 @@ class LinearTB(Testbench):
                 self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"),
             ],
         )
-        breakpoint()
         self.data_out_0_monitor.load_monitor(outs)
 
         await Timer(us, units="us")
@@ -194,32 +201,40 @@ async def cocotb_test(dut):
     tb = LinearTB(dut)
     await tb.run_test(us=100)
 
-
+async def check_signal(dut):
+    await Timer(40, units="ns")
+    while True:
+        await RisingEdge(dut.clk)
+        await ReadOnly()
+        # if dut.acc_data_out_valid.value == 1 and dut.acc_data_out_ready.value == 1:
+        #     print("mdata_out = ",[x.signed_integer for x in dut.acc_mdata_out.value])
+        #     print("edata_out = ",dut.acc_edata_out.value.signed_integer)
+        # print("end")
 def get_fixed_linear_config(kwargs={}):
     # if pretranspose
     #   weight1 = in0
     # else
     #   weight0 = in0
     # currently, we only consider the transposed situation
-    # config = {
-    #     "HAS_BIAS": 1,
-    #     "DATA_IN_0_TENSOR_SIZE_DIM_0": 2,
-    #     "DATA_IN_0_TENSOR_SIZE_DIM_1": 2,
-    #     "DATA_IN_0_PARALLELISM_DIM_0": 2,
-    #     "DATA_IN_0_PARALLELISM_DIM_1": 1,
-    #     "WEIGHT_TENSOR_SIZE_DIM_0": 2,
-    #     "WEIGHT_TENSOR_SIZE_DIM_1": 2,
-    #     "WEIGHT_PARALLELISM_DIM_0": 2,
-    #     "WEIGHT_PARALLELISM_DIM_1": 1,
-    #     "DATA_IN_0_PRECISION_0": 8,
-    #     "DATA_IN_0_PRECISION_1": 4,
-    #     "WEIGHT_PRECISION_0": 8,
-    #     "WEIGHT_PRECISION_1": 4,
-    #     "BIAS_PRECISION_0": 8,
-    #     "BIAS_PRECISION_1": 4,
-    #     "DATA_OUT_0_PRECISION_0": 10,
-    #     "DATA_OUT_0_PRECISION_1": 4,
-    # }
+    config = {
+        "HAS_BIAS": 0,
+        "DATA_IN_0_TENSOR_SIZE_DIM_0": 2,
+        "DATA_IN_0_TENSOR_SIZE_DIM_1": 2,
+        "DATA_IN_0_PARALLELISM_DIM_0": 2,
+        "DATA_IN_0_PARALLELISM_DIM_1": 1,
+        "WEIGHT_TENSOR_SIZE_DIM_0": 2,
+        "WEIGHT_TENSOR_SIZE_DIM_1": 2,
+        "WEIGHT_PARALLELISM_DIM_0": 2,
+        "WEIGHT_PARALLELISM_DIM_1": 1,
+        "DATA_IN_0_PRECISION_0": 8,
+        "DATA_IN_0_PRECISION_1": 4,
+        "WEIGHT_PRECISION_0": 8,
+        "WEIGHT_PRECISION_1": 4,
+        "BIAS_PRECISION_0": 8,
+        "BIAS_PRECISION_1": 4,
+        "DATA_OUT_0_PRECISION_0": 10,
+        "DATA_OUT_0_PRECISION_1": 4,
+    }
     config = {
         "HAS_BIAS": 1,
         "DATA_IN_0_TENSOR_SIZE_DIM_0": 32,
@@ -230,7 +245,7 @@ def get_fixed_linear_config(kwargs={}):
         "WEIGHT_TENSOR_SIZE_DIM_1": 16,
         "WEIGHT_PARALLELISM_DIM_0": 4,
         "WEIGHT_PARALLELISM_DIM_1": 4,
-        "DATA_IN_0_PRECISION_0": 9,
+        "DATA_IN_0_PRECISION_0": 10,
         "DATA_IN_0_PRECISION_1": 4,
         "WEIGHT_PRECISION_0": 8,
         "WEIGHT_PRECISION_1": 3,
@@ -250,7 +265,6 @@ def test_fixed_linear_smoke():
     """
     mase_runner(
         trace=True,
-        extra_build_args=["--trace-depth", "8"],
         module_param_list=[
             get_fixed_linear_config(),
             # noticed here if change WEIGHT_PRE_TRANSPOSED also need to change the DIM_SIZE to match ACTIVATION
@@ -263,6 +277,8 @@ def test_fixed_linear_smoke():
             #     },
             # ),
         ],
+        sim="questa",
+        # gui=True,
     )
 
 

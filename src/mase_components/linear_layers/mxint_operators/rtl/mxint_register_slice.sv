@@ -27,22 +27,37 @@ module mxint_register_slice #(
     output data_out_valid,
     input data_out_ready
 );
-  initial begin
-    assert (DATA_PRECISION_0 >= DATA_PRECISION_1)
-    else $fatal("DATA_PRECISION_0 must larger than PRECISION_1");
-  end
-  logic [DATA_PRECISION_0 - 1:0] packed_data_in [IN_NUM:0];
+  localparam EDATA_BREAK_NUM = DATA_PRECISION_1/DATA_PRECISION_0 + 1;
+  logic [DATA_PRECISION_0 - 1:0] breaked_edata_in [EDATA_BREAK_NUM - 1:0];
+  logic [DATA_PRECISION_0 - 1:0] breaked_edata_out [EDATA_BREAK_NUM - 1:0];
+  logic [DATA_PRECISION_0 - 1:0] packed_data_in [IN_NUM - 1 + EDATA_BREAK_NUM:0];
   logic [DATA_PRECISION_0 - 1:0] packed_data_out[IN_NUM:0];
+  break_data #(
+    .IN_WIDTH(DATA_PRECISION_1),
+    .OUT_WIDTH(DATA_PRECISION_0)
+  ) bd_inst (
+    .data_in(edata_in),
+    .data_out(breaked_edata_in)
+  );
+  pack_data #(
+    .IN_WIDTH(DATA_PRECISION_0),
+    .BREAK_NUM(EDATA_BREAK_NUM),
+    .OUT_WIDTH(DATA_PRECISION_0)
+  ) pk_data (
+    .data_in(breaked_edata_out),
+    .data_out(edata_out)
+  );
+
   always_comb begin : data_pack
+    packed_data_in[IN_NUM + EDATA_BREAK_NUM-1:IN_NUM] = breaked_edata_in;
     packed_data_in[IN_NUM-1:0] = mdata_in;
-    packed_data_in[IN_NUM] = $signed(edata_in);
+    breaked_edata_out = packed_data_out[IN_NUM + EDATA_BREAK_NUM-1:IN_NUM];
     mdata_out = packed_data_out[IN_NUM-1:0];
-    edata_out = packed_data_out[IN_NUM];
   end
 
   unpacked_register_slice #(
       .DATA_WIDTH(DATA_PRECISION_0),
-      .IN_SIZE(IN_NUM + 1)
+      .IN_SIZE(IN_NUM + EDATA_BREAK_NUM)
   ) register_slice (
       .clk           (clk),
       .rst           (rst),
@@ -54,4 +69,42 @@ module mxint_register_slice #(
       .data_out_ready(data_out_ready)
   );
 
+endmodule
+
+module break_data #(
+  /*
+  If input data with [IN_WIDTH - 1:0]
+  This module will actually break it into smaller pieces
+  Redundant bit width will be filled with 0
+  */
+  parameter IN_WIDTH = -1,
+  parameter OUT_WIDTH = -1,
+  parameter BREAK_NUM = IN_WIDTH/OUT_WIDTH + 1
+) (
+  input logic [IN_WIDTH - 1:0] data_in,
+  output logic [OUT_WIDTH - 1:0] data_out [BREAK_NUM - 1:0]
+);
+  logic [BREAK_NUM * OUT_WIDTH - 1:0] extended_data_in;
+  assign extended_data_in = {{(BREAK_NUM*OUT_WIDTH - IN_WIDTH){0}}, data_in};
+  for(genvar i=0; i<BREAK_NUM; i++)
+    assign data_out[i] = extended_data_in[(i+1)*OUT_WIDTH - 1:i*OUT_WIDTH];
+endmodule
+
+module pack_data #(
+  /*
+  If input data with [IN_WIDTH - 1:0]
+  This module will actually break it into smaller pieces
+  Redundant bit width will be filled with 0
+  */
+  parameter IN_WIDTH = -1,
+  parameter BREAK_NUM = -1,
+  parameter OUT_WIDTH = -1
+) (
+  input logic [IN_WIDTH - 1:0] data_in [BREAK_NUM - 1:0],
+  output logic [OUT_WIDTH - 1:0] data_out
+);
+  logic [BREAK_NUM * IN_WIDTH - 1:0] extended_data_out;
+  for(genvar i=0; i<BREAK_NUM; i++)
+    assign extended_data_out[(i+1)*OUT_WIDTH - 1:i*OUT_WIDTH] = data_in[i];
+  assign data_out = extended_data_out;
 endmodule

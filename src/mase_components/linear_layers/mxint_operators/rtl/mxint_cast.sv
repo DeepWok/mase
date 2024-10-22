@@ -41,7 +41,7 @@ module mxint_cast #(
   logic log2_max_value_valid, log2_max_value_ready;
 
   localparam EBIAS = 2 ** (OUT_EXP_WIDTH - 1);
-localparam LOSSLESSS_EDATA_WIDTH = 
+  localparam LOSSLESSS_EDATA_WIDTH = 
     (LOG2_WIDTH > IN_EXP_WIDTH && LOG2_WIDTH > OUT_EXP_WIDTH) ? LOG2_WIDTH + 2 :
     (IN_EXP_WIDTH > OUT_EXP_WIDTH) ? IN_EXP_WIDTH + 2:
     OUT_EXP_WIDTH + 2;
@@ -62,13 +62,23 @@ localparam LOSSLESSS_EDATA_WIDTH =
       .data_out_0_ready(log2_max_value_ready)
   );
 
-  if (FIFO_DEPTH == 0) begin
-    always_comb begin
-      mbuffer_data_for_out = mdata_in;
-      ebuffer_data_for_out = edata_in;
-      buffer_data_for_out_valid = data_for_out_valid;
-      data_for_out_ready = buffer_data_for_out_ready;
-    end
+  if (FIFO_DEPTH == 0) begin: register
+    mxint_register_slice #(
+        .DATA_PRECISION_0($bits(mbuffer_data_for_out[0])),
+        .DATA_PRECISION_1($bits(ebuffer_data_for_out)),
+        .IN_NUM(BLOCK_SIZE)
+    ) register_slice (
+        .clk           (clk),
+        .rst           (rst),
+        .mdata_in      (mdata_in),
+        .edata_in      (edata_in),
+        .data_in_valid (data_for_out_valid),
+        .data_in_ready (data_for_out_ready),
+        .mdata_out     (mbuffer_data_for_out),
+        .edata_out     (ebuffer_data_for_out),
+        .data_out_valid(buffer_data_for_out_valid),
+        .data_out_ready(buffer_data_for_out_ready)
+    );
   end else begin: data_buffer
     unpacked_mx_fifo #(
         .DEPTH(FIFO_DEPTH),

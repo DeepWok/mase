@@ -29,9 +29,21 @@ module or_tree #(
   generate
     if (LEVELS == 0) begin : gen_skip_adder_tree
 
-      assign data_out = data_in[0][IN_WIDTH-1] ? ~data_in[0] + 1 : data_in[0];
-      assign data_out_valid = data_in_valid;
-      assign data_in_ready = data_out_ready;
+      register_slice #(
+          .DATA_WIDTH(IN_WIDTH)
+      ) register_slice_i (
+          .clk           (clk),
+          .rst           (rst),
+          .data_in_valid (data_in_valid),
+          .data_in_ready (data_in_ready),
+          .data_in       (data_in[0][IN_WIDTH-1] ? ~data_in[0] + 1 : data_in[0]),
+          .data_out_valid(data_out_valid),
+          .data_out_ready(data_out_ready),
+          .data_out      (data_out)
+      );
+      // assign data_out = data_in[0][IN_WIDTH-1] ? ~data_in[0] + 1 : data_in[0];
+      // assign data_out_valid = data_in_valid;
+      // assign data_in_ready = data_out_ready;
 
     end else begin : gen_adder_tree
 

@@ -151,7 +151,7 @@ module mxint_linear #(
       DATA_IN_0_PARALLELISM_DIM_0
   );
   localparam FDP_EXP_WIDTH = (WEIGHT_PRECISION_1 > DATA_IN_0_PRECISION_1)? WEIGHT_PRECISION_1 + 1: DATA_IN_0_PRECISION_1 + 1;
-  localparam ACC_WIDTH = FDP_WIDTH + $clog2(IN_0_DEPTH_DIM_0) + 2 ** FDP_EXP_WIDTH;
+  localparam ACC_WIDTH = FDP_WIDTH + $clog2(IN_0_DEPTH_DIM_0);
   localparam ACC_EXP_WIDTH = FDP_EXP_WIDTH;
   localparam LOSSLESS_OUT_WIDTH = ACC_WIDTH + HAS_BIAS;
   localparam LOSSLESS_OUT_EXP_WIDTH = ACC_EXP_WIDTH;
@@ -196,7 +196,9 @@ module mxint_linear #(
           .DATA_IN_0_PRECISION_1(DATA_IN_0_PRECISION_1),
           .WEIGHT_PRECISION_0(WEIGHT_PRECISION_0),
           .WEIGHT_PRECISION_1(WEIGHT_PRECISION_1),
-          .BLOCK_SIZE(DATA_IN_0_PARALLELISM_DIM_0)
+          .BLOCK_SIZE(DATA_IN_0_PARALLELISM_DIM_0),
+          .DATA_OUT_0_PRECISION_0(FDP_WIDTH),
+          .DATA_OUT_0_PRECISION_1(FDP_EXP_WIDTH)
       ) mxdp_inst (
           .clk(clk),
           .rst(rst),
@@ -222,7 +224,9 @@ module mxint_linear #(
       .DATA_IN_0_PRECISION_0(FDP_WIDTH),
       .DATA_IN_0_PRECISION_1(FDP_EXP_WIDTH),
       .IN_DEPTH(IN_0_DEPTH_DIM_0),
-      .BLOCK_SIZE(DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0)
+      .BLOCK_SIZE(DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0),
+      .DATA_OUT_0_PRECISION_0(ACC_WIDTH),
+      .DATA_OUT_0_PRECISION_1(FDP_EXP_WIDTH)
   ) accumulator_inst (
       .clk(clk),
       .rst(rst),
@@ -250,7 +254,7 @@ module mxint_linear #(
         .data_out_valid(cast_data_out_0_valid),
         .data_out_ready(cast_data_out_0_ready)
     );
-    assign exp_difference = $signed(circular_ebias) - $signed(acc_edata_out);
+    assign exp_difference = $signed(circular_ebias) - $signed(acc_edata_out) + DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 - 2 - (BIAS_PRECISION_0 - 1);
     assign abs_shift_value = exp_difference[FDP_EXP_WIDTH - 1]? (~exp_difference + 1): exp_difference;
     for (genvar m = 0; m < DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1; m++) begin
       assign shifted_mbias[m] = exp_difference[FDP_EXP_WIDTH-1] ? $signed(
@@ -266,10 +270,11 @@ module mxint_linear #(
     assign cast_data_out_0_valid = acc_data_out_valid;
     assign cast_mdata_out_0 = acc_mdata_out;
     assign cast_edata_out_0 = acc_edata_out;
-    assign bias_ready = 1;
+    assign circular_bias_ready = 1;
   end
   mxint_cast #(
       .IN_MAN_WIDTH(LOSSLESS_OUT_WIDTH),
+      .IN_MAN_FRAC_WIDTH(DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 - 2),
       .IN_EXP_WIDTH(LOSSLESS_OUT_EXP_WIDTH),
       .OUT_MAN_WIDTH(DATA_OUT_0_PRECISION_0),
       .OUT_EXP_WIDTH(DATA_OUT_0_PRECISION_1),

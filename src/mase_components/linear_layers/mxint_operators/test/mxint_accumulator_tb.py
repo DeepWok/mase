@@ -14,7 +14,7 @@ from mase_cocotb.interfaces.streaming import (
 )
 
 from mase_cocotb.runner import mase_runner
-from utils import mxint_quantize, MXINTAccumulator
+from utils import mxint_quantize, MxIntAccumulator
 
 import torch
 from math import ceil, log2
@@ -65,7 +65,7 @@ class MXIntAccumulatorTB(Testbench):
         (qtensor, mtensor, etensor) = block_mxint_quant(data_in, config, parallelism)
         mtensor = mtensor.reshape(self.get_parameter("IN_DEPTH"), self.get_parameter("BLOCK_SIZE"))
         etensor = etensor.reshape(self.get_parameter("IN_DEPTH"))
-        mout, eout = MXINTAccumulator(mtensor, etensor)
+        mout, eout = MxIntAccumulator(mtensor, etensor)
             
         tensor_inputs = pack_tensor_to_mx_listed_chunk(mtensor, etensor, parallelism)
         exp_outs = [(mout.int().tolist(), int(eout))]
@@ -132,24 +132,24 @@ if __name__ == "__main__":
     mase_runner(
         trace=True,
         module_param_list=[
-            # {
-            #     "DATA_IN_0_PRECISION_0": 8,
-            #     "DATA_IN_0_PRECISION_1": 4,
-            #     "BLOCK_SIZE": 1,
-            #     "IN_DEPTH": 1,
-            # },
+            {
+                "DATA_IN_0_PRECISION_0": 8,
+                "DATA_IN_0_PRECISION_1": 4,
+                "BLOCK_SIZE": 1,
+                "IN_DEPTH": 1,
+            },
             # {
             #     "DATA_IN_0_PRECISION_0": 8,
             #     "DATA_IN_0_PRECISION_1": 4,
             #     "BLOCK_SIZE": 4,
             #     "IN_DEPTH": 1,
             # },
-            {
-                "DATA_IN_0_PRECISION_0": 8,
-                "DATA_IN_0_PRECISION_1": 4,
-                "BLOCK_SIZE": 4,
-                "IN_DEPTH": 4,
-            },
+            # {
+            #     "DATA_IN_0_PRECISION_0": 8,
+            #     "DATA_IN_0_PRECISION_1": 4,
+            #     "BLOCK_SIZE": 4,
+            #     "IN_DEPTH": 4,
+            # },
         ],
         sim="questa"
     )
