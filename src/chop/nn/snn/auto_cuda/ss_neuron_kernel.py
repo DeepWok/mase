@@ -11,8 +11,8 @@ except BaseException as e:
     cupy = None
     
 
-from .. import cuda_utils, surrogate
-from ... import configure
+from .. import cuda_utils
+from .. import configure
 from typing import Callable, Iterable
 from . import base, cfunction
 import math

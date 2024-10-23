@@ -11,7 +11,7 @@ import torch.nn.functional as F
 import sys
 import logging
 from .. import cuda_utils
-from ... import configure
+from .. import configure
 
 
 def wrap_with_comment(code: str, comment: str):
