@@ -155,7 +155,7 @@ ann_model = load_model(load_name="/home/thw20/projects/mase/mase_output/snn/trai
 print(val(ann_model, "cuda", data_module.test_dataloader()))
 
 #------------------------------------------------------------
-# Convert the base ANN to SNN
+# Convert the base ANN to SNN and test
 #------------------------------------------------------------
 
 quan_args = {
@@ -176,3 +176,10 @@ quan_args = {
 model.to("cuda")
 mg, _ = ann2snn_transform_pass(mg, quan_args)
 print(val(mg.model, "cuda", data_module.test_dataloader(), T=20))
+
+
+#------------------------------------------------------------
+# load the SNN mz graph and test
+#------------------------------------------------------------
+snn_model = load_model(load_name="/home/thw20/projects/mase/mase_output/cnv_toy_cls_cifar10_2024-10-23/software/transform/transformed_ckpt/graph_module.mz", load_type="mz", model=model)
+print(val(snn_model, "cuda", data_module.test_dataloader(), T=20))

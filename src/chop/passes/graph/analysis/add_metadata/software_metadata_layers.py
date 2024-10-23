@@ -214,6 +214,7 @@ SOFTWARE_PARAM_ANALYSIS_LAYERS = {
         "hardswish": analyze_software_meta_param_module_related_func_default,
         "hardsigmoid": analyze_software_meta_param_module_related_func_default,
         "dropout": analyze_software_meta_param_module_related_func_default,
+        "flatten": analyze_software_meta_param_module_related_func_default,
         # default:
         "default": analyze_software_meta_param_module_related_func_default,
     },
