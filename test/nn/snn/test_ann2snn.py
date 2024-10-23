@@ -112,13 +112,32 @@ plt_trainer_args = {
     "accelerator": "cuda",
 }
 
-save_path = "/home/thw20/projects/mase/mase_output/snn/training_ckpts"
-visualizer_save_path = (
-    "/home/thw20/projects/mase/mase_output/snn/software/training_ckpts"
-)
-visualizer = TensorBoardLogger(
-    save_dir=visualizer_save_path,
-)
+# save_path = "/home/thw20/projects/mase/mase_output/snn/training_ckpts"
+# visualizer_save_path = (
+#     "/home/thw20/projects/mase/mase_output/snn/software/training_ckpts"
+# )
+# visualizer = TensorBoardLogger(
+#     save_dir=visualizer_save_path,
+# )
+
+# train(
+#     model=mg.model,
+#     model_info=model_info,
+#     dataset_info=dataset_info,
+#     weight_decay=1e-4,
+#     task="cls",
+#     data_module=data_module,
+#     optimizer="adam",
+#     learning_rate=1e-5,
+#     plt_trainer_args=plt_trainer_args,
+#     scheduler_args=None,
+#     save_path=save_path,
+#     load_name=None,
+#     load_type="pl",
+#     visualizer=visualizer,
+#     auto_requeue=False,
+# )
+
 
 train(
     model=mg.model,
@@ -131,10 +150,10 @@ train(
     learning_rate=1e-5,
     plt_trainer_args=plt_trainer_args,
     scheduler_args=None,
-    save_path=save_path,
+    save_path=None,
     load_name=None,
     load_type="pl",
-    visualizer=visualizer,
+    visualizer=None,
     auto_requeue=False,
 )
 
