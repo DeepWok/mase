@@ -203,7 +203,7 @@ class InputGenerator:
 
     def __len__(self):
         return len(self.dataloader)
-    
+
     def __iter__(self):
         return self
 

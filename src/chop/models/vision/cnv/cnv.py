@@ -27,23 +27,19 @@ class CNV_Toy(nn.Module):
             nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.AvgPool2d(2, 2),
-
             nn.Conv2d(32, 32, 3, 1),
             nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.AvgPool2d(2, 2),
-
             nn.Conv2d(32, 32, 3, 1),
             nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.AvgPool2d(2, 2),
-            
-
             nn.Flatten(),
-            nn.Linear(128, num_classes)
+            nn.Linear(128, num_classes),
         )
 
-    def forward(self,x):
+    def forward(self, x):
         x = self.network(x)
         return x
 

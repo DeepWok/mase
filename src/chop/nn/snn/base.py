@@ -7,7 +7,7 @@ from abc import abstractmethod
 try:
     import cupy
 except BaseException as e:
-    logging.info(f'spikingjelly.activation_based.base: {e}')
+    logging.info(f"spikingjelly.activation_based.base: {e}")
     cupy = None
 
 try:
@@ -26,15 +26,19 @@ def check_backend_library(backend: str):
 
     Check whether the python lib for backend is installed. If not, this function will raise an error.
     """
-    if backend == 'torch':
+    if backend == "torch":
         return
-    elif backend == 'cupy':
+    elif backend == "cupy":
         if cupy is None:
-            raise ImportError('CuPy is not installed! You can install it from "https://github.com/cupy/cupy".')
-    elif backend == 'lava':
+            raise ImportError(
+                'CuPy is not installed! You can install it from "https://github.com/cupy/cupy".'
+            )
+    elif backend == "lava":
         if slayer is None:
-            raise ImportError('Lava-DL is not installed! You can install it from ' \
-                              '"https://github.com/lava-nc/lava-dl". ')
+            raise ImportError(
+                "Lava-DL is not installed! You can install it from "
+                '"https://github.com/lava-nc/lava-dl". '
+            )
     else:
         pass
 
@@ -49,7 +53,7 @@ class StepModule:
         :rtype: tuple[str]
 
         """
-        return ('s', 'm')
+        return ("s", "m")
 
     @property
     def step_mode(self):
@@ -75,8 +79,11 @@ class StepModule:
 
         """
         if value not in self.supported_step_mode():
-            raise ValueError(f'step_mode can only be {self.supported_step_mode()}, but got "{value}"!')
+            raise ValueError(
+                f'step_mode can only be {self.supported_step_mode()}, but got "{value}"!'
+            )
         self._step_mode = value
+
 
 class SingleModule(StepModule):
     """
@@ -85,8 +92,10 @@ class SingleModule(StepModule):
 
     The module that only supports for single-step (``step_mode == 's'``)
     """
+
     def supported_step_mode(self):
-        return ('s', )
+        return ("s",)
+
 
 class MultiStepModule(StepModule):
     """
@@ -95,8 +104,10 @@ class MultiStepModule(StepModule):
 
     The module that only supports for multi-step (``step_mode == 'm'``)
     """
+
     def supported_step_mode(self):
-        return ('m', )
+        return ("m",)
+
 
 class MemoryModule(nn.Module, StepModule):
     def __init__(self):
@@ -110,8 +121,8 @@ class MemoryModule(nn.Module, StepModule):
         super().__init__()
         self._memories = {}
         self._memories_rv = {}
-        self._backend = 'torch'
-        self.step_mode = 's'
+        self._backend = "torch"
+        self.step_mode = "s"
 
     @property
     def supported_backends(self):
@@ -125,7 +136,7 @@ class MemoryModule(nn.Module, StepModule):
         :rtype: tuple[str]
 
         """
-        return ('torch',)
+        return ("torch",)
 
     @property
     def backend(self):
@@ -134,7 +145,9 @@ class MemoryModule(nn.Module, StepModule):
     @backend.setter
     def backend(self, value: str):
         if value not in self.supported_backends:
-            raise NotImplementedError(f'{value} is not a supported backend of {self._get_name()}!')
+            raise NotImplementedError(
+                f"{value} is not a supported backend of {self._get_name()}!"
+            )
         check_backend_library(value)
         self._backend = value
 
@@ -173,15 +186,15 @@ class MemoryModule(nn.Module, StepModule):
         return torch.cat(y_seq, 0)
 
     def forward(self, *args, **kwargs):
-        if self.step_mode == 's':
+        if self.step_mode == "s":
             return self.single_step_forward(*args, **kwargs)
-        elif self.step_mode == 'm':
+        elif self.step_mode == "m":
             return self.multi_step_forward(*args, **kwargs)
         else:
             raise ValueError(self.step_mode)
 
     def extra_repr(self):
-        return f'step_mode={self.step_mode}, backend={self.backend}'
+        return f"step_mode={self.step_mode}, backend={self.backend}"
 
     def register_memory(self, name: str, value):
         """
@@ -198,7 +211,7 @@ class MemoryModule(nn.Module, StepModule):
         each calling of ``self.reset()``.
 
         """
-        assert not hasattr(self, name), f'{name} has been set as a member variable!'
+        assert not hasattr(self, name), f"{name} has been set as a member variable!"
         self._memories[name] = value
         self.set_reset_value(name, value)
 
@@ -216,15 +229,15 @@ class MemoryModule(nn.Module, StepModule):
         self._memories_rv[name] = copy.deepcopy(value)
 
     def __getattr__(self, name: str):
-        if '_memories' in self.__dict__:
-            memories = self.__dict__['_memories']
+        if "_memories" in self.__dict__:
+            memories = self.__dict__["_memories"]
             if name in memories:
                 return memories[name]
 
         return super().__getattr__(name)
 
     def __setattr__(self, name: str, value) -> None:
-        _memories = self.__dict__.get('_memories')
+        _memories = self.__dict__.get("_memories")
         if _memories is not None and name in _memories:
             _memories[name] = value
         else:
@@ -306,7 +319,3 @@ class MemoryModule(nn.Module, StepModule):
         replica = super()._replicate_for_data_parallel()
         replica._memories = self._memories.copy()
         return replica
-
-
-
-

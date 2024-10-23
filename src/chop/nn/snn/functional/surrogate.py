@@ -4,14 +4,14 @@ import torch.nn.functional as F
 import math
 from chop.nn.snn.auto_cuda import cfunction
 
-tab4_str = '\t\t\t\t'  # used for aligning code
-curly_bracket_l = '{'
-curly_bracket_r = '}'
+tab4_str = "\t\t\t\t"  # used for aligning code
+curly_bracket_l = "{"
+curly_bracket_r = "}"
 
 
 @torch.jit.script
 def heaviside(x: torch.Tensor):
-    '''
+    """
     * :ref:`API in English <heaviside.__init__-en>`
     .. _heaviside.__init__-en:
 
@@ -29,14 +29,14 @@ def heaviside(x: torch.Tensor):
 
     For more information, see `HeavisideStepFunction <https://mathworld.wolfram.com/HeavisideStepFunction.html>`_.
 
-    '''
+    """
     return (x >= 0).to(x)
 
 
 @torch.jit.script
 def sigmoid_backward(grad_output: torch.Tensor, x: torch.Tensor, alpha: float):
     sgax = (x * alpha).sigmoid_()
-    return grad_output * (1. - sgax) * sgax * alpha, None
+    return grad_output * (1.0 - sgax) * sgax * alpha, None
 
 
 class sigmoid(torch.autograd.Function):

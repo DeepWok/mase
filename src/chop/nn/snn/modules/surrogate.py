@@ -5,14 +5,13 @@ import math
 
 from chop.nn.snn.auto_cuda import cfunction
 
-tab4_str = '\t\t\t\t'  # used for aligning code
-curly_bracket_l = '{'
-curly_bracket_r = '}'
+tab4_str = "\t\t\t\t"  # used for aligning code
+curly_bracket_l = "{"
+curly_bracket_r = "}"
 
 
-from chop.nn.snn.functional.surrogate import (
-    sigmoid_backward, sigmoid
-)
+from chop.nn.snn.functional.surrogate import sigmoid_backward, sigmoid
+
 
 class SurrogateFunctionBase(nn.Module):
     def __init__(self, alpha, spiking=True):
@@ -24,7 +23,7 @@ class SurrogateFunctionBase(nn.Module):
         self.spiking = spiking
 
     def extra_repr(self):
-        return f'alpha={self.alpha}, spiking={self.spiking}'
+        return f"alpha={self.alpha}, spiking={self.spiking}"
 
     @staticmethod
     def spiking_function(x, alpha):
@@ -34,14 +33,14 @@ class SurrogateFunctionBase(nn.Module):
     def primitive_function(x, alpha):
         raise NotImplementedError
 
-    def cuda_code(self, x: str, y: str, dtype='fp32'):
+    def cuda_code(self, x: str, y: str, dtype="fp32"):
         raise NotImplementedError
 
     def cuda_code_start_comments(self):
-        return f'// start: spikingjelly.activation_based.surrogate.{self._get_name()}.cuda_code'
+        return f"// start: spikingjelly.activation_based.surrogate.{self._get_name()}.cuda_code"
 
     def cuda_code_end_comments(self):
-        return f'// end: spikingjelly.activation_based.surrogate.{self._get_name()}.cuda_code'
+        return f"// end: spikingjelly.activation_based.surrogate.{self._get_name()}.cuda_code"
 
     def forward(self, x: torch.Tensor):
         if self.spiking:
@@ -54,10 +53,9 @@ class SurrogateFunctionBase(nn.Module):
         raise NotImplementedError
 
 
-
 class Sigmoid(SurrogateFunctionBase):
     def __init__(self, alpha=4.0, spiking=True):
-        '''
+        """
         * :ref:`API in English <Sigmoid.__init__-en>`
         .. _Sigmoid.__init__-en:
 
@@ -80,7 +78,7 @@ class Sigmoid(SurrogateFunctionBase):
             :width: 100%
 
         The function is used in  [#STBP]_ [#roy2019scaling]_ [#SNNLSTM]_ [#SNU]_ .
-        '''
+        """
         super().__init__(alpha, spiking)
 
     @staticmethod
@@ -96,29 +94,29 @@ class Sigmoid(SurrogateFunctionBase):
     def backward(grad_output, x, alpha):
         return sigmoid_backward(grad_output, x, alpha)[0]
 
-    def cuda_code(self, x: str, y: str, dtype='fp32'):
-        sg_name = 'sg_' + self._get_name()
-        alpha = str(self.alpha) + 'f'
-        code = f'''
+    def cuda_code(self, x: str, y: str, dtype="fp32"):
+        sg_name = "sg_" + self._get_name()
+        alpha = str(self.alpha) + "f"
+        code = f"""
             {tab4_str}{self.cuda_code_start_comments()}
-        '''
+        """
 
-        if dtype == 'fp32':
-            code += f'''
+        if dtype == "fp32":
+            code += f"""
             {tab4_str}const float {sg_name}_sigmoid_ax = 1.0f / (1.0f + expf(- {alpha} * {x}));
             {tab4_str}const float {y} = (1.0f - {sg_name}_sigmoid_ax) * {sg_name}_sigmoid_ax * {alpha};
-            '''
-        elif dtype == 'fp16':
-            code += f'''
+            """
+        elif dtype == "fp16":
+            code += f"""
             {tab4_str}const half2 {sg_name}_alpha = __float2half2_rn({alpha});
             {tab4_str}const half2 {sg_name}_sigmoid_ax = __h2div(__float2half2_rn(1.0f), __hadd2(h2exp(__hneg2(__hmul2({sg_name}_alpha, {x}))), __float2half2_rn(1.0f)));
             {tab4_str}const half2 {y} = __hmul2(__hmul2(__hsub2(__float2half2_rn(1.0f), {sg_name}_sigmoid_ax), {sg_name}_sigmoid_ax), {sg_name}_alpha);
-            '''
+            """
         else:
             raise NotImplementedError
-        code += f'''
+        code += f"""
             {tab4_str}{self.cuda_code_end_comments()}
-        '''
+        """
         return code
 
     def cuda_codes(self, y: str, x: str, dtype: str):
