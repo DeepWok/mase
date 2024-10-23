@@ -7,7 +7,9 @@ import math
 import numpy as np
 import logging
 
-from . import surrogate, base
+from . import base
+from .modules import surrogate
+
 from .auto_cuda import neuron_kernel as ac_neuron_kernel
 from .auto_cuda import ss_neuron_kernel as ss_ac_neuron_kernel
 try:
