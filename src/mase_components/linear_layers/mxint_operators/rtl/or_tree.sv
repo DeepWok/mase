@@ -5,20 +5,19 @@ Description : This module actually implement the tree structure of or logic.
 */
 
 module or_tree #(
-    parameter IN_SIZE   = 2,
-    parameter IN_WIDTH  = 32,
-    parameter OUT_WIDTH = IN_WIDTH
+    parameter IN_SIZE  = 2,
+    parameter IN_WIDTH = 32
 ) (
     /* verilator lint_off UNUSEDSIGNAL */
-    input  logic                 clk,
-    input  logic                 rst,
+    input  logic                clk,
+    input  logic                rst,
     /* verilator lint_on UNUSEDSIGNAL */
-    input  logic [ IN_WIDTH-1:0] data_in       [IN_SIZE-1:0],
-    input  logic                 data_in_valid,
-    output logic                 data_in_ready,
-    output logic [OUT_WIDTH-1:0] data_out,
-    output logic                 data_out_valid,
-    input  logic                 data_out_ready
+    input  logic [IN_WIDTH-1:0] data_in       [IN_SIZE-1:0],
+    input  logic                data_in_valid,
+    output logic                data_in_ready,
+    output logic [IN_WIDTH-1:0] data_out,
+    output logic                data_out_valid,
+    input  logic                data_out_ready
 );
 
   localparam LEVELS = $clog2(IN_SIZE);
@@ -30,17 +29,29 @@ module or_tree #(
   generate
     if (LEVELS == 0) begin : gen_skip_adder_tree
 
-      assign data_out = data_in[0][IN_WIDTH-1] ? ~data_in[0] + 1 : data_in[0];
-      assign data_out_valid = data_in_valid;
-      assign data_in_ready = data_out_ready;
+      register_slice #(
+          .DATA_WIDTH(IN_WIDTH)
+      ) register_slice_i (
+          .clk           (clk),
+          .rst           (rst),
+          .data_in_valid (data_in_valid),
+          .data_in_ready (data_in_ready),
+          .data_in       (data_in[0][IN_WIDTH-1] ? ~data_in[0] + 1 : data_in[0]),
+          .data_out_valid(data_out_valid),
+          .data_out_ready(data_out_ready),
+          .data_out      (data_out)
+      );
+      // assign data_out = data_in[0][IN_WIDTH-1] ? ~data_in[0] + 1 : data_in[0];
+      // assign data_out_valid = data_in_valid;
+      // assign data_in_ready = data_out_ready;
 
     end else begin : gen_adder_tree
 
       // data & sum wires are oversized on purpose for vivado.
-      logic [OUT_WIDTH*IN_SIZE-1:0] data[LEVELS:0];
-      logic [OUT_WIDTH*IN_SIZE-1:0] or_result[LEVELS-1:0];
-      logic valid[IN_SIZE-1:0];
-      logic ready[IN_SIZE-1:0];
+      logic [IN_WIDTH*IN_SIZE-1:0] data[LEVELS:0];
+      logic [IN_WIDTH*IN_SIZE-1:0] or_result[LEVELS-1:0];
+      logic valid[LEVELS:0];
+      logic ready[LEVELS:0];
 
       // Generate adder for each layer
       for (genvar i = 0; i < LEVELS; i++) begin : level
@@ -54,13 +65,13 @@ module or_tree #(
             .IN_SIZE (LEVEL_IN_SIZE),
             .IN_WIDTH(LEVEL_IN_WIDTH)
         ) layer (
-            .data_in(data[i]),  // flattened LEVEL_IN_SIZE * LEVEL_IN_WIDTH
+            .data_in (data[i]),  // flattened LEVEL_IN_SIZE * LEVEL_IN_WIDTH
             .data_out(or_result[i])  // flattened LEVEL_OUT_SIZE * LEVEL_OUT_WIDTH
         );
 
         register_slice #(
             .DATA_WIDTH(LEVEL_OUT_SIZE * LEVEL_OUT_WIDTH)
-        ) register_slice (
+        ) register_slice_i (
             .clk           (clk),
             .rst           (rst),
             .data_in       (or_result[i]),
@@ -80,7 +91,7 @@ module or_tree #(
       assign valid[0] = data_in_valid;
       assign data_in_ready = ready[0];
 
-      assign data_out = data[LEVELS][OUT_WIDTH-1:0];
+      assign data_out = data[LEVELS][IN_WIDTH-1:0];
       assign data_out_valid = valid[LEVELS];
       assign ready[LEVELS] = data_out_ready;
 

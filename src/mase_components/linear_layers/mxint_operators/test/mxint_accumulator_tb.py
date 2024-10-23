@@ -14,7 +14,7 @@ from mase_cocotb.interfaces.streaming import (
 )
 
 from mase_cocotb.runner import mase_runner
-from utils import mxint_quantize
+from utils import mxint_quantize, MxIntAccumulator
 
 import torch
 from math import ceil, log2
@@ -33,7 +33,6 @@ class MXIntAccumulatorTB(Testbench):
         self.num = num
         if not hasattr(self, "log"):
             self.log = SimLog("%s" % (type(self).__qualname__))
-
         self.data_in_0_driver = MultiSignalStreamDriver(
             dut.clk,
             (dut.mdata_in_0, dut.edata_in_0),
@@ -47,14 +46,20 @@ class MXIntAccumulatorTB(Testbench):
             dut.data_out_0_ready,
             check=True,
         )
+        self.input_drivers = {"in0": self.data_in_0_driver}
+        self.output_monitors = {"out": self.data_out_0_monitor}
 
     def generate_inputs(self):
         from utils import block_mxint_quant, pack_tensor_to_mx_listed_chunk
         from utils import mxint_quantize
         from math import ceil, log2
 
-        data_in = 20 * torch.rand(
-            self.get_parameter("IN_DEPTH"), self.get_parameter("BLOCK_SIZE")
+        data_in = (
+            20
+            * torch.rand(
+                self.get_parameter("IN_DEPTH"), self.get_parameter("BLOCK_SIZE")
+            )
+            - 20
         )
         config = {
             "width": self.get_parameter("DATA_IN_0_PRECISION_0"),
@@ -62,15 +67,11 @@ class MXIntAccumulatorTB(Testbench):
         }
         parallelism = [1, self.get_parameter("BLOCK_SIZE")]
         (qtensor, mtensor, etensor) = block_mxint_quant(data_in, config, parallelism)
-
-        qout, mout, eout = mxint_quantize(
-            qtensor.sum(dim=0),
-            width=config["width"]
-            + 2 ** config["exponent_width"]
-            + ceil(log2(self.get_parameter("IN_DEPTH"))),
-            exponent_width=config["exponent_width"],
-            exponent=int(etensor.min()),
+        mtensor = mtensor.reshape(
+            self.get_parameter("IN_DEPTH"), self.get_parameter("BLOCK_SIZE")
         )
+        etensor = etensor.reshape(self.get_parameter("IN_DEPTH"))
+        mout, eout = MxIntAccumulator(mtensor, etensor)
 
         tensor_inputs = pack_tensor_to_mx_listed_chunk(mtensor, etensor, parallelism)
         exp_outs = [(mout.int().tolist(), int(eout))]
@@ -94,10 +95,27 @@ class MXIntAccumulatorTB(Testbench):
         assert self.data_out_0_monitor.exp_queue.empty()
 
 
+async def check_signal(dut):
+    await Timer(40, units="ns")
+    while True:
+        await RisingEdge(dut.clk)
+        await ReadOnly()
+        if dut.data_in_0_valid.value == 1 and dut.data_in_0_valid.value == 1:
+            print(
+                "data_in_0 = ", [x.signed_integer for x in dut.shifted_mdata_in_0.value]
+            )
+            print(
+                "data_out_0 = ",
+                [x.signed_integer for x in dut.shifted_mdata_out_0.value],
+            )
+        print("end")
+
+
 # @cocotb.test()
 # async def test(dut):
 #     tb = MXIntAccumulatorTB(dut, 1)
-#     await tb.run_test(samples=20, us=5)
+#     cocotb.start_soon(check_signal(dut))
+#     await tb.run_test(samples=10, us=5)
 
 # @cocotb.test()
 # async def single_mult(dut):
@@ -131,5 +149,18 @@ if __name__ == "__main__":
                 "BLOCK_SIZE": 1,
                 "IN_DEPTH": 1,
             },
+            # {
+            #     "DATA_IN_0_PRECISION_0": 8,
+            #     "DATA_IN_0_PRECISION_1": 4,
+            #     "BLOCK_SIZE": 4,
+            #     "IN_DEPTH": 1,
+            # },
+            # {
+            #     "DATA_IN_0_PRECISION_0": 8,
+            #     "DATA_IN_0_PRECISION_1": 4,
+            #     "BLOCK_SIZE": 4,
+            #     "IN_DEPTH": 4,
+            # },
         ],
+        sim="questa",
     )

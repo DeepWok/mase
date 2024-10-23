@@ -141,7 +141,7 @@ module mxint_matmul #(
   logic [C_DEPTH_DIM0-1:0] acc_out_valid;
   logic [C_DEPTH_DIM0-1:0] acc_out_ready;
   localparam MAT_ACC_EXP_WIDTH = SM_EXP_WIDTH;
-  localparam MAT_ACC_OUT_WIDTH = SM_OUT_WIDTH + 2 ** SM_EXP_WIDTH + $clog2(B_DEPTH_DIM1);
+  localparam MAT_ACC_OUT_WIDTH = SM_OUT_WIDTH + $clog2(B_DEPTH_DIM1);
   logic [MAT_ACC_OUT_WIDTH-1:0] macc_out_data[C_DEPTH_DIM0-1:0][C_COMPUTE_DIM0*C_COMPUTE_DIM1-1:0];
   logic [MAT_ACC_EXP_WIDTH-1:0] eacc_out_data[C_DEPTH_DIM0-1:0];
 
@@ -361,11 +361,11 @@ module mxint_matmul #(
       .M             (A_COMPUTE_DIM0),  // == B_COMPUTE_DIM1
       .K             (B_COMPUTE_DIM0),
       .X_WIDTH       (A_MAN_WIDTH),
-      .X_FRAC_WIDTH  (0),
+      .X_FRAC_WIDTH  (A_MAN_WIDTH - 1),
       .Y_WIDTH       (B_MAN_WIDTH),
-      .Y_FRAC_WIDTH  (0),
+      .Y_FRAC_WIDTH  (B_MAN_WIDTH - 1),
       .OUT_WIDTH     (SM_OUT_WIDTH),
-      .OUT_FRAC_WIDTH(0)
+      .OUT_FRAC_WIDTH(A_MAN_WIDTH + B_MAN_WIDTH - 2)
   ) simple_matmul_inst (
       .clk      (clk),
       .rst      (rst),
@@ -414,6 +414,7 @@ module mxint_matmul #(
 
   mxint_cast #(
       .IN_MAN_WIDTH(MAT_ACC_OUT_WIDTH),
+      .IN_MAN_FRAC_WIDTH(A_MAN_WIDTH + B_MAN_WIDTH - 2),
       .IN_EXP_WIDTH(MAT_ACC_EXP_WIDTH),
       .OUT_MAN_WIDTH(OUT_MAN_WIDTH),
       .OUT_EXP_WIDTH(OUT_EXP_WIDTH),
