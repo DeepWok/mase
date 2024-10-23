@@ -26,38 +26,6 @@ class BaseNode(base.MemoryModule):
                  step_mode='s', backend='torch', store_v_seq: bool = False):
         """
         * :ref:`API in English <BaseNode.__init__-en>`
-
-        .. _BaseNode.__init__-cn:
-
-        :param v_threshold: 神经元的阈值电压
-        :type v_threshold: float
-
-        :param v_reset: 神经元的重置电压。如果不为 ``None``，当神经元释放脉冲后，电压会被重置为 ``v_reset``；
-            如果设置为 ``None``，当神经元释放脉冲后，电压会被减去 ``v_threshold``
-        :type v_reset: Optional[float]
-
-        :param surrogate_function: 反向传播时用来计算脉冲函数梯度的替代函数
-        :type surrogate_function: Callable
-
-        :param detach_reset: 是否将reset过程的计算图分离
-        :type detach_reset: bool
-
-        :param step_mode: 步进模式，可以为 `'s'` (单步) 或 `'m'` (多步)
-        :type step_mode: str
-
-        :param backend: 使用哪种后端。不同的 ``step_mode`` 可能会带有不同的后端。可以通过打印 ``self.supported_backends`` 查看当前
-            使用的步进模式支持的后端。在支持的情况下，使用 ``'cupy'`` 后端是速度最快的
-        :type backend: str
-
-        :param store_v_seq: 在使用 ``step_mode = 'm'`` 时，给与 ``shape = [T, N, *]`` 的输入后，是否保存中间过程的 ``shape = [T, N, *]``
-            的各个时间步的电压值 ``self.v_seq`` 。设置为 ``False`` 时计算完成后只保留最后一个时刻的电压，即 ``shape = [N, *]`` 的 ``self.v`` 。
-            通常设置成 ``False`` ，可以节省内存
-        :type store_v_seq: bool
-
-        可微分SNN神经元的基类神经元。
-
-        * :ref:`中文API <BaseNode.__init__-cn>`
-
         .. _BaseNode.__init__-en:
 
         :param v_threshold: threshold of this neurons layer
@@ -144,13 +112,6 @@ class BaseNode(base.MemoryModule):
     def neuronal_charge(self, x: torch.Tensor):
         """
          * :ref:`API in English <BaseNode.neuronal_charge-en>`
-
-        .. _BaseNode.neuronal_charge-cn:
-
-        定义神经元的充电差分方程。子类必须实现这个函数。
-
-        * :ref:`中文API <BaseNode.neuronal_charge-cn>`
-
         .. _BaseNode.neuronal_charge-en:
 
 
@@ -161,12 +122,6 @@ class BaseNode(base.MemoryModule):
     def neuronal_fire(self):
         """
         * :ref:`API in English <BaseNode.neuronal_fire-en>`
-
-        .. _BaseNode.neuronal_fire-cn:
-
-        根据当前神经元的电压、阈值，计算输出脉冲。
-
-        * :ref:`中文API <BaseNode.neuronal_fire-cn>`
 
         .. _BaseNode.neuronal_fire-en:
 
@@ -179,12 +134,6 @@ class BaseNode(base.MemoryModule):
     def neuronal_reset(self, spike):
         """
         * :ref:`API in English <BaseNode.neuronal_reset-en>`
-
-        .. _BaseNode.neuronal_reset-cn:
-
-        根据当前神经元释放的脉冲，对膜电位进行重置。
-
-        * :ref:`中文API <BaseNode.neuronal_reset-cn>`
 
         .. _BaseNode.neuronal_reset-en:
 
@@ -211,18 +160,6 @@ class BaseNode(base.MemoryModule):
         """
 
         * :ref:`API in English <BaseNode.single_step_forward-en>`
-
-        .. _BaseNode.single_step_forward-cn:
-
-        :param x: 输入到神经元的电压增量
-        :type x: torch.Tensor
-
-        :return: 神经元的输出脉冲
-        :rtype: torch.Tensor
-
-        按照充电、放电、重置的顺序进行前向传播。
-
-        * :ref:`中文API <BaseNode.single_step_forward-cn>`
 
         .. _BaseNode.single_step_forward-en:
 
@@ -268,40 +205,6 @@ class IFNode(BaseNode):
                  backend='torch', store_v_seq: bool = False):
         """
         * :ref:`API in English <IFNode.__init__-en>`
-
-        .. _IFNode.__init__-cn:
-
-        :param v_threshold: 神经元的阈值电压
-        :type v_threshold: float
-
-        :param v_reset: 神经元的重置电压。如果不为 ``None``，当神经元释放脉冲后，电压会被重置为 ``v_reset``；
-            如果设置为 ``None``，当神经元释放脉冲后，电压会被减去 ``v_threshold``
-        :type v_reset: Optional[float]
-
-        :param surrogate_function: 反向传播时用来计算脉冲函数梯度的替代函数
-        :type surrogate_function: Callable
-
-        :param detach_reset: 是否将reset过程的计算图分离
-        :type detach_reset: bool
-
-        :param step_mode: 步进模式，可以为 `'s'` (单步) 或 `'m'` (多步)
-        :type step_mode: str
-
-        :param backend: 使用哪种后端。不同的 ``step_mode`` 可能会带有不同的后端。可以通过打印 ``self.supported_backends`` 查看当前
-            使用的步进模式支持的后端。在支持的情况下，使用 ``'cupy'`` 后端是速度最快的
-        :type backend: str
-
-        :param store_v_seq: 在使用 ``step_mode = 'm'`` 时，给与 ``shape = [T, N, *]`` 的输入后，是否保存中间过程的 ``shape = [T, N, *]``
-            的各个时间步的电压值 ``self.v_seq`` 。设置为 ``False`` 时计算完成后只保留最后一个时刻的电压，即 ``shape = [N, *]`` 的 ``self.v`` 。
-            通常设置成 ``False`` ，可以节省内存
-        :type store_v_seq: bool
-
-        Integrate-and-Fire 神经元模型，可以看作理想积分器，无输入时电压保持恒定，不会像LIF神经元那样衰减。其阈下神经动力学方程为：
-
-        .. math::
-            H[t] = V[t-1] + X[t]
-
-        * :ref:`中文API <IFNode.__init__-cn>`
 
         .. _IFNode.__init__-en:
 

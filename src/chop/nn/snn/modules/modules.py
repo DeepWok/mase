@@ -6,20 +6,6 @@ class VoltageHook(nn.Module):
     def __init__(self, scale=1.0, momentum=0.1, mode='Max'):
         """
         * :ref:`API in English <VoltageHook.__init__-en>`
-
-        .. _voltageHook.__init__-cn:
-
-        :param scale: 缩放初始值
-        :type scale: float
-        :param momentum: 动量值
-        :type momentum: float
-        :param mode: 模式。输入“Max”表示记录ANN激活最大值，“99.9%”表示记录ANN激活的99.9%分位点，输入0-1的float型浮点数表示记录激活最大值的对应倍数。
-        :type mode: str, float
-
-        ``VoltageHook`` 被置于ReLU后，用于在ANN推理中确定激活的范围。
-
-        * :ref:`中文API <VoltageHook.__init__-cn>`
-
         .. _voltageHook.__init__-en:
 
         :param scale: initial scaling value
@@ -41,18 +27,6 @@ class VoltageHook(nn.Module):
     def forward(self, x):
         """
         * :ref:`API in English <VoltageHook.forward-en>`
-
-        .. _VoltageHook.forward-cn:
-
-        :param x: 输入张量
-        :type x: torch.Tensor
-        :return: 原输入张量
-        :rtype: torch.Tensor
-
-        不对输入张量做任何处理，只是抓取ReLU的激活值
-
-        * :ref:`中文API <VoltageHook.forward-cn>`
-
         .. _VoltageHook.forward-en:
 
         :param x: input tensor
@@ -90,16 +64,6 @@ class VoltageScaler(nn.Module):
     def __init__(self, scale=1.0):
         """
         * :ref:`API in English <VoltageScaler.__init__-en>`
-
-        .. _VoltageScaler.__init__-cn:
-
-        :param scale: 缩放值
-        :type scale: float
-
-        ``VoltageScaler`` 用于SNN推理中缩放电流。
-
-        * :ref:`中文API <VoltageScaler.__init__-cn>`
-
         .. _VoltageScaler.__init__-en:
 
         :param scale: scaling value
@@ -114,16 +78,6 @@ class VoltageScaler(nn.Module):
     def forward(self, x):
         """
         * :ref:`API in English <VoltageScaler.forward-en>`
-
-        .. _VoltageScaler.forward-cn:
-
-        :param x: 输入张量，亦即输入电流
-        :type x: torch.Tensor
-        :return: 缩放后的电流
-        :rtype: torch.Tensor
-
-        * :ref:`中文API <VoltageScaler.forward-cn>`
-
         .. _VoltageScaler.forward-en:
 
         :param x: input tensor, or input current

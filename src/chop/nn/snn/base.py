@@ -19,16 +19,6 @@ except BaseException as e:
 def check_backend_library(backend: str):
     """
     * :ref:`API in English <check_backend_library-en>`
-
-    .. _check_backend_library-cn:
-
-    :param backend: ``'torch'``, ``'cupy'`` 或 ``'lava'``
-    :type backend: str
-
-    检查某个后端的python库是否已经安装。若未安装则此函数会报错。
-
-    * :ref:`中文 API <check_backend_library-cn>`
-
     .. _check_backend_library-en:
 
     :param backend: ``'torch'``, ``'cupy'`` or ``'lava'``
@@ -53,16 +43,6 @@ class StepModule:
     def supported_step_mode(self):
         """
         * :ref:`API in English <StepModule.supported_step_mode-en>`
-
-        .. _StepModule.supported_step_mode-cn:
-
-        :return: 包含支持的后端的tuple
-        :rtype: tuple[str]
-
-        返回此模块支持的步进模式。
-
-        * :ref:`中文 API <StepModule.supported_step_mode-cn>`
-
         .. _StepModule.supported_step_mode-en:
 
         :return: a tuple that contains the supported backends
@@ -75,14 +55,6 @@ class StepModule:
     def step_mode(self):
         """
         * :ref:`API in English <StepModule.step_mode-en>`
-
-        .. _StepModule.step_mode-cn:
-
-        :return: 模块当前使用的步进模式
-        :rtype: str
-
-        * :ref:`中文 API <StepModule.step_mode-cn>`
-
         .. _StepModule.step_mode-en:
 
         :return: the current step mode of this module
@@ -94,16 +66,6 @@ class StepModule:
     def step_mode(self, value: str):
         """
         * :ref:`API in English <StepModule.step_mode-setter-en>`
-
-        .. _StepModule.step_mode-setter-cn:
-
-        :param value: 步进模式
-        :type value: str
-
-        将本模块的步进模式设置为 ``value``
-
-        * :ref:`中文 API <StepModule.step_mode-setter-cn>`
-
         .. _StepModule.step_mode-setter-en:
 
         :param value: the step mode
@@ -119,13 +81,6 @@ class StepModule:
 class SingleModule(StepModule):
     """
     * :ref:`API in English <SingleModule-en>`
-
-    .. _SingleModule-cn:
-
-    只支持单步的模块 (``step_mode == 's'``)。
-
-    * :ref:`中文 API <SingleModule-cn>`
-
     .. _SingleModule-en:
 
     The module that only supports for single-step (``step_mode == 's'``)
@@ -136,13 +91,6 @@ class SingleModule(StepModule):
 class MultiStepModule(StepModule):
     """
     * :ref:`API in English <MultiStepModule-en>`
-
-    .. _MultiStepModule-cn:
-
-    只支持多步的模块 (``step_mode == 'm'``)。
-
-    * :ref:`中文 API <MultiStepModule-cn>`
-
     .. _MultiStepModule-en:
 
     The module that only supports for multi-step (``step_mode == 'm'``)
@@ -154,13 +102,6 @@ class MemoryModule(nn.Module, StepModule):
     def __init__(self):
         """
         * :ref:`API in English <MemoryModule.__init__-en>`
-
-        .. _MemoryModule.__init__-cn:
-
-        ``MemoryModule`` 是SpikingJelly中所有有状态（记忆）模块的基类。
-
-        * :ref:`中文API <MemoryModule.__init__-cn>`
-
         .. _MemoryModule.__init__-en:
 
         ``MemoryModule`` is the base class of all stateful modules in SpikingJelly.
@@ -176,16 +117,6 @@ class MemoryModule(nn.Module, StepModule):
     def supported_backends(self):
         """
         * :ref:`API in English <MemoryModule.supported_backends-en>`
-
-        .. _MemoryModule.supported_backends-cn:
-
-        返回支持的后端，默认情况下只有 `('torch', )`
-
-        :return: 支持的后端
-        :rtype: tuple[str]
-
-        * :ref:`中文API <MemoryModule.supported_backends-cn>`
-
         .. _MemoryModule.supported_backends-en:
 
         Return the supported backends. The default return value is `('torch', )`
@@ -211,17 +142,6 @@ class MemoryModule(nn.Module, StepModule):
     def single_step_forward(self, x: torch.Tensor, *args, **kwargs):
         """
         * :ref:`API in English <MemoryModule.single_step_forward-en>`
-
-        .. _MemoryModule.single_step_forward-cn:
-
-        :param x: input tensor with ``shape = [N, *] ``
-        :type x: torch.Tensor
-
-        本模块的单步的前向传播函数
-
-
-        * :ref:`中文 API <MemoryModule.single_step_forward-cn>`
-
         .. _MemoryModule.single_step_forward-en:
 
         :param x: input tensor with ``shape = [N, *] ``
@@ -235,17 +155,6 @@ class MemoryModule(nn.Module, StepModule):
     def multi_step_forward(self, x_seq: torch.Tensor, *args, **kwargs):
         """
         * :ref:`API in English <MemoryModule.multi_step_forward-en>`
-
-        .. _MemoryModule.multi_step_forward-cn:
-
-        :param x_seq: input tensor with ``shape = [T, N, *] ``
-        :type x_seq: torch.Tensor
-
-        本模块的多步的前向传播函数，通过调用 ``T`` 次 ``single_step_forward(x[t], *args, **kwargs)`` 实现
-
-
-        * :ref:`中文 API <MemoryModule.multi_step_forward-cn>`
-
         .. _MemoryModule.multi_step_forward-en:
 
         :param x_seq: input tensor with ``shape = [T, N, *] ``
@@ -277,19 +186,6 @@ class MemoryModule(nn.Module, StepModule):
     def register_memory(self, name: str, value):
         """
         * :ref:`API in English <MemoryModule.register_memory-en>`
-
-        .. _MemoryModule.register_memory-cn:
-
-        :param name: 变量的名字
-        :type name: str
-        :param value: 变量的值
-        :type value: any
-
-        将变量存入用于保存有状态变量（例如脉冲神经元的膜电位）的字典中。这个变量的重置值会被设置为 ``value``。每次调用 ``self.reset()``
-        函数后， ``self.name`` 都会被重置为 ``value``。
-
-        * :ref:`中文API <MemoryModule.register_memory-cn>`
-
         .. _MemoryModule.register_memory-en:
 
         :param name: variable's name
@@ -309,13 +205,6 @@ class MemoryModule(nn.Module, StepModule):
     def reset(self):
         """
         * :ref:`API in English <MemoryModule.reset-en>`
-
-        .. _MemoryModule.reset-cn:
-
-        重置所有有状态变量为默认值。
-
-        * :ref:`中文API <MemoryModule.reset-cn>`
-
         .. _MemoryModule.reset-en:
 
         Reset all stateful variables to their default values.
@@ -365,14 +254,6 @@ class MemoryModule(nn.Module, StepModule):
     def memories(self):
         """
         * :ref:`API in English <MemoryModule.memories-en>`
-
-        .. _MemoryModule.memories-cn:
-
-        :return: 返回一个所有状态变量的迭代器
-        :rtype: Iterator
-
-        * :ref:`中文API <MemoryModule.memories-cn>`
-
         .. _MemoryModule.memories-en:
 
         :return: an iterator over all stateful variables
@@ -384,14 +265,6 @@ class MemoryModule(nn.Module, StepModule):
     def named_memories(self):
         """
         * :ref:`API in English <MemoryModule.named_memories-en>`
-
-        .. _MemoryModule.named_memories-cn:
-
-        :return: 返回一个所有状态变量及其名称的迭代器
-        :rtype: Iterator
-
-        * :ref:`中文API <MemoryModule.named_memories-cn>`
-
         .. _MemoryModule.named_memories-en:
 
         :return: an iterator over all stateful variables and their names
@@ -404,18 +277,6 @@ class MemoryModule(nn.Module, StepModule):
     def detach(self):
         """
         * :ref:`API in English <MemoryModule.detach-en>`
-
-        .. _MemoryModule.detach-cn:
-
-        从计算图中分离所有有状态变量。
-
-        .. tip::
-
-            可以使用这个函数实现TBPTT(Truncated Back Propagation Through Time)。
-
-
-        * :ref:`中文API <MemoryModule.detach-cn>`
-
         .. _MemoryModule.detach-en:
 
         Detach all stateful variables.
