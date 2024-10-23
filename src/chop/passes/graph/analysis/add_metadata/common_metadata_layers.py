@@ -360,6 +360,8 @@ module_data = {
     # chop.nn.modules.lora.LoRALinear
     "loralinear": {"input": "data_in"},
     "grouped_query_attention": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.Flatten.html#flatten
+    "flatten": {"input": "data_in", "start_dim": "config", "end_dim": "config"},
 }
 
 
