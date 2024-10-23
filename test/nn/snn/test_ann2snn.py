@@ -133,7 +133,7 @@ train(
     scheduler_args=None,
     save_path=save_path,
     load_name=None,
-    load_type='pl',
+    load_type="pl",
     visualizer=visualizer,
     auto_requeue=False,
 )
