@@ -1,7 +1,7 @@
 import logging
 import sys, os
+
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
-print(sys.path)
 # import chop
 
 from chop.tools.checkpoint_load import load_model
@@ -48,14 +48,16 @@ def val(net, device, data_loader, T=None):
                 correct += (out.argmax(dim=1) == label.to(device)).float().sum().item()
             else:
                 for m in net.modules():
-                    if hasattr(m, 'reset'):
+                    if hasattr(m, "reset"):
                         m.reset()
                 for t in range(T):
                     if t == 0:
                         out = net(img)
                     else:
                         out += net(img)
-                    corrects[t] += (out.argmax(dim=1) == label.to(device)).float().sum().item()
+                    corrects[t] += (
+                        (out.argmax(dim=1) == label.to(device)).float().sum().item()
+                    )
             total += out.shape[0]
     return correct / total if T is None else corrects / total
 
@@ -84,9 +86,9 @@ dummy_input = get_dummy_input(model_info, data_module, "cls", "cpu")
 input_generator = InputGenerator(
     model_info=model_info,
     data_module=data_module,
-        task="cls",
-        which_dataloader="train",
-    )
+    task="cls",
+    which_dataloader="train",
+)
 
 model = models.get_model(model_name, "cls", dataset_info, pretrained=True)
 
@@ -100,9 +102,9 @@ mg, _ = add_common_metadata_analysis_pass(
     mg, {"dummy_in": dummy_input, "add_value": False}
 )
 
-#------------------------------------------------------------
+# ------------------------------------------------------------
 # Training the base ANN
-#------------------------------------------------------------
+# ------------------------------------------------------------
 
 plt_trainer_args = {
     "max_epochs": 30,
@@ -111,7 +113,9 @@ plt_trainer_args = {
 }
 
 save_path = "/home/thw20/projects/mase/mase_output/snn/training_ckpts"
-visualizer_save_path = "/home/thw20/projects/mase/mase_output/snn/software/training_ckpts"
+visualizer_save_path = (
+    "/home/thw20/projects/mase/mase_output/snn/software/training_ckpts"
+)
 visualizer = TensorBoardLogger(
     save_dir=visualizer_save_path,
 )
@@ -151,12 +155,16 @@ visualizer = TensorBoardLogger(
 #     load_type='pl',
 # )
 
-ann_model = load_model(load_name="/home/thw20/projects/mase/mase_output/snn/training_ckpts/best.ckpt", load_type="pl", model=model)
+ann_model = load_model(
+    load_name="/home/thw20/projects/mase/mase_output/snn/training_ckpts/best.ckpt",
+    load_type="pl",
+    model=model,
+)
 print(val(ann_model, "cuda", data_module.test_dataloader()))
 
-#------------------------------------------------------------
+# ------------------------------------------------------------
 # Convert the base ANN to SNN and test
-#------------------------------------------------------------
+# ------------------------------------------------------------
 
 quan_args = {
     "by": "type",
@@ -164,7 +172,7 @@ quan_args = {
     "fuse": True,
     "relu": {
         "config": {
-            "name": "IFNode", 
+            "name": "IFNode",
             "mode": "99.9%",
             "momentum": 0.1,
         }
@@ -178,8 +186,12 @@ mg, _ = ann2snn_transform_pass(mg, quan_args)
 print(val(mg.model, "cuda", data_module.test_dataloader(), T=20))
 
 
-#------------------------------------------------------------
+# ------------------------------------------------------------
 # load the SNN mz graph and test
-#------------------------------------------------------------
-snn_model = load_model(load_name="/home/thw20/projects/mase/mase_output/cnv_toy_cls_cifar10_2024-10-23/software/transform/transformed_ckpt/graph_module.mz", load_type="mz", model=model)
+# ------------------------------------------------------------
+snn_model = load_model(
+    load_name="/home/thw20/projects/mase/mase_output/cnv_toy_cls_cifar10_2024-10-23/software/transform/transformed_ckpt/graph_module.mz",
+    load_type="mz",
+    model=model,
+)
 print(val(snn_model, "cuda", data_module.test_dataloader(), T=20))

@@ -1,5 +1,6 @@
 from .modules import (
-    VoltageHook, VoltageScaler,
+    VoltageHook,
+    VoltageScaler,
 )
 
 # from .converter import Converter
