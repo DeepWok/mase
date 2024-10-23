@@ -44,6 +44,14 @@ module mxint_accumulator #(
   logic no_value_in_register;
   logic [DATA_IN_0_PRECISION_1 - 1:0] exp_max;
 
+  logic [DATA_IN_0_PRECISION_1 - 1:0] mdata_in_shift_value;
+  logic [DATA_IN_0_PRECISION_1 - 1:0] mdata_in_real_shift_value;
+  logic [DATA_IN_0_PRECISION_1 - 1:0] mdata_out_shift_value;
+  logic [DATA_IN_0_PRECISION_1 - 1:0] mdata_out_real_shift_value;
+
+  logic [DATA_IN_0_PRECISION_0 - 1:0] shifted_mdata_in_list [BLOCK_SIZE - 1:0][DATA_IN_0_PRECISION_0 - 1:0];
+  logic [DATA_OUT_0_PRECISION_0 - 1:0] shifted_mdata_out_list [BLOCK_SIZE - 1:0][DATA_OUT_0_PRECISION_0 - 1:0];
+
   assign no_value_in_register =(counter == 0 || (data_out_0_valid && data_out_0_ready && data_in_0_valid));
   assign exp_max = ($signed(edata_out_0) < $signed(edata_in_0)) ? edata_in_0 : edata_out_0;
   // counter
@@ -58,41 +66,29 @@ module mxint_accumulator #(
       end else if (data_in_0_valid && data_in_0_ready) counter <= counter + 1;
     end
   // mantissa
-  for (genvar i = 0; i < BLOCK_SIZE; i++) begin : mantissa_block
-    // mantissa shift
-    always_comb begin
-      shifted_mdata_in_0[i] = no_value_in_register ? $signed(
-          mdata_in_0[i]
-      ) : $signed(
-          mdata_in_0[i]
-      ) >>> ($signed(
-          exp_max
-      ) - $signed(
-          edata_in_0
-      ));
-      shifted_mdata_out_0[i] = $signed(
-          mdata_out_0[i]
-      ) >>> ($signed(
-          exp_max
-      ) - $signed(
-          edata_out_0
-      ));
+  always_comb begin
+    mdata_in_shift_value = $signed(exp_max) - $signed(edata_in_0);
+    mdata_in_real_shift_value = (mdata_in_shift_value < DATA_IN_0_PRECISION_0)? mdata_in_shift_value: DATA_IN_0_PRECISION_0 - 1;
+    mdata_out_shift_value = $signed(exp_max) - $signed(edata_out_0);
+    mdata_out_real_shift_value = (mdata_out_shift_value < DATA_OUT_0_PRECISION_0)? mdata_out_shift_value: DATA_OUT_0_PRECISION_0 - 1;
+  end
+
+  for (genvar i = 0; i < BLOCK_SIZE; i++) begin : optimize_variable_shift
+    for (genvar j=0; j< DATA_IN_0_PRECISION_0; j++) begin: data_in_shift
+      always_comb begin
+        shifted_mdata_in_list[i][j] = no_value_in_register ? $signed(mdata_in_0[i]) : $signed(mdata_in_0[i]) >>> j;
+      end
     end
-    // for (genvar i = 0; i < BLOCK_SIZE; i++) begin : mantissa_block
-    //   // mantissa shift
-    //   for (genvar j = 0; j < 2 ** DATA_IN_0_PRECISION_1; j++) begin : static_shift
-    //     always_comb begin
-    //       if (($signed(edata_in_0) - $signed(exp_min)) == j)
-    //         shifted_mdata_in_0[i] = no_value_in_register ? $signed(
-    //             mdata_in_0[i]
-    //         ) : $signed(
-    //             mdata_in_0[i]
-    //         ) <<< j;
-    //       if (($signed(edata_out_0) - $signed(exp_min)) == j)
-    //         shifted_mdata_out_0[i] = $signed(mdata_out_0[i]) <<< j;
-    //     end
-    //   end
-    // mantissa out
+    for (genvar k=0; k< DATA_OUT_0_PRECISION_0; k++) begin: data_out_shift
+      always_comb begin
+        shifted_mdata_out_list[i][k] = $signed(mdata_out_0[i]) >>> k;
+      end
+    end
+    assign shifted_mdata_in_0[i] = shifted_mdata_in_list[i][mdata_in_real_shift_value];
+    assign shifted_mdata_out_0[i] = shifted_mdata_out_list[i][mdata_out_real_shift_value];
+  end
+
+  for (genvar i = 0; i < BLOCK_SIZE; i++) begin : mantissa_block
     always_ff @(posedge clk)
       if (rst) mdata_out_0[i] <= '0;
       else begin

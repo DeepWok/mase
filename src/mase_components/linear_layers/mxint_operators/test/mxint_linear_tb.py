@@ -30,7 +30,6 @@ class LinearTB(Testbench):
             self.log = SimLog("%s" % (type(self).__qualname__))
             self.log.setLevel(logging.DEBUG)
 
-        # cocotb.start_soon(check_signal(dut))
         self.data_in_0_driver = MultiSignalStreamDriver(
             dut.clk,
             (dut.mdata_in_0, dut.edata_in_0),
@@ -194,43 +193,50 @@ class LinearTB(Testbench):
 @cocotb.test()
 async def cocotb_test(dut):
     tb = LinearTB(dut)
+    cocotb.start_soon(check_signal(dut))
     await tb.run_test(us=100)
 
 
-# async def check_signal(dut):
-#     await Timer(40, units="ns")
-#     while True:
-#         await RisingEdge(dut.clk)
-#         await ReadOnly()
-#         # if dut.acc_data_out_valid.value == 1 and dut.acc_data_out_ready.value == 1:
-#         #     print("mdata_out = ",[x.signed_integer for x in dut.acc_mdata_out.value])
-#         #     print("edata_out = ",dut.acc_edata_out.value.signed_integer)
-#         # print("end")
+async def check_signal(dut):
+    await Timer(40, units="ns")
+    while True:
+        await RisingEdge(dut.clk)
+        await ReadOnly()
+        if dut.cast_data_out_0_valid.value == 1 and dut.cast_data_out_0_ready.value == 1:
+            shift = dut.bias_cast.ovshift_inst
+            print(shift.SHIFT_WIDTH.value)
+            print(shift.OUT_WIDTH.value)
+            print(shift.shift_value.value.signed_integer)
+            print(shift.abs_shift_value.value.signed_integer)
+            print("data_in = ",[x.signed_integer for x in shift.data_in.value])
+            print("data_out = ",[x.signed_integer for x in shift.data_out.value])
+        #     print("edata_out = ",dut.acc_edata_out.value.signed_integer)
+        # print("end")
 def get_fixed_linear_config(kwargs={}):
     # if pretranspose
     #   weight1 = in0
     # else
     #   weight0 = in0
     # currently, we only consider the transposed situation
-    config = {
-        "HAS_BIAS": 0,
-        "DATA_IN_0_TENSOR_SIZE_DIM_0": 2,
-        "DATA_IN_0_TENSOR_SIZE_DIM_1": 2,
-        "DATA_IN_0_PARALLELISM_DIM_0": 2,
-        "DATA_IN_0_PARALLELISM_DIM_1": 1,
-        "WEIGHT_TENSOR_SIZE_DIM_0": 2,
-        "WEIGHT_TENSOR_SIZE_DIM_1": 2,
-        "WEIGHT_PARALLELISM_DIM_0": 2,
-        "WEIGHT_PARALLELISM_DIM_1": 1,
-        "DATA_IN_0_PRECISION_0": 8,
-        "DATA_IN_0_PRECISION_1": 4,
-        "WEIGHT_PRECISION_0": 8,
-        "WEIGHT_PRECISION_1": 4,
-        "BIAS_PRECISION_0": 8,
-        "BIAS_PRECISION_1": 4,
-        "DATA_OUT_0_PRECISION_0": 10,
-        "DATA_OUT_0_PRECISION_1": 4,
-    }
+    # config = {
+    #     "HAS_BIAS": 1,
+    #     "DATA_IN_0_TENSOR_SIZE_DIM_0": 2,
+    #     "DATA_IN_0_TENSOR_SIZE_DIM_1": 2,
+    #     "DATA_IN_0_PARALLELISM_DIM_0": 2,
+    #     "DATA_IN_0_PARALLELISM_DIM_1": 1,
+    #     "WEIGHT_TENSOR_SIZE_DIM_0": 2,
+    #     "WEIGHT_TENSOR_SIZE_DIM_1": 2,
+    #     "WEIGHT_PARALLELISM_DIM_0": 2,
+    #     "WEIGHT_PARALLELISM_DIM_1": 1,
+    #     "DATA_IN_0_PRECISION_0": 8,
+    #     "DATA_IN_0_PRECISION_1": 4,
+    #     "WEIGHT_PRECISION_0": 8,
+    #     "WEIGHT_PRECISION_1": 4,
+    #     "BIAS_PRECISION_0": 8,
+    #     "BIAS_PRECISION_1": 4,
+    #     "DATA_OUT_0_PRECISION_0": 10,
+    #     "DATA_OUT_0_PRECISION_1": 4,
+    # }
     config = {
         "HAS_BIAS": 1,
         "DATA_IN_0_TENSOR_SIZE_DIM_0": 32,

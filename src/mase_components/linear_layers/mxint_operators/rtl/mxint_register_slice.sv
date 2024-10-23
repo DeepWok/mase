@@ -35,7 +35,7 @@ module mxint_register_slice #(
   assign data_in_flatten[DATA_PRECISION_0*IN_NUM+DATA_PRECISION_1-1:DATA_PRECISION_0*IN_NUM] = edata_in;
 
   register_slice #(
-      .DATA_WIDTH(DATA_PRECISION_0)
+      .DATA_WIDTH(DATA_PRECISION_0 * IN_NUM + DATA_PRECISION_1)
   ) register_slice_i (
       .clk           (clk),
       .rst           (rst),

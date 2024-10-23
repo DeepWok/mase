@@ -425,15 +425,12 @@ def mxint_linear_hardware(x, w, bias, config):
                 ex_block = reshaped_ex[i * x_config["depth_dim_0"] + k]
                 mw_block = reshaped_mw[j * w_config["depth_dim_0"] + k]
                 ew_block = reshaped_ew[j * w_config["depth_dim_0"] + k]
-                print(mx_block, ex_block)
-                print(mw_block, ew_block)
                 partial_man_out[k], partial_exp_out[k] = DotProductCore(
                     mx_block, ex_block, mw_block, ew_block
                 )
             acc_man_out, acc_exp_out = MxIntAccumulator(
                 partial_man_out.reshape(w_config["depth_dim_0"], -1), partial_exp_out
             )
-            print("software: acc_man, exp", acc_man_out, acc_exp_out)
             if bias != None:
                 bias_config = config["bias_config"]
                 mbias, ebias = bias
@@ -452,7 +449,10 @@ def mxint_linear_hardware(x, w, bias, config):
                 shifted_bias = reshaped_mbias[j].repeat(
                     x_config["parallism_dim_1"]
                 ) * 2 ** (shifted_value)
+                print(reshaped_mbias[j])
+                print(shifted_value)
                 acc_man_out = shifted_bias + acc_man_out
+                print("shfited_bias", shifted_bias)
             man_out[i][j], exp_out[i][j] = MxIntCast(
                 acc_man_out,
                 acc_exp_out,

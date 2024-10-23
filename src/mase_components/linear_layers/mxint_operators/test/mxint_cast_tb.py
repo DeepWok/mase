@@ -98,13 +98,24 @@ async def test(dut):
 
 async def check_signal(dut):
     num = {"data_out_0": 0, "data_in_0": 0}
+    await Timer(40, units="ns")
     while True:
         await RisingEdge(dut.clk)
         await ReadOnly()
-        print(dut.data_for_max_valid.value)
-        print(dut.data_for_max_ready.value)
-        print(dut.data_for_out_valid.value)
-        print(dut.data_for_out_ready.value)
+        if dut.data_out_valid.value == 1 and dut.data_out_ready.value == 1:
+            print(dut.edata_out_full)
+            print(dut.log2_max_value)
+            print(dut.ebuffer_data_for_out)
+            shift = dut.ovshift_inst
+            print(shift.SHIFT_WIDTH.value)
+            print(shift.OUT_WIDTH.value)
+            print(shift.shift_value.value.signed_integer)
+            print(shift.abs_shift_value.value.signed_integer)
+            # print(shift.shift_data.value.signed_integer)
+            print([x for x in shift.shift_data.value])
+        # print(dut.data_for_max_ready.value)
+        # print(dut.data_for_out_valid.value)
+        # print(dut.data_for_out_ready.value)
         print("end")
         # print(dut.max_bas_i.or_tree_i.gen_adder_tree.level[0].register_slice.data_out_ready)
         # print(dut.max_bas_i.or_tree_i.gen_adder_tree.level[0].register_slice.data_in_valid)

@@ -254,18 +254,23 @@ module mxint_linear #(
         .data_out_valid(cast_data_out_0_valid),
         .data_out_ready(cast_data_out_0_ready)
     );
-    assign exp_difference = $signed(
+    assign exp_difference =  - ($signed(
         circular_ebias
     ) - $signed(
         acc_edata_out
-    ) + DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 - 2 - (BIAS_PRECISION_0 - 1);
-    assign abs_shift_value = exp_difference[FDP_EXP_WIDTH - 1]? (~exp_difference + 1): exp_difference;
+    ) + DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 - 2 - (BIAS_PRECISION_0 - 1));
+
+    optimized_variable_shift #(
+        .IN_WIDTH(BIAS_PRECISION_0),
+        .SHIFT_WIDTH(FDP_EXP_WIDTH),
+        .OUT_WIDTH(LOSSLESS_OUT_WIDTH),
+        .BLOCK_SIZE(DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1)
+    ) ovshift_inst(
+        .data_in(mbias_sext),
+        .shift_value(exp_difference),
+        .data_out(shifted_mbias)
+    );
     for (genvar m = 0; m < DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1; m++) begin
-      assign shifted_mbias[m] = exp_difference[FDP_EXP_WIDTH-1] ? $signed(
-          mbias_sext[m]
-      ) >>> abs_shift_value : $signed(
-          mbias_sext[m]
-      ) <<< abs_shift_value;
       assign cast_mdata_out_0[m] = $signed(shifted_mbias[m]) + $signed(acc_mdata_out[m]);
     end
     assign cast_edata_out_0 = acc_edata_out;

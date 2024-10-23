@@ -54,7 +54,7 @@ class MLP(torch.nn.Module):
 
     def forward(self, x):
         x = self.fc1(x)
-        # x = self.fc2(x)
+        x = self.fc2(x)
         return x
 
 
@@ -69,18 +69,18 @@ quan_args = {
             # data
             "data_in_width": 4,
             "data_in_exponent_width": 8,
-            "data_in_parallelism": [1, 2],
+            "data_in_parallelism": [1, 48],
             # weight
             "weight_width": 4,
             "weight_exponent_width": 8,
-            "weight_parallelism": [2, 2],
+            "weight_parallelism": [48, 48],
             # bias
             "bias_width": 4,
             "bias_exponent_width": 8,
-            "bias_parallelism": [1, 2],
+            "bias_parallelism": [1, 48],
             "data_out_width": 4,
             "data_out_exponent_width": 8,
-            "data_out_parallelism": [1, 2],
+            "data_out_parallelism": [1, 48],
         }
     },
 }
@@ -88,10 +88,10 @@ quan_args = {
 
 @pytest.mark.dev
 def test_emit_verilog_linear():
-    in_features = 8
-    hidden_features = 32
-    out_features = 8
-    n = 2
+    in_features = 192
+    hidden_features = 192*4
+    out_features = 192
+    n = 196
     batch_size = 10
     linear = MLP(in_features, hidden_features, out_features)
     mg = chop.MaseGraph(model=linear)
@@ -148,4 +148,4 @@ def _simulate():
 
 if __name__ == "__main__":
     test_emit_verilog_linear()
-    _simulate()
+    # _simulate()
