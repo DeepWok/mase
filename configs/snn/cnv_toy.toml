@@ -1,0 +1,31 @@
+# basics
+model = "cnv_toy"
+dataset = "cifar10"
+# training
+training_optimizer = "adam"
+learning_rate = 0.01
+max_epochs = 3
+batch_size = 32
+# torch lightning
+task = "classification"
+num_workers = 0
+num_devices = 1
+accelerator = "gpu"
+project_dir = "../mase_output"
+
+[transform]
+style = "graph"
+
+[passes.ann2snn]
+by = "type"
+report = true
+fuse = true
+device = "cuda"
+
+[passes.ann2snn.default.config]
+name = "NA"
+
+[passes.ann2snn.relu.config]
+name = "IFNode"
+mode = "99.9%"
+mementum = 0.1

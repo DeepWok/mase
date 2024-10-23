@@ -1,5 +1,6 @@
 from copy import copy, deepcopy
 import logging
+from chop.ir.graph.mase_metadata import MaseMetadata
 from chop.nn.snn import neuron
 from chop.passes.graph.transforms.quantize.quant_parsers.update_node_meta import update_quant_meta_param
 import torch
@@ -41,6 +42,9 @@ def get_config(config: dict, name: str):
         return config["default"]["config"]
 
 
+def attach_empty_mase_metadata(node):
+    node.meta["mase"] = MaseMetadata(node=node)
+    return node
 
 def add_module_and_node(fx_model: torch.fx.GraphModule, target: str, after: torch.fx.Node, m: torch.nn.Module,
                              args: Tuple) -> torch.fx.Node:
@@ -110,13 +114,17 @@ def replace_by_ifnode(graph, config: dict) -> torch.fx.GraphModule:
 
                     node0 = add_module_and_node(fx_model, target0, hook_node, m0,
                                                 relu_node.args)
+                    node0 = attach_empty_mase_metadata(node0)
                     
                     # parent_name, name = get_parent_name(node.target)
                     # setattr(graph.modules[parent_name], name, m0)
 
                     node1 = add_module_and_node(fx_model, target1, node0, m1
                                                 , (node0,))
+                    node1 = attach_empty_mase_metadata(node1)
+
                     node2 = add_module_and_node(fx_model, target2, node1, m2, args=(node1,))
+                    node2 = attach_empty_mase_metadata(node2)
 
                     relu_node.replace_all_uses_with(node2)
                     node2.args = (node1,)
@@ -144,7 +152,7 @@ def graph_iterator_quantize_by_type(graph, config: dict):
 
     # Adding hooks to the graph
     for node in graph.fx_graph.nodes:
-        if node.meta == {}:
+        if node.meta['mase'].parameters['common'] == {}:
             # spiking node! Ignore for now
             continue
         node_config = get_config(config, get_mase_op(node))
@@ -160,6 +168,7 @@ def graph_iterator_quantize_by_type(graph, config: dict):
                 m = VoltageHook(momentum=momentum, mode=mode) 
                 # TODO: check this
                 new_node = add_module_and_node(graph.model, target, node, m, (node,))
+                new_node = attach_empty_mase_metadata(new_node)
 
     
     graph.fx_graph.lint()
