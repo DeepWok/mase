@@ -59,28 +59,6 @@ class Sigmoid(SurrogateFunctionBase):
     def __init__(self, alpha=4.0, spiking=True):
         '''
         * :ref:`API in English <Sigmoid.__init__-en>`
-        .. _Sigmoid.__init__-cn:
-
-        :param alpha: 控制反向传播时梯度的平滑程度的参数
-        :param spiking: 是否输出脉冲，默认为 ``True``，在前向传播时使用 ``heaviside`` 而在反向传播使用替代梯度。若为 ``False``
-            则不使用替代梯度，前向传播时，使用反向传播时的梯度替代函数对应的原函数
-
-        反向传播时使用sigmoid的梯度的脉冲发放函数。反向传播为
-
-        .. math::
-            g'(x) = \\alpha * (1 - \\mathrm{sigmoid} (\\alpha x)) \\mathrm{sigmoid} (\\alpha x)
-
-        对应的原函数为
-
-        .. math::
-            g(x) = \\mathrm{sigmoid}(\\alpha x) = \\frac{1}{1+e^{-\\alpha x}}
-
-        .. image:: ../_static/API/activation_based/surrogate/Sigmoid.*
-            :width: 100%
-
-        该函数在文章 [#STBP]_ [#roy2019scaling]_ [#SNNLSTM]_ [#SNU]_ 中使用。
-
-        * :ref:`中文API <Sigmoid.__init__-cn>`
         .. _Sigmoid.__init__-en:
 
         :param alpha: parameter to control smoothness of gradient

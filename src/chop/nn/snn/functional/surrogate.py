@@ -13,23 +13,6 @@ curly_bracket_r = '}'
 def heaviside(x: torch.Tensor):
     '''
     * :ref:`API in English <heaviside.__init__-en>`
-    .. _heaviside.__init__-cn:
-
-    :param x: 输入tensor
-    :return: 输出tensor
-
-    heaviside阶跃函数，定义为
-
-    .. math::
-        g(x) =
-        \\begin{cases}
-        1, & x \\geq 0 \\\\
-        0, & x < 0 \\\\
-        \\end{cases}
-
-    阅读 `HeavisideStepFunction <https://mathworld.wolfram.com/HeavisideStepFunction.html>`_ 以获得更多信息。
-
-    * :ref:`中文API <heaviside.__init__-cn>`
     .. _heaviside.__init__-en:
 
     :param x: the input tensor

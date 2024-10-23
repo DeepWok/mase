@@ -59,18 +59,7 @@ def replace_by_ifnode(graph, config: dict) -> torch.fx.GraphModule:
         """
         * :ref:`API in English <Converter.replace_by_ifnode-en>`
 
-        .. _Converter.replace_by_ifnode-cn:
-
-        :param fx_model: 原模型
-        :type fx_model: torch.fx.GraphModule
-        :return: 将ReLU替换为IF脉冲神经元后的模型.
-        :rtype: torch.fx.GraphModule
-
-        ``replace_by_ifnode`` 用于将模型的ReLU替换为IF脉冲神经元。
-
-        * :ref:`中文API <Converter.replace_by_ifnode-cn>`
-
-        .. _Converter.replace_by_ifnode-en:
+        .. replace_by_ifnode-en:
 
         :param fx_model: Original fx_model
         :type fx_model: torch.fx.GraphModule
