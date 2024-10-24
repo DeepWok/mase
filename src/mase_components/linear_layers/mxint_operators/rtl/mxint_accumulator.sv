@@ -76,11 +76,8 @@ module mxint_accumulator #(
   for (genvar i = 0; i < BLOCK_SIZE; i++) begin : optimize_variable_shift
     for (genvar j = 0; j < DATA_IN_0_PRECISION_0; j++) begin : data_in_shift
       always_comb begin
-        shifted_mdata_in_list[i][j] = no_value_in_register ? $signed(
-            mdata_in_0[i]
-        ) : $signed(
-            mdata_in_0[i]
-        ) >>> j;
+        shifted_mdata_in_list[i][j] = no_value_in_register ? $signed(mdata_in_0[i]) :
+            $signed(mdata_in_0[i]) >>> j;
       end
     end
     for (genvar k = 0; k < DATA_OUT_0_PRECISION_0; k++) begin : data_out_shift

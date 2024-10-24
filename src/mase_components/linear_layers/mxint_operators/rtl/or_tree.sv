@@ -65,7 +65,7 @@ module or_tree #(
             .IN_SIZE (LEVEL_IN_SIZE),
             .IN_WIDTH(LEVEL_IN_WIDTH)
         ) layer (
-            .data_in (data[i]),  // flattened LEVEL_IN_SIZE * LEVEL_IN_WIDTH
+            .data_in(data[i]),  // flattened LEVEL_IN_SIZE * LEVEL_IN_WIDTH
             .data_out(or_result[i])  // flattened LEVEL_OUT_SIZE * LEVEL_OUT_WIDTH
         );
 

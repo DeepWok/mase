@@ -21,11 +21,8 @@ module optimized_variable_shift #(
   for (genvar i = 0; i < BLOCK_SIZE; i++) begin
     for (genvar j = 0; j < SHIFT_DATA_WIDTH; j++) begin
       always_comb begin
-        shift_data_list[i][j] = (shift_value[SHIFT_WIDTH-1]) ? $signed(
-            data_in[i]
-        ) <<< j : $signed(
-            data_in[i]
-        ) >>> j;
+        shift_data_list[i][j] = (shift_value[SHIFT_WIDTH-1]) ? $signed(data_in[i]) <<< j :
+            $signed(data_in[i]) >>> j;
       end
     end
     assign shift_data[i] = shift_data_list[i][real_shift_value];
