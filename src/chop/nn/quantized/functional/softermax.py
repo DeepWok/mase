@@ -25,6 +25,6 @@ def fixed_softermax(
     out = softermax(input, dim=dim)
 
     if out_q_config is not None:
-        out = integer_floor_quantizer(out, **out_q_config)
+        out = integer_floor_quantizer(out, is_signed=False, **out_q_config)
 
     return out

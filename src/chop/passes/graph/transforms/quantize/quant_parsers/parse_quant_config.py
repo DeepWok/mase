@@ -245,6 +245,23 @@ QUANT_ARITH_ENTRIES = {
             "bias_block_size",
         ),
     },
+    "mxint_hardware": {
+        "weight_entries": (
+            "weight_width",
+            "weight_exponent_width",
+            "weight_parallelism",
+        ),
+        "data_in_entries": (
+            "data_in_width",
+            "data_in_exponent_width",
+            "data_in_parallelism",
+        ),
+        "bias_entries": (
+            "bias_width",
+            "bias_exponent_width",
+            "bias_parallelism",
+        ),
+    },
 }
 
 
@@ -381,6 +398,10 @@ MASE_OP_TO_ENTRIES = {
     "rms_norm": (
         ("name", "data_in_entries"),
         ("bypass",),
+    ),
+    "grouped_query_attention": (
+        ("name", "data_in_entries", "weight_entries"),
+        ("bypass", "bias_entries"),
     ),
 }
 

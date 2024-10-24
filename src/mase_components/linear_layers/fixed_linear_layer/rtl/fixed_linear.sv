@@ -38,7 +38,9 @@ module fixed_linear #(
 
     // Inferred precision of the output data
     // if the data out precision will be replaced by the setting
-    parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 + $clog2(DATA_IN_0_TENSOR_SIZE_DIM_0) + 1,
+    parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 + $clog2(
+        DATA_IN_0_TENSOR_SIZE_DIM_0
+    ) + 1,
     parameter DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1 + WEIGHT_PRECISION_1,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0)? WEIGHT_TENSOR_SIZE_DIM_1:WEIGHT_TENSOR_SIZE_DIM_0,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1,
@@ -51,7 +53,6 @@ module fixed_linear #(
     parameter BIAS_TENSOR_SIZE_DIM_1 = 1,
     parameter BIAS_PARALLELISM_DIM_0 = DATA_OUT_0_PARALLELISM_DIM_0,
     parameter BIAS_PARALLELISM_DIM_1 = 1,
-    
     localparam BIAS_DEPTH_DIM_0 = BIAS_TENSOR_SIZE_DIM_0 / BIAS_PARALLELISM_DIM_0,
     localparam BIAS_DEPTH_DIM_1 = BIAS_TENSOR_SIZE_DIM_1 / BIAS_PARALLELISM_DIM_1
 
@@ -79,7 +80,9 @@ module fixed_linear #(
     output logic data_out_0_valid,
     input logic data_out_0_ready
 );
-  localparam MMOUT_PRECISION_0 = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 + $clog2(DATA_IN_0_TENSOR_SIZE_DIM_0);
+  localparam MMOUT_PRECISION_0 = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 + $clog2(
+      DATA_IN_0_TENSOR_SIZE_DIM_0
+  );
   localparam MMOUT_PRECISION_1 = DATA_IN_0_PRECISION_1 + WEIGHT_PRECISION_1;
 
   // The TENSOR_SIZE and PARALLELISM parameters for the weights are set by emit verilog according to the real
@@ -180,33 +183,33 @@ module fixed_linear #(
     );
 
     input_buffer #(
-        .DATA_WIDTH(BIAS_PRECISION_0),
-        .IN_NUM    (BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1),
-        .REPEAT    (IN_0_DEPTH_DIM_1),
-        .BUFFER_SIZE      (BIAS_DEPTH_DIM_0)
+        .DATA_WIDTH (BIAS_PRECISION_0),
+        .IN_NUM     (BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1),
+        .REPEAT     (IN_0_DEPTH_DIM_1),
+        .BUFFER_SIZE(BIAS_DEPTH_DIM_0)
     ) bias_buffer_inst (
         .clk,
         .rst,
 
         // Input streaming port
-        .data_in (bias),
+        .data_in(bias),
         .data_in_valid(bias_valid),
         .data_in_ready(bias_ready),
 
         // Output streaming port
-        .data_out (bias_buffered),
+        .data_out(bias_buffered),
         .data_out_valid(bias_buffered_valid),
         .data_out_ready(bias_buffered_ready)
     );
     fixed_rounding #(
-      .IN_SIZE(DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1),
-      .IN_WIDTH      (MMOUT_PRECISION_0 + 1),
-      .IN_FRAC_WIDTH (MMOUT_PRECISION_1),
-      .OUT_WIDTH     (DATA_OUT_0_PRECISION_0),
-      .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1)
+        .IN_SIZE       (DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1),
+        .IN_WIDTH      (MMOUT_PRECISION_0 + 1),
+        .IN_FRAC_WIDTH (MMOUT_PRECISION_1),
+        .OUT_WIDTH     (DATA_OUT_0_PRECISION_0),
+        .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1)
     ) output_cast (
-      .data_in(add_bias_in),
-      .data_out(add_bias_in_casted)
+        .data_in (add_bias_in),
+        .data_out(add_bias_in_casted)
     );
     unpacked_register_slice #(
         .DATA_WIDTH(DATA_OUT_0_PRECISION_0),
@@ -264,14 +267,14 @@ module fixed_linear #(
 
   end else begin
     fixed_rounding #(
-      .IN_SIZE(DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1),
-      .IN_WIDTH      (MMOUT_PRECISION_0),
-      .IN_FRAC_WIDTH (MMOUT_PRECISION_1),
-      .OUT_WIDTH     (DATA_OUT_0_PRECISION_0),
-      .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1)
+        .IN_SIZE       (DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1),
+        .IN_WIDTH      (MMOUT_PRECISION_0),
+        .IN_FRAC_WIDTH (MMOUT_PRECISION_1),
+        .OUT_WIDTH     (DATA_OUT_0_PRECISION_0),
+        .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1)
     ) output_cast (
-      .data_in(matmul_out),
-      .data_out(data_out_0)
+        .data_in (matmul_out),
+        .data_out(data_out_0)
     );
     assign data_out_0_valid = matmul_out_valid;
     assign matmul_out_ready = data_out_0_ready;

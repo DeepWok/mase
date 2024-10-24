@@ -28,6 +28,7 @@ QUANT_ARITH_TO_SUFFIXES = {
     "block_fp": ("width", "exponent_width", "exponent_bias", "block_size"),
     "block_minifloat": ("width", "exponent_width", "exponent_bias_width", "block_size"),
     "block_log": ("width", "exponent_bias_width", "block_size"),
+    "mxint_hardware": ("width", "exponent_width"),
 }
 
 
@@ -68,10 +69,14 @@ MASE_OP_TO_INPUT_ENTRIES_AND_ARGS = {
     "softplus": (("data_in",), ("data_in_0",)),
     "sub": (("data_in", "data_in"), ("data_in_0", "data_in_1")),
     "batch_norm2d": (("data_in", "weight", "bias"), ("data_in_0", "weight", "bias")),
-    "layer_norm": (("data_in",), ("data_in_0")),
-    "group_norm": (("data_in",), ("data_in_0")),
-    "instance_norm2d": (("data_in",), ("data_in_0")),
-    "rms_norm": (("data_in",), ("data_in_0")),
+    "layer_norm": (("data_in",), ("data_in_0",)),
+    "group_norm": (("data_in",), ("data_in_0",)),
+    "instance_norm2d": (("data_in",), ("data_in_0",)),
+    "rms_norm": (("data_in",), ("data_in_0",)),
+    "grouped_query_attention": (
+        ("data_in", "weight", "bias"),
+        ("data_in_0", "weight", "bias"),
+    ),
 }
 
 
@@ -107,6 +112,7 @@ MASE_OP_TO_OUTPUT_ENTRIES = {
     "group_norm": (("data_out",), ("data_out_0",)),
     "instance_norm2d": (("data_out",), ("data_out_0",)),
     "rms_norm": (("data_out",), ("data_out_0")),
+    "grouped_query_attention": (("data_out",), ("data_out_0")),
 }
 
 

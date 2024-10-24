@@ -17,9 +17,9 @@ module fixed_self_attention_input_block_batched #(
 
     parameter HAS_BIAS = 1,
     parameter BIAS_TENSOR_SIZE_DIM_0 = 64,
-    parameter BIAS_TENSOR_SIZE_DIM_1 = 20,
+    parameter BIAS_TENSOR_SIZE_DIM_1 = 1,
     parameter BIAS_PARALLELISM_DIM_0 = 4,
-    parameter BIAS_PARALLELISM_DIM_1 = 4,
+    parameter BIAS_PARALLELISM_DIM_1 = 1,
     parameter BIAS_PRECISION_0 = 16,
     parameter BIAS_PRECISION_1 = 3,
 

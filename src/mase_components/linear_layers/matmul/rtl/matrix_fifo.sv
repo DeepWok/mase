@@ -32,33 +32,33 @@ module matrix_fifo #(
   // Modules
   matrix_flatten #(
       .DATA_WIDTH(DATA_WIDTH),
-      .DIM0(DIM0),
-      .DIM1(DIM1)
+      .DIM0      (DIM0),
+      .DIM1      (DIM1)
   ) input_flatten (
       .data_in (in_data),
       .data_out(in_data_flat)
   );
 
   fifo #(
-      .DATA_WIDTH(FLAT_DATA_WIDTH),
-      .DEPTH(FIFO_SIZE)
+      .DEPTH     (FIFO_SIZE),
+      .DATA_WIDTH(FLAT_DATA_WIDTH)
   ) input_fifo_inst (
-      .clk(clk),
-      .rst(rst),
-      .in_data(in_data_flat),
-      .in_valid(in_valid),
-      .in_ready(in_ready),
-      .out_data(out_data_flat),
+      .clk      (clk),
+      .rst      (rst),
+      .in_data  (in_data_flat),
+      .in_valid (in_valid),
+      .in_ready (in_ready),
+      .out_data (out_data_flat),
       .out_valid(out_valid),
       .out_ready(out_ready),
-      .empty(),
-      .full()
+      .empty    (),
+      .full     ()
   );
 
   matrix_unflatten #(
       .DATA_WIDTH(DATA_WIDTH),
-      .DIM0(DIM0),
-      .DIM1(DIM1)
+      .DIM0      (DIM0),
+      .DIM1      (DIM1)
   ) fifo_unflatten (
       .data_in (out_data_flat),
       .data_out(out_data)

@@ -45,12 +45,15 @@ MASE_HW_DEPS = {
         "scalar_operators/fixed",
         "generated_lut",
     ],
-    "activation_layers/fixed_softermax": [
+    "activation_layers/fixed_softermax_1d": [
         "common",
         "cast",
         "fixed_arithmetic",
         "conv",
         "matmul",
+        "memory",
+        "linear_layers/fixed_operators",
+        "linear_layers/matmul",
         "activation_layers",
     ],
     # Cast
@@ -248,6 +251,66 @@ MASE_HW_DEPS = {
         "memory",
     ],
     "linear_layers/matmul/transpose": ["cast", "common", "memory"],
+    "linear_layers/mxint_operators/mxint_vector_mult": [
+        "linear_layers/mxint_operators",
+        "common",
+        "memory",
+    ],
+    "linear_layers/mxint_operators/mxint_accumulator": [
+        "linear_layers/mxint_operators",
+        "linear_layers/fixed_operators",
+        "common",
+        "memory",
+    ],
+    "linear_layers/mxint_operators/mxint_dot_product": [
+        "linear_layers/mxint_operators",
+        "linear_layers/fixed_operators",
+        "common",
+        "memory",
+    ],
+    "linear_layers/mxint_operators/mxint_linear": [
+        "linear_layers/mxint_operators",
+        "linear_layers/fixed_operators",
+        "common",
+        "memory",
+        "cast",
+    ],
+    "linear_layers/mxint_operators/mxint_cast": [
+        "linear_layers/mxint_operators",
+        "linear_layers/fixed_operators",
+        "common",
+        "memory",
+        "cast",
+    ],
+    "linear_layers/mxint_operators/old_linear": [
+        "linear_layers/mxint_operators",
+        "linear_layers/fixed_operators",
+        "common",
+        "memory",
+        "cast",
+    ],
+    "linear_layers/mxint_operators/mxint_linear": [
+        "linear_layers/fixed_linear_layer",
+        "linear_layers/matmul",
+        "linear_layers/mxint_operators",
+        "linear_layers/fixed_operators",
+        "common",
+        "memory",
+        "cast",
+    ],
+    "linear_layers/mxint_operators/mxint_matmul": [
+        "linear_layers/matmul",
+        "linear_layers/mxint_operators",
+        "linear_layers/fixed_operators",
+        "common",
+        "memory",
+        "cast",
+    ],
+    "linear_layers/mxint_operators/log2_max_abs": [
+        "linear_layers/mxint_operators",
+        "common",
+        "memory",
+    ],
     # Memory
     "memory/skid_buffer": [],
     "memory/fifo": ["memory"],
@@ -312,11 +375,6 @@ MASE_HW_DEPS = {
         "cast",
     ],
     # Transformer Layers
-    "transformer_layers/fixed_gqa_head": [
-        "common",
-        "linear_layers/matmul",
-        "activation_layers",
-    ],
     "transformer_layers/fixed_self_attention": [
         "transformer_layers",
         "activation_layers",
@@ -346,6 +404,16 @@ MASE_HW_DEPS = {
         "common",
         "linear_layers/fixed_operators",
         "linear_layers/fixed_linear_layer",
+    ],
+    "transformer_layers/fixed_grouped_query_attention_wrapper": [
+        "transformer_layers",
+        "cast",
+        "memory",
+        "common",
+        "linear_layers/fixed_operators",
+        "linear_layers/fixed_linear_layer",
+        "linear_layers/matmul",
+        "activation_layers",
     ],
     "arithmetic/mac": ["fixed_arithmetic", "float_arithmetic"],
     # ViT

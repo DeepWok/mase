@@ -89,7 +89,12 @@ class LinearTB(Testbench):
         self.data_out_0_monitor.log.setLevel(logging.DEBUG)
 
     def generate_inputs(self):
-        return torch.randn((self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_1"), self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0")))
+        return torch.randn(
+            (
+                self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_1"),
+                self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
+            )
+        )
 
     def preprocess_tensor(self, tensor, config, parallelism):
         if len(tensor.shape) == 1:
@@ -190,7 +195,6 @@ class LinearTB(Testbench):
         )
         self.data_out_0_monitor.load_monitor(outs)
 
-        cocotb.start_soon(check_signal(self.dut, self.log))
         await Timer(us, units="us")
         assert self.data_out_0_monitor.exp_queue.empty()
 
@@ -200,29 +204,11 @@ async def cocotb_test(dut):
     tb = LinearTB(dut)
     await tb.run_test(us=100)
 
-async def check_signal(dut, log):
-    while True:
-        await RisingEdge(dut.clk)
-        handshake_signal_check(
-            dut.data_out_0_valid, 
-            dut.data_out_0_ready, 
-            dut.matmul_out, log)
-        # handshake_signal_check(dut.rolled_k_valid, dut.rolled_k_ready, dut.rolled_k, log)
-        # handshake_signal_check(dut.bias_valid,
-        #                        dut.bias_ready,
-        #                        dut.bias, log)
-
-
-def handshake_signal_check(valid, ready, signal, log):
-    svalue = [i.signed_integer for i in signal.value]
-    if valid.value & ready.value:
-        log.debug(f"handshake {signal} = {svalue}")
-
 
 def get_fixed_linear_config(kwargs={}):
     # if pretranspose
     #   weight1 = in0
-    # else 
+    # else
     #   weight0 = in0
     config = {
         "HAS_BIAS": 1,
@@ -235,7 +221,6 @@ def get_fixed_linear_config(kwargs={}):
         "WEIGHT_TENSOR_SIZE_DIM_1": 32,
         "WEIGHT_PARALLELISM_DIM_0": 2,
         "WEIGHT_PARALLELISM_DIM_1": 4,
-
         "DATA_IN_0_PRECISION_0": 8,
         "DATA_IN_0_PRECISION_1": 4,
         "WEIGHT_PRECISION_0": 8,
@@ -258,10 +243,16 @@ def test_fixed_linear_smoke():
         trace=True,
         module_param_list=[
             get_fixed_linear_config(),
-            # get_fixed_linear_config({"WEIGHTS_PRE_TRANSPOSED": 0}),
-            # TODO: fix these two cases
-            # get_fixed_linear_config({"HAS_BIAS": 1}),
-            # get_fixed_linear_config({"HAS_BIAS": 1, "WEIGHTS_PRE_TRANSPOSED": 0}),
+            # noticed here if change WEIGHT_PRE_TRANSPOSED also need to change the DIM_SIZE to match ACTIVATION
+            get_fixed_linear_config(
+                {
+                    "WEIGHTS_PRE_TRANSPOSED": 0,
+                    "WEIGHT_TENSOR_SIZE_DIM_0": 32,
+                    "WEIGHT_TENSOR_SIZE_DIM_1": 16,
+                    "WEIGHT_PARALLELISM_DIM_0": 4,
+                    "WEIGHT_PARALLELISM_DIM_1": 2,
+                },
+            ),
         ],
     )
 

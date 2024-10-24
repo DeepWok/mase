@@ -36,15 +36,16 @@ class VerificationCase:
 
     def single_run(self):
         data = torch.randn(self.in_size)
-        data = integer_floor_quantizer(
-            data, self.in_width, self.in_frac_width
-        )
+        data = integer_floor_quantizer(data, self.in_width, self.in_frac_width)
         print("data = ", data)
         h = q2i(data, self.in_width, self.in_frac_width)
         return [int(i) for i in h], [int(i) for i in self.sw_cast(data)]
 
     def sw_cast(self, inputs):
-        outputs = integer_floor_quantizer(inputs, self.out_width, self.out_frac_width) * 2**self.out_frac_width
+        outputs = (
+            integer_floor_quantizer(inputs, self.out_width, self.out_frac_width)
+            * 2**self.out_frac_width
+        )
         # breakpoint()
         return outputs
 

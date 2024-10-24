@@ -2,7 +2,9 @@ import random
 
 import numpy as np
 
+from cocotb import simulator
 from cocotb.binary import BinaryValue
+from cocotb.result import TestFailure
 from cocotb.triggers import *
 
 from mase_cocotb.driver import Driver
@@ -15,13 +17,22 @@ def _sign_extend(value: int, bits: int):
 
 
 class StreamDriver(Driver):
-    def __init__(self, clk, data, valid, ready) -> None:
+    def __init__(
+        self,
+        clk,
+        data,
+        valid,
+        ready,
+        record_num_beats=False,
+    ) -> None:
         super().__init__()
         self.clk = clk
         self.data = data
         self.valid = valid
         self.ready = ready
         self.valid_prob = 1.0
+        self.record_num_beats = record_num_beats
+        self.num_beats = 0 if record_num_beats else None
 
     def set_valid_prob(self, prob):
         assert prob >= 0.0 and prob <= 1.0
@@ -49,7 +60,12 @@ class StreamDriver(Driver):
                         self.log.debug("Sent %s" % t)
                 else:
                     self.log.debug("Sent %s" % transaction)
+                if self.record_num_beats:
+                    self.num_beats += 1
                 break
+
+        # Load extra
+        # self.load_driver
 
         if self.send_queue.empty():
             await RisingEdge(self.clk)
@@ -57,7 +73,16 @@ class StreamDriver(Driver):
 
 
 class StreamMonitor(Monitor):
-    def __init__(self, clk, data, valid, ready, check=True, name=None, unsigned=False):
+    def __init__(
+        self,
+        clk,
+        data,
+        valid,
+        ready,
+        check=True,
+        name=None,
+        unsigned=False,
+    ):
         super().__init__(clk, check=check, name=name)
         self.clk = clk
         self.data = data
@@ -66,6 +91,7 @@ class StreamMonitor(Monitor):
         self.check = check
         self.name = name
         self.unsigned = unsigned
+        self.last_timestamp = None
 
     def _trigger(self):
         if "x" in self.valid.value.binstr or "x" in self.ready.value.binstr:
@@ -73,9 +99,7 @@ class StreamMonitor(Monitor):
         return self.valid.value == 1 and self.ready.value == 1
 
     def _recv(self):
-
         def _get_sig_value(sig):
-
             if type(sig.value) == list:
                 if self.unsigned:
                     return [x.integer for x in sig.value]
@@ -90,13 +114,15 @@ class StreamMonitor(Monitor):
 
         if type(self.data) == tuple:
             # Multiple synchronised data signals
-            return tuple(_get_sig_value(s) for s in self.data)
+            data = tuple(_get_sig_value(s) for s in self.data)
         else:
             # Single data signal
-            return _get_sig_value(self.data)
+            data = _get_sig_value(self.data)
+
+        self.last_timestamp = simulator.get_sim_time()
+        return data
 
     def _check(self, got, exp):
-
         def _check_sig(got, exp):
             if not np.equal(got, exp).all():
                 self.log.error(
@@ -160,7 +186,7 @@ class ErrorThresholdStreamMonitor(StreamMonitor):
         check=True,
         name=None,
     ):
-        super().__init__(clk, data, valid, ready, check, name)
+        super().__init__(clk, data, valid, ready, check, name, unsigned=not signed)
 
         self.width = width
         self.signed = signed
@@ -210,3 +236,63 @@ class ErrorThresholdStreamMonitor(StreamMonitor):
             g, e = got, exp
             err = np.abs(g - e)
             self.log.debug("Passed | Got: %20s Exp: %20s Err: %10s" % (g, e, err))
+
+
+class MultiSignalStreamDriver(Driver):
+    def __init__(self, clk, data, valid, ready) -> None:
+        super().__init__()
+        self.clk = clk
+        self.data = data
+        self.valid = valid
+        self.ready = ready
+        self.valid_prob = 1.0
+
+    def set_valid_prob(self, prob):
+        assert prob >= 0.0 and prob <= 1.0
+        self.valid_prob = prob
+
+    async def _driver_send(self, data) -> None:
+        while True:
+            await RisingEdge(self.clk)
+            for hardware_target, item in zip(self.data, data):
+                hardware_target.value = item
+
+            if random.random() > self.valid_prob:
+                self.valid.value = 0
+                continue  # Try roll random valid again at next clock
+            self.valid.value = 1
+            await ReadOnly()
+            if self.ready.value == 1:
+                self.log.debug(f"Sent {data}")
+                break
+        if self.send_queue.empty():
+            await RisingEdge(self.clk)
+            self.valid.value = 0
+
+
+class MultiSignalStreamMonitor(Monitor):
+    def __init__(self, clk, data, valid, ready, check=True):
+        super().__init__(clk)
+        self.clk = clk
+        self.data = data
+        self.valid = valid
+        self.ready = ready
+        self.check = check
+
+    def _trigger(self):
+        return self.valid.value == 1 and self.ready.value == 1
+
+    def _recv(self):
+        def cast_data(value):
+            if type(value) == list:
+                return [x.signed_integer for x in value]
+            elif type(value) == BinaryValue:
+                return value.signed_integer
+
+        return tuple([cast_data(target.value) for target in self.data])
+
+    def _check(self, got, exp):
+        if self.check:
+            for g, e in zip(got, exp):
+                if not np.equal(g, e).all():
+                    raise TestFailure("\nGot \n%s, \nExpected \n%s" % (got, exp))

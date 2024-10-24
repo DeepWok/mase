@@ -45,6 +45,7 @@ from .linear import (
     LinearTernary,
     LinearLUT,
     LinearLogicNets,
+    LinearMXIntHardware,
 )
 from .pool2d import (
     AdaptiveAvgPool2dInteger,
@@ -149,6 +150,9 @@ from .softplus import (
 from .batch_norm1d import (
     BatchNorm1dInteger,
 )
+from .gqa import (
+    GroupedQueryAttentionInteger,
+)
 
 quantized_module_map = {
     "conv1d_block_minifloat": Conv1dBlockMinifloat,
@@ -176,6 +180,7 @@ quantized_module_map = {
     "linear_integer": LinearInteger,
     "linear_fixed": LinearInteger,
     "linear_log": LinearLog,
+    "linear_mxint_hardware": LinearMXIntHardware,
     "linear_block_log": LinearBlockLog,
     "linear_minifloat_ieee": LinearMinifloatIEEE,
     "linear_minifloat_denorm": LinearMinifloatDenorm,
@@ -269,7 +274,6 @@ quantized_module_map = {
     "batch_norm1d_linear": BatchNorm1dInteger,
     "bert_self_attention_head_integer": BertSelfAttentionHeadInteger,
     "bert_self_attention_integer": BertSelfAttentionInteger,
-    "bert_self_attention_head_integer": ViTSelfAttentionHeadInteger,
-    "bert_self_attention_integer": ViTAttentionInteger,
+    "grouped_query_attention_integer": GroupedQueryAttentionInteger,
 }
 
