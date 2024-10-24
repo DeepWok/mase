@@ -284,7 +284,7 @@ def test_fixed_linear_smoke():
             #     },
             # ),
         ],
-        sim="questa",
+        # sim="questa",
         # gui=True,
     )
 

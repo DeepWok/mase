@@ -163,6 +163,6 @@ if __name__ == "__main__":
             #     "BLOCK_SIZE": 4,
             # },
         ],
-        sim="questa",
+        # sim="questa",
         # gui=True
     )
