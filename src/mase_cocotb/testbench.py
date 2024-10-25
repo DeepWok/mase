@@ -38,10 +38,6 @@ class Testbench:
         parameter = getattr(self.dut, parameter_name)
         return int(parameter)
 
-    def get_parameter(self, parameter_name):
-        parameter = getattr(self.dut, parameter_name)
-        return int(parameter)
-
     async def reset(self, active_high=True):
         if self.rst is None:
             raise Exception(
@@ -53,6 +49,10 @@ class Testbench:
         self.rst.value = 1 if active_high else 0
         await RisingEdge(self.clk)
         self.rst.value = 0 if active_high else 1
+        for monitor in self.output_monitors.values():
+            monitor.ready.value = 1
+        for driver in self.input_drivers.values():
+            driver.valid.value = 0
         await RisingEdge(self.clk)
 
     async def initialize(self):

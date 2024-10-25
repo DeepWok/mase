@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 /*
 Module      : optimized_variable_shift
 Description : optimized version of variable shift.

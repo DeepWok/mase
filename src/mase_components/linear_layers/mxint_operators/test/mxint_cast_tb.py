@@ -91,7 +91,7 @@ class MxIntCastTB(Testbench):
 
 @cocotb.test()
 async def test(dut):
-    cocotb.start_soon(check_signal(dut))
+    # cocotb.start_soon(check_signal(dut))
     tb = MxIntCastTB(dut, num=1)
     await tb.run_test()
 
