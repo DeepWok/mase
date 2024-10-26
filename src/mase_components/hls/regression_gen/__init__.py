@@ -16,3 +16,5 @@ from .buffer_dse import buffer_dse
 from .bfp_add_dse import bfp_add_dse
 from .bfp_mult_dse import bfp_mult_dse
 from .bfp_linear2d_dse import bfp_linear2d_dse
+
+from .mxfp_linear2d_dse import mxfp_linear2d_dse

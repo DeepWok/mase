@@ -23,6 +23,7 @@ from regression_gen import (
     bfp_add_dse,
     bfp_mult_dse,
     bfp_linear2d_dse,
+    mxfp_linear2d_dse,
 )
 
 ALL_OPS = [
@@ -42,6 +43,7 @@ ALL_OPS = [
     "bfp_add",
     "bfp_mult",
     "bfp_linear2d",
+    "mxfp_linear2d",
 ]
 
 
@@ -83,6 +85,8 @@ def single_run(op, args):
         bfp_mult_dse(mode=mode, top=top)
     elif op == "bfp_linear2d":
         bfp_linear2d_dse(mode=mode, top=top)
+    elif op == "mxfp_linear2d":
+        mxfp_linear2d_dse(mode=mode, top=top)
     else:
         assert False, f"Unsupported op = {op}"
 

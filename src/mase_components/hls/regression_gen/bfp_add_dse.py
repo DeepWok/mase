@@ -16,7 +16,7 @@ from hls.regression_gen.utils import (
     bash_gen,
     csv_gen,
 )
-from hls.bfp_arith import bfp_add_gen
+from hls.bfp_arith import bfp_adder
 from hls import HLSWriter
 
 
