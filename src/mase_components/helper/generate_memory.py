@@ -269,7 +269,7 @@ module {function}_lut{end} #(
     input  logic [7:0] data_in_0,
     output logic [7:0] data_out_0
 );
-    
+
 """
     sv_code += """
   always_comb begin

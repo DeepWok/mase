@@ -21,6 +21,7 @@ MASE_HW_DEPS = {
         "common",
         "memory",
         "activation_layers",
+        "generated_lut",
     ],
     "activation_layers/fixed_softsign": [
         "common",
