@@ -37,9 +37,11 @@ MASE_HW_DEPS = {
     "activation_layers/fixed_logsigmoid": ["common", "cast", "activation_layers"],
     "activation_layers/fixed_softmax": [
         "common",
+        "memory",
+        "scalar_operators/fixed",
         "cast",
-        "fixed_arithmetic",
-        "conv",
+        "linear_layers/fixed_operators",
+        "generated_lut",
         "activation_layers",
     ],
     "activation_layers/fixed_softermax_1d": [
