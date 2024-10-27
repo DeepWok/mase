@@ -22,7 +22,7 @@ test-hw:
 	# python3 src/mase_components/activation_layers/test/fixed_sigmoid_tb.py
 	python3 src/mase_components/activation_layers/test/fixed_softermax_1d_tb.py
 	# python3 src/mase_components/activation_layers/test/fixed_softermax_tb.py
-	# python3 src/mase_components/activation_layers/test/fixed_softmax_tb.py
+	python3 src/mase_components/activation_layers/test/fixed_softmax_tb.py
 	python3 src/mase_components/activation_layers/test/fixed_softplus_tb.py
 	python3 src/mase_components/activation_layers/test/fixed_softsign_tb.py
 	python3 src/mase_components/activation_layers/test/fixed_tanh_tb.py
