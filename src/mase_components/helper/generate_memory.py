@@ -260,31 +260,32 @@ def lookup_to_sv_file(
 `timescale 1ns / 1ps
 /* verilator lint_off UNUSEDPARAM */
 module {function}_lut{end} #(
-    parameter DATA_IN_0_PRECISION_0 = 16,
-    parameter DATA_IN_0_PRECISION_1 = 8,
+    parameter DATA_IN_0_PRECISION_0  = 16,
+    parameter DATA_IN_0_PRECISION_1  = 8,
     parameter DATA_OUT_0_PRECISION_0 = 16,
     parameter DATA_OUT_0_PRECISION_1 = 8
-)
-(
+) (
     /* verilator lint_off UNUSEDSIGNAL */
-    input logic [{in_data_width-1}:0] data_in_0, 
-    output logic [{data_width-1}:0] data_out_0
+    input  logic [7:0] data_in_0,
+    output logic [7:0] data_out_0
 );
     
 """
-    sv_code += "    always_comb begin\n"
-    sv_code += "        case(data_in_0)\n"
+    sv_code += """
+  always_comb begin
+    case (data_in_0)
+"""
 
     # Adding each case
     for key, value in dicto.items():
         formatted_key = key_format.format(key)
         formatted_value = value_format.format(value)
-        sv_code += f"            {formatted_key}: data_out_0 = {formatted_value};\n"
+        sv_code += f"      {formatted_key}: data_out_0 = {formatted_value};\n"
 
     # Ending the case statement and module
-    sv_code += f"            default: data_out_0 = {data_width}'b0;\n"
-    sv_code += "        endcase\n"
-    sv_code += "    end\n"
+    sv_code += f"      default: data_out_0 = {data_width}'b0;\n"
+    sv_code += "    endcase\n"
+    sv_code += "  end\n"
     sv_code += "endmodule\n"
 
     # Write the code to a SystemVerilog file
