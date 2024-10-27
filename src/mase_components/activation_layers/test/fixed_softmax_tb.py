@@ -1,220 +1,191 @@
 #!/usr/bin/env python3
 
+import os
 import pytest
-import os, logging
-from . import generate_memory
-import pdb
-from bitstring import BitArray
-import cocotb
-from functools import partial
-from cocotb.triggers import *
-from chop.nn.quantizers import integer_quantizer
-from mase_cocotb.testbench import Testbench
-from mase_cocotb.interfaces.streaming import (
-    StreamDriver,
-    StreamMonitor,
-    StreamMonitorFloat,
-)
-from mase_cocotb.z_qlayers import quantize_to_int
-from mase_cocotb.runner import mase_runner
-from mase_cocotb.utils import bit_driver, sign_extend_t
-from math import ceil
-
-# from chop.passes.graph.transforms.quantize.quantized_modules import LinearInteger
 
 import torch
+import logging
+from functools import partial
+from mase_components.helper import generate_memory
+from pathlib import Path
+import cocotb
+from cocotb.log import SimLog
+from cocotb.triggers import Timer
 
-logger = logging.getLogger("testbench")
-logger.setLevel(logging.INFO)
+from mase_cocotb.testbench import Testbench
+from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
+from mase_cocotb.runner import mase_runner
+from mase_cocotb.utils import fixed_preprocess_tensor
 
-
-def split_and_flatten_2d_tensor(input_tensor, row_block_size, col_block_size):
-    rows, cols = input_tensor.size()
-
-    num_row_blocks = rows // row_block_size
-    num_col_blocks = cols // col_block_size
-
-    reshaped_tensor = input_tensor.view(
-        num_row_blocks, row_block_size, num_col_blocks, col_block_size
-    )
-    reshaped_tensor = reshaped_tensor.permute(0, 2, 1, 3).contiguous()
-    flattened_tensor = reshaped_tensor.view(-1, row_block_size * col_block_size)
-    return flattened_tensor
+from mase_cocotb.utils import bit_driver
+from chop.nn.quantized.functional import softmax_integer
 
 
-class fixed_softmax_tb(Testbench):
-    def __init__(self, module, dut, dut_params, float_test=False) -> None:
+class SoftmaxTB(Testbench):
+    def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
 
-        self.data_width = dut_params["DATA_IN_0_PRECISION_0"]
-        self.frac_width = dut_params["DATA_IN_0_PRECISION_1"]
+        if not hasattr(self, "log"):
+            self.log = SimLog("%s" % (type(self).__qualname__))
+            self.log.setLevel(logging.DEBUG)
 
-        self.outputwidth = dut_params["DATA_OUT_0_PRECISION_0"]
-        self.outputfracw = dut_params["DATA_OUT_0_PRECISION_1"]
-
-        self.num_in_features = dut_params["DATA_IN_0_TENSOR_SIZE_DIM_0"]
-        self.num_in_batches = dut_params["DATA_IN_0_TENSOR_SIZE_DIM_1"]
-
-        self.size_in_feature_blocks = dut_params["DATA_IN_0_PARALLELISM_DIM_0"]
-        self.size_in_batch_blocks = dut_params["DATA_IN_0_PARALLELISM_DIM_1"]
-
-        self.num_in_feature_splits = int(
-            ceil(self.num_in_features / self.size_in_feature_blocks)
-        )
-        self.num_in_batch_splits = int(
-            ceil(self.num_in_batches / self.size_in_batch_blocks)
-        )
-
-        self.num_out_features = dut_params["DATA_OUT_0_TENSOR_SIZE_DIM_0"]
-        self.num_out_batches = dut_params["DATA_OUT_0_TENSOR_SIZE_DIM_1"]
-
-        self.size_out_feature_blocks = dut_params["DATA_OUT_0_PARALLELISM_DIM_0"]
-        self.size_out_batch_blocks = dut_params["DATA_OUT_0_PARALLELISM_DIM_1"]
-
-        self.num_out_feature_splits = int(
-            ceil(self.num_out_features / self.size_out_feature_blocks)
-        )
-        self.num_out_batch_splits = int(
-            ceil(self.num_out_batches / self.size_out_batch_blocks)
-        )
-
-        self.data_in_0_driver = StreamDriver(
+        self.in_data_driver = StreamDriver(
             dut.clk, dut.data_in_0, dut.data_in_0_valid, dut.data_in_0_ready
         )
 
-        if float_test:
-            self.data_out_0_monitor = StreamMonitorFloat(
-                dut.clk,
-                dut.data_out_0,
-                dut.data_out_0_valid,
-                dut.data_out_0_ready,
-                self.outputwidth,
-                self.outputfracw,
-            )
-        else:
-            self.data_out_0_monitor = StreamMonitor(
-                dut.clk, dut.data_out_0, dut.data_out_0_valid, dut.data_out_0_ready
-            )
-
-        self.in_dquantizer = partial(
-            integer_quantizer,
-            width=self.data_width,
-            frac_width=self.frac_width,
-            is_signed=True,
+        self.out_data_monitor = StreamMonitor(
+            dut.clk,
+            dut.data_out_0,
+            dut.data_out_0_valid,
+            dut.data_out_0_ready,
+            check=True,
+        )
+        # Model
+        self.model = partial(
+            softmax_integer,
+            config={
+                "data_in_width": self.get_parameter("DATA_IN_0_PRECISION_0"),
+                "data_in_frac_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
+                "data_in_exp_width": self.get_parameter("DATA_EXP_0_PRECISION_0"),
+                "data_in_exp_frac_width": self.get_parameter("DATA_EXP_0_PRECISION_1"),
+                "data_out_frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
+                "mult_data": CONSTANT_MULT,
+            },
+            dim=-1,
+            floor=True,
         )
 
-        self.out_dquantizer = partial(
-            integer_quantizer,
-            width=self.outputwidth,
-            frac_width=self.outputfracw,
-            is_signed=True,
-        )
-
-        self.model = module
-
-        self.real_in_tensor = torch.randn(self.num_in_batches, self.num_in_features)
-        self.quant_in_tensor = self.in_dquantizer(self.real_in_tensor)
-        self.real_out_tensor = self.model(self.quant_in_tensor)
-
-        logger.info(f"REAL IN TENSOR: \n{self.real_in_tensor}")
-        logger.info(f"REAL OUT TENSOR: \n{self.real_out_tensor}")
-
-    def exp(self):
-        # Run the model with the provided inputs and return the expected integer outputs in the format expected by the monitor
-        m = split_and_flatten_2d_tensor(
-            self.real_out_tensor,
-            self.size_out_batch_blocks,
-            self.size_out_feature_blocks,
-        )  # match output
-        logger.info(f"EXP - FLOAT OUTPUT: \n{m}")
-        m = self.out_dquantizer(m)
-        m2 = (m * 2**self.outputfracw).to(torch.int64)
-        m2 = m2.clone().detach() % (2**self.outputwidth)
-
-        return m2
+        # Set verbosity of driver and monitor loggers to debug
+        self.in_data_driver.log.setLevel(logging.DEBUG)
+        self.out_data_monitor.log.setLevel(logging.DEBUG)
 
     def generate_inputs(self):
-        # Generate the integer inputs for the DUT in the format expected by the driver
-        inputs = split_and_flatten_2d_tensor(
-            self.real_in_tensor, self.size_in_batch_blocks, self.size_in_feature_blocks
+        return torch.randn(
+            (
+                self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_1"),
+                self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
+            )
         )
-        logger.info(f"FLOAT INPUT: \n{inputs}")
-        inputs = self.in_dquantizer(inputs)
-        intinp = (inputs * 2**self.frac_width).to(torch.int64)
-        return intinp, inputs
 
-    def doubletofx(self, num, data_width, f_width, type="bin"):
-        assert type == "bin" or type == "hex", "type can only be: 'hex' or 'bin'"
-        intnum = int(num * 2 ** (f_width))
-        intbits = BitArray(int=intnum, length=data_width)
-        return str(intbits.bin) if type == "bin" else str(intbits)
-
-    async def run_test(self):
+    async def run_test(self, batches, us):
         await self.reset()
-        logger.info(f"Reset finished")
-        self.data_out_0_monitor.ready.value = 1
-        for i in range(1):
-            inputs, real_tensor = self.generate_inputs()
-            exp_out = self.exp()
-            inputs = inputs.tolist()
-            exp_out = exp_out.tolist()
-            logger.info("Inputs and expected generated")
-            logger.info(f"DUT IN: {inputs}")
-            logger.info(f"DUT EXP OUT: {exp_out}")
-            self.data_in_0_driver.load_driver(inputs)
-            self.data_out_0_monitor.load_monitor(exp_out)
+        self.log.info(f"Reset finished")
 
-        await Timer(1000, units="us")
-        assert self.data_out_0_monitor.exp_queue.empty()
+        for _ in range(batches):
+            inputs = self.generate_inputs()
+            exp_out = self.model(inputs)
+
+            # * Load the inputs driver
+            self.log.info(f"Processing inputs: {inputs}")
+            inputs = fixed_preprocess_tensor(
+                tensor=inputs,
+                q_config={
+                    "width": self.get_parameter("DATA_IN_0_PRECISION_0"),
+                    "frac_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
+                },
+                parallelism=[
+                    self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1"),
+                    self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"),
+                ],
+                floor=True,
+            )
+            self.in_data_driver.load_driver(inputs)
+
+            # * Load the output monitor
+            self.log.info(f"Processing outputs: {exp_out}")
+            outs = fixed_preprocess_tensor(
+                tensor=exp_out,
+                q_config={
+                    "width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
+                    "frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
+                },
+                parallelism=[
+                    self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_1"),
+                    self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"),
+                ],
+            )
+            self.out_data_monitor.load_monitor(outs)
+
+        await Timer(us, units="us")
+        assert self.out_data_monitor.exp_queue.empty()
 
 
 @cocotb.test()
-async def cocotb_test(dut):
-    in_data_width = dut_params["DATA_IN_0_PRECISION_0"]
-    in_frac_width = dut_params["DATA_IN_0_PRECISION_1"]
-    out_data_width = dut_params["DATA_OUT_0_PRECISION_0"]
-    out_frac_width = dut_params["DATA_OUT_0_PRECISION_1"]
-    inter_data_width = dut_params["DATA_INTERMEDIATE_0_PRECISION_0"]
-    inter_frac_width = dut_params["DATA_INTERMEDIATE_0_PRECISION_1"]
-    # generate_memory.generate_sv_lut("exp", in_data_width, in_frac_width, inter_data_width, inter_frac_width)
-    # print("Generated memory")
-    tb = fixed_softmax_tb(torch.nn.Softmax(), dut, dut_params, float_test=True)
-    await tb.run_test()
+async def single_test(dut):
+    tb = SoftmaxTB(dut)
+    tb.out_data_monitor.ready.value = 1
+    await tb.run_test(batches=50, us=100)
 
+
+# @cocotb.test()
+# async def repeated_mult(dut):
+#     tb = SoftmaxTB(dut)
+#     tb.out_data_monitor.ready.value = 1
+#     await tb.run_test(batches=100, us=2000)
+
+
+# @cocotb.test()
+# async def repeated_mult_backpressure(dut):
+#     tb = SoftmaxTB(dut)
+#     cocotb.start_soon(bit_driver(dut.data_out_0_ready, dut.clk, 0.6))
+#     await tb.run_test(batches=10, us=500)
+
+
+# @cocotb.test()
+# async def repeated_mult_valid_backpressure(dut):
+#     tb = SoftmaxTB(dut)
+#     tb.in_data_driver.set_valid_prob(0.7)
+#     cocotb.start_soon(bit_driver(dut.data_out_0_ready, dut.clk, 0.6))
+#     await tb.run_test(batches=50, us=200)
 
 dut_params = {
-    "DATA_IN_0_TENSOR_SIZE_DIM_0": 12,
-    "DATA_IN_0_TENSOR_SIZE_DIM_1": 4,
-    "DATA_IN_0_PARALLELISM_DIM_0": 6,
-    "DATA_IN_0_PARALLELISM_DIM_1": 2,
     "DATA_IN_0_PRECISION_0": 8,
     "DATA_IN_0_PRECISION_1": 4,
-    "DATA_OUT_0_PRECISION_0": 8,
-    "DATA_OUT_0_PRECISION_1": 4,
-    "DATA_OUT_0_TENSOR_SIZE_DIM_0": 12,
-    "DATA_OUT_0_TENSOR_SIZE_DIM_1": 4,
-    "DATA_OUT_0_PARALLELISM_DIM_0": 6,
-    "DATA_OUT_0_PARALLELISM_DIM_1": 2,
-    "DATA_INTERMEDIATE_0_PRECISION_0": 12,
-    "DATA_INTERMEDIATE_0_PRECISION_1": 8,
+    "DATA_IN_0_TENSOR_SIZE_DIM_0": 32,
+    "DATA_IN_0_TENSOR_SIZE_DIM_1": 1,
+    "DATA_IN_0_PARALLELISM_DIM_0": 1,
+    "DATA_IN_0_PARALLELISM_DIM_1": 1,
+    "DATA_EXP_0_PRECISION_0": 8,
+    "DATA_EXP_0_PRECISION_1": 4,
+    "DATA_OUT_0_PRECISION_1": 6,
 }
 
+
+def get_fixed_softmax_config(kwargs={}):
+    config = dut_params
+    config.update(kwargs)
+    return config
+
+
 torch.manual_seed(1)
+CONSTANT_MULT = 0.19
 
 
 @pytest.mark.dev
-def test_fixed_softmax():
-    # generate_memory.generate_sv_lut("exp", dut_params["DATA_IN_0_PRECISION_0"], dut_params["DATA_IN_0_PRECISION_1"])
+def test_fixed_softmax_smoke():
+    """
+    Some quick tests to check if the module is working.
+    """
+    path = Path(__file__).parents[1] / "rtl"
     generate_memory.generate_sv_lut(
         "exp",
         dut_params["DATA_IN_0_PRECISION_0"],
         dut_params["DATA_IN_0_PRECISION_1"],
-        dut_params["DATA_INTERMEDIATE_0_PRECISION_0"],
-        dut_params["DATA_INTERMEDIATE_0_PRECISION_1"],
+        dut_params["DATA_EXP_0_PRECISION_0"],
+        dut_params["DATA_EXP_0_PRECISION_1"],
+        path=path,
+        constant_mult=CONSTANT_MULT,
+        floor=True,
     )
-    print("Generated memory")
-    mase_runner(module_param_list=[dut_params])
+    mase_runner(
+        trace=True,
+        module_param_list=[
+            get_fixed_softmax_config(),
+        ],
+        sim="questa",
+        # skip_build=True,
+    )
 
 
 if __name__ == "__main__":
-    test_fixed_softmax()
+    test_fixed_softmax_smoke()
