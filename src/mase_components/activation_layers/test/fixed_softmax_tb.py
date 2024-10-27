@@ -182,7 +182,7 @@ def test_fixed_softmax_smoke():
         module_param_list=[
             get_fixed_softmax_config(),
         ],
-        sim="questa",
+        # sim="questa",
         # skip_build=True,
     )
 
