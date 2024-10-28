@@ -62,12 +62,6 @@ def linearMinifloatDenorm(
     bias: Tensor = None,
     config: dict = None,
 ):
-    # assert config is not None, "config is None!"
-    # self.config = config
-    # self.bypass = config.get("bypass", False)
-    # if self.bypass:
-    #     return
-
     w_width, w_exponent_width, w_exponent_bias = (
         config["weight_width"],
         config["weight_exponent_width"],
@@ -118,12 +112,6 @@ def linearMinifloatIEEE(
     bias: Tensor = None,
     config: dict = None,
 ):
-    # assert config is not None, "config is None!"
-    # self.config = config
-    # self.bypass = config.get("bypass", False)
-    # if self.bypass:
-    #     return
-
     w_width, w_exponent_width, w_exponent_bias = (
         config["weight_width"],
         config["weight_exponent_width"],
@@ -174,13 +162,6 @@ def linearMinifloatIEEE(
     bias: Tensor = None,
     config: dict = None,
 ):
-
-    # assert config is not None, "config is None!"
-    # self.config = config
-    # self.bypass = config.get("bypass", False)
-    # if self.bypass:
-    #     return
-
     w_width, w_exponent_width, w_exponent_bias = (
         config["weight_width"],
         config["weight_exponent_width"],
@@ -231,12 +212,6 @@ def linearLog(
     bias: Tensor = None,
     config: dict = None,
 ):
-    # assert config is not None, "config is None!"
-    # self.config = config
-    # self.bypass = config.get("bypass", False)
-    # if self.bypass:
-    #     return
-
     w_width, w_exponent_bias = (
         config["weight_width"],
         config["weight_exponent_bias"],
@@ -281,11 +256,6 @@ def linearBlockFP(
     bias: Tensor = None,
     config: dict = None,
 ):
-    # assert config is not None, "config is None!"
-    # self.config = config
-    # self.bypass = config.get("bypass", False)
-    # if self.bypass:
-    #     return
     # establish quantizers
     w_width, w_exponent_width, w_exponent_bias, w_block_size = (
         config["weight_width"],
@@ -347,12 +317,6 @@ def linearBlockMinifloat(
     bias: Tensor = None,
     config: dict = None,
 ):
-
-    # assert config is not None, "config is None!"
-    # self.config = config
-    # self.bypass = config.get("bypass", False)
-    # if self.bypass:
-    #     return
     # establish quantizers
     w_width, w_exponent_width, w_exponent_bias_width, w_block_size = (
         config["weight_width"],
@@ -414,11 +378,6 @@ def linearBlockLog(
     bias: Tensor = None,
     config: dict = None,
 ):
-    # assert config is not None, "config is None!"
-    # self.config = config
-    # self.bypass = config.get("bypass", False)
-    # if self.bypass:
-    #     return
     # establish quantizers
     w_width, w_exponent_bias_width, w_block_size = (
         config["weight_width"],
@@ -474,12 +433,6 @@ def linearBinary(
     bias: Tensor = None,
     config: dict = None,
 ):
-    # assert config is not None, "config is None!"
-    # self.config = config
-    # self.bypass = config.get("bypass", False)
-    # if self.bypass:
-    #     return
-
     w_stochastic = config["weight_stochastic"]
     w_bipolar = config["weight_bipolar"]
     w_quantizer = partial(binary_quantizer, stochastic=w_stochastic, bipolar=w_bipolar)
@@ -507,11 +460,6 @@ def linearBinaryScaling(
         - "data_in_bipolar", "bias_bipolar", "weight_bipolar": Bipolar settings.
         - "binary_training": Apply binary scaling during training.
     """
-    # assert config is not None, "config is None!"
-    # self.config = config
-    # self.bypass = config.get("bypass", False)
-    # if self.bypass:
-    #     return
     x_stochastic, b_stochastic, w_stochastic = (
         config["data_in_stochastic"],
         config["bias_stochastic"],
@@ -548,28 +496,12 @@ def linearBinaryScaling(
             bias,
         )
 
-
-def linearBinaryResidualSign(
-    x: Tensor,
-    weight: Tensor,
-    bias: Tensor = None,
-    config: dict = None,
-):
-    raise NotImplementedError
-
-
 def linearTernary(
     x: Tensor,
     weight: Tensor,
     bias: Tensor = None,
     config: dict = None,
 ):
-    # assert config is not None, "config is None!"
-    # self.config = config
-    # self.bypass = config.get("bypass", False)
-    # if self.bypass:
-    #     return
-
     w_scaling_factor = config["weight_scaling_factor"]
     w_mean = get_stats(config, "weight_mean")
     w_median = get_stats(config, "weight_median")
@@ -589,6 +521,15 @@ def linearTernary(
     bias = b_quantizer(bias) if bias is not None else None
 
     return F.linear(x, weight, bias)
+
+
+def linearBinaryResidualSign(
+    x: Tensor,
+    weight: Tensor,
+    bias: Tensor = None,
+    config: dict = None,
+):
+    raise NotImplementedError
 
 
 def linearLUT(
@@ -616,13 +557,6 @@ def linearMXIntHardware(
     config: dict = None,
     out_config: dict = None,
 ):
-    # assert config is not None, "config is None!"
-    # self.config = config
-    # self.out_config = out_config
-    # self.bypass = config.get("bypass", False)
-    # if self.bypass:
-    #     return
-    # establish quantizer
     w_width, w_exponent_width = (
         config["weight_width"],
         config["weight_exponent_width"],
