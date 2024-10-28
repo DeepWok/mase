@@ -8,6 +8,7 @@ class CustomLinear(torch.nn.Linear):
     """
     Linear module with custom autograd function
     """
+
     def __init__(self, in_features, out_features, bias=True, device=None, dtype=None):
         super(CustomLinear, self).__init__(
             in_features, out_features, bias=bias, device=device, dtype=dtype

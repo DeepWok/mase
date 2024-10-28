@@ -496,6 +496,7 @@ def linearBinaryScaling(
             bias,
         )
 
+
 def linearTernary(
     x: Tensor,
     weight: Tensor,
