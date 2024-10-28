@@ -1,9 +1,12 @@
 from functools import partial
 
+from chop.nn.quantized.functional.linear import linearInteger
 import torch
 from torch import Tensor
 from torch.nn import functional as F
-from .utils import get_stats, quantiser_passthrough
+
+
+from ..utils import get_stats, quantiser_passthrough
 
 from chop.nn.quantizers import (
     residual_sign_quantizer,
@@ -117,6 +120,56 @@ class LinearInteger(_LinearBase):
             )
 
 
+class LinearInteger(_LinearBase):        
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        bias: bool = True,
+        device=None,
+        dtype=None,
+        config=None,
+        out_config=None,
+        floor=False,
+    ) -> None:
+        super().__init__(in_features, out_features, bias, device, dtype)
+        assert config is not None, "config is None!"
+        self.config = config
+        self.out_config = out_config
+        self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
+        
+        # establish quantizer
+        w_width, w_frac_width = config["weight_width"], config["weight_frac_width"]
+        x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
+        # check bias quantizer, if not, use weight quantizer
+        b_width, b_frac_width = config["bias_width"], config["bias_frac_width"]
+        if out_config is not None:
+            out_width, out_frac_width = (
+                out_config["data_out_width"],
+                out_config["data_out_frac_width"],
+            )
+        base_quantizer = integer_floor_quantizer if floor else integer_quantizer
+        self.w_quantizer = partial(
+            base_quantizer, width=w_width, frac_width=w_frac_width
+        )
+        self.x_quantizer = partial(
+            base_quantizer, width=x_width, frac_width=x_frac_width
+        )
+        self.b_quantizer = partial(
+            base_quantizer, width=b_width, frac_width=b_frac_width
+        )
+        if out_config is not None:
+            self.out_quantizer = partial(
+                base_quantizer, width=out_width, frac_width=out_frac_width
+            )
+    
+    def forward(self, x):
+        if self.bypass:
+            return F.linear(x, self.weight, self.bias)
+        return linearInteger(x, self.weight, self.bias, self.config, self.out_config)
+    
 class LinearMinifloatDenorm(_LinearBase):
     def __init__(
         self,

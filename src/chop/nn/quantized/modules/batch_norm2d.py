@@ -8,7 +8,7 @@ from chop.nn.quantizers import (
     integer_quantizer,
     binary_quantizer,
 )
-from .utils import quantiser_passthrough
+from ..utils import quantiser_passthrough
 
 
 class _BatchNorm2dBase(nn.BatchNorm2d):

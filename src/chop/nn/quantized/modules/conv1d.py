@@ -16,7 +16,7 @@ from chop.nn.quantizers import (
     binary_quantizer,
     ternary_quantizer,
 )
-from .utils import get_stats
+from ..utils import get_stats
 
 
 class _Conv1dBase(torch.nn.Conv1d):
