@@ -136,6 +136,7 @@ def attach_quantized_backward(q_fn: torch.autograd.Function, q_fn_cfg: dict):
 
 q_cfg = {
     "forward": {
+        "pass": "quantization",
         "name": "integer",
         "weight_width": 10,
         "weight_frac_width": 5,
@@ -147,6 +148,7 @@ q_cfg = {
         "data_out_frac_width": 5,
     },
     "backward": {
+        "pass": "quantization",
         "name": "integer",
         "output_grad_width": 10,
         "output_grad_frac_width": 5,
