@@ -58,76 +58,124 @@ struct fixed_2_1_9_7_t {
 ap_int<8> fp8_add(ap_int<8> x, ap_int<8> y) {
 #pragma HLS INLINE
 
-  ap_uint<4> exp_x = x.range(6, 3);
-  ap_uint<4> exp_y = y.range(6, 3);
-  ap_uint<3> man_x = x.range(2, 0);
-  ap_uint<3> man_y = y.range(2, 0);
+  union {
+    int intval;
+    half fpval;
+  } xin;
 
-  ap_int<4> man_xs = (x[7], man_x);
-  ap_int<4> man_ys = (y[7], man_y);
+  union {
+    int intval;
+    half fpval;
+  } yin;
 
-  ap_int<5> man_r;
-  ap_int<5> exp_r;
+  union {
+    int intval;
+    half fpval;
+  } zout;
 
-  if (exp_x > exp_y) {
-    ap_int<4> shift = exp_x - exp_y;
-    if (shift == 1)
-      man_y >>= 1;
-    else if (shift == 2)
-      man_y >>= 2;
-    else
-      man_y = 0;
+  xin.intval = (x.range(7, 3), (ap_int<1>)(0), x.range(2, 0), (ap_int<7>)(0));
+  yin.intval = (x.range(7, 3), (ap_int<1>)(0), x.range(2, 0), (ap_int<7>)(0));
 
-  } else {
-    ap_int<4> shift = eyp_y - eyp_x;
-    if (shift == 1)
-      man_x >>= 1;
-    else if (shift == 2)
-      man_x >>= 2;
-    else
-      man_x = 0;
-  }
+  zout.fpval = xin.fpval + yin.fpval;
 
-  man_r = man_x + man_y;
-  if (man_r[4] == 1) {
-    exp_r = exp_x + 1;
-    man_r >>= 1;
-  }
+  ap_int<16> z = zout.intval;
+  return (z[15], z.range(13, 7));
 
-  // saturation
-  if (exp_r[4] == 1)
-    exp_r = 0xf;
+  // ap_uint<4> exp_x = x.range(6, 3);
+  // ap_uint<4> exp_y = y.range(6, 3);
+  // ap_uint<3> man_x = x.range(2, 0);
+  // ap_uint<3> man_y = y.range(2, 0);
+
+  // ap_int<4> man_xs = (x[7], man_x);
+  // ap_int<4> man_ys = (y[7], man_y);
+
+  // ap_int<5> man_r;
+  // ap_int<5> exp_r;
+
+  // if (exp_x > exp_y) {
+  //   ap_int<4> shift = exp_x - exp_y;
+  //   if (shift == 1)
+  //     man_y >>= 1;
+  //   else if (shift == 2)
+  //     man_y >>= 2;
+  //   else
+  //     man_y = 0;
+
+  // } else {
+  //   ap_int<4> shift = exp_y - exp_x;
+  //   if (shift == 1)
+  //     man_x >>= 1;
+  //   else if (shift == 2)
+  //     man_x >>= 2;
+  //   else
+  //     man_x = 0;
+  // }
+
+  // man_r = man_x + man_y;
+  // if (man_r[3] == 1) {
+  //   exp_r = exp_x + 1;
+  //   man_r >>= 1;
+  // }
+
+  // // saturation
+  // if (exp_r[4] == 1)
+  //   exp_r = 0xf;
+
+  // return (man_r[4] && y[7], exp_r.range(3, 0), man_r.range(2, 0));
 }
 
 // E4M3
 ap_int<8> fp8_mult(ap_int<8> x, ap_int<8> y) {
 #pragma HLS INLINE
 
-  ap_int<4> exp_x = x.range(6, 3);
-  ap_int<4> exp_y = y.range(6, 3);
-  ap_int<3> man_x = x.range(2, 0);
-  ap_int<3> man_y = y.range(2, 0);
+  union {
+    int intval;
+    half fpval;
+  } xin;
 
-  ap_int<6> man_r = man_x * man_y;
-  ap_int<5> exp_r = exp_x + exp_y;
+  union {
+    int intval;
+    half fpval;
+  } yin;
 
-  if (wx_man_0_0[5])
-    exp_r += 3;
-  else if (wx_man_0_0[4])
-    exp_r += 2;
-  else if (wx_man_0_0[3])
-    exp_r += 1;
+  union {
+    int intval;
+    half fpval;
+  } zout;
 
-  // saturation
-  if (exp_r[4] == 1)
-    exp_r = 0xf;
+  xin.intval = (x.range(7, 3), (ap_int<1>)(0), x.range(2, 0), (ap_int<7>)(0));
+  yin.intval = (x.range(7, 3), (ap_int<1>)(0), x.range(2, 0), (ap_int<7>)(0));
 
-  return (x[7] && y[7], exp_r.range(3, 0), man_r.range(2, 0));
+  zout.fpval = xin.fpval * yin.fpval;
+
+  ap_int<16> z = zout.intval;
+  return (z[15], z.range(13, 7));
+
+  // ap_int<4> exp_x = x.range(6, 3);
+  // ap_int<4> exp_y = y.range(6, 3);
+  // ap_int<3> man_x = x.range(2, 0);
+  // ap_int<3> man_y = y.range(2, 0);
+
+  // ap_int<6> man_r = man_x * man_y;
+  // ap_int<5> exp_r = exp_x + exp_y;
+
+  // if (man_r[5])
+  //   exp_r += 3;
+  // else if (man_r[4])
+  //   exp_r += 2;
+  // else if (man_r[3])
+  //   exp_r += 1;
+
+  // // saturation
+  // if (exp_r[4] == 1)
+  //   exp_r = 0xf;
+
+  // return (x[7] && y[7], exp_r.range(3, 0), man_r.range(2, 0));
 }
 
 // Linear 2D:
-void bfp_linear2d_0(hls::stream<fixed_16_1_8_3_t> &data_in,
-                    hls::stream<fixed_2_1_9_7_t> &data_out) {
+void mxfp_linear2d_0(hls::stream<fixed_16_1_8_3_t> &data_in,
+                     hls::stream<fixed_2_1_9_7_t> &data_out) {
 #pragma HLS INLINE OFF
   fixed_1_16_8_3_t weight_0[8][8];
   fixed_1_16_8_3_t weight_1[8][8];
