@@ -57,7 +57,7 @@ def graph_iterator_by_type(graph, config: dict):
     return graph
 
 
-def backward_pass_base(graph, pass_args: dict = {}):
+def training_base_pass(graph, pass_args: dict = {}):
     by = pass_args.pop("by")
     match by:
         case "type":
