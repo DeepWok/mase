@@ -18,12 +18,15 @@ SUPPORTED_FORWARD_TRANSFORMS = {"quantize": quantized_func_map}
 SUPPORTED_BACKWARD_TRANSFORMS = {"quantize": quantized_grad_func_map}
 
 
-def attach_forward_fn(mase_op: str, q_fn: torch.autograd.Function, q_fn_cfg: dict):
+def attach_forward_fn(q_fn: torch.autograd.Function, mase_op: str, q_fn_cfg: dict):
     """
     Attach a forward function
     """
     name = q_fn_cfg["name"]
     pass_name = q_fn_cfg["pass"]
+    bypass = q_fn_cfg.get("bypass", False)
+    if bypass:
+        return
     forward_fn_name = f"{mase_op}_{name}"
 
     if pass_name in SUPPORTED_FORWARD_TRANSFORMS:
@@ -38,13 +41,16 @@ def attach_forward_fn(mase_op: str, q_fn: torch.autograd.Function, q_fn_cfg: dic
     q_fn.forward = partial(forward_fn, config=q_fn_cfg)
 
 
-def attach_backward_fn(mase_op: str, q_fn: torch.autograd.Function, q_fn_cfg: dict):
+def attach_backward_fn(q_fn: torch.autograd.Function, mase_op: str, q_fn_cfg: dict):
     """
     Attach a custom backward function
     """
     name = q_fn_cfg["name"]
     pass_name = q_fn_cfg["pass"]
     backward_fn_name = f"{mase_op}_{name}"
+    bypass = q_fn_cfg.get("bypass", False)
+    if bypass:
+        return
 
     if pass_name in SUPPORTED_BACKWARD_TRANSFORMS:
         if backward_fn_name not in SUPPORTED_BACKWARD_TRANSFORMS[pass_name]:
@@ -79,9 +85,9 @@ def create_new_module(
         if use_bias:
             copy_weights(original_module.bias, new_module.bias)
         # Edit forward function
-        attach_forward_fn(new_module.linear_autograd_fn, config["forward"])
+        attach_forward_fn(new_module.linear_autograd_fn, mase_op, config["forward"])
         # Edit backward function
-        attach_backward_fn(new_module.linear_autograd_fn, config["backward"])
+        attach_backward_fn(new_module.linear_autograd_fn, mase_op, config["backward"])
     else:
         raise NotImplementedError(
             f"Unsupported module class {original_module_cls} to modify"

@@ -1,5 +1,4 @@
 from functools import partial
-from chop.nn.backward.modules.linear import QLinear
 from chop.passes.graph.transforms.training.modify import create_new_module
 import torch
 
@@ -17,16 +16,18 @@ EDITABLE_OPS = [
     "linear",
 ]
 
+def get_config(config: dict, name: str):
+    if name in config:
+        return config[name]["config"]
+    else:
+        return config["default"]["config"]
 
 def graph_iterator_by_type(graph, config: dict):
     for node in graph.fx_graph.nodes:
         mase_op = get_mase_op(node)
         if mase_op not in EDITABLE_OPS:
             continue
-
-        node_config = config.get(mase_op, None)
-        if node_config["name"] is None:
-            continue
+        node_config = get_config(config, mase_op)
 
         if node.op == "call_module":
             ori_module = get_node_actual_target(node)
@@ -36,12 +37,6 @@ def graph_iterator_by_type(graph, config: dict):
                     ori_module,
                     node_config,
                     node.meta,
-                )
-                new_module = QLinear(
-                    ori_module.in_features,
-                    ori_module.out_features,
-                    bias=ori_module.bias is not None,
-                    extra_params=node_config,
                 )
                 parent_name, name = get_parent_name(node.target)
                 setattr(graph.modules[parent_name], name, new_module)

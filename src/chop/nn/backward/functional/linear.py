@@ -47,7 +47,6 @@ class QLinearFunction(torch.autograd.Function):
 def linearGradInteger(ctx, grad_output, config: dict = None):
     inputs, weight, bias = ctx.saved_tensors
     grad_input = grad_weight = grad_bias = None
-
     output_grad_width, output_grad_frac_width = (
         config["output_grad_width"],
         config["output_grad_frac_width"],
