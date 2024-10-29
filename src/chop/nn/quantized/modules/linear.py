@@ -349,7 +349,7 @@ class LinearTernary(_LinearBase):
         #     median=b_median,
         #     mean=b_mean,
         # )
-    
+
     def forward(self, x):
         if self.bypass:
             return F.linear(x, self.weight, self.bias)

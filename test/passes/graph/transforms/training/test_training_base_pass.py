@@ -42,7 +42,6 @@ class MLP(torch.nn.Module):
         self.fc2 = nn.Linear(8 * 8, 8 * 8 * 4)
         self.fc3 = nn.Linear(8 * 8 * 4, 10)
 
-
     def forward(self, x):
         x = torch.flatten(x, start_dim=1, end_dim=-1)
         x = torch.nn.functional.relu(self.fc1(x))
@@ -60,7 +59,6 @@ class MLP_S(torch.nn.Module):
         super().__init__()
 
         self.fc1 = nn.Linear(8 * 8, 10)
-
 
     def forward(self, x):
         x = torch.flatten(x, start_dim=1, end_dim=-1)
@@ -119,24 +117,27 @@ def test_training_base():
     # deep copy is only possible if we put "add_value" to False
     ori_mg = deepcopy_mase_graph(mg)
 
-
     def hook_fn(m, i, o):
         print(m)
-        print("------------ Output Grad: Backward Gradient passed by last layer ------------")
-        for grad in o:  
+        print(
+            "------------ Output Grad: Backward Gradient passed by last layer ------------"
+        )
+        for grad in o:
             try:
                 print(grad.shape)
-            except AttributeError: 
-                print ("None found for Gradient")
+            except AttributeError:
+                print("None found for Gradient")
         print("\n")
 
-        print("------------ Input Grad: Gradient computed over Input, Weight, Bias ------------")
+        print(
+            "------------ Input Grad: Gradient computed over Input, Weight, Bias ------------"
+        )
 
         for grad in i:
             try:
                 print(grad.shape)
-            except AttributeError: 
-                print ("None found for Gradient")
+            except AttributeError:
+                print("None found for Gradient")
 
     mlp.fc1.register_backward_hook(hook_fn)
     mlp.fc2.register_backward_hook(hook_fn)
@@ -197,21 +198,25 @@ def test_training_base_backward_only():
 
     def hook_fn(m, i, o):
         print(m)
-        print("------------ Output Grad: Backward Gradient passed by last layer ------------")
-        for grad in o:  
+        print(
+            "------------ Output Grad: Backward Gradient passed by last layer ------------"
+        )
+        for grad in o:
             try:
                 print(grad.shape)
-            except AttributeError: 
-                print ("None found for Gradient")
+            except AttributeError:
+                print("None found for Gradient")
         print("\n")
 
-        print("------------ Input Grad: Gradient computed over Input, Weight, Bias ------------")
+        print(
+            "------------ Input Grad: Gradient computed over Input, Weight, Bias ------------"
+        )
 
         for grad in i:
             try:
                 print(grad.shape)
-            except AttributeError: 
-                print ("None found for Gradient")
+            except AttributeError:
+                print("None found for Gradient")
 
     mlp.fc1.register_backward_hook(hook_fn)
     out = mlp(x)
@@ -221,7 +226,6 @@ def test_training_base_backward_only():
     mg.model.fc1.register_backward_hook(hook_fn)
     out = mg.model(x)
     (1 - out.mean()).backward()
-
 
 
 def test_training_base_forward_only():
@@ -277,23 +281,27 @@ def test_training_base_forward_only():
 
     def hook_fn(m, i, o):
         print(m)
-        print("------------ Output Grad: Backward Gradient passed by last layer ------------")
-        for grad in o:  
+        print(
+            "------------ Output Grad: Backward Gradient passed by last layer ------------"
+        )
+        for grad in o:
             try:
                 print(grad.shape)
                 print(grad)
-            except AttributeError: 
-                print ("None found for Gradient")
+            except AttributeError:
+                print("None found for Gradient")
         print("\n")
 
-        print("------------ Input Grad: Gradient computed over Input, Weight, Bias ------------")
+        print(
+            "------------ Input Grad: Gradient computed over Input, Weight, Bias ------------"
+        )
 
         for grad in i:
             try:
                 print(grad.shape)
                 print(grad)
-            except AttributeError: 
-                print ("None found for Gradient")
+            except AttributeError:
+                print("None found for Gradient")
 
     mlp.fc1.register_backward_hook(hook_fn)
     out = mlp(x)

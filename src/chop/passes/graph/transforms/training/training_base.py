@@ -16,11 +16,13 @@ EDITABLE_OPS = [
     "linear",
 ]
 
+
 def get_config(config: dict, name: str):
     if name in config:
         return config[name]["config"]
     else:
         return config["default"]["config"]
+
 
 def graph_iterator_by_type(graph, config: dict):
     for node in graph.fx_graph.nodes:
