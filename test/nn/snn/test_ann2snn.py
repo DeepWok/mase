@@ -139,23 +139,23 @@ plt_trainer_args = {
 # )
 
 
-train(
-    model=mg.model,
-    model_info=model_info,
-    dataset_info=dataset_info,
-    weight_decay=1e-4,
-    task="cls",
-    data_module=data_module,
-    optimizer="adam",
-    learning_rate=1e-5,
-    plt_trainer_args=plt_trainer_args,
-    scheduler_args=None,
-    save_path=None,
-    load_name=None,
-    load_type="pl",
-    visualizer=None,
-    auto_requeue=False,
-)
+# train(
+#     model=mg.model,
+#     model_info=model_info,
+#     dataset_info=dataset_info,
+#     weight_decay=1e-4,
+#     task="cls",
+#     data_module=data_module,
+#     optimizer="adam",
+#     learning_rate=1e-5,
+#     plt_trainer_args=plt_trainer_args,
+#     scheduler_args=None,
+#     save_path=None,
+#     load_name=None,
+#     load_type="pl",
+#     visualizer=None,
+#     auto_requeue=False,
+# )
 
 # test(
 #     model=mg.model,
@@ -173,7 +173,7 @@ train(
 #     load_name="/home/thw20/projects/mase/mase_output/snn/training_ckpts/best.ckpt",
 #     load_type='pl',
 # )
-print(val(mg.model, "cuda", data_module.test_dataloader()))
+# print(val(mg.model, "cuda", data_module.test_dataloader()))
 
 
 # ann_model = load_model(
@@ -199,12 +199,12 @@ quan_args = {
         }
     },
     "train_data_loader": input_generator,
-    "device": "cuda",
+    "device": "cpu",  # "device": "cuda",
 }
 
-model.to("cuda")
+model.to("cpu")  # model.to("gpu")
 mg, _ = ann2snn_transform_pass(mg, quan_args)
-print(val(mg.model, "cuda", data_module.test_dataloader(), T=10))
+# print(val(mg.model, "cuda", data_module.test_dataloader(), T=10))
 
 
 # ------------------------------------------------------------
