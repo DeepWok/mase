@@ -201,18 +201,15 @@ class ActProfiler(Interpreter):
             if len(act_stats) > 0:
                 numeric_args = tuple(
                     filter(
-                        lambda x: isinstance(x, (torch.Tensor, int, float))
+                        lambda x: isinstance(x, (torch.Tensor))
                         and not isinstance(x, bool),
                         args + tuple(kwargs.values()),
                     )
                 )
-                try:
-                    assert len(numeric_args) == len(act_stats), (
-                        f"Number of tensor args ({len(numeric_args)}) "
-                        f"does not match number of act entries ({len(act_stats)})"
-                    )
-                except AssertionError:
-                    exit(1)
+                assert len(numeric_args) == len(act_stats), (
+                    f"Number of tensor args ({len(numeric_args)}) "
+                    f"does not match number of act entries ({len(act_stats)})"
+                )
 
                 for tensor_arg, stat in zip(numeric_args, act_stats):
                     stat.update(tensor_arg)
