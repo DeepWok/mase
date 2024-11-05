@@ -1,9 +1,4 @@
-from .modules import (
-    VoltageHook,
-    VoltageScaler,
-    SeqToANNContainer,
-    MultiStepContainer
-)
+from .modules import VoltageHook, VoltageScaler, SeqToANNContainer, MultiStepContainer
 
 # from .converter import Converter
 
@@ -11,3 +6,28 @@ from .surrogate import (
     Sigmoid,
 )
 
+from .conv1d import Conv1d
+
+from .conv2d import Conv2d
+
+from .conv3d import Conv3d
+
+from .linear import Linear
+
+from .pool1d import MaxPool1d, AvgPool1d, AdaptiveAvgPool1d
+
+from .pool2d import MaxPool2d, AvgPool2d, AdaptiveAvgPool2d
+
+from .pool3d import MaxPool3d, AvgPool3d, AdaptiveAvgPool3d
+
+from .batch_norm1d import batch_norm1d
+
+from .batch_norm2d import batch_norm2d
+
+from .batch_norm3d import batch_norm3d
+
+from .flatten import Flatten
+
+from .group_norm import GroupNorm
+
+from upsample import Upsample
