@@ -6,7 +6,6 @@ import torch.nn.functional as F
 import math
 from typing import Callable, Union
 from torch import Tensor
-from chop.nn.snn.base import base
 
 
 def multi_step_forward(
