@@ -306,6 +306,12 @@ MASE_HW_DEPS = {
         "memory",
         "cast",
     ],
+    "linear_layers/mxint_operators/mxint_hardware_round": [
+        "linear_layers/mxint_operators",
+        "common",
+        "memory",
+        "cast",
+    ],
     "linear_layers/mxint_operators/log2_max_abs": [
         "linear_layers/mxint_operators",
         "common",

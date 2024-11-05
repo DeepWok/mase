@@ -3,7 +3,7 @@
 Module      : optimized_variable_shift
 Description : optimized version of variable shift.
 */
-module optimized_variable_shift #(
+module optimized_variable_right_shift #(
     parameter IN_WIDTH = -1,
     parameter BLOCK_SIZE = -1,
     parameter SHIFT_WIDTH = -1,
