@@ -1,1 +1,1 @@
-from base import StepModule, SingleModule, MultiStepModule, MemoryModule
+from .base import StepModule, SingleModule, MultiStepModule, MemoryModule
