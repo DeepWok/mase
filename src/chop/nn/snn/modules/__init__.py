@@ -1,6 +1,8 @@
 from .modules import (
     VoltageHook,
     VoltageScaler,
+    SeqToANNContainer,
+    MultiStepContainer
 )
 
 # from .converter import Converter
@@ -8,3 +10,4 @@ from .modules import (
 from .surrogate import (
     Sigmoid,
 )
+
