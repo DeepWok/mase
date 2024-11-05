@@ -1,6 +1,52 @@
 import torch.nn as nn
+from torch import Tensor
 import torch
 import numpy as np
+import chop.nn.snn.base as base
+import chop.nn.snn.functional as functional
+import logging
+
+
+class MultiStepContainer(nn.Sequential, base.MultiStepModule):
+    def __init__(self, *args):
+        super().__init__(*args)
+        for m in self:
+            assert not hasattr(m, "step_mode") or m.step_mode == "s"
+            if isinstance(m, base.StepModule):
+                if "m" in m.supported_step_mode():
+                    logging.warning(
+                        f"{m} supports for step_mode == 's', which should not be contained by MultiStepContainer!"
+                    )
+
+    def forward(self, x_seq: Tensor):
+        """
+        :param x_seq: ``shape=[T, batch_size, ...]``
+        :type x_seq: Tensor
+        :return: y_seq with ``shape=[T, batch_size, ...]``
+        :rtype: Tensor
+        """
+        return functional.multi_step_forward(x_seq, super().forward)
+
+
+class SeqToANNContainer(nn.Sequential, base.MultiStepModule):
+    def __init__(self, *args):
+        super().__init__(*args)
+        for m in self:
+            assert not hasattr(m, "step_mode") or m.step_mode == "s"
+            if isinstance(m, base.StepModule):
+                if "m" in m.supported_step_mode():
+                    logging.warning(
+                        f"{m} supports for step_mode == 's', which should not be contained by SeqToANNContainer!"
+                    )
+
+    def forward(self, x_seq: Tensor):
+        """
+        :param x_seq: shape=[T, batch_size, ...]
+        :type x_seq: Tensor
+        :return: y_seq, shape=[T, batch_size, ...]
+        :rtype: Tensor
+        """
+        return functional.seq_to_ann_forward(x_seq, super().forward)
 
 
 class VoltageHook(nn.Module):
