@@ -30,4 +30,4 @@ from .flatten import Flatten
 
 from .group_norm import GroupNorm
 
-from upsample import Upsample
+from .upsample import Upsample
