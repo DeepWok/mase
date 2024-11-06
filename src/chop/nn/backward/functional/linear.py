@@ -19,7 +19,7 @@ from chop.nn.quantizers import (
 )
 
 
-class QLinearFunction(torch.autograd.Function):
+class CustomLinearFunction(torch.autograd.Function):
     @staticmethod
     def forward(x: Tensor, weight: Tensor, bias: Tensor = None):
         return F.linear(x, weight, bias)

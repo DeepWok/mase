@@ -65,7 +65,7 @@ def linearGradInteger(ctx, grad_output, config: dict = None):
     return grad_input, grad_weight, grad_bias
 
 
-class QLinearFunction(torch.autograd.Function):
+class CustomLinearFunction(torch.autograd.Function):
     @staticmethod
     def forward(x: Tensor, weight: Tensor, bias: Tensor = None):
         return F.linear(x, weight, bias)
@@ -94,7 +94,7 @@ class QLinear(torch.nn.Linear):
         super(QLinear, self).__init__(
             in_features, out_features, bias=bias, device=device, dtype=dtype
         )
-        self.linear_autograd_fn = clone_autograd_fn(QLinearFunction)
+        self.linear_autograd_fn = clone_autograd_fn(CustomLinearFunction)
 
     def forward(self, x: Tensor):
         return self.linear_autograd_fn.apply(x, self.weight, self.bias)
@@ -166,7 +166,7 @@ q_cfg = {
 # Validate the un-quanitzed forward function
 # ------------------------------------------------
 def linear(x: Tensor, weight: Tensor, bias: Tensor = None):
-    return QLinearFunction.apply(x, weight, bias)
+    return CustomLinearFunction.apply(x, weight, bias)
 
 
 input = (
