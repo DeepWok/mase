@@ -1,5 +1,3 @@
-# README
-
 ## Overview
 
 This directory contains code designed for transformations in Spiking Neural Networks (SNNs) within the MASE framework. The code adapts and integrates modules from the SpikingJelly library, providing essential functionality for efficient SNN simulations and operations.
