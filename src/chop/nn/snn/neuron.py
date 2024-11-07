@@ -1,3 +1,11 @@
+# ***************************************************************************************
+# *    Title: neuron.py
+# *    Reference:  This file is adapted from spikingJelly
+# *    Availability: https://github.com/fangwei123456/spikingjelly/blob/master/spikingjelly/timing_based/neuron.py
+# *    Date: 07/11/2024
+# *    Code version: 0.0.0.014
+# ***************************************************************************************
+
 from abc import abstractmethod
 from typing import Callable, Optional
 import torch

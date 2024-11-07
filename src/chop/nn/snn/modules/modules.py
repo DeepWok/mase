@@ -1,3 +1,12 @@
+# ***************************************************************************************
+# *    Title: modules.py
+# *    Reference:  This file is adapted from spikingJelly
+# *    Availability: https://github.com/fangwei123456/spikingjelly/blob/master/spikingjelly/activation_based/layer.py
+# *    Availability: https://github.com/fangwei123456/spikingjelly/blob/master/spikingjelly/activation_based/ann2snn/modules.py
+# *    Date: 07/11/2024
+# *    Code version: 0.0.0.014
+# ***************************************************************************************
+
 import torch.nn as nn
 from torch import Tensor
 import torch

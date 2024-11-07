@@ -1,3 +1,12 @@
+# ***************************************************************************************
+# *    Title: auto_cuda
+# *    Reference: These directory is directly sourced from spikingJelly
+# *    Availability: https://github.com/fangwei123456/spikingjelly/tree/master/spikingjelly/activation_based/auto_cuda
+# *    Date: 07/11/2024
+# *    Code version: 0.0.0.014
+# ***************************************************************************************
+
+
 from spikingjelly.activation_based.auto_cuda.generator import (
     analyse_graph,
     gen_forward_codes,
