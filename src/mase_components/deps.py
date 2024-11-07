@@ -268,6 +268,12 @@ MASE_HW_DEPS = {
         "common",
         "memory",
     ],
+    "linear_layers/mxint_operators/mxint_range_reduction": [
+        "linear_layers/mxint_operators",
+        "common",
+        "memory",
+        "cast",
+    ],
     "linear_layers/mxint_operators/mxint_linear": [
         "linear_layers/mxint_operators",
         "linear_layers/fixed_operators",
