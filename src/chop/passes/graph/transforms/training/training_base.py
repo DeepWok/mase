@@ -55,6 +55,58 @@ def graph_iterator_by_type(graph, config: dict):
 
 
 def training_base_pass(graph, pass_args: dict = {}):
+    """
+    Apply training transformation to the given graph.
+
+    :param graph: The input graph to be transformed.
+    :type graph: MaseGraph
+
+    :param pass_args: Additional arguments for the transformation.
+    :type pass_args: dict, optional
+
+    .. code-block: python
+
+            "by": "type",  # transform by type. NOTE: transformation based on type only for now
+        quan_args = {
+            "default": {"config": {"name": None}}, # default config, this would be used for any node that does not have a specific config
+            "linear": {
+                "config": {
+                    "forward": { # specifed the forward pass of the custom module 
+                        "pass": "quantize", # catagory of the forward pass
+                        "name": "integer",  # specific configurations of the pass
+                        "weight_width": 10,
+                        "weight_frac_width": 5,
+                        "data_in_width": 10,
+                        "data_in_frac_width": 5,
+                        "bias_width": 10,
+                        "bias_frac_width": 5,
+                        "data_out_width": 10,
+                        "data_out_frac_width": 5,
+                    },
+                    "backward": { # specifed the backward pass of the custom module 
+                        "pass": "quantize", # catagory of the backward pass
+                        "name": "integer",  # specific configurations of the pass
+                        "output_grad_width": 10,
+                        "output_grad_frac_width": 5,
+                        "data_in_width": 10,
+                        "data_in_frac_width": 5,
+                        "weight_width": 10,
+                        "weight_frac_width": 5,
+                        "bias_width": 10,
+                        "bias_frac_width": 5,
+                    },
+                }
+            },
+        }
+
+    :return: The transformed graph.
+    :rtype: tuple
+    :raises ValueError: If the quantize "by" argument is unsupported.
+
+
+    - pass_args
+        - by -> str : different transformation schemes choose from ["type"]
+    """
     by = pass_args.pop("by")
     match by:
         case "type":
