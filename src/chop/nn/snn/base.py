@@ -1,3 +1,11 @@
+# ***************************************************************************************
+# *    Title: base.py
+# *    Reference:  This file is directly sourced from spikingJelly
+# *    Availability: https://github.com/fangwei123456/spikingjelly/blob/master/spikingjelly/activation_based/base.py
+# *    Date: 07/11/2024
+# *    Code version: 0.0.0.014
+# ***************************************************************************************
+
 import torch
 import torch.nn as nn
 import copy

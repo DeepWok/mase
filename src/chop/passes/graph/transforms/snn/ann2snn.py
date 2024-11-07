@@ -1,3 +1,11 @@
+# ***************************************************************************************/
+# *    Title: ann2snn
+# *    Reference: This code is adapted from spikingJelly cnn_mnist.py
+# *    Availability: https://github.com/fangwei123456/spikingjelly/blob/master/spikingjelly/activation_based/ann2snn/examples/cnn_mnist.py
+# *    Date: 07/11/2024
+# *    Code version: 0.0.0.014
+# *
+# ***************************************************************************************/
 from copy import copy, deepcopy
 import logging
 from chop.ir.graph.mase_metadata import MaseMetadata

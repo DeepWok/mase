@@ -1,3 +1,11 @@
+# ***************************************************************************************
+# *    Title: cuda_utils
+# *    Reference: This file is directly sourced from spikingJelly
+# *    Availability: https://github.com/fangwei123456/spikingjelly/blob/master/spikingjelly/activation_based/cuda_utils.py
+# *    Date: 07/11/2024
+# *    Code version: 0.0.0.014
+# ***************************************************************************************
+
 import logging
 import torch
 import time

@@ -1,3 +1,11 @@
+# ***************************************************************************************
+# *    Title: funtional.py
+# *    Reference:  This file is adapted from spikingJelly
+# *    Availability: https://github.com/fangwei123456/spikingjelly/blob/master/spikingjelly/activation_based/functional.py
+# *    Date: 07/11/2024
+# *    Code version: 0.0.0.014
+# ***************************************************************************************
+
 import logging
 import copy
 import torch
