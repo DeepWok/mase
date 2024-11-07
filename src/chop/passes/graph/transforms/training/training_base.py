@@ -71,7 +71,7 @@ def training_base_pass(graph, pass_args: dict = {}):
             "default": {"config": {"name": None}}, # default config, this would be used for any node that does not have a specific config
             "linear": {
                 "config": {
-                    "forward": { # specifed the forward pass of the custom module 
+                    "forward": { # specifed the forward pass of the custom module
                         "pass": "quantize", # catagory of the forward pass
                         "name": "integer",  # specific configurations of the pass
                         "weight_width": 10,
@@ -83,7 +83,7 @@ def training_base_pass(graph, pass_args: dict = {}):
                         "data_out_width": 10,
                         "data_out_frac_width": 5,
                     },
-                    "backward": { # specifed the backward pass of the custom module 
+                    "backward": { # specifed the backward pass of the custom module
                         "pass": "quantize", # catagory of the backward pass
                         "name": "integer",  # specific configurations of the pass
                         "output_grad_width": 10,
