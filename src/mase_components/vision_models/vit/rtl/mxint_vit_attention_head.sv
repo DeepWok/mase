@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-module fixed_vit_attention_head #(
+module mxint_vit_attention_head #(
 
     // * Queries, keys and values are assumed to have the same
     // * precision, dimensions and parallelism
@@ -30,18 +30,22 @@ module fixed_vit_attention_head #(
     input logic rst,
 
     input logic [IN_DATA_PRECISION_0-1:0] query [IN_DATA_PARALLELISM_DIM_0*IN_DATA_PARALLELISM_DIM_1-1:0],
+    input logic [IN_DATA_PRECISION_1-1:0] query_exp,
     input logic query_valid,
     output logic query_ready,
 
     input logic [IN_DATA_PRECISION_0-1:0] key [IN_DATA_PARALLELISM_DIM_0*IN_DATA_PARALLELISM_DIM_1-1:0],
+    input logic [IN_DATA_PRECISION_1-1:0] key_exp,
     input logic key_valid,
     output logic key_ready,
 
     input logic [IN_DATA_PRECISION_0-1:0] value [IN_DATA_PARALLELISM_DIM_0*IN_DATA_PARALLELISM_DIM_1-1:0],
+    input logic [IN_DATA_PRECISION_1-1:0] value_exp,
     input logic value_valid,
     output logic value_ready,
 
     output logic [OUT_DATA_PRECISION_0-1:0] out [OUT_DATA_PARALLELISM_DIM_0*OUT_DATA_PARALLELISM_DIM_1-1:0],
+    output logic [OUT_DATA_PRECISION_1-1:0] out_exp,
     output logic out_valid,
     input logic out_ready
 );
@@ -99,10 +103,12 @@ module fixed_vit_attention_head #(
   // * =================================================================
 
   logic [IN_DATA_PRECISION_0-1:0] key_transpose [IN_DATA_PARALLELISM_DIM_0*IN_DATA_PARALLELISM_DIM_1-1:0];
+  logic [IN_DATA_PRECISION_1-1:0] key_transpose_exp;
   logic key_transpose_valid;
   logic key_transpose_ready;
 
   logic [QKMM_OUT_PRECISION_0-1:0] query_key_transpose [IN_DATA_PARALLELISM_DIM_1 * IN_DATA_PARALLELISM_DIM_1-1:0];
+  logic [QKMM_OUT_PRECISION_1-1:0] query_key_transpose_exp;
   logic query_key_transpose_valid;
   logic query_key_transpose_ready;
 
@@ -111,6 +117,7 @@ module fixed_vit_attention_head #(
   logic buffered_query_key_transpose_ready;
 
   logic [SOFTMAX_OUT_DATA_PRECISION_0 - 1:0] attention_scores [IN_DATA_PARALLELISM_DIM_1 * IN_DATA_PARALLELISM_DIM_1-1:0];
+  logic [SOFTMAX_OUT_DATA_PRECISION_1-1:0] attention_scores_exp;
   logic attention_scores_valid;
   logic attention_scores_ready;
 
@@ -127,31 +134,34 @@ module fixed_vit_attention_head #(
 
   // * Transpose projected keys
 
-  matrix_stream_transpose #(
+  mxint_matrix_stream_transpose #(
       .TOTAL_DIM0  (IN_DATA_TENSOR_SIZE_DIM_0),
       .TOTAL_DIM1  (IN_DATA_TENSOR_SIZE_DIM_1),
       .COMPUTE_DIM0(IN_DATA_PARALLELISM_DIM_0),
       .COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_1),
 
-      .DATA_WIDTH(IN_DATA_PRECISION_0)
+      .MAN_WIDTH(IN_DATA_PRECISION_0),
+      .EXP_WIDTH(IN_DATA_PRECISION_1)
   ) key_transpose_i (
       .clk,
       .rst,
 
       // In Matrix
-      .in_data (key),
-      .in_valid(key_valid),
-      .in_ready(key_ready),
+      .mdata_in (key),
+      .edata_in(key_exp),
+      .data_in_valid(key_valid),
+      .data_in_ready(key_ready),
 
       // Out Matrix
-      .out_data (key_transpose),
-      .out_valid(key_transpose_valid),
-      .out_ready(key_transpose_ready)
+      .mdata_out (key_transpose),
+      .edata_out(key_transpose_exp),
+      .data_out_valid(key_transpose_valid),
+      .data_out_ready(key_transpose_ready)
   );
 
   // * Query x Key^T
 
-  matmul #(
+  mxint_matmul #(
       .A_TOTAL_DIM0(IN_DATA_TENSOR_SIZE_DIM_0),
       .A_TOTAL_DIM1(IN_DATA_TENSOR_SIZE_DIM_1),
 
@@ -163,28 +173,31 @@ module fixed_vit_attention_head #(
       .B_COMPUTE_DIM0(IN_DATA_PARALLELISM_DIM_1),
       .B_COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_0),
 
-      .A_WIDTH     (IN_DATA_PRECISION_0),
-      .A_FRAC_WIDTH(IN_DATA_PRECISION_1),
+      .A_MAN_WIDTH     (IN_DATA_PRECISION_0),
+      .A_EXP_WIDTH(IN_DATA_PRECISION_1),
 
-      .B_WIDTH     (IN_DATA_PRECISION_0),
-      .B_FRAC_WIDTH(IN_DATA_PRECISION_1),
+      .B_MAN_WIDTH     (IN_DATA_PRECISION_0),
+      .B_EXP_WIDTH(IN_DATA_PRECISION_1),
 
-      .OUT_WIDTH     (QKMM_OUT_PRECISION_0),
-      .OUT_FRAC_WIDTH(QKMM_OUT_PRECISION_1)
+      .OUT_MAN_WIDTH     (QKMM_OUT_PRECISION_0),
+      .OUT_EXP_WIDTH(QKMM_OUT_PRECISION_1)
 
   ) query_key_transpose_matmul_i (
       .clk,
       .rst,
 
-      .a_data (query),
+      .ma_data (query),
+      .ea_data(query_exp),
       .a_valid(query_valid),
       .a_ready(query_ready),
 
-      .b_data (key_transpose),
+      .mb_data (key_transpose),
+      .eb_data(key_transpose_exp),
       .b_valid(key_transpose_valid),
       .b_ready(key_transpose_ready),
 
-      .out_data (query_key_transpose),
+      .mout_data (query_key_transpose),
+      .eout_data(query_key_transpose_exp),
       .out_valid(query_key_transpose_valid),
       .out_ready(query_key_transpose_ready)
   );
@@ -204,7 +217,7 @@ module fixed_vit_attention_head #(
         .data_out_valid(buffered_query_key_transpose_valid),
         .data_out_ready(buffered_query_key_transpose_ready)
     );
-  fixed_softmax #(
+  mxint_softmax #(
       .DATA_IN_0_PRECISION_0      (QKMM_OUT_PRECISION_0),
       .DATA_IN_0_PRECISION_1      (QKMM_OUT_PRECISION_1),
       .DATA_EXP_0_PRECISION_0     (SOFTMAX_EXP_PRECISION_0),
@@ -219,11 +232,13 @@ module fixed_vit_attention_head #(
       .clk,
       .rst,
 
-      .data_in_0      (buffered_query_key_transpose),
+      .mdata_in_0      (buffered_query_key_transpose),
+      .edata_in_0      (query_key_transpose_exp),
       .data_in_0_valid(buffered_query_key_transpose_valid),
       .data_in_0_ready(buffered_query_key_transpose_ready),
 
-      .data_out_0      (attention_scores),
+      .mdata_out_0      (attention_scores),
+      .edata_out_0      (attention_scores_exp),
       .data_out_0_valid(attention_scores_valid),
       .data_out_0_ready(attention_scores_ready)
   );
@@ -231,7 +246,7 @@ module fixed_vit_attention_head #(
 
   // * Output: Attention scores x Value
 
-  matmul #(
+  mxint_matmul #(
       .A_TOTAL_DIM0(IN_DATA_TENSOR_SIZE_DIM_1),
       .A_TOTAL_DIM1(IN_DATA_TENSOR_SIZE_DIM_1),
 
@@ -243,30 +258,33 @@ module fixed_vit_attention_head #(
       .B_COMPUTE_DIM0(IN_DATA_PARALLELISM_DIM_0),
       .B_COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_1),
 
-      .A_WIDTH     (SOFTMAX_OUT_DATA_PRECISION_0),
-      .A_FRAC_WIDTH(SOFTMAX_OUT_DATA_PRECISION_1),
+      .A_MAN_WIDTH     (SOFTMAX_OUT_DATA_PRECISION_0),
+      .A_EXP_WIDTH(SOFTMAX_OUT_DATA_PRECISION_1),
 
-      .B_WIDTH     (IN_DATA_PRECISION_0),
-      .B_FRAC_WIDTH(IN_DATA_PRECISION_1),
+      .B_MAN_WIDTH     (IN_DATA_PRECISION_0),
+      .B_EXP_WIDTH(IN_DATA_PRECISION_1),
 
-      .OUT_WIDTH     (OUT_DATA_PRECISION_0),
-      .OUT_FRAC_WIDTH(OUT_DATA_PRECISION_1)
+      .OUT_MAN_WIDTH     (OUT_DATA_PRECISION_0),
+      .OUT_EXP_WIDTH(OUT_DATA_PRECISION_1)
 
   ) attention_scores_values_matmul_i (
       .clk,
       .rst,
 
-      .a_data (attention_scores),
+      .ma_data (attention_scores),
+      .ea_data(attention_scores_exp),
       .a_valid(attention_scores_valid),
       .a_ready(attention_scores_ready),
 
-      .b_data (value),
+      .mb_data (value),
+      .eb_data(value_exp),
       .b_valid(value_valid),
       .b_ready(value_ready),
 
-      .out_data (out_casted),
-      .out_valid(out_cast_valid),
-      .out_ready(out_cast_ready)
+      .mout_data (out),
+      .eout_data(out_exp),
+      .out_valid(out_valid),
+      .out_ready(out_ready)
   );
 
 

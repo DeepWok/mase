@@ -26,30 +26,33 @@ logger.setLevel(logging.DEBUG)
 
 torch.manual_seed(10)
 
+
 def quantized_range_reduction(mx, ex, in_man_width, data_out_n_width):
     """Vectorized range reduction"""
+
     def hardware_round(mx, ex, in_man_frac_width, data_out_width):
-        round_max = 2**(data_out_width-1) - 1
-        round_min = -2**(data_out_width-1)
-        round_x = mx.reshape(-1) // 2**((in_man_frac_width-ex).reshape(-1))
+        round_max = 2 ** (data_out_width - 1) - 1
+        round_min = -(2 ** (data_out_width - 1))
+        round_x = mx.reshape(-1) // 2 ** ((in_man_frac_width - ex).reshape(-1))
         return torch.clamp(round_x, round_min, round_max)
-    coefficient_quant_block = partial(
-        mxint_quantize, 
-        width=8,
-        exponent_width=4)
+
+    coefficient_quant_block = partial(mxint_quantize, width=8, exponent_width=4)
     _, mlog2_e, elog2_e = coefficient_quant_block(torch.log2(torch.tensor(math.e)))
     _, mln_2, eln_2 = coefficient_quant_block(torch.log(torch.tensor(2.0)))
-    n = hardware_round(mx * mlog2_e, ex + elog2_e, (in_man_width - 1 + 7), data_out_n_width)
+    n = hardware_round(
+        mx * mlog2_e, ex + elog2_e, (in_man_width - 1 + 7), data_out_n_width
+    )
     print(n)
     _mx = n * mln_2
     _ex = eln_2
-    shifted_mx = mx // 2**(_ex - ex + (in_man_width - 1) - 7)
+    shifted_mx = mx // 2 ** (_ex - ex + (in_man_width - 1) - 7)
     print(shifted_mx)
     print(_ex - ex + (in_man_width - 1) - 7)
     mr = shifted_mx - _mx
     # return mr as an fixedpoint ?.7 we can make it 2.7
     # return n as an integer number with width = data_out_width
     return mr, n
+
 
 class MXIntRangeReductionTB(Testbench):
     def __init__(self, dut, num) -> None:
@@ -101,7 +104,12 @@ class MXIntRangeReductionTB(Testbench):
                 int(self.dut.DATA_IN_MAN_WIDTH),
                 int(self.dut.DATA_IN_EXP_WIDTH),
             )
-            r,n = quantized_range_reduction(mdata_in, edata_in, int(self.dut.DATA_IN_MAN_WIDTH), int(self.dut.DATA_OUT_N_WIDTH))
+            r, n = quantized_range_reduction(
+                mdata_in,
+                edata_in,
+                int(self.dut.DATA_IN_MAN_WIDTH),
+                int(self.dut.DATA_OUT_N_WIDTH),
+            )
             inputs.append((mdata_in.int().tolist(), edata_in.int().tolist()))
             exp_r_outputs.append(r.int().tolist())
             exp_n_outputs.append(n.int().tolist())
@@ -127,11 +135,13 @@ class MXIntRangeReductionTB(Testbench):
         assert self.data_out_n_monitor.exp_queue.empty()
         assert self.data_out_r_monitor.exp_queue.empty()
 
+
 @cocotb.test()
 async def test(dut):
     cocotb.start_soon(check_signal(dut))
     tb = MXIntRangeReductionTB(dut, num=20)
     await tb.run_test()
+
 
 async def check_signal(dut):
     await Timer(40, units="ns")
@@ -140,13 +150,9 @@ async def check_signal(dut):
         await ReadOnly()
         print(dut.data_in_0_valid.value, dut.data_in_0_ready.value)
         if dut.data_in_0_valid.value == 1 and dut.data_in_0_ready.value == 1:
-            print(
-                "data_in_0 = ", [x.signed_integer for x in dut.mdata_in_0.value]
-            )
+            print("data_in_0 = ", [x.signed_integer for x in dut.mdata_in_0.value])
         if dut.data_out_n_valid.value == 1 and dut.data_out_n_ready.value == 1:
-            print(
-                "data_out_n = ", [x.signed_integer for x in dut.data_out_n.value]
-            )
+            print("data_out_n = ", [x.signed_integer for x in dut.data_out_n.value])
         #     "straight_data_out_n = ", [x for x in dut.straight_data_out_n.value]
         # )
         # print(
@@ -154,16 +160,17 @@ async def check_signal(dut):
         # )
         print("end")
 
+
 if __name__ == "__main__":
     mase_runner(
-    trace=True,
-    module_param_list=[
-        {
-        "DATA_IN_MAN_WIDTH": 8,
-        "DATA_IN_EXP_WIDTH": 4,
-        "BLOCK_SIZE": 4,
-        "DATA_OUT_N_WIDTH": 8,
-        },
-    ],
-    sim="questa",
+        trace=True,
+        module_param_list=[
+            {
+                "DATA_IN_MAN_WIDTH": 8,
+                "DATA_IN_EXP_WIDTH": 4,
+                "BLOCK_SIZE": 4,
+                "DATA_OUT_N_WIDTH": 8,
+            },
+        ],
+        sim="questa",
     )

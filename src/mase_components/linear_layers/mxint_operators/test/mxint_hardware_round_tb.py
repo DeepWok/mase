@@ -25,11 +25,13 @@ logger.setLevel(logging.DEBUG)
 
 torch.manual_seed(10)
 
+
 def hardware_round(mx, ex, in_man_frac_width):
-    round_max = 2**(8-1) - 1
-    round_min = -2**(8-1)
-    round_x = mx.reshape(-1) // 2**((in_man_frac_width-ex).reshape(-1))
+    round_max = 2 ** (8 - 1) - 1
+    round_min = -(2 ** (8 - 1))
+    round_x = mx.reshape(-1) // 2 ** ((in_man_frac_width - ex).reshape(-1))
     return torch.clamp(round_x, round_min, round_max)
+
 
 class MXIntHardwareRoundTB(Testbench):
     def __init__(self, dut, num) -> None:
@@ -59,17 +61,20 @@ class MXIntHardwareRoundTB(Testbench):
         self.output_drivers = {
             "out": self.data_out_0_monitor,
         }
+
     def generate_inputs(self):
         inputs = []
         exp_outputs = []
         for _ in range(self.num):
+
             def hardware_round(mx, ex, in_man_frac_width):
-                round_max = 2**(8-1) - 1
-                round_min = -2**(8-1)
-                round_x = mx.reshape(-1) // 2**((in_man_frac_width-ex).reshape(-1))
+                round_max = 2 ** (8 - 1) - 1
+                round_min = -(2 ** (8 - 1))
+                round_x = mx.reshape(-1) // 2 ** ((in_man_frac_width - ex).reshape(-1))
                 print(mx.reshape(-1))
-                print((in_man_frac_width-ex).reshape(-1))
+                print((in_man_frac_width - ex).reshape(-1))
                 return torch.clamp(round_x, round_min, round_max)
+
             data = 49 * torch.rand(int(self.dut.BLOCK_SIZE)) - 24.5
             (data_in, mdata_in, edata_in) = mxint_quantize(
                 data,
@@ -105,6 +110,7 @@ async def test(dut):
     tb = MXIntHardwareRoundTB(dut, num=20)
     await tb.run_test()
 
+
 async def check_signal(dut):
     await Timer(40, units="ns")
     while True:
@@ -112,20 +118,16 @@ async def check_signal(dut):
         await ReadOnly()
         print(dut.data_in_0_valid.value, dut.data_in_0_ready.value)
         if dut.data_in_0_valid.value == 1 and dut.data_in_0_ready.value == 1:
-            print(
-                "data_in_0 = ", [x.signed_integer for x in dut.mdata_in_0.value]
-            )
-            print(
-                "shift_result = ", [x.signed_integer for x in dut.shift_result.value]
-            )
-            print(
-                "clamped_n = ", [x.signed_integer for x in dut.clamped_n.value]
-            )
+            print("data_in_0 = ", [x.signed_integer for x in dut.mdata_in_0.value])
+            print("shift_result = ", [x.signed_integer for x in dut.shift_result.value])
+            print("clamped_n = ", [x.signed_integer for x in dut.clamped_n.value])
         # print(
         #     "data_out_0 = ",
         #     [x.signed_integer for x in dut.data_out_0.value],
         # )
         print("end")
+
+
 if __name__ == "__main__":
     mase_runner(
         trace=True,
