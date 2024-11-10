@@ -11,8 +11,8 @@ module mxint_accumulator #(
     parameter DATA_IN_0_PRECISION_1 = 8,
     parameter BLOCK_SIZE = 4,
     parameter IN_DEPTH = 2,
-    parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0 + $clog2(IN_DEPTH),
-    parameter DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1
+    localparam DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0 + $clog2(IN_DEPTH),
+    localparam DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1
 ) (
     input logic clk,
     input logic rst,

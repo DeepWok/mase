@@ -32,7 +32,7 @@ module mxint_hardware_round #(
     logic [DATA_IN_MAN_WIDTH-1:0] shift_result [BLOCK_SIZE-1:0];
 
     assign shift_value = DATA_IN_MAN_FRAC_WIDTH - $signed(edata_in_0);
-    optimized_variable_right_shift #(
+    optimized_right_shift #(
         .IN_WIDTH(DATA_IN_MAN_WIDTH),
         .SHIFT_WIDTH(SHIFT_WIDTH),
         .OUT_WIDTH(DATA_IN_MAN_WIDTH),
@@ -43,13 +43,16 @@ module mxint_hardware_round #(
         .data_out(shift_result)
     );
 
-    always_comb begin
-        if ($signed(shift_value) >=DATA_IN_MAN_FRAC_WIDTH) begin
-            mid_n = mdata_in_0;
-        end else begin
-            mid_n = shift_result;
+    for (genvar i = 0; i < BLOCK_SIZE; i++) begin
+        always_comb begin
+            if ($signed(shift_value) >=DATA_IN_MAN_FRAC_WIDTH) begin
+                    mid_n[i] = (mdata_in_0[i][DATA_IN_MAN_WIDTH - 1]) ? -1 : 0;
+            end else begin
+                mid_n[i] = shift_result[i];
+            end
         end
     end
+
     logic [DATA_OUT_WIDTH - 1:0] clamped_n [BLOCK_SIZE - 1:0];
     for (genvar i = 0; i < BLOCK_SIZE; i++) begin
         signed_clamp #(

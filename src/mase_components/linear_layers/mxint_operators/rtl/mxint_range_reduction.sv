@@ -145,7 +145,7 @@ module mxint_range_reduction #(
         .data_out_valid(regi_r_in_valid),
         .data_out_ready(regi_r_in_ready)
     );
-    optimized_variable_right_shift #(
+    optimized_right_shift #(
         .IN_WIDTH(DATA_IN_MAN_WIDTH),
         .SHIFT_WIDTH(SHIFT_WIDTH),
         .OUT_WIDTH(DATA_LN_2_MAN_WIDTH),

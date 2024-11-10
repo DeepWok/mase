@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module unpacked_mx_split2_with_data #(
     parameter DEPTH = 8,
     parameter MAN_WIDTH = 8,

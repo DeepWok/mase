@@ -126,7 +126,7 @@ module mxint_cast #(
       .in_data (edata_out_full),
       .out_data(edata_out)
   );
-  optimized_variable_shift #(
+  optimized_right_shift #(
       .IN_WIDTH(IN_MAN_WIDTH),
       .SHIFT_WIDTH(SHIFT_WIDTH),
       .OUT_WIDTH(OUT_MAN_WIDTH),

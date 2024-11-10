@@ -7,7 +7,7 @@ Description :
   if left shift exceeding output range,
   it will automatically clamp into maximum;
 */
-module optimized_variable_right_shift #(
+module optimized_right_shift #(
     parameter IN_WIDTH = -1,
     parameter BLOCK_SIZE = -1,
     parameter SHIFT_WIDTH = -1,

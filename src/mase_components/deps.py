@@ -274,6 +274,13 @@ MASE_HW_DEPS = {
         "memory",
         "cast",
     ],
+    "linear_layers/mxint_operators/mxint_softmax": [
+        "linear_layers/mxint_operators",
+        "common",
+        "memory",
+        "cast",
+        "scalar_operators/fixed",
+    ],
     "linear_layers/mxint_operators/mxint_linear": [
         "linear_layers/mxint_operators",
         "linear_layers/fixed_operators",

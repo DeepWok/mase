@@ -48,6 +48,9 @@ def doubletofx(data_width: int, f_width: int, num: float, type="hex"):
     intbits = BitArray(int=intnum, length=data_width)
     return str(intbits.bin) if type == "bin" else str(intbits)
 
+def inttobit(data_width:int, num: float, signed: bool = True):
+    intbits = BitArray(int=num, length=data_width) if signed else BitArray(uint=num, length=data_width)
+    return intbits
 
 def generate_lookup(data_width: int, f_width: int, function: str, type="hex"):
     f = FUNCTION_TABLE[function]
@@ -294,6 +297,86 @@ module {function}_lut{end} #(
 
     print(f"SystemVerilog module generated and saved as {file_path}.")
 
+
+def inttobit(data_width:int, num: float, signed: bool = True):
+    intbits = BitArray(int=num, length=data_width) if signed else BitArray(uint=num, length=data_width)
+    return intbits
+class GenerateSVLut:
+    def __init__(self, function_name, parameter, path):
+        assert (
+            function_name in FUNCTION_TABLE
+        ), f"Function {function_name} not found in FUNCTION_TABLE"
+        self.f = FUNCTION_TABLE[function_name]
+        self.parameter = parameter
+        self.path = path
+    def quant_profile(self, bin_in):
+        bin_out = bin_in
+        return bin_out
+
+    def generate_lut_address(self):
+        return NotImplementedError
+
+    def generate_lut(self, lut_address: list):
+        lut = {}
+        for i in lut_address:
+            bin_out = self.quant_profile(i)
+            lut[i] = bin_out
+        return lut
+
+    def generate_sv(self,lut):
+        self.generate_lut()
+        return NotImplementedError
+
+    def pipeline(self):
+        lut_address = self.generate_lut_address(self)
+        lut = self.generate_lut(lut_address)
+        sv = self.generate_sv(lut)
+
+from mase_components.linear_layers.mxint_operators.test.utils import mxint_quantize
+class GenerateMxIntSVLut(GenerateSVLut):
+    def quant_profile(self, bin_in):
+        in_man_width, in_exp_width, out_man_width, out_exp_width = self.parameter["in_man_width"], self.parameter["in_exp_width"], self.parameter["out_man_width"], self.parameter["out_exp_width"]
+        _bin = BitArray(bin=bin_in)
+        exp_int = _bin[0:in_exp_width].int
+        man_int = _bin[in_exp_width:in_man_width + in_exp_width].int
+        value = man_int / 2**(in_man_width - 1) * 2**(exp_int)
+        exp_value = self.f(torch.tensor(value))
+        quant_value, mx, ex = mxint_quantize(exp_value,out_man_width,out_exp_width)
+        exp_bit = inttobit(out_exp_width, num=ex).bin 
+        man_bit = inttobit(out_man_width, num=mx).bin 
+        bin_out = exp_bit + man_bit
+        return bin_out
+    def generate_lut_address(self):
+        in_man_width, in_exp_width, out_man_width, out_exp_width = self.parameter["in_man_width"], self.parameter["in_exp_width"], self.parameter["out_man_width"], self.parameter["out_exp_width"]
+        # we can determine the upperbound of exp
+        from math import log
+        upperbound_of_mx_output = (2**(out_man_width - 1) - 1) / 2**(out_man_width - 1) * 2**(2**(out_exp_width - 1) - 1)
+        lowerbound_of_mx_output = (1) / 2**(out_man_width - 1) * 2**(-2**(out_exp_width - 1))
+        positive_max_bound = log(upperbound_of_mx_output)
+        negetive_max_bound = log(lowerbound_of_mx_output)
+        # when input> max_bound or input < lower_boud, we actually dont need to represent them
+        max_exp = torch.tensor(max(abs(positive_max_bound), abs(negetive_max_bound)))
+        _, _, max_exp = mxint_quantize(max_exp)
+
+        # actually, we also don't have that much precision to represent the data around 1(exp(0))
+        # so the limitation at data around 0 can determine the minimum value of exp.
+        # so we got two value in the left side or in the right side
+        _left = (2**(out_man_width - 1) - 1) / 2**(out_man_width - 1)
+        _right = (1*2**(out_man_width - 2) + 1) / 2**(out_man_width - 1) * 2**(1)
+        # we need to find a way to rounding them, divide the gap by two, so when it's smaller than this value, we can actually think, it's 0 
+        _left = 1 - (1 - _left)/2
+        _right = 1 + (_right - 1)/2
+        positive_min_bound = log(_left)
+        negetive_min_bound = log(_right)
+        min_exp = torch.tensor(min(abs(positive_min_bound), abs(negetive_min_bound)))
+        _, _, min_exp = mxint_quantize(min_exp)
+        address = []
+        for i in range(int(min_exp), int(max_exp+in_man_width)):
+            for j in range(2**in_man_width):
+                exp_bin = inttobit(in_exp_width,i).bin
+                man_bin = inttobit(in_man_width,j, signed=False).bin
+                address += [str(exp_bin) + str(man_bin)]
+        return address
 
 def generate_sv_lut(
     function_name,
