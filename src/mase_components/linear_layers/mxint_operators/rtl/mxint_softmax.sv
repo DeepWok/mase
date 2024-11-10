@@ -49,15 +49,16 @@ module mxint_softmax #(
 
   localparam ACC_WIDTH = $clog2(IN_0_DEPTH) + DATA_EXP_0_PRECISION_0;
 
-  localparam BLOCK_SIZE = DATA_IN_0_PARALLELISM; 
+  localparam BLOCK_SIZE = DATA_IN_0_PARALLELISM;
   initial begin
-    assert (BLOCK_SIZE == 1) else $fatal("Currently only BLOCK_SIZE of 1 is supported.");
+    assert (BLOCK_SIZE == 1)
+    else $fatal("Currently only BLOCK_SIZE of 1 is supported.");
   end
 
   // Range reduction and exp signals
   // data_out_r - fixed point representation
   // data_out_n - integer representation
-  logic [DATA_R_PRECISION_0-1:0] data_out_r [BLOCK_SIZE - 1:0];
+  logic [DATA_R_PRECISION_0-1:0] data_out_r[BLOCK_SIZE - 1:0];
   logic data_out_r_valid, data_out_r_ready;
   logic [DATA_N_PRECISION_0-1:0] data_out_n[BLOCK_SIZE - 1:0];
   logic data_out_n_valid, data_out_n_ready;
@@ -74,7 +75,7 @@ module mxint_softmax #(
   logic [DATA_EXP_0_PRECISION_0-1:0] ff_exp_mdata_out[DATA_IN_0_PARALLELISM-1:0];
   logic [DATA_N_PRECISION_0-1:0] ff_exp_edata_out;
   logic ff_exp_data_valid, ff_exp_data_ready;
-  
+
   // Straight path signals
   logic [DATA_EXP_0_PRECISION_0-1:0] straight_exp_mdata_out[DATA_IN_0_PARALLELISM-1:0];
   logic [DATA_N_PRECISION_0-1:0] straight_exp_edata_out;
@@ -160,8 +161,8 @@ module mxint_softmax #(
 
   // After fixed_taylor_exp instance, add join2
   join2 #() join_exp_n (
-      .data_in_valid({taylor_exp_valid, data_out_n_valid}),
-      .data_in_ready({taylor_exp_ready, data_out_n_ready}),
+      .data_in_valid ({taylor_exp_valid, data_out_n_valid}),
+      .data_in_ready ({taylor_exp_ready, data_out_n_ready}),
       .data_out_valid(mxint_exp_valid),
       .data_out_ready(mxint_exp_ready)
   );
@@ -169,7 +170,7 @@ module mxint_softmax #(
   assign mxint_eexp = data_out_n[0];
 
   unpacked_mx_split2_with_data #(
-      .DEPTH(DATA_IN_0_DIM*2),
+      .DEPTH(DATA_IN_0_DIM * 2),
       .MAN_WIDTH(DATA_EXP_0_PRECISION_0),
       .EXP_WIDTH(DATA_N_PRECISION_0),
       .IN_SIZE(DATA_IN_0_PARALLELISM)
@@ -247,7 +248,7 @@ module mxint_softmax #(
       .data_in_valid(circ_data_out_valid),
       .data_in_ready(circ_data_out_ready),
       // FIFO output path (not used)
-      .fifo_mdata_out(circ_mdata_out_ff),  
+      .fifo_mdata_out(circ_mdata_out_ff),
       .fifo_edata_out(),
       .fifo_data_out_valid(circ_mdata_valid),
       .fifo_data_out_ready(circ_mdata_ready),
@@ -259,10 +260,9 @@ module mxint_softmax #(
   );
 
   // Add split2 for ff_exp outputs
-  split2 #(
-  ) split2_ff_exp (
-      .data_in_valid(ff_exp_data_valid),
-      .data_in_ready(ff_exp_data_ready),
+  split2 #() split2_ff_exp (
+      .data_in_valid (ff_exp_data_valid),
+      .data_in_ready (ff_exp_data_ready),
       .data_out_valid({ff_exp_mdata_valid, ff_exp_edata_valid}),
       .data_out_ready({ff_exp_mdata_ready, ff_exp_edata_ready})
   );
@@ -324,8 +324,8 @@ module mxint_softmax #(
   assign equotient_data = $signed(ff_exp_edata_skid) - $signed(circ_edata_out_straight);
   // Update join2 connection to use skid buffer output
   join2 #() join_equotient_2 (
-      .data_in_valid({ff_exp_edata_skid_valid, circ_edata_valid}),
-      .data_in_ready({ff_exp_edata_skid_ready, circ_edata_ready}),
+      .data_in_valid ({ff_exp_edata_skid_valid, circ_edata_valid}),
+      .data_in_ready ({ff_exp_edata_skid_ready, circ_edata_ready}),
       .data_out_valid(equotient_data_valid),
       .data_out_ready(equotient_data_ready)
   );
@@ -349,10 +349,9 @@ module mxint_softmax #(
 
   // Add join2 to combine quotient data paths
 
-  join2 #(
-  ) join_quotient (
-      .data_in_valid({ff_equotient_valid, mquotient_data_valid}),
-      .data_in_ready({ff_equotient_ready, mquotient_data_ready}),
+  join2 #() join_quotient (
+      .data_in_valid ({ff_equotient_valid, mquotient_data_valid}),
+      .data_in_ready ({ff_equotient_ready, mquotient_data_ready}),
       .data_out_valid(quotient_joined_valid),
       .data_out_ready(quotient_joined_ready)
   );

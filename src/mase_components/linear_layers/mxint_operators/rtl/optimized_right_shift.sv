@@ -19,7 +19,7 @@ module optimized_right_shift #(
 );
   localparam SHIFT_DATA_WIDTH = IN_WIDTH + OUT_WIDTH - 1; // The maximum left shift value is out_width - 1
 
-  localparam logic signed [OUT_WIDTH-1:0] MIN_VAL = -(2 ** (OUT_WIDTH-1));
+  localparam logic signed [OUT_WIDTH-1:0] MIN_VAL = -(2 ** (OUT_WIDTH - 1));
   localparam logic signed [OUT_WIDTH-1:0] MAX_VAL = (2 ** (OUT_WIDTH - 1)) - 1;
 
   logic [SHIFT_WIDTH - 1:0] abs_shift_value, real_shift_value;
@@ -27,31 +27,28 @@ module optimized_right_shift #(
 
   logic [SHIFT_DATA_WIDTH - 1:0] shift_data_list[BLOCK_SIZE - 1:0][SHIFT_DATA_WIDTH -1 : 0];
 
-  logic [OUT_WIDTH - 1:0]clamped_out [BLOCK_SIZE - 1:0];
+  logic [OUT_WIDTH - 1:0] clamped_out[BLOCK_SIZE - 1:0];
 
   enum {
     SHIFT_OUT_RANGE,
     SHIFT_IN_RANGE
   } mode;
 
-  assign shift_sign = shift_value[SHIFT_WIDTH - 1];
+  assign shift_sign = shift_value[SHIFT_WIDTH-1];
 
   assign abs_shift_value = (shift_sign) ? (~shift_value + 1) : shift_value;
-  assign real_shift_value = (abs_shift_value < OUT_WIDTH - 1)? abs_shift_value: OUT_WIDTH - 1;
+  assign real_shift_value = (abs_shift_value < OUT_WIDTH - 1) ? abs_shift_value : OUT_WIDTH - 1;
 
   // There is several things need to be considered
   always_comb begin
-    if((abs_shift_value>=OUT_WIDTH)&&(shift_sign))
-      mode = SHIFT_OUT_RANGE;
-    else
-      mode = SHIFT_IN_RANGE;
+    if ((abs_shift_value >= OUT_WIDTH) && (shift_sign)) mode = SHIFT_OUT_RANGE;
+    else mode = SHIFT_IN_RANGE;
   end
 
   for (genvar i = 0; i < BLOCK_SIZE; i++) begin
     for (genvar j = 0; j < OUT_WIDTH - 1; j++) begin
       always_comb begin
-        shift_data_list[i][j] = (shift_value[SHIFT_WIDTH-1]) ? 
-            $signed(data_in[i]) <<< j :
+        shift_data_list[i][j] = (shift_value[SHIFT_WIDTH-1]) ? $signed(data_in[i]) <<< j :
             $signed(data_in[i]) >>> j;
       end
     end
@@ -66,18 +63,14 @@ module optimized_right_shift #(
     );
   end
 
-  for( genvar i =0; i < BLOCK_SIZE; i++) begin
+  for (genvar i = 0; i < BLOCK_SIZE; i++) begin
     always_comb begin
-      if(data_in[i]==0)
-        data_out[i] =0;
+      if (data_in[i] == 0) data_out[i] = 0;
       else
         case (mode)
-          SHIFT_OUT_RANGE:
-            data_out[i]=(data_in[i][IN_WIDTH-1])?MIN_VAL:MAX_VAL;
-          SHIFT_IN_RANGE:
-            data_out[i]=clamped_out[i];
-          default:
-            data_out[i]=clamped_out[i];
+          SHIFT_OUT_RANGE: data_out[i] = (data_in[i][IN_WIDTH-1]) ? MIN_VAL : MAX_VAL;
+          SHIFT_IN_RANGE: data_out[i] = clamped_out[i];
+          default: data_out[i] = clamped_out[i];
         endcase
     end
   end
