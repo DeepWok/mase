@@ -142,6 +142,6 @@ if __name__ == "__main__":
                 "IN_SIZE": 4,
             },
         ],
-        sim="questa",
+        # sim="questa",
         # gui=True
     )

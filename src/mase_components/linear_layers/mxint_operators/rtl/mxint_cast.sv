@@ -54,8 +54,8 @@ module mxint_cast #(
   // in order to avoid shift loss, we set the shift_data_width = OUT_MAN_WIDTH + 1.
   localparam SHIFT_DATA_WIDTH = OUT_MAN_WIDTH + 1;
 
-  logic [SHIFT_DATA_WIDTH - 1:0] shift_buffer_data_for_out [BLOCK_SIZE - 1:0];
-  logic [SHIFT_DATA_WIDTH - 1:0] shift_data [BLOCK_SIZE - 1:0][SHIFT_DATA_WIDTH - 1:0];
+  logic [SHIFT_DATA_WIDTH - 1:0] shift_buffer_data_for_out[BLOCK_SIZE - 1:0];
+  logic [SHIFT_DATA_WIDTH - 1:0] shift_data[BLOCK_SIZE - 1:0][SHIFT_DATA_WIDTH - 1:0];
   logic [$clog2(SHIFT_DATA_WIDTH) - 1:0] real_shift_value;
   log2_max_abs #(
       .IN_SIZE (BLOCK_SIZE),
@@ -126,46 +126,19 @@ module mxint_cast #(
       .in_data (edata_out_full),
       .out_data(edata_out)
   );
-  optimized_variable_shift #(
-    .IN_WIDTH(IN_MAN_WIDTH),
-    .SHIFT_WIDTH(SHIFT_WIDTH),
-    .OUT_WIDTH(OUT_MAN_WIDTH),
-    .BLOCK_SIZE(BLOCK_SIZE)
-  ) ovshift_inst(
-    .data_in(mbuffer_data_for_out),
-    .shift_value(shift_value),
-    .data_out(mdata_out)
+  optimized_right_shift #(
+      .IN_WIDTH(IN_MAN_WIDTH),
+      .SHIFT_WIDTH(SHIFT_WIDTH),
+      .OUT_WIDTH(OUT_MAN_WIDTH),
+      .BLOCK_SIZE(BLOCK_SIZE)
+  ) ovshift_inst (
+      .data_in(mbuffer_data_for_out),
+      .shift_value(shift_value),
+      .data_out(mdata_out)
   );
-  assign shift_value = $signed(edata_out) - $signed(ebuffer_data_for_out) + IN_MAN_FRAC_WIDTH - (OUT_MAN_WIDTH - 1);
-//   assign abs_shift_value = (shift_value[SHIFT_WIDTH-1]) ? (~shift_value + 1) : shift_value;
-//   assign real_shift_value = (abs_shift_value < SHIFT_DATA_WIDTH)? abs_shift_value: SHIFT_DATA_WIDTH - 1;
-
-//   for (genvar i = 0; i < BLOCK_SIZE; i++) begin
-//     for (genvar j = 0; j < SHIFT_DATA_WIDTH; j++) begin
-//       always_comb begin
-//         shift_data[i][j] = (shift_value[SHIFT_WIDTH-1]) ? $signed(
-//             mbuffer_data_for_out[i]
-//         ) <<< j : $signed(
-//             mbuffer_data_for_out[i]
-//         ) >>> j;
-//       end
-//     end
-//     assign shift_buffer_data_for_out[i] = shift_data[i][real_shift_value];
-//   end
-//   for (genvar i = 0; i < BLOCK_SIZE; i++) begin
-//     signed_clamp #(
-//         .IN_WIDTH (OUT_MAN_WIDTH + 1),
-//         .OUT_WIDTH(OUT_MAN_WIDTH)
-//     ) exp_clamp (
-//         .in_data (shift_buffer_data_for_out[i]),
-//         .out_data(mdata_out[i])
-//     );
-//   end
+  assign shift_value = $signed(
+      edata_out
+  ) - $signed(
+      ebuffer_data_for_out
+  ) + IN_MAN_FRAC_WIDTH - (OUT_MAN_WIDTH - 1);
 endmodule
-// function int max(input int x, y, z);
-//   begin
-//     if (x > y && x > z) max = x;
-//     else if (y > z) max = y;
-//     else max = z;
-//   end
-// endfunction

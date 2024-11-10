@@ -6,7 +6,7 @@ import pytest
 import torch
 import logging
 from functools import partial
-from src.mase_components.helper import generate_memory
+from mase_components.helper import generate_memory
 from pathlib import Path
 import cocotb
 from cocotb.log import SimLog
@@ -182,6 +182,7 @@ def test_fixed_softmax_smoke():
         module_param_list=[
             get_fixed_softmax_config(),
         ],
+        # sim="questa",
         # skip_build=True,
     )
 

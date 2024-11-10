@@ -254,7 +254,7 @@ module mxint_linear #(
         .data_out_valid(cast_data_out_0_valid),
         .data_out_ready(cast_data_out_0_ready)
     );
-    assign exp_difference =  - ($signed(
+    assign exp_difference = -($signed(
         circular_ebias
     ) - $signed(
         acc_edata_out
@@ -265,7 +265,7 @@ module mxint_linear #(
         .SHIFT_WIDTH(FDP_EXP_WIDTH),
         .OUT_WIDTH(LOSSLESS_OUT_WIDTH),
         .BLOCK_SIZE(DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1)
-    ) ovshift_inst(
+    ) ovshift_inst (
         .data_in(mbias_sext),
         .shift_value(exp_difference),
         .data_out(shifted_mbias)

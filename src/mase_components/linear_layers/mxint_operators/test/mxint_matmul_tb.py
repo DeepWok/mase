@@ -313,7 +313,7 @@ def test_matmul():
         ],
         trace=True,
         jobs=12,
-        sim="questa",
+        # sim="questa",
     )
 
 

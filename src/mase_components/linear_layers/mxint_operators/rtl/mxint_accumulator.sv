@@ -11,8 +11,8 @@ module mxint_accumulator #(
     parameter DATA_IN_0_PRECISION_1 = 8,
     parameter BLOCK_SIZE = 4,
     parameter IN_DEPTH = 2,
-    parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0 + $clog2(IN_DEPTH),
-    parameter DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1
+    localparam DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0 + $clog2(IN_DEPTH),
+    localparam DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1
 ) (
     input logic clk,
     input logic rst,
@@ -74,17 +74,18 @@ module mxint_accumulator #(
   end
 
   for (genvar i = 0; i < BLOCK_SIZE; i++) begin : optimize_variable_shift
-    for (genvar j=0; j< DATA_IN_0_PRECISION_0; j++) begin: data_in_shift
+    for (genvar j = 0; j < DATA_IN_0_PRECISION_0; j++) begin : data_in_shift
       always_comb begin
-        shifted_mdata_in_list[i][j] = no_value_in_register ? $signed(mdata_in_0[i]) : $signed(mdata_in_0[i]) >>> j;
+        shifted_mdata_in_list[i][j] = no_value_in_register ? $signed(mdata_in_0[i]) :
+            $signed(mdata_in_0[i]) >>> j;
       end
     end
-    for (genvar k=0; k< DATA_OUT_0_PRECISION_0; k++) begin: data_out_shift
+    for (genvar k = 0; k < DATA_OUT_0_PRECISION_0; k++) begin : data_out_shift
       always_comb begin
         shifted_mdata_out_list[i][k] = $signed(mdata_out_0[i]) >>> k;
       end
     end
-    assign shifted_mdata_in_0[i] = shifted_mdata_in_list[i][mdata_in_real_shift_value];
+    assign shifted_mdata_in_0[i]  = shifted_mdata_in_list[i][mdata_in_real_shift_value];
     assign shifted_mdata_out_0[i] = shifted_mdata_out_list[i][mdata_out_real_shift_value];
   end
 

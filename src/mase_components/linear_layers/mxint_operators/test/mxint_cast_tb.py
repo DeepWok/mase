@@ -91,7 +91,7 @@ class MxIntCastTB(Testbench):
 
 @cocotb.test()
 async def test(dut):
-    cocotb.start_soon(check_signal(dut))
+    # cocotb.start_soon(check_signal(dut))
     tb = MxIntCastTB(dut, num=1)
     await tb.run_test()
 
@@ -163,6 +163,6 @@ if __name__ == "__main__":
             #     "BLOCK_SIZE": 4,
             # },
         ],
-        sim="questa",
+        # sim="questa",
         # gui=True
     )

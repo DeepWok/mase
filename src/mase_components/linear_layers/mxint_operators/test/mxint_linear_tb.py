@@ -202,16 +202,21 @@ async def check_signal(dut):
     while True:
         await RisingEdge(dut.clk)
         await ReadOnly()
-        if dut.cast_data_out_0_valid.value == 1 and dut.cast_data_out_0_ready.value == 1:
+        if (
+            dut.cast_data_out_0_valid.value == 1
+            and dut.cast_data_out_0_ready.value == 1
+        ):
             shift = dut.bias_cast.ovshift_inst
             print(shift.SHIFT_WIDTH.value)
             print(shift.OUT_WIDTH.value)
             print(shift.shift_value.value.signed_integer)
             print(shift.abs_shift_value.value.signed_integer)
-            print("data_in = ",[x.signed_integer for x in shift.data_in.value])
-            print("data_out = ",[x.signed_integer for x in shift.data_out.value])
+            print("data_in = ", [x.signed_integer for x in shift.data_in.value])
+            print("data_out = ", [x.signed_integer for x in shift.data_out.value])
         #     print("edata_out = ",dut.acc_edata_out.value.signed_integer)
         # print("end")
+
+
 def get_fixed_linear_config(kwargs={}):
     # if pretranspose
     #   weight1 = in0
@@ -279,7 +284,7 @@ def test_fixed_linear_smoke():
             #     },
             # ),
         ],
-        sim="questa",
+        # sim="questa",
         # gui=True,
     )
 
