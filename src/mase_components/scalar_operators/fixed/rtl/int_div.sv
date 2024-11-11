@@ -18,15 +18,14 @@ module int_div #(
     output logic quotient_data_valid,
     input logic quotient_data_ready
 );
-  join2 #(
-  ) join2_inst (
-      .data_in_valid({dividend_data_valid, divisor_data_valid}),
-      .data_in_ready({dividend_data_ready, divisor_data_ready}),
+  join2 #() join2_inst (
+      .data_in_valid ({dividend_data_valid, divisor_data_valid}),
+      .data_in_ready ({dividend_data_ready, divisor_data_ready}),
       .data_out_valid(quotient_data_valid),
       .data_out_ready(quotient_data_ready)
   );
-  
-  for(genvar i = 0; i< IN_NUM; i++) begin 
+
+  for (genvar i = 0; i < IN_NUM; i++) begin
     assign quotient_data[i] = dividend_data[i] / divisor_data[i];
   end
 
