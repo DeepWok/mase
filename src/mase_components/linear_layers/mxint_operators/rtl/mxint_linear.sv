@@ -176,6 +176,12 @@ module mxint_linear #(
   logic [LOSSLESS_OUT_WIDTH-1:0] cast_mdata_out_0[DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0-1:0];
   logic [LOSSLESS_OUT_EXP_WIDTH-1:0] cast_edata_out_0;
   logic cast_data_out_0_valid, cast_data_out_0_ready;
+
+  // Add signals for FIFO
+  logic [LOSSLESS_OUT_WIDTH-1:0] fifo_mdata_out[DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0-1:0];
+  logic [LOSSLESS_OUT_EXP_WIDTH-1:0] fifo_edata_out;
+  logic fifo_data_out_valid, fifo_data_out_ready;
+
   // There are WEIGHT_PARALLELISM_DIM_0 number of dot product instances with DATA_IN_0_TENSOR_SIZE_DIM_0 inputs
   // and each one computes for IN_0_DEPTH iterations for each inputs.
   for (genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_1; i = i + 1) begin : out_dim_1
@@ -224,9 +230,7 @@ module mxint_linear #(
       .DATA_IN_0_PRECISION_0(FDP_WIDTH),
       .DATA_IN_0_PRECISION_1(FDP_EXP_WIDTH),
       .IN_DEPTH(IN_0_DEPTH_DIM_0),
-      .BLOCK_SIZE(DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0),
-      .DATA_OUT_0_PRECISION_0(ACC_WIDTH),
-      .DATA_OUT_0_PRECISION_1(FDP_EXP_WIDTH)
+      .BLOCK_SIZE(DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0)
   ) accumulator_inst (
       .clk(clk),
       .rst(rst),
@@ -281,6 +285,27 @@ module mxint_linear #(
     assign cast_edata_out_0 = acc_edata_out;
     assign circular_bias_ready = 1;
   end
+
+  // Replace skid buffer with unpacked_mx_fifo
+  unpacked_mx_fifo #(
+    .MAN_WIDTH(LOSSLESS_OUT_WIDTH),
+    .EXP_WIDTH(LOSSLESS_OUT_EXP_WIDTH), 
+    .IN_SIZE(DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0),
+    .DEPTH(2)  // Minimum depth for breaking timing path
+  ) cast_fifo (
+    .clk(clk),
+    .rst(rst),
+    .mdata_in(cast_mdata_out_0),
+    .edata_in(cast_edata_out_0),
+    .data_in_valid(cast_data_out_0_valid),
+    .data_in_ready(cast_data_out_0_ready),
+    .mdata_out(fifo_mdata_out),
+    .edata_out(fifo_edata_out),
+    .data_out_valid(fifo_data_out_valid),
+    .data_out_ready(fifo_data_out_ready)
+  );
+
+  // Update cast instance to use FIFO outputs
   mxint_cast #(
       .IN_MAN_WIDTH(LOSSLESS_OUT_WIDTH),
       .IN_MAN_FRAC_WIDTH(DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 - 2),
@@ -289,12 +314,12 @@ module mxint_linear #(
       .OUT_EXP_WIDTH(DATA_OUT_0_PRECISION_1),
       .BLOCK_SIZE(DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0)
   ) cast_i (
-      .clk,
-      .rst,
-      .mdata_in(cast_mdata_out_0),
-      .edata_in(cast_edata_out_0),
-      .data_in_valid(cast_data_out_0_valid),
-      .data_in_ready(cast_data_out_0_ready),
+      .clk(clk),
+      .rst(rst),
+      .mdata_in(fifo_mdata_out),  // Changed from skid_mdata_out
+      .edata_in(fifo_edata_out),  // Changed from skid_edata_out 
+      .data_in_valid(fifo_data_out_valid),  // Changed from skid_data_out_valid
+      .data_in_ready(fifo_data_out_ready),  // Changed from skid_data_out_ready
       .mdata_out(mdata_out_0),
       .edata_out(edata_out_0),
       .data_out_valid(data_out_0_valid),

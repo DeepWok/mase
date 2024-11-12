@@ -633,3 +633,70 @@ def MxIntAccumulator(man, exp):
         mout = mout + shifted_man
 
     return mout, out_exp
+
+def quantized_range_reduction(mx, ex, in_man_width, data_out_n_width):
+    """Vectorized range reduction"""
+    def hardware_round(mx, ex, in_man_frac_width, data_out_width):
+        round_max = 2**(data_out_width-1) - 1
+        round_min = -2**(data_out_width-1)
+        round_x = mx.reshape(-1) // 2**((in_man_frac_width-ex).reshape(-1))
+        return torch.clamp(round_x, round_min, round_max)
+    coefficient_quant_block = partial(
+        mxint_quantize, 
+        width=8,
+        exponent_width=4)
+    _, mlog2_e, elog2_e = coefficient_quant_block(torch.log2(torch.tensor(math.e)))
+    _, mln_2, eln_2 = coefficient_quant_block(torch.log(torch.tensor(2.0)))
+    n = hardware_round(mx * mlog2_e, ex + elog2_e, (in_man_width - 1 + 7), data_out_n_width)
+    print(n)
+    _mx = n * mln_2
+    _ex = eln_2
+    shifted_mx = mx // 2**(_ex - ex + (in_man_width - 1) - 7)
+    print(shifted_mx)
+    print(_ex - ex + (in_man_width - 1) - 7)
+    mr = shifted_mx - _mx
+    # return mr as an fixedpoint ?.7 we can make it 2.7
+    # return n as an integer number with width = data_out_width
+    return mr, n
+
+def fixed_exp(fr):
+    frac_width = 7
+    exp = 1*2**(frac_width) + fr + fr**2//2**(frac_width + 1) + fr**3*5//2**(frac_width + 4)
+    return exp
+    
+
+    
+def mxint_softmax(x, q_config):
+    # fixed_r, integer_n
+    in_man_width = q_config["in_man_width"]
+    in_exp_width = q_config["in_exp_width"]
+    data_out_n_width = q_config["data_out_n_width"]
+    data_out_man_width = q_config["data_out_man_width"]
+    data_out_frac_width = data_out_man_width - 1
+    data_out_exp_width = q_config["data_out_exp_width"]
+
+    shape = x.shape[0]
+    mout = torch.zeros_like(x)
+    eout = torch.zeros_like(x)
+
+    list_of_mexps = [] 
+    list_of_eexps = [] 
+    for i in range(shape):
+        _, mx, ex = mxint_quantize(x[i], in_man_width, in_exp_width)
+        fixed_r, integer_n = quantized_range_reduction(mx, ex, in_man_width, data_out_n_width)
+        # fixed_r will be 2.7 bits, integer_n will be data_out_n_width bits
+        mexp = fixed_exp(fixed_r)
+        eexp = integer_n
+        # currently we got mexp ?.7 bits, integer_n data_out_n_width bits
+        list_of_mexps.append(mexp)
+        list_of_eexps.append(eexp)
+    eexps = torch.stack(list_of_eexps)
+    mexps = torch.stack(list_of_mexps)
+    m_sum, e_sum = MxIntAccumulator(torch.stack(list_of_mexps), torch.stack(list_of_eexps))
+    extended_mexps = mexps * 2**(data_out_frac_width)
+    pre_cast_mout = extended_mexps // mexps
+    pre_cast_eout = eexps - e_sum
+    pre_cast_out = pre_cast_mout * 2**(pre_cast_eout - 7)
+    for i in range(shape):
+        _, mout[i], eout[i] = mxint_quantize(pre_cast_out[i], data_out_man_width, data_out_exp_width)
+    return mout, eout

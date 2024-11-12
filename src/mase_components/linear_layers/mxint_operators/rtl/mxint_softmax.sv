@@ -121,7 +121,8 @@ module mxint_softmax #(
   logic [DATA_EXP_0_PRECISION_0-1:0] ff_exp_mdata_skid[DATA_IN_0_PARALLELISM-1:0];
   logic ff_exp_mdata_skid_valid, ff_exp_mdata_skid_ready;
 
-  // generate r and n
+  // generate r and n exp(x) = exp(r) * 2^n
+  // ToDO: rescaling
   mxint_range_reduction #(
       .DATA_IN_MAN_WIDTH(DATA_IN_0_PRECISION_0),
       .DATA_IN_EXP_WIDTH(DATA_IN_0_PRECISION_1),
@@ -211,7 +212,11 @@ module mxint_softmax #(
       .data_out_0_valid(acc_data_out_valid),
       .data_out_0_ready(acc_data_out_ready)
   );
-
+    // exp - exp1, exp2
+    // exp1 - acc_1
+    // exp2 - combexp
+    // join acc_1, combexp2
+    // 
   // Replace existing signals
   // Replace input_buffer with mxint_circular
   mxint_circular #(
