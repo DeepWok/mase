@@ -5,7 +5,7 @@ import pytest
 
 @pytest.mark.skip(reason="Needs to be fixed.")
 def test_lint_conv():
-    run_lint("conv")
+    run_lint("convolution_layers")
 
 
 if __name__ == "__main__":

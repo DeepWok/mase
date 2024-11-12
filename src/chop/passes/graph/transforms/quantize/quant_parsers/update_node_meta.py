@@ -9,6 +9,7 @@ def entry_to_list(config: dict, entry: str, suffixes: tuple[str]):
 QUANT_ARITH_TO_SUFFIXES = {
     "integer": ("width", "frac_width"),
     "fixed": ("width", "frac_width"),
+    "integer_floor": ("width", "frac_width"),
     "binary": (
         "width",
         "stochastic",
@@ -69,7 +70,10 @@ MASE_OP_TO_INPUT_ENTRIES_AND_ARGS = {
     "softplus": (("data_in",), ("data_in_0",)),
     "sub": (("data_in", "data_in"), ("data_in_0", "data_in_1")),
     "batch_norm2d": (("data_in", "weight", "bias"), ("data_in_0", "weight", "bias")),
-    "layer_norm": (("data_in",), ("data_in_0",)),
+    "layer_norm": (("data_in", "weight", "bias"), ("data_in_0", "weight", "bias")),
+    "group_norm": (("data_in",), ("data_in_0")),
+    "instance_norm2d": (("data_in",), ("data_in_0")),
+    "rms_norm": (("data_in",), ("data_in_0")),
     "group_norm": (("data_in",), ("data_in_0",)),
     "instance_norm2d": (("data_in",), ("data_in_0",)),
     "rms_norm": (("data_in",), ("data_in_0",)),

@@ -41,6 +41,9 @@ module softermax_lpw_reciprocal #(
   // Parameters
   // -----
 
+  // let max(a, b) = (a > b) ? a : b;
+  // This is not syntheable
+
   localparam ENTRIES_WIDTH = $clog2(ENTRIES);
 
   // Range reduced num: x

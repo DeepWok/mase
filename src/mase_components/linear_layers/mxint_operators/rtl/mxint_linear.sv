@@ -151,7 +151,7 @@ module mxint_linear #(
       DATA_IN_0_PARALLELISM_DIM_0
   );
   localparam FDP_EXP_WIDTH = (WEIGHT_PRECISION_1 > DATA_IN_0_PRECISION_1)? WEIGHT_PRECISION_1 + 1: DATA_IN_0_PRECISION_1 + 1;
-  localparam ACC_WIDTH = FDP_WIDTH + $clog2(IN_0_DEPTH_DIM_0) + 2 ** FDP_EXP_WIDTH;
+  localparam ACC_WIDTH = FDP_WIDTH + $clog2(IN_0_DEPTH_DIM_0);
   localparam ACC_EXP_WIDTH = FDP_EXP_WIDTH;
   localparam LOSSLESS_OUT_WIDTH = ACC_WIDTH + HAS_BIAS;
   localparam LOSSLESS_OUT_EXP_WIDTH = ACC_EXP_WIDTH;
@@ -176,6 +176,12 @@ module mxint_linear #(
   logic [LOSSLESS_OUT_WIDTH-1:0] cast_mdata_out_0[DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0-1:0];
   logic [LOSSLESS_OUT_EXP_WIDTH-1:0] cast_edata_out_0;
   logic cast_data_out_0_valid, cast_data_out_0_ready;
+
+  // Add signals for FIFO
+  logic [LOSSLESS_OUT_WIDTH-1:0] fifo_mdata_out[DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0-1:0];
+  logic [LOSSLESS_OUT_EXP_WIDTH-1:0] fifo_edata_out;
+  logic fifo_data_out_valid, fifo_data_out_ready;
+
   // There are WEIGHT_PARALLELISM_DIM_0 number of dot product instances with DATA_IN_0_TENSOR_SIZE_DIM_0 inputs
   // and each one computes for IN_0_DEPTH iterations for each inputs.
   for (genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_1; i = i + 1) begin : out_dim_1
@@ -196,7 +202,9 @@ module mxint_linear #(
           .DATA_IN_0_PRECISION_1(DATA_IN_0_PRECISION_1),
           .WEIGHT_PRECISION_0(WEIGHT_PRECISION_0),
           .WEIGHT_PRECISION_1(WEIGHT_PRECISION_1),
-          .BLOCK_SIZE(DATA_IN_0_PARALLELISM_DIM_0)
+          .BLOCK_SIZE(DATA_IN_0_PARALLELISM_DIM_0),
+          .DATA_OUT_0_PRECISION_0(FDP_WIDTH),
+          .DATA_OUT_0_PRECISION_1(FDP_EXP_WIDTH)
       ) mxdp_inst (
           .clk(clk),
           .rst(rst),
@@ -250,14 +258,23 @@ module mxint_linear #(
         .data_out_valid(cast_data_out_0_valid),
         .data_out_ready(cast_data_out_0_ready)
     );
-    assign exp_difference = $signed(circular_ebias) - $signed(acc_edata_out);
-    assign abs_shift_value = exp_difference[FDP_EXP_WIDTH - 1]? (~exp_difference + 1): exp_difference;
+    assign exp_difference = -($signed(
+        circular_ebias
+    ) - $signed(
+        acc_edata_out
+    ) + DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 - 2 - (BIAS_PRECISION_0 - 1));
+
+    optimized_right_shift #(
+        .IN_WIDTH(BIAS_PRECISION_0),
+        .SHIFT_WIDTH(FDP_EXP_WIDTH),
+        .OUT_WIDTH(LOSSLESS_OUT_WIDTH),
+        .BLOCK_SIZE(DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1)
+    ) ovshift_inst (
+        .data_in(mbias_sext),
+        .shift_value(exp_difference),
+        .data_out(shifted_mbias)
+    );
     for (genvar m = 0; m < DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1; m++) begin
-      assign shifted_mbias[m] = exp_difference[FDP_EXP_WIDTH-1] ? $signed(
-          mbias_sext[m]
-      ) >>> abs_shift_value : $signed(
-          mbias_sext[m]
-      ) <<< abs_shift_value;
       assign cast_mdata_out_0[m] = $signed(shifted_mbias[m]) + $signed(acc_mdata_out[m]);
     end
     assign cast_edata_out_0 = acc_edata_out;
@@ -266,21 +283,43 @@ module mxint_linear #(
     assign cast_data_out_0_valid = acc_data_out_valid;
     assign cast_mdata_out_0 = acc_mdata_out;
     assign cast_edata_out_0 = acc_edata_out;
-    assign bias_ready = 1;
+    assign circular_bias_ready = 1;
   end
+
+  // Replace skid buffer with unpacked_mx_fifo
+  unpacked_mx_fifo #(
+    .MAN_WIDTH(LOSSLESS_OUT_WIDTH),
+    .EXP_WIDTH(LOSSLESS_OUT_EXP_WIDTH), 
+    .IN_SIZE(DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0),
+    .DEPTH(2)  // Minimum depth for breaking timing path
+  ) cast_fifo (
+    .clk(clk),
+    .rst(rst),
+    .mdata_in(cast_mdata_out_0),
+    .edata_in(cast_edata_out_0),
+    .data_in_valid(cast_data_out_0_valid),
+    .data_in_ready(cast_data_out_0_ready),
+    .mdata_out(fifo_mdata_out),
+    .edata_out(fifo_edata_out),
+    .data_out_valid(fifo_data_out_valid),
+    .data_out_ready(fifo_data_out_ready)
+  );
+
+  // Update cast instance to use FIFO outputs
   mxint_cast #(
       .IN_MAN_WIDTH(LOSSLESS_OUT_WIDTH),
+      .IN_MAN_FRAC_WIDTH(DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 - 2),
       .IN_EXP_WIDTH(LOSSLESS_OUT_EXP_WIDTH),
       .OUT_MAN_WIDTH(DATA_OUT_0_PRECISION_0),
       .OUT_EXP_WIDTH(DATA_OUT_0_PRECISION_1),
       .BLOCK_SIZE(DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0)
   ) cast_i (
-      .clk,
-      .rst,
-      .mdata_in(cast_mdata_out_0),
-      .edata_in(cast_edata_out_0),
-      .data_in_valid(cast_data_out_0_valid),
-      .data_in_ready(cast_data_out_0_ready),
+      .clk(clk),
+      .rst(rst),
+      .mdata_in(fifo_mdata_out),  // Changed from skid_mdata_out
+      .edata_in(fifo_edata_out),  // Changed from skid_edata_out 
+      .data_in_valid(fifo_data_out_valid),  // Changed from skid_data_out_valid
+      .data_in_ready(fifo_data_out_ready),  // Changed from skid_data_out_ready
       .mdata_out(mdata_out_0),
       .edata_out(edata_out_0),
       .data_out_valid(data_out_0_valid),

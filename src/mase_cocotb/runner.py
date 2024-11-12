@@ -65,6 +65,7 @@ def _single_test(
     comp_path: Path,
     test_work_dir: Path,
     sim: str = "verilator",
+    gui: bool = False,
     extra_build_args: list[str] = [],
     seed: int = None,
     trace: bool = False,
@@ -126,6 +127,7 @@ def _single_test(
             seed=seed,
             results_xml="results.xml",
             build_dir=test_work_dir,
+            gui=gui,
         )
         num_tests, fail = get_results(test_work_dir.joinpath("results.xml"))
     except Exception as e:
@@ -144,6 +146,7 @@ def mase_runner(
     group=None,
     module_param_list: list[dict[str, Any]] = [dict()],
     sim: str = "verilator",
+    gui: str = False,
     extra_build_args: list[str] = [],
     seed: int = None,
     jobs: int = 1,
@@ -206,6 +209,7 @@ def mase_runner(
                 comp_path=comp_path,
                 test_work_dir=test_work_dir,
                 sim=sim,
+                gui=gui,
                 extra_build_args=extra_build_args,
                 seed=seed,
                 trace=trace,
@@ -237,6 +241,7 @@ def mase_runner(
                     comp_path=comp_path,
                     test_work_dir=test_work_dir,
                     sim=sim,
+                    gui=gui,
                     extra_build_args=extra_build_args,
                     seed=seed,
                     trace=trace,

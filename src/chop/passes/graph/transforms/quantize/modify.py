@@ -164,7 +164,7 @@ def create_new_module(
         new_module = new_module_cls(config=config)
     elif mase_op == "gelu":
         new_module_cls = quantized_module_map[f"gelu_{quant_name}"]
-        new_module = new_module_cls(inplace=original_module.inplace, config=config)
+        new_module = new_module_cls(config=config)
     elif mase_op == "softsign":
         new_module_cls = quantized_module_map[f"softsign_{quant_name}"]
         new_module = new_module_cls(inplace=original_module.inplace, config=config)
@@ -203,13 +203,17 @@ def create_new_module(
             copy_weights(original_module.bias, new_module.bias)
     elif mase_op == "layer_norm":
         new_module_cls = quantized_module_map[f"layer_norm_{quant_name}"]
+
         new_module = new_module_cls(
             normalized_shape=original_module.normalized_shape,
             eps=original_module.eps,
             elementwise_affine=original_module.elementwise_affine,
-            bias=original_module.bias,
             config=config,
         )
+        if original_module.elementwise_affine:
+            new_module.weight = original_module.weight
+            if original_module.bias is not None:
+                new_module.bias = original_module.bias
     elif mase_op == "group_norm":
         new_module_cls = quantized_module_map[f"group_norm_{quant_name}"]
         new_module = new_module_cls(

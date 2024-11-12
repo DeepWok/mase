@@ -66,6 +66,7 @@ class _LinearBase(torch.nn.Linear):
             x = self.x_quantizer(x)
             w = self.w_quantizer(self.weight)
             bias = self.b_quantizer(self.bias) if self.bias is not None else None
+            print(w)
             out = F.linear(x, w, bias)
             if self.out_quantizer is None:
                 return out
@@ -96,6 +97,11 @@ class LinearInteger(_LinearBase):
         x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
         # check bias quantizer, if not, use weight quantizer
         b_width, b_frac_width = config["bias_width"], config["bias_frac_width"]
+        if config.get("data_out_width") is not None:
+            out_width, out_frac_width = (
+                config["data_out_width"],
+                config["data_out_frac_width"],
+            )
         if out_config is not None:
             out_width, out_frac_width = (
                 out_config["data_out_width"],
@@ -115,6 +121,46 @@ class LinearInteger(_LinearBase):
             self.out_quantizer = partial(
                 base_quantizer, width=out_width, frac_width=out_frac_width
             )
+
+
+class LinearIntegerFloor(_LinearBase):
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        bias: bool = True,
+        device=None,
+        dtype=None,
+        config=None,
+    ) -> None:
+        super().__init__(in_features, out_features, bias, device, dtype)
+        assert config is not None, "config is None!"
+        self.config = config
+        self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
+        # establish quantizer
+        w_width, w_frac_width = config["weight_width"], config["weight_frac_width"]
+        x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
+        # check bias quantizer, if not, use weight quantizer
+        b_width, b_frac_width = config["bias_width"], config["bias_frac_width"]
+        out_width, out_frac_width = (
+            config["data_out_width"],
+            config["data_out_frac_width"],
+        )
+
+        self.w_quantizer = partial(
+            integer_floor_quantizer, width=w_width, frac_width=w_frac_width
+        )
+        self.x_quantizer = partial(
+            integer_floor_quantizer, width=x_width, frac_width=x_frac_width
+        )
+        self.b_quantizer = partial(
+            integer_floor_quantizer, width=b_width, frac_width=b_frac_width
+        )
+        self.out_quantizer = partial(
+            integer_floor_quantizer, width=out_width, frac_width=out_frac_width
+        )
 
 
 class LinearMinifloatDenorm(_LinearBase):
@@ -1026,6 +1072,91 @@ class LinearLogicNets(_LinearBase):
             return self.decode(self.lut_forward(x))
         else:
             return self.math_forward(x)
+
+
+class LinearMxInt(_LinearBase):
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        bias: bool = True,
+        device=None,
+        dtype=None,
+        config=None,
+        out_config=None,
+    ) -> None:
+        super().__init__(in_features, out_features, bias, device, dtype)
+        assert config is not None, "config is None!"
+        self.config = config
+        self.out_config = out_config
+        self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
+        # establish quantizer
+        w_width, w_exponent_width = (
+            config["weight_width"],
+            config["weight_exponent_width"],
+        )
+        w_p1, w_p0 = (
+            config["weight_parallelism"][0],
+            config["weight_parallelism"][1],
+        )
+        x_width, x_exponent_width = (
+            config["data_in_width"],
+            config["data_in_exponent_width"],
+        )
+        x_p1, x_p0 = (
+            config["data_in_parallelism"][0],
+            config["data_in_parallelism"][1],
+        )
+        # check bias quantizer, if not, use weight quantizer
+        b_width, b_exponent_width = config["bias_width"], config["bias_exponent_width"]
+        b_p1, b_p0 = config["bias_parallelism"][0], config["bias_parallelism"][1]
+        base_quantizer = mxint_hardware
+        if out_config is not None:
+            out_width, out_exponent_width = (
+                config["data_out_width"],
+                config["data_out_exponent_width"],
+            )
+            out_p1, out_p0 = (
+                config["data_out_parallelism_dim_1"],
+                config["data_out_parallelism_dim_0"],
+            )
+            self.out_quantizer = partial(
+                base_quantizer,
+                q_config={"width": out_width, "exponent_width": out_exponent_width},
+                parallelism=[out_p1, out_p0],
+            )
+        self.w_quantizer = partial(
+            base_quantizer,
+            q_config={"width": w_width, "exponent_width": w_exponent_width},
+            parallelism=[w_p1, w_p0],
+        )
+        self.x_quantizer = partial(
+            base_quantizer,
+            q_config={"width": x_width, "exponent_width": x_exponent_width},
+            parallelism=[x_p1, x_p0],
+        )
+        self.b_quantizer = partial(
+            base_quantizer,
+            q_config={"width": b_width, "exponent_width": b_exponent_width},
+            parallelism=[b_p1, b_p0],
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        if self.bypass:
+            return F.linear(x, self.weight, self.bias)
+        else:
+            x = self.x_quantizer(x)
+            w = self.w_quantizer(self.weight)
+            if self.bias is not None:
+                bias = self.b_quantizer(self.bias)
+            else:
+                bias = None
+            out = F.linear(x, w, bias)
+            if self.out_quantizer is None:
+                return out
+            return self.out_quantizer(out)
 
 
 class LinearMXIntHardware(_LinearBase):

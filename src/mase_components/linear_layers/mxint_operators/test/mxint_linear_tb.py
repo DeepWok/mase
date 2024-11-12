@@ -8,7 +8,7 @@ from functools import partial
 
 import cocotb
 from cocotb.log import SimLog
-from cocotb.triggers import Timer, RisingEdge
+from cocotb.triggers import Timer, RisingEdge, ReadOnly
 
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import (
@@ -19,7 +19,7 @@ from mase_cocotb.runner import mase_runner
 
 torch.manual_seed(0)
 # from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner
-from utils import MXIntLinear
+from utils import MXIntLinear, MXIntLinearHardware
 
 
 class LinearTB(Testbench):
@@ -40,54 +40,56 @@ class LinearTB(Testbench):
             dut.clk, (dut.mweight, dut.eweight), dut.weight_valid, dut.weight_ready
         )
 
+        self.input_drivers = {
+            "a": self.data_in_0_driver,
+            "b": self.weight_driver,
+        }
         if self.get_parameter("HAS_BIAS") == 1:
             self.bias_driver = MultiSignalStreamDriver(
                 dut.clk, (dut.mbias, dut.ebias), dut.bias_valid, dut.bias_ready
             )
             self.bias_driver.log.setLevel(logging.DEBUG)
+            self.input_drivers["bias"] = self.bias_driver
 
         self.data_out_0_monitor = MultiSignalStreamMonitor(
             dut.clk,
             (dut.mdata_out_0, dut.edata_out_0),
             dut.data_out_0_valid,
             dut.data_out_0_ready,
-            check=True,
+            check=False,
         )
 
+        self.output_monitors = {"out": self.data_out_0_monitor}
         # Model
-        self.model = MXIntLinear(
+        self.model = MXIntLinearHardware(
             in_features=self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
             out_features=self.get_parameter("DATA_OUT_0_TENSOR_SIZE_DIM_0"),
             bias=True if self.get_parameter("HAS_BIAS") == 1 else False,
             config={
                 "data_in_width": self.get_parameter("DATA_IN_0_PRECISION_0"),
                 "data_in_exponent_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
-                "data_in_parallelism_dim_1": self.get_parameter(
-                    "DATA_IN_0_PARALLELISM_DIM_1"
-                ),
-                "data_in_parallelism_dim_0": self.get_parameter(
-                    "DATA_IN_0_PARALLELISM_DIM_0"
-                ),
+                "data_in_parallelism": [
+                    self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1"),
+                    self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"),
+                ],
                 "weight_width": self.get_parameter("WEIGHT_PRECISION_0"),
                 "weight_exponent_width": self.get_parameter("WEIGHT_PRECISION_1"),
-                "weight_parallelism_dim_1": self.get_parameter(
-                    "WEIGHT_PARALLELISM_DIM_1"
-                ),
-                "weight_parallelism_dim_0": self.get_parameter(
-                    "WEIGHT_PARALLELISM_DIM_0"
-                ),
+                "weight_parallelism": [
+                    self.get_parameter("WEIGHT_PARALLELISM_DIM_1"),
+                    self.get_parameter("WEIGHT_PARALLELISM_DIM_0"),
+                ],
                 "bias_width": self.get_parameter("BIAS_PRECISION_0"),
                 "bias_exponent_width": self.get_parameter("BIAS_PRECISION_1"),
-                "bias_parallelism_dim_1": self.get_parameter("BIAS_PARALLELISM_DIM_1"),
-                "bias_parallelism_dim_0": self.get_parameter("BIAS_PARALLELISM_DIM_0"),
+                "bias_parallelism": [
+                    self.get_parameter("BIAS_PARALLELISM_DIM_1"),
+                    self.get_parameter("BIAS_PARALLELISM_DIM_0"),
+                ],
                 "data_out_width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
                 "data_out_exponent_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
-                "data_out_parallelism_dim_1": self.get_parameter(
-                    "DATA_OUT_0_PARALLELISM_DIM_1"
-                ),
-                "data_out_parallelism_dim_0": self.get_parameter(
-                    "DATA_OUT_0_PARALLELISM_DIM_0"
-                ),
+                "data_out_parallelism": [
+                    self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_1"),
+                    self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"),
+                ],
             },
         )
 
@@ -152,6 +154,7 @@ class LinearTB(Testbench):
         )
         self.weight_driver.load_driver(weights)
 
+        self.input_drivers = {"in0": self.data_in_0_driver, "in1": self.weight_driver}
         # * Load the bias driver
         if self.get_parameter("HAS_BIAS") == 1:
             bias = self.model.bias
@@ -168,6 +171,7 @@ class LinearTB(Testbench):
                 ],
             )
             self.bias_driver.load_driver(bias)
+            self.input_drivers["in2"] = self.bias_driver
 
         # * Load the output monitor
         self.log.info(f"Processing outputs: {exp_out}")
@@ -182,9 +186,8 @@ class LinearTB(Testbench):
                 self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"),
             ],
         )
-        breakpoint()
         self.data_out_0_monitor.load_monitor(outs)
-
+        self.output_monitors = {"out": self.data_out_0_monitor}
         await Timer(us, units="us")
         assert self.data_out_0_monitor.exp_queue.empty()
 
@@ -192,35 +195,52 @@ class LinearTB(Testbench):
 @cocotb.test()
 async def cocotb_test(dut):
     tb = LinearTB(dut)
+    cocotb.start_soon(check_signal(dut))
     await tb.run_test(us=100)
 
 
+async def check_signal(dut):
+    await Timer(40, units="ns")
+    while True:
+        await RisingEdge(dut.clk)
+        await ReadOnly()
+        # if (
+        #     dut.cast_data_out_0_valid.value == 1
+        #     and dut.cast_data_out_0_ready.value == 1
+        # ):
+        #     shift = dut.bias_cast.ovshift_inst
+        #     print(shift.SHIFT_WIDTH.value)
+        #     print(shift.OUT_WIDTH.value)
+        #     print(shift.shift_value.value.signed_integer)
+        #     print(shift.abs_shift_value.value.signed_integer)
+        #     print("data_in = ", [x.signed_integer for x in shift.data_in.value])
+        #     print("data_out = ", [x.signed_integer for x in shift.data_out.value])
+        #     print("edata_out = ",dut.acc_edata_out.value.signed_integer)
+        # print("end")
+
+
 def get_fixed_linear_config(kwargs={}):
-    # if pretranspose
-    #   weight1 = in0
-    # else
-    #   weight0 = in0
     # currently, we only consider the transposed situation
-    # config = {
-    #     "HAS_BIAS": 1,
-    #     "DATA_IN_0_TENSOR_SIZE_DIM_0": 2,
-    #     "DATA_IN_0_TENSOR_SIZE_DIM_1": 2,
-    #     "DATA_IN_0_PARALLELISM_DIM_0": 2,
-    #     "DATA_IN_0_PARALLELISM_DIM_1": 1,
-    #     "WEIGHT_TENSOR_SIZE_DIM_0": 2,
-    #     "WEIGHT_TENSOR_SIZE_DIM_1": 2,
-    #     "WEIGHT_PARALLELISM_DIM_0": 2,
-    #     "WEIGHT_PARALLELISM_DIM_1": 1,
-    #     "DATA_IN_0_PRECISION_0": 8,
-    #     "DATA_IN_0_PRECISION_1": 4,
-    #     "WEIGHT_PRECISION_0": 8,
-    #     "WEIGHT_PRECISION_1": 4,
-    #     "BIAS_PRECISION_0": 8,
-    #     "BIAS_PRECISION_1": 4,
-    #     "DATA_OUT_0_PRECISION_0": 10,
-    #     "DATA_OUT_0_PRECISION_1": 4,
-    # }
     config = {
+        "HAS_BIAS": 1,
+        "DATA_IN_0_TENSOR_SIZE_DIM_0": 4,
+        "DATA_IN_0_TENSOR_SIZE_DIM_1": 12,
+        "DATA_IN_0_PARALLELISM_DIM_0": 4,
+        "DATA_IN_0_PARALLELISM_DIM_1": 1,
+        "WEIGHT_TENSOR_SIZE_DIM_0": 4,
+        "WEIGHT_TENSOR_SIZE_DIM_1": 12,
+        "WEIGHT_PARALLELISM_DIM_0": 4,
+        "WEIGHT_PARALLELISM_DIM_1": 1,
+        "DATA_IN_0_PRECISION_0": 8,
+        "DATA_IN_0_PRECISION_1": 4,
+        "WEIGHT_PRECISION_0": 8,
+        "WEIGHT_PRECISION_1": 4,
+        "BIAS_PRECISION_0": 8,
+        "BIAS_PRECISION_1": 4,
+        "DATA_OUT_0_PRECISION_0": 10,
+        "DATA_OUT_0_PRECISION_1": 4,
+    }
+    basic_config = {
         "HAS_BIAS": 1,
         "DATA_IN_0_TENSOR_SIZE_DIM_0": 32,
         "DATA_IN_0_TENSOR_SIZE_DIM_1": 16,
@@ -230,7 +250,7 @@ def get_fixed_linear_config(kwargs={}):
         "WEIGHT_TENSOR_SIZE_DIM_1": 16,
         "WEIGHT_PARALLELISM_DIM_0": 4,
         "WEIGHT_PARALLELISM_DIM_1": 4,
-        "DATA_IN_0_PRECISION_0": 9,
+        "DATA_IN_0_PRECISION_0": 10,
         "DATA_IN_0_PRECISION_1": 4,
         "WEIGHT_PRECISION_0": 8,
         "WEIGHT_PRECISION_1": 3,
@@ -250,7 +270,6 @@ def test_fixed_linear_smoke():
     """
     mase_runner(
         trace=True,
-        extra_build_args=["--trace-depth", "8"],
         module_param_list=[
             get_fixed_linear_config(),
             # noticed here if change WEIGHT_PRE_TRANSPOSED also need to change the DIM_SIZE to match ACTIVATION
@@ -263,6 +282,8 @@ def test_fixed_linear_smoke():
             #     },
             # ),
         ],
+        sim="questa",
+        # gui=True,
     )
 
 

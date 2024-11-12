@@ -81,7 +81,7 @@ module single_element_repeat #(
 
       end
 
-      skid_buffer #(
+      register_slice #(
           .DATA_WIDTH(DATA_WIDTH)
       ) output_buffer (
           .clk(clk),

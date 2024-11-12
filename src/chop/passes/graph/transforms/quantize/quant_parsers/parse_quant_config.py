@@ -23,10 +23,17 @@ QUANT_ARITH_ENTRIES = {
         "data_in_entries": ("data_in_width", "data_in_frac_width"),
         "bias_entries": ("bias_width", "bias_frac_width"),
     },
+    "integer_floor": {
+        "weight_entries": ("weight_width", "weight_frac_width"),
+        "data_in_entries": ("data_in_width", "data_in_frac_width"),
+        "bias_entries": ("bias_width", "bias_frac_width"),
+        "data_out_entries": ("data_out_width", "data_out_frac_width"),
+    },
     "fixed": {
         "weight_entries": ("weight_width", "weight_frac_width"),
         "data_in_entries": ("data_in_width", "data_in_frac_width"),
         "bias_entries": ("bias_width", "bias_frac_width"),
+        "data_out_entries": ("data_out_width", "data_out_frac_width"),
     },
     "lutnet": {
         "weight_entries": (
@@ -261,6 +268,11 @@ QUANT_ARITH_ENTRIES = {
             "bias_exponent_width",
             "bias_parallelism",
         ),
+        "data_out_entries": (
+            "data_out_width",
+            "data_out_exponent_width",
+            "data_out_parallelism",
+        ),
     },
 }
 
@@ -276,6 +288,10 @@ def cp_name(config: dict, p_config: dict, entries=None, strict: bool = True):
 
 def cp_bypass(config: dict, p_config: dict, entries=None, strict: bool = True):
     cp_multi_values(config, p_config, ("bypass",), strict=strict)
+
+
+def cp_floor(config: dict, p_config: dict, entries=None, strict: bool = True):
+    cp_multi_values(config, p_config, ("floor",), strict=strict)
 
 
 def cp_weight_entries(config: dict, p_config: dict, entries: dict, strict: bool = True):
@@ -339,6 +355,7 @@ for quant_arith, entries in QUANT_ARITH_ENTRIES.items():
     QUANT_ARITH_TO_CP_FN[quant_arith] = {
         "name": partial(cp_name, entries=entries),
         "bypass": partial(cp_bypass, entries=entries),
+        "floor": partial(cp_floor, entries=entries),
         "weight_entries": partial(cp_weight_entries, entries=entries),
         "data_in_entries": partial(cp_data_in_entries, entries=entries),
         "bias_entries": partial(cp_bias_entries, entries=entries),
@@ -366,12 +383,18 @@ MASE_OP_TO_ENTRIES = {
     "mul": (("name", "data_in_entries"), ("bypass",)),
     "linear": (
         ("name", "data_in_entries", "weight_entries"),
-        ("bias_entries", "bypass", "data_out_entries", "additional_layers_entries"),
+        (
+            "bias_entries",
+            "bypass",
+            "data_out_entries",
+            "additional_layers_entries",
+            "floor",
+        ),
     ),
     "relu": (("name", "data_in_entries"), ("bypass",)),
     "selu": (("name", "data_in_entries"), ("bypass",)),
     "tanh": (("name", "data_in_entries"), ("bypass",)),
-    "gelu": (("name", "data_in_entries"), ("bypass",)),
+    "gelu": (("name", "data_in_entries"), ("data_out_entries", "bypass")),
     "softplus": (("name", "data_in_entries"), ("bypass",)),
     "softsign": (("name", "data_in_entries"), ("bypass",)),
     "sub": (("name", "data_in_entries"), ("bypass",)),
@@ -385,7 +408,7 @@ MASE_OP_TO_ENTRIES = {
     ),
     "layer_norm": (
         ("name", "data_in_entries"),
-        ("bypass",),
+        ("bypass", "isqrt_in_entries", "isqrt_out_entries", "data_out_entries"),
     ),
     "group_norm": (
         ("name", "data_in_entries"),
@@ -423,6 +446,8 @@ def parse_node_config(config: dict, mase_op: str, strict: bool = True) -> dict:
         a missing `bias_frac_width` in linear node config
     """
     assert mase_op in MASE_OP_TO_ENTRIES, f"Unknown mase op: {mase_op}"
+    if config.get("noparse", False):
+        return config
     if config.get("bypass", False):
         return config
     op_entries, op_optional_entries = MASE_OP_TO_ENTRIES[mase_op]

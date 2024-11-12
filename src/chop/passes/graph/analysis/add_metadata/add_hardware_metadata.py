@@ -48,12 +48,22 @@ def add_component_source(node):
                     "dependence_files"
                 ]
     elif mase_op in INTERNAL_COMP.keys():
-        node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_RTL"
-        # take the first ip in the component list by default
-        node.meta["mase"]["hardware"]["module"] = INTERNAL_COMP[mase_op][0]["name"]
-        node.meta["mase"]["hardware"]["dependence_files"] = INTERNAL_COMP[mase_op][0][
-            "dependence_files"
-        ]
+        if node.meta["mase"].parameters["common"]["quant_type"] == "mxint_hardware":
+            node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_RTL"
+            # take the first ip in the component list by default
+            node.meta["mase"]["hardware"]["module"] = INTERNAL_COMP[
+                mase_op + "_mxint_hardware"
+            ][0]["name"]
+            node.meta["mase"]["hardware"]["dependence_files"] = INTERNAL_COMP[
+                mase_op + "_mxint_hardware"
+            ][0]["dependence_files"]
+        else:
+            node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_RTL"
+            # take the first ip in the component list by default
+            node.meta["mase"]["hardware"]["module"] = INTERNAL_COMP[mase_op][0]["name"]
+            node.meta["mase"]["hardware"]["dependence_files"] = INTERNAL_COMP[mase_op][
+                0
+            ]["dependence_files"]
     else:
         node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_HLS"
         node.meta["mase"]["hardware"]["module"] = None
@@ -96,7 +106,12 @@ def add_verilog_param(node):
                     else 1
                 )
                 # Check if max parallelism is defined
-                if node.meta["mase"]["hardware"]["max_parallelism"] is not None:
+                if arg_info["parallelism"] is not None:
+                    # parallelism only support the last 2 dimension
+                    vp[_cap(arg + f"_parallelism_dim_{dim}")] = (
+                        arg_info["parallelism"][::-1][dim] if dim <= 1 else 1
+                    )
+                elif node.meta["mase"]["hardware"]["max_parallelism"] is not None:
                     # Take the minimum between...
                     vp[_cap(arg + f"_parallelism_dim_{dim}")] = min(
                         # The defined max parallelism for this dimension
@@ -125,7 +140,12 @@ def add_verilog_param(node):
                     else 1
                 )
                 # Check if max parallelism is defined
-                if node.meta["mase"]["hardware"]["max_parallelism"] is not None:
+                if result_info["parallelism"] is not None:
+                    # parallelism only support the last 2 dimension
+                    vp[_cap(result + f"_parallelism_dim_{dim}")] = (
+                        result_info["parallelism"][::-1][dim] if dim <= 1 else 1
+                    )
+                elif node.meta["mase"]["hardware"]["max_parallelism"] is not None:
                     # Take the minimum between...
                     vp[_cap(result + f"_parallelism_dim_{dim}")] = min(
                         # The defined max parallelism for this dimension

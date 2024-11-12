@@ -1,12 +1,11 @@
 from functools import partial
-
+import torch
 import torch.nn as nn
 from torch import Tensor
 import torch.nn.functional as F
 
-from chop.nn.quantizers import (
-    integer_quantizer,
-)
+from ...quantizers import integer_quantizer
+from ..functional import IntLayerNormFunc
 
 
 class _LayerNormBase(nn.LayerNorm):
@@ -47,7 +46,37 @@ class LayerNormInteger(_LayerNormBase):
         self.bypass = config.get("bypass", False)
         if self.bypass:
             return
-        x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
+        x_width, x_frac_width = config.get("data_in_width"), config.get(
+            "data_in_frac_width"
+        )
         self.x_quantizer = partial(
             integer_quantizer, width=x_width, frac_width=x_frac_width
+        )
+
+
+class LayerNormIntegerFloor(nn.LayerNorm):
+    def __init__(
+        self,
+        normalized_shape,
+        eps: float = 0.00001,
+        elementwise_affine: bool = False,
+        bias: bool = False,
+        device=None,
+        dtype=None,
+        config=None,
+    ) -> None:
+        assert config is not None, "config is None!"
+        super().__init__(normalized_shape, eps, elementwise_affine, bias, device, dtype)
+        self.config = config
+        self.bypass = config.get("bypass", False)
+
+    def forward(self, x: Tensor) -> Tensor:
+        return IntLayerNormFunc.apply(
+            x,
+            self.normalized_shape,
+            self.weight,
+            self.bias,
+            self.eps,
+            self.config,
+            self.bypass,
         )

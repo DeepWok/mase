@@ -76,9 +76,6 @@ class MXIntDotProductTB(Testbench):
             inputs.append((mdata_in.int().tolist(), edata_in.int().tolist()))
             weights.append((mweight.int().tolist(), eweight.int().tolist()))
             exp_outputs.append((mdp_out.int().tolist(), edp_out.int().tolist()))
-        print(inputs)
-        print(weights)
-        print(exp_outputs)
         return inputs, weights, exp_outputs
 
     async def run_test(self):
@@ -118,4 +115,5 @@ if __name__ == "__main__":
                 "BLOCK_SIZE": 4,
             },
         ],
+        # sim="questa",
     )

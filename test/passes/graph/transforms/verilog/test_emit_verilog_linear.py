@@ -17,6 +17,11 @@ from chop.tools.logger import set_logging_verbosity
 from chop.tools import get_logger
 
 set_logging_verbosity("debug")
+from utils import (
+    update_common_metadata_pass,
+    update_hardware_precision_param,
+    manually_update_hardware_parallelism_param,
+)
 
 
 def excepthook(exc_type, exc_value, exc_traceback):
@@ -33,85 +38,95 @@ sys.excepthook = excepthook
 #   Model specifications
 #   prefer small models for fast test
 # --------------------------------------------------
+# verified test case linear(2,4)
+
+
 class MLP(torch.nn.Module):
     """
     Toy quantized FC model for digit recognition on MNIST
     """
 
-    def __init__(self) -> None:
+    def __init__(self, in_features, hidden_features, out_features) -> None:
         super().__init__()
 
-        self.fc1 = nn.Linear(10, 10, bias=True)
+        self.fc1 = nn.Linear(in_features, hidden_features, bias=True)
+        self.fc2 = nn.Linear(hidden_features, out_features, bias=True)
 
     def forward(self, x):
-        x = torch.nn.functional.relu(self.fc1(x))
+        x = self.fc1(x)
+        x = self.fc2(x)
         return x
+
+
+quan_args = {
+    "by": "type",  # quantize by type, name, or regex_name
+    "default": {
+        "config": {"name": None}
+    },  # default config, this would be used for any node that does not have a specific config
+    "linear": {
+        "config": {
+            "name": "integer_floor",  # quantization scheme name supported are ["integer", "fixed" (equivalent to integer), "lutnet" (dev mode), "logicnets" (dev mode), "binary", "binary_residual", "ternary", "minifloat_ieee", "minifloat_denorm", "log", "block_fp", "block_minifloat", "block_log"]
+            # data
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            # weight
+            "weight_width": 10,
+            "weight_frac_width": 3,
+            # bias
+            "bias_width": 5,
+            "bias_frac_width": 2,
+            "data_out_width": 8,
+            "data_out_frac_width": 4,
+        },
+    },
+}
 
 
 @pytest.mark.dev
 def test_emit_verilog_linear():
-    mlp = MLP()
-    mg = chop.MaseGraph(model=mlp)
-
+    in_features = 192
+    hidden_features = 192
+    out_features = 192
+    n = 196
+    batch_size = 10
+    linear = MLP(in_features, hidden_features, out_features)
+    mg = chop.MaseGraph(model=linear)
+    torch.manual_seed(0)
     # Provide a dummy input for the graph so it can use for tracing
-    batch_size = 2
-    x = torch.randn((batch_size, 10))
+    x = torch.randn((batch_size, n, in_features))
     dummy_in = {"x": x}
 
     mg, _ = passes.init_metadata_analysis_pass(mg, None)
-    mg, _ = passes.add_common_metadata_analysis_pass(mg, {"dummy_in": dummy_in})
-
-    # Quantize to int
-    config_file = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "..",
-        "..",
-        "..",
-        "..",
-        "..",
-        "configs",
-        "tests",
-        "quantize",
-        "integer.toml",
-    )
-
-    # load toml config file
-    with open(config_file, "r") as f:
-        quan_args = toml.load(f)["passes"]["quantize"]
-    mg, _ = passes.quantize_transform_pass(mg, quan_args)
-
-    # There is a bug in the current quantizzation pass, where the results metadata is not uppdated with the precision.
-    # Here we temporarily update the metadata here so we can test the hardware back end.
-    for node in mg.fx_graph.nodes:
-        for arg, _ in node.meta["mase"].parameters["common"]["args"].items():
-            if (
-                type(node.meta["mase"].parameters["common"]["args"][arg]) == dict
-                and "type" in node.meta["mase"].parameters["common"]["args"][arg].keys()
-            ):
-                node.meta["mase"].parameters["common"]["args"][arg]["type"] = "fixed"
-        for result, _ in node.meta["mase"].parameters["common"]["results"].items():
-            if (
-                type(node.meta["mase"].parameters["common"]["results"][result]) == dict
-                and "type"
-                in node.meta["mase"].parameters["common"]["results"][result].keys()
-            ):
-                node.meta["mase"].parameters["common"]["results"][result][
-                    "type"
-                ] = "fixed"
-                node.meta["mase"].parameters["common"]["results"][result][
-                    "precision"
-                ] = [8, 3]
-
     # Increase weight range
     mg.model.fc1.weight = torch.nn.Parameter(
         10 * torch.randn(mg.model.fc1.weight.shape)
     )
+    mg, _ = passes.add_common_metadata_analysis_pass(mg, {"dummy_in": dummy_in})
 
+    mg, _ = passes.quantize_transform_pass(mg, quan_args)
+
+    update_common_metadata_pass(mg, quan_args)
+    # from chop.passes.graph.transforms.verilog.insert_fork import insert_fifo_after_specified_modules
+    # mg, _ = insert_fifo_after_specified_modules(
+    #     mg, pass_args = {
+    #     "insert_fifo": ["linear"],
+    #     "max_parallelism": 2 # used for generating the fifo depth
+    #     }
+    # )
     mg, _ = passes.add_hardware_metadata_analysis_pass(
         mg, pass_args={"max_parallelism": [2] * 4}
     )
+    update_hardware_precision_param(mg, quan_args)
+    wp1 = 8
+    wp2 = 1
+    manually_update_hardware_parallelism_param(
+        mg,
+        pass_args={
+            "fc1": {"din": [1, 2], "dout": [1, wp1]},
+            "fc2": {"din": [1, wp1], "dout": [1, wp2]},
+        },
+    )
     mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
-
     mg, _ = passes.emit_verilog_top_transform_pass(mg)
     mg, _ = passes.emit_bram_transform_pass(mg)
     mg, _ = passes.emit_internal_rtl_transform_pass(mg)
@@ -120,7 +135,7 @@ def test_emit_verilog_linear():
     )
     mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
-    simulate(skip_build=False, skip_test=False, simulator="verilator")
+    # simulate(skip_build=False, skip_test=False, simulator="questa", waves=True, gui=False)
 
 
 if __name__ == "__main__":

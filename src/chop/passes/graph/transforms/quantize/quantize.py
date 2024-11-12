@@ -230,9 +230,15 @@ def quantize_transform_pass(graph, pass_args=None):
                     # weight
                     "weight_width": 8,
                     "weight_frac_width": 4,
+
+                    # optional
                     # bias
                     "bias_width": 8,
                     "bias_frac_width": 4,
+                    "data_out_width": 8,
+                    "data_out_frac_width": 4,
+                    # quantize method
+                    "floor": True,
                 }
             },
         }
@@ -246,7 +252,7 @@ def quantize_transform_pass(graph, pass_args=None):
         - by -> str : different quantization schemes choose from ["type", "name", "regx_name"]
     """
 
-    by = pass_args.pop("by")
+    by = pass_args.get("by")
     match by:
         case "type":
             graph = graph_iterator_quantize_by_type(graph, pass_args)

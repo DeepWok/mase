@@ -32,26 +32,70 @@ norm = {
         "normalization_layers/rtl/norm.sv",
     ],
 }
-
+linear = {
+    "name": "fixed_linear_with_input_circular",
+    "dependence_files": [
+        "cast/rtl/fixed_round.sv",
+        "cast/rtl/fixed_rounding.sv",
+        "cast/rtl/floor_round.sv",
+        "cast/rtl/signed_clamp.sv",
+        "cast/rtl/fixed_signed_cast.sv",
+        "linear_layers/fixed_operators/rtl/fixed_dot_product.sv",
+        "linear_layers/fixed_operators/rtl/fixed_vector_mult.sv",
+        "linear_layers/fixed_operators/rtl/fixed_accumulator.sv",
+        "linear_layers/fixed_operators/rtl/fixed_adder_tree.sv",
+        "linear_layers/fixed_operators/rtl/fixed_adder_tree_layer.sv",
+        "linear_layers/fixed_operators/rtl/fixed_mult.sv",
+        "common/rtl/register_slice.sv",
+        "common/rtl/join2.sv",
+        "common/rtl/mux.sv",
+        "common/rtl/unpacked_register_slice.sv",
+        "common/rtl/single_element_repeat.sv",
+        "memory/rtl/unpacked_repeat_circular_buffer.sv",
+        "memory/rtl/input_buffer.sv",
+        "memory/rtl/blk_mem_gen_0.sv",
+        "memory/rtl/simple_dual_port_ram.sv",
+        "linear_layers/fixed_linear_layer/rtl/fixed_linear_with_input_circular.sv",
+        "memory/rtl/fifo_for_autogen.sv",
+        "memory/rtl/unpacked_fifo.sv",
+        "memory/rtl/skid_buffer.sv",
+        "memory/rtl/unpacked_skid_buffer.sv",
+        "memory/rtl/simple_dual_port_ram.sv",
+        "memory/rtl/fifo.sv",
+    ],
+}
 INTERNAL_COMP = {
-    "linear": [
+    "linear": [linear],
+    "linear_mxint_hardware": [
         {
-            "name": "fixed_linear",
-            "dependence_files": [
-                "cast/rtl/fixed_cast.sv",
-                "linear_layers/fixed_operators/rtl/fixed_dot_product.sv",
-                "linear_layers/fixed_operators/rtl/fixed_vector_mult.sv",
-                "linear_layers/fixed_operators/rtl/fixed_accumulator.sv",
-                "linear_layers/fixed_operators/rtl/fixed_adder_tree.sv",
-                "linear_layers/fixed_operators/rtl/fixed_adder_tree_layer.sv",
-                "linear_layers/fixed_operators/rtl/fixed_mult.sv",
-                "common/rtl/register_slice.sv",
-                "common/rtl/join2.sv",
-                "memory/rtl/unpacked_repeat_circular_buffer.sv",
-                "memory/rtl/skid_buffer.sv",
-                "linear_layers/fixed_linear_layer/rtl/fixed_linear.sv",
+            "name": "mxint_linear",
+            "dependence_files": linear["dependence_files"]
+            + [
+                "linear_layers/mxint_operators/rtl/mxint_linear.sv",
+                "linear_layers/mxint_operators/rtl/mxint_register_slice.sv",
+                "linear_layers/mxint_operators/rtl/or_tree_layer.sv",
+                "linear_layers/mxint_operators/rtl/or_tree.sv",
+                "linear_layers/mxint_operators/rtl/log2_max_abs.sv",
+                "linear_layers/mxint_operators/rtl/mxint_accumulator.sv",
+                "linear_layers/mxint_operators/rtl/mxint_cast.sv",
+                "linear_layers/mxint_operators/rtl/mxint_circular.sv",
+                "linear_layers/mxint_operators/rtl/mxint_dot_product.sv",
+                "linear_layers/mxint_operators/rtl/unpacked_mx_fifo.sv",
+                "common/rtl/join_n.sv",
             ],
-        },
+        }
+    ],
+    "fifo": [
+        {
+            "name": "fifo_for_autogen",
+            "dependence_files": [
+                "memory/rtl/fifo_for_autogen.sv",
+                "memory/rtl/unpacked_fifo.sv",
+                "memory/rtl/skid_buffer.sv",
+                "memory/rtl/simple_dual_port_ram.sv",
+                "memory/rtl/fifo.sv",
+            ],
+        }
     ],
     "relu": [
         {
@@ -123,10 +167,19 @@ INTERNAL_COMP = {
         }
     ],
     "batch_norm2d": [norm],
-    "layer_norm": [norm],
     "group_norm": [norm],
     "instance_norm2d": [norm],
     "rms_norm": [norm],
+    "layer_norm": [
+        {
+            "name": "layer_norm_2d",
+            "dependence_files": norm["dependence_files"]
+            + [
+                "normalization_layers/rtl/layer_norm_2d.sv",
+                "generated_lut/rtl/isqrt_lut.sv",
+            ],
+        },
+    ],
     "selu": [
         {
             "name": "fixed_selu",
@@ -148,7 +201,8 @@ INTERNAL_COMP = {
             "name": "fixed_gelu",
             "dependence_files": [
                 "activation_layers/rtl/fixed_gelu.sv",
-                "activation_layers/rtl/gelu_lut.sv",
+                "generated_lut/rtl/gelu_lut.sv",
+                "common/rtl/unpacked_register_slice_quick.sv",
             ],
         },
     ],
@@ -191,11 +245,41 @@ INTERNAL_COMP = {
             "dependence_files": ["common/rtl/df_split.sv", "common/rtl/split2.sv"],
         }
     ],
+    "fork2": [
+        {
+            "name": "fork2",
+            "dependence_files": ["common/rtl/fork2.sv"],
+        }
+    ],
     "getitem": [
         {
             "name": "buffer",
             "dependence_files": [
                 "memory/rtl/buffer.sv",
+            ],
+        }
+    ],
+    "vit_self_attention_integer": [
+        {
+            "name": "fixed_vit_attention_single_precision_wrapper",
+            "dependence_files": linear["dependence_files"]
+            + [
+                "vision_models/vit/rtl/fixed_vit_attention_single_precision_wrapper.sv",
+                "vision_models/vit/rtl/fixed_vit_attention.sv",
+                "vision_models/vit/rtl/fixed_vit_attention_head.sv",
+                "transformer_layers/rtl/self_attention_head_single_scatter.sv",
+                "transformer_layers/rtl/gqa_head_scatter_control.sv",
+                "transformer_layers/rtl/self_attention_head_gather.sv",
+                "vision_models/vit/rtl/fixed_vit_attention_input_block_batched.sv",
+                "transformer_layers/rtl/self_attention_head_scatter.sv",
+                "activation_layers/rtl/fixed_softmax.sv",
+                "scalar_operators/fixed/rtl/fixed_div.sv",
+                "generated_lut/rtl/exp_lut.sv",
+                "common/rtl/find_first_arbiter.sv",
+                "common/rtl/split2.sv",
+                "common/rtl/split_n.sv",
+                "memory/rtl/unpacked_fifo.sv",
+                "memory/rtl/unpacked_skid_buffer.sv",
             ],
         }
     ],

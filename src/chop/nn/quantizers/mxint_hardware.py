@@ -24,14 +24,14 @@ def mxint_quant_block(
 
     # exponent
     if exponent == None:
-        exponent = torch.ceil(torch.log2(x.abs().max())) - exponent_bias
+        exponent = torch.ceil(torch.log2(x.abs().max()))
         exponent = torch.clamp(exponent, exponent_min, exponent_max)
     # mantissa
     int_min = -(2 ** (width - 1))
     int_max = 2 ** (width - 1) - 1
-    mantissa = x / 2**exponent
+    mantissa = x * (2 ** (width - 1)) / 2**exponent
     mantissa = torch.clamp(mantissa.floor(), int_min, int_max)
-    q_x = (2**exponent) * mantissa
+    q_x = (2**exponent) * mantissa / ((2 ** (width - 1)))
     return q_x
 
 

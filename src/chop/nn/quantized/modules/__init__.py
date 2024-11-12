@@ -1,5 +1,5 @@
-from .attention_head import BertSelfAttentionHeadInteger
-from .attention import BertSelfAttentionInteger
+from .attention_head import BertSelfAttentionHeadInteger, ViTSelfAttentionHeadInteger
+from .attention import BertSelfAttentionInteger, ViTAttentionInteger
 
 # from .add import AddInteger
 from .conv1d import (
@@ -32,6 +32,7 @@ from .linear import (
     LinearBlockFP,
     LinearBlockMinifloat,
     LinearInteger,
+    LinearIntegerFloor,
     LinearLog,
     LinearBlockLog,
     LinearMinifloatDenorm,
@@ -67,6 +68,7 @@ from .batch_norm2d import (
 )
 from .layer_norm import (
     LayerNormInteger,
+    LayerNormIntegerFloor,
 )
 from .group_norm import GroupNormInteger
 from .instance_norm2d import InstanceNorm2dInteger
@@ -113,6 +115,7 @@ from .gelu import (
     GELUBlockFP,
     GELUBlockMinifloat,
     GELUInteger,
+    GELUIntegerFloor,
     GELULog,
     GELUBlockLog,
     GELUMinifloatDenorm,
@@ -151,6 +154,8 @@ from .gqa import (
     GroupedQueryAttentionInteger,
 )
 
+from mase_components.linear_layers.mxint_operators.test.utils import MXIntLinearHardware
+
 quantized_module_map = {
     "conv1d_block_minifloat": Conv1dBlockMinifloat,
     "conv1d_integer": Conv1dInteger,
@@ -176,8 +181,9 @@ quantized_module_map = {
     "linear_block_minifloat": LinearBlockMinifloat,
     "linear_integer": LinearInteger,
     "linear_fixed": LinearInteger,
+    "linear_integer_floor": LinearIntegerFloor,
     "linear_log": LinearLog,
-    "linear_mxint_hardware": LinearMXIntHardware,
+    "linear_mxint_hardware": MXIntLinearHardware,
     "linear_block_log": LinearBlockLog,
     "linear_minifloat_ieee": LinearMinifloatIEEE,
     "linear_minifloat_denorm": LinearMinifloatDenorm,
@@ -204,6 +210,7 @@ quantized_module_map = {
     "batch_norm2d_integer": BatchNorm2dInteger,
     "batch_norm2d_binary": BatchNorm2dBinary,
     "layer_norm_integer": LayerNormInteger,
+    "layer_norm_integer_floor": LayerNormIntegerFloor,
     "group_norm_integer": GroupNormInteger,
     "instance_norm2d_integer": InstanceNorm2dInteger,
     "rms_norm_integer": RMSNormInteger,
@@ -240,6 +247,7 @@ quantized_module_map = {
     "gelu_block_minifloat": GELUBlockMinifloat,
     "gelu_integer": GELUInteger,
     "gelu_fixed": GELUInteger,
+    "gelu_integer_floor": GELUIntegerFloor,
     "gelu_log": GELULog,
     "gelu_block_log": GELUBlockLog,
     "gelu_minifloat_ieee": GELUMinifloatIEEE,
@@ -271,5 +279,7 @@ quantized_module_map = {
     "batch_norm1d_linear": BatchNorm1dInteger,
     "bert_self_attention_head_integer": BertSelfAttentionHeadInteger,
     "bert_self_attention_integer": BertSelfAttentionInteger,
+    "bert_self_attention_head_integer": ViTSelfAttentionHeadInteger,
+    "vit_self_attention_integer": ViTAttentionInteger,
     "grouped_query_attention_integer": GroupedQueryAttentionInteger,
 }
