@@ -264,7 +264,7 @@ module mxint_linear #(
         acc_edata_out
     ) + DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 - 2 - (BIAS_PRECISION_0 - 1));
 
-    optimized_variable_shift #(
+    optimized_right_shift #(
         .IN_WIDTH(BIAS_PRECISION_0),
         .SHIFT_WIDTH(FDP_EXP_WIDTH),
         .OUT_WIDTH(LOSSLESS_OUT_WIDTH),

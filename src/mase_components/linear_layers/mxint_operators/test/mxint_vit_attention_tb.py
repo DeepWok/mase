@@ -35,7 +35,7 @@ from functools import partial
 from mase_components.linear_layers.mxint_operators.test.utils import MXIntLinearHardware, MXIntMatmulHardware
 from mase_components.linear_layers.mxint_operators.test.mxint_softmax_tb import mxint_softmax
 
-class MxIntViTSelfAttentionHeadTB(Testbench):
+class MxIntViTAttentionTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
 
@@ -51,7 +51,7 @@ class MxIntViTSelfAttentionHeadTB(Testbench):
             dut.data_in_0_ready
         )
         
-        # Weight/bias drivers for Query/Key/Value
+        # Query parameters drivers
         self.query_weight_driver = MultiSignalStreamDriver(
             dut.clk, 
             (dut.mweight_query, dut.eweight_query),
@@ -61,23 +61,54 @@ class MxIntViTSelfAttentionHeadTB(Testbench):
         
         self.query_bias_driver = MultiSignalStreamDriver(
             dut.clk,
-            (dut.mbias_query, dut.ebias_query),
-            dut.bias_query_valid,
-            dut.bias_query_ready
+            (dut.mquery_bias, dut.equery_bias),
+            dut.query_bias_valid,
+            dut.query_bias_ready
         )
         
-        # Similar drivers for key and value weights/biases
-        self.key_driver = MultiSignalStreamDriver(
+        # Key parameters drivers
+        self.key_weight_driver = MultiSignalStreamDriver(
             dut.clk,
-            (dut.mkey, dut.ekey),
-            dut.key_valid,
-            dut.key_ready
+            (dut.mkey_weight, dut.ekey_weight), 
+            dut.key_weight_valid,
+            dut.key_weight_ready
         )
-        self.value_driver = MultiSignalStreamDriver(
+        
+        self.key_bias_driver = MultiSignalStreamDriver(
             dut.clk,
-            (dut.mvalue, dut.evalue),
-            dut.value_valid,
-            dut.value_ready
+            (dut.mkey_bias, dut.ekey_bias),
+            dut.key_bias_valid,
+            dut.key_bias_ready
+        )
+        
+        # Value parameters drivers
+        self.value_weight_driver = MultiSignalStreamDriver(
+            dut.clk,
+            (dut.mvalue_weight, dut.evalue_weight),
+            dut.value_weight_valid,
+            dut.value_weight_ready
+        )
+        
+        self.value_bias_driver = MultiSignalStreamDriver(
+            dut.clk,
+            (dut.mvalue_bias, dut.evalue_bias),
+            dut.value_bias_valid,
+            dut.value_bias_ready
+        )
+        
+        # Projection parameters drivers
+        self.proj_weight_driver = MultiSignalStreamDriver(
+            dut.clk,
+            (dut.mproj_weight, dut.eproj_weight),
+            dut.proj_weight_valid,
+            dut.proj_weight_ready
+        )
+        
+        self.proj_bias_driver = MultiSignalStreamDriver(
+            dut.clk,
+            (dut.mproj_bias, dut.eproj_bias),  # No exponent for proj bias
+            dut.proj_bias_valid,
+            dut.proj_bias_ready
         )
 
         self.out_monitor = MultiSignalStreamMonitor(
@@ -92,13 +123,19 @@ class MxIntViTSelfAttentionHeadTB(Testbench):
             "data_in": self.data_in_driver,
             "query_weight": self.query_weight_driver,
             "query_bias": self.query_bias_driver,
-            "in1": self.key_driver,
-            "in2": self.value_driver
+            "key_weight": self.key_weight_driver,
+            "key_bias": self.key_bias_driver,
+            "value_weight": self.value_weight_driver,
+            "value_bias": self.value_bias_driver,
+            "proj_weight": self.proj_weight_driver,
+            "proj_bias": self.proj_bias_driver
         }
         self.output_monitors = {"out": self.out_monitor}
-        # Model parameters
-        self.head_size = self.get_parameter("IN_DATA_TENSOR_SIZE_DIM_0")
-        self.seq_len = self.get_parameter("IN_DATA_TENSOR_SIZE_DIM_1")
+        # Model parameters (moved up for clarity)
+        self.num_heads = self.get_parameter("NUM_HEADS")
+        self.hidden_size = self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0")
+        self.seq_len = self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_1")
+        self.head_size = self.hidden_size // self.num_heads
         
         # Configure logging
         # self.query_driver.log.setLevel(logging.DEBUG)
@@ -119,112 +156,196 @@ class MxIntViTSelfAttentionHeadTB(Testbench):
         self.log.info("Reset finished")
         self.out_monitor.ready.value = 1
 
-        # Generate random inputs
-        query = torch.randn((self.seq_len, self.head_size))
-        key = torch.randn((self.seq_len, self.head_size))
-        value = torch.randn((self.seq_len, self.head_size))
+        # Generate random tensors for all inputs
+        batch_size = self.seq_len
+        hidden_size = self.hidden_size
+        
+        # Input data
+        input_data = torch.randn((batch_size, hidden_size))
+        
+        # Query/Key/Value weights and biases
+        qkv_weight_shape = (hidden_size, hidden_size)
+        qkv_bias_shape = (hidden_size,)
+        
+        query_weight = torch.randn(qkv_weight_shape)
+        query_bias = torch.randn(qkv_bias_shape)
+        key_weight = torch.randn(qkv_weight_shape)
+        key_bias = torch.randn(qkv_bias_shape)
+        value_weight = torch.randn(qkv_weight_shape)
+        value_bias = torch.randn(qkv_bias_shape)
+        
+        # Projection weights and biases
+        proj_weight = torch.randn(qkv_weight_shape)
+        proj_bias = torch.randn(qkv_bias_shape)
 
-        # Process and load inputs
-        config = {
-            "width": self.get_parameter("IN_DATA_PRECISION_0"),
-            "exponent_width": self.get_parameter("IN_DATA_PRECISION_1"),
+        # Configuration for different parameter types
+        input_config = {
+            "width": self.get_parameter("DATA_IN_0_PRECISION_0"),
+            "exponent_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
         }
-        parallelism = [
-            self.get_parameter("IN_DATA_PARALLELISM_DIM_1"),
-            self.get_parameter("IN_DATA_PARALLELISM_DIM_0"),
+        weight_config = {
+            "width": self.get_parameter("WEIGHT_PRECISION_0"),
+            "exponent_width": self.get_parameter("WEIGHT_PRECISION_1"),
+        }
+        bias_config = {
+            "width": self.get_parameter("BIAS_PRECISION_0"),
+            "exponent_width": self.get_parameter("BIAS_PRECISION_1"),
+        }
+        proj_config = {
+            "width": self.get_parameter("WEIGHT_PROJ_PRECISION_0"),
+            "exponent_width": self.get_parameter("WEIGHT_PROJ_PRECISION_1"),
+        }
+
+        # Parallelism configurations
+        input_parallelism = [
+            self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1"),
+            self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"),
+        ]
+        weight_parallelism = [
+            self.get_parameter("WEIGHT_PARALLELISM_DIM_1"),
+            self.get_parameter("WEIGHT_PARALLELISM_DIM_0"),
+        ]
+        bias_parallelism = [
+            self.get_parameter("BIAS_PARALLELISM_DIM_1"),
+            self.get_parameter("BIAS_PARALLELISM_DIM_0"),
+        ]
+        proj_parallelism = [
+            self.get_parameter("WEIGHT_PROJ_PARALLELISM_DIM_1"),
+            self.get_parameter("WEIGHT_PROJ_PARALLELISM_DIM_0"),
         ]
 
-        query_inputs = self.preprocess_tensor_for_mxint(query, config, parallelism)
-        key_inputs = self.preprocess_tensor_for_mxint(key, config, parallelism)
-        value_inputs = self.preprocess_tensor_for_mxint(value, config, parallelism)
+        # Preprocess all inputs
+        input_data_processed = self.preprocess_tensor_for_mxint(input_data, input_config, input_parallelism)
+        
+        query_weight_processed = self.preprocess_tensor_for_mxint(query_weight, weight_config, weight_parallelism)
+        query_bias_processed = self.preprocess_tensor_for_mxint(query_bias, bias_config, bias_parallelism)
+        
+        key_weight_processed = self.preprocess_tensor_for_mxint(key_weight, weight_config, weight_parallelism)
+        key_bias_processed = self.preprocess_tensor_for_mxint(key_bias, bias_config, bias_parallelism)
+        
+        value_weight_processed = self.preprocess_tensor_for_mxint(value_weight, weight_config, weight_parallelism)
+        value_bias_processed = self.preprocess_tensor_for_mxint(value_bias, bias_config, bias_parallelism)
+        
+        proj_weight_processed = self.preprocess_tensor_for_mxint(proj_weight, proj_config, proj_parallelism)
+        proj_bias_processed = self.preprocess_tensor_for_mxint(proj_bias, bias_config, bias_parallelism)
 
-        self.query_driver.load_driver(query_inputs)
-        self.key_driver.load_driver(key_inputs)
-        self.value_driver.load_driver(value_inputs)
+        # Load all drivers
+        self.data_in_driver.load_driver(input_data_processed)
+        
+        self.query_weight_driver.load_driver(query_weight_processed)
+        self.query_bias_driver.load_driver(query_bias_processed)
+        
+        self.key_weight_driver.load_driver(key_weight_processed)
+        self.key_bias_driver.load_driver(key_bias_processed)
+        
+        self.value_weight_driver.load_driver(value_weight_processed)
+        self.value_bias_driver.load_driver(value_bias_processed)
+        
+        self.proj_weight_driver.load_driver(proj_weight_processed)
+        self.proj_bias_driver.load_driver(proj_bias_processed)
+        breakpoint()
 
-        # Generate expected outputs (using random values for this example)
-        exp_out = torch.randn((self.seq_len, self.head_size))
+        # Generate expected output (for verification)
+        exp_out = torch.randn((batch_size, hidden_size))
         out_config = {
-            "width": self.get_parameter("OUT_DATA_PRECISION_0"),
-            "exponent_width": self.get_parameter("OUT_DATA_PRECISION_1"),
+            "width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
+            "exponent_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
         }
         out_parallelism = [
-            self.get_parameter("OUT_DATA_PARALLELISM_DIM_1"),
-            self.get_parameter("OUT_DATA_PARALLELISM_DIM_0"),
+            self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_1"),
+            self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"),
         ]
-        outs = self.preprocess_tensor_for_mxint(exp_out, out_config, out_parallelism)
-        self.out_monitor.load_monitor(outs)
+        out_processed = self.preprocess_tensor_for_mxint(exp_out, out_config, out_parallelism)
+        self.out_monitor.load_monitor(out_processed)
 
         await Timer(1, units="ms")
         if not self.out_monitor.exp_queue.empty():
             raise RuntimeError("Output monitor is not empty at end of test")
 
 
-@cocotb.test()
-async def cocotb_test(dut):
-    cocotb.start_soon(check_signal(dut))
-    tb = MxIntViTSelfAttentionHeadTB(dut)
-    await tb.run_test()
-
 async def check_signal(dut):
     await Timer(40, units="ns")
+    cycle_count = 0
     while True:
         await RisingEdge(dut.clk)
         await ReadOnly()
         
-        # Print all valid/ready signals
-        print("\nValid/Ready Signals:")
-        # print(f"query: {dut.query_valid.value}/{dut.query_ready.value}")
-        # print(f"key: {dut.key_valid.value}/{dut.key_ready.value}")
-        print(f"qk: {dut.qk_valid.value}/{dut.qk_ready.value}")
-        print(f"query_key_linear_acc: {dut.query_key_linear.acc_data_out_valid.value}/{dut.query_key_linear.acc_data_out_ready.value}")
-        print(f"query_key_linear_fifo: {dut.query_key_linear.fifo_data_out_valid.value}/{dut.query_key_linear.fifo_data_out_ready.value}") 
-        print(f"query_key_linear_cast_buffer: {dut.query_key_linear.cast_i.buffer_data_for_out_valid.value}/{dut.query_key_linear.cast_i.buffer_data_for_out_ready.value}")
-        print(f"log2_max_value: {dut.query_key_linear.cast_i.log2_max_value_valid.value}/{dut.query_key_linear.cast_i.log2_max_value_ready.value}")
-        # Print data values when valid and ready
-        # if dut.query_valid.value == 1 and dut.query_ready.value == 1:
-        #     print("query_mout = ", [x.signed_integer for x in dut.mquery.value])
-        #     print("query_eout = ", dut.equery.value.signed_integer)
-            
-        # if dut.key_valid.value == 1 and dut.key_ready.value == 1:
-        #     print("key_mout = ", [x.signed_integer for x in dut.mkey.value])
-        #     print("key_eout = ", dut.ekey.value.signed_integer)
-                       
-        if dut.query_key_linear.cast_i.log2_max_value_valid.value == 1 and dut.query_key_linear.cast_i.log2_max_value_ready.value == 1:
-            print("log2_max_value = ", dut.query_key_linear.cast_i.log2_max_value.value.signed_integer)
-             
-        if dut.query_key_linear.cast_i.buffer_data_for_out_valid.value == 1 and dut.query_key_linear.cast_i.buffer_data_for_out_ready.value == 1:
-            print("query_key_linear_cast_buffer_mdata = ", [x.signed_integer for x in dut.query_key_linear.cast_i.mbuffer_data_for_out.value])
-            print("query_key_linear_cast_buffer_edata = ", dut.query_key_linear.cast_i.ebuffer_data_for_out.value.signed_integer)
+        print(f"\nCycle {cycle_count}:")
+        print("Valid/Ready Status:")
+        print("=" * 50)
+        
+        # Print QKV internal signals status with exact binary values
+        print("\nQKV Internal Handshaking:")
+        print("Query signals:")
+        print(f"  joint_query:     valid={int(dut.joint_query_valid.value):1d} ready={int(dut.joint_query_ready.value):1d}")
+        print(f"  split_query:     valid={[int(x) for x in dut.split_query_valid.value]} ready={[int(x) for x in dut.split_query_ready.value]}")
+        
+        print("\nKey signals:")
+        print(f"  joint_key:       valid={int(dut.joint_key_valid.value):1d} ready={int(dut.joint_key_ready.value):1d}")
+        print(f"  split_key:       valid={[int(x) for x in dut.split_key_valid.value]} ready={[int(x) for x in dut.split_key_ready.value]}")
+        
+        print("\nValue signals:")
+        print(f"  joint_value:     valid={int(dut.joint_value_valid.value):1d} ready={int(dut.joint_value_ready.value):1d}")
+        print(f"  split_value:     valid={[int(x) for x in dut.split_value_valid.value]} ready={[int(x) for x in dut.split_value_ready.value]}")
+        
+        # Print other signals as before
+        print("\nOther Signals:")
+        print("-" * 50)
+        if dut.data_in_0_valid.value and dut.data_in_0_ready.value:
+            print("INPUT DATA:")
+            print(f"  m={[x.signed_integer for x in dut.mdata_in_0.value]}")
+            print(f"  e={dut.edata_in_0.value.signed_integer}")
+        
+        if dut.data_out_0_valid.value and dut.data_out_0_ready.value:
+            print("OUTPUT DATA:")
+            print(f"  m={[x.signed_integer for x in dut.mdata_out_0.value]}")
+            print(f"  e={dut.edata_out_0.value.signed_integer}")
+        
+        print("\n" + "=" * 50)
+        cycle_count += 1
 
-        if dut.query_key_linear.cast_i.buffer_data_for_out_valid.value == 1 and dut.query_key_linear.cast_i.buffer_data_for_out_ready.value == 1:
-            print("query_key_linear_cast_buffer_mdata = ", [x.signed_integer for x in dut.query_key_linear.cast_i.mbuffer_data_for_out.value])
-            print("query_key_linear_cast_buffer_edata = ", dut.query_key_linear.cast_i.ebuffer_data_for_out.value.signed_integer)
-
-        if dut.query_key_linear.acc_data_out_valid.value == 1 and dut.query_key_linear.acc_data_out_ready.value == 1:
-            print("query_key_linear_acc_mdata_out = ", [x.signed_integer for x in dut.query_key_linear.acc_mdata_out.value])
-            print("query_key_linear_acc_edata_out = ", dut.query_key_linear.acc_edata_out.value.signed_integer)
-            
-        if dut.qk_valid.value == 1 and dut.qk_ready.value == 1:
-            print("qk_mout = ", [x.signed_integer for x in dut.qk_mout.value])
-            print("qk_eout = ", dut.qk_eout.value.signed_integer)
-
-        if dut.query_key_linear.fifo_data_out_valid.value == 1 and dut.query_key_linear.fifo_data_out_ready.value == 1:
-            print("query_key_linear_fifo_mdata_out = ", [x.signed_integer for x in dut.query_key_linear.fifo_mdata_out.value])
-            print("query_key_linear_fifo_edata_out = ", dut.query_key_linear.fifo_edata_out.value.signed_integer)
-
-        print("---")
+@cocotb.test()
+async def cocotb_test(dut):
+    cocotb.start_soon(check_signal(dut))  # Enable signal monitoring
+    tb = MxIntViTAttentionTB(dut)
+    await tb.run_test()
 
 default_config = {
-    "IN_DATA_TENSOR_SIZE_DIM_0": 4,
-    "IN_DATA_TENSOR_SIZE_DIM_1": 12,
-    "IN_DATA_PARALLELISM_DIM_0": 4,
-    "IN_DATA_PARALLELISM_DIM_1": 1,
-    "IN_DATA_PRECISION_0": 8,
-    "IN_DATA_PRECISION_1": 4,
-    "OUT_DATA_PRECISION_0": 8,
-    "OUT_DATA_PRECISION_1": 4,
+    # Number of attention heads
+    "NUM_HEADS": 2,
+
+    # Input data parameters
+    "DATA_IN_0_TENSOR_SIZE_DIM_0": 8,
+    "DATA_IN_0_TENSOR_SIZE_DIM_1": 2,
+    "DATA_IN_0_PARALLELISM_DIM_0": 2,
+    "DATA_IN_0_PARALLELISM_DIM_1": 1,
+    "DATA_IN_0_PRECISION_0": 8,
+    "DATA_IN_0_PRECISION_1": 3,
+
+    # Weight parameters (shared by Q,K,V)
+    "WEIGHT_TENSOR_SIZE_DIM_0": 8,
+    "WEIGHT_TENSOR_SIZE_DIM_1": 8,
+    "WEIGHT_PARALLELISM_DIM_0": 2,
+    "WEIGHT_PARALLELISM_DIM_1": 2,
+    "WEIGHT_PRECISION_0": 8,
+    "WEIGHT_PRECISION_1": 3,
+
+    # Bias parameters (shared by Q,K,V)
+    "HAS_BIAS": 1,
+    "BIAS_PRECISION_0": 8,
+    "BIAS_PRECISION_1": 3,
+
+    # Internal precision parameters
+    "QKV_PRECISION_0": 16,
+    "QKV_PRECISION_1": 3,
+
+    # Projection parameters
+    "WEIGHT_PROJ_PRECISION_0": 12,
+    "WEIGHT_PROJ_PRECISION_1": 3,
+    "BIAS_PROJ_PRECISION_0": 8,
+    "BIAS_PROJ_PRECISION_1": 3,
 }
+
 def get_fixed_self_attention_head_config(kwargs={}):
     config = default_config
     config.update(kwargs)
@@ -239,14 +360,13 @@ def test_fixed_self_attention_head_smoke():
     """
     Some quick tests to check if the module is working.
     """
-
     mase_runner(
         trace=True,
         module_param_list=[
             get_fixed_self_attention_head_config(),
         ],
         skip_build=False,
-        sim="questa",
+        # sim="questa",
     )
 
 

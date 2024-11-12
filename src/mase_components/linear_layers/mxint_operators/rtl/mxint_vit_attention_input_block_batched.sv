@@ -174,10 +174,10 @@ module mxint_vit_attention_input_block_batched #(
       .bias_valid(bias_query_valid),
       .bias_ready(bias_query_ready),
 
-      .mdata_out_0      (mdata_out_query),
-      .edata_out_0      (edata_out_query),
-      .data_out_0_valid(data_out_query_valid),
-      .data_out_0_ready(data_out_query_ready)
+      .mdata_out_0      (query_buffer_mdata),
+      .edata_out_0      (query_buffer_edata),
+      .data_out_0_valid(query_buffer_valid),
+      .data_out_0_ready(query_buffer_ready)
   );
 
   // * We must buffer the queries to latency match the key transpose path

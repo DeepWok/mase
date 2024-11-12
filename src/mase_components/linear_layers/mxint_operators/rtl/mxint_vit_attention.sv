@@ -1,10 +1,8 @@
-`timescale 1ns / 1ps
+`timescale 1 ns / 1 ps
 module mxint_vit_attention #(
-    // currently assume weights are all transposed
-    // currently force weight dim keep same
-
     parameter NUM_HEADS = 4,
 
+    // Input data parameters
     parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 8,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 2,
     parameter DATA_IN_0_PARALLELISM_DIM_0 = 4,
@@ -12,6 +10,7 @@ module mxint_vit_attention #(
     parameter DATA_IN_0_PRECISION_0 = 8,
     parameter DATA_IN_0_PRECISION_1 = 3,
 
+    // Weight parameters (shared by Q,K,V)
     parameter WEIGHT_TENSOR_SIZE_DIM_0 = 8,
     parameter WEIGHT_TENSOR_SIZE_DIM_1 = 8,
     parameter WEIGHT_PARALLELISM_DIM_0 = 4,
@@ -19,6 +18,7 @@ module mxint_vit_attention #(
     parameter WEIGHT_PRECISION_0 = 8,
     parameter WEIGHT_PRECISION_1 = 3,
 
+    // Bias parameters (shared by Q,K,V)
     parameter HAS_BIAS = 1,
     parameter BIAS_TENSOR_SIZE_DIM_0 = WEIGHT_TENSOR_SIZE_DIM_1,
     parameter BIAS_TENSOR_SIZE_DIM_1 = 1,
@@ -27,38 +27,34 @@ module mxint_vit_attention #(
     parameter BIAS_PRECISION_0 = 8,
     parameter BIAS_PRECISION_1 = 3,
 
+    // Internal precision parameters
     parameter QKV_PRECISION_0 = 16,
     parameter QKV_PRECISION_1 = 3,
-    parameter QKMM_OUT_PRECISION_0 = 16,
-    parameter QKMM_OUT_PRECISION_1 = 3,
-    parameter SOFTMAX_EXP_PRECISION_0 = 16,
-    parameter SOFTMAX_EXP_PRECISION_1 = 3,
-    parameter SOFTMAX_OUT_DATA_PRECISION_1 = 3,
-    parameter SVMM_OUT_PRECISION_0 = 8,
-    parameter SVMM_OUT_PRECISION_1 = 3,
 
+    // Projection parameters
     parameter WEIGHT_PROJ_PRECISION_0 = 12,
     parameter WEIGHT_PROJ_PRECISION_1 = 3,
-
-    parameter WEIGHT_PROJ_TENSOR_SIZE_DIM_0 = 8,
-    parameter WEIGHT_PROJ_TENSOR_SIZE_DIM_1 = 8,
-    parameter WEIGHT_PROJ_PARALLELISM_DIM_0 = 4,
-    parameter WEIGHT_PROJ_PARALLELISM_DIM_1 = 4,
-
     parameter BIAS_PROJ_PRECISION_0 = 8,
     parameter BIAS_PROJ_PRECISION_1 = 3,
+
+    // Derived parameters for projection
+    parameter WEIGHT_PROJ_TENSOR_SIZE_DIM_0 = WEIGHT_TENSOR_SIZE_DIM_0,
+    parameter WEIGHT_PROJ_TENSOR_SIZE_DIM_1 = WEIGHT_TENSOR_SIZE_DIM_1,
+    parameter WEIGHT_PROJ_PARALLELISM_DIM_0 = WEIGHT_PARALLELISM_DIM_0,
+    parameter WEIGHT_PROJ_PARALLELISM_DIM_1 = WEIGHT_PARALLELISM_DIM_1,
+
     parameter BIAS_PROJ_TENSOR_SIZE_DIM_0 = WEIGHT_PROJ_TENSOR_SIZE_DIM_1,
     parameter BIAS_PROJ_TENSOR_SIZE_DIM_1 = 1,
     parameter BIAS_PROJ_PARALLELISM_DIM_0 = WEIGHT_PROJ_PARALLELISM_DIM_1,
     parameter BIAS_PROJ_PARALLELISM_DIM_1 = 1,
 
+    // Derived parameters for output
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = WEIGHT_PROJ_TENSOR_SIZE_DIM_1,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1,
     parameter DATA_OUT_0_PARALLELISM_DIM_0 = WEIGHT_PROJ_PARALLELISM_DIM_1,
     parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1,
     parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0,
     parameter DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1
-
 ) (
     input logic clk,
     input logic rst,
@@ -111,7 +107,8 @@ module mxint_vit_attention #(
     output logic proj_weight_ready,
 
     // Proj bias
-    input logic [BIAS_PROJ_PRECISION_0-1:0] proj_bias [BIAS_PROJ_PARALLELISM_DIM_0 * BIAS_PROJ_PARALLELISM_DIM_1 -1:0],
+    input logic [BIAS_PROJ_PRECISION_0-1:0] mproj_bias [BIAS_PROJ_PARALLELISM_DIM_0 * BIAS_PROJ_PARALLELISM_DIM_1 -1:0],
+    input logic [BIAS_PROJ_PRECISION_1-1:0] eproj_bias,
     input logic proj_bias_valid,
     output logic proj_bias_ready,
 
@@ -153,14 +150,15 @@ module mxint_vit_attention #(
   logic fifo_value_valid, fifo_value_ready;
 
   // Head output
-  logic [SVMM_OUT_PRECISION_0-1:0] mhead_out [NUM_HEADS-1:0] [HEAD_OUT_0_PARALLELISM_DIM_0 * HEAD_OUT_0_PARALLELISM_DIM_1-1:0];
+  logic [QKV_PRECISION_0-1:0] mhead_out [NUM_HEADS-1:0] [HEAD_OUT_0_PARALLELISM_DIM_0 * HEAD_OUT_0_PARALLELISM_DIM_1-1:0];
   logic [QKV_PRECISION_1-1:0] ehead_out [NUM_HEADS-1:0];
   logic [NUM_HEADS-1:0] head_out_valid;
   logic [NUM_HEADS-1:0] head_out_ready;
 
-  logic [SVMM_OUT_PRECISION_0-1:0] proj_in [HEAD_OUT_0_PARALLELISM_DIM_0 * HEAD_OUT_0_PARALLELISM_DIM_1-1:0];
-  logic [SVMM_OUT_PRECISION_1-1:0] eproj_in; // Add this signal declaration
+  logic [QKV_PRECISION_0-1:0] mproj_in [HEAD_OUT_0_PARALLELISM_DIM_0 * HEAD_OUT_0_PARALLELISM_DIM_1-1:0];
+  logic [QKV_PRECISION_1-1:0] eproj_in; // Add this signal declaration
   logic proj_in_valid, proj_in_ready;
+
 
   // * Instances
   // * =================================================================
@@ -205,10 +203,10 @@ module mxint_vit_attention #(
       .weight_query_valid(query_weight_valid),
       .weight_query_ready(query_weight_ready),
 
-      .mquery_bias(mquery_bias),
-      .equery_bias(equery_bias),
-      .query_bias_valid(query_bias_valid),
-      .query_bias_ready(query_bias_ready),
+      .mbias_query(mquery_bias),
+      .ebias_query(equery_bias),
+      .bias_query_valid(query_bias_valid),
+      .bias_query_ready(query_bias_ready),
 
       // Key parameters
       .mweight_key(mkey_weight),
@@ -216,10 +214,10 @@ module mxint_vit_attention #(
       .weight_key_valid(key_weight_valid),
       .weight_key_ready(key_weight_ready),
 
-      .mkey_bias(mkey_bias),
-      .ekey_bias(ekey_bias),
-      .key_bias_valid(key_bias_valid),
-      .key_bias_ready(key_bias_ready),
+      .mbias_key(mkey_bias),
+      .ebias_key(ekey_bias),
+      .bias_key_valid(key_bias_valid),
+      .bias_key_ready(key_bias_ready),
 
       // Value parameters
       .mweight_value(mvalue_weight),
@@ -227,10 +225,10 @@ module mxint_vit_attention #(
       .weight_value_valid(value_weight_valid),
       .weight_value_ready(value_weight_ready),
 
-      .mvalue_bias(mvalue_bias),
-      .evalue_bias(evalue_bias),
-      .value_bias_valid(value_bias_valid),
-      .value_bias_ready(value_bias_ready),
+      .mbias_value(mvalue_bias),
+      .ebias_value(evalue_bias),
+      .bias_value_valid(value_bias_valid),
+      .bias_value_ready(value_bias_ready),
 
       // Query output
       .mdata_out_query(query),
@@ -274,11 +272,11 @@ module mxint_vit_attention #(
   self_attention_head_scatter #(
       .NUM_HEADS(NUM_HEADS),
 
+      // Fix parameter names to match module definition
       .IN_DATA_TENSOR_SIZE_DIM_0(DATA_IN_0_TENSOR_SIZE_DIM_0),
       .IN_DATA_TENSOR_SIZE_DIM_1(DATA_IN_0_TENSOR_SIZE_DIM_1),
-      .IN_DATA_PARALLELISM_DIM_0(WEIGHT_PARALLELISM_DIM_0),
+      .IN_DATA_PARALLELISM_DIM_0(DATA_IN_0_PARALLELISM_DIM_0),
       .IN_DATA_PARALLELISM_DIM_1(DATA_IN_0_PARALLELISM_DIM_1)
-
   ) scatter_qkv_i (
       .clk,
       .rst,
@@ -312,13 +310,8 @@ module mxint_vit_attention #(
         .IN_DATA_PARALLELISM_DIM_1   (HEAD_OUT_0_PARALLELISM_DIM_1),
         .IN_DATA_PRECISION_0         (QKV_PRECISION_0),
         .IN_DATA_PRECISION_1         (QKV_PRECISION_1),
-        .QKMM_OUT_PRECISION_0        (QKMM_OUT_PRECISION_0),
-        .QKMM_OUT_PRECISION_1        (QKMM_OUT_PRECISION_1),
-        .SOFTMAX_EXP_PRECISION_0     (SOFTMAX_EXP_PRECISION_0),
-        .SOFTMAX_EXP_PRECISION_1     (SOFTMAX_EXP_PRECISION_1),
-        .SOFTMAX_OUT_DATA_PRECISION_1(SOFTMAX_OUT_DATA_PRECISION_1),
-        .OUT_DATA_PRECISION_0        (SVMM_OUT_PRECISION_0),
-        .OUT_DATA_PRECISION_1        (SVMM_OUT_PRECISION_1)
+        .OUT_DATA_PRECISION_0        (QKV_PRECISION_0),
+        .OUT_DATA_PRECISION_1        (QKV_PRECISION_1)
     ) head_i (
         .clk,
         .rst,
@@ -353,8 +346,8 @@ module mxint_vit_attention #(
       .IN_DATA_TENSOR_SIZE_DIM_1(HEAD_OUT_0_TENSOR_SIZE_DIM_1),
       .IN_DATA_PARALLELISM_DIM_0(HEAD_OUT_0_PARALLELISM_DIM_0),
       .IN_DATA_PARALLELISM_DIM_1(HEAD_OUT_0_PARALLELISM_DIM_1),
-      .MAN_WIDTH(SVMM_OUT_PRECISION_0),
-      .EXP_WIDTH(SVMM_OUT_PRECISION_1)
+      .MAN_WIDTH(QKV_PRECISION_0),
+      .EXP_WIDTH(QKV_PRECISION_1)
   ) gather_qkv_i (
       .clk,
       .rst,
@@ -362,7 +355,7 @@ module mxint_vit_attention #(
       .esplit_head_out(ehead_out),
       .split_head_out_valid(head_out_valid),
       .split_head_out_ready(head_out_ready),
-      .mupdated_tokens(proj_in),
+      .mupdated_tokens(mproj_in),
       .eupdated_tokens(eproj_in),
       .updated_tokens_valid(proj_in_valid),
       .updated_tokens_ready(proj_in_ready)
@@ -371,8 +364,8 @@ module mxint_vit_attention #(
   mxint_linear #(
       .HAS_BIAS              (HAS_BIAS),
 
-      .DATA_IN_0_PRECISION_0      (SVMM_OUT_PRECISION_0),
-      .DATA_IN_0_PRECISION_1      (SVMM_OUT_PRECISION_1),
+      .DATA_IN_0_PRECISION_0      (QKV_PRECISION_0),
+      .DATA_IN_0_PRECISION_1      (QKV_PRECISION_1),
       .DATA_IN_0_TENSOR_SIZE_DIM_0(HEAD_OUT_0_TENSOR_SIZE_DIM_0),
       .DATA_IN_0_TENSOR_SIZE_DIM_1(HEAD_OUT_0_TENSOR_SIZE_DIM_1),
       .DATA_IN_0_PARALLELISM_DIM_0(HEAD_OUT_0_PARALLELISM_DIM_0),
@@ -394,10 +387,10 @@ module mxint_vit_attention #(
       .rst(rst),
 
       // input port for data_inivations
-      .mdata_in_0      (proj_in),
-      .edata_in_0(edata_in_0),
-      .data_in_0_valid(proj_in_valid),
-      .data_in_0_ready(proj_in_ready),
+      .mdata_in_0      (mproj_in),
+      .edata_in_0      (eproj_in),
+      .data_in_0_valid (proj_in_valid),
+      .data_in_0_ready (proj_in_ready),
 
       // input port for weight
       .mweight      (mproj_weight),
@@ -405,8 +398,8 @@ module mxint_vit_attention #(
       .weight_valid(proj_weight_valid),
       .weight_ready(proj_weight_ready),
 
-      .mbias      (proj_bias),
-      .ebias(ebias_proj),
+      .mbias      (mproj_bias),
+      .ebias(eproj_bias),  
       .bias_valid(proj_bias_valid),
       .bias_ready(proj_bias_ready),
 

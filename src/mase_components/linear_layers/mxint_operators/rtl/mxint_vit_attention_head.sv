@@ -13,8 +13,8 @@ module mxint_vit_attention_head #(
     parameter OUT_DATA_TENSOR_SIZE_DIM_1 = IN_DATA_TENSOR_SIZE_DIM_1,
     parameter OUT_DATA_PARALLELISM_DIM_0 = IN_DATA_PARALLELISM_DIM_0,
     parameter OUT_DATA_PARALLELISM_DIM_1 = IN_DATA_PARALLELISM_DIM_1,
-    parameter OUT_DATA_PRECISION_0 = 16,
-    parameter OUT_DATA_PRECISION_1 = 3
+    parameter OUT_DATA_PRECISION_0 = IN_DATA_PRECISION_0,
+    parameter OUT_DATA_PRECISION_1 = IN_DATA_PRECISION_1
 ) (
     input logic clk,
     input logic rst,
@@ -50,8 +50,8 @@ module mxint_vit_attention_head #(
     logic qk_valid, qk_ready;
 
     // Softmax signals 
-    logic [OUT_DATA_PRECISION_0-1:0] sm_mout [IN_DATA_PARALLELISM_DIM_1 * IN_DATA_PARALLELISM_DIM_1-1:0];
-    logic [OUT_DATA_PRECISION_1-1:0] sm_eout;
+    logic [IN_DATA_PRECISION_0-1:0] sm_mout [IN_DATA_PARALLELISM_DIM_1 * IN_DATA_PARALLELISM_DIM_1-1:0];
+    logic [IN_DATA_PRECISION_1-1:0] sm_eout;
     logic sm_valid, sm_ready;
 
     // First compute Q * K^T using mxint_linear
