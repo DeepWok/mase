@@ -273,16 +273,20 @@ module mxint_softmax #(
   );
 
   // Add skid buffer for breaking the combinational logic connection between split2 and join2 exponent path
+  logic [DATA_IN_0_PRECISION_1 - 1:0] ff_exp_edata_out_skid_in[DATA_IN_0_PARALLELISM - 1:0];
+  logic [DATA_IN_0_PRECISION_1 - 1:0] ff_exp_edata_out_skid_out[DATA_IN_0_PARALLELISM - 1:0];
+  assign ff_exp_edata_out_skid_in[0] = ff_exp_edata_out;
+  assign ff_exp_edata_out_skid = ff_exp_edata_out_skid_out[0];
   unpacked_skid_buffer #(
       .DATA_WIDTH(DATA_N_PRECISION_0),
       .IN_NUM(1)
   ) ff_exp_edata_skid_buffer (
       .clk(clk),
       .rst(rst),
-      .data_in({ff_exp_edata_out}),
+      .data_in(ff_exp_edata_out_skid_in),
       .data_in_valid(ff_exp_edata_valid),
       .data_in_ready(ff_exp_edata_ready),
-      .data_out({ff_exp_edata_skid}),
+      .data_out(ff_exp_edata_out_skid_out),
       .data_out_valid(ff_exp_edata_skid_valid),
       .data_out_ready(ff_exp_edata_skid_ready)
   );

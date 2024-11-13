@@ -223,7 +223,7 @@ def test_fixed_self_attention_head_smoke():
             get_fixed_self_attention_head_config(),
         ],
         skip_build=False,
-        sim="verilator",
+        sim="questa",
     )
 
 

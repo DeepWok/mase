@@ -127,6 +127,7 @@ def add_verilog_param(node):
         elif type(arg_info) == bool:
             vp[_cap(arg)] = 1 if arg_info else 0
         else:
+            breakpoint()
             vp[_cap(arg)] = arg_info
 
     for result, result_info in results.items():

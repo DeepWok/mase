@@ -29,7 +29,7 @@ def update_common_metadata_pass(mg, quan_args):
     # update precision
     for node in mg.fx_graph.nodes:
         mase_op = node.meta["mase"].parameters["common"]["mase_op"]
-        if mase_op not in QUANTIZEABLE_OP:
+        if mase_op not in QUANTIZEABLE_OP + ("user_defined_module",):
             print(mase_op)
             continue
         node_quan_config = quan_args.get(mase_op)["config"]
@@ -39,9 +39,28 @@ def update_common_metadata_pass(mg, quan_args):
                 and "type" in node.meta["mase"].parameters["common"]["args"][arg].keys()
             ):
                 if node_quan_config["name"] == "mxint_hardware":
-                    node.meta["mase"].parameters["common"]["args"][arg][
+                    if mase_op == "user_defined_module":
+                        if "weight" in arg:
+                            parallelism = node_quan_config["weight_parallelism"]
+                            precision = node_quan_config["weight_width"], node_quan_config["weight_exponent_width"]
+                        elif "data_in" in arg:
+                            parallelism = node_quan_config["data_in_parallelism"]
+                            precision = node_quan_config["data_in_width"], node_quan_config["data_in_exponent_width"]
+                        else:
+                            parallelism = node_quan_config["bias_parallelism"]
+                            precision = node_quan_config["bias_width"], node_quan_config["bias_exponent_width"]
+                        node.meta["mase"].parameters["common"]["args"][arg][
+                            "type"
+                        ] = "mxint_hardware"
+                        node.meta["mase"].parameters["common"]["args"][arg][
+                            "precision"
+                        ] = precision
+                        node.meta["mase"].parameters["common"]["args"][arg][
+                        "parallelism"] = parallelism
+                    else:
+                        node.meta["mase"].parameters["common"]["args"][arg][
                         "parallelism"
-                    ] = node_quan_config[parse_arg(arg) + "_parallelism"]
+                        ] = node_quan_config[parse_arg(arg) + "_parallelism"]
                 else:
                     node.meta["mase"].parameters["common"]["args"][arg][
                         "type"
@@ -64,7 +83,7 @@ def update_common_metadata_pass(mg, quan_args):
                     ]
                     node.meta["mase"].parameters["common"]["results"][result][
                         "parallelism"
-                    ] = node_quan_config[parse_arg(arg) + "_parallelism"]
+                    ] = node_quan_config["data_out_parallelism"]
                 else:
                     node.meta["mase"].parameters["common"]["results"][result][
                         "type"
@@ -185,7 +204,7 @@ def update_hardware_precision_param(mg, quan_args, model_args: dict = {}):
         if vp == None:
             continue
         delete_dim_of_batch_size(vp)
-        if mase_op not in (QUANTIZEABLE_OP + ("vit_self_attention_integer",)):
+        if mase_op not in (QUANTIZEABLE_OP + ("vit_self_attention_integer","user_defined_module")):
             continue
         node_quan_args = quan_args.get(mase_op)["config"]
         node_model_args = model_args.get(mase_op)
