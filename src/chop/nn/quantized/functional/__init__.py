@@ -135,6 +135,23 @@ from .softplus import (
     softplus_ternary,
 )
 
+from .linear import (
+    linearBlockFP,
+    linearBlockMinifloat,
+    linearInteger,
+    linearLog,
+    linearBlockLog,
+    linearMinifloatDenorm,
+    linearMinifloatIEEE,
+    linearBinary,
+    linearBinaryResidualSign,
+    linearBinaryScaling,
+    linearTernary,
+    linearLUT,
+    linearLogicNets,
+    linearMXIntHardware,
+)
+
 quantized_func_map = {
     "add_block_minifloat": add_block_minifloat,
     "add_integer": add_integer,
@@ -246,4 +263,18 @@ quantized_func_map = {
     "softplus_block_log": softplus_block_log,
     "softplus_binary": softplus_binary,
     "softplus_ternary": softplus_ternary,
+    "linear_block_minifloat": linearBlockMinifloat,
+    "linear_integer": linearInteger,
+    "linear_fixed": linearInteger,
+    "linear_log": linearLog,
+    "linear_mxint_hardware": linearMXIntHardware,
+    "linear_block_log": linearBlockLog,
+    "linear_minifloat_ieee": linearMinifloatIEEE,
+    "linear_minifloat_denorm": linearMinifloatDenorm,
+    "linear_block_fp": linearBlockFP,
+    "linear_binary": linearBinary,
+    "linear_binary_residual": linearBinaryResidualSign,
+    "linear_ternary": linearTernary,
+    "linear_lutnet": linearLUT,
+    "linear_logicnets": linearLogicNets,
 }

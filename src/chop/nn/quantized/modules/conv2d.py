@@ -22,7 +22,7 @@ from chop.nn.quantizers import (
     binary_quantizer,
     ternary_quantizer,
 )
-from .utils import get_stats, quantiser_passthrough
+from ..utils import get_stats, quantiser_passthrough
 import math
 
 # LogicNets
