@@ -308,6 +308,14 @@ MASE_HW_DEPS = {
         "memory",
         "cast",
     ],
+    "linear_layers/mxint_operators/mxint_gelu": [
+        "linear_layers/mxint_operators",
+        "linear_layers/fixed_operators",
+        "common",
+        "memory",
+        "cast",
+        "generated_lut"
+    ],
     "linear_layers/mxint_operators/mxint_vit_attention_head": [
         "linear_layers/mxint_operators",
         "linear_layers/fixed_operators",
@@ -317,7 +325,7 @@ MASE_HW_DEPS = {
         "cast",
         "scalar_operators/fixed",
     ],
-    "linear_layers/mxint_operators/mxint_vit_attention": [
+    "linear_layers/mxint_operators/mxint_vit_attention_wrap": [
         "linear_layers/mxint_operators",
         "linear_layers/fixed_operators",
         "transformer_layers",
