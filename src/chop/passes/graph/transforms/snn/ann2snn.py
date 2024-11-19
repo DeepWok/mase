@@ -9,7 +9,7 @@
 from copy import copy, deepcopy
 import logging
 from chop.ir.graph.mase_metadata import MaseMetadata
-from chop.nn.snn import neuron
+from chop.nn.snn.modules.neuron import IFNode
 from chop.passes.graph.transforms.quantize.quant_parsers.update_node_meta import (
     update_quant_meta_param,
 )
@@ -116,7 +116,7 @@ def replace_by_ifnode(graph, config: dict) -> torch.fx.GraphModule:
                 target2 = "snn tailor." + str(hook_cnt) + ".2"  # voltage_scaler
                 m0 = VoltageScaler(1.0 / s)
                 if node_config.get("name") == "IFNode":
-                    m1 = neuron.IFNode(v_threshold=1.0, v_reset=None)
+                    m1 = IFNode(v_threshold=1.0, v_reset=None)
                 else:
                     raise NotImplementedError("Not implemented yet.")
                 m2 = VoltageScaler(s)
@@ -146,11 +146,11 @@ def replace_by_ifnode(graph, config: dict) -> torch.fx.GraphModule:
     return graph.model
 
 
-def graph_iterator_quantize_by_name(graph, config: dict):
+def graph_iterator_ann2snn_by_name(graph, config: dict):
     pass
 
 
-def graph_iterator_quantize_by_type(graph, config: dict):
+def graph_iterator_ann2snn_by_type(graph, config: dict):
     fuse_flag = config.get("fuse", False)
     dataloader = config.get("train_data_loader")
     device = config.get("device", "cpu")
@@ -229,9 +229,9 @@ def ann2snn_transform_pass(graph, pass_args=None):
     by = pass_args.pop("by")
     match by:
         case "type":
-            graph = graph_iterator_quantize_by_type(graph, pass_args)
+            graph = graph_iterator_ann2snn_by_type(graph, pass_args)
         case "name":
-            graph = graph_iterator_quantize_by_name(graph, pass_args)
+            graph = graph_iterator_ann2snn_by_name(graph, pass_args)
         case _:
             raise ValueError(f'Unsupported quantize "by": {by}')
 
