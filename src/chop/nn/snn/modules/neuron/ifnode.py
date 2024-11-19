@@ -28,6 +28,7 @@ class SimpleIFNode(SimpleBaseNode):
     def neuronal_charge(self, x: torch.Tensor):
         self.v = self.v + x
 
+
 class IFNode(BaseNode):
     def __init__(
         self,
