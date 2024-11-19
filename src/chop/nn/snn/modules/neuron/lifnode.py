@@ -18,10 +18,19 @@ from .neuron import BaseNode, SimpleBaseNode
 
 
 class SimpleLIFNode(SimpleBaseNode):
-    def __init__(self, tau:float, decay_input: bool, v_threshold: float = 1., v_reset: float = 0.,
-                 surrogate_function: Callable = surrogate.Sigmoid(), detach_reset: bool = False,
-                 step_mode='s'):
-        super().__init__(v_threshold, v_reset, surrogate_function, detach_reset, step_mode)
+    def __init__(
+        self,
+        tau: float,
+        decay_input: bool,
+        v_threshold: float = 1.0,
+        v_reset: float = 0.0,
+        surrogate_function: Callable = surrogate.Sigmoid(),
+        detach_reset: bool = False,
+        step_mode="s",
+    ):
+        super().__init__(
+            v_threshold, v_reset, surrogate_function, detach_reset, step_mode
+        )
         self.tau = tau
         self.decay_input = decay_input
 
@@ -33,9 +42,18 @@ class SimpleLIFNode(SimpleBaseNode):
 
 
 class LIFNode(BaseNode):
-    def __init__(self, tau: float = 2., decay_input: bool = True, v_threshold: float = 1.,
-                 v_reset: Optional[float] = 0., surrogate_function: Callable = surrogate.Sigmoid(),
-                 detach_reset: bool = False, step_mode='s', backend='torch', store_v_seq: bool = False):
+    def __init__(
+        self,
+        tau: float = 2.0,
+        decay_input: bool = True,
+        v_threshold: float = 1.0,
+        v_reset: Optional[float] = 0.0,
+        surrogate_function: Callable = surrogate.Sigmoid(),
+        detach_reset: bool = False,
+        step_mode="s",
+        backend="torch",
+        store_v_seq: bool = False,
+    ):
         """
         * :ref:`API in English <LIFNode.__init__-en>`
 
@@ -88,84 +106,107 @@ class LIFNode(BaseNode):
                 H[t] = V[t-1] - \\frac{1}{\\tau}(V[t-1] - V_{reset}) + X[t]
 
         """
-        assert isinstance(tau, float) and tau > 1.
+        assert isinstance(tau, float) and tau > 1.0
 
-        super().__init__(v_threshold, v_reset, surrogate_function, detach_reset, step_mode, backend, store_v_seq)
+        super().__init__(
+            v_threshold,
+            v_reset,
+            surrogate_function,
+            detach_reset,
+            step_mode,
+            backend,
+            store_v_seq,
+        )
 
         self.tau = tau
         self.decay_input = decay_input
 
     @property
     def supported_backends(self):
-        if self.step_mode == 's':
-            return ('torch', 'cupy')
-        elif self.step_mode == 'm':
-            return ('torch', 'cupy')
+        if self.step_mode == "s":
+            return ("torch", "cupy")
+        elif self.step_mode == "m":
+            return ("torch", "cupy")
         else:
             raise ValueError(self.step_mode)
 
     def extra_repr(self):
-        return super().extra_repr() + f', tau={self.tau}'
+        return super().extra_repr() + f", tau={self.tau}"
 
     def neuronal_charge(self, x: torch.Tensor):
         if self.decay_input:
-            if self.v_reset is None or self.v_reset == 0.:
+            if self.v_reset is None or self.v_reset == 0.0:
                 self.v = self.neuronal_charge_decay_input_reset0(x, self.v, self.tau)
             else:
-                self.v = self.neuronal_charge_decay_input(x, self.v, self.v_reset, self.tau)
+                self.v = self.neuronal_charge_decay_input(
+                    x, self.v, self.v_reset, self.tau
+                )
 
         else:
-            if self.v_reset is None or self.v_reset == 0.:
+            if self.v_reset is None or self.v_reset == 0.0:
                 self.v = self.neuronal_charge_no_decay_input_reset0(x, self.v, self.tau)
             else:
-                self.v = self.neuronal_charge_no_decay_input(x, self.v, self.v_reset, self.tau)
+                self.v = self.neuronal_charge_no_decay_input(
+                    x, self.v, self.v_reset, self.tau
+                )
 
     @staticmethod
     @torch.jit.script
-    def neuronal_charge_decay_input_reset0(x: torch.Tensor, v: torch.Tensor, tau: float):
+    def neuronal_charge_decay_input_reset0(
+        x: torch.Tensor, v: torch.Tensor, tau: float
+    ):
         v = v + (x - v) / tau
         return v
 
     @staticmethod
     @torch.jit.script
-    def neuronal_charge_decay_input(x: torch.Tensor, v: torch.Tensor, v_reset: float, tau: float):
+    def neuronal_charge_decay_input(
+        x: torch.Tensor, v: torch.Tensor, v_reset: float, tau: float
+    ):
         v = v + (x - (v - v_reset)) / tau
         return v
 
     @staticmethod
     @torch.jit.script
-    def neuronal_charge_no_decay_input_reset0(x: torch.Tensor, v: torch.Tensor, tau: float):
-        v = v * (1. - 1. / tau) + x
+    def neuronal_charge_no_decay_input_reset0(
+        x: torch.Tensor, v: torch.Tensor, tau: float
+    ):
+        v = v * (1.0 - 1.0 / tau) + x
         return v
 
     @staticmethod
     @torch.jit.script
-    def neuronal_charge_no_decay_input(x: torch.Tensor, v: torch.Tensor, v_reset: float, tau: float):
+    def neuronal_charge_no_decay_input(
+        x: torch.Tensor, v: torch.Tensor, v_reset: float, tau: float
+    ):
         v = v - (v - v_reset) / tau + x
         return v
 
     @staticmethod
     @torch.jit.script
-    def jit_eval_single_step_forward_hard_reset_decay_input(x: torch.Tensor, v: torch.Tensor, v_threshold: float,
-                                                            v_reset: float, tau: float):
+    def jit_eval_single_step_forward_hard_reset_decay_input(
+        x: torch.Tensor, v: torch.Tensor, v_threshold: float, v_reset: float, tau: float
+    ):
         v = v + (x - (v - v_reset)) / tau
         spike = (v >= v_threshold).to(x)
-        v = v_reset * spike + (1. - spike) * v
+        v = v_reset * spike + (1.0 - spike) * v
         return spike, v
 
     @staticmethod
     @torch.jit.script
-    def jit_eval_single_step_forward_hard_reset_no_decay_input(x: torch.Tensor, v: torch.Tensor, v_threshold: float,
-                                                               v_reset: float, tau: float):
+    def jit_eval_single_step_forward_hard_reset_no_decay_input(
+        x: torch.Tensor, v: torch.Tensor, v_threshold: float, v_reset: float, tau: float
+    ):
         v = v - (v - v_reset) / tau + x
         spike = (v >= v_threshold).to(x)
-        v = v_reset * spike + (1. - spike) * v
+        v = v_reset * spike + (1.0 - spike) * v
         return spike, v
 
     @staticmethod
     @torch.jit.script
-    def jit_eval_single_step_forward_soft_reset_decay_input(x: torch.Tensor, v: torch.Tensor, v_threshold: float,
-                                                            tau: float):
+    def jit_eval_single_step_forward_soft_reset_decay_input(
+        x: torch.Tensor, v: torch.Tensor, v_threshold: float, tau: float
+    ):
         v = v + (x - v) / tau
         spike = (v >= v_threshold).to(x)
         v = v - spike * v_threshold
@@ -173,70 +214,91 @@ class LIFNode(BaseNode):
 
     @staticmethod
     @torch.jit.script
-    def jit_eval_single_step_forward_soft_reset_no_decay_input(x: torch.Tensor, v: torch.Tensor, v_threshold: float,
-                                                               tau: float):
-        v = v * (1. - 1. / tau) + x
+    def jit_eval_single_step_forward_soft_reset_no_decay_input(
+        x: torch.Tensor, v: torch.Tensor, v_threshold: float, tau: float
+    ):
+        v = v * (1.0 - 1.0 / tau) + x
         spike = (v >= v_threshold).to(x)
         v = v - spike * v_threshold
         return spike, v
 
     @staticmethod
     @torch.jit.script
-    def jit_eval_multi_step_forward_hard_reset_decay_input(x_seq: torch.Tensor, v: torch.Tensor, v_threshold: float,
-                                                           v_reset: float, tau: float):
+    def jit_eval_multi_step_forward_hard_reset_decay_input(
+        x_seq: torch.Tensor,
+        v: torch.Tensor,
+        v_threshold: float,
+        v_reset: float,
+        tau: float,
+    ):
         spike_seq = torch.zeros_like(x_seq)
         for t in range(x_seq.shape[0]):
             v = v + (x_seq[t] - (v - v_reset)) / tau
             spike = (v >= v_threshold).to(x_seq)
-            v = v_reset * spike + (1. - spike) * v
+            v = v_reset * spike + (1.0 - spike) * v
             spike_seq[t] = spike
         return spike_seq, v
 
     @staticmethod
     @torch.jit.script
-    def jit_eval_multi_step_forward_hard_reset_decay_input_with_v_seq(x_seq: torch.Tensor, v: torch.Tensor,
-                                                                      v_threshold: float, v_reset: float, tau: float):
+    def jit_eval_multi_step_forward_hard_reset_decay_input_with_v_seq(
+        x_seq: torch.Tensor,
+        v: torch.Tensor,
+        v_threshold: float,
+        v_reset: float,
+        tau: float,
+    ):
         spike_seq = torch.zeros_like(x_seq)
         v_seq = torch.zeros_like(x_seq)
         for t in range(x_seq.shape[0]):
             v = v + (x_seq[t] - (v - v_reset)) / tau
             spike = (v >= v_threshold).to(x_seq)
-            v = v_reset * spike + (1. - spike) * v
+            v = v_reset * spike + (1.0 - spike) * v
             spike_seq[t] = spike
             v_seq[t] = v
         return spike_seq, v, v_seq
 
     @staticmethod
     @torch.jit.script
-    def jit_eval_multi_step_forward_hard_reset_no_decay_input(x_seq: torch.Tensor, v: torch.Tensor, v_threshold: float,
-                                                              v_reset: float, tau: float):
+    def jit_eval_multi_step_forward_hard_reset_no_decay_input(
+        x_seq: torch.Tensor,
+        v: torch.Tensor,
+        v_threshold: float,
+        v_reset: float,
+        tau: float,
+    ):
         spike_seq = torch.zeros_like(x_seq)
         for t in range(x_seq.shape[0]):
             v = v - (v - v_reset) / tau + x_seq[t]
             spike = (v >= v_threshold).to(x_seq)
-            v = v_reset * spike + (1. - spike) * v
+            v = v_reset * spike + (1.0 - spike) * v
             spike_seq[t] = spike
         return spike_seq, v
 
     @staticmethod
     @torch.jit.script
-    def jit_eval_multi_step_forward_hard_reset_no_decay_input_with_v_seq(x_seq: torch.Tensor, v: torch.Tensor,
-                                                                         v_threshold: float, v_reset: float,
-                                                                         tau: float):
+    def jit_eval_multi_step_forward_hard_reset_no_decay_input_with_v_seq(
+        x_seq: torch.Tensor,
+        v: torch.Tensor,
+        v_threshold: float,
+        v_reset: float,
+        tau: float,
+    ):
         spike_seq = torch.zeros_like(x_seq)
         v_seq = torch.zeros_like(x_seq)
         for t in range(x_seq.shape[0]):
             v = v - (v - v_reset) / tau + x_seq[t]
             spike = (v >= v_threshold).to(x_seq)
-            v = v_reset * spike + (1. - spike) * v
+            v = v_reset * spike + (1.0 - spike) * v
             spike_seq[t] = spike
             v_seq[t] = v
         return spike_seq, v, v_seq
 
     @staticmethod
     @torch.jit.script
-    def jit_eval_multi_step_forward_soft_reset_decay_input(x_seq: torch.Tensor, v: torch.Tensor, v_threshold: float,
-                                                           tau: float):
+    def jit_eval_multi_step_forward_soft_reset_decay_input(
+        x_seq: torch.Tensor, v: torch.Tensor, v_threshold: float, tau: float
+    ):
         spike_seq = torch.zeros_like(x_seq)
         for t in range(x_seq.shape[0]):
             v = v + (x_seq[t] - v) / tau
@@ -247,8 +309,9 @@ class LIFNode(BaseNode):
 
     @staticmethod
     @torch.jit.script
-    def jit_eval_multi_step_forward_soft_reset_decay_input_with_v_seq(x_seq: torch.Tensor, v: torch.Tensor,
-                                                                      v_threshold: float, tau: float):
+    def jit_eval_multi_step_forward_soft_reset_decay_input_with_v_seq(
+        x_seq: torch.Tensor, v: torch.Tensor, v_threshold: float, tau: float
+    ):
         spike_seq = torch.zeros_like(x_seq)
         v_seq = torch.zeros_like(x_seq)
         for t in range(x_seq.shape[0]):
@@ -261,11 +324,12 @@ class LIFNode(BaseNode):
 
     @staticmethod
     @torch.jit.script
-    def jit_eval_multi_step_forward_soft_reset_no_decay_input(x_seq: torch.Tensor, v: torch.Tensor, v_threshold: float,
-                                                              tau: float):
+    def jit_eval_multi_step_forward_soft_reset_no_decay_input(
+        x_seq: torch.Tensor, v: torch.Tensor, v_threshold: float, tau: float
+    ):
         spike_seq = torch.zeros_like(x_seq)
         for t in range(x_seq.shape[0]):
-            v = v * (1. - 1. / tau) + x_seq[t]
+            v = v * (1.0 - 1.0 / tau) + x_seq[t]
             spike = (v >= v_threshold).to(x_seq)
             v = v - spike * v_threshold
             spike_seq[t] = spike
@@ -273,13 +337,13 @@ class LIFNode(BaseNode):
 
     @staticmethod
     @torch.jit.script
-    def jit_eval_multi_step_forward_soft_reset_no_decay_input_with_v_seq(x_seq: torch.Tensor, v: torch.Tensor,
-                                                                         v_threshold: float,
-                                                                         tau: float):
+    def jit_eval_multi_step_forward_soft_reset_no_decay_input_with_v_seq(
+        x_seq: torch.Tensor, v: torch.Tensor, v_threshold: float, tau: float
+    ):
         spike_seq = torch.zeros_like(x_seq)
         v_seq = torch.zeros_like(x_seq)
         for t in range(x_seq.shape[0]):
-            v = v * (1. - 1. / tau) + x_seq[t]
+            v = v * (1.0 - 1.0 / tau) + x_seq[t]
             spike = (v >= v_threshold).to(x_seq)
             v = v - spike * v_threshold
             spike_seq[t] = spike
@@ -288,38 +352,57 @@ class LIFNode(BaseNode):
 
     def single_step_forward(self, x: torch.Tensor):
         if self.training:
-            if self.backend == 'torch':
+            if self.backend == "torch":
                 return super().single_step_forward(x)
-            elif self.backend == 'cupy':
+            elif self.backend == "cupy":
                 hard_reset = self.v_reset is not None
 
                 if x.dtype == torch.float:
-                    dtype = 'float'
+                    dtype = "float"
                 elif x.dtype == torch.half:
-                    dtype = 'half2'
+                    dtype = "half2"
                 else:
                     raise NotImplementedError(x.dtype)
-                
-                if self.forward_kernel is None or not self.forward_kernel.check_attributes(hard_reset=hard_reset,
-                                                                                           dtype=dtype,
-                                                                                           decay_input=self.decay_input):
-                    self.forward_kernel = ss_ac_neuron_kernel.LIFNodeFPKernel(decay_input=self.decay_input,
-                                                                              hard_reset=hard_reset, dtype=dtype)
 
-                if self.backward_kernel is None or not self.backward_kernel.check_attributes(
-                        surrogate_function=self.surrogate_function.cuda_codes, hard_reset=hard_reset,
-                        detach_reset=self.detach_reset, dtype=dtype, decay_input=self.decay_input):
+                if (
+                    self.forward_kernel is None
+                    or not self.forward_kernel.check_attributes(
+                        hard_reset=hard_reset, dtype=dtype, decay_input=self.decay_input
+                    )
+                ):
+                    self.forward_kernel = ss_ac_neuron_kernel.LIFNodeFPKernel(
+                        decay_input=self.decay_input, hard_reset=hard_reset, dtype=dtype
+                    )
+
+                if (
+                    self.backward_kernel is None
+                    or not self.backward_kernel.check_attributes(
+                        surrogate_function=self.surrogate_function.cuda_codes,
+                        hard_reset=hard_reset,
+                        detach_reset=self.detach_reset,
+                        dtype=dtype,
+                        decay_input=self.decay_input,
+                    )
+                ):
                     self.backward_kernel = ss_ac_neuron_kernel.LIFNodeBPKernel(
                         decay_input=self.decay_input,
-                        surrogate_function=self.surrogate_function.cuda_codes, hard_reset=hard_reset,
-                        detach_reset=self.detach_reset, dtype=dtype)
+                        surrogate_function=self.surrogate_function.cuda_codes,
+                        hard_reset=hard_reset,
+                        detach_reset=self.detach_reset,
+                        dtype=dtype,
+                    )
 
                 self.v_float_to_tensor(x)
 
-                spike, v = ss_ac_neuron_kernel.LIFNodeATGF.apply(x.flatten(0), self.v.flatten(0),
-                                                                 self.v_threshold, self.v_reset, 1. / self.tau,
-                                                                 self.forward_kernel,
-                                                                 self.backward_kernel)
+                spike, v = ss_ac_neuron_kernel.LIFNodeATGF.apply(
+                    x.flatten(0),
+                    self.v.flatten(0),
+                    self.v_threshold,
+                    self.v_reset,
+                    1.0 / self.tau,
+                    self.forward_kernel,
+                    self.backward_kernel,
+                )
 
                 spike = spike.reshape(x.shape)
                 v = v.reshape(x.shape)
@@ -334,59 +417,85 @@ class LIFNode(BaseNode):
             self.v_float_to_tensor(x)
             if self.v_reset is None:
                 if self.decay_input:
-                    spike, self.v = self.jit_eval_single_step_forward_soft_reset_decay_input(x, self.v,
-                                                                                             self.v_threshold, self.tau)
+                    spike, self.v = (
+                        self.jit_eval_single_step_forward_soft_reset_decay_input(
+                            x, self.v, self.v_threshold, self.tau
+                        )
+                    )
                 else:
-                    spike, self.v = self.jit_eval_single_step_forward_soft_reset_no_decay_input(x, self.v,
-                                                                                                self.v_threshold,
-                                                                                                self.tau)
+                    spike, self.v = (
+                        self.jit_eval_single_step_forward_soft_reset_no_decay_input(
+                            x, self.v, self.v_threshold, self.tau
+                        )
+                    )
             else:
                 if self.decay_input:
-                    spike, self.v = self.jit_eval_single_step_forward_hard_reset_decay_input(x, self.v,
-                                                                                             self.v_threshold,
-                                                                                             self.v_reset, self.tau)
+                    spike, self.v = (
+                        self.jit_eval_single_step_forward_hard_reset_decay_input(
+                            x, self.v, self.v_threshold, self.v_reset, self.tau
+                        )
+                    )
                 else:
-                    spike, self.v = self.jit_eval_single_step_forward_hard_reset_no_decay_input(x, self.v,
-                                                                                                self.v_threshold,
-                                                                                                self.v_reset,
-                                                                                                self.tau)
+                    spike, self.v = (
+                        self.jit_eval_single_step_forward_hard_reset_no_decay_input(
+                            x, self.v, self.v_threshold, self.v_reset, self.tau
+                        )
+                    )
             return spike
 
     def multi_step_forward(self, x_seq: torch.Tensor):
         if self.training:
-            if self.backend == 'torch':
+            if self.backend == "torch":
                 return super().multi_step_forward(x_seq)
-            elif self.backend == 'cupy':
+            elif self.backend == "cupy":
 
                 hard_reset = self.v_reset is not None
                 if x_seq.dtype == torch.float:
-                    dtype = 'float'
+                    dtype = "float"
                 elif x_seq.dtype == torch.half:
-                    dtype = 'half2'
+                    dtype = "half2"
                 else:
                     raise NotImplementedError(x_seq.dtype)
 
-                if self.forward_kernel is None or not self.forward_kernel.check_attributes(hard_reset=hard_reset,
-                                                                                           dtype=dtype,
-                                                                                           decay_input=self.decay_input):
-                    self.forward_kernel = ac_neuron_kernel.LIFNodeFPTTKernel(decay_input=self.decay_input,
-                                                                             hard_reset=hard_reset, dtype=dtype)
+                if (
+                    self.forward_kernel is None
+                    or not self.forward_kernel.check_attributes(
+                        hard_reset=hard_reset, dtype=dtype, decay_input=self.decay_input
+                    )
+                ):
+                    self.forward_kernel = ac_neuron_kernel.LIFNodeFPTTKernel(
+                        decay_input=self.decay_input, hard_reset=hard_reset, dtype=dtype
+                    )
 
-                if self.backward_kernel is None or not self.backward_kernel.check_attributes(
-                        surrogate_function=self.surrogate_function.cuda_codes, hard_reset=hard_reset,
-                        detach_reset=self.detach_reset, dtype=dtype, decay_input=self.decay_input):
-                    self.backward_kernel = ac_neuron_kernel.LIFNodeBPTTKernel(decay_input=self.decay_input,
-                                                                              surrogate_function=self.surrogate_function.cuda_codes,
-                                                                              hard_reset=hard_reset,
-                                                                              detach_reset=self.detach_reset,
-                                                                              dtype=dtype)
+                if (
+                    self.backward_kernel is None
+                    or not self.backward_kernel.check_attributes(
+                        surrogate_function=self.surrogate_function.cuda_codes,
+                        hard_reset=hard_reset,
+                        detach_reset=self.detach_reset,
+                        dtype=dtype,
+                        decay_input=self.decay_input,
+                    )
+                ):
+                    self.backward_kernel = ac_neuron_kernel.LIFNodeBPTTKernel(
+                        decay_input=self.decay_input,
+                        surrogate_function=self.surrogate_function.cuda_codes,
+                        hard_reset=hard_reset,
+                        detach_reset=self.detach_reset,
+                        dtype=dtype,
+                    )
 
                 self.v_float_to_tensor(x_seq[0])
 
-                spike_seq, v_seq = ac_neuron_kernel.LIFNodeATGF.apply(x_seq.flatten(1), self.v.flatten(0),
-                                                                      self.v_threshold, self.v_reset, 1. / self.tau,
-                                                                      self.forward_kernel,
-                                                                      self.backward_kernel)
+                spike_seq, v_seq = ac_neuron_kernel.LIFNodeATGF.apply(
+                    x_seq.flatten(1),
+                    self.v.flatten(0),
+                    self.v_threshold,
+                    self.v_reset,
+                    1.0 / self.tau,
+                    self.forward_kernel,
+                    self.backward_kernel,
+                )
 
                 spike_seq = spike_seq.reshape(x_seq.shape)
                 v_seq = v_seq.reshape(x_seq.shape)
@@ -405,39 +514,56 @@ class LIFNode(BaseNode):
             if self.v_reset is None:
                 if self.decay_input:
                     if self.store_v_seq:
-                        spike_seq, self.v, self.v_seq = self.jit_eval_multi_step_forward_soft_reset_decay_input_with_v_seq(
-                            x_seq, self.v, self.v_threshold, self.tau)
+                        spike_seq, self.v, self.v_seq = (
+                            self.jit_eval_multi_step_forward_soft_reset_decay_input_with_v_seq(
+                                x_seq, self.v, self.v_threshold, self.tau
+                            )
+                        )
                     else:
-                        spike_seq, self.v = self.jit_eval_multi_step_forward_soft_reset_decay_input(x_seq, self.v,
-                                                                                                    self.v_threshold,
-                                                                                                    self.tau)
+                        spike_seq, self.v = (
+                            self.jit_eval_multi_step_forward_soft_reset_decay_input(
+                                x_seq, self.v, self.v_threshold, self.tau
+                            )
+                        )
                 else:
                     if self.store_v_seq:
-                        spike_seq, self.v, self.v_seq = self.jit_eval_multi_step_forward_soft_reset_no_decay_input_with_v_seq(
-                            x_seq, self.v, self.v_threshold, self.tau)
+                        spike_seq, self.v, self.v_seq = (
+                            self.jit_eval_multi_step_forward_soft_reset_no_decay_input_with_v_seq(
+                                x_seq, self.v, self.v_threshold, self.tau
+                            )
+                        )
                     else:
-                        spike_seq, self.v = self.jit_eval_multi_step_forward_soft_reset_no_decay_input(x_seq, self.v,
-                                                                                                       self.v_threshold,
-                                                                                                       self.tau)
+                        spike_seq, self.v = (
+                            self.jit_eval_multi_step_forward_soft_reset_no_decay_input(
+                                x_seq, self.v, self.v_threshold, self.tau
+                            )
+                        )
             else:
                 if self.decay_input:
                     if self.store_v_seq:
-                        spike_seq, self.v, self.v_seq = self.jit_eval_multi_step_forward_hard_reset_decay_input_with_v_seq(
-                            x_seq, self.v, self.v_threshold, self.v_reset, self.tau)
+                        spike_seq, self.v, self.v_seq = (
+                            self.jit_eval_multi_step_forward_hard_reset_decay_input_with_v_seq(
+                                x_seq, self.v, self.v_threshold, self.v_reset, self.tau
+                            )
+                        )
                     else:
-                        spike_seq, self.v = self.jit_eval_multi_step_forward_hard_reset_decay_input(x_seq, self.v,
-                                                                                                    self.v_threshold,
-                                                                                                    self.v_reset,
-                                                                                                    self.tau)
+                        spike_seq, self.v = (
+                            self.jit_eval_multi_step_forward_hard_reset_decay_input(
+                                x_seq, self.v, self.v_threshold, self.v_reset, self.tau
+                            )
+                        )
                 else:
                     if self.store_v_seq:
-                        spike_seq, self.v, self.v_seq = self.jit_eval_multi_step_forward_hard_reset_no_decay_input_with_v_seq(
-                            x_seq, self.v, self.v_threshold, self.v_reset, self.tau)
+                        spike_seq, self.v, self.v_seq = (
+                            self.jit_eval_multi_step_forward_hard_reset_no_decay_input_with_v_seq(
+                                x_seq, self.v, self.v_threshold, self.v_reset, self.tau
+                            )
+                        )
                     else:
-                        spike_seq, self.v = self.jit_eval_multi_step_forward_hard_reset_no_decay_input(x_seq, self.v,
-                                                                                                       self.v_threshold,
-                                                                                                       self.v_reset,
-                                                                                                       self.tau)
+                        spike_seq, self.v = (
+                            self.jit_eval_multi_step_forward_hard_reset_no_decay_input(
+                                x_seq, self.v, self.v_threshold, self.v_reset, self.tau
+                            )
+                        )
 
             return spike_seq
-
