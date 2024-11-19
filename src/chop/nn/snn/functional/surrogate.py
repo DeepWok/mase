@@ -50,3 +50,21 @@ class sigmoid(torch.autograd.Function):
     @staticmethod
     def backward(ctx, grad_output):
         return sigmoid_backward(grad_output, ctx.saved_tensors[0], ctx.alpha)
+
+
+@torch.jit.script
+def atan_backward(grad_output: torch.Tensor, x: torch.Tensor, alpha: float):
+    return alpha / 2 / (1 + (math.pi / 2 * alpha * x).pow_(2)) * grad_output, None
+
+
+class atan(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, x, alpha):
+        if x.requires_grad:
+            ctx.save_for_backward(x)
+            ctx.alpha = alpha
+        return heaviside(x)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        return atan_backward(grad_output, ctx.saved_tensors[0], ctx.alpha)
