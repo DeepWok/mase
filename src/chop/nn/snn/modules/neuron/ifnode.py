@@ -21,7 +21,12 @@ except BaseException as e:
     neuron_kernel = None
     cuda_utils = None
 
-from .neuron import BaseNode
+from .neuron import BaseNode, SimpleBaseNode
+
+
+class SimpleIFNode(SimpleBaseNode):
+    def neuronal_charge(self, x: torch.Tensor):
+        self.v = self.v + x
 
 class IFNode(BaseNode):
     def __init__(
