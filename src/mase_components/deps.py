@@ -370,6 +370,17 @@ MASE_HW_DEPS = {
         "common",
         "memory",
     ],
+    "linear_layers/mxint_operators/mxint_layernorm": [
+        "common",
+        "linear_layers/matmul",
+        "linear_layers/fixed_operators",
+        "scalar_operators/fixed",
+        "normalization_layers",
+        "cast",
+        "memory",
+        "generated_lut",
+        "linear_layers/mxint_operators",
+    ],
     # Memory
     "memory/skid_buffer": [],
     "memory/fifo": ["memory"],
