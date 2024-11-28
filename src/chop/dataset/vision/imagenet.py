@@ -7,7 +7,7 @@ from ..utils import add_dataset_info
 @add_dataset_info(
     name="imagenet",
     dataset_source="others",
-    available_splits=("train", "validation"),
+    available_splits=("train", "validation", "test"),
     image_classification=True,
     num_classes=1000,
     image_size=(3, 224, 224),
@@ -66,7 +66,7 @@ def get_imagenet_dataset(
 ) -> tv.datasets.ImageFolder:
     match name.lower():
         case "imagenet":
-            imagenet_dir = Path(path)
+            imagenet_dir = Path("/mnt/data/shared/imagenet/")
             root = imagenet_dir / ("train" if train else "val")
             if not root.exists():
                 raise RuntimeError(

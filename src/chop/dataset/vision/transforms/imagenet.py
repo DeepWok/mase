@@ -43,23 +43,23 @@ def get_imagenet_default_transform(train: bool) -> tv_transforms.Compose:
 # Refer to Torchvision recipe: https://github.com/pytorch/vision/blob/main/references/classification/presets.py
 # ===================================
 
-DEFAULT_PRESET_ARGS = {
-    "mean": (0.485, 0.456, 0.406),
-    "std": (0.229, 0.224, 0.225),
-    "val_resize_size": 256,
-    "val_crop_size": 224,
-    "train_crop_size": 224,
-    "interpolation": InterpolationMode("bilinear"),
-    "auto_augment_policy": None,
-    "random_erase_prob": 0.0,
-    "ra_magnitude": 9,
-    "augmix_severity": 3,
-    "backend": "pil",
-    "use_v2": False,
-}
 
 
 def get_model_dependent_transform_args(model_name: str) -> dict:
+    DEFAULT_PRESET_ARGS = {
+        "mean": (0.485, 0.456, 0.406),
+        "std": (0.229, 0.224, 0.225),
+        "val_resize_size": 256,
+        "val_crop_size": 224,
+        "train_crop_size": 224,
+        "interpolation": InterpolationMode("bilinear"),
+        "auto_augment_policy": None,
+        "random_erase_prob": 0.0,
+        "ra_magnitude": 9,
+        "augmix_severity": 3,
+        "backend": "pil",
+        "use_v2": False,
+    }
     match model_name.lower():
         case "resnet18" | "resnet34" | "resnet50" | "resnet101" | "resnet152":
             return DEFAULT_PRESET_ARGS | {}
@@ -111,8 +111,16 @@ def get_model_dependent_transform_args(model_name: str) -> dict:
                 f"model-dependent transform is not implemented for `{model_name}`."
             )
 
+from torchvision.models import ViT_B_16_Weights
 
 def get_imagenet_model_dependent_transform(train: bool, model_name: str):
+    match model_name.lower():
+        case "vit_base_patch16_224":
+            logger.info(
+                f"model {model_name} is currently using transform from torchvision "
+            )
+            transform = ViT_B_16_Weights.IMAGENET1K_V1.transforms()
+            return transform
     model_transform_args = get_model_dependent_transform_args(model_name)
     if train:
         transform = ClassificationPresetTrain(
@@ -137,6 +145,13 @@ def get_imagenet_model_dependent_transform(train: bool, model_name: str):
             backend=model_transform_args["backend"],
             use_v2=model_transform_args["use_v2"],
         )
+    match model_name.lower():
+        case "vit_base_patch16_224":
+            logger.info(
+                f"model {model_name} is currently using transform from torchvision "
+            )
+            breakpoint()
+            transform = ViT_B_16_Weights.IMAGENET1K_V1.transforms()
     return transform
 
 
