@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Accelerate FSDP &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_style.css?v=678fb11e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/modern.css?v=803738c0" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-test-results/common.css?v=9ec2c1d5" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+        <script src="../../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+        <script src="../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+        <script src="../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+        <script src="../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Roadmap" href="../roadmap.html" />
+    <link rel="prev" title="How to extend search" href="actions/search/how_to_extend_search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../tutorials.html#common-usage-examples">Common Usage Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials.html#interactive-usage-with-python">Interactive Usage with Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials.html#the-mase-command-line-system">The MASE Command Line System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials.html#the-mase-pass-system">The MASE Pass System</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../tutorials.html#advanced-topics">Advanced Topics</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="Add-model-to-machop.html">Guide on how to add a new model into Machop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="stat_to_ternary_q_config.html">How to use the Statistics Pass Combined with the Ternary Quantiser</a></li>
+<li class="toctree-l3"><a class="reference internal" href="doc_writing.html">How to write documentations in MASE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="passes/interface/masert/tensorrt/tensorRT_quantization_tutorial.html">TensorRT Quantization Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="passes/interface/masert/onnxrt/onnxrt_quantization_tutorial.html">ONNX Runtime Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="actions/search/how_to_extend_search.html">How to extend search</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Accelerate FSDP</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#huggingface-accelerate">HuggingFace Accelerate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fully-sharded-data-parallelism">Fully Sharded Data Parallelism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#accelerates-fully-shard-plugin">Accelerate’s Fully Shard Plugin</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/actions.html">chop.actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/datasets.html">chop.datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/distributed.html">chop.distributed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/ir.html">chop.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/models.html">chop.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/nn.html">chop.nn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/passes.html">chop.passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/tools.html">chop.tools</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../tutorials.html">Tutorials</a></li>
+      <li class="breadcrumb-item active">Accelerate FSDP</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/modules/documentation/tutorials/accelerate_fsdp.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="accelerate-fsdp">
+<h1>Accelerate FSDP<a class="headerlink" href="#accelerate-fsdp" title="Link to this heading"></a></h1>
+<section id="huggingface-accelerate">
+<h2>HuggingFace Accelerate<a class="headerlink" href="#huggingface-accelerate" title="Link to this heading"></a></h2>
+<p><a class="reference external" href="https://huggingface.co/docs/accelerate/index">HuggingFace accelerate</a> is a library that makes distributed training simple. It provides a simple API for launching training and evaluation jobs across multiple processes and machines.</p>
+<p>Different from HuggingFace <a class="reference external" href="https://huggingface.co/docs/transformers/main_classes/trainer">transformers Trainer</a> or Lightning’s <a class="reference external" href="https://lightning.ai/docs/pytorch/stable/common/lightning_module.html">LightningModule</a>, accelerate requires users to write their own training and evaluation loops.</p>
+</section>
+<section id="fully-sharded-data-parallelism">
+<h2>Fully Sharded Data Parallelism<a class="headerlink" href="#fully-sharded-data-parallelism" title="Link to this heading"></a></h2>
+<p>See PyTorch’s <a class="reference external" href="https://arxiv.org/abs/2304.11277">paper</a> for more details about fully sharding.</p>
+<p><img alt="fully_shard" src="https://pytorch.org/assets/images/fsdp_workflow.png" /></p>
+</section>
+<section id="accelerates-fully-shard-plugin">
+<h2>Accelerate’s Fully Shard Plugin<a class="headerlink" href="#accelerates-fully-shard-plugin" title="Link to this heading"></a></h2>
+<p>Accelerate’s fully shard plugin is a wrapper around PyTorch’s <a class="reference external" href="https://pytorch.org/tutorials/intermediate/FSDP_tutorial.html">FullyShardedDataParallel</a> module, providing a simple API for HuggingFace transformer models.</p>
+<p>Here is an example of training a model with accelerate’s fully shard plugin.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>mase-tools/machop/test/actions/accelerate_train
+<span class="c1"># launch training script using accelerate</span>
+accelerate<span class="w"> </span>launch<span class="w"> </span>--use_fsdp<span class="w"> </span>accelerate_fsdp.py
+</pre></div>
+</div>
+<p>Note that if running the script without accelerate, i.e.,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>accelerate_fsdp.py
+</pre></div>
+</div>
+<p>the script will only run on a single GPU.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="actions/search/how_to_extend_search.html" class="btn btn-neutral float-left" title="How to extend search" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../roadmap.html" class="btn btn-neutral float-right" title="Roadmap" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

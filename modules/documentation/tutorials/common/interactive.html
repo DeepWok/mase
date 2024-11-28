@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Importing MASE as a Python package &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/common_css/need_style.css?v=678fb11e" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/modern.css?v=803738c0" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-test-results/common.css?v=9ec2c1d5" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+        <script src="../../../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+        <script src="../../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+        <script src="../../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+        <script src="../../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="Importing MASE Quantizers" href="interactive_quantize.html" />
+    <link rel="prev" title="Deploy a BERT model on an FPGA" href="bert_emit.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials.html#common-usage-examples">Common Usage Examples</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../tutorials.html#interactive-usage-with-python">Interactive Usage with Python</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Importing MASE as a Python package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#transforming-torch-module">Transforming torch.Module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="interactive_quantize.html">Importing MASE Quantizers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials.html#the-mase-command-line-system">The MASE Command Line System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials.html#the-mase-pass-system">The MASE Pass System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials.html#advanced-topics">Advanced Topics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/actions.html">chop.actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/datasets.html">chop.datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/distributed.html">chop.distributed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/ir.html">chop.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/models.html">chop.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/nn.html">chop.nn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/passes.html">chop.passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tools.html">chop.tools</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../tutorials.html">Tutorials</a></li>
+      <li class="breadcrumb-item active">Importing MASE as a Python package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/modules/documentation/tutorials/common/interactive.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="importing-mase-as-a-python-package">
+<h1>Importing MASE as a Python package<a class="headerlink" href="#importing-mase-as-a-python-package" title="Link to this heading"></a></h1>
+<p>An easy way to use MASE is to make a direct import.</p>
+<p>As mentioned in Getting Started, you can install an editable version of MASE through pip by</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="w"> </span>-vvv
+</pre></div>
+</div>
+<p>You can then test the installation by</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="s2">&quot;import chop; print(chop)&quot;</span>
+</pre></div>
+</div>
+<section id="transforming-torch-module">
+<h2>Transforming torch.Module<a class="headerlink" href="#transforming-torch-module" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">chop.passes</span></code> offers a range of different passes that offer the capability to replace certain components for in the original neural network for various purposes. Some of these passes are Module Passes, that can directly operate on native <code class="docutils literal notranslate"><span class="pre">torch.nn.Module</span></code>, which basically means any arbitrary networks.</p>
+<p>The following example is applying a MASE module pass to a pre-built <code class="docutils literal notranslate"><span class="pre">resnet50</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">chop</span> 
+
+<span class="kn">from</span> <span class="nn">torchvision.models</span> <span class="kn">import</span> <span class="n">resnet50</span><span class="p">,</span> <span class="n">ResNet50_Weights</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">resnet50</span><span class="p">(</span><span class="n">weights</span><span class="o">=</span><span class="n">ResNet50_Weights</span><span class="o">.</span><span class="n">IMAGENET1K_V2</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">chop.passes</span> <span class="kn">import</span> <span class="n">quantize_module_transform_pass</span>
+
+<span class="n">pass_args</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;by&quot;</span><span class="p">:</span> <span class="s2">&quot;type&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;linear&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;data_in_width&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+        <span class="s2">&quot;data_in_frac_width&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="s2">&quot;weight_width&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+        <span class="s2">&quot;weight_frac_width&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="s2">&quot;bias_width&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+        <span class="s2">&quot;bias_frac_width&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;conv2d&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;data_in_width&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+        <span class="s2">&quot;data_in_frac_width&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="s2">&quot;weight_width&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+        <span class="s2">&quot;weight_frac_width&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="s2">&quot;bias_width&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+        <span class="s2">&quot;bias_frac_width&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+<span class="n">transformed_model</span> <span class="o">=</span> <span class="n">quantize_module_transform_pass</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">transformed_model</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Transforming a MaseGraph</p>
+<p>To support manipulation on a finer-level, eg. graph-level, MASE has provided built-in functionality to transform any arbitrary <code class="docutils literal notranslate"><span class="pre">torch.nn.Module</span></code> into <code class="docutils literal notranslate"><span class="pre">MaseGraph</span></code>. This is because the ordinary <code class="docutils literal notranslate"><span class="pre">torch.Module</span></code> level view is normally not enough for finer manipulation – many details are omitted at this level, we thus provide this <code class="docutils literal notranslate"><span class="pre">MaseGraph</span></code> to capture these detail. Correspondingly, we have provided a series of passes on the graph-level.</p>
+<p>The following example is applying a MASE graph-level pass to a <code class="docutils literal notranslate"><span class="pre">vgg7</span></code> network. It also tries to use many MASE built-in functions to fetch the data, fetch the model, transform the model to <code class="docutils literal notranslate"><span class="pre">MaseGraph</span></code> land and then apply graph-level passes.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">chop</span> 
+
+<span class="kn">from</span> <span class="nn">chop.dataset</span> <span class="kn">import</span> <span class="n">MaseDataModule</span><span class="p">,</span> <span class="n">get_dataset_info</span>
+<span class="kn">from</span> <span class="nn">chop.ir.graph.mase_graph</span> <span class="kn">import</span> <span class="n">MaseGraph</span>
+<span class="kn">from</span> <span class="nn">chop</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="kn">from</span> <span class="nn">chop.tools.get_input</span> <span class="kn">import</span> <span class="n">InputGenerator</span><span class="p">,</span> <span class="n">get_dummy_input</span>
+
+<span class="kn">from</span> <span class="nn">chop.passes.graph</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">init_metadata_analysis_pass</span><span class="p">,</span>
+    <span class="n">add_common_metadata_analysis_pass</span><span class="p">,</span>
+    <span class="n">quantize_transform_pass</span><span class="p">,</span>
+    <span class="n">summarize_quantization_analysis_pass</span><span class="p">,</span>
+    <span class="n">verify_common_metadata_analysis_pass</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">chop.passes.graph.utils</span> <span class="kn">import</span> <span class="n">deepcopy_mase_graph</span>
+
+<span class="n">model_name</span> <span class="o">=</span> <span class="s2">&quot;vgg7&quot;</span>
+<span class="n">dataset_name</span> <span class="o">=</span> <span class="s2">&quot;cifar10&quot;</span>
+<span class="n">BATCH_SIZE</span> <span class="o">=</span> <span class="mi">32</span>
+
+<span class="c1"># get dataset information</span>
+<span class="n">dataset_info</span> <span class="o">=</span> <span class="n">get_dataset_info</span><span class="p">(</span><span class="n">dataset_name</span><span class="p">)</span>
+
+<span class="c1"># get model information</span>
+<span class="n">model_info</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">get_model_info</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span>
+
+<span class="c1"># get data module</span>
+<span class="n">data_module</span> <span class="o">=</span> <span class="n">MaseDataModule</span><span class="p">(</span>
+    <span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="n">dataset_name</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="n">BATCH_SIZE</span><span class="p">,</span>
+    <span class="n">num_workers</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">tokenizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_token_len</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">data_module</span><span class="o">.</span><span class="n">prepare_data</span><span class="p">()</span>
+<span class="n">data_module</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+<span class="c1"># NOTE: We only support vision classification models for now.</span>
+<span class="n">dummy_input</span> <span class="o">=</span> <span class="n">get_dummy_input</span><span class="p">(</span><span class="n">model_info</span><span class="p">,</span> <span class="n">data_module</span><span class="p">,</span> <span class="s2">&quot;cls&quot;</span><span class="p">,</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+
+<span class="c1"># get an input generator so that we can drive to get sample inputs</span>
+<span class="n">input_generator</span> <span class="o">=</span> <span class="n">InputGenerator</span><span class="p">(</span>
+    <span class="n">model_info</span><span class="o">=</span><span class="n">model_info</span><span class="p">,</span>
+    <span class="n">data_module</span><span class="o">=</span><span class="n">data_module</span><span class="p">,</span>
+        <span class="n">task</span><span class="o">=</span><span class="s2">&quot;cls&quot;</span><span class="p">,</span>
+        <span class="n">which_dataloader</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">get_model</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="s2">&quot;cls&quot;</span><span class="p">,</span> <span class="n">dataset_info</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># This line transforms a nn.Module to a MaseGraph</span>
+<span class="n">mg</span> <span class="o">=</span> <span class="n">MaseGraph</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+
+<span class="c1"># Apply initialization passes to populate information in the graph</span>
+<span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">init_metadata_analysis_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="p">{})</span>
+<span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">add_common_metadata_analysis_pass</span><span class="p">(</span>
+    <span class="n">mg</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;dummy_in&quot;</span><span class="p">:</span> <span class="n">dummy_input</span><span class="p">,</span> <span class="s2">&quot;add_value&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+<span class="p">)</span>
+<span class="c1"># Sanity check and report</span>
+<span class="c1"># mg = verify_common_metadata_analysis_pass(mg)</span>
+<span class="n">quan_args</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;by&quot;</span><span class="p">:</span> <span class="s2">&quot;type&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}},</span>
+    <span class="s2">&quot;linear&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span><span class="p">,</span>
+            <span class="c1"># data</span>
+            <span class="s2">&quot;data_in_width&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+            <span class="s2">&quot;data_in_frac_width&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="c1"># weight</span>
+            <span class="s2">&quot;weight_width&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+            <span class="s2">&quot;weight_frac_width&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="c1"># bias</span>
+            <span class="s2">&quot;bias_width&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+            <span class="s2">&quot;bias_frac_width&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="c1"># deep copy is only possible if we put &quot;add_value&quot; to False</span>
+<span class="n">ori_mg</span> <span class="o">=</span> <span class="n">deepcopy_mase_graph</span><span class="p">(</span><span class="n">mg</span><span class="p">)</span>
+<span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">quantize_transform_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="n">quan_args</span><span class="p">)</span>
+
+<span class="n">summarize_quantization_analysis_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;save_dir&quot;</span><span class="p">:</span> <span class="s2">&quot;quantize_summary&quot;</span><span class="p">,</span> <span class="s2">&quot;original_graph&quot;</span><span class="p">:</span> <span class="n">ori_mg</span><span class="p">})</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="bert_emit.html" class="btn btn-neutral float-left" title="Deploy a BERT model on an FPGA" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="interactive_quantize.html" class="btn btn-neutral float-right" title="Importing MASE Quantizers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

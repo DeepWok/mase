@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mixed-precision search on MASE Graph &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/common_css/need_style.css?v=678fb11e" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/modern.css?v=803738c0" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-test-results/common.css?v=9ec2c1d5" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../../../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+        <script src="../../../../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+        <script src="../../../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+        <script src="../../../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+        <script src="../../../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+    <link rel="next" title="Mixed-precision search on manual model" href="mixed_precision_search_on_manual_model.html" />
+    <link rel="prev" title="Run the transform action with the CLI" href="../transform/cli_transform.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials.html#common-usage-examples">Common Usage Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials.html#interactive-usage-with-python">Interactive Usage with Python</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../../tutorials.html#the-mase-command-line-system">The MASE Command Line System</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../train/simple_train_flow.html">Run the train action with the CLI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../transform/cli_transform.html">Run the transform action with the CLI</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Mixed-precision search on MASE Graph</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#commands">Commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#search-config">Search Config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#run-the-search">Run the search</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mixed_precision_search_on_manual_model.html">Mixed-precision search on manual model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials.html#the-mase-pass-system">The MASE Pass System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials.html#advanced-topics">Advanced Topics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/actions.html">chop.actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/datasets.html">chop.datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/distributed.html">chop.distributed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/ir.html">chop.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/models.html">chop.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/nn.html">chop.nn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/passes.html">chop.passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/tools.html">chop.tools</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../tutorials.html">Tutorials</a></li>
+      <li class="breadcrumb-item active">Mixed-precision search on MASE Graph</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../../_sources/modules/documentation/tutorials/actions/search/mixed_precision_search_on_mase_graph.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="mixed-precision-search-on-mase-graph">
+<h1>Mixed-precision search on MASE Graph<a class="headerlink" href="#mixed-precision-search-on-mase-graph" title="Link to this heading"></a></h1>
+<p>This tutorial shows how to search for mixed-precision quantization strategy for JSC model (a small toy model).</p>
+<section id="commands">
+<h2>Commands<a class="headerlink" href="#commands" title="Link to this heading"></a></h2>
+<p>First we train a model on the dataset. After training for some epochs, we get a model with some validation accuracy. The checkpoint is saved at an auto-created location. You can refer to <a class="reference internal" href="../train/simple_train_flow.html"><span class="std std-doc">Run the train action with the CLI</span></a> for more detailed explanation.</p>
+<p>The reason why we need a pre-trained model is because we would like to do a post-training-quantization (PTQ) search. This means the quantization happens on a pre-trained model. We then use the PTQ accuracy as a proxy signal for our search.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>src<span class="w"> </span>
+./ch<span class="w"> </span>train<span class="w"> </span>jsc-tiny<span class="w"> </span>jsc<span class="w"> </span>--max-epochs<span class="w"> </span><span class="m">3</span><span class="w"> </span>--batch-size<span class="w"> </span><span class="m">256</span><span class="w"> </span>--accelerator<span class="w"> </span>cpu<span class="w"> </span>--project<span class="w"> </span>tmp<span class="w"> </span>--debug<span class="w"> </span>--cpu<span class="w"> </span><span class="m">0</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>For the interest of time, we do not train this to convergence, apparently one can adjust <code class="docutils literal notranslate"><span class="pre">--max-epochs</span></code> for longer training epochs.</p></li>
+<li><p>We choose to train on <code class="docutils literal notranslate"><span class="pre">cpu</span></code> and <code class="docutils literal notranslate"><span class="pre">--cpu</span> <span class="pre">0</span></code> avoids multiprocessing dataloader issues.</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># search command</span>
+./ch<span class="w"> </span>search<span class="w"> </span>--config<span class="w"> </span>../configs/examples/jsc_toy_by_type.toml<span class="w"> </span>--task<span class="w"> </span>cls<span class="w"> </span>--accelerator<span class="o">=</span>cpu<span class="w"> </span>--load<span class="w"> </span>../mase_output/tmp/software/training_ckpts/best.ckpt<span class="w"> </span>--load-type<span class="w"> </span>pl<span class="w"> </span>--cpu<span class="w"> </span><span class="m">0</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>The line above issues the search with a configuration file, we discuss the configuration in later sections.</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># train searched network</span>
+./ch<span class="w"> </span>train<span class="w"> </span>jsc-tiny<span class="w"> </span>jsc<span class="w"> </span>--max-epochs<span class="w"> </span><span class="m">3</span><span class="w"> </span>--batch-size<span class="w"> </span><span class="m">256</span><span class="w"> </span>--accelerator<span class="w"> </span>cpu<span class="w"> </span>--project<span class="w"> </span>tmp<span class="w"> </span>--debug<span class="w"> </span>--load<span class="w"> </span>../mase_output/jsc-tiny/software/transform/transformed_ckpt/graph_module.mz<span class="w"> </span>--load-type<span class="w"> </span>mz
+
+<span class="c1"># view searched results</span>
+cat<span class="w"> </span>../mase_output/jsc-tiny/software/search_ckpts/best.json
+</pre></div>
+</div>
+</section>
+<section id="search-config">
+<h2>Search Config<a class="headerlink" href="#search-config" title="Link to this heading"></a></h2>
+<p>Here is the search part in <code class="docutils literal notranslate"><span class="pre">configs/examples/jsc_toy_by_type.toml</span></code> looks like the following.</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="c1"># basics</span>
+<span class="n">model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;jsc-tiny&quot;</span>
+<span class="n">dataset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;jsc&quot;</span>
+<span class="n">task</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;cls&quot;</span>
+
+<span class="n">max_epochs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+<span class="n">batch_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">512</span>
+<span class="n">learning_rate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-2</span>
+<span class="n">accelerator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;gpu&quot;</span>
+<span class="n">project</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;jsc-tiny&quot;</span>
+<span class="n">seed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">42</span>
+<span class="n">log_every_n_steps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+
+<span class="k">[passes.quantize]</span>
+<span class="n">by</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;type&quot;</span>
+<span class="k">[passes.quantize.default.config]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NA&quot;</span>
+<span class="k">[passes.quantize.linear.config]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;integer&quot;</span>
+<span class="s2">&quot;data_in_width&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span>
+<span class="s2">&quot;data_in_frac_width&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span>
+<span class="s2">&quot;weight_width&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span>
+<span class="s2">&quot;weight_frac_width&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span>
+<span class="s2">&quot;bias_width&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span>
+<span class="s2">&quot;bias_frac_width&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span>
+
+<span class="k">[transform]</span>
+<span class="n">style</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;graph&quot;</span>
+
+
+<span class="k">[search.search_space]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;graph/quantize/mixed_precision_ptq&quot;</span>
+
+<span class="k">[search.search_space.setup]</span>
+<span class="n">by</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;name&quot;</span>
+
+<span class="k">[search.search_space.seed.default.config]</span>
+<span class="c1"># the only choice &quot;NA&quot; is used to indicate that layers are not quantized by default</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;NA&quot;</span><span class="p">]</span>
+
+<span class="k">[search.search_space.seed.linear.config]</span>
+<span class="c1"># if search.search_space.setup.by = &quot;type&quot;, this seed will be used to quantize all torch.nn.Linear/ F.linear</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;integer&quot;</span><span class="p">]</span>
+<span class="n">data_in_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">]</span>
+<span class="n">data_in_frac_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;NA&quot;</span><span class="p">]</span><span class="w"> </span><span class="c1"># &quot;NA&quot; means data_in_frac_width = data_in_width // 2</span>
+<span class="n">weight_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">]</span>
+<span class="n">weight_frac_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;NA&quot;</span><span class="p">]</span>
+<span class="n">bias_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">]</span>
+<span class="n">bias_frac_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;NA&quot;</span><span class="p">]</span>
+
+<span class="k">[search.search_space.seed.seq_blocks_2.config]</span>
+<span class="c1"># if search.search_space.setup.by = &quot;name&quot;, this seed will be used to quantize the mase graph node with name &quot;seq_blocks_2&quot;</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;integer&quot;</span><span class="p">]</span>
+<span class="n">data_in_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">]</span>
+<span class="n">data_in_frac_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;NA&quot;</span><span class="p">]</span>
+<span class="n">weight_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">]</span>
+<span class="n">weight_frac_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;NA&quot;</span><span class="p">]</span>
+<span class="n">bias_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">]</span>
+<span class="n">bias_frac_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;NA&quot;</span><span class="p">]</span>
+
+<span class="k">[search.strategy]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;optuna&quot;</span>
+<span class="n">eval_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+
+<span class="k">[search.strategy.sw_runner.basic_evaluation]</span>
+<span class="n">data_loader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;val_dataloader&quot;</span>
+<span class="n">num_samples</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">512</span>
+
+<span class="k">[search.strategy.hw_runner.average_bitwidth]</span>
+<span class="n">compare_to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">32</span><span class="w"> </span><span class="c1"># compare to FP32</span>
+
+<span class="k">[search.strategy.setup]</span>
+<span class="n">n_jobs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="n">n_trials</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+<span class="n">timeout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20000</span>
+<span class="n">sampler</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tpe&quot;</span>
+<span class="c1"># sum_scaled_metrics = true # single objective</span>
+<span class="c1"># direction = &quot;maximize&quot;</span>
+<span class="n">sum_scaled_metrics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="w"> </span><span class="c1"># multi objective</span>
+
+<span class="k">[search.strategy.metrics]</span>
+<span class="c1"># loss.scale = 1.0</span>
+<span class="c1"># loss.direction = &quot;minimize&quot;</span>
+<span class="n">accuracy</span><span class="p">.</span><span class="n">scale</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span>
+<span class="n">accuracy</span><span class="p">.</span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;maximize&quot;</span>
+<span class="n">average_bitwidth</span><span class="p">.</span><span class="n">scale</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.2</span>
+<span class="n">average_bitwidth</span><span class="p">.</span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;minimize&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="run-the-search">
+<h2>Run the search<a class="headerlink" href="#run-the-search" title="Link to this heading"></a></h2>
+<p>When the search is completed, we will see the Pareto frontier trials (<code class="docutils literal notranslate"><span class="pre">sum_scaled_metrics</span> <span class="pre">=</span> <span class="pre">false</span></code>) or the best trials (<code class="docutils literal notranslate"><span class="pre">sum_scaled_metrics</span> <span class="pre">=</span> <span class="pre">true</span></code>) printed in the terminal.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[2023-09-06 15:54:24][chop.actions.search.strategies.optuna][INFO] Best trial(s):
+Best trial(s):
+|    |   number | software_metrics                   | hardware_metrics            | scaled_metrics                                 |
+|----+----------+------------------------------------+-----------------------------+------------------------------------------------|
+|  0 |        0 | {&#39;loss&#39;: 0.668, &#39;accuracy&#39;: 0.668} | {&#39;average_bitwidth&#39;: 2.038} | {&#39;accuracy&#39;: 0.668, &#39;average_bitwidth&#39;: 0.408} |
+|  1 |        4 | {&#39;loss&#39;: 0.526, &#39;accuracy&#39;: 0.729} | {&#39;average_bitwidth&#39;: 4.151} | {&#39;accuracy&#39;: 0.729, &#39;average_bitwidth&#39;: 0.83}  |
+|  2 |        5 | {&#39;loss&#39;: 0.55, &#39;accuracy&#39;: 0.691}  | {&#39;average_bitwidth&#39;: 2.113} | {&#39;accuracy&#39;: 0.691, &#39;average_bitwidth&#39;: 0.423} |
+|  3 |       10 | {&#39;loss&#39;: 0.542, &#39;accuracy&#39;: 0.691} | {&#39;average_bitwidth&#39;: 2.189} | {&#39;accuracy&#39;: 0.691, &#39;average_bitwidth&#39;: 0.438} |
+|  4 |       13 | {&#39;loss&#39;: 0.556, &#39;accuracy&#39;: 0.681} | {&#39;average_bitwidth&#39;: 2.075} | {&#39;accuracy&#39;: 0.681, &#39;average_bitwidth&#39;: 0.415} |
+|  5 |       19 | {&#39;loss&#39;: 0.563, &#39;accuracy&#39;: 0.663} | {&#39;average_bitwidth&#39;: 2.0}   | {&#39;accuracy&#39;: 0.663, &#39;average_bitwidth&#39;: 0.4}   |
+</pre></div>
+</div>
+<p>The entire searching log is saved in <code class="docutils literal notranslate"><span class="pre">../mase_output/jsc-tiny/software/search_ckpts/log.json</span></code>.</p>
+<p>Here is part of the <code class="docutils literal notranslate"><span class="pre">log.json</span></code></p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;0&quot;</span><span class="p">:{</span>
+<span class="w">        </span><span class="nt">&quot;number&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;values_0&quot;</span><span class="p">:</span><span class="mf">0.5</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;values_1&quot;</span><span class="p">:</span><span class="mf">0.7849056604</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;user_attrs_hardware_metrics&quot;</span><span class="p">:{</span>
+<span class="w">            </span><span class="nt">&quot;average_bitwidth&quot;</span><span class="p">:</span><span class="mf">3.9245283019</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;user_attrs_sampled_config&quot;</span><span class="p">:{</span>
+<span class="w">            </span><span class="nt">&quot;seq_blocks_0&quot;</span><span class="p">:{</span>
+<span class="w">                </span><span class="nt">&quot;config&quot;</span><span class="p">:{</span>
+<span class="w">                    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="s2">&quot;integer&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;data_in_width&quot;</span><span class="p">:</span><span class="mi">4</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;data_in_frac_width&quot;</span><span class="p">:</span><span class="mi">4</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;weight_width&quot;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;weight_frac_width&quot;</span><span class="p">:</span><span class="mi">8</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;bias_width&quot;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;bias_frac_width&quot;</span><span class="p">:</span><span class="mi">8</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">            </span><span class="err">...</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;user_attrs_scaled_metrics&quot;</span><span class="p">:{</span>
+<span class="w">            </span><span class="nt">&quot;accuracy&quot;</span><span class="p">:</span><span class="mf">0.5</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;average_bitwidth&quot;</span><span class="p">:</span><span class="mf">0.7849056604</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;user_attrs_software_metrics&quot;</span><span class="p">:{</span>
+<span class="w">            </span><span class="nt">&quot;loss&quot;</span><span class="p">:</span><span class="mf">0.6922941208</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;accuracy&quot;</span><span class="p">:</span><span class="mf">0.5</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;state&quot;</span><span class="p">:</span><span class="s2">&quot;COMPLETE&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;datetime_start&quot;</span><span class="p">:</span><span class="mi">1694095030315</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;datetime_complete&quot;</span><span class="p">:</span><span class="mi">1694095031289</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;duration&quot;</span><span class="p">:</span><span class="mi">974</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;1&quot;</span><span class="p">:{</span>
+<span class="w">        </span><span class="nt">&quot;number&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;values_0&quot;</span><span class="p">:</span><span class="mf">0.5747232437</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;values_1&quot;</span><span class="p">:</span><span class="mf">0.8150943396</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;user_attrs_hardware_metrics&quot;</span><span class="p">:{</span>
+<span class="w">            </span><span class="nt">&quot;average_bitwidth&quot;</span><span class="p">:</span><span class="mf">4.0754716981</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;user_attrs_sampled_config&quot;</span><span class="p">:{</span>
+<span class="w">            </span><span class="nt">&quot;seq_blocks_0&quot;</span><span class="p">:{</span>
+<span class="w">                </span><span class="nt">&quot;config&quot;</span><span class="p">:{</span>
+<span class="w">                    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="s2">&quot;integer&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;data_in_width&quot;</span><span class="p">:</span><span class="mi">8</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;data_in_frac_width&quot;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;weight_width&quot;</span><span class="p">:</span><span class="mi">4</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;weight_frac_width&quot;</span><span class="p">:</span><span class="mi">7</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;bias_width&quot;</span><span class="p">:</span><span class="mi">4</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;bias_frac_width&quot;</span><span class="p">:</span><span class="mi">3</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">            </span><span class="err">...</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;user_attrs_scaled_metrics&quot;</span><span class="p">:{</span>
+<span class="w">            </span><span class="nt">&quot;accuracy&quot;</span><span class="p">:</span><span class="mf">0.5747232437</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;average_bitwidth&quot;</span><span class="p">:</span><span class="mf">0.8150943396</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;user_attrs_software_metrics&quot;</span><span class="p">:{</span>
+<span class="w">            </span><span class="nt">&quot;loss&quot;</span><span class="p">:</span><span class="mf">0.6845972538</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;accuracy&quot;</span><span class="p">:</span><span class="mf">0.5747232437</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;state&quot;</span><span class="p">:</span><span class="s2">&quot;COMPLETE&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;datetime_start&quot;</span><span class="p">:</span><span class="mi">1694095031290</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;datetime_complete&quot;</span><span class="p">:</span><span class="mi">1694095032462</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;duration&quot;</span><span class="p">:</span><span class="mi">1172</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;2&quot;</span><span class="p">:{</span>
+<span class="w">        </span><span class="nt">&quot;number&quot;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;values_0&quot;</span><span class="p">:</span><span class="mf">0.5498154759</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;values_1&quot;</span><span class="p">:</span><span class="mf">0.8</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;user_attrs_hardware_metrics&quot;</span><span class="p">:{</span>
+<span class="w">            </span><span class="nt">&quot;average_bitwidth&quot;</span><span class="p">:</span><span class="mf">4.0</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;user_attrs_sampled_config&quot;</span><span class="p">:{</span>
+<span class="w">            </span><span class="nt">&quot;seq_blocks_0&quot;</span><span class="p">:{</span>
+<span class="w">                </span><span class="nt">&quot;config&quot;</span><span class="p">:{</span>
+<span class="w">                    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="s2">&quot;integer&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;data_in_width&quot;</span><span class="p">:</span><span class="mi">4</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;data_in_frac_width&quot;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;weight_width&quot;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;weight_frac_width&quot;</span><span class="p">:</span><span class="mi">4</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;bias_width&quot;</span><span class="p">:</span><span class="mi">8</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;bias_frac_width&quot;</span><span class="p">:</span><span class="mi">4</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">            </span><span class="err">...</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;user_attrs_scaled_metrics&quot;</span><span class="p">:{</span>
+<span class="w">            </span><span class="nt">&quot;accuracy&quot;</span><span class="p">:</span><span class="mf">0.5498154759</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;average_bitwidth&quot;</span><span class="p">:</span><span class="mf">0.8</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;user_attrs_software_metrics&quot;</span><span class="p">:{</span>
+<span class="w">            </span><span class="nt">&quot;loss&quot;</span><span class="p">:</span><span class="mf">0.6868978143</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;accuracy&quot;</span><span class="p">:</span><span class="mf">0.5498154759</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;state&quot;</span><span class="p">:</span><span class="s2">&quot;COMPLETE&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;datetime_start&quot;</span><span class="p">:</span><span class="mi">1694095032463</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;datetime_complete&quot;</span><span class="p">:</span><span class="mi">1694095033622</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;duration&quot;</span><span class="p">:</span><span class="mi">1159</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="err">...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../transform/cli_transform.html" class="btn btn-neutral float-left" title="Run the transform action with the CLI" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mixed_precision_search_on_manual_model.html" class="btn btn-neutral float-right" title="Mixed-precision search on manual model" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

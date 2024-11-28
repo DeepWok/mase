@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Overview: module code &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-needs/common_css/need_style.css?v=678fb11e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-needs/modern.css?v=803738c0" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-test-results/common.css?v=9ec2c1d5" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+        <script src="../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+        <script src="../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+        <script src="../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+        <script src="../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules/documentation/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/documentation/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/documentation/roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/documentation/specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules/api/actions.html">chop.actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/api/datasets.html">chop.datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/api/distributed.html">chop.distributed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/api/ir.html">chop.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/api/models.html">chop.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/api/nn.html">chop.nn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/api/passes.html">chop.passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/api/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/api/tools.html">chop.tools</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules/hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules/labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Overview: module code</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>All modules for which code is available</h1>
+<ul><li><a href="chop/actions/search/search.html">chop.actions.search.search</a></li>
+<li><a href="chop/actions/test.html">chop.actions.test</a></li>
+<li><a href="chop/actions/train.html">chop.actions.train</a></li>
+<li><a href="chop/ir/graph/mase_graph.html">chop.ir.graph.mase_graph</a></li>
+<li><a href="chop/ir/graph/mase_metadata.html">chop.ir.graph.mase_metadata</a></li>
+<li><a href="chop/passes/graph/analysis/add_metadata/add_common_metadata.html">chop.passes.graph.analysis.add_metadata.add_common_metadata</a></li>
+<li><a href="chop/passes/graph/analysis/add_metadata/add_hardware_metadata.html">chop.passes.graph.analysis.add_metadata.add_hardware_metadata</a></li>
+<li><a href="chop/passes/graph/analysis/add_metadata/add_software_metadata.html">chop.passes.graph.analysis.add_metadata.add_software_metadata</a></li>
+<li><a href="chop/passes/graph/analysis/autosharding/autosharding.html">chop.passes.graph.analysis.autosharding.autosharding</a></li>
+<li><a href="chop/passes/graph/analysis/init_metadata.html">chop.passes.graph.analysis.init_metadata</a></li>
+<li><a href="chop/passes/graph/analysis/pruning/calculate_natural_sparsity.html">chop.passes.graph.analysis.pruning.calculate_natural_sparsity</a></li>
+<li><a href="chop/passes/graph/analysis/pruning/calculate_sparsity.html">chop.passes.graph.analysis.pruning.calculate_sparsity</a></li>
+<li><a href="chop/passes/graph/analysis/pruning/hook_inspector.html">chop.passes.graph.analysis.pruning.hook_inspector</a></li>
+<li><a href="chop/passes/graph/analysis/quantization/calculate_avg_bits.html">chop.passes.graph.analysis.quantization.calculate_avg_bits</a></li>
+<li><a href="chop/passes/graph/analysis/report/report_graph.html">chop.passes.graph.analysis.report.report_graph</a></li>
+<li><a href="chop/passes/graph/analysis/report/report_node.html">chop.passes.graph.analysis.report.report_node</a></li>
+<li><a href="chop/passes/graph/analysis/statistical_profiler/profile_statistics.html">chop.passes.graph.analysis.statistical_profiler.profile_statistics</a></li>
+<li><a href="chop/passes/graph/analysis/verify/verify.html">chop.passes.graph.analysis.verify.verify</a></li>
+<li><a href="chop/passes/graph/interface/onnxrt/onnx_runtime.html">chop.passes.graph.interface.onnxrt.onnx_runtime</a></li>
+<li><a href="chop/passes/graph/interface/save_and_load.html">chop.passes.graph.interface.save_and_load</a></li>
+<li><a href="chop/passes/graph/interface/tensorrt/quantize.html">chop.passes.graph.interface.tensorrt.quantize</a></li>
+<li><a href="chop/passes/graph/transforms/pruning/prune.html">chop.passes.graph.transforms.pruning.prune</a></li>
+<li><a href="chop/passes/graph/transforms/pruning/prune_detach_hook.html">chop.passes.graph.transforms.pruning.prune_detach_hook</a></li>
+<li><a href="chop/passes/graph/transforms/quantize/quantize.html">chop.passes.graph.transforms.quantize.quantize</a></li>
+<li><a href="chop/passes/graph/transforms/quantize/summary.html">chop.passes.graph.transforms.quantize.summary</a></li>
+<li><a href="chop/passes/graph/transforms/utils/conv_bn_fusion.html">chop.passes.graph.transforms.utils.conv_bn_fusion</a></li>
+<li><a href="chop/passes/graph/transforms/utils/logicnets_fusion.html">chop.passes.graph.transforms.utils.logicnets_fusion</a></li>
+<li><a href="chop/passes/graph/transforms/utils/onnx_annotator.html">chop.passes.graph.transforms.utils.onnx_annotator</a></li>
+<li><a href="chop/passes/graph/transforms/verilog/emit_bram.html">chop.passes.graph.transforms.verilog.emit_bram</a></li>
+<li><a href="chop/passes/graph/transforms/verilog/emit_hls.html">chop.passes.graph.transforms.verilog.emit_hls</a></li>
+<li><a href="chop/passes/graph/transforms/verilog/emit_internal.html">chop.passes.graph.transforms.verilog.emit_internal</a></li>
+<li><a href="chop/passes/graph/transforms/verilog/emit_tb.html">chop.passes.graph.transforms.verilog.emit_tb</a></li>
+<li><a href="chop/passes/graph/transforms/verilog/emit_top.html">chop.passes.graph.transforms.verilog.emit_top</a></li>
+<li><a href="chop/passes/module/analysis/quantize/calculate_avg_bits_module.html">chop.passes.module.analysis.quantize.calculate_avg_bits_module</a></li>
+<li><a href="chop/passes/module/transforms/quantize/quantize.html">chop.passes.module.transforms.quantize.quantize</a></li>
+<li><a href="chop/pipelines/auto_pipeline.html">chop.pipelines.auto_pipeline</a></li>
+<li><a href="chop/pipelines/distributed_inference.html">chop.pipelines.distributed_inference</a></li>
+</ul>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

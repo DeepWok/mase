@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Run the train action with the CLI &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/common_css/need_style.css?v=678fb11e" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/modern.css?v=803738c0" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-test-results/common.css?v=9ec2c1d5" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../../../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+        <script src="../../../../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+        <script src="../../../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+        <script src="../../../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+        <script src="../../../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+    <link rel="next" title="Run the transform action with the CLI" href="../transform/cli_transform.html" />
+    <link rel="prev" title="Importing MASE Quantizers" href="../../common/interactive_quantize.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials.html#common-usage-examples">Common Usage Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials.html#interactive-usage-with-python">Interactive Usage with Python</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../../tutorials.html#the-mase-command-line-system">The MASE Command Line System</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Run the train action with the CLI</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#command-line-interface">Command line interface</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#training-implementation">Training implementation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#models">Models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#output">Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#training-logs">Training Logs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#test-command">Test command</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../transform/cli_transform.html">Run the transform action with the CLI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../search/mixed_precision_search_on_mase_graph.html">Mixed-precision search on MASE Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../search/mixed_precision_search_on_manual_model.html">Mixed-precision search on manual model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials.html#the-mase-pass-system">The MASE Pass System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials.html#advanced-topics">Advanced Topics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/actions.html">chop.actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/datasets.html">chop.datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/distributed.html">chop.distributed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/ir.html">chop.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/models.html">chop.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/nn.html">chop.nn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/passes.html">chop.passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/tools.html">chop.tools</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../tutorials.html">Tutorials</a></li>
+      <li class="breadcrumb-item active">Run the train action with the CLI</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../../_sources/modules/documentation/tutorials/actions/train/simple_train_flow.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="run-the-train-action-with-the-cli">
+<h1>Run the train action with the CLI<a class="headerlink" href="#run-the-train-action-with-the-cli" title="Link to this heading"></a></h1>
+<p>MASE has several functionalities, and this document aims to introduce the simplest <code class="docutils literal notranslate"><span class="pre">train</span></code> and <code class="docutils literal notranslate"><span class="pre">eval</span></code> pipelines.</p>
+<section id="command-line-interface">
+<h2>Command line interface<a class="headerlink" href="#command-line-interface" title="Link to this heading"></a></h2>
+<p>MASE actually supports usage in two modes:</p>
+<ul class="simple">
+<li><p>A direct <code class="docutils literal notranslate"><span class="pre">import</span></code> as a module (eg. <code class="docutils literal notranslate"><span class="pre">machop/examples/toy/main.py</span></code>).</p></li>
+<li><p>Through the command line interface (the focus of this document).</p></li>
+</ul>
+<p>In this case, we can try a toymodel, the command looks like the following</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># assuming you you are at the our-stuff/mase directory</span>
+<span class="nb">cd</span><span class="w"> </span>src<span class="w"> </span>
+./ch<span class="w"> </span>train<span class="w"> </span>toy<span class="w"> </span>toy_tiny<span class="w"> </span>--config<span class="w"> </span>../configs/archive/test/train.toml<span class="w"> </span>--max-epochs<span class="w"> </span><span class="m">3</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p><strong>Note:</strong> This is training is for demonstration purposes, we picked a very small model/dataset to make it runnable even on CPU-based devices. It does not mean to achieve a useful accuracy!</p>
+</div></blockquote>
+<p>You can fetch all command-line arguments:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span>nix-shell:~/Projects/mase/src<span class="o">]</span>$<span class="w"> </span>./ch<span class="w"> </span>-help
+INFO<span class="w">     </span>Set<span class="w"> </span>logging<span class="w"> </span>level<span class="w"> </span>to<span class="w"> </span>debug
+WARNING<span class="w">  </span>TensorRT<span class="w"> </span>pass<span class="w"> </span>is<span class="w"> </span>unavailable<span class="w"> </span>because<span class="w"> </span>the<span class="w"> </span>following<span class="w"> </span>dependencies<span class="w"> </span>are<span class="w"> </span>not<span class="w"> </span>installed:<span class="w"> </span>pytorch_quantization,<span class="w"> </span>tensorrt,<span class="w"> </span>pycuda,<span class="w"> </span>cuda.
+usage:<span class="w"> </span>ch<span class="w"> </span><span class="o">[</span>--config<span class="w"> </span>PATH<span class="o">]</span><span class="w"> </span><span class="o">[</span>--task<span class="w"> </span>TASK<span class="o">]</span><span class="w"> </span><span class="o">[</span>--load<span class="w"> </span>PATH<span class="o">]</span><span class="w"> </span><span class="o">[</span>--load-type<span class="o">]</span><span class="w"> </span><span class="o">[</span>--batch-size<span class="w"> </span>NUM<span class="o">]</span><span class="w"> </span><span class="o">[</span>--debug<span class="o">]</span><span class="w"> </span><span class="o">[</span>--log-level<span class="o">]</span><span class="w"> </span><span class="o">[</span>--report-to<span class="w"> </span><span class="o">{</span>wandb,tensorboard<span class="o">}]</span><span class="w"> </span><span class="o">[</span>--seed<span class="w"> </span>NUM<span class="o">]</span><span class="w"> </span><span class="o">[</span>--quant-config<span class="w"> </span>TOML<span class="o">]</span>
+<span class="w">          </span><span class="o">[</span>--training-optimizer<span class="w"> </span>TYPE<span class="o">]</span><span class="w"> </span><span class="o">[</span>--trainer-precision<span class="w"> </span>TYPE<span class="o">]</span><span class="w"> </span><span class="o">[</span>--learning-rate<span class="w"> </span>NUM<span class="o">]</span><span class="w"> </span><span class="o">[</span>--weight-decay<span class="w"> </span>NUM<span class="o">]</span><span class="w"> </span><span class="o">[</span>--max-epochs<span class="w"> </span>NUM<span class="o">]</span><span class="w"> </span><span class="o">[</span>--max-steps<span class="w"> </span>NUM<span class="o">]</span><span class="w"> </span><span class="o">[</span>--accumulate-grad-batches<span class="w"> </span>NUM<span class="o">]</span>
+<span class="w">          </span><span class="o">[</span>--log-every-n-steps<span class="w"> </span>NUM<span class="o">]</span><span class="w"> </span><span class="o">[</span>--cpu<span class="w"> </span>NUM<span class="o">]</span><span class="w"> </span><span class="o">[</span>--gpu<span class="w"> </span>NUM<span class="o">]</span><span class="w"> </span><span class="o">[</span>--nodes<span class="w"> </span>NUM<span class="o">]</span><span class="w"> </span><span class="o">[</span>--accelerator<span class="w"> </span>TYPE<span class="o">]</span><span class="w"> </span><span class="o">[</span>--strategy<span class="w"> </span>TYPE<span class="o">]</span><span class="w"> </span><span class="o">[</span>--auto-requeue<span class="o">]</span><span class="w"> </span><span class="o">[</span>--github-ci<span class="o">]</span><span class="w"> </span><span class="o">[</span>--disable-dataset-cache<span class="o">]</span>
+<span class="w">          </span><span class="o">[</span>--target<span class="w"> </span>STR<span class="o">]</span><span class="w"> </span><span class="o">[</span>--num-targets<span class="w"> </span>NUM<span class="o">]</span><span class="w"> </span><span class="o">[</span>--run-emit<span class="o">]</span><span class="w"> </span><span class="o">[</span>--skip-build<span class="o">]</span><span class="w"> </span><span class="o">[</span>--skip-test<span class="o">]</span><span class="w"> </span><span class="o">[</span>--pretrained<span class="o">]</span><span class="w"> </span><span class="o">[</span>--max-token-len<span class="w"> </span>NUM<span class="o">]</span><span class="w"> </span><span class="o">[</span>--project-dir<span class="w"> </span>DIR<span class="o">]</span><span class="w"> </span><span class="o">[</span>--project<span class="w"> </span>NAME<span class="o">]</span><span class="w"> </span><span class="o">[</span>--profile<span class="o">]</span>
+<span class="w">          </span><span class="o">[</span>--no-warnings<span class="o">]</span><span class="w"> </span><span class="o">[</span>-h<span class="o">]</span><span class="w"> </span><span class="o">[</span>-V<span class="o">]</span><span class="w"> </span><span class="o">[</span>--info<span class="w"> </span><span class="o">[</span>TYPE<span class="o">]]</span>
+<span class="w">          </span>action<span class="w"> </span><span class="o">[</span>model<span class="o">]</span><span class="w"> </span><span class="o">[</span>dataset<span class="o">]</span>
+
+Chop<span class="w"> </span>is<span class="w"> </span>a<span class="w"> </span>simple<span class="w"> </span>utility,<span class="w"> </span>part<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>MASE<span class="w"> </span>tookit,<span class="w"> </span>to<span class="w"> </span>train,<span class="w"> </span><span class="nb">test</span><span class="w"> </span>and<span class="w"> </span>transform<span class="w"> </span><span class="o">(</span>i.e.<span class="w"> </span>prune<span class="w"> </span>or<span class="w"> </span>quantise<span class="o">)</span><span class="w"> </span>a<span class="w"> </span>supported<span class="w"> </span>model.
+
+main<span class="w"> </span>arguments:
+<span class="w">  </span>action<span class="w">                </span>action<span class="w"> </span>to<span class="w"> </span>perform.<span class="w"> </span>One<span class="w"> </span>of<span class="w"> </span><span class="o">(</span>train<span class="p">|</span>test<span class="p">|</span>transform<span class="p">|</span>search<span class="p">|</span>emit<span class="p">|</span>simulate<span class="o">)</span>
+<span class="w">  </span>model<span class="w">                 </span>name<span class="w"> </span>of<span class="w"> </span>a<span class="w"> </span>supported<span class="w"> </span>model.<span class="w"> </span>Required<span class="w"> </span><span class="k">if</span><span class="w"> </span>configuration<span class="w"> </span>NOT<span class="w"> </span>provided.
+<span class="w">  </span>dataset<span class="w">               </span>name<span class="w"> </span>of<span class="w"> </span>a<span class="w"> </span>supported<span class="w"> </span>dataset.<span class="w"> </span>Required<span class="w"> </span><span class="k">if</span><span class="w"> </span>configuration<span class="w"> </span>NOT<span class="w"> </span>provided.
+
+general<span class="w"> </span>options:
+<span class="w">  </span>--config<span class="w"> </span>PATH<span class="w">         </span>path<span class="w"> </span>to<span class="w"> </span>a<span class="w"> </span>configuration<span class="w"> </span>file<span class="w"> </span><span class="k">in</span><span class="w"> </span>the<span class="w"> </span>TOML<span class="w"> </span>format.<span class="w"> </span>Manual<span class="w"> </span>CLI<span class="w"> </span>overrides<span class="w"> </span><span class="k">for</span><span class="w"> </span>arguments<span class="w"> </span>have<span class="w"> </span>a<span class="w"> </span>higher<span class="w"> </span>precedence.<span class="w"> </span>Required<span class="w"> </span><span class="k">if</span><span class="w"> </span>the<span class="w"> </span>action<span class="w"> </span>is<span class="w"> </span>transform.<span class="w"> </span><span class="o">(</span>default:
+<span class="w">                        </span>None<span class="o">)</span>
+<span class="w">  </span>--task<span class="w"> </span>TASK<span class="w">           </span>task<span class="w"> </span>to<span class="w"> </span>perform.<span class="w"> </span>One<span class="w"> </span>of<span class="w"> </span><span class="o">(</span>classification<span class="p">|</span>cls<span class="p">|</span>translation<span class="p">|</span>tran<span class="p">|</span>language_modeling<span class="p">|</span>lm<span class="o">)</span><span class="w"> </span><span class="o">(</span>default:<span class="w"> </span>classification<span class="o">)</span>
+<span class="w">  </span>--load<span class="w"> </span>PATH<span class="w">           </span>path<span class="w"> </span>to<span class="w"> </span>load<span class="w"> </span>the<span class="w"> </span>model<span class="w"> </span>from.<span class="w"> </span><span class="o">(</span>default:<span class="w"> </span>None<span class="o">)</span>
+<span class="w">  </span>--load-type<span class="w">           </span>the<span class="w"> </span><span class="nb">type</span><span class="w"> </span>of<span class="w"> </span>checkpoint<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>loaded<span class="p">;</span><span class="w"> </span>it<span class="s1">&#39;s disregarded if --load is NOT specified. It is designed to and must be used in tandem with --load. One of</span>
+<span class="s1">                        (pt|pl|mz|hf) (default: mz)</span>
+<span class="s1">  --batch-size NUM      batch size for training and evaluation. (default: 128)</span>
+<span class="s1">  --debug               run the action in debug mode, which enables verbose logging, custom exception hook that uses ipdb, and sets the PL trainer to run in &quot;fast_dev_run&quot; mode.</span>
+<span class="s1">                        (default: False)</span>
+<span class="s1">  --log-level           verbosity level of the logger; it&#39;</span>s<span class="w"> </span>only<span class="w"> </span>effective<span class="w"> </span>when<span class="w"> </span>--debug<span class="w"> </span>flag<span class="w"> </span>is<span class="w"> </span>NOT<span class="w"> </span>passed<span class="w"> </span><span class="k">in</span>.<span class="w"> </span>One<span class="w"> </span>of<span class="w"> </span><span class="o">(</span>debug<span class="p">|</span>info<span class="p">|</span>warning<span class="p">|</span>error<span class="p">|</span>critical<span class="o">)</span><span class="w"> </span><span class="o">(</span>default:<span class="w"> </span>info<span class="o">)</span>
+<span class="w">  </span>--report-to<span class="w"> </span><span class="o">{</span>wandb,tensorboard<span class="o">}</span>
+<span class="w">                        </span>reporting<span class="w"> </span>tool<span class="w"> </span><span class="k">for</span><span class="w"> </span>logging<span class="w"> </span>metrics.<span class="w"> </span>One<span class="w"> </span>of<span class="w"> </span><span class="o">(</span>wandb<span class="p">|</span>tensorboard<span class="o">)</span><span class="w"> </span><span class="o">(</span>default:<span class="w"> </span>tensorboard<span class="o">)</span>
+<span class="w">  </span>--seed<span class="w"> </span>NUM<span class="w">            </span>seed<span class="w"> </span><span class="k">for</span><span class="w"> </span>random<span class="w"> </span>number<span class="w"> </span>generators<span class="w"> </span><span class="nb">set</span><span class="w"> </span>via<span class="w"> </span>Pytorch<span class="w"> </span>Lightning<span class="s1">&#39;s seed_everything function. (default: 0)</span>
+<span class="s1">  --quant-config TOML   path to a configuration file in the TOML format. Manual CLI overrides for arguments have a higher precedence. (default: None)</span>
+
+<span class="s1">trainer options:</span>
+<span class="s1">  --training-optimizer TYPE</span>
+<span class="s1">                        name of supported optimiser for training. One of (adam|sgd|adamw) (default: adam)</span>
+<span class="s1">  --trainer-precision TYPE</span>
+<span class="s1">                        numeric precision for training. One of (16-mixed|32|64|bf16) (default: 16-mixed)</span>
+<span class="s1">  --learning-rate NUM   initial learning rate for training. (default: 1e-05)</span>
+<span class="s1">  --weight-decay NUM    weight decay for training. (default: 0)</span>
+<span class="s1">  --max-epochs NUM      maximum number of epochs for training. (default: 20)</span>
+<span class="s1">  --max-steps NUM       maximum number of steps for training. A negative value disables this option. (default: -1)</span>
+<span class="s1">  --accumulate-grad-batches NUM</span>
+<span class="s1">                        number of batches to accumulate gradients. (default: 1)</span>
+<span class="s1">  --log-every-n-steps NUM</span>
+<span class="s1">                        log every n steps. No logs if num_batches &lt; log_every_n_steps. (default: 50))</span>
+
+<span class="s1">runtime environment options:</span>
+<span class="s1">  --cpu NUM, --num-workers NUM</span>
+<span class="s1">                        number of CPU workers; the default varies across systems and is set to os.cpu_count(). (default: 12)</span>
+<span class="s1">  --gpu NUM, --num-devices NUM</span>
+<span class="s1">                        number of GPU devices. (default: 1)</span>
+<span class="s1">  --nodes NUM           number of nodes. (default: 1)</span>
+<span class="s1">  --accelerator TYPE    type of accelerator for training. One of (auto|cpu|gpu|mps) (default: auto)</span>
+<span class="s1">  --strategy TYPE       type of strategy for training. One of (auto|ddp|ddp_find_unused_parameters_true) (default: auto)</span>
+<span class="s1">  --auto-requeue        enable automatic job resubmission on SLURM managed cluster. (default: False)</span>
+<span class="s1">  --github-ci           set the execution environment to GitHub&#39;</span>s<span class="w"> </span>CI<span class="w"> </span>pipeline<span class="p">;</span><span class="w"> </span>it<span class="err">&#39;</span>s<span class="w"> </span>used<span class="w"> </span><span class="k">in</span><span class="w"> </span>the<span class="w"> </span>MASE<span class="w"> </span>verilog<span class="w"> </span>emitter<span class="w"> </span>transform<span class="w"> </span>pass<span class="w"> </span>to<span class="w"> </span>skip<span class="w"> </span>simulations.<span class="w"> </span><span class="o">(</span>default:<span class="w"> </span>False<span class="o">)</span>
+<span class="w">  </span>--disable-dataset-cache
+<span class="w">                        </span>disable<span class="w"> </span>caching<span class="w"> </span>of<span class="w"> </span>datasets.<span class="w"> </span><span class="o">(</span>default:<span class="w"> </span>False<span class="o">)</span>
+
+hardware<span class="w"> </span>generation<span class="w"> </span>options:
+<span class="w">  </span>--target<span class="w"> </span>STR<span class="w">          </span>target<span class="w"> </span>FPGA<span class="w"> </span><span class="k">for</span><span class="w"> </span>hardware<span class="w"> </span>synthesis.<span class="w"> </span><span class="o">(</span>default:<span class="w"> </span>xcu250-figd2104-2L-e<span class="o">)</span>
+<span class="w">  </span>--num-targets<span class="w"> </span>NUM<span class="w">     </span>number<span class="w"> </span>of<span class="w"> </span>FPGA<span class="w"> </span>devices.<span class="w"> </span><span class="o">(</span>default:<span class="w"> </span><span class="m">100</span><span class="o">)</span>
+<span class="w">  </span>--run-emit
+<span class="w">  </span>--skip-build
+<span class="w">  </span>--skip-test
+
+language<span class="w"> </span>model<span class="w"> </span>options:
+<span class="w">  </span>--pretrained<span class="w">          </span>load<span class="w"> </span>pretrained<span class="w"> </span>checkpoint<span class="w"> </span>from<span class="w"> </span>HuggingFace/Torchvision<span class="w"> </span>when<span class="w"> </span>initialising<span class="w"> </span>models.<span class="w"> </span><span class="o">(</span>default:<span class="w"> </span>False<span class="o">)</span>
+<span class="w">  </span>--max-token-len<span class="w"> </span>NUM<span class="w">   </span>maximum<span class="w"> </span>number<span class="w"> </span>of<span class="w"> </span>tokens.<span class="w"> </span>A<span class="w"> </span>negative<span class="w"> </span>value<span class="w"> </span>will<span class="w"> </span>use<span class="w"> </span>tokenizer.model_max_length.<span class="w"> </span><span class="o">(</span>default:<span class="w"> </span><span class="m">512</span><span class="o">)</span>
+
+project<span class="w"> </span>options:
+<span class="w">  </span>--project-dir<span class="w"> </span>DIR<span class="w">     </span>directory<span class="w"> </span>to<span class="w"> </span>save<span class="w"> </span>the<span class="w"> </span>project<span class="w"> </span>to.<span class="w"> </span><span class="o">(</span>default:<span class="w"> </span>/Users/yz10513/Projects/mase/mase_output<span class="o">)</span>
+<span class="w">  </span>--project<span class="w"> </span>NAME<span class="w">        </span>name<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>project.<span class="w"> </span><span class="o">(</span>default:<span class="w"> </span><span class="o">{</span>MODEL-NAME<span class="o">}</span>_<span class="o">{</span>TASK-TYPE<span class="o">}</span>_<span class="o">{</span>DATASET-NAME<span class="o">}</span>_<span class="o">{</span>TIMESTAMP<span class="o">})</span>
+<span class="w">  </span>--profile
+<span class="w">  </span>--no-warnings
+
+information:
+<span class="w">  </span>-h,<span class="w"> </span>--help<span class="w">            </span>show<span class="w"> </span>this<span class="w"> </span><span class="nb">help</span><span class="w"> </span>message<span class="w"> </span>and<span class="w"> </span><span class="nb">exit</span>
+<span class="w">  </span>-V,<span class="w"> </span>--version<span class="w">         </span>show<span class="w"> </span>version<span class="w"> </span>and<span class="w"> </span><span class="nb">exit</span>
+<span class="w">  </span>--info<span class="w"> </span><span class="o">[</span>TYPE<span class="o">]</span><span class="w">         </span>list<span class="w"> </span>information<span class="w"> </span>about<span class="w"> </span>supported<span class="w"> </span>models<span class="w"> </span>or/and<span class="w"> </span>datasets<span class="w"> </span>and<span class="w"> </span>exit.<span class="w"> </span>One<span class="w"> </span>of<span class="w"> </span><span class="o">(</span>all<span class="p">|</span>model<span class="p">|</span>dataset<span class="o">)</span><span class="w"> </span><span class="o">(</span>default:<span class="w"> </span>all<span class="o">)</span>
+
+Maintained<span class="w"> </span>by<span class="w"> </span>the<span class="w"> </span>DeepWok<span class="w"> </span>Lab.<span class="w"> </span>Raise<span class="w"> </span>issues<span class="w"> </span>at<span class="w"> </span>https://github.com/JianyiCheng/mase-tools/issues
+<span class="o">(</span>.venv<span class="o">)</span>
+<span class="o">[</span>nix-shell:~/Projects/mase/src<span class="o">]</span>$
+</pre></div>
+</div>
+</section>
+<section id="training-implementation">
+<h2>Training implementation<a class="headerlink" href="#training-implementation" title="Link to this heading"></a></h2>
+<p>The core train file is <code class="docutils literal notranslate"><span class="pre">mase/src/chop/actions/train.py</span></code>, and the model is wrapped using <code class="docutils literal notranslate"><span class="pre">torch_lightning</span></code>(<a class="reference external" href="https://www.pytorchlightning.ai/index.html">https://www.pytorchlightning.ai/index.html</a>). These wrappers are different for various tasks, as you can see in <code class="docutils literal notranslate"><span class="pre">src/chop/tools/plt_wrapper/__init__.py</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_model_wrapper</span><span class="p">(</span><span class="n">model_info</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">model_info</span><span class="o">.</span><span class="n">is_physical_model</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">JetSubstructureModelWrapper</span>
+    <span class="k">elif</span> <span class="n">model_info</span><span class="o">.</span><span class="n">is_nerf_model</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">NeRFModelWrapper</span>
+    <span class="k">elif</span> <span class="n">model_info</span><span class="o">.</span><span class="n">is_vision_model</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">VisionModelWrapper</span>
+    <span class="k">elif</span> <span class="n">model_info</span><span class="o">.</span><span class="n">is_nlp_model</span><span class="p">:</span>
+        <span class="k">match</span> <span class="n">task</span><span class="p">:</span>
+            <span class="k">case</span> <span class="s2">&quot;classification&quot;</span> <span class="o">|</span> <span class="s2">&quot;cls&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">NLPClassificationModelWrapper</span>
+            <span class="k">case</span> <span class="s2">&quot;language_modeling&quot;</span> <span class="o">|</span> <span class="s2">&quot;lm&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">NLPLanguageModelingModelWrapper</span>
+            <span class="k">case</span> <span class="s2">&quot;translation&quot;</span> <span class="o">|</span> <span class="s2">&quot;tran&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">NLPTranslationModelWrapper</span>
+            <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Task </span><span class="si">{</span><span class="n">task</span><span class="si">}</span><span class="s2"> is not supported for </span><span class="si">{</span><span class="n">model_info</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This is because different tasks may have a different <code class="docutils literal notranslate"><span class="pre">forward</span></code> pass and also might use different manipulations on data and also its evaluation metrics.
+These <code class="docutils literal notranslate"><span class="pre">Wrapper</span></code> also defines the detailed <code class="docutils literal notranslate"><span class="pre">training_flow</span></code>, if we use <code class="docutils literal notranslate"><span class="pre">src/chop/tools/splt_wrapper/base.py</span></code> as an example, <code class="docutils literal notranslate"><span class="pre">training_step</span></code> and <code class="docutils literal notranslate"><span class="pre">validation_step</span></code> are defined in this class.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>class<span class="w"> </span>WrapperBase<span class="o">(</span>pl.LightningModule<span class="o">)</span>:
+<span class="w">    </span>def<span class="w"> </span>forward<span class="o">(</span>self,<span class="w"> </span>x<span class="o">)</span>:
+<span class="w">        </span><span class="k">return</span><span class="w"> </span>self.model<span class="o">(</span>x<span class="o">)</span>
+
+<span class="w">    </span>def<span class="w"> </span>training_step<span class="o">(</span>self,<span class="w"> </span>batch,<span class="w"> </span>batch_idx<span class="o">)</span>:
+<span class="w">        </span>x,<span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>batch<span class="o">[</span><span class="m">0</span><span class="o">]</span>,<span class="w"> </span>batch<span class="o">[</span><span class="m">1</span><span class="o">]</span>
+<span class="w">        </span><span class="nv">y_hat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>self.forward<span class="o">(</span>x<span class="o">)</span>
+<span class="w">        </span><span class="nv">loss</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>self.loss_fn<span class="o">(</span>y_hat,<span class="w"> </span>y<span class="o">)</span>
+
+<span class="w">        </span>self.acc_train<span class="o">(</span>y_hat,<span class="w"> </span>y<span class="o">)</span>
+<span class="w">        </span>self.log<span class="o">(</span><span class="s2">&quot;train_acc_step&quot;</span>,<span class="w"> </span>self.acc_train,<span class="w"> </span><span class="nv">prog_bar</span><span class="o">=</span>True<span class="o">)</span>
+<span class="w">        </span>self.log<span class="o">(</span><span class="s2">&quot;train_loss_step&quot;</span>,<span class="w"> </span>loss<span class="o">)</span>
+
+<span class="w">        </span><span class="k">return</span><span class="w"> </span>loss
+
+<span class="w">    </span>def<span class="w"> </span>validation_step<span class="o">(</span>self,<span class="w"> </span>batch,<span class="w"> </span>batch_idx<span class="o">)</span>:
+<span class="w">        </span>...
+
+<span class="w">    </span>def<span class="w"> </span>test_step<span class="o">(</span>self,<span class="w"> </span>batch,<span class="w"> </span>batch_idx<span class="o">)</span>:
+<span class="w">				</span>...
+</pre></div>
+</div>
+</section>
+<section id="models">
+<h2>Models<a class="headerlink" href="#models" title="Link to this heading"></a></h2>
+<p>Models are mainly implemented in <code class="docutils literal notranslate"><span class="pre">src/chop/models/__init__.py</span> </code>, and the <code class="docutils literal notranslate"><span class="pre">get_model_info</span></code> contains all currently supported models.
+One can also instantiate a custom model and add it to our flow like <code class="docutils literal notranslate"><span class="pre">src/chop/models/toys</span></code>.</p>
+</section>
+<section id="output">
+<h2>Output<a class="headerlink" href="#output" title="Link to this heading"></a></h2>
+<p>MASE produces an output directory after running the training flow. The output directory is found at <code class="docutils literal notranslate"><span class="pre">../mase_output/&lt;model&gt;_&lt;task&gt;_&lt;dataset&gt;_&lt;current_date&gt;</span></code>.
+This directory includes</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">hardware</span></code> - a directory for Verilog hardware generated for the trained model</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">software</span></code> - a directory for any software generated for the trained model (PyTorch checkpoints or MASE models) as well as any generated logs</p></li>
+</ul>
+</section>
+<section id="training-logs">
+<h2>Training Logs<a class="headerlink" href="#training-logs" title="Link to this heading"></a></h2>
+<p>MASE creates <a class="reference external" href="https://pytorch.org/tutorials/recipes/recipes/tensorboard_with_pytorch.html">Tensorboard</a> or <a class="reference external" href="https://wandb.ai/site">wandb</a> logs for the training flow - allowing tracking and visualizing metrics such as loss and accuracy. The log files are in <code class="docutils literal notranslate"><span class="pre">&lt;output_dir&gt;/software/tensorboard/lightning_logs/version_&lt;n&gt;</span></code>.</p>
+<p>Run Tensorboard to visualise the logs using:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tensorboard<span class="w"> </span>--logdir<span class="w"> </span>&lt;path_to_log_files&gt;
+</pre></div>
+</div>
+<p>If you are using VSCode, this will show up popup asking if you want to open Tensorboard in your browser. Select yes.</p>
+<p>If you look at the training printouts, you should have seen something like the following</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>INFO<span class="w">     </span>Initialising<span class="w"> </span>model<span class="w"> </span><span class="s1">&#39;toy&#39;</span>...
+INFO<span class="w">     </span>Initialising<span class="w"> </span>dataset<span class="w"> </span><span class="s1">&#39;toy_tiny&#39;</span>...
+INFO<span class="w">     </span>Project<span class="w"> </span>will<span class="w"> </span>be<span class="w"> </span>created<span class="w"> </span>at<span class="w"> </span>../mase_output/toy_classification_toy_tiny_2024-06-13
+INFO<span class="w">     </span>Training<span class="w"> </span>model<span class="w"> </span><span class="s1">&#39;toy&#39;</span>...
+</pre></div>
+</div>
+<p>This means the <code class="docutils literal notranslate"><span class="pre">path_to_log_files</span></code> is <code class="docutils literal notranslate"><span class="pre">../mase_output/toy_classification_toy_tiny_2024-06-13</span></code>.</p>
+<p>Full command should be something like</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tensorboard<span class="w"> </span>--logdir<span class="w"> </span>../mase_output/toy_classification_toy_tiny_2024-06-13/software/tensorboard/lightning_logs/version_2
+</pre></div>
+</div>
+</section>
+<section id="test-command">
+<h2>Test command<a class="headerlink" href="#test-command" title="Link to this heading"></a></h2>
+<p>To test the model trained above you can use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># After training, you will have your checkpoint under mase-tools/mase_output</span>
+<span class="c1"># For example, the checkpoint is under ../mase_output/toy_classification_toy-tiny_2023-07-03/software/training_ckpts/best.ckpt </span>
+./ch<span class="w"> </span><span class="nb">test</span><span class="w"> </span>toy<span class="w"> </span>toy_tiny<span class="w"> </span>--config<span class="w"> </span>../configs/archive/test/train.toml<span class="w"> </span>--load<span class="w"> </span>../mase_output/toy_classification_toy_tiny_2024-06-13/software/training_ckpts/best.ckpt<span class="sb">```</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../../common/interactive_quantize.html" class="btn btn-neutral float-left" title="Importing MASE Quantizers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../transform/cli_transform.html" class="btn btn-neutral float-right" title="Run the transform action with the CLI" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
