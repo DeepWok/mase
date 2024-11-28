@@ -5,6 +5,7 @@ from chop.nn.snn.modules import neuron as snn_neuron
 import torch
 from timm.models.registry import register_model
 
+
 @register_model
 class SNN_toy(nn.Module):
     def __init__(self, tau):
@@ -13,8 +14,10 @@ class SNN_toy(nn.Module):
         self.layer = nn.Sequential(
             snn_modules.Flatten(),
             snn_modules.Linear(28 * 28, 10, bias=False),
-            snn_neuron.LIFNode(tau=tau, surrogate_function=snn_modules.surrogate.ATan()),
-            )
+            snn_neuron.LIFNode(
+                tau=tau, surrogate_function=snn_modules.surrogate.ATan()
+            ),
+        )
 
     def forward(self, x: torch.Tensor):
         return self.layer(x)

@@ -2,9 +2,7 @@ from .modules import VoltageHook, VoltageScaler, SeqToANNContainer, MultiStepCon
 
 # from .converter import Converter
 
-from .surrogate import (
-    Sigmoid,
-)
+from .surrogate import Sigmoid, ATan
 
 from .conv1d import Conv1d
 
@@ -31,3 +29,5 @@ from .flatten import Flatten
 from .group_norm import GroupNorm
 
 from .upsample import Upsample
+
+from .spiking_self_attention import DSSA, GWFFN, BN, DownsampleLayer, Conv1x1, LIF, PLIF

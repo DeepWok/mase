@@ -3,13 +3,20 @@ import torch
 import torch.nn as nn
 from typing import Any, List, Mapping
 
-from chop.nn.snn.modules.spiking_self_attention import DSSA, GWFFN, BN, DownsampleLayer
+from chop.nn.snn.modules.spiking_self_attention import (
+    DSSA,
+    GWFFN,
+    BN,
+    DownsampleLayer,
+    LIF,
+    PLIF,
+)
 
 from chop.nn.snn.modules.conv2d import Conv2d
 
 from chop.nn.snn.modules.pool2d import MaxPool2d, AdaptiveAvgPool2d
 
-from chop.nn.snn.modules.neuron import LIFNode as LIF, ParametricLIFNode as PLIF
+from chop.nn.snn.modules import surrogate
 
 from timm.models.registry import register_model
 

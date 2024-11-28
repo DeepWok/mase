@@ -9,10 +9,9 @@ from typing import Callable
 import chop.nn.snn.base as base
 import chop.nn.snn.functional as functional
 
-from chop.nn.snn.modules.conv2d import Conv2d
-from chop.nn.snn.modules.batch_norm2d import BatchNorm2d
-from chop.nn.snn.modules.neuron.lifnode import LIFNode
+from chop.nn.snn.modules import Conv2d, BatchNorm2d
 import chop.nn.snn.modules.surrogate as surrogate
+from chop.nn.snn.modules.neuron import LIFNode, ParametricLIFNode
 
 
 class Conv1x1(Conv2d):
@@ -41,6 +40,21 @@ class LIF(LIFNode):
     def __init__(self):
         super().__init__(
             tau=2.0,
+            decay_input=True,
+            v_threshold=1.0,
+            v_reset=0.0,
+            surrogate_function=surrogate.ATan(),
+            detach_reset=True,
+            step_mode="m",
+            backend="cupy",
+            store_v_seq=False,
+        )
+
+
+class PLIF(ParametricLIFNode):
+    def __init__(self):
+        super().__init__(
+            init_tau=2.0,
             decay_input=True,
             v_threshold=1.0,
             v_reset=0.0,
