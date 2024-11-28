@@ -66,5 +66,5 @@ def test(
         logger.info(f"Predicted results is saved to {pred_save_name}")
     else:
         raise ValueError(
-            f"Test or pred split not available for dataset {data_module.info.name}"
+            f"Test or pred split not available for dataset {data_module.dataset_info.name}"
         )

@@ -14,6 +14,11 @@ from .deit import (
     get_deit_small_patch16_224,
     get_deit_tiny_patch16_224,
 )
+from .vit import (
+    get_vit_base_patch16_224,
+    get_vit_small_patch16_224,
+    get_vit_tiny_patch16_224,
+)
 from .efficientnet import (
     get_efficientnet_b0,
     get_efficientnet_b3,
@@ -34,6 +39,14 @@ from .pvt import (
     get_pvt_v2_b3,
     get_pvt_v2_b4,
     get_pvt_v2_b5,
+)
+from .swin import (
+    get_swin_tiny_224,
+    get_swin_small_224,
+    get_swin_base_224,
+    get_swin_tiny_v2_224,
+    get_swin_small_v2_224,
+    get_swin_base_v2_224,
 )
 from .resnet import (
     get_resnet18,
@@ -219,6 +232,43 @@ VISION_MODELS = {
             "pvt_v2_b5", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
+    # Swin
+    "swin_tiny_224": {
+        "get_model_fn_image_classification": get_swin_tiny_224,
+        "info": MaseModelInfo(
+            "swin_tiny_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
+        ),
+    },
+    "swin_small_224": {
+        "get_model_fn_image_classification": get_swin_small_224,
+        "info": MaseModelInfo(
+            "swin_small_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
+        ),
+    },
+    "swin_base_224": {
+        "get_model_fn_image_classification": get_swin_base_224,
+        "info": MaseModelInfo(
+            "swin_base_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
+        ),
+    },
+    "swin_tiny_v2_224": {
+        "get_model_fn_image_classification": get_swin_tiny_v2_224,
+        "info": MaseModelInfo(
+            "swin_tiny_v2_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
+        ),
+    },
+    "swin_small_v2_224": {
+        "get_model_fn_image_classification": get_swin_small_v2_224,
+        "info": MaseModelInfo(
+            "swin_small_v2_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
+        ),
+    },
+    "swin_base_v2_224": {
+        "get_model_fn_image_classification": get_swin_base_v2_224,
+        "info": MaseModelInfo(
+            "swin_base_v2_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
+        ),
+    },
     # CSWin
     "cswin_64_tiny": {
         "get_model_fn_image_classification": get_cswin_64_tiny,
@@ -261,6 +311,25 @@ VISION_MODELS = {
         "get_model_fn_image_classification": get_deit_base_patch16_224,
         "info": MaseModelInfo(
             "deit_base_patch16_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
+        ),
+    },
+    # ViT
+    "vit_tiny_patch16_224": {
+        "get_model_fn_image_classification": get_vit_tiny_patch16_224,
+        "info": MaseModelInfo(
+            "deit_tiny_patch16_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
+        ),
+    },
+    "vit_base_patch16_224": {
+        "get_model_fn_image_classification": get_vit_small_patch16_224,
+        "info": MaseModelInfo(
+            "deit_small_patch16_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
+        ),
+    },
+    "vit_base_patch16_224": {
+        "get_model_fn_image_classification": get_vit_base_patch16_224,
+        "info": MaseModelInfo(
+            "vit_base_patch16_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     # repvgg

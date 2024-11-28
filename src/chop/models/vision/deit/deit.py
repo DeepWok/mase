@@ -138,7 +138,7 @@ def get_deit_small_patch16_224(info, pretrained=False, **kwargs):
 
 
 def get_deit_base_patch16_224(info, pretrained=False, **kwargs):
-    kwargs.pop("info")
+    # kwargs.pop("info")
     num_classes = info.num_classes
     model = VisionTransformer(
         num_classes=num_classes,
