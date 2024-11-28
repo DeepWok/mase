@@ -65,6 +65,13 @@ from .repvgg import (
 
 from .lfc import get_lfc
 from .cnv import get_cnv, get_cnv_residual, get_cnv_toy
+from .snn import (
+    get_snn_toy,
+    spikingresformer_ti,
+    spikingresformer_s,
+    spikingresformer_m,
+    spikingresformer_l,
+)
 
 logger = logging.getLogger(__name__)
 
