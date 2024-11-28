@@ -11,6 +11,7 @@ import numpy as np
 from torchvision.models import ViT_B_16_Weights
 from torchvision.models import VisionTransformer
 from .utils import load_weights_from_npz
+
 logger = getLogger(__name__)
 
 try:
@@ -30,6 +31,7 @@ from typing import (
     List,
 )
 
+
 def get_vit_tiny_patch16_224(info, pretrained=False, **kwargs):
     """ViT-Tiny (Vit-Ti/16)"""
     num_classes = info.num_classes
@@ -44,8 +46,11 @@ def get_vit_tiny_patch16_224(info, pretrained=False, **kwargs):
         **kwargs,
     )
     if pretrained:
-        raise NotImplementedError("Pretrained weights not available for vit_tiny_patch16")
+        raise NotImplementedError(
+            "Pretrained weights not available for vit_tiny_patch16"
+        )
     return model
+
 
 def get_vit_small_patch16_224(info, pretrained=False, **kwargs):
     """ViT-Tiny (Vit-Ti/16)"""
@@ -61,8 +66,11 @@ def get_vit_small_patch16_224(info, pretrained=False, **kwargs):
         **kwargs,
     )
     if pretrained:
-        raise NotImplementedError("Pretrained weights not available for vit_small_patch16")
+        raise NotImplementedError(
+            "Pretrained weights not available for vit_small_patch16"
+        )
     return model
+
 
 def get_vit_base_patch16_224(info, pretrained=False, **kwargs):
     """ViT-Base (Vit-B/16)"""

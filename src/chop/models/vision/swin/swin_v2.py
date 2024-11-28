@@ -10,7 +10,12 @@ from timm.layers import (
 import numpy as np
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 from torchvision.models import Swin_V2_T_Weights, Swin_V2_S_Weights, Swin_V2_B_Weights
-from torchvision.models.swin_transformer import SwinTransformer, SwinTransformerBlockV2, PatchMergingV2
+from torchvision.models.swin_transformer import (
+    SwinTransformer,
+    SwinTransformerBlockV2,
+    PatchMergingV2,
+)
+
 logger = getLogger(__name__)
 
 try:
@@ -30,8 +35,9 @@ from typing import (
     List,
 )
 
+
 def get_swin_tiny_v2_224(info, pretrained=False, **kwargs):
-    """Swin-Tiny """
+    """Swin-Tiny"""
 
     model = SwinTransformer(
         patch_size=[4, 4],
@@ -53,6 +59,7 @@ def get_swin_tiny_v2_224(info, pretrained=False, **kwargs):
         logger.info("swin_tiny randomly initialized")
 
     return model
+
 
 def get_swin_small_v2_224(info, pretrained=False, **kwargs):
     """Swin-Small"""
@@ -76,6 +83,7 @@ def get_swin_small_v2_224(info, pretrained=False, **kwargs):
         logger.info("swin_small randomly initialized")
 
     return model
+
 
 def get_swin_base_v2_224(info, pretrained=False, **kwargs):
     """Swin-Base (Vit-B/16)"""

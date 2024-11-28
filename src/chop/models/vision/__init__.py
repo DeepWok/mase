@@ -18,7 +18,6 @@ from .vit import (
     get_vit_base_patch16_224,
     get_vit_small_patch16_224,
     get_vit_tiny_patch16_224,
-
 )
 from .efficientnet import (
     get_efficientnet_b0,
@@ -42,7 +41,7 @@ from .pvt import (
     get_pvt_v2_b5,
 )
 from .swin import (
-    get_swin_tiny_224, 
+    get_swin_tiny_224,
     get_swin_small_224,
     get_swin_base_224,
     get_swin_tiny_v2_224,

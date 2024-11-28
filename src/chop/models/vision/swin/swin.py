@@ -11,6 +11,7 @@ import numpy as np
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 from torchvision.models import Swin_T_Weights, Swin_S_Weights, Swin_B_Weights
 from torchvision.models import SwinTransformer
+
 logger = getLogger(__name__)
 
 try:
@@ -29,6 +30,7 @@ from typing import (
     Union,
     List,
 )
+
 
 def get_swin_tiny_224(info, pretrained=False, **kwargs):
     """Swin-Tiny (Vit-Ti/16)"""
@@ -52,6 +54,7 @@ def get_swin_tiny_224(info, pretrained=False, **kwargs):
 
     return model
 
+
 def get_swin_small_224(info, pretrained=False, **kwargs):
     """swin_small"""
 
@@ -74,8 +77,9 @@ def get_swin_small_224(info, pretrained=False, **kwargs):
 
     return model
 
+
 def get_swin_base_224(info, pretrained=False, **kwargs):
-    """Swin-Base """
+    """Swin-Base"""
     num_classes = info.num_classes
     img_size = info.image_size[-1]
     model = SwinTransformer(
