@@ -41,6 +41,14 @@ from .pvt import (
     get_pvt_v2_b4,
     get_pvt_v2_b5,
 )
+from .swin import (
+    get_swin_tiny_224, 
+    get_swin_small_224,
+    get_swin_base_224,
+    get_swin_tiny_v2_224,
+    get_swin_small_v2_224,
+    get_swin_base_v2_224,
+)
 from .resnet import (
     get_resnet18,
     get_resnet34,
@@ -223,6 +231,43 @@ VISION_MODELS = {
         "get_model_fn_image_classification": get_pvt_v2_b5,
         "info": MaseModelInfo(
             "pvt_v2_b5", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
+        ),
+    },
+    # Swin
+    "swin_tiny_224": {
+        "get_model_fn_image_classification": get_swin_tiny_224,
+        "info": MaseModelInfo(
+            "swin_tiny_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
+        ),
+    },
+    "swin_small_224": {
+        "get_model_fn_image_classification": get_swin_small_224,
+        "info": MaseModelInfo(
+            "swin_small_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
+        ),
+    },
+    "swin_base_224": {
+        "get_model_fn_image_classification": get_swin_base_224,
+        "info": MaseModelInfo(
+            "swin_base_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
+        ),
+    },
+    "swin_tiny_v2_224": {
+        "get_model_fn_image_classification": get_swin_tiny_v2_224,
+        "info": MaseModelInfo(
+            "swin_tiny_v2_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
+        ),
+    },
+    "swin_small_v2_224": {
+        "get_model_fn_image_classification": get_swin_small_v2_224,
+        "info": MaseModelInfo(
+            "swin_small_v2_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
+        ),
+    },
+    "swin_base_v2_224": {
+        "get_model_fn_image_classification": get_swin_base_v2_224,
+        "info": MaseModelInfo(
+            "swin_base_v2_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     # CSWin
