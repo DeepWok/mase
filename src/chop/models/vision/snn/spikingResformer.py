@@ -11,6 +11,8 @@ from chop.nn.snn.modules.pool2d import MaxPool2d, AdaptiveAvgPool2d
 
 from chop.nn.snn.modules.neuron import LIFNode as LIF, ParametricLIFNode as PLIF
 
+from timm.models.registry import register_model
+
 
 class SpikingResformer(nn.Module):
     def __init__(
@@ -110,3 +112,109 @@ class SpikingResformer(nn.Module):
             if isinstance(module, PLIF):
                 ret.add(name + ".w")
         return ret
+
+
+@register_model
+def spikingresformer_ti(**kwargs):
+    return SpikingResformer(
+        [
+            ["DSSA", "GWFFN"] * 1,
+            ["DSSA", "GWFFN"] * 2,
+            ["DSSA", "GWFFN"] * 3,
+        ],
+        [64, 192, 384],
+        [1, 3, 6],
+        [4, 2, 1],
+        in_channels=3,
+        **kwargs,
+    )
+
+
+@register_model
+def spikingresformer_s(**kwargs):
+    return SpikingResformer(
+        [
+            ["DSSA", "GWFFN"] * 1,
+            ["DSSA", "GWFFN"] * 2,
+            ["DSSA", "GWFFN"] * 3,
+        ],
+        [64, 256, 512],
+        [1, 4, 8],
+        [4, 2, 1],
+        in_channels=3,
+        **kwargs,
+    )
+
+
+@register_model
+def spikingresformer_m(**kwargs):
+    return SpikingResformer(
+        [
+            ["DSSA", "GWFFN"] * 1,
+            ["DSSA", "GWFFN"] * 2,
+            ["DSSA", "GWFFN"] * 3,
+        ],
+        [64, 384, 768],
+        [1, 6, 12],
+        [4, 2, 1],
+        in_channels=3,
+        **kwargs,
+    )
+
+
+@register_model
+def spikingresformer_l(**kwargs):
+    return SpikingResformer(
+        [
+            ["DSSA", "GWFFN"] * 1,
+            ["DSSA", "GWFFN"] * 2,
+            ["DSSA", "GWFFN"] * 3,
+        ],
+        [128, 512, 1024],
+        [2, 8, 16],
+        [4, 2, 1],
+        in_channels=3,
+        **kwargs,
+    )
+
+
+@register_model
+def spikingresformer_dvsg(**kwargs):
+    return SpikingResformer(
+        [
+            ["DSSA", "GWFFN"] * 1,
+            ["DSSA", "GWFFN"] * 2,
+            ["DSSA", "GWFFN"] * 3,
+        ],
+        [32, 96, 192],
+        [1, 3, 6],
+        [4, 2, 1],
+        in_channels=3,
+        prologue=nn.Sequential(
+            Conv2d(3, 32, 3, 1, 1, bias=False, step_mode="m"),
+            BN(32),
+        ),
+        group_size=32,
+        activation=PLIF,
+        **kwargs,
+    )
+
+
+@register_model
+def spikingresformer_cifar(**kwargs):
+    return SpikingResformer(
+        [
+            ["DSSA", "GWFFN"] * 1,
+            ["DSSA", "GWFFN"] * 2,
+            ["DSSA", "GWFFN"] * 3,
+        ],
+        [64, 192, 384],
+        [1, 3, 6],
+        [4, 2, 1],
+        in_channels=3,
+        prologue=nn.Sequential(
+            Conv2d(3, 64, 3, 1, 1, bias=False, step_mode="m"),
+            BN(64),
+        ),
+        **kwargs,
+    )
