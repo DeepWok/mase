@@ -14,6 +14,12 @@ from .deit import (
     get_deit_small_patch16_224,
     get_deit_tiny_patch16_224,
 )
+from .vit import (
+    get_vit_base_patch16_224,
+    get_vit_small_patch16_224,
+    get_vit_tiny_patch16_224,
+
+)
 from .efficientnet import (
     get_efficientnet_b0,
     get_efficientnet_b3,
@@ -261,6 +267,25 @@ VISION_MODELS = {
         "get_model_fn_image_classification": get_deit_base_patch16_224,
         "info": MaseModelInfo(
             "deit_base_patch16_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
+        ),
+    },
+    # ViT
+    "vit_tiny_patch16_224": {
+        "get_model_fn_image_classification": get_vit_tiny_patch16_224,
+        "info": MaseModelInfo(
+            "deit_tiny_patch16_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
+        ),
+    },
+    "vit_base_patch16_224": {
+        "get_model_fn_image_classification": get_vit_small_patch16_224,
+        "info": MaseModelInfo(
+            "deit_small_patch16_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
+        ),
+    },
+    "vit_base_patch16_224": {
+        "get_model_fn_image_classification": get_vit_base_patch16_224,
+        "info": MaseModelInfo(
+            "vit_base_patch16_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     # repvgg
