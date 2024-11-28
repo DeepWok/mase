@@ -30,4 +30,14 @@ from .group_norm import GroupNorm
 
 from .upsample import Upsample
 
-from .spiking_self_attention import DSSA, GWFFN, BN, DownsampleLayer, Conv1x1, LIF, PLIF
+from .spiking_self_attention import (
+    DSSA,
+    GWFFN,
+    BN,
+    DownsampleLayer,
+    Conv1x1,
+    LIF,
+    PLIF,
+    Conv3x3,
+    SpikingMatmul,
+)
