@@ -1,9 +1,24 @@
 from functools import partial
 
+from chop.nn.quantized.functional.linear import (
+    linearBinary,
+    linearBinaryScaling,
+    linearBlockFP,
+    linearBlockLog,
+    linearBlockMinifloat,
+    linearInteger,
+    linearLog,
+    linearMXIntHardware,
+    linearMinifloatDenorm,
+    linearMinifloatIEEE,
+    linearTernary,
+)
 import torch
 from torch import Tensor
 from torch.nn import functional as F
-from .utils import get_stats, quantiser_passthrough
+
+
+from ..utils import get_stats, quantiser_passthrough
 
 from chop.nn.quantizers import (
     residual_sign_quantizer,
@@ -58,24 +73,26 @@ class _LinearBase(torch.nn.Linear):
             dtype,
         )
         self.bypass = False
-        self.x_quantizer = None
-        self.w_quantizer = None
-        self.b_quantizer = None
-        self.out_quantizer = None
         self.pruning_masks = None
+        # NOTE: Quantizers properties are not needed for now
+        # self.x_quantizer = None
+        # self.w_quantizer = None
+        # self.b_quantizer = None
+        # self.out_quantizer = None
 
-    def forward(self, x: Tensor) -> Tensor:
-        if self.bypass:
-            # if bypass, there is no quantization
-            return F.linear(x, self.weight, self.bias)
-        else:
-            x = self.x_quantizer(x)
-            w = self.w_quantizer(self.weight)
-            bias = self.b_quantizer(self.bias) if self.bias is not None else None
-            out = F.linear(x, w, bias)
-            if self.out_quantizer is None:
-                return out
-            return self.out_quantizer(out)
+    # NOTE: This is not needed for now
+    # def forward(self, x: Tensor) -> Tensor:
+    #     if self.bypass:
+    #         # if bypass, there is no quantization
+    #         return F.linear(x, self.weight, self.bias)
+    #     else:
+    #         x = self.x_quantizer(x)
+    #         w = self.w_quantizer(self.weight)
+    #         bias = self.b_quantizer(self.bias) if self.bias is not None else None
+    #         out = F.linear(x, w, bias)
+    #         if self.out_quantizer is None:
+    #             return out
+    #         return self.out_quantizer(out)
 
 
 class LinearInteger(_LinearBase):
@@ -97,30 +114,11 @@ class LinearInteger(_LinearBase):
         self.bypass = config.get("bypass", False)
         if self.bypass:
             return
-        # establish quantizer
-        w_width, w_frac_width = config["weight_width"], config["weight_frac_width"]
-        x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
-        # check bias quantizer, if not, use weight quantizer
-        b_width, b_frac_width = config["bias_width"], config["bias_frac_width"]
-        if out_config is not None:
-            out_width, out_frac_width = (
-                out_config["data_out_width"],
-                out_config["data_out_frac_width"],
-            )
-        base_quantizer = integer_floor_quantizer if floor else integer_quantizer
-        self.w_quantizer = partial(
-            base_quantizer, width=w_width, frac_width=w_frac_width
-        )
-        self.x_quantizer = partial(
-            base_quantizer, width=x_width, frac_width=x_frac_width
-        )
-        self.b_quantizer = partial(
-            base_quantizer, width=b_width, frac_width=b_frac_width
-        )
-        if out_config is not None:
-            self.out_quantizer = partial(
-                base_quantizer, width=out_width, frac_width=out_frac_width
-            )
+
+    def forward(self, x):
+        if self.bypass:
+            return F.linear(x, self.weight, self.bias)
+        return linearInteger(x, self.weight, self.bias, self.config, self.out_config)
 
 
 class LinearMinifloatDenorm(_LinearBase):
@@ -140,42 +138,10 @@ class LinearMinifloatDenorm(_LinearBase):
         if self.bypass:
             return
 
-        w_width, w_exponent_width, w_exponent_bias = (
-            config["weight_width"],
-            config["weight_exponent_width"],
-            config["weight_exponent_bias"],
-        )
-        x_width, x_exponent_width, x_exponent_bias = (
-            config["data_in_width"],
-            config["data_in_exponent_width"],
-            config["data_in_exponent_bias"],
-        )
-        b_width, b_exponent_width, b_exponent_bias = (
-            config["bias_width"],
-            config["bias_exponent_width"],
-            config["bias_exponent_bias"],
-        )
-
-        self.w_quantizer = partial(
-            minifloat_denorm_quantizer,
-            width=w_width,
-            exponent_width=w_exponent_width,
-            exponent_bias=w_exponent_bias,
-        )
-
-        self.x_quantizer = partial(
-            minifloat_denorm_quantizer,
-            width=x_width,
-            exponent_width=x_exponent_width,
-            exponent_bias=x_exponent_bias,
-        )
-
-        self.b_quantizer = partial(
-            minifloat_denorm_quantizer,
-            width=b_width,
-            exponent_width=b_exponent_width,
-            exponent_bias=b_exponent_bias,
-        )
+    def forward(self, x):
+        if self.bypass:
+            return F.linear(x, self.weight, self.bias)
+        return linearMinifloatDenorm(x, self.weight, self.bias, self.config)
 
 
 class LinearMinifloatIEEE(_LinearBase):
@@ -196,42 +162,10 @@ class LinearMinifloatIEEE(_LinearBase):
         if self.bypass:
             return
 
-        w_width, w_exponent_width, w_exponent_bias = (
-            config["weight_width"],
-            config["weight_exponent_width"],
-            config["weight_exponent_bias"],
-        )
-        x_width, x_exponent_width, x_exponent_bias = (
-            config["data_in_width"],
-            config["data_in_exponent_width"],
-            config["data_in_exponent_bias"],
-        )
-        b_width, b_exponent_width, b_exponent_bias = (
-            config["bias_width"],
-            config["bias_exponent_width"],
-            config["bias_exponent_bias"],
-        )
-
-        self.w_quantizer = partial(
-            minifloat_ieee_quantizer,
-            width=w_width,
-            exponent_width=w_exponent_width,
-            exponent_bias=w_exponent_bias,
-        )
-
-        self.x_quantizer = partial(
-            minifloat_ieee_quantizer,
-            width=x_width,
-            exponent_width=x_exponent_width,
-            exponent_bias=x_exponent_bias,
-        )
-
-        self.b_quantizer = partial(
-            minifloat_ieee_quantizer,
-            width=b_width,
-            exponent_width=b_exponent_width,
-            exponent_bias=b_exponent_bias,
-        )
+    def forward(self, x):
+        if self.bypass:
+            return F.linear(x, self.weight, self.bias)
+        return linearMinifloatIEEE(x, self.weight, self.bias, self.config)
 
 
 class LinearLog(_LinearBase):
@@ -251,36 +185,10 @@ class LinearLog(_LinearBase):
         if self.bypass:
             return
 
-        w_width, w_exponent_bias = (
-            config["weight_width"],
-            config["weight_exponent_bias"],
-        )
-        x_width, x_exponent_bias = (
-            config["data_in_width"],
-            config["data_in_exponent_bias"],
-        )
-        b_width, b_exponent_bias = (
-            config["bias_width"],
-            config["bias_exponent_bias"],
-        )
-
-        self.w_quantizer = partial(
-            log_quantizer,
-            width=w_width,
-            exponent_bias=w_exponent_bias,
-        )
-
-        self.x_quantizer = partial(
-            log_quantizer,
-            width=x_width,
-            exponent_bias=x_exponent_bias,
-        )
-
-        self.b_quantizer = partial(
-            log_quantizer,
-            width=b_width,
-            exponent_bias=b_exponent_bias,
-        )
+    def forward(self, x):
+        if self.bypass:
+            return F.linear(x, self.weight, self.bias)
+        return linearLog(x, self.weight, self.bias, self.config)
 
 
 class LinearBlockFP(_LinearBase):
@@ -299,53 +207,11 @@ class LinearBlockFP(_LinearBase):
         self.bypass = config.get("bypass", False)
         if self.bypass:
             return
-        # establish quantizers
-        w_width, w_exponent_width, w_exponent_bias, w_block_size = (
-            config["weight_width"],
-            config["weight_exponent_width"],
-            config["weight_exponent_bias"],
-            config["weight_block_size"],
-        )
-        x_width, x_exponent_width, x_exponent_bias, x_block_size = (
-            config["data_in_width"],
-            config["data_in_exponent_width"],
-            config["data_in_exponent_bias"],
-            config["data_in_block_size"],
-        )
-        x_skip_first_dim = config.get("data_in_skip_first_dim", True)
 
-        b_width, b_exponent_width, b_exponent_bias, b_block_size = (
-            config["bias_width"],
-            config["bias_exponent_width"],
-            config["bias_exponent_bias"],
-            config["bias_block_size"],
-        )
-
-        # blocking/unblocking 4D kernel/feature map is not supported
-        self.w_quantizer = partial(
-            block_fp_quantizer,
-            width=w_width,
-            exponent_width=w_exponent_width,
-            exponent_bias=w_exponent_bias,
-            block_size=w_block_size,
-            skip_first_dim=False,
-        )
-        self.x_quantizer = partial(
-            block_fp_quantizer,
-            width=x_width,
-            exponent_width=x_exponent_width,
-            exponent_bias=x_exponent_bias,
-            block_size=x_block_size,
-            skip_first_dim=x_skip_first_dim,
-        )
-        self.b_quantizer = partial(
-            block_fp_quantizer,
-            width=b_width,
-            exponent_width=b_exponent_width,
-            exponent_bias=b_exponent_bias,
-            block_size=b_block_size,
-            skip_first_dim=False,
-        )
+    def forward(self, x):
+        if self.bypass:
+            return F.linear(x, self.weight, self.bias)
+        return linearBlockFP(x, self.weight, self.bias, self.config)
 
 
 class LinearBlockMinifloat(_LinearBase):
@@ -365,53 +231,11 @@ class LinearBlockMinifloat(_LinearBase):
         self.bypass = config.get("bypass", False)
         if self.bypass:
             return
-        # establish quantizers
-        w_width, w_exponent_width, w_exponent_bias_width, w_block_size = (
-            config["weight_width"],
-            config["weight_exponent_width"],
-            config["weight_exponent_bias_width"],
-            config["weight_block_size"],
-        )
-        x_width, x_exponent_width, x_exponent_bias_width, x_block_size = (
-            config["data_in_width"],
-            config["data_in_exponent_width"],
-            config["data_in_exponent_bias_width"],
-            config["data_in_block_size"],
-        )
-        x_skip_first_dim = config.get("data_in_skip_first_dim", True)
 
-        b_width, b_exponent_width, b_exponent_bias_width, b_block_size = (
-            config["bias_width"],
-            config["bias_exponent_width"],
-            config["bias_exponent_bias_width"],
-            config["bias_block_size"],
-        )
-
-        # blocking/unblocking 4D kernel/feature map is not supported
-        self.w_quantizer = partial(
-            block_minifloat_quantizer,
-            width=w_width,
-            exponent_width=w_exponent_width,
-            exponent_bias_width=w_exponent_bias_width,
-            block_size=w_block_size,
-            skip_first_dim=False,
-        )
-        self.x_quantizer = partial(
-            block_minifloat_quantizer,
-            width=x_width,
-            exponent_width=x_exponent_width,
-            exponent_bias_width=x_exponent_bias_width,
-            block_size=x_block_size,
-            skip_first_dim=x_skip_first_dim,
-        )
-        self.b_quantizer = partial(
-            block_minifloat_quantizer,
-            width=b_width,
-            exponent_width=b_exponent_width,
-            exponent_bias_width=b_exponent_bias_width,
-            block_size=b_block_size,
-            skip_first_dim=False,
-        )
+    def forward(self, x):
+        if self.bypass:
+            return F.linear(x, self.weight, self.bias)
+        return linearBlockMinifloat(x, self.weight, self.bias, self.config)
 
 
 class LinearBlockLog(_LinearBase):
@@ -431,47 +255,11 @@ class LinearBlockLog(_LinearBase):
         self.bypass = config.get("bypass", False)
         if self.bypass:
             return
-        # establish quantizers
-        w_width, w_exponent_bias_width, w_block_size = (
-            config["weight_width"],
-            config["weight_exponent_bias_width"],
-            config["weight_block_size"],
-        )
-        x_width, x_exponent_bias_width, x_block_size = (
-            config["data_in_width"],
-            config["data_in_exponent_bias_width"],
-            config["data_in_block_size"],
-        )
-        x_skip_first_dim = config.get("data_in_skip_first_dim", True)
 
-        b_width, b_exponent_bias_width, b_block_size = (
-            config["bias_width"],
-            config["bias_exponent_bias_width"],
-            config["bias_block_size"],
-        )
-
-        # blocking/unblocking 4D kernel/feature map is not supported
-        self.w_quantizer = partial(
-            block_log_quantizer,
-            width=w_width,
-            exponent_bias_width=w_exponent_bias_width,
-            block_size=w_block_size,
-            skip_first_dim=False,
-        )
-        self.x_quantizer = partial(
-            block_log_quantizer,
-            width=x_width,
-            exponent_bias_width=x_exponent_bias_width,
-            block_size=x_block_size,
-            skip_first_dim=x_skip_first_dim,
-        )
-        self.b_quantizer = partial(
-            block_log_quantizer,
-            width=b_width,
-            exponent_bias_width=b_exponent_bias_width,
-            block_size=b_block_size,
-            skip_first_dim=False,
-        )
+    def forward(self, x):
+        if self.bypass:
+            return F.linear(x, self.weight, self.bias)
+        return linearBlockLog(x, self.weight, self.bias, self.config)
 
 
 class LinearBinary(_LinearBase):
@@ -491,13 +279,10 @@ class LinearBinary(_LinearBase):
         if self.bypass:
             return
 
-        w_stochastic = config["weight_stochastic"]
-        w_bipolar = config["weight_bipolar"]
-        self.w_quantizer = partial(
-            binary_quantizer, stochastic=w_stochastic, bipolar=w_bipolar
-        )
-        self.b_quantizer = quantiser_passthrough
-        self.x_quantizer = quantiser_passthrough
+    def forward(self, x):
+        if self.bypass:
+            return F.linear(x, self.weight, self.bias)
+        return linearBinary(x, self.weight, self.bias, self.config)
 
 
 class LinearBinaryScaling(_LinearBase):
@@ -524,57 +309,60 @@ class LinearBinaryScaling(_LinearBase):
         self.config = config
         self.bypass = config.get("bypass", False)
         # self.gamma = torch.nn.Parameter(torch.tensor(1.0, requires_grad=True))
-
         if self.bypass:
             return
-        x_stochastic, b_stochastic, w_stochastic = (
-            config["data_in_stochastic"],
-            config["bias_stochastic"],
-            config["weight_stochastic"],
-        )
-        x_bipolar, b_bipolar, w_bipolar = (
-            config["data_in_bipolar"],
-            config["bias_bipolar"],
-            config["weight_bipolar"],
-        )
 
-        self.binary_training = config["binary_training"]
-
-        self.w_quantizer = partial(
-            binary_quantizer, stochastic=w_stochastic, bipolar=w_bipolar
-        )
-        self.x_quantizer = partial(
-            binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
-        )
-        self.b_quantizer = partial(
-            binary_quantizer, stochastic=b_stochastic, bipolar=b_bipolar
-        )
-
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x):
         if self.bypass:
-            # if bypass, there is no quantization
             return F.linear(x, self.weight, self.bias)
-
-        if self.binary_training:
-            x = self.x_quantizer(x)
-            w = self.w_quantizer(self.weight)
-            bias = self.b_quantizer(self.bias) if self.bias is not None else None
-            return F.linear(
-                x,
-                # w * self.gamma.abs(),
-                w,
-                bias,
-            )
-        else:
-            self.weight.data.clamp_(-1, 1)
-            return F.linear(
-                x,
-                # self.weight * self.gamma.abs(),
-                self.weight,
-                self.bias,
-            )
+        return linearBinaryScaling(x, self.weight, self.bias, self.config)
 
 
+class LinearTernary(_LinearBase):
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        bias: bool = True,
+        device=None,
+        dtype=None,
+        config=None,
+    ) -> None:
+        super().__init__(in_features, out_features, bias, device, dtype)
+        assert config is not None, "config is None!"
+        self.config = config
+        self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
+
+        w_scaling_factor = config["weight_scaling_factor"]
+        w_mean = get_stats(config, "weight_mean")
+        w_median = get_stats(config, "weight_median")
+        w_max = get_stats(config, "weight_max")
+        self.w_quantizer = partial(
+            ternary_quantizer,
+            scaling_factor=w_scaling_factor,
+            maximum=w_max,
+            median=w_median,
+            mean=w_mean,
+        )
+        self.x_quantizer = quantiser_passthrough
+        self.b_quantizer = quantiser_passthrough
+        # self.b_quantizer = partial(
+        #     ternary_quantizer,
+        #     scaling_factor=b_scaling_factor,
+        #     maximum=b_max,
+        #     median=b_median,
+        #     mean=b_mean,
+        # )
+
+    def forward(self, x):
+        if self.bypass:
+            return F.linear(x, self.weight, self.bias)
+        return linearTernary(x, self.weight, self.bias, self.config)
+
+
+# LUT
 class LinearBinaryResidualSign(_LinearBase):
     """
     Binary Linear layer with redisual sign variant of the linear transformation layer.
@@ -670,46 +458,6 @@ class LinearBinaryResidualSign(_LinearBase):
             )
 
 
-class LinearTernary(_LinearBase):
-    def __init__(
-        self,
-        in_features: int,
-        out_features: int,
-        bias: bool = True,
-        device=None,
-        dtype=None,
-        config=None,
-    ) -> None:
-        super().__init__(in_features, out_features, bias, device, dtype)
-        assert config is not None, "config is None!"
-        self.config = config
-        self.bypass = config.get("bypass", False)
-        if self.bypass:
-            return
-
-        w_scaling_factor = config["weight_scaling_factor"]
-        w_mean = get_stats(config, "weight_mean")
-        w_median = get_stats(config, "weight_median")
-        w_max = get_stats(config, "weight_max")
-        self.w_quantizer = partial(
-            ternary_quantizer,
-            scaling_factor=w_scaling_factor,
-            maximum=w_max,
-            median=w_median,
-            mean=w_mean,
-        )
-        self.x_quantizer = quantiser_passthrough
-        self.b_quantizer = quantiser_passthrough
-        # self.b_quantizer = partial(
-        #     ternary_quantizer,
-        #     scaling_factor=b_scaling_factor,
-        #     maximum=b_max,
-        #     median=b_median,
-        #     mean=b_mean,
-        # )
-
-
-# LUT
 class LinearLUT(torch.nn.Module):
     input_mask: torch.Tensor
     tables_count: int
@@ -1052,68 +800,10 @@ class LinearMXIntHardware(_LinearBase):
         self.bypass = config.get("bypass", False)
         if self.bypass:
             return
-        # establish quantizer
-        w_width, w_exponent_width = (
-            config["weight_width"],
-            config["weight_exponent_width"],
-        )
-        w_p1, w_p0 = (
-            config["weight_parallelism"][0],
-            config["weight_parallelism"][1],
-        )
-        x_width, x_exponent_width = (
-            config["data_in_width"],
-            config["data_in_exponent_width"],
-        )
-        x_p1, x_p0 = (
-            config["data_in_parallelism"][0],
-            config["data_in_parallelism"][1],
-        )
-        # check bias quantizer, if not, use weight quantizer
-        b_width, b_exponent_width = config["bias_width"], config["bias_exponent_width"]
-        b_p1, b_p0 = config["bias_parallelism"][0], config["bias_parallelism"][1]
-        base_quantizer = mxint_hardware
-        if out_config is not None:
-            out_width, out_exponent_width = (
-                config["data_out_width"],
-                config["data_out_exponent_width"],
-            )
-            out_p1, out_p0 = (
-                config["data_out_parallelism_dim_1"],
-                config["data_out_parallelism_dim_0"],
-            )
-            self.out_quantizer = partial(
-                base_quantizer,
-                q_config={"width": out_width, "exponent_width": out_exponent_width},
-                parallelism=[out_p1, out_p0],
-            )
-        self.w_quantizer = partial(
-            base_quantizer,
-            q_config={"width": w_width, "exponent_width": w_exponent_width},
-            parallelism=[w_p1, w_p0],
-        )
-        self.x_quantizer = partial(
-            base_quantizer,
-            q_config={"width": x_width, "exponent_width": x_exponent_width},
-            parallelism=[x_p1, x_p0],
-        )
-        self.b_quantizer = partial(
-            base_quantizer,
-            q_config={"width": b_width, "exponent_width": b_exponent_width},
-            parallelism=[b_p1, b_p0],
-        )
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x):
         if self.bypass:
             return F.linear(x, self.weight, self.bias)
-        else:
-            x = self.x_quantizer(x)
-            w = self.w_quantizer(self.weight)
-            if self.bias is not None:
-                bias = self.b_quantizer(self.bias)
-            else:
-                bias = None
-            out = F.linear(x, w, bias)
-            if self.out_quantizer is None:
-                return out
-            return self.out_quantizer(out)
+        return linearMXIntHardware(
+            x, self.weight, self.bias, self.config, self.out_config
+        )

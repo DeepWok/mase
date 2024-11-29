@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from torch import Tensor
 from torch.nn.common_types import _size_2_t
 
-from .utils import get_stats, quantiser_passthrough
+from ..utils import get_stats, quantiser_passthrough
 
 from chop.nn.quantizers import (
     block_fp_quantizer,
