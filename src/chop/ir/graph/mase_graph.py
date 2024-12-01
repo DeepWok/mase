@@ -8,8 +8,10 @@ import dill
 
 import toml
 import torch
+import pydot
 import torch.fx as fx
 from torch.fx.passes.graph_drawer import FxGraphDrawer
+import matplotlib.pyplot as plt
 
 from transformers import PreTrainedModel
 from transformers.utils.fx import symbolic_trace as hf_symbolic_trace
@@ -468,7 +470,25 @@ class MaseGraph:
             file (str, optional): File to save the graph to. Defaults to "mase_graph.svg".
         """
         drawer = FxGraphDrawer(self.model, "masegraph")
-        drawer.get_dot_graph().write_svg(file)
+        dot_graph = drawer.get_dot_graph()
+        # some dot_graph contains .weight and .bias, this cause pydot to crash in plotting
+        # so we need to remove them
+        # for instance, in BERT, you have bert_embeddings_word_embeddings.weight as a node, 
+        # this is not allowed in graphviz
+
+        dot_string = dot_graph.to_string()
+        dot_string = dot_string.replace(".weight", "_weight")
+        dot_string = dot_string.replace(".bias", "_bias")
+        # the following code snippet is how to plot in networkx, but it does not look nice
+        # new_dot_graph = pydot.graph_from_dot_data(dot_string)
+        # new_dot_graph = new_dot_graph[0]
+        # graph = nx.drawing.nx_pydot.from_pydot(dot_graph)
+        # nx.draw(graph)
+        # plt.tight_layout()
+        # plt.savefig("test.png", format="PNG")
+        dot_graph = pydot.graph_from_dot_data(dot_string)
+        dot_graph = dot_graph[0]
+        dot_graph.write_svg(file)
 
     @property
     def fx_graph(self):

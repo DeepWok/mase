@@ -40,15 +40,16 @@ python3 -m pip install -e . -vvv
 
 > **Common error:** when installing the `pip` requirements, make sure the conda environment is activated and the pip command points to your environment version. You can check this by running `which pip` or `which python` and making sure the resulting path includes "anaconda" and "mase".
 
-## Install MASE
+## Detailed explanation and test your installation
 
-1. After all dependencies are installed, you can do an editable pip install. This makes the mase packages available within any python session in your environment, this command was included in the previous step. You have to understand what is meant by `editable` mode. This means that the package is installed in a way that any changes you make to the source code will be reflected in the package. This is useful for development and testing purposes. For stable installations, you can remove the `-e` flag.
+1. After all dependencies are installed, you can do an **editable pip install**. This is the last line of the previous code snippet. If you have executed the above code snippet, YOU DO NOT NEED TO RUN THIS COMMAND AGAIN. However, it is worse to learn what is editable install.
+This makes the mase packages available within any python session in your environment, this command was included in the previous step. You have to understand what is meant by `editable` mode. This means that the package is installed in a way that any changes you make to the source code will be reflected in the package. This is useful for development and testing purposes. For stable installations, you can remove the `-e` flag.
 
 ```bash
 python3 -m pip install -e . -vvv
 ```
 
-2. (Optional but suggested) You can check the installation was successful by running the following, which ensures MASE's software stack is available globally in your python environment.
+1. (Optional but suggested) You can check the installation was successful by running the following, which ensures MASE's software stack is available globally in your python environment.
 
 ```bash
 python -c "import chop"
