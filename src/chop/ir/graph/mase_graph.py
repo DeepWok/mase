@@ -473,7 +473,7 @@ class MaseGraph:
         dot_graph = drawer.get_dot_graph()
         # some dot_graph contains .weight and .bias, this cause pydot to crash in plotting
         # so we need to remove them
-        # for instance, in BERT, you have bert_embeddings_word_embeddings.weight as a node, 
+        # for instance, in BERT, you have bert_embeddings_word_embeddings.weight as a node,
         # this is not allowed in graphviz
 
         dot_string = dot_graph.to_string()

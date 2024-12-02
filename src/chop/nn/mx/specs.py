@@ -55,7 +55,7 @@ import traceback
 
 # Change this to True to enable an assert test
 # in every MX user-facing function and class
-_ASSERT_MODE = os.environ.get('MX_ASSERT', 'False')
+_ASSERT_MODE = os.environ.get("MX_ASSERT", "False")
 
 
 class MxSpecs(collections.UserDict):
@@ -80,24 +80,18 @@ class MxSpecs(collections.UserDict):
         # Added new mode RNE (round to nearest, round ties to nearest even) for float32 to bfloat16 quantization
         defaults = {
             "scale_bits": 0,
-
             "w_elem_format": None,
             "a_elem_format": None,
             "w_elem_format_bp": None,
             "a_elem_format_bp_ex": None,
             "a_elem_format_bp_os": None,
             "mx_flush_fp32_subnorms": False,
-
             "shared_exp_method": "max",
             "block_size": 0,
-
             "bfloat": 0,
             "fp": 0,
-
             "bfloat_subnorms": True,
-
             "quantize_backprop": True,
-
             "round": "nearest",
             "round_m": "nearest",
             "round_weight": "nearest",
@@ -110,37 +104,29 @@ class MxSpecs(collections.UserDict):
             "round_mx_grad_output_grad_input": "nearest",
             "round_mx_input_grad_weight": "nearest",
             "round_mx_grad_output_grad_weight": "nearest",
-
             "softmax_exp2": False,
             "vec_use_exp2": False,
             "vec_use_recip": False,
-
             "custom_cuda": False,
         }
 
         self.help_strings = {
             "scale_bits": "Bits (sign + magnitude) to use for shared exponent/scale",
             "w_elem_format": "Weight MX elem format, one of {fp8_e5m2, fp8_e4m3, "
-                             "fp6_e3m2, fp6_e2m3, fp4_e2m1, int8, int4}",
+            "fp6_e3m2, fp6_e2m3, fp4_e2m1, int8, int4}",
             "a_elem_format": "Activation MX elem format. See w_elem_format",
             "w_elem_format_bp": "Backpass weight MX elem format. See w_elem_format",
             "a_elem_format_bp_ex": "Backpass act MX elem format. See w_elem_format",
             "a_elem_format_bp_os": "Backpass act MX elem format. See w_elem_format",
             "mx_flush_fp32_subnorms": "MX quantization flushes blocks with "
-                                      "subnormal shared scale to zero",
-
-            "shared_exp_method": "Shared exponent calculation method. " "Options: max, none",
+            "subnormal shared scale to zero",
+            "shared_exp_method": "Shared exponent calculation method. "
+            "Options: max, none",
             "block_size": "mx shared exponent block size",
-
-            "bfloat": 
-                "BfloatX format (8exp + sign + mantissa). Only one of bfloat or fp can be used",
-            "fp":
-                "fpX format (5exp + sign + mantissa). Only one of bfloat or fp can be used",
-
+            "bfloat": "BfloatX format (8exp + sign + mantissa). Only one of bfloat or fp can be used",
+            "fp": "fpX format (5exp + sign + mantissa). Only one of bfloat or fp can be used",
             "bfloat_subnorms": "Bfloat/FP supports subnorms",
-
             "quantize_backprop": "Enable mx/bfloat quantization on backward pass",
-
             "round": "Global rounding mode. Choices: nearest, floor",
             "round_m": "ADAM optimizer m and v rounding mode",
             "round_weight": "Weight bfloat rounding mode (W in WAGE)",
@@ -153,11 +139,9 @@ class MxSpecs(collections.UserDict):
             "round_mx_grad_output_grad_input": "",
             "round_mx_input_grad_weight": "",
             "round_mx_grad_output_grad_weight": "",
-
             "softmax_exp2": "Softmax uses 2^x instead of e^x",
             "vec_use_exp2": "Use 2^x to compute e^x",
             "vec_use_recip": "Use 1/x to compute division",
-
             "custom_cuda": "Enable custom CUDA kernels for quantization",
         }
 
@@ -166,7 +150,7 @@ class MxSpecs(collections.UserDict):
                 self.data[k] = defaults[k]
 
         for k in self.data.keys():
-            assert(k in self.help_strings.keys())
+            assert k in self.help_strings.keys()
 
     def safe_json(self, indent=None):
         """
@@ -233,9 +217,7 @@ def add_mx_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     default type and value"""
     group = parser.add_argument_group("mx", "MX specs")
 
-    group.add_argument(
-        "--mx_dir", type=str, default=None, help="Path to mx library"
-    )
+    group.add_argument("--mx_dir", type=str, default=None, help="Path to mx library")
 
     # All arguments are added as default None except bools.
     # A newly parsed mx_specs object must have finalize_mx_specs
@@ -267,8 +249,12 @@ def add_mx_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         else:
             group.add_argument("--" + k, type=type(v), default=None, help=help_str)
 
-    group.add_argument("--skip_early_exit", action="store_true",
-                       help="Don't early exit if no quantization is specified", default=False)
+    group.add_argument(
+        "--skip_early_exit",
+        action="store_true",
+        help="Don't early exit if no quantization is specified",
+        default=False,
+    )
 
     return parser
 
@@ -280,7 +266,7 @@ def finalize_mx_specs(specs, early_exit=True):
     """
     # Early exit, works for 0 and None
     if (
-        not specs.get("w_elem_format", 0) 
+        not specs.get("w_elem_format", 0)
         and not specs.get("a_elem_format", 0)
         and not specs.get("w_elem_format_bp", 0)
         and not specs.get("a_elem_format_bp_os", 0)

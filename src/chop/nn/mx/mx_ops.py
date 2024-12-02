@@ -30,16 +30,17 @@ import numpy as np
 
 from .specs import mx_assert_test
 from .formats import (
-        RoundingMode,
-        ElemFormat,
-        FP32_EXPONENT_BIAS,
-        FP32_MIN_NORMAL,
-        _get_format_params
+    RoundingMode,
+    ElemFormat,
+    FP32_EXPONENT_BIAS,
+    FP32_MIN_NORMAL,
+    _get_format_params,
 )
 from .elemwise_ops import (
-        _safe_lshift, _safe_rshift,
-        _round_mantissa,
-        _quantize_elemwise_core
+    _safe_lshift,
+    _safe_rshift,
+    _round_mantissa,
+    _quantize_elemwise_core,
 )
 
 
@@ -81,8 +82,8 @@ def _shared_exponents(A, method="max", axes=None, ebits=0):
 
     # Restrict to [-emax, emax] range
     if ebits > 0:
-        emax = 2**(ebits-1) - 1
-        #shared_exp = torch.clamp(shared_exp, -emax, emax)
+        emax = 2 ** (ebits - 1) - 1
+        # shared_exp = torch.clamp(shared_exp, -emax, emax)
         # Overflow to Inf
         shared_exp[shared_exp > emax] = float("NaN")
         # Underflows are set to -127 which causes them to be
@@ -173,7 +174,7 @@ def _undo_reshape_to_blocks(A, padded_shape, orig_shape, axes):
 def _quantize_mx(
     A,
     scale_bits,
-    elem_format,    # can be None for no quantization
+    elem_format,  # can be None for no quantization
     shared_exp_method="max",
     axes=None,
     block_size=0,
@@ -181,13 +182,12 @@ def _quantize_mx(
     flush_fp32_subnorms=False,
     custom_cuda=False,
 ):
-    """Function used for MX* quantization
-    """
+    """Function used for MX* quantization"""
     # Shortcut for no quantization
     if elem_format == None:
         return A
 
-    assert(scale_bits > 0)
+    assert scale_bits > 0
 
     # Make sure axes is a list of non-negative numbers
     axes = [axes] if type(axes) == int else axes
@@ -210,6 +210,7 @@ def _quantize_mx(
             A = A.contiguous()
 
             from . import custom_extensions as ce
+
             A = ce.funcs.quantize_mx_by_tile_func_cuda(
                 A,
                 scale_bits,
@@ -223,12 +224,9 @@ def _quantize_mx(
             )
             return A
 
-
     # Perform tiling to the hardware vector size
     if block_size > 0:
-        A, axes, orig_shape, padded_shape = _reshape_to_blocks(
-            A, axes, block_size
-        )
+        A, axes, orig_shape, padded_shape = _reshape_to_blocks(A, axes, block_size)
 
     ####################
     # Quantize
@@ -243,31 +241,50 @@ def _quantize_mx(
             assert len(shared_exp_axes) == 1
             axis = shared_exp_axes[0]
 
-        assert(shared_exp_method == "max")
+        assert shared_exp_method == "max"
         max_values = A.abs().max(dim=axis, keepdim=True).values
 
         A = A.contiguous()
 
         if A.device.type == "cuda":
             from . import custom_extensions as ce
+
             A = ce.funcs.quantize_mx_func_cuda(
-                A, scale_bits, ebits, mbits, max_norm,
-                max_values, axis,
-                flush_fp32_subnorms, RoundingMode[round]);
+                A,
+                scale_bits,
+                ebits,
+                mbits,
+                max_norm,
+                max_values,
+                axis,
+                flush_fp32_subnorms,
+                RoundingMode[round],
+            )
 
         elif A.device.type == "cpu":
             from . import custom_extensions as ce
+
             A = ce.funcs.quantize_mx_func_cpp(
-                A, scale_bits, ebits, mbits, max_norm,
-                max_values, axis,
-                flush_fp32_subnorms, RoundingMode[round]);
+                A,
+                scale_bits,
+                ebits,
+                mbits,
+                max_norm,
+                max_values,
+                axis,
+                flush_fp32_subnorms,
+                RoundingMode[round],
+            )
 
         else:
             raise ValueError("Unrecognized device type %s" % A.device.type)
     else:
         # Get shared exponents
         shared_exp = _shared_exponents(
-            A, method=shared_exp_method, axes=shared_exp_axes, ebits=0,
+            A,
+            method=shared_exp_method,
+            axes=shared_exp_axes,
+            ebits=0,
         )
 
         # Flush subnormal FP32 inputs to zero
@@ -278,16 +295,22 @@ def _quantize_mx(
         # in the element data format
         shared_exp = shared_exp - emax
 
-        scale_emax = 2**(scale_bits-1) - 1
+        scale_emax = 2 ** (scale_bits - 1) - 1
         shared_exp[shared_exp > scale_emax] = float("NaN")
         shared_exp[shared_exp < -scale_emax] = -scale_emax
 
         A = A / (2**shared_exp)
 
         A = _quantize_elemwise_core(
-                A, mbits, ebits, max_norm, round=round,
-                allow_denorm=True, saturate_normals=True,
-                custom_cuda=custom_cuda)
+            A,
+            mbits,
+            ebits,
+            max_norm,
+            round=round,
+            allow_denorm=True,
+            saturate_normals=True,
+            custom_cuda=custom_cuda,
+        )
 
         A = A * (2**shared_exp)
 
@@ -323,9 +346,13 @@ def quantize_mx_op(
         scale_bits = mx_specs["scale_bits"]
 
     return _quantize_mx(
-            A, scale_bits,
-            elem_format, block_size=block_size,
-            axes=axes, round=round,
-            shared_exp_method=mx_specs["shared_exp_method"],
-            flush_fp32_subnorms=mx_specs["mx_flush_fp32_subnorms"],
-            custom_cuda=mx_specs["custom_cuda"])
+        A,
+        scale_bits,
+        elem_format,
+        block_size=block_size,
+        axes=axes,
+        round=round,
+        shared_exp_method=mx_specs["shared_exp_method"],
+        flush_fp32_subnorms=mx_specs["mx_flush_fp32_subnorms"],
+        custom_cuda=mx_specs["custom_cuda"],
+    )

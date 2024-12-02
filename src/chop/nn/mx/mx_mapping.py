@@ -7,16 +7,40 @@ from .batchnorm import BatchNorm1d, BatchNorm2d, BatchNorm3d, batch_norm
 from .bmm import bmm
 from .convolution import Conv1d, Conv2d, Conv3d, conv1d, conv2d, conv3d
 from .transpose_convolution import ConvTranspose2d
-from .activations import GELU, ReLU, SiLU, ReLU6, Sigmoid, Tanh, LeakyReLU, gelu, leaky_relu, relu, relu6, sigmoid, silu, \
-    tanh
+from .activations import (
+    GELU,
+    ReLU,
+    SiLU,
+    ReLU6,
+    Sigmoid,
+    Tanh,
+    LeakyReLU,
+    gelu,
+    leaky_relu,
+    relu,
+    relu6,
+    sigmoid,
+    silu,
+    tanh,
+)
 from .groupnorm import GroupNorm, group_norm
 from .layernorm import LayerNorm, layer_norm
 from .linear import Linear, linear
 from .matmul import MatMulFunction, matmul
 from .rnn import LSTM
 from .softmax import Softmax, softmax
-from .simd_ops import simd_add, simd_sub, simd_mul, simd_div, simd_exp, simd_log, simd_reduce_sum, simd_reduce_mean, \
-    simd_norm, simd_square
+from .simd_ops import (
+    simd_add,
+    simd_sub,
+    simd_mul,
+    simd_div,
+    simd_exp,
+    simd_log,
+    simd_reduce_sum,
+    simd_reduce_mean,
+    simd_norm,
+    simd_square,
+)
 
 DEBUG = False
 
@@ -25,8 +49,8 @@ torch_addmm = torch.addmm
 
 def tracer_decorator(func, mx_specs):
     def wrapper(*args, **kwargs):
-        if 'dtype' in kwargs:
-            dtype = kwargs.pop('dtype')
+        if "dtype" in kwargs:
+            dtype = kwargs.pop("dtype")
         else:
             dtype = None
         if DEBUG:
@@ -35,6 +59,7 @@ def tracer_decorator(func, mx_specs):
         if dtype is not None:
             res = res.to(dtype)
         return res
+
     return wrapper
 
 
@@ -43,17 +68,19 @@ def inject_pyt_ops(mx_specs):
     Injects PyTorch operators into the PyTorch namespace, replacing them. The ops need to have their own reference
     to the original PyTorch operator, so that they can call it.
     """
+
     def mx_class_factory(cls):
         def __init__(self, *args, **kwargs):
             cls.__init__(self, *args, mx_specs=mx_specs, **kwargs)
-        return type(f'{cls.__name__}_inj', (cls,), {'__init__': __init__})
+
+        return type(f"{cls.__name__}_inj", (cls,), {"__init__": __init__})
 
     for k, v in FUNCTION_MAPPING.items():
         if k in torch.__dict__:
             torch.__dict__[k] = tracer_decorator(v, mx_specs)
         if k in torch.nn.functional.__dict__:
             torch.nn.functional.__dict__[k] = tracer_decorator(v, mx_specs)
-    for k,v in MODULE_MAPPING.items():
+    for k, v in MODULE_MAPPING.items():
         torch.nn.__dict__[k] = mx_class_factory(v)
 
 
@@ -103,7 +130,7 @@ FUNCTION_MAPPING = {
     "relu6": relu6,
     "sigmoid": sigmoid,
     "silu": silu,
-    "softmax": softmax, # Causes NaNs?
+    "softmax": softmax,  # Causes NaNs?
     "tanh": tanh,
     "add": simd_add,
     "sub": simd_sub,

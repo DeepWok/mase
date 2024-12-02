@@ -17,4 +17,3 @@ sources = [
 file_dir = os.path.dirname(__file__)
 sources = [os.path.join(file_dir, "cpp", x) for x in sources]
 funcs = load(name="custom_extensions", sources=sources)
-

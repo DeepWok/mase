@@ -18,6 +18,7 @@ Exposed Methods:
     simd_reduce_mean    y = x.mean(dim)
     simd_norm           y = (x**2).sum().sqrt()
 """
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -37,37 +38,40 @@ torch_square = torch.square
 
 
 def _broadcast_gradient(grad_out, in_shape, mx_specs):
-    """ Computes the gradient of y = broadcast_shape(x)
-        Pytorch broadcasting rules:
-        https://pytorch.org/docs/stable/notes/broadcasting.html?highlight=broadcasting
-        - Match dims starting from innermost
-        - Broadcast dims if dim sizes are equal, one of the two is 1,
-          or one of the two does not exist
+    """Computes the gradient of y = broadcast_shape(x)
+    Pytorch broadcasting rules:
+    https://pytorch.org/docs/stable/notes/broadcasting.html?highlight=broadcasting
+    - Match dims starting from innermost
+    - Broadcast dims if dim sizes are equal, one of the two is 1,
+      or one of the two does not exist
     """
     if list(grad_out.shape) == in_shape:
         return grad_out
 
-    assert(grad_out.ndim >= len(in_shape))
+    assert grad_out.ndim >= len(in_shape)
 
     # Iterate each dim starting from -1 backwards
     # add any broadcasted dims to reduce_dims
     reduce_dims = []
     for i in range(grad_out.ndim):
-        if i+1 > len(in_shape): # dim does not exist
+        if i + 1 > len(in_shape):  # dim does not exist
             reduce_dims.append(-1 - i)
             continue
 
         dout = grad_out.shape[-1 - i]
-        din  = in_shape[-1 - i]
+        din = in_shape[-1 - i]
 
-        if dout == din: # dims match
+        if dout == din:  # dims match
             pass
         elif din == 1:  # one of the dims is 1
             reduce_dims.append(-1 - i)
         else:
             raise ValueError(
-                    "simd_add _gradient shape error. grad_out is" + \
-                    str(grad_out.shape) + "and input is" + str(in_shape))
+                "simd_add _gradient shape error. grad_out is"
+                + str(grad_out.shape)
+                + "and input is"
+                + str(in_shape)
+            )
 
     # Quantize to bfloat if reduction is needed
     if len(reduce_dims) > 0:
@@ -79,19 +83,20 @@ def _broadcast_gradient(grad_out, in_shape, mx_specs):
         return grad_out.view(in_shape)
 
 
-#----------------------------------------------------
+# ----------------------------------------------------
 # Autograd functions
-#----------------------------------------------------
+# ----------------------------------------------------
 class SIMDAdd(torch.autograd.Function):
-    """ Fwd: y = x1 + x2
-        Bwd: dy/dx1 = dy/dx2 = 1
-        Shape broadcasting is fully supported
+    """Fwd: y = x1 + x2
+    Bwd: dy/dx1 = dy/dx2 = 1
+    Shape broadcasting is fully supported
     """
+
     @staticmethod
     def forward(ctx, in1, in2, mx_specs=None):
         ctx.mx_specs = get_backwards_mx_specs(mx_specs)
-        assert(isinstance(in1, torch.Tensor))
-    
+        assert isinstance(in1, torch.Tensor)
+
         qin1 = vec_quantize(in1, mx_specs=mx_specs)
 
         if isinstance(in2, torch.Tensor):
@@ -118,15 +123,16 @@ class SIMDAdd(torch.autograd.Function):
 
 
 class SIMDSub(torch.autograd.Function):
-    """ Fwd: y = x1 - x2
-        Bwd: dy/dx1 = 1, dy/dx2 = -1
-        Shape broadcasting is fully supported
+    """Fwd: y = x1 - x2
+    Bwd: dy/dx1 = 1, dy/dx2 = -1
+    Shape broadcasting is fully supported
     """
+
     @staticmethod
     def forward(ctx, in1, in2, mx_specs=None):
         ctx.mx_specs = get_backwards_mx_specs(mx_specs)
-        assert(isinstance(in1, torch.Tensor))
-    
+        assert isinstance(in1, torch.Tensor)
+
         qin1 = vec_quantize(in1, mx_specs=mx_specs)
 
         if isinstance(in2, torch.Tensor):
@@ -152,14 +158,15 @@ class SIMDSub(torch.autograd.Function):
 
 
 class SIMDMul(torch.autograd.Function):
-    """ Supports Tensor*Tensor or Tensor*Const
-        Fwd: y = x1 * x2
-        Bwd: dy/dx1 = x2, dy/dx2 = x1
+    """Supports Tensor*Tensor or Tensor*Const
+    Fwd: y = x1 * x2
+    Bwd: dy/dx1 = x2, dy/dx2 = x1
     """
+
     @staticmethod
     def forward(ctx, in1, in2, mx_specs=None):
         ctx.mx_specs = get_backwards_mx_specs(mx_specs)
-        assert(isinstance(in1, torch.Tensor))
+        assert isinstance(in1, torch.Tensor)
 
         qin1 = vec_quantize(in1, mx_specs=mx_specs)
 
@@ -170,7 +177,7 @@ class SIMDMul(torch.autograd.Function):
 
             qin2 = vec_quantize(in2, mx_specs=mx_specs)
 
-            if mx_specs['quantize_backprop']:
+            if mx_specs["quantize_backprop"]:
                 ctx.save_for_backward(qin1, qin2)
             else:
                 ctx.save_for_backward(in1, in2)
@@ -179,7 +186,7 @@ class SIMDMul(torch.autograd.Function):
             ctx.in2 = in2
             qin2 = in2
 
-            if mx_specs['quantize_backprop']:
+            if mx_specs["quantize_backprop"]:
                 ctx.save_for_backward(qin1)
             else:
                 ctx.save_for_backward(in1)
@@ -198,20 +205,21 @@ class SIMDMul(torch.autograd.Function):
             g2 = _broadcast_gradient(g2, ctx.in2_shape, ctx.mx_specs)
             return (g1, g2, None)
         else:
-            in1, = ctx.saved_tensors
+            (in1,) = ctx.saved_tensors
             g1 = vec_mul(g, ctx.in2, mx_specs=ctx.mx_specs)
             return (g1, None, None)
 
 
 class SIMDDiv(torch.autograd.Function):
-    """ Supports Tensor*Tensor or Tensor*Const
-        Fwd: y = x1 / x2
-        Bwd: dy/dx1 = 1/x2, dy/dx2 = -x1/(x2^2)
+    """Supports Tensor*Tensor or Tensor*Const
+    Fwd: y = x1 / x2
+    Bwd: dy/dx1 = 1/x2, dy/dx2 = -x1/(x2^2)
     """
+
     @staticmethod
     def forward(ctx, in1, in2, mx_specs=None):
         ctx.mx_specs = get_backwards_mx_specs(mx_specs)
-        assert(isinstance(in1, torch.Tensor))
+        assert isinstance(in1, torch.Tensor)
 
         qin1 = vec_quantize(in1, mx_specs=mx_specs)
 
@@ -223,7 +231,7 @@ class SIMDDiv(torch.autograd.Function):
             qin2 = vec_quantize(in2, mx_specs=mx_specs)
             out = vec_div(qin1, qin2, mx_specs=mx_specs)
 
-            if mx_specs['quantize_backprop']:
+            if mx_specs["quantize_backprop"]:
                 ctx.save_for_backward(out, qin2)
             else:
                 ctx.save_for_backward(out, in2)
@@ -233,7 +241,7 @@ class SIMDDiv(torch.autograd.Function):
 
             out = vec_div(qin1, in2, mx_specs=mx_specs)
 
-            if mx_specs['quantize_backprop']:
+            if mx_specs["quantize_backprop"]:
                 ctx.save_for_backward(qin1)
             else:
                 ctx.save_for_backward(in1)
@@ -254,15 +262,16 @@ class SIMDDiv(torch.autograd.Function):
             g2 = _broadcast_gradient(g2, ctx.in2_shape, ctx.mx_specs)
             return (g1, g2, None)
         else:
-            in1, = ctx.saved_tensors
+            (in1,) = ctx.saved_tensors
             g1 = vec_div(g, ctx.in2, mx_specs=ctx.mx_specs)
             return (g1, None, None)
 
 
 class SIMDSplit(torch.autograd.Function):
-    """ Fwd: x1, x2 = x
-        Bwd: dy/dx = dy/dx1 + dy/dx2
+    """Fwd: x1, x2 = x
+    Bwd: dy/dx = dy/dx1 + dy/dx2
     """
+
     @staticmethod
     def forward(ctx, in1, mx_specs=None):
         ctx.mx_specs = get_backwards_mx_specs(mx_specs)
@@ -284,15 +293,16 @@ class SIMDSplit(torch.autograd.Function):
 
 
 class SIMDSquare(torch.autograd.Function):
-    """ Fwd: y = x**2
-        Bwd: dy/dx = 2*x
+    """Fwd: y = x**2
+    Bwd: dy/dx = 2*x
     """
+
     @staticmethod
     def forward(ctx, in1, mx_specs=None):
         ctx.mx_specs = get_backwards_mx_specs(mx_specs)
         qin1 = vec_quantize(in1, mx_specs=mx_specs)
 
-        if mx_specs['quantize_backprop']:
+        if mx_specs["quantize_backprop"]:
             ctx.save_for_backward(qin1)
         else:
             ctx.save_for_backward(in1)
@@ -301,7 +311,7 @@ class SIMDSquare(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, g):
-        x, = ctx.saved_tensors
+        (x,) = ctx.saved_tensors
         g = vec_quantize(g, mx_specs=ctx.mx_specs)
         x2 = vec_mul(x, 2, mx_specs=ctx.mx_specs)
         grad_in = vec_mul(g, x2, mx_specs=ctx.mx_specs)
@@ -309,9 +319,10 @@ class SIMDSquare(torch.autograd.Function):
 
 
 class SIMDSqrt(torch.autograd.Function):
-    """ Fwd: y = sqrt(x)
-        Bwd: dy/dx = 0.5/sqrt(x)
+    """Fwd: y = sqrt(x)
+    Bwd: dy/dx = 0.5/sqrt(x)
     """
+
     @staticmethod
     def forward(ctx, in1, mx_specs=None):
         ctx.mx_specs = get_backwards_mx_specs(mx_specs)
@@ -323,18 +334,18 @@ class SIMDSqrt(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, g):
-        sqrt_x, = ctx.saved_tensors
+        (sqrt_x,) = ctx.saved_tensors
         g = vec_quantize(g, mx_specs=ctx.mx_specs)
         g = vec_mul(g, 0.5, mx_specs=ctx.mx_specs)
-        grad_in = vec_div(
-                g, sqrt_x, mx_specs=ctx.mx_specs)
+        grad_in = vec_div(g, sqrt_x, mx_specs=ctx.mx_specs)
         return (grad_in, None)
 
 
 class SIMDExp(torch.autograd.Function):
-    """ Fwd: y = e^x
-        Bwd: dy/dx = e^x
+    """Fwd: y = e^x
+    Bwd: dy/dx = e^x
     """
+
     @staticmethod
     def forward(ctx, in1, mx_specs=None):
         ctx.mx_specs = get_backwards_mx_specs(mx_specs)
@@ -346,16 +357,17 @@ class SIMDExp(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, g):
-        exp_x, = ctx.saved_tensors
+        (exp_x,) = ctx.saved_tensors
         g = vec_quantize(g, mx_specs=ctx.mx_specs)
         g = vec_mul(g, exp_x, mx_specs=ctx.mx_specs)
         return (g, None)
 
 
 class SIMDLog(torch.autograd.Function):
-    """ Fwd: y = log_e(x)
-        Bwd: dy/dx = 1/x
+    """Fwd: y = log_e(x)
+    Bwd: dy/dx = 1/x
     """
+
     @staticmethod
     def forward(ctx, in1, mx_specs=None):
         ctx.mx_specs = get_backwards_mx_specs(mx_specs)
@@ -364,7 +376,7 @@ class SIMDLog(torch.autograd.Function):
         out = torch_log(qin1)
         out = vec_quantize(out, mx_specs=mx_specs)
 
-        if mx_specs['quantize_backprop']:
+        if mx_specs["quantize_backprop"]:
             ctx.save_for_backward(qin1)
         else:
             ctx.save_for_backward(in1)
@@ -373,16 +385,17 @@ class SIMDLog(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, g):
-        x, = ctx.saved_tensors
+        (x,) = ctx.saved_tensors
         g = vec_quantize(g, mx_specs=ctx.mx_specs)
         g = vec_div(g, x, mx_specs=ctx.mx_specs)
         return (g, None)
 
 
 class SIMDReduceSum(torch.autograd.Function):
-    """ Fwd: y = sum(x, dim)
-        Bwd: dy/dx = 1, expanded in summed dims
+    """Fwd: y = sum(x, dim)
+    Bwd: dy/dx = 1, expanded in summed dims
     """
+
     @staticmethod
     def forward(ctx, in1, dim, keepdim=False, mx_specs=None):
         ctx.mx_specs = get_backwards_mx_specs(mx_specs)
@@ -393,8 +406,7 @@ class SIMDReduceSum(torch.autograd.Function):
         ctx.input_shape = list(in1.shape)
 
         in1 = vec_quantize(in1, mx_specs=mx_specs)
-        out = vec_reduce_sum(in1, dim, keepdim=keepdim,
-                             mx_specs=mx_specs)
+        out = vec_reduce_sum(in1, dim, keepdim=keepdim, mx_specs=mx_specs)
         return out
 
     @staticmethod
@@ -402,7 +414,7 @@ class SIMDReduceSum(torch.autograd.Function):
         # Make sure dim is a list of positives
         ndim = len(ctx.input_shape)
         dim = ctx.dim
-        dim = [(i+ndim if i < 0 else i) for i in dim]
+        dim = [(i + ndim if i < 0 else i) for i in dim]
 
         # unsqueeze g to the same ndims as input
         g = vec_quantize(g, mx_specs=ctx.mx_specs)
@@ -421,9 +433,9 @@ class SIMDReduceSum(torch.autograd.Function):
         return (grad_in, None, None, None)
 
 
-#----------------------------------------------------
+# ----------------------------------------------------
 # User-facing functions
-#----------------------------------------------------
+# ----------------------------------------------------
 def simd_add(in1, in2, mx_specs=None):
     mx_assert_test(mx_specs)
     if mx_specs is None:
@@ -538,12 +550,12 @@ def simd_reduce_mean(in1, dim=None, keepdim=False, mx_specs=None):
     denom = np.prod([in1.shape[i] for i in dim])
 
     s = SIMDReduceSum.apply(in1, dim, keepdim, mx_specs)
-    return SIMDMul.apply(s, 1/denom, mx_specs)
+    return SIMDMul.apply(s, 1 / denom, mx_specs)
 
 
 def simd_norm(in1, keepdim=False, mx_specs=None):
-    """ Computes Frobenius norm sqrt(sum(in1**2)), same as
-        torch.linalg.norm(in1) with no other args """
+    """Computes Frobenius norm sqrt(sum(in1**2)), same as
+    torch.linalg.norm(in1) with no other args"""
     mx_assert_test(mx_specs)
     if mx_specs is None:
         return torch.linalg.norm(in1, keepdim=keepdim)
@@ -551,7 +563,5 @@ def simd_norm(in1, keepdim=False, mx_specs=None):
     mx_specs = apply_mx_specs(mx_specs)
 
     in1 = SIMDSquare.apply(in1, mx_specs)
-    s = SIMDReduceSum.apply(
-            in1, list(range(in1.ndim)), keepdim, mx_specs)
+    s = SIMDReduceSum.apply(in1, list(range(in1.ndim)), keepdim, mx_specs)
     return SIMDSqrt.apply(s, mx_specs)
-

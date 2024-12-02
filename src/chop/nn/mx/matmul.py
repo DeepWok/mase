@@ -28,7 +28,7 @@ class MatMulFunction(torch.autograd.Function):
     """
 
     @staticmethod
-    def forward(ctx, in1, in2, bias, mx_specs, name, mode_config='aa'):
+    def forward(ctx, in1, in2, bias, mx_specs, name, mode_config="aa"):
         assert mode_config in ["aa", "aw", "wa"]
         ctx.mode_config = mode_config
         if mode_config[0] == "a":
@@ -95,7 +95,6 @@ class MatMulFunction(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, grad_out):
-
         """
         For a matmul in "wa" mode, the fwd and bwd matmuls configs are:
             FWD wt x act: w x a
@@ -191,7 +190,7 @@ class MatMulFunction(torch.autograd.Function):
         return (grad_in1, grad_in2, grad_bias, None, None, None)
 
 
-def matmul(in1, in2, bias=None, mx_specs=None, name=None, mode_config='aa'):
+def matmul(in1, in2, bias=None, mx_specs=None, name=None, mode_config="aa"):
     mx_assert_test(mx_specs)
     if mx_specs is None:
         if bias is None:

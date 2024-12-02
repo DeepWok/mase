@@ -182,13 +182,13 @@ class ConvFunction(torch.autograd.Function):
         qid_input = quantize_mx_op(
             bf_in,
             mx_specs,
-            elem_format=mx_specs['a_elem_format'],
+            elem_format=mx_specs["a_elem_format"],
             axes=[1],
         )
         qid_weight = quantize_mx_op(
             bf_weight,
             mx_specs,
-            elem_format=mx_specs['w_elem_format'],
+            elem_format=mx_specs["w_elem_format"],
             axes=[1],
         )
 
@@ -227,13 +227,13 @@ class ConvFunction(torch.autograd.Function):
         qex_input = quantize_mx_op(
             input,
             ctx.mx_specs,
-            elem_format=ctx.mx_specs['a_elem_format'],
+            elem_format=ctx.mx_specs["a_elem_format"],
             axes=[0],
         )
         qex_grad_output = quantize_mx_op(
             grad_output,
             ctx.mx_specs,
-            elem_format=ctx.mx_specs['a_elem_format'],
+            elem_format=ctx.mx_specs["a_elem_format"],
             axes=[0],
         )
 
@@ -266,13 +266,13 @@ class ConvFunction(torch.autograd.Function):
         qod_weight = quantize_mx_op(
             weight,
             ctx.mx_specs,
-            elem_format=ctx.mx_specs['w_elem_format'],
+            elem_format=ctx.mx_specs["w_elem_format"],
             axes=[0],
         )
         qod_grad_output = quantize_mx_op(
             grad_output,
             ctx.mx_specs,
-            elem_format=ctx.mx_specs['a_elem_format'],
+            elem_format=ctx.mx_specs["a_elem_format"],
             axes=[1],
         )
 

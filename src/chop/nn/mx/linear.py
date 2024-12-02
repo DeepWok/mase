@@ -14,6 +14,7 @@ from .specs import mx_assert_test
 f_linear = F.linear
 torch_matmul = torch.matmul
 
+
 class LinearFunction(torch.autograd.Function):
     @staticmethod
     def forward(
@@ -52,14 +53,14 @@ class LinearFunction(torch.autograd.Function):
         qis_input = quantize_mx_op(
             bf_in,
             mx_specs,
-            elem_format=mx_specs['a_elem_format'],
+            elem_format=mx_specs["a_elem_format"],
             axes=[-1],
             round=mx_specs["round_mx_output"],
         )
         qis_weight = quantize_mx_op(
             bf_weight,
             mx_specs,
-            elem_format=mx_specs['w_elem_format'],
+            elem_format=mx_specs["w_elem_format"],
             axes=[-1],
             round=mx_specs["round_mx_output"],
         )
@@ -102,14 +103,14 @@ class LinearFunction(torch.autograd.Function):
         qex_input = quantize_mx_op(
             input,
             ctx.mx_specs,
-            elem_format=ctx.mx_specs['a_elem_format_bp_ex'],
+            elem_format=ctx.mx_specs["a_elem_format_bp_ex"],
             axes=[-2],
             round=ctx.mx_specs["round_mx_input_grad_weight"],
         )
         qex_grad_output = quantize_mx_op(
             grad_output,
             ctx.mx_specs,
-            elem_format=ctx.mx_specs['a_elem_format_bp_ex'],
+            elem_format=ctx.mx_specs["a_elem_format_bp_ex"],
             axes=[-2],
             round=ctx.mx_specs["round_mx_grad_output_grad_weight"],
         )
@@ -133,7 +134,7 @@ class LinearFunction(torch.autograd.Function):
         qos_weight = quantize_mx_op(
             weight,
             ctx.mx_specs,
-            elem_format=ctx.mx_specs['w_elem_format_bp'],
+            elem_format=ctx.mx_specs["w_elem_format_bp"],
             axes=[0],
             round=ctx.mx_specs["round_mx_weight_grad_input"],
         )
@@ -141,7 +142,7 @@ class LinearFunction(torch.autograd.Function):
         qos_grad_output = quantize_mx_op(
             grad_output,
             ctx.mx_specs,
-            elem_format=ctx.mx_specs['a_elem_format_bp_os'],
+            elem_format=ctx.mx_specs["a_elem_format_bp_os"],
             axes=[-1],
             round=ctx.mx_specs["round_mx_grad_output_grad_input"],
         )
