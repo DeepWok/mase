@@ -47,7 +47,7 @@ def add_component_source(node):
                 node.meta["mase"]["hardware"]["dependence_files"] = op_info[
                     "dependence_files"
                 ]
-    elif mase_op in INTERNAL_COMP.keys():
+    elif any(mase_op in key for key in INTERNAL_COMP.keys()):
         if node.meta["mase"].parameters["common"]["quant_type"] == "mxint_hardware":
             node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_RTL"
             # take the first ip in the component list by default
@@ -106,7 +106,7 @@ def add_verilog_param(node):
                     else 1
                 )
                 # Check if max parallelism is defined
-                if arg_info["parallelism"] is not None:
+                if arg_info.get("parallelism") is not None:
                     # parallelism only support the last 2 dimension
                     vp[_cap(arg + f"_parallelism_dim_{dim}")] = (
                         arg_info["parallelism"][::-1][dim] if dim <= 1 else 1
@@ -127,7 +127,6 @@ def add_verilog_param(node):
         elif type(arg_info) == bool:
             vp[_cap(arg)] = 1 if arg_info else 0
         else:
-            breakpoint()
             vp[_cap(arg)] = arg_info
 
     for result, result_info in results.items():
@@ -141,7 +140,7 @@ def add_verilog_param(node):
                     else 1
                 )
                 # Check if max parallelism is defined
-                if result_info["parallelism"] is not None:
+                if result_info.get("parallelism") is not None:
                     # parallelism only support the last 2 dimension
                     vp[_cap(result + f"_parallelism_dim_{dim}")] = (
                         result_info["parallelism"][::-1][dim] if dim <= 1 else 1

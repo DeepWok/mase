@@ -294,6 +294,13 @@ MASE_HW_DEPS = {
         "cast",
         "scalar_operators/fixed",
     ],
+    "linear_layers/mxint_operators/mxint_addition": [
+        "linear_layers/mxint_operators",
+        "linear_layers/fixed_operators",
+        "common",
+        "memory",
+        "cast",
+    ],
     "linear_layers/mxint_operators/mxint_linear": [
         "linear_layers/mxint_operators",
         "linear_layers/fixed_operators",
@@ -352,6 +359,15 @@ MASE_HW_DEPS = {
         "cast",
     ],
     "linear_layers/mxint_operators/mxint_matmul": [
+        "linear_layers/matmul",
+        "linear_layers/mxint_operators",
+        "linear_layers/fixed_operators",
+        "common",
+        "memory",
+        "cast",
+    ],
+    "linear_layers/mxint_operators/mxint_patch_embed": [
+        "convolution_layers",
         "linear_layers/matmul",
         "linear_layers/mxint_operators",
         "linear_layers/fixed_operators",

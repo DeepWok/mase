@@ -20,7 +20,7 @@ module or_tree #(
     input  logic                data_out_ready
 );
 
-  localparam LEVELS = $clog2(IN_SIZE);
+  localparam LEVELS = $clog2(IN_SIZE) + 1;
 
   initial begin
     assert (IN_SIZE > 0);
@@ -41,9 +41,6 @@ module or_tree #(
           .data_out_ready(data_out_ready),
           .data_out      (data_out)
       );
-      // assign data_out = data_in[0][IN_WIDTH-1] ? ~data_in[0] + 1 : data_in[0];
-      // assign data_out_valid = data_in_valid;
-      // assign data_in_ready = data_out_ready;
 
     end else begin : gen_adder_tree
 

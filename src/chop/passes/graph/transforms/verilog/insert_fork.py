@@ -27,7 +27,12 @@ def insert_fork_transform_pass(graph, pass_args={}):
         inherited_metadata = deepcopy(
             node.meta["mase"]["common"]["results"]["data_out_0"]
         )
-        inherited_metadata["precision"] = quan_args
+        if quan_args["config"]["name"] == "mxint_hardware":
+            inherited_metadata["precision"] = [quan_args["config"]["data_in_width"], quan_args["config"]["data_in_exponent_width"]],
+            inherited_metadata["type"] = "mxint_hardware"
+        else:
+            inherited_metadata["precision"] = quan_args
+            inherited_metadata["type"] = "fixed"
         new_node.meta["mase"].parameters["common"]["args"] = {
             "data_in_0": inherited_metadata
         }

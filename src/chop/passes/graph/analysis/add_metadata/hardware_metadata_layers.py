@@ -30,6 +30,7 @@ norm = {
         "normalization_layers/rtl/rms_norm_2d.sv",
         "normalization_layers/rtl/batch_norm_2d.sv",
         "normalization_layers/rtl/norm.sv",
+        "normalization_layers/rtl/layer_norm_1d.sv",
     ],
 }
 linear = {
@@ -64,25 +65,34 @@ linear = {
         "memory/rtl/fifo.sv",
     ],
 }
+unpacked_mx_split2_with_data = [
+    "linear_layers/mxint_operators/rtl/unpacked_mx_split2_with_data.sv",
+    "common/rtl/split2_with_data.sv",
+    "common/rtl/split2.sv",
+    "memory/rtl/fifo.sv",
+]
+mxint_cast = [
+    "linear_layers/mxint_operators/rtl/or_tree_layer.sv",
+    "linear_layers/mxint_operators/rtl/or_tree.sv",
+    "linear_layers/mxint_operators/rtl/log2_max_abs.sv",
+    "linear_layers/mxint_operators/rtl/mxint_cast.sv",
+    "linear_layers/mxint_operators/rtl/optimized_right_shift.sv"
+]
+mxint_linear = linear["dependence_files"] + unpacked_mx_split2_with_data + mxint_cast + [
+        "linear_layers/mxint_operators/rtl/mxint_linear.sv",
+        "linear_layers/mxint_operators/rtl/mxint_register_slice.sv",
+        "linear_layers/mxint_operators/rtl/mxint_accumulator.sv",
+        "linear_layers/mxint_operators/rtl/mxint_circular.sv",
+        "linear_layers/mxint_operators/rtl/mxint_dot_product.sv",
+        "linear_layers/mxint_operators/rtl/unpacked_mx_fifo.sv",
+        "common/rtl/join_n.sv",
+    ]
 INTERNAL_COMP = {
     "linear": [linear],
     "linear_mxint_hardware": [
         {
             "name": "mxint_linear",
-            "dependence_files": linear["dependence_files"]
-            + [
-                "linear_layers/mxint_operators/rtl/mxint_linear.sv",
-                "linear_layers/mxint_operators/rtl/mxint_register_slice.sv",
-                "linear_layers/mxint_operators/rtl/or_tree_layer.sv",
-                "linear_layers/mxint_operators/rtl/or_tree.sv",
-                "linear_layers/mxint_operators/rtl/log2_max_abs.sv",
-                "linear_layers/mxint_operators/rtl/mxint_accumulator.sv",
-                "linear_layers/mxint_operators/rtl/mxint_cast.sv",
-                "linear_layers/mxint_operators/rtl/mxint_circular.sv",
-                "linear_layers/mxint_operators/rtl/mxint_dot_product.sv",
-                "linear_layers/mxint_operators/rtl/unpacked_mx_fifo.sv",
-                "common/rtl/join_n.sv",
-            ],
+            "dependence_files": mxint_linear
         }
     ],
     "fifo": [
@@ -206,6 +216,60 @@ INTERNAL_COMP = {
             ],
         },
     ],
+    "gelu_mxint_hardware": [
+        {
+            "name": "mxint_gelu",
+            "dependence_files": [
+                "linear_layers/mxint_operators/rtl/mxint_gelu.sv",
+                "generated_lut/rtl/gelu_lut.sv",
+                "linear_layers/mxint_operators/rtl/mxint_register_slice.sv",
+                "linear_layers/mxint_operators/rtl/or_tree_layer.sv",
+                "linear_layers/mxint_operators/rtl/or_tree.sv",
+                "linear_layers/mxint_operators/rtl/log2_max_abs.sv",
+                "linear_layers/mxint_operators/rtl/mxint_accumulator.sv",
+                "linear_layers/mxint_operators/rtl/mxint_cast.sv",
+                "linear_layers/mxint_operators/rtl/mxint_circular.sv",
+                "linear_layers/mxint_operators/rtl/mxint_dot_product.sv",
+                "linear_layers/mxint_operators/rtl/unpacked_mx_fifo.sv",    
+                "common/rtl/unpacked_register_slice_quick.sv",
+            ],
+        },
+    ],
+    "mx_int_patch_embed_mxint_hardware": [
+        {
+            "name": "mxint_patch_embed",
+            "dependence_files": mxint_linear + 
+            [
+                "linear_layers/mxint_operators/rtl/mxint_patch_embed.sv",    
+                "convolution_layers/rtl/sliding_window.sv",
+                "convolution_layers/rtl/padding.sv",
+                "convolution_layers/rtl/roller.sv",
+            ]
+        }
+    ],
+    "layer_norm_mxint_hardware": [
+        {
+            "name": "mxint_layernorm",
+            "dependence_files": norm["dependence_files"]
+            + [
+                "linear_layers/mxint_operators/rtl/mxint_layernorm.sv",
+                "linear_layers/mxint_operators/rtl/mxint_gelu.sv",
+                "generated_lut/rtl/isqrt_lut.sv",
+                "generated_lut/rtl/gelu_lut.sv",
+                "linear_layers/mxint_operators/rtl/mxint_register_slice.sv",
+                "linear_layers/mxint_operators/rtl/or_tree_layer.sv",
+                "linear_layers/mxint_operators/rtl/or_tree.sv",
+                "linear_layers/mxint_operators/rtl/log2_max_abs.sv",
+                "linear_layers/mxint_operators/rtl/mxint_accumulator.sv",
+                "linear_layers/mxint_operators/rtl/mxint_cast.sv",
+                "linear_layers/mxint_operators/rtl/mxint_circular.sv",
+                "linear_layers/mxint_operators/rtl/mxint_dot_product.sv",
+                "linear_layers/mxint_operators/rtl/unpacked_mx_fifo.sv",    
+                "common/rtl/unpacked_register_slice_quick.sv",
+                
+            ],
+        },
+    ],
     "softsign": [
         {
             "name": "fixed_softsign",
@@ -249,6 +313,12 @@ INTERNAL_COMP = {
         {
             "name": "fork2",
             "dependence_files": ["common/rtl/fork2.sv"],
+        }
+    ],
+    "fork2_mxint_hardware": [
+        {
+            "name": "mxint_fork2",
+            "dependence_files": ["linear_layers/mxint_operators/rtl/mxint_fork2.sv"],
         }
     ],
     "getitem": [

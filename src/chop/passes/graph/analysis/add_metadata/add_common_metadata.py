@@ -257,6 +257,8 @@ def graph_iterator_for_metadata(
         #     node.shape = result.shape
         #     node.dtype = result.dtype
 
+        # print(node.op, node.name, result)
+        # breakpoint()
         node.meta["mase"] = analyse_fn(
             node.meta["mase"], result, args, kwargs, add_value=add_value
         )

@@ -1,0 +1,49 @@
+---
+MainSourceFile:  /workspace/src/mase_components/hls/scalar_ops/int_div/prj/solution1/.autopilot/db/div.pp.0.cpp
+Diagnostics:     
+  - DiagnosticName:  xilinx-label-all-loops
+    Message:         'Added loop label VITIS_LOOP_1213_1:  '
+    FileOffset:      1213
+    FilePath:        /mnt/applications/Xilinx/23.1/Vitis_HLS/2023.1/common/technology/autopilot/etc/ap_int_base.h
+    Replacements:    
+      - FilePath:        /workspace/src/mase_components/hls/scalar_ops/int_div/prj/solution1/.autopilot/db/div.pp.0.cpp
+        Offset:          55884
+        Length:          0
+        ReplacementText: 'VITIS_LOOP_1213_1: '
+  - DiagnosticName:  xilinx-label-all-loops
+    Message:         'Added loop label VITIS_LOOP_676_1:  '
+    FileOffset:      676
+    FilePath:        /mnt/applications/Xilinx/23.1/Vitis_HLS/2023.1/common/technology/autopilot/etc/ap_int_ref.h
+    Replacements:    
+      - FilePath:        /workspace/src/mase_components/hls/scalar_ops/int_div/prj/solution1/.autopilot/db/div.pp.0.cpp
+        Offset:          283740
+        Length:          0
+        ReplacementText: 'VITIS_LOOP_676_1: '
+  - DiagnosticName:  xilinx-label-all-loops
+    Message:         'Added loop label VITIS_LOOP_690_1:  '
+    FileOffset:      690
+    FilePath:        /mnt/applications/Xilinx/23.1/Vitis_HLS/2023.1/common/technology/autopilot/etc/ap_int_ref.h
+    Replacements:    
+      - FilePath:        /workspace/src/mase_components/hls/scalar_ops/int_div/prj/solution1/.autopilot/db/div.pp.0.cpp
+        Offset:          284204
+        Length:          0
+        ReplacementText: 'VITIS_LOOP_690_1: '
+  - DiagnosticName:  xilinx-label-all-loops
+    Message:         'Added loop label VITIS_LOOP_704_1:  '
+    FileOffset:      704
+    FilePath:        /mnt/applications/Xilinx/23.1/Vitis_HLS/2023.1/common/technology/autopilot/etc/ap_int_ref.h
+    Replacements:    
+      - FilePath:        /workspace/src/mase_components/hls/scalar_ops/int_div/prj/solution1/.autopilot/db/div.pp.0.cpp
+        Offset:          284669
+        Length:          0
+        ReplacementText: 'VITIS_LOOP_704_1: '
+  - DiagnosticName:  xilinx-label-all-loops
+    Message:         'Added loop label VITIS_LOOP_1247_1:  '
+    FileOffset:      1247
+    FilePath:        /mnt/applications/Xilinx/23.1/Vitis_HLS/2023.1/common/technology/autopilot/etc/ap_fixed_base.h
+    Replacements:    
+      - FilePath:        /workspace/src/mase_components/hls/scalar_ops/int_div/prj/solution1/.autopilot/db/div.pp.0.cpp
+        Offset:          568011
+        Length:          0
+        ReplacementText: 'VITIS_LOOP_1247_1: '
+...

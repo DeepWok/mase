@@ -1,0 +1,11 @@
+{
+  "0": {
+    "basicblocks": 11,
+    "calls": "",
+    "file": "div.cpp",
+    "fileloc": 10,
+    "instructions": 27,
+    "name": "div",
+    "total_instructions": 27
+  }
+}

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<BindInfo>
+	<BindNode BINDTYPE="op" DISPLAY="bind_op sdiv" ID="" IMPL="auto" LATENCY="35" OPTYPE="sdiv" PRAGMA="" RTLNAME="sdiv_32ns_32ns_16_36_1_U1" SOURCE="div.cpp:20" VARIABLE="sdiv_ln20" MODULE="div" LOOP="" BUNDLEDNAME="" DSP="0" BRAM="0" URAM="0"/>
+</BindInfo>

@@ -50,14 +50,14 @@ class MLP(torch.nn.Module):
         super().__init__()
 
         self.fc1 = nn.Linear(in_features, hidden_features, bias=True)
-        self.fc2 = nn.Linear(hidden_features, out_features, bias=True)
+        # self.fc2 = nn.Linear(hidden_features, out_features, bias=True)
 
     def forward(self, x):
         x = self.fc1(x)
-        x = self.fc2(x)
+        # x = self.fc2(x)
         return x
 
-
+parallelism = 32
 quan_args = {
     "by": "type",  # quantize by type, name, or regex_name
     "default": {
@@ -69,18 +69,18 @@ quan_args = {
             # data
             "data_in_width": 4,
             "data_in_exponent_width": 8,
-            "data_in_parallelism": [1, 48],
+            "data_in_parallelism": [1, parallelism],
             # weight
             "weight_width": 4,
             "weight_exponent_width": 8,
-            "weight_parallelism": [48, 48],
+            "weight_parallelism": [parallelism, parallelism],
             # bias
             "bias_width": 4,
             "bias_exponent_width": 8,
-            "bias_parallelism": [1, 48],
+            "bias_parallelism": [1, parallelism],
             "data_out_width": 4,
             "data_out_exponent_width": 8,
-            "data_out_parallelism": [1, 48],
+            "data_out_parallelism": [1, parallelism],
         }
     },
 }
@@ -131,13 +131,16 @@ def test_emit_verilog_linear():
     #     },
     # )
     mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
-    mg, _ = passes.emit_verilog_top_transform_pass(mg)
-    mg, _ = passes.emit_bram_transform_pass(mg)
-    mg, _ = passes.emit_internal_rtl_transform_pass(mg)
-    mg, _ = passes.emit_cocotb_transform_pass(
-        mg, pass_args={"wait_time": 100, "wait_unit": "ms", "batch_size": batch_size}
-    )
-    mg, _ = passes.emit_vivado_project_transform_pass(mg)
+    pass_args = {
+        "project_dir": Path("/scratch/cx922/mase/mxint_linear"),
+    }
+    mg, _ = passes.emit_verilog_top_transform_pass(mg, pass_args)
+    mg, _ = passes.emit_bram_transform_pass(mg, pass_args)
+    mg, _ = passes.emit_internal_rtl_transform_pass(mg, pass_args)
+    # mg, _ = passes.emit_cocotb_transform_pass(
+    #     mg, pass_args={"wait_time": 100, "wait_unit": "ms", "batch_size": batch_size}
+    # )
+    mg, _ = passes.emit_vivado_project_transform_pass(mg, pass_args)
 
 
 def _simulate():

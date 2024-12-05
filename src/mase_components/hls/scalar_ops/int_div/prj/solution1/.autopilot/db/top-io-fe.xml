@@ -1,0 +1,24 @@
+<root versionMajor = "1" versionMinor = "5">
+  <kernel src_name="div" language="c" hwCtrl="ap_ctrl_hs" mem_layout="fpga64-xilinx-none">
+    <args>
+      <arg id="0" access_type="r" src_name="data_in_0" src_type="stream&lt;ap_int&lt;32&gt;, 0&gt;&amp;" src_isptr="1" src_bitwidth="32" src_size_or_depth="1">
+        <hw hw_usage="data" hw_interface="FIFO" hw_name="data_in_0" hw_bitwidth="32" hw_size_or_depth="0" hw_kernel_support="false">
+          <constraint constraint_type="pragma interface" mode="ap_fifo" register_option="0"/>
+        </hw>
+      </arg>
+      <arg id="1" access_type="r" src_name="data_in_1" src_type="stream&lt;ap_int&lt;32&gt;, 0&gt;&amp;" src_isptr="1" src_bitwidth="32" src_size_or_depth="1">
+        <hw hw_usage="data" hw_interface="FIFO" hw_name="data_in_1" hw_bitwidth="32" hw_size_or_depth="0" hw_kernel_support="false">
+          <constraint constraint_type="pragma interface" mode="ap_fifo" register_option="0"/>
+        </hw>
+      </arg>
+      <arg id="2" access_type="w" src_name="data_out_0" src_type="stream&lt;ap_int&lt;16&gt;, 0&gt;&amp;" src_isptr="1" src_bitwidth="16" src_size_or_depth="1">
+        <hw hw_usage="data" hw_interface="FIFO" hw_name="data_out_0" hw_bitwidth="16" hw_size_or_depth="0" hw_kernel_support="false">
+          <constraint constraint_type="pragma interface" mode="ap_fifo" register_option="0"/>
+        </hw>
+      </arg>
+    </args>
+    <return src_type="void" src_bitwidth="0" offset="0x0">
+      <hw hw_usage="data" hw_interface="" hw_name="" hw_bitwidth="0" hw_kernel_support="true"/>
+    </return>
+  </kernel>
+</root>

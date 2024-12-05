@@ -50,11 +50,11 @@ class MLP(torch.nn.Module):
         super().__init__()
 
         self.fc1 = nn.Linear(in_features, hidden_features, bias=True)
-        self.fc2 = nn.Linear(hidden_features, out_features, bias=True)
+        # self.fc2 = nn.Linear(hidden_features, out_features, bias=True)
 
     def forward(self, x):
         x = self.fc1(x)
-        x = self.fc2(x)
+        # x = self.fc2(x)
         return x
 
 
@@ -70,10 +70,10 @@ quan_args = {
             "data_in_width": 8,
             "data_in_frac_width": 4,
             # weight
-            "weight_width": 10,
+            "weight_width": 8,
             "weight_frac_width": 3,
             # bias
-            "bias_width": 5,
+            "bias_width": 8,
             "bias_frac_width": 2,
             "data_out_width": 8,
             "data_out_frac_width": 4,
@@ -85,7 +85,7 @@ quan_args = {
 @pytest.mark.dev
 def test_emit_verilog_linear():
     in_features = 192
-    hidden_features = 192
+    hidden_features = 192*4
     out_features = 192
     n = 196
     batch_size = 10
@@ -117,26 +117,30 @@ def test_emit_verilog_linear():
         mg, pass_args={"max_parallelism": [2] * 4}
     )
     update_hardware_precision_param(mg, quan_args)
-    wp1 = 8
-    wp2 = 1
+    wp1 = 32
+    wp2 = 32
     manually_update_hardware_parallelism_param(
         mg,
         pass_args={
-            "fc1": {"din": [1, 2], "dout": [1, wp1]},
-            "fc2": {"din": [1, wp1], "dout": [1, wp2]},
+            "fc1": {"din": [1, wp1], "dout": [1, wp2]},
+            # "fc2": {"din": [1, wp1], "dout": [1, wp2]},
         },
     )
+    pass_args = {
+        "project_dir": Path("/scratch/cx922/mase/int_linear"),
+    }
     mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
-    mg, _ = passes.emit_verilog_top_transform_pass(mg)
-    mg, _ = passes.emit_bram_transform_pass(mg)
-    mg, _ = passes.emit_internal_rtl_transform_pass(mg)
+    mg, _ = passes.emit_verilog_top_transform_pass(mg, pass_args)
+    mg, _ = passes.emit_bram_transform_pass(mg, pass_args)
+    mg, _ = passes.emit_internal_rtl_transform_pass(mg, pass_args)
     mg, _ = passes.emit_cocotb_transform_pass(
-        mg, pass_args={"wait_time": 100, "wait_unit": "ms", "batch_size": batch_size}
+        mg, pass_args={"wait_time": 100, "wait_unit": "us", "batch_size": batch_size, "project_dir": pass_args["project_dir"]}
     )
-    mg, _ = passes.emit_vivado_project_transform_pass(mg)
-
-    # simulate(skip_build=False, skip_test=False, simulator="questa", waves=True, gui=False)
+    mg, _ = passes.emit_vivado_project_transform_pass(mg,  pass_args)
 
 
 if __name__ == "__main__":
+    pass_args = {
+        "project_dir": Path("/scratch/cx922/mase/int_linear"),
+    }
     test_emit_verilog_linear()

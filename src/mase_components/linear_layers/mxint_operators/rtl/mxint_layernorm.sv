@@ -4,7 +4,9 @@ module mxint_layernorm #(
     parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 4,
     parameter DATA_IN_0_PARALLELISM_DIM_0 = 2,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 4,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_2 = 1,
     parameter DATA_IN_0_PARALLELISM_DIM_1 = 2,
+    parameter DATA_IN_0_PARALLELISM_DIM_2 = 1,
 
     // Data widths
     parameter DATA_IN_0_PRECISION_0        = 8,
@@ -14,6 +16,7 @@ module mxint_layernorm #(
     parameter BIAS_PRECISION_0             = 8,
     parameter BIAS_PRECISION_1             = 4,
     parameter ELEMENTWISE_AFFINE           = 0,
+    parameter HAS_BIAS                     = 1,
 
     parameter ISQRT_IN_PRECISION_0         = 8, //PREICISION_0 for ISQRT is integer width
     parameter ISQRT_IN_PRECISION_1         = 8, //PREICISION_1 for ISQRT is integer frac width
@@ -34,6 +37,8 @@ module mxint_layernorm #(
     parameter DATA_OUT_0_PARALLELISM_DIM_0 = DATA_IN_0_PARALLELISM_DIM_0,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1,
     parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_2 = DATA_IN_0_TENSOR_SIZE_DIM_2,
+    parameter DATA_OUT_0_PARALLELISM_DIM_2 = DATA_IN_0_PARALLELISM_DIM_2,
     parameter DATA_OUT_0_PRECISION_0       = 8,
     parameter DATA_OUT_0_PRECISION_1       = 4
 ) (
@@ -281,7 +286,7 @@ module dim_0_cast #(
     logic max_edata_in_0_valid;
     logic max_edata_in_0_ready;
     
-    logic [EXP_WIDTH-1:0] circular_max_edata_in_0;
+    logic [EXP_WIDTH-1:0] circular_max_edata_in_0 [0:0];
     logic circular_max_edata_in_0_valid;
     logic circular_max_edata_in_0_ready;
 
@@ -340,7 +345,7 @@ module dim_0_cast #(
       .data_in_valid(max_edata_in_0_valid),
       .data_in_ready(max_edata_in_0_ready),
       // Output streaming port
-      .data_out({circular_max_edata_in_0}),
+      .data_out(circular_max_edata_in_0),
       .data_out_valid(circular_max_edata_in_0_valid),
       .data_out_ready(circular_max_edata_in_0_ready)
   );
@@ -354,7 +359,7 @@ module dim_0_cast #(
     );
 
     // Calculate shift value and perform optimized right shift
-    assign shift_value = $signed(max_edata_in_0) - $signed(circular_max_edata_in_0);
+    assign shift_value = $signed(max_edata_in_0) - $signed(circular_max_edata_in_0[0]);
 
     optimized_right_shift #(
         .IN_WIDTH(MAN_WIDTH),

@@ -35,6 +35,19 @@ module mxint_gelu_element #(
         .shift_value(edata_in_0),
         .data_out(real_x_v)
     );
+
+    assign real_x = real_x_v[0];
+
+    gelu_lut #(
+        .DATA_IN_0_PRECISION_0(VALID_WIDTH),
+        .DATA_IN_0_PRECISION_1(VALID_WIDTH - 3),
+        .DATA_OUT_0_PRECISION_0(OUT_MAN_WIDTH),
+        .DATA_OUT_0_PRECISION_1(OUT_MAN_WIDTH - 1)
+    ) gelu_lut_inst (
+        .data_in_0(real_x),
+        .data_out_0(lut_out)
+    );
+
     optimized_right_shift #(
         .IN_WIDTH(OUT_MAN_WIDTH),
         .SHIFT_WIDTH(IN_EXP_WIDTH),
@@ -45,9 +58,9 @@ module mxint_gelu_element #(
         .shift_value(edata_in_0),
         .data_out(shifted_lut_out_v)
     );
+    assign shifted_lut_out = shifted_lut_out_v[0];
 
     always_comb begin
-        real_x = real_x_v[0];
         if (real_x == MAX_VAL) begin
             mdata_out_0 = mdata_in_0;
             edata_out_0 = edata_in_0;
@@ -59,15 +72,6 @@ module mxint_gelu_element #(
             edata_out_0 = edata_in_0;
         end
     end
-    gelu_lut #(
-        .DATA_IN_0_PRECISION_0(VALID_WIDTH),
-        .DATA_IN_0_PRECISION_1(VALID_WIDTH - 3),
-        .DATA_OUT_0_PRECISION_0(OUT_MAN_WIDTH),
-        .DATA_OUT_0_PRECISION_1(OUT_MAN_WIDTH - 1)
-    ) gelu_lut_inst (
-        .data_in_0(real_x),
-        .data_out_0(lut_out)
-    );
 endmodule
 
 module mxint_gelu #(

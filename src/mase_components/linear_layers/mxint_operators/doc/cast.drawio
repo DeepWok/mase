@@ -1,0 +1,67 @@
+<mxfile host="65bd71144e">
+    <diagram id="ZS1z_XDA-JXgYE8ir04j" name="Page-1">
+        <mxGraphModel dx="934" dy="673" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="3" value="input&lt;br&gt;(in_width, in_frac_width)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="90" y="200" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="software" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="30" y="120" width="60" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="120" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="exp_width" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="220" width="80" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" value="input = input &amp;lt;&amp;lt; input_frac_width" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="70" y="330" width="220" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="13" value="exp_x = lma(x)" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="380" y="320" width="90" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="14" value="lma(x)" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="380" y="290" width="60" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="15" value="exp_x = lma(x)" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="120" y="400" width="90" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="19" value="man_x = floor((x &amp;gt;&amp;gt; exp_x) &amp;lt;&amp;lt; man_frac_w)" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="450" width="230" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="20" value="q_x = man_x &amp;gt;&amp;gt;&amp;nbsp; man_frac_w" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="105" y="490" width="180" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="21" value="x/ 2**exp_x &amp;lt;1" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="290" y="450" width="110" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="23" value="hardware" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="440" y="360" width="60" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="24" value="exp_hx = lma(hx) = lma(x &amp;lt;&amp;lt; in_frac_width &amp;gt;&amp;gt; exp_value) &lt;br&gt;= lma(x) + in_frac_width - exp_value" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="400" width="460" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="25" value="exp_hx = lmx(hx) = exp_x + in_frac_width - exp_value" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="470" y="450" width="300" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="26" value="man_x = floor((x &amp;gt;&amp;gt; exp_x) &amp;lt;&amp;lt; out_frac_w) =" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="410" y="500" width="310" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="27" value="x = hx&amp;lt;&amp;lt;exp_value &amp;gt;&amp;gt; in_frac_width" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="475" y="530" width="250" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="28" value="man_x &lt;br&gt;=floor((x &amp;gt;&amp;gt; (exp_x - out_frac_w) )&lt;br&gt;=floor(hx&amp;gt;&amp;gt;(in_frac_width - exp_value + exp_x - out_frac_w)&lt;br&gt;=floor(hx&amp;gt;&amp;gt;(in_frac_width + exp_hx - in_frac_width - out_frac_width)&lt;br&gt;=floor(hx&amp;gt;&amp;gt;(lmx(hx) - out_frac-width)&lt;br&gt;&lt;br&gt;=floor(hx&amp;gt;&amp;gt;(in_frac_width - exp_value + cast(exp_x) - out_frac_w)" style="text;strokeColor=none;align=left;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="414" y="560" width="390" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="31" value="but notice a cast here" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="540" y="680" width="220" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="32" value="so in order to aviod vast loss" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="550" y="710" width="200" height="30" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

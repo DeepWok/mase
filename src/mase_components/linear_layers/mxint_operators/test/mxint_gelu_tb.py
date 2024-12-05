@@ -87,6 +87,7 @@ class MXIntGeluTB(Testbench):
         self.output_monitors = {
             "out": self.data_out_0_monitor,
         }
+        self.data_out_0_monitor.log.setLevel(logging.DEBUG)
     def generate_inputs(self):
         inputs = []
         expected_outputs = []
@@ -128,13 +129,13 @@ class MXIntGeluTB(Testbench):
         self.data_in_0_driver.load_driver(inputs)
         self.data_out_0_monitor.load_monitor(expected_outputs)
 
-        await Timer(5, units="us")
+        await Timer(500, units="us")
         assert self.data_out_0_monitor.exp_queue.empty()
 
 @cocotb.test()
 async def test(dut):
-    cocotb.start_soon(check_signal(dut))
-    tb = MXIntGeluTB(dut, num=20)
+    # cocotb.start_soon(check_signal(dut))
+    tb = MXIntGeluTB(dut, num=2000)
     await tb.run_test()
 
 async def check_signal(dut):
@@ -147,15 +148,6 @@ async def check_signal(dut):
             print(
                 "data_in_0 = ", [x.signed_integer for x in dut.mdata_in_0.value]
             )
-        # if dut.data_out_n_valid.value == 1 and dut.data_out_n_ready.value == 1:
-        #     print(
-        #         "data_out_n = ", [x.signed_integer for x in dut.data_out_n.value]
-        #     )
-        #     "straight_data_out_n = ", [x for x in dut.straight_data_out_n.value]
-        # )
-        # print(
-        #     "mdata_in_0_log2_e = ", [x for x in dut.mdata_in_0_log2_e.value]
-        # )
         print("end")
 
 if __name__ == "__main__":

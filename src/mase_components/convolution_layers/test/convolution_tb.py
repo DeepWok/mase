@@ -269,7 +269,7 @@ class ConvArithTB(Testbench):
         self.data_out_0_monitor.load_monitor(o)
 
         # cocotb.start_soon(check_signal(self.dut, self.log))
-        await Timer(100, units="us")
+        await Timer(1000, units="us")
         assert self.data_out_0_monitor.exp_queue.empty()
 
 
@@ -299,16 +299,16 @@ def get_fixed_conv_config(kwargs={}):
     config = {
         "IN_C": 3,
         "UNROLL_IN_C": 3,
-        "IN_X": 3,
-        "IN_Y": 3,
-        "KERNEL_X": 3,
-        "KERNEL_Y": 2,
-        "UNROLL_KERNEL_OUT": 3,
-        "OUT_C": 4,
-        "UNROLL_OUT_C": 2,
+        "IN_X": 16,
+        "IN_Y": 16,
+        "KERNEL_X": 4,
+        "KERNEL_Y": 4,
+        "UNROLL_KERNEL_OUT": 4,
+        "OUT_C": 16,
+        "UNROLL_OUT_C": 4,
         "STRIDE": 2,
-        "PADDING_Y": 1,
-        "PADDING_X": 2,
+        "PADDING_Y": 0,
+        "PADDING_X": 0,
         "HAS_BIAS": 1,
     }
     in_y = config["IN_Y"]
@@ -336,6 +336,7 @@ def test_fixed_linear_smoke():
         module_param_list=[
             get_fixed_conv_config(),
         ],
+        sim="questa",
     )
 
 
@@ -357,20 +358,6 @@ def test_fixed_linear_regression():
                     "OUT_CHANNELS_DEPTH": 96,
                 }
             ),
-            # get_fixed_linear_config(
-            #     {
-            #         "HAS_BIAS": 1,
-            #         "WEIGHTS_PRE_TRANSPOSED": 0,
-            #         "DATA_IN_0_TENSOR_SIZE_DIM_0": 768,
-            #         "DATA_IN_0_PARALLELISM_DIM_0": 32,
-            #         "WEIGHT_TENSOR_SIZE_DIM_0": 768,
-            #         "WEIGHT_TENSOR_SIZE_DIM_1": 768,
-            #         "WEIGHT_PARALLELISM_DIM_0": 32,
-            #         "WEIGHT_PARALLELISM_DIM_1": 32,
-            #         "BIAS_TENSOR_SIZE_DIM_0": 768,
-            #         "BIAS_PARALLELISM_DIM_0": 32,
-            #     }
-            # ),
         ],
     )
 

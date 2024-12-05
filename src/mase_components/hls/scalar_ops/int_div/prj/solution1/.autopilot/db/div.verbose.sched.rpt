@@ -1,0 +1,447 @@
+
+
+================================================================
+== Vitis HLS Report for 'div'
+================================================================
+* Date:           Sun Aug  4 22:51:43 2024
+
+* Version:        2023.1 (Build 3854077 on May  4 2023)
+* Project:        prj
+* Solution:       solution1 (Vivado IP Flow Target)
+* Product family: virtexuplus
+* Target device:  xcu250-figd2104-2L-e
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing: 
+    * Summary: 
+    +--------+----------+----------+------------+
+    |  Clock |  Target  | Estimated| Uncertainty|
+    +--------+----------+----------+------------+
+    |ap_clk  |  10.00 ns|  2.593 ns|     2.70 ns|
+    +--------+----------+----------+------------+
+
++ Latency: 
+    * Summary: 
+    +---------+---------+----------+----------+-----+-----+---------+
+    |  Latency (cycles) |  Latency (absolute) |  Interval | Pipeline|
+    |   min   |   max   |    min   |    max   | min | max |   Type  |
+    +---------+---------+----------+----------+-----+-----+---------+
+    |       35|       35|  0.350 us|  0.350 us|    1|    1|      yes|
+    +---------+---------+----------+----------+-----+-----+---------+
+
+    + Detail: 
+        * Instance: 
+        N/A
+
+        * Loop: 
+        N/A
+
+============================================================
++ Verbose Summary: Synthesis Manager
+============================================================
+InlineROM: 1
+ExposeGlobal: 0
+============================================================
++ Verbose Summary: CDFG Model
+============================================================
+IsTopModel: 1
+ResetActiveHigh: 1
+IsCombinational: 0
+IsDatapathOnly: 0
+HasWiredReturn: 1
+HasMFsm: 2
+HasVarLatency: 0
+IsPipeline: 1
+IsRtlPipelined: 1
+IsInstanceOverlapped: 0
+IsDontTouch: 0
+HasImplIP: 0
+IsGatedGlobalClock: 0
+
++ Individual pipeline summary: 
+  * Pipeline-0: initiation interval (II) = 1, depth = 36
+
+
+============================================================
++ Verbose Summary: Schedule
+============================================================
+* Number of FSM states : 36
+* Pipeline : 1
+  Pipeline-0 : II = 1, D = 36, States = { 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 }
+* Dataflow Pipeline: 0
+
+* FSM state transitions: 
+1 --> 2 
+2 --> 3 
+3 --> 4 
+4 --> 5 
+5 --> 6 
+6 --> 7 
+7 --> 8 
+8 --> 9 
+9 --> 10 
+10 --> 11 
+11 --> 12 
+12 --> 13 
+13 --> 14 
+14 --> 15 
+15 --> 16 
+16 --> 17 
+17 --> 18 
+18 --> 19 
+19 --> 20 
+20 --> 21 
+21 --> 22 
+22 --> 23 
+23 --> 24 
+24 --> 25 
+25 --> 26 
+26 --> 27 
+27 --> 28 
+28 --> 29 
+29 --> 30 
+30 --> 31 
+31 --> 32 
+32 --> 33 
+33 --> 34 
+34 --> 35 
+35 --> 36 
+36 --> 
+
+* FSM state operations: 
+
+State 1 <SV = 0> <Delay = 2.59>
+ST_1 : Operation 37 [1/1] (0.00ns)   --->   "%specpipeline_ln13 = specpipeline void @_ssdm_op_SpecPipeline, i32 1, i32 0, i32 0, i32 0, void @empty" [div.cpp:13]   --->   Operation 37 'specpipeline' 'specpipeline_ln13' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 38 [1/1] (0.00ns)   --->   "%spectopmodule_ln10 = spectopmodule void @_ssdm_op_SpecTopModule, void @empty_1" [div.cpp:10]   --->   Operation 38 'spectopmodule' 'spectopmodule_ln10' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 39 [1/1] (0.00ns)   --->   "%specinterface_ln0 = specinterface void @_ssdm_op_SpecInterface, i32 %data_in_0, void @empty_0, i32 0, i32 0, void @empty, i32 0, i32 0, void @empty, void @empty, void @empty, i32 0, i32 0, i32 0, i32 0, void @empty, void @empty, i32 4294967295, i32 0"   --->   Operation 39 'specinterface' 'specinterface_ln0' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 40 [1/1] (0.00ns)   --->   "%specbitsmap_ln0 = specbitsmap void @_ssdm_op_SpecBitsMap, i32 %data_in_0"   --->   Operation 40 'specbitsmap' 'specbitsmap_ln0' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 41 [1/1] (0.00ns)   --->   "%specinterface_ln0 = specinterface void @_ssdm_op_SpecInterface, i32 %data_in_1, void @empty_0, i32 0, i32 0, void @empty, i32 0, i32 0, void @empty, void @empty, void @empty, i32 0, i32 0, i32 0, i32 0, void @empty, void @empty, i32 4294967295, i32 0"   --->   Operation 41 'specinterface' 'specinterface_ln0' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 42 [1/1] (0.00ns)   --->   "%specbitsmap_ln0 = specbitsmap void @_ssdm_op_SpecBitsMap, i32 %data_in_1"   --->   Operation 42 'specbitsmap' 'specbitsmap_ln0' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 43 [1/1] (0.00ns)   --->   "%specinterface_ln0 = specinterface void @_ssdm_op_SpecInterface, i16 %data_out_0, void @empty_0, i32 0, i32 0, void @empty, i32 0, i32 0, void @empty, void @empty, void @empty, i32 0, i32 0, i32 0, i32 0, void @empty, void @empty, i32 4294967295, i32 0"   --->   Operation 43 'specinterface' 'specinterface_ln0' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 44 [1/1] (0.00ns)   --->   "%specbitsmap_ln0 = specbitsmap void @_ssdm_op_SpecBitsMap, i16 %data_out_0"   --->   Operation 44 'specbitsmap' 'specbitsmap_ln0' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 45 [1/1] (0.00ns)   --->   "%tmp = nbreadreq i1 @_ssdm_op_NbReadReq.ap_fifo.i32P0A, i32 %data_in_0, i32 1" [div.cpp:14]   --->   Operation 45 'nbreadreq' 'tmp' <Predicate = true> <Delay = 0.00> <CoreInst = "FIFO">   --->   Core 78 'FIFO' <Latency = 0> <II = 1> <Delay = 1.42> <Storage> <Opcode : 'read' 'write' 'nbread' 'nbwrite'> <Ports = 0> <Width = -1> <Depth = -1> <FIFO>
+ST_1 : Operation 46 [1/1] (0.00ns)   --->   "%br_ln14 = br i1 %tmp, void %if.then, void %lor.lhs.false" [div.cpp:14]   --->   Operation 46 'br' 'br_ln14' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 47 [1/1] (0.00ns)   --->   "%tmp_1 = nbreadreq i1 @_ssdm_op_NbReadReq.ap_fifo.i32P0A, i32 %data_in_1, i32 1" [div.cpp:14]   --->   Operation 47 'nbreadreq' 'tmp_1' <Predicate = (tmp)> <Delay = 0.00> <CoreInst = "FIFO">   --->   Core 78 'FIFO' <Latency = 0> <II = 1> <Delay = 1.42> <Storage> <Opcode : 'read' 'write' 'nbread' 'nbwrite'> <Ports = 0> <Width = -1> <Depth = -1> <FIFO>
+ST_1 : Operation 48 [1/1] (0.00ns)   --->   "%br_ln14 = br i1 %tmp_1, void %if.then, void %if.end" [div.cpp:14]   --->   Operation 48 'br' 'br_ln14' <Predicate = (tmp)> <Delay = 0.00>
+ST_1 : Operation 49 [1/1] (0.00ns)   --->   "%br_ln15 = br void %return" [div.cpp:15]   --->   Operation 49 'br' 'br_ln15' <Predicate = (!tmp_1) | (!tmp)> <Delay = 0.00>
+ST_1 : Operation 50 [1/1] (1.42ns)   --->   "%data_in_0_read = nbread i33 @_ssdm_op_NbRead.ap_fifo.volatile.i32P0A, i32 %data_in_0" [div.cpp:18]   --->   Operation 50 'nbread' 'data_in_0_read' <Predicate = (tmp & tmp_1)> <Delay = 1.42> <CoreInst = "FIFO">   --->   Core 78 'FIFO' <Latency = 0> <II = 1> <Delay = 1.42> <Storage> <Opcode : 'read' 'write' 'nbread' 'nbwrite'> <Ports = 0> <Width = -1> <Depth = -1> <FIFO>
+ST_1 : Operation 51 [1/1] (0.00ns)   --->   "%in0 = extractvalue i33 %data_in_0_read" [div.cpp:18]   --->   Operation 51 'extractvalue' 'in0' <Predicate = (tmp & tmp_1)> <Delay = 0.00>
+ST_1 : Operation 52 [1/1] (1.42ns)   --->   "%data_in_1_read = nbread i33 @_ssdm_op_NbRead.ap_fifo.volatile.i32P0A, i32 %data_in_1" [div.cpp:19]   --->   Operation 52 'nbread' 'data_in_1_read' <Predicate = (tmp & tmp_1)> <Delay = 1.42> <CoreInst = "FIFO">   --->   Core 78 'FIFO' <Latency = 0> <II = 1> <Delay = 1.42> <Storage> <Opcode : 'read' 'write' 'nbread' 'nbwrite'> <Ports = 0> <Width = -1> <Depth = -1> <FIFO>
+ST_1 : Operation 53 [1/1] (0.00ns)   --->   "%in1 = extractvalue i33 %data_in_1_read" [div.cpp:19]   --->   Operation 53 'extractvalue' 'in1' <Predicate = (tmp & tmp_1)> <Delay = 0.00>
+ST_1 : Operation 54 [36/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 54 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 2 <SV = 1> <Delay = 1.16>
+ST_2 : Operation 55 [35/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 55 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 3 <SV = 2> <Delay = 1.16>
+ST_3 : Operation 56 [34/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 56 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 4 <SV = 3> <Delay = 1.16>
+ST_4 : Operation 57 [33/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 57 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 5 <SV = 4> <Delay = 1.16>
+ST_5 : Operation 58 [32/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 58 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 6 <SV = 5> <Delay = 1.16>
+ST_6 : Operation 59 [31/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 59 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 7 <SV = 6> <Delay = 1.16>
+ST_7 : Operation 60 [30/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 60 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 8 <SV = 7> <Delay = 1.16>
+ST_8 : Operation 61 [29/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 61 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 9 <SV = 8> <Delay = 1.16>
+ST_9 : Operation 62 [28/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 62 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 10 <SV = 9> <Delay = 1.16>
+ST_10 : Operation 63 [27/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 63 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 11 <SV = 10> <Delay = 1.16>
+ST_11 : Operation 64 [26/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 64 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 12 <SV = 11> <Delay = 1.16>
+ST_12 : Operation 65 [25/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 65 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 13 <SV = 12> <Delay = 1.16>
+ST_13 : Operation 66 [24/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 66 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 14 <SV = 13> <Delay = 1.16>
+ST_14 : Operation 67 [23/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 67 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 15 <SV = 14> <Delay = 1.16>
+ST_15 : Operation 68 [22/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 68 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 16 <SV = 15> <Delay = 1.16>
+ST_16 : Operation 69 [21/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 69 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 17 <SV = 16> <Delay = 1.16>
+ST_17 : Operation 70 [20/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 70 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 18 <SV = 17> <Delay = 1.16>
+ST_18 : Operation 71 [19/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 71 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 19 <SV = 18> <Delay = 1.16>
+ST_19 : Operation 72 [18/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 72 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 20 <SV = 19> <Delay = 1.16>
+ST_20 : Operation 73 [17/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 73 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 21 <SV = 20> <Delay = 1.16>
+ST_21 : Operation 74 [16/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 74 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 22 <SV = 21> <Delay = 1.16>
+ST_22 : Operation 75 [15/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 75 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 23 <SV = 22> <Delay = 1.16>
+ST_23 : Operation 76 [14/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 76 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 24 <SV = 23> <Delay = 1.16>
+ST_24 : Operation 77 [13/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 77 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 25 <SV = 24> <Delay = 1.16>
+ST_25 : Operation 78 [12/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 78 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 26 <SV = 25> <Delay = 1.16>
+ST_26 : Operation 79 [11/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 79 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 27 <SV = 26> <Delay = 1.16>
+ST_27 : Operation 80 [10/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 80 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 28 <SV = 27> <Delay = 1.16>
+ST_28 : Operation 81 [9/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 81 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 29 <SV = 28> <Delay = 1.16>
+ST_29 : Operation 82 [8/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 82 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 30 <SV = 29> <Delay = 1.16>
+ST_30 : Operation 83 [7/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 83 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 31 <SV = 30> <Delay = 1.16>
+ST_31 : Operation 84 [6/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 84 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 32 <SV = 31> <Delay = 1.16>
+ST_32 : Operation 85 [5/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 85 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 33 <SV = 32> <Delay = 1.16>
+ST_33 : Operation 86 [4/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 86 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 34 <SV = 33> <Delay = 1.16>
+ST_34 : Operation 87 [3/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 87 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 35 <SV = 34> <Delay = 1.16>
+ST_35 : Operation 88 [2/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 88 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+
+State 36 <SV = 35> <Delay = 2.59>
+ST_36 : Operation 89 [1/36] (1.16ns)   --->   "%sdiv_ln20 = sdiv i32 %in0, i32 %in1" [div.cpp:20]   --->   Operation 89 'sdiv' 'sdiv_ln20' <Predicate = (tmp & tmp_1)> <Delay = 1.16> <CoreInst = "Divider">   --->   Core 6 'Divider' <Latency = 35> <II = 1> <Delay = 1.16> <FuncUnit> <Opcode : 'sdiv' 'srem' 'udiv' 'urem'> <InPorts = 2> <OutPorts = 1>
+ST_36 : Operation 90 [1/1] (0.00ns)   --->   "%res = trunc i16 %sdiv_ln20" [div.cpp:20]   --->   Operation 90 'trunc' 'res' <Predicate = (tmp & tmp_1)> <Delay = 0.00>
+ST_36 : Operation 91 [1/1] (1.42ns)   --->   "%empty = nbwrite i1 @_ssdm_op_NbWrite.ap_fifo.volatile.i16P0A, i16 %data_out_0, i16 %res" [div.cpp:22]   --->   Operation 91 'nbwrite' 'empty' <Predicate = (tmp & tmp_1)> <Delay = 1.42> <CoreInst = "FIFO">   --->   Core 78 'FIFO' <Latency = 0> <II = 1> <Delay = 1.42> <Storage> <Opcode : 'read' 'write' 'nbread' 'nbwrite'> <Ports = 0> <Width = -1> <Depth = -1> <FIFO>
+ST_36 : Operation 92 [1/1] (0.00ns)   --->   "%br_ln23 = br void %return" [div.cpp:23]   --->   Operation 92 'br' 'br_ln23' <Predicate = (tmp & tmp_1)> <Delay = 0.00>
+ST_36 : Operation 93 [1/1] (0.00ns)   --->   "%ret_ln23 = ret" [div.cpp:23]   --->   Operation 93 'ret' 'ret_ln23' <Predicate = true> <Delay = 0.00>
+
+
+============================================================
++ Verbose Summary: Timing violations
+============================================================
+Target clock period: 10.000ns, clock uncertainty: 2.700ns.
+
+ <State 1>: 2.593ns
+The critical path consists of the following:
+	fifo read operation ('data_in_0_read', div.cpp:18) on port 'data_in_0' (div.cpp:18) [20]  (1.428 ns)
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 2>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 3>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 4>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 5>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 6>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 7>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 8>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 9>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 10>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 11>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 12>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 13>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 14>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 15>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 16>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 17>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 18>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 19>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 20>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 21>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 22>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 23>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 24>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 25>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 26>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 27>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 28>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 29>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 30>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 31>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 32>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 33>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 34>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 35>: 1.165ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+
+ <State 36>: 2.593ns
+The critical path consists of the following:
+	'sdiv' operation ('sdiv_ln20', div.cpp:20) [24]  (1.165 ns)
+	fifo write operation ('empty', div.cpp:22) on port 'data_out_0' (div.cpp:22) [26]  (1.428 ns)
+
+
+============================================================
++ Verbose Summary: Binding
+============================================================
+N/A
+* FSMD analyzer results:
+  - Output states:
+ - Input state : 
+  - Chain level:
+	State 1
+	State 2
+	State 3
+	State 4
+	State 5
+	State 6
+	State 7
+	State 8
+	State 9
+	State 10
+	State 11
+	State 12
+	State 13
+	State 14
+	State 15
+	State 16
+	State 17
+	State 18
+	State 19
+	State 20
+	State 21
+	State 22
+	State 23
+	State 24
+	State 25
+	State 26
+	State 27
+	State 28
+	State 29
+	State 30
+	State 31
+	State 32
+	State 33
+	State 34
+	State 35
+	State 36
+
+
+============================================================
++ Verbose Summary: Datapath Resource usage 
+============================================================
+N/A

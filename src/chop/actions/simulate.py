@@ -38,11 +38,16 @@ def simulate(
     gui: bool = False,
     waves: bool = False,
     simulator: str = "verilator",
+    pass_args = {},
 ):
     SIM = getenv("SIM", simulator)
     runner = get_runner(SIM)
 
-    project_dir = Path.home() / ".mase" / "top"
+    project_dir = (
+        pass_args["project_dir"]
+        if "project_dir" in pass_args.keys()
+        else Path.home() / ".mase" / "top"
+    )
 
     if run_emit:
         emit(model, model_info, task, dataset_info, data_module, load_name, load_type)
@@ -64,6 +69,8 @@ def simulate(
                 "--trace-structs",
                 "--trace-depth",
                 str(trace_depth),
+                "--unroll-count",
+                "16384"
             ]
         else:
             raise ValueError(f"Unrecognized simulator: {simulator}")

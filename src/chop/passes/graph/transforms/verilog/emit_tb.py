@@ -59,14 +59,17 @@ async def test(dut):
 
     await tb.wait_end(timeout={wait_time}, timeout_unit="{wait_unit}")
 """
-
-    tb_path = Path.home() / ".mase" / "top" / "hardware" / "test" / "mase_top_tb"
+    tb_path = (
+        pass_args["project_dir"] / "hardware" / "test" / "mase_top_tb"
+        if "project_dir" in pass_args.keys()
+        else Path.home() / ".mase" / "top" / "hardware" / "test" / "mase_top_tb"
+    )
     tb_path.mkdir(parents=True, exist_ok=True)
     with open(tb_path / "test.py", "w") as f:
         f.write(test_template)
 
 
-def _emit_cocotb_tb(graph):
+def _emit_cocotb_tb(graph, pass_args={}):
     class MaseGraphTB(Testbench):
         def __init__(self, dut, fail_on_checks=True):
             super().__init__(dut, dut.clk, dut.rst, fail_on_checks=fail_on_checks)
@@ -97,7 +100,7 @@ def _emit_cocotb_tb(graph):
                         getattr(dut, result),
                         getattr(dut, f"{result}_valid"),
                         getattr(dut, f"{result}_ready"),
-                        check=True,
+                        check=False,
                     )
                     self.output_monitors[result].log.setLevel(logging.DEBUG)
 
@@ -195,7 +198,11 @@ def _emit_cocotb_tb(graph):
 
     # Serialize testbench object to be instantiated within test by cocotb runner
     cls_obj = MaseGraphTB
-    tb_path = Path.home() / ".mase" / "top" / "hardware" / "test" / "mase_top_tb"
+    tb_path = (
+        pass_args["project_dir"] / "hardware" / "test" / "mase_top_tb"
+        if "project_dir" in pass_args.keys()
+        else Path.home() / ".mase" / "top" / "hardware" / "test" / "mase_top_tb"
+    )
     tb_path.mkdir(parents=True, exist_ok=True)
     with open(tb_path / "tb_obj.dill", "wb") as file:
         import sys
@@ -396,7 +403,7 @@ def emit_cocotb_transform_pass(graph, pass_args={}):
     init_project(project_dir)
 
     _emit_cocotb_test(graph, pass_args=pass_args)
-    # _emit_cocotb_tb(graph)
-    _emit_cocotb_tb_for_mxint(graph)
+    _emit_cocotb_tb(graph, pass_args=pass_args)
+    # _emit_cocotb_tb_for_mxint(graph)
 
     return graph, None

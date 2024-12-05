@@ -28,10 +28,15 @@ def update_common_metadata_pass(mg, quan_args):
 
     # update precision
     for node in mg.fx_graph.nodes:
+        print(node.name)
         mase_op = node.meta["mase"].parameters["common"]["mase_op"]
-        if mase_op not in QUANTIZEABLE_OP + ("user_defined_module",):
+        if mase_op not in QUANTIZEABLE_OP + ("user_defined_module","fork2"):
             print(mase_op)
             continue
+        if mase_op == "user_defined_module":
+            if "mx_int_patch_embed" in node.name:
+                node.meta["mase"].parameters["common"]["mase_op"] = "mx_int_patch_embed"
+                mase_op = "mx_int_patch_embed"
         node_quan_config = quan_args.get(mase_op)["config"]
         for arg, _ in node.meta["mase"].parameters["common"]["args"].items():
             if (
@@ -39,28 +44,28 @@ def update_common_metadata_pass(mg, quan_args):
                 and "type" in node.meta["mase"].parameters["common"]["args"][arg].keys()
             ):
                 if node_quan_config["name"] == "mxint_hardware":
-                    if mase_op == "user_defined_module":
-                        if "weight" in arg:
-                            parallelism = node_quan_config["weight_parallelism"]
-                            precision = node_quan_config["weight_width"], node_quan_config["weight_exponent_width"]
-                        elif "data_in" in arg:
-                            parallelism = node_quan_config["data_in_parallelism"]
-                            precision = node_quan_config["data_in_width"], node_quan_config["data_in_exponent_width"]
-                        else:
-                            parallelism = node_quan_config["bias_parallelism"]
-                            precision = node_quan_config["bias_width"], node_quan_config["bias_exponent_width"]
-                        node.meta["mase"].parameters["common"]["args"][arg][
-                            "type"
-                        ] = "mxint_hardware"
-                        node.meta["mase"].parameters["common"]["args"][arg][
-                            "precision"
-                        ] = precision
-                        node.meta["mase"].parameters["common"]["args"][arg][
-                        "parallelism"] = parallelism
+                    # if mase_op == "user_defined_module":
+                    if "weight" in arg:
+                        parallelism = node_quan_config["weight_parallelism"]
+                        precision = node_quan_config["weight_width"], node_quan_config["weight_exponent_width"]
+                    elif "data_in" in arg:
+                        parallelism = node_quan_config["data_in_parallelism"]
+                        precision = node_quan_config["data_in_width"], node_quan_config["data_in_exponent_width"]
                     else:
-                        node.meta["mase"].parameters["common"]["args"][arg][
-                        "parallelism"
-                        ] = node_quan_config[parse_arg(arg) + "_parallelism"]
+                        parallelism = node_quan_config["bias_parallelism"]
+                        precision = node_quan_config["bias_width"], node_quan_config["bias_exponent_width"]
+                    node.meta["mase"].parameters["common"]["args"][arg][
+                        "type"
+                    ] = "mxint_hardware"
+                    node.meta["mase"].parameters["common"]["args"][arg][
+                        "precision"
+                    ] = precision
+                    node.meta["mase"].parameters["common"]["args"][arg][
+                    "parallelism"] = parallelism
+                    # else:
+                    #     node.meta["mase"].parameters["common"]["args"][arg][
+                    #     "parallelism"
+                    #     ] = node_quan_config[parse_arg(arg) + "_parallelism"]
                 else:
                     node.meta["mase"].parameters["common"]["args"][arg][
                         "type"
@@ -198,12 +203,12 @@ def update_hardware_precision_param(mg, quan_args, model_args: dict = {}):
         """
         return str(name).upper()
 
-    for node in list(mg.fx_graph.nodes):
+    for node in mg.fx_graph.nodes:
         mase_op = node.meta["mase"].parameters["common"]["mase_op"]
         vp = node.meta["mase"]["hardware"].get("verilog_param")
         if vp == None:
             continue
-        delete_dim_of_batch_size(vp)
+        delete_dim_of_batch_size(vp, node_name=node.name)
         if mase_op not in (QUANTIZEABLE_OP + ("vit_self_attention_integer","user_defined_module")):
             continue
         node_quan_args = quan_args.get(mase_op)["config"]
@@ -228,12 +233,30 @@ def update_hardware_precision_param(mg, quan_args, model_args: dict = {}):
                     vp[_cap(arg_name)] = 1 if arg_info else 0
                 else:
                     vp[_cap(arg_name)] = arg_info
+        if mase_op == "mx_int_patch_embed":
+            for arg_name, arg_info in node_quan_args.items():
+                if "width" not in arg_name:
+                    continue
+                cofig_str = arg_name.replace("frac_width", "precision_1")
+                cofig_str = cofig_str.replace("width", "precision_0")
+                vp[_cap(cofig_str)] = arg_info
+            if node_model_args == None:
+                continue
+            for arg_name, arg_info in node_model_args.items():
+                if type(arg_info) == bool:
+                    vp[_cap(arg_name)] = 1 if arg_info else 0
+                else:
+                    vp[_cap(arg_name)] = arg_info
 
 
-def delete_dim_of_batch_size(vp):
+def delete_dim_of_batch_size(vp, node_name=None):
     pop_list = []
     for key, item in vp.items():
         if any(keyword in key for keyword in ["DATA_IN", "DATA_OUT"]):
-            if key.endswith("2"):
-                pop_list.append(key)
+            if node_name != 'mx_int_patch_embed':
+                if key.endswith("2"):
+                    pop_list.append(key)
+            else:
+                if key.endswith("3"):
+                    pop_list.append(key)
     [vp.pop(key) for key in pop_list]
