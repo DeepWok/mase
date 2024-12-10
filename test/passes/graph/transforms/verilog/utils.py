@@ -22,13 +22,17 @@ def parse_arg(arg):
     return new_arg
 
 
+def parse_q_config(node, mase_op, q_config):
+    if q_config.get("by") == "name":
+        return q_config.get(node.name)["config"]
+    elif q_config.get("by") == "type":
+        return q_config.get(mase_op)["config"]
+
 def update_common_metadata_pass(mg, quan_args):
     # There is a bug in the current quantization pass, where the results metadata is not updated with the precision.
     # # Here we update the metadata here so we can test the hardware back end.
-
     # update precision
     for node in mg.fx_graph.nodes:
-        print(node.name)
         mase_op = node.meta["mase"].parameters["common"]["mase_op"]
         if mase_op not in QUANTIZEABLE_OP + ("user_defined_module","fork2"):
             print(mase_op)
@@ -37,7 +41,7 @@ def update_common_metadata_pass(mg, quan_args):
             if "mx_int_patch_embed" in node.name:
                 node.meta["mase"].parameters["common"]["mase_op"] = "mx_int_patch_embed"
                 mase_op = "mx_int_patch_embed"
-        node_quan_config = quan_args.get(mase_op)["config"]
+        node_quan_config = parse_q_config(node, mase_op, quan_args)
         for arg, _ in node.meta["mase"].parameters["common"]["args"].items():
             if (
                 type(node.meta["mase"].parameters["common"]["args"][arg]) == dict
@@ -211,7 +215,7 @@ def update_hardware_precision_param(mg, quan_args, model_args: dict = {}):
         delete_dim_of_batch_size(vp, node_name=node.name)
         if mase_op not in (QUANTIZEABLE_OP + ("vit_self_attention_integer","user_defined_module")):
             continue
-        node_quan_args = quan_args.get(mase_op)["config"]
+        node_quan_args = parse_q_config(node, mase_op, quan_args)
         node_model_args = model_args.get(mase_op)
         if mase_op in ["vit_self_attention_integer", "layer_norm"]:
             for arg_name, arg_info in node_quan_args.items():

@@ -15,7 +15,7 @@ class Monitor:
         self.exp_queue = Queue()
         self.check = check
         self.name = name
-        self.in_flight = False
+        self.in_flight = True
 
         if not hasattr(self, "log"):
             self.log = SimLog(

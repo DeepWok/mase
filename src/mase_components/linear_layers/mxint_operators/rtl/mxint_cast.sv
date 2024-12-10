@@ -47,13 +47,11 @@ module mxint_cast #(
 
   logic [LOSSLESSS_EDATA_WIDTH - 1:0] edata_out_full;
   logic [SHIFT_WIDTH - 1:0] shift_value;
-  logic [SHIFT_WIDTH - 1:0] abs_shift_value;
   // we dont need to implement full shift here, because we'll clamp in the final.
   // in order to avoid shift loss, we set the shift_data_width = OUT_MAN_WIDTH + 1.
 
   logic [SHIFT_DATA_WIDTH - 1:0] shift_buffer_data_for_out[BLOCK_SIZE - 1:0];
   logic [SHIFT_DATA_WIDTH - 1:0] shift_data[BLOCK_SIZE - 1:0][SHIFT_DATA_WIDTH - 1:0];
-  logic [$clog2(SHIFT_DATA_WIDTH) - 1:0] real_shift_value;
 
   unpacked_mx_split2_with_data #(
       .DEPTH($clog2(BLOCK_SIZE) + 1),
@@ -129,4 +127,14 @@ module mxint_cast #(
   ) - $signed(
       edata_for_out
   ) + IN_MAN_FRAC_WIDTH - (OUT_MAN_WIDTH - 1);
+  //   fixed_cast #(
+//       .IN_SIZE(BLOCK_SIZE),
+//       .IN_WIDTH(SHIFT_DATA_WIDTH),
+//       .IN_FRAC_WIDTH(),
+//       .OUT_WIDTH(OUT_MAN_WIDTH),
+//       .OUT_FRAC_WIDTH(0)
+//   ) fixed_cast_inst (
+//       .data_in(mdata_for_cast),
+//       .data_out(mdata_out)
+//   );
 endmodule

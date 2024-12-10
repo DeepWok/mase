@@ -11,6 +11,7 @@ from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import (
     MultiSignalStreamDriver,
     MultiSignalStreamMonitor,
+    MultiSignalErrorThresholdStreamMonitor
 )
 
 from mase_cocotb.runner import mase_runner
@@ -39,12 +40,15 @@ class MXIntAccumulatorTB(Testbench):
             dut.data_in_0_valid,
             dut.data_in_0_ready,
         )
-        self.data_out_0_monitor = MultiSignalStreamMonitor(
+        self.data_out_0_monitor = MultiSignalErrorThresholdStreamMonitor(
             dut.clk,
             (dut.mdata_out_0, dut.edata_out_0),
             dut.data_out_0_valid,
             dut.data_out_0_ready,
+            width=self.get_parameter("DATA_IN_0_PRECISION_0"),
+            signed=True,
             check=True,
+            error_bits=1,
         )
         self.input_drivers = {"in0": self.data_in_0_driver}
         self.output_monitors = {"out": self.data_out_0_monitor}
@@ -59,7 +63,7 @@ class MXIntAccumulatorTB(Testbench):
             * torch.rand(
                 self.get_parameter("IN_DEPTH"), self.get_parameter("BLOCK_SIZE")
             )
-            - 20
+            - 10
         )
         config = {
             "width": self.get_parameter("DATA_IN_0_PRECISION_0"),
@@ -72,6 +76,17 @@ class MXIntAccumulatorTB(Testbench):
         )
         etensor = etensor.reshape(self.get_parameter("IN_DEPTH"))
         mout, eout = MxIntAccumulator(mtensor, etensor)
+        _, mout, eout = block_mxint_quant(qtensor.sum(dim=0), config, parallelism)
+
+        qout = mout * 2**(eout - config["width"] + 1)
+        new_config = {
+            "width": 8,
+            "exponent_width": config["exponent_width"],
+        }
+        # print(block_mxint_quant(mid_out, new_config, parallelism))
+        # print(block_mxint_quant(qout, new_config, parallelism))
+        # breakpoint()
+
 
         tensor_inputs = pack_tensor_to_mx_listed_chunk(mtensor, etensor, parallelism)
         exp_outs = [(mout.int().tolist(), int(eout))]
@@ -143,24 +158,24 @@ if __name__ == "__main__":
     mase_runner(
         trace=True,
         module_param_list=[
-            {
-                "DATA_IN_0_PRECISION_0": 8,
-                "DATA_IN_0_PRECISION_1": 4,
-                "BLOCK_SIZE": 1,
-                "IN_DEPTH": 1,
-            },
             # {
             #     "DATA_IN_0_PRECISION_0": 8,
             #     "DATA_IN_0_PRECISION_1": 4,
-            #     "BLOCK_SIZE": 4,
+            #     "BLOCK_SIZE": 1,
             #     "IN_DEPTH": 1,
             # },
             # {
             #     "DATA_IN_0_PRECISION_0": 8,
             #     "DATA_IN_0_PRECISION_1": 4,
             #     "BLOCK_SIZE": 4,
-            #     "IN_DEPTH": 4,
+            #     "IN_DEPTH": 1,
             # },
+            {
+                "DATA_IN_0_PRECISION_0": 16,
+                "DATA_IN_0_PRECISION_1": 4,
+                "BLOCK_SIZE": 4,
+                "IN_DEPTH": 4,
+            },
         ],
         # sim="questa",
     )

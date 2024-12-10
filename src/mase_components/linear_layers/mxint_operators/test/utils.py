@@ -29,14 +29,17 @@ def mxint_quantize(x, width: int = 12, exponent_width: int = 6, exponent: int = 
 
     # exponent
     if exponent == None:
-        exponent = torch.ceil(torch.log2(x.abs().max()))
+        log2 = torch.log2(x.abs().max())
+        exponent = torch.ceil(log2)
+        if exponent == log2:
+            exponent += 1
         exponent = torch.clamp(exponent, exponent_min, exponent_max)
     # mantissa
     int_min = -(2 ** (width - 1))
     int_max = 2 ** (width - 1) - 1
     mantissa = x * (2 ** (width - 1)) / 2**exponent
     # print(mantissa, int_min, int_max)
-    mantissa = torch.clamp(mantissa.floor(), int_min, int_max)
+    mantissa = torch.clamp(mantissa.round(), int_min, int_max)
     q_x = (2**exponent) * mantissa / ((2 ** (width - 1)))
     return q_x, mantissa, exponent
 
@@ -111,12 +114,10 @@ class MXIntLinear(_LinearBase):
         device=None,
         dtype=None,
         config=None,
-        out_config=None,
     ) -> None:
         super().__init__(in_features, out_features, bias, device, dtype)
         assert config is not None, "config is None!"
         self.config = config
-        self.out_config = out_config
         self.bypass = config.get("bypass", False)
         if self.bypass:
             return
@@ -141,20 +142,19 @@ class MXIntLinear(_LinearBase):
         b_width, b_exponent_width = config["bias_width"], config["bias_exponent_width"]
         b_p1, b_p0 = config["bias_parallelism_dim_1"], config["bias_parallelism_dim_0"]
         base_quantizer = block_mxint_quant
-        if out_config is not None:
-            out_width, out_exponent_width = (
-                config["data_out_width"],
-                config["data_out_exponent_width"],
-            )
-            out_p1, out_p0 = (
-                config["data_out_parallelism_dim_1"],
-                config["data_out_parallelism_dim_0"],
-            )
-            self.out_quantizer = partial(
-                base_quantizer,
-                q_config={"width": out_width, "exponent_width": out_exponent_width},
-                parallelism=[out_p1, out_p0],
-            )
+        out_width, out_exponent_width = (
+            config["data_out_width"],
+            config["data_out_exponent_width"],
+        )
+        out_p1, out_p0 = (
+            config["data_out_parallelism_dim_1"],
+            config["data_out_parallelism_dim_0"],
+        )
+        self.out_quantizer = partial(
+            base_quantizer,
+            q_config={"width": out_width, "exponent_width": out_exponent_width},
+            parallelism=[out_p1, out_p0],
+        )
         self.w_quantizer = partial(
             base_quantizer,
             q_config={"width": w_width, "exponent_width": w_exponent_width},
@@ -182,10 +182,8 @@ class MXIntLinear(_LinearBase):
             else:
                 bias = None
             out = F.linear(x, w, bias)
-            # print(f"mout = {F.linear(mx, mw, mb*2**(ex+ew - eb).floor())}")
-            if self.out_quantizer is None:
-                return out
-            return self.out_quantizer(out)
+            qout, mout, eout = self.out_quantizer(out)
+            return qout
 
 
 class MXIntLinearHardware(_LinearBase):
@@ -622,9 +620,9 @@ def MxIntCast(man_in, exp_in, param):
 
 def MxIntAccumulator(man, exp):
     IN_DEPTH, BLOCK_SIZE = man.shape[0], man.shape[1]
-    max_exp = torch.Tensor([-999])
+    max_exp = torch.Tensor([float("-inf")])
     mout = torch.zeros(BLOCK_SIZE)
-    out_exp = torch.Tensor([-999])
+    out_exp = torch.Tensor([float("-inf")])
     for i in range(IN_DEPTH):
         max_exp = exp[i] if exp[i] > max_exp else max_exp
         mout = mout // 2 ** (max_exp - out_exp)

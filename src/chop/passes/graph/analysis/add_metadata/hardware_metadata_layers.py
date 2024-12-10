@@ -81,6 +81,8 @@ mxint_cast = [
 mxint_linear = linear["dependence_files"] + unpacked_mx_split2_with_data + mxint_cast + [
         "linear_layers/mxint_operators/rtl/mxint_linear.sv",
         "linear_layers/mxint_operators/rtl/mxint_register_slice.sv",
+        "linear_layers/mxint_operators/rtl/mxint_skid_buffer.sv",
+        "linear_layers/mxint_operators/rtl/mxint_straightm_fifoe.sv",
         "linear_layers/mxint_operators/rtl/mxint_accumulator.sv",
         "linear_layers/mxint_operators/rtl/mxint_circular.sv",
         "linear_layers/mxint_operators/rtl/mxint_dot_product.sv",

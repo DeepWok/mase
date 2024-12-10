@@ -176,17 +176,27 @@ VIT_CUSTOM_OPS = {
     },
 }
 
-
-def vit_module_level_quantize(model, model_config, q_config):
+def vit_module_level_quantize(model, model_config = {}, q_config = {}):
+    def parse_q_config(module, q_config):
+        if q_config.get("by") == "name":
+            if module[0] in q_config:
+                return False, q_config[module[0]]["config"]
+            else:
+                return True, None
+        elif q_config.get("by") == "type":
+            return False, q_config
     from chop.passes.graph.utils import deepsetattr
     for module in model.named_modules():
+        skip, config = parse_q_config(module, q_config)
+        if skip:
+            continue
         if isinstance(module[1], Attention):
             ori_module = module[1]
             new_module = ViTAttentionMxInt(
                 model_config["dim"],
                 model_config["num_heads"],
                 qkv_bias=True,
-                q_config=q_config["user_defined_module"],
+                q_config=config["user_defined_module"],
             )
             logger.info(f"Replacing module: {module[0]}")
             dim = ori_module.head_dim * ori_module.num_heads
@@ -215,7 +225,7 @@ def vit_module_level_quantize(model, model_config, q_config):
                 eps=ori_module.eps,
                 elementwise_affine=ori_module.elementwise_affine,
                 bias=bias,
-                q_config=q_config,
+                q_config=config,
             )
             new_module.weight = ori_module.weight
             new_module.bias = ori_module.bias
@@ -229,7 +239,7 @@ def vit_module_level_quantize(model, model_config, q_config):
             new_module = MxIntLinear(
                 ori_module.in_features,
                 ori_module.out_features,
-                q_config=q_config,
+                q_config=config,
             )
             new_module.weight = ori_module.weight
             new_module.bias = ori_module.bias
@@ -246,7 +256,7 @@ def vit_module_level_quantize(model, model_config, q_config):
                 eps=ori_module.eps,
                 elementwise_affine=ori_module.elementwise_affine,
                 bias=bias,
-                q_config=q_config["layer_norm"],
+                q_config=config["layer_norm"],
             )
             new_module.weight = ori_module.weight
             new_module.bias = ori_module.bias
@@ -257,7 +267,7 @@ def vit_module_level_quantize(model, model_config, q_config):
         elif isinstance(module[1], nn.GELU):
             ori_module = module[1]
             new_module = MxIntGELU(
-                q_config=q_config["gelu"],
+                q_config=config,
             )
             logger.info(f"Replacing module: {module[0]}")
             deepsetattr(model, module[0], new_module)

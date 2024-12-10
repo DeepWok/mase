@@ -272,27 +272,6 @@ class MultiSignalStreamDriver(StreamDriver):
             await RisingEdge(self.clk)
             self.valid.value = 0
 
-    # async def _driver_send(self, data) -> None:
-    #     while True:
-    #         await RisingEdge(self.clk)
-    #         print(self.data, data)
-    #         for hardware_target, item in zip(self.data, data):
-    #             print(hardware_target, item)
-    #             hardware_target.value = item
-
-    #         if random.random() > self.valid_prob:
-    #             self.valid.value = 0
-    #             continue  # Try roll random valid again at next clock
-    #         self.valid.value = 1
-    #         await ReadOnly()
-    #         if self.ready.value == 1:
-    #             self.log.debug(f"Sent {data}")
-    #             break
-    #     if self.send_queue.empty():
-    #         await RisingEdge(self.clk)
-    #         self.valid.value = 0
-
-
 class MultiSignalStreamMonitor(StreamMonitor):
     def _recv(self):
         def cast_data(value):
@@ -308,3 +287,38 @@ class MultiSignalStreamMonitor(StreamMonitor):
             for g, e in zip(got, exp):
                 if not np.equal(g, e).all():
                     raise TestFailure("\nGot \n%s, \nExpected \n%s" % (got, exp))
+
+class MultiSignalErrorThresholdStreamMonitor(ErrorThresholdStreamMonitor):
+    def _recv(self):
+        def cast_data(value):
+            if type(value) == list:
+                return [x.signed_integer for x in value]
+            elif type(value) == BinaryValue:
+                return value.signed_integer
+
+        return tuple([cast_data(target.value) for target in self.data])
+
+    def _check(self, got, exp):
+        if self.check:
+            mg, eg = got
+            me, ee = exp
+            if type(mg) == list:
+                mg = np.array(mg)
+                me = np.array(me)
+                mg = mg // 2**(ee - eg)
+                mg = mg.astype(np.int64)
+
+                if self.signed:
+                    mg = _sign_extend(mg, self.width)
+                    me = _sign_extend(me, self.width)
+                err = np.abs(mg - me)
+                if self.log_error:
+                    self.error_log.append(err)
+                    self.recv_log.append(got)
+                max_biterr = np.full_like(err, self.error_bits)
+                if not (err <= max_biterr).all():
+                    self.log.error("Failed | Got: %20s Exp: %20s Err: %14s" % (mg, me, err))
+                    assert False, "Test Failed!"
+                    return
+            else:
+                assert False, "Not implemented"

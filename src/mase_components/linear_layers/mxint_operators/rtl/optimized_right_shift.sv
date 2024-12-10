@@ -37,7 +37,7 @@ module optimized_right_shift #(
   assign shift_sign = shift_value[SHIFT_WIDTH-1];
 
   assign abs_shift_value = (shift_sign) ? (~shift_value + 1) : shift_value;
-  assign real_shift_value = (abs_shift_value < OUT_WIDTH - 1) ? abs_shift_value : OUT_WIDTH - 1;
+  assign real_shift_value = (abs_shift_value < SHIFT_DATA_WIDTH - 1) ? abs_shift_value : SHIFT_DATA_WIDTH - 1;
 
   // There is several things need to be considered
   always_comb begin
@@ -46,7 +46,7 @@ module optimized_right_shift #(
   end
 
   for (genvar i = 0; i < BLOCK_SIZE; i++) begin
-    for (genvar j = 0; j < OUT_WIDTH - 1; j++) begin
+    for (genvar j = 0; j < SHIFT_DATA_WIDTH - 1; j++) begin
       always_comb begin
         shift_data_list[i][j] = (shift_value[SHIFT_WIDTH-1]) ? $signed(data_in[i]) <<< j :
             $signed(data_in[i]) >>> j;

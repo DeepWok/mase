@@ -30,9 +30,9 @@ module mxint_linear #(
 
     parameter WEIGHT_PRECISION_0 = 16,
     parameter WEIGHT_PRECISION_1 = 3,
-    parameter WEIGHT_TENSOR_SIZE_DIM_0 = 20,
+    parameter WEIGHT_TENSOR_SIZE_DIM_0 = DATA_IN_0_TENSOR_SIZE_DIM_0,
     parameter WEIGHT_TENSOR_SIZE_DIM_1 = 20,
-    parameter WEIGHT_PARALLELISM_DIM_0 = 4,
+    parameter WEIGHT_PARALLELISM_DIM_0 = DATA_IN_0_PARALLELISM_DIM_0,
     parameter WEIGHT_PARALLELISM_DIM_1 = 4,
 
     // Inferred precision of the output data
@@ -48,6 +48,7 @@ module mxint_linear #(
     parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1,
     parameter DATA_OUT_0_PARALLELISM_DIM_2 = 1,
 
+    parameter UNDERFLOW_BITS = 2,
     parameter BIAS_PRECISION_0 = 16,
     parameter BIAS_PRECISION_1 = 3,
     parameter BIAS_TENSOR_SIZE_DIM_0 = DATA_OUT_0_TENSOR_SIZE_DIM_0,
@@ -131,6 +132,7 @@ module mxint_linear #(
       .data_out_valid(circular_weight_valid),
       .data_out_ready(circular_weight_ready)
   );
+
   mxint_circular #(
       .DATA_PRECISION_0(BIAS_PRECISION_0),
       .DATA_PRECISION_1(BIAS_PRECISION_1),
@@ -155,10 +157,12 @@ module mxint_linear #(
       DATA_IN_0_PARALLELISM_DIM_0
   );
   localparam FDP_EXP_WIDTH = (WEIGHT_PRECISION_1 > DATA_IN_0_PRECISION_1)? WEIGHT_PRECISION_1 + 1: DATA_IN_0_PRECISION_1 + 1;
-  localparam ACC_WIDTH = FDP_WIDTH + $clog2(IN_0_DEPTH_DIM_0);
+  localparam ACC_WIDTH = FDP_WIDTH + $clog2(IN_0_DEPTH_DIM_0) + UNDERFLOW_BITS;
+  localparam ACC_FRAC_WIDTH = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 + UNDERFLOW_BITS - 2;
   localparam ACC_EXP_WIDTH = FDP_EXP_WIDTH;
   localparam LOSSLESS_OUT_WIDTH = ACC_WIDTH + HAS_BIAS;
   localparam LOSSLESS_OUT_EXP_WIDTH = ACC_EXP_WIDTH;
+  localparam LOSSLESS_OUT_FRAC_WIDTH = ACC_FRAC_WIDTH;
   /* verilator lint_off UNUSEDSIGNAL */
   // Assume the parallelised hardware above have the same arrival time
   // which means that they always have the same state. So we can just
@@ -170,11 +174,16 @@ module mxint_linear #(
   logic [FDP_EXP_WIDTH-1:0] fdp_edata_out [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_1 - 1:0];
   logic [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_1 - 1:0] fdp_data_out_valid;
 
-  logic [FDP_WIDTH-1:0] acc_mdata_in [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_1 - 1:0];
-  logic [FDP_EXP_WIDTH-1:0] acc_edata_in;
-  logic acc_data_in_valid, acc_data_in_ready;
+  // Change signal names to reflect data flow: dp -> skid -> acc
+  logic [FDP_WIDTH-1:0] dp_mdata_out [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_1 - 1:0];
+  logic [FDP_EXP_WIDTH-1:0] dp_edata_out;
+  logic dp_data_out_valid, dp_data_out_ready;
 
-  logic [         ACC_WIDTH-1:0] acc_mdata_out   [DATA_IN_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0-1:0];
+  logic [FDP_WIDTH-1:0] skid_mdata_out[DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_1 - 1:0];
+  logic [FDP_EXP_WIDTH-1:0] skid_edata_out;
+  logic skid_data_out_valid, skid_data_out_ready;
+
+  logic [ACC_WIDTH-1:0] acc_mdata_out [DATA_IN_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0-1:0];
   logic [FDP_EXP_WIDTH-1:0] acc_edata_out;
   logic acc_data_out_valid, acc_data_out_ready;
   logic [LOSSLESS_OUT_WIDTH-1:0] cast_mdata_out_0[DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0-1:0];
@@ -190,7 +199,7 @@ module mxint_linear #(
   // and each one computes for IN_0_DEPTH iterations for each inputs.
   for (genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_1; i = i + 1) begin : out_dim_1
     for (genvar j = 0; j < WEIGHT_PARALLELISM_DIM_1; j = j + 1) begin : out_dim_0
-      // Assume the weight are transposed and partitioned 
+      // Assume the weight are transposed and partitioned
       logic [WEIGHT_PRECISION_0-1:0] current_mweight[WEIGHT_PARALLELISM_DIM_0-1:0];
       logic [WEIGHT_PRECISION_1-1:0] current_eweight;
       logic [DATA_IN_0_PRECISION_0-1:0] current_mdata[WEIGHT_PARALLELISM_DIM_0-1:0];
@@ -220,34 +229,52 @@ module mxint_linear #(
           .eweight(current_eweight),
           .weight_valid(circular_weight_valid),
           .weight_ready(fdp_weight_ready[i*WEIGHT_PARALLELISM_DIM_1+j]),
-          .mdata_out_0(acc_mdata_in[i*WEIGHT_PARALLELISM_DIM_1+j]),
+          .mdata_out_0(dp_mdata_out[i*WEIGHT_PARALLELISM_DIM_1+j]),
           .edata_out_0(fdp_edata_out[i*WEIGHT_PARALLELISM_DIM_1+j]),
           .data_out_0_valid(fdp_data_out_valid[i*WEIGHT_PARALLELISM_DIM_1+j]),
-          .data_out_0_ready(acc_data_in_ready)
+          .data_out_0_ready(dp_data_out_ready)
       );
     end
   end
-  assign acc_data_in_valid = fdp_data_out_valid[0];
-  assign acc_edata_in = fdp_edata_out[0];
+  assign dp_data_out_valid = fdp_data_out_valid[0];
+  assign dp_edata_out = fdp_edata_out[0];
+
+  // Insert skid buffer between dot product and accumulator
+  mxint_skid_buffer #(
+      .DATA_PRECISION_0(FDP_WIDTH),
+      .DATA_PRECISION_1(FDP_EXP_WIDTH),
+      .IN_NUM(DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_1)
+  ) skid_buffer_inst (
+      .clk(clk),
+      .rst(rst),
+      .mdata_in(dp_mdata_out),
+      .edata_in(dp_edata_out),
+      .data_in_valid(dp_data_out_valid),
+      .data_in_ready(dp_data_out_ready),
+      .mdata_out(skid_mdata_out),
+      .edata_out(skid_edata_out), 
+      .data_out_valid(skid_data_out_valid),
+      .data_out_ready(skid_data_out_ready)
+  );
 
   mxint_accumulator #(
       .DATA_IN_0_PRECISION_0(FDP_WIDTH),
       .DATA_IN_0_PRECISION_1(FDP_EXP_WIDTH),
+      .UNDERFLOW_BITS(UNDERFLOW_BITS),
       .IN_DEPTH(IN_0_DEPTH_DIM_0),
       .BLOCK_SIZE(DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0)
   ) accumulator_inst (
       .clk(clk),
       .rst(rst),
-      .mdata_in_0(acc_mdata_in),
-      .edata_in_0(acc_edata_in),
-      .data_in_0_valid(acc_data_in_valid),
-      .data_in_0_ready(acc_data_in_ready),
+      .mdata_in_0(skid_mdata_out),  // Changed from acc_mdata_in
+      .edata_in_0(skid_edata_out),  // Changed from acc_edata_in
+      .data_in_0_valid(skid_data_out_valid),  // Changed from acc_data_in_valid
+      .data_in_0_ready(skid_data_out_ready),  // Changed from acc_data_in_ready
       .mdata_out_0(acc_mdata_out),
       .edata_out_0(acc_edata_out),
       .data_out_0_valid(acc_data_out_valid),
       .data_out_0_ready(acc_data_out_ready)
   );
-
 
   logic [BIAS_PRECISION_0-1:0] mbias_sext[DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0-1:0];
   logic [LOSSLESS_OUT_WIDTH-1:0] shifted_mbias[DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0-1:0];
@@ -266,7 +293,7 @@ module mxint_linear #(
         circular_ebias
     ) - $signed(
         acc_edata_out
-    ) + DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 - 2 - (BIAS_PRECISION_0 - 1));
+    ) + LOSSLESS_OUT_FRAC_WIDTH - (BIAS_PRECISION_0 - 1));
 
     optimized_right_shift #(
         .IN_WIDTH(BIAS_PRECISION_0),
@@ -290,12 +317,12 @@ module mxint_linear #(
     assign circular_bias_ready = 1;
   end
 
-  // Replace skid buffer with unpacked_mx_fifo
+  // We need a fifo here to make match the throughput between different layers
   unpacked_mx_fifo #(
     .MAN_WIDTH(LOSSLESS_OUT_WIDTH),
-    .EXP_WIDTH(LOSSLESS_OUT_EXP_WIDTH), 
+    .EXP_WIDTH(LOSSLESS_OUT_EXP_WIDTH),
     .IN_SIZE(DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0),
-    .DEPTH(2)  // Minimum depth for breaking timing path
+    .DEPTH(DATA_OUT_0_TENSOR_SIZE_DIM_0 / DATA_OUT_0_PARALLELISM_DIM_0)
   ) cast_fifo (
     .clk(clk),
     .rst(rst),
@@ -312,7 +339,7 @@ module mxint_linear #(
   // Update cast instance to use FIFO outputs
   mxint_cast #(
       .IN_MAN_WIDTH(LOSSLESS_OUT_WIDTH),
-      .IN_MAN_FRAC_WIDTH(DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 - 2),
+      .IN_MAN_FRAC_WIDTH(LOSSLESS_OUT_FRAC_WIDTH),
       .IN_EXP_WIDTH(LOSSLESS_OUT_EXP_WIDTH),
       .OUT_MAN_WIDTH(DATA_OUT_0_PRECISION_0),
       .OUT_EXP_WIDTH(DATA_OUT_0_PRECISION_1),

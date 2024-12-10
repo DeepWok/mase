@@ -44,48 +44,44 @@ module mxint_dot_product #(
   logic buffer_eweight_valid, buffer_eweight_ready;
 
   logic mdata_out_0_valid, mdata_out_0_ready;
-  unpacked_mx_split2_with_data #(
+  mxint_straightm_fifoe #(
       .DEPTH($clog2(BLOCK_SIZE) + 1),
       .MAN_WIDTH(DATA_IN_0_PRECISION_0),
       .EXP_WIDTH(DATA_IN_0_PRECISION_1),
       .IN_SIZE(BLOCK_SIZE)
-  ) data_in_0_unpacked_mx_split2_with_data_i (
+  ) data_in_0_split_m_e (
       .clk(clk),
       .rst(rst),
       .mdata_in(mdata_in_0),
       .edata_in(edata_in_0),
       .data_in_valid(data_in_0_valid),
       .data_in_ready(data_in_0_ready),
-      .fifo_mdata_out(),
       .fifo_edata_out(buffer_edata_in_0),
-      .fifo_data_out_valid(buffer_edata_in_0_valid),
-      .fifo_data_out_ready(buffer_edata_in_0_ready),
+      .fifo_edata_out_valid(buffer_edata_in_0_valid),
+      .fifo_edata_out_ready(buffer_edata_in_0_ready),
       .straight_mdata_out(mdata_in_0_reg_out),
-      .straight_edata_out(),
-      .straight_data_out_valid(mdata_in_0_reg_out_valid),
-      .straight_data_out_ready(mdata_in_0_reg_out_ready)
+      .straight_mdata_out_valid(mdata_in_0_reg_out_valid),
+      .straight_mdata_out_ready(mdata_in_0_reg_out_ready)
   );
 
-  unpacked_mx_split2_with_data #(
+  mxint_straightm_fifoe #(
       .DEPTH($clog2(BLOCK_SIZE) + 1),
       .MAN_WIDTH(WEIGHT_PRECISION_0),
       .EXP_WIDTH(WEIGHT_PRECISION_1),
       .IN_SIZE(BLOCK_SIZE)
-  ) weight_unpacked_mx_split2_with_data_i (
+  ) weight_split_m_e (
       .clk(clk),
       .rst(rst),
       .mdata_in(mweight),
       .edata_in(eweight),
       .data_in_valid(weight_valid),
       .data_in_ready(weight_ready),
-      .fifo_mdata_out(),
       .fifo_edata_out(buffer_eweight),
-      .fifo_data_out_valid(buffer_eweight_valid),
-      .fifo_data_out_ready(buffer_eweight_ready),
+      .fifo_edata_out_valid(buffer_eweight_valid),
+      .fifo_edata_out_ready(buffer_eweight_ready),
       .straight_mdata_out(mweight_reg_out),
-      .straight_edata_out(),
-      .straight_data_out_valid(mweight_reg_out_valid),
-      .straight_data_out_ready(mweight_reg_out_ready)
+      .straight_mdata_out_valid(mweight_reg_out_valid),
+      .straight_mdata_out_ready(mweight_reg_out_ready)
   );
   assign edata_out_0 = $signed(buffer_eweight) + $signed(buffer_edata_in_0);
   fixed_dot_product #(
