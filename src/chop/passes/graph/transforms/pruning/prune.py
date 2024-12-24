@@ -159,7 +159,6 @@ def prune_graph_iterator(graph, config: dict):
     for node in graph.fx_graph.nodes:
         # pruning only deals with modules at the moment
         if node.op == "call_module":
-
             name = node.target
             if name in hooks.keys():
                 logger.info(f"Pruning module: {node.name}")
@@ -174,7 +173,6 @@ def prune_graph_iterator(graph, config: dict):
                 if node_hooks["a_hook"] is not None:
                     register_fn, hook_fn = node_hooks["a_hook"]
                     getattr(graph.modules[node.target], register_fn)(hook_fn)
-
     return graph
 
 
