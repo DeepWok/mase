@@ -1,4 +1,4 @@
-# C++ and CUDA Extensions
+#C++ and CUDA Extensions
 
 This directory includes custom C++ and CUDA implementations of functions. These
 are automatically compiled and pulled into the Python APIs using
@@ -18,7 +18,7 @@ The following are some general CUDA references:
   * https://stackoverflow.com/questions/16619274/cuda-griddim-and-blockdim
 * How to Query Device Properties and Handle Errors in CUDA C/C++: https://devblogs.nvidia.com/how-query-device-properties-and-handle-errors-cuda-cc/
 
-# Dependencies
+#Dependencies
 
 This library has been built and tested on a machine with the following:
 * Ubuntu 18.04
