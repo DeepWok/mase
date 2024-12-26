@@ -8,7 +8,6 @@ import dill
 
 import toml
 import torch
-import pydot
 import torch.fx as fx
 from torch.fx.passes.graph_drawer import FxGraphDrawer
 import matplotlib.pyplot as plt
@@ -469,6 +468,10 @@ class MaseGraph:
         Args:
             file (str, optional): File to save the graph to. Defaults to "mase_graph.svg".
         """
+        try:
+            import pydot
+        except:
+            raise ImportError("pydot is required to draw the graph")
         drawer = FxGraphDrawer(self.model, "masegraph")
         dot_graph = drawer.get_dot_graph()
         # some dot_graph contains .weight and .bias, this cause pydot to crash in plotting
