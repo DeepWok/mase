@@ -6,7 +6,7 @@
    :alt: logo
    :align: center
 
-Lab 4 (Hardware Stream) for Advanced Deep Learning Systems (ADLS)
+Lab 4 (Hardware Stream) Emitting Hardware 
 ~~~~~
 
 .. raw:: html
@@ -25,11 +25,7 @@ Lab 4 (Hardware Stream) for Advanced Deep Learning Systems (ADLS)
 General introduction
 ====================
 
-In this lab, you will learn how to use the search functionality in the
-software stack of MASE to implement a Network Architecture Search.
-
-There are in total 4 tasks you would need to finish, there is also 1
-optional task.
+In this lab, you will learn how to use MASE to emit hardware modules in SystemVerilog, and test the emitted hardware through Cocotb.
 
 Most of the guidance are in
 `lab4-hardware.ipynb <https://github.com/DeepWok/mase/blob/main/docs/labs/lab4-hardware.ipynb>`__, make sure you followed
@@ -40,7 +36,7 @@ Tasks
 =====
 
 1. Read `this
-   page <https://jianyicheng.github.io/mase-tools/modules/analysis/add_metadata.html#add-hardware-metadata-analysis-pass>`__
+   page <https://deepwok.github.io/mase/modules/api/analysis/add_metadata.html#add-hardware-metadata-analysis-pass>`__
    for more information on the hardware metadata pass. Why we have such
    a metadata setup? How is this different from the software metadata?
 

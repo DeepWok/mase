@@ -24,7 +24,7 @@ Lab 2: Neural Architecture Search
 General introduction
 ====================
 
-In this lab, you will learn how to use Mase and 
+In this lab, you will learn how to use Mase to conduct a Neural Architecture Search (NAS) on a BERT model.
 
 Learning tasks
 =============================
