@@ -36,13 +36,13 @@ def load_unwrapped_ckpt(checkpoint: str, model: torch.nn.Module):
     return model
 
 
-def load_graph_module_ckpt(checkpoint: str):
+def load_graph_module_ckpt(checkpoint: str, weights_only: bool = False):
     """
     Load a serialized graph module.
     """
     if os.path.isdir(checkpoint):
         checkpoint = os.path.join(checkpoint, "graph_module.mz")
-    model = torch.load(checkpoint)
+    model = torch.load(checkpoint, weights_only=weights_only)
     return model
 
 
