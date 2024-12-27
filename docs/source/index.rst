@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Welcome to Machop's documentation!
-================================
+===================================
 
 .. image:: imgs/machop.png
    :alt: logo
