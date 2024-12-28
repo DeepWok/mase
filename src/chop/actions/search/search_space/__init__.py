@@ -7,7 +7,7 @@ from .base import SearchSpaceBase
 
 from chop.tools.check_dependency import check_deps_tensorRT_pass
 
-from .nas_bert import NasBertSpace
+# from .nas_bert import NasBertSpace
 
 SEARCH_SPACE_MAP = {
     "graph/quantize/mixed_precision_ptq": GraphSearchSpaceMixedPrecisionPTQ,
