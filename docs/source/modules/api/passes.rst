@@ -248,4 +248,3 @@ Additional Documentation
 
 	transform/quantize_further_doc
 
-.. test-results:: ../../software_report.xml
