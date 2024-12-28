@@ -41,7 +41,6 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
     "sphinx_needs",
-    "sphinxcontrib.test_reports",
     "sphinxcontrib.plantuml",
     "myst_nb",
 ]

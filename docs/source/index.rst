@@ -1,5 +1,5 @@
 Machine-Learning System Exploration Tools
-================================
+==========================================
 
 Mase is a Machine Learning compiler based on PyTorch FX, maintained by researchers at Imperial College London. We provide a set of tools for inference and training optimization of state-of-the-art language and vision models. The following features are supported, among others:
 
