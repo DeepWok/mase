@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # --------------------------------------------------------------------
 #    This is a script to test command line interfaces
+#    command line interfaces are abandoned in the latest version
+#    this test is no longer maintained
 # --------------------------------------------------------------------
 
 set -o errexit

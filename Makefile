@@ -84,7 +84,6 @@ test-hw:
 		$(hw_test_dir)
 
 test-sw:
-	bash scripts/test-machop.sh
 	pytest --log-level=DEBUG --verbose \
 		-n $(NUM_WORKERS) \
 		--cov=src/chop/ --cov-report=html \
