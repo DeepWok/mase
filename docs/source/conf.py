@@ -42,7 +42,6 @@ extensions = [
     "sphinx.ext.napoleon",
     "myst_parser",
     "sphinx_needs",
-    "sphinxcontrib.test_reports",
     "sphinxcontrib.plantuml",
 ]
 

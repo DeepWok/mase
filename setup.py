@@ -34,6 +34,7 @@ requirements = [
     "timm",
     "pytorch-nlp",
     "datasets",
+    "evaluate",
     "ipython",
     "ipdb",
     "sentencepiece",
@@ -51,9 +52,9 @@ requirements = [
     "onnxruntime",
     "matplotlib",
     "sphinx-rtd-theme",
+    "sphinx-needs",
     "sphinx-test-reports",
     "sphinxcontrib-plantuml",
-    "sphinx-needs",
     "imageio",
     "imageio-ffmpeg",
     "opencv-python",
@@ -89,6 +90,10 @@ requirements = [
     "psutil",
     "Pillow==10.4.0",
     "mpmath==1.3.0",
+    "evaluate",
+    "myst-nb",
+    "sphinx-book-theme",
+    "pydot",
 ]
 
 setup(

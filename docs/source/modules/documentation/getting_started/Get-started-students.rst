@@ -1,5 +1,5 @@
 Additional Instructions for Imperial College Students
-=============================
+=====================================================
 
 For students at Imperial College London taking the Advanced Deep Learning Systems module, or taking MSc/MEng projects with the DeepWok Lab, your setup will depend on the requirements for your project.
 
@@ -12,7 +12,7 @@ For students at Imperial College London taking the Advanced Deep Learning System
 
 
 SSH into an Imperial server
-----------------
+---------------------------
 
 .. hint::
 
@@ -23,7 +23,7 @@ SSH into an Imperial server
         ssh <username>@<server_name>.ee.ic.ac.uk
 
 VS Code (optional)
-----------------
+------------------
 
 My suggestion to work on the server is to install VS Code on your local machine and develop with it. You can also use your own IDE for the project, such as `emacs` or `vim`. 
 
