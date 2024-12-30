@@ -19,7 +19,7 @@ test-hw:
 	# Cast
 	python3 src/mase_components/cast/test/fixed_cast_tb.py
 	# Linear layers
-	python3	src/mase_components/linear_layers/fixed_linear_layer/test/fixed_linear_tb
+	python3	src/mase_components/linear_layers/fixed_linear_layer/test/fixed_linear_tb.py
 	# MxInt
 	python3 src/mase_components/linear_layers/mxint_operators/test/mxint_linear_tb.py
 	# Memory
