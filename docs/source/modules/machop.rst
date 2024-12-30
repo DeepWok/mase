@@ -25,7 +25,6 @@ For more, you can watch this
    :caption: Machop API
 
    chop/actions
-   chop/cli
    chop/datasets
    chop/distributed
    chop/ir

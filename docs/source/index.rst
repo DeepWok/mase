@@ -13,10 +13,12 @@ Mase is a Machine Learning compiler based on PyTorch FX, maintained by researche
 
 For more details, refer to the `Tutorials <https://deepwok.github.io/mase/modules/documentation/tutorials.html>`_. If you enjoy using the framework, you can support us by starring the repository on `GitHub <https://github.com/DeepWok/mase>`__!
 
-Quantization Search and QAT
+Efficient AI Optimization 
 ----------------------------------------------------
 
-Some details...
+MASE provides a set of composable tools for optimizing AI models. The tools are designed to be modular and can be used in a variety of ways to optimize models for different hardware targets. The tools can be used to optimize models for inference, training, or both. The tools can be used to optimize models for a variety of hardware targets, including CPUs, GPUs, and FPGAs. The tools can be used to optimize models for a variety of applications, including computer vision, natural language processing, and speech recognition.
+
+
 
 Hardware Generation
 ----------------------------------------------------
@@ -29,10 +31,6 @@ Machine learning accelerators have been used extensively to compute models with 
 
 MASE provides an efficient and scalable approach for exploring accelerator systems to compute large ML models by directly mapping onto an efficient streaming accelerator system. Over a set of ML models, MASE can achieve better energy efficiency to GPUs when computing inference for recent transformer models.
 
-Distributed Deployment
-----------------------------------------------------
-
-Some details...
 
 Documentation
 ----------------------------------------------------
