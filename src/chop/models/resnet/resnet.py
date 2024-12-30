@@ -311,10 +311,13 @@ class ResNet(nn.Module):
 def _resnet(
     block: Type[Union[BasicBlock, Bottleneck]],
     layers: List[int],
-    num_classes: int,
     pretrained_weight_cls: Optional[WeightsEnum],
     **kwargs,
 ) -> ResNet:
+    info = kwargs["dataset_info"]
+    num_classes = info.num_classes
+    kwargs["num_classes"] = num_classes
+    kwargs.pop("dataset_info")
     model = ResNet(block, layers, **kwargs)
 
     if pretrained_weight_cls is not None:
@@ -358,7 +361,6 @@ def get_resnet34(
     **kwargs: Any,
 ) -> ResNet:
     """ResNet-34 from `Deep Residual Learning for Image Recognition <https://arxiv.org/pdf/1512.03385.pdf>`__."""
-    num_classes = kwargs["num_classes"]
     if pretrained:
         pretrained_weight_cls = ResNet34_Weights.IMAGENET1K_V1
     else:
@@ -378,7 +380,7 @@ def get_resnet50(
     **kwargs: Any,
 ) -> ResNet:
     """ResNet-50 from `Deep Residual Learning for Image Recognition <https://arxiv.org/pdf/1512.03385.pdf>`__."""
-    num_classes = kwargs["num_classes"]
+    info = kwargs["dataset_info"]
     if pretrained:
         pretrained_weight_cls = ResNet50_Weights.IMAGENET1K_V2
     else:
@@ -398,7 +400,7 @@ def get_resnet101(
     **kwargs: Any,
 ) -> ResNet:
     """ResNet-101 from `Deep Residual Learning for Image Recognition <https://arxiv.org/pdf/1512.03385.pdf>`__."""
-    num_classes = kwargs["num_classes"]
+    info = kwargs["dataset_info"]
     if pretrained:
         pretrained_weight_cls = ResNet101_Weights.IMAGENET1K_V2
     else:
@@ -425,7 +427,7 @@ def get_wide_resnet50_2(
     convolutions is the same, e.g. last block in ResNet-50 has 2048-512-2048
     channels, and in Wide ResNet-50-2 has 2048-1024-2048.
     """
-    num_classes = kwargs["num_classes"]
+
     if pretrained:
         pretrained_weight_cls = Wide_ResNet50_2_Weights.IMAGENET1K_V2
     else:

@@ -296,7 +296,8 @@ class WideResNet(nn.Module):
 
 
 @register_mase_checkpoint("wideresnet28_cifar")
-def wideresnet28_cifar(info, pretrained=False, **kwargs):
+def wideresnet28_cifar(pretrained=False, **kwargs):
+    info = kwargs["dataset_info"]
     num_classes = info.num_classes
     model = WideResNet(
         28,

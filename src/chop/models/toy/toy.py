@@ -5,7 +5,7 @@ A collection of toy models for testing and development runs.
 import torch.nn as nn
 from typing import Any
 
-from chop.models.utils import register_mase_model
+from chop.models.utils import register_mase_model, register_mase_checkpoint
 
 
 @register_mase_model(
@@ -158,11 +158,12 @@ class ToyConvNet(nn.Module):
 
 
 # Getters ------------------------------------------------------------------------------
+@register_mase_checkpoint("toy")
 def get_toynet(
-    info,
     pretrained=False,
     **kwargs: Any,
 ):
+    info = kwargs["dataset_info"]
     image_size = info.image_size
     num_classes = info.num_classes
     return ToyNet(image_size, num_classes)

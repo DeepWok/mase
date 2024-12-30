@@ -24,4 +24,4 @@ def plot_graph_analysis_pass(
     # # nx.draw(nx_graph, pos, with_labels=True, labels=labels, node_size=3000, node_color='#ffcccc', font_size=10, font_weight='bold')
     # plt.title("Torch.fx Graph")
     # plt.show()
-    return {}
+    return graph, {}

@@ -297,6 +297,11 @@ func_data = {
         "training": "config",
         "inplace": "config",
     },
+    # https://pytorch.org/docs/stable/generated/torch.nn.functional.adaptive_avg_pool1d.html
+    "adaptive_avg_pool1d": {"input": "data_in", "output_size": "config"},
+    "adaptive_avg_pool2d": {"input": "data_in", "output_size": "config"},
+    "adaptive_max_pool1d": {"input": "data_in", "output_size": "config"},
+    "adaptive_max_pool2d": {"input": "data_in", "output_size": "config"},
 }
 
 module_data = {

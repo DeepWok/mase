@@ -3,7 +3,7 @@
 
 import torch
 import torch.nn as nn
-from chop.models.utils import register_mase_model
+from chop.models.utils import register_mase_model, register_mase_checkpoint
 
 
 @register_mase_model(
@@ -57,7 +57,9 @@ class VGG7(nn.Module):
         return x
 
 
-def get_vgg7(info, pretrained=False) -> VGG7:
+@register_mase_checkpoint("vgg7_cifar")
+def get_vgg7(pretrained=False, **kwargs) -> VGG7:
+    info = kwargs["dataset_info"]
     image_size = info.image_size
     num_classes = info.num_classes
     return VGG7(image_size, num_classes)

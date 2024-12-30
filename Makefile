@@ -86,6 +86,7 @@ test-hw:
 test-sw:
 	pytest --log-level=DEBUG --verbose \
 		-n $(NUM_WORKERS) \
+		-m "not large" \
 		--cov=src/chop/ --cov-report=html \
 		--html=report.html --self-contained-html \
 		--junitxml=software_report.xml \

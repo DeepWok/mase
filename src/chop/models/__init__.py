@@ -19,7 +19,7 @@ from .opt.modeling_opt import *
 from .pvt.pvt import *
 from .repvgg.repvgg import *
 from .resnet.resnet import *
-from .toy.toy import *
+from .toy import *
 from .vgg_cifar.vgg_cifar import *
 from .wideresnet.wideresnet import *
 
@@ -34,8 +34,13 @@ def get_model(
     **kwargs,
 ):
     model_info = get_model_info(checkpoint)
-    getter = ModelFactory._checkpoint_getter_dict[checkpoint]
-    model = getter(pretrained, **kwargs)
+    try:
+        getter = ModelFactory._checkpoint_getter_dict[checkpoint]
+    except KeyError:
+        raise ValueError(
+            f"Model {checkpoint} not supported, please add it to the ModelFactory or pick from the supported models {ModelFactory._checkpoint_getter_dict.keys()}"
+        )
+    model = getter(pretrained=pretrained, **kwargs)
 
     return model
 

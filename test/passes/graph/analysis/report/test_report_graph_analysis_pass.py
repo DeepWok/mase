@@ -7,36 +7,27 @@ import sys
 
 import torch
 
-sys.path.append(
-    os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "..",
-        "..",
-        "..",
-        "..",
-        "..",
-        "..",
-        "machop",
-    )
-)
-
-print(sys.path)
-
+import chop.models as models
 from chop.tools.logger import set_logging_verbosity
 from chop.ir.graph import MaseGraph
-from chop.models.toys.toy_custom_fn import ToyCustomFnNet
 from chop.passes.graph.analysis import (
     add_common_metadata_analysis_pass,
     init_metadata_analysis_pass,
     report_graph_analysis_pass,
 )
+from dotdict import DotDict as dd
+
 
 logger = logging.getLogger("chop.test")
 set_logging_verbosity("debug")
 
 
 def test_report_graph():
-    mlp = ToyCustomFnNet(image_size=(1, 28, 28), num_classes=10)
+    dataset_info = dd()
+    dataset_info.num_classes = 10
+    dataset_info.image_size = (28, 28, 1)
+
+    mlp = models.get_model("toy", pretrained=False, dataset_info=dataset_info)
     mg = MaseGraph(model=mlp)
 
     # Provide a dummy input for the graph so it can use for tracing

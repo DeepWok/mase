@@ -173,21 +173,21 @@ class CNV_Residual(nn.Module):
 # Getters ------------------------------------------------------------------------------
 @register_mase_checkpoint("cnv")
 def get_cnv(
-    info,
     pretrained=False,
     **kwargs: Any,
 ):
     # image_size = info["image_size"]
+    info = kwargs["dataset_info"]
     num_classes = info.num_classes
     return CNV(num_classes)
 
 
 @register_mase_checkpoint("cnv_residual")
 def get_cnv_residual(
-    info,
     pretrained=False,
     **kwargs: Any,
 ):
     # image_size = info["image_size"]
+    info = kwargs["dataset_info"]
     num_classes = info.num_classes
     return CNV_Residual(num_classes)

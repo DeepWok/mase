@@ -54,7 +54,7 @@ def test_statistic_profiler():
     model = get_model(
         checkpoint="resnet18",
         pretrained=False,
-        num_classes=dataset_info.num_classes,
+        dataset_info=dataset_info,
     )
 
     dummy_in = {"x": next(iter(datamodule.train_dataloader()))[0]}

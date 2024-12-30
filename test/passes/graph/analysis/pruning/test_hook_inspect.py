@@ -63,7 +63,7 @@ def run_with_config(config_file):
     with open(config_file) as f:
         config = toml.load(f)
 
-    model_name = "vgg7"
+    model_name = "vgg7_cifar"
     dataset_name = "cifar10"
 
     # NOTE: We're only concerned with pre-trained vision models
@@ -91,7 +91,7 @@ def run_with_config(config_file):
         which_dataloader="train",
     )
 
-    model = models.get_model(model_name, "cls", dataset_info, pretrained=True)
+    model = models.get_model(model_name, dataset_info=dataset_info, pretrained=True)
 
     _ = model(dummy_input["x"])
     graph = MaseGraph(model=model)

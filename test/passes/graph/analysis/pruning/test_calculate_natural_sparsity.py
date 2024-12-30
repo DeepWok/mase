@@ -33,10 +33,10 @@ def test_calculate_natural_sparsity():
     # batch-size = 1 will trigger the bug in add_common_metadata_analysis_pass
     batch_size = 2
 
-    model_info = get_model_info("toy_custom_fn")
+    model_info = get_model_info("wideresnet28_cifar")
 
     datamodule = MaseDataModule(
-        model_name="toy_custom_fn",
+        model_name="wideresnet28_cifar",
         batch_size=batch_size,
         name="cifar10",
         # num_workers=os.cpu_count(),
@@ -56,7 +56,7 @@ def test_calculate_natural_sparsity():
 
     dataset_info = get_dataset_info("cifar10")
     model = get_model(
-        "resnet18", task="cls", dataset_info=dataset_info, pretrained=False
+        "wideresnet28_cifar", task="cls", dataset_info=dataset_info, pretrained=False
     )
 
     dummy_in = {"x": next(iter(datamodule.train_dataloader()))[0]}
