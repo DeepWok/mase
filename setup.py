@@ -94,6 +94,7 @@ requirements = [
     "myst-nb",
     "sphinx-book-theme",
     "pydot",
+    "attr-dot-dict",
 ]
 
 setup(
