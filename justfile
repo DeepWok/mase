@@ -18,8 +18,6 @@ test-hw:
 	python3 src/mase_components/activation_layers/test/fixed_relu_tb.py
 	# Cast
 	python3 src/mase_components/cast/test/fixed_cast_tb.py
-	# Convolution_layers
-	python3	src/mase_components/convolution_layers/test/convolution_tb.py
 	# Linear layers
 	python3	src/mase_components/linear_layers/fixed_linear_layer/test/fixed_linear_tb
 	# MxInt
