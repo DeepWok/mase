@@ -10,27 +10,21 @@ from ...transforms.onnxrt.quantize import Quantizer
 
 
 def onnx_runtime_interface_pass(graph, pass_args=None):
-    """
-    Converts a PyTorch model within a MaseGraph to ONNX format and performs quantization as specified in the configuration.
-    This function facilitates the conversion of a PyTorch model to ONNX format, leveraging ONNX Runtime (ONNXRT) for potential quantization and optimization. Depending on the `precision` parameter set in `passes.onnxruntime.default.config`, the model can be quantized to various numeric precisions including INT8, UINT8, INT16, UINT16, or FP16, affecting the model's performance and latency. Notably, INT8 and UINT8 quantization typically yield significant latency improvements at the potential cost of reduced model performance. The quantization process supports three methodologies.
+
+    """Converts a PyTorch model within a MaseGraph to ONNX format and performs quantization as specified in the configuration. This function facilitates the conversion of a PyTorch model to ONNX format, leveraging ONNX Runtime (ONNXRT) for potential quantization and optimization. Depending on the `precision` parameter set in `passes.onnxruntime.default.config`, the model can be quantized to various numeric precisions including INT8, UINT8, INT16, UINT16, or FP16, affecting the model's performance and latency. Notably, INT8 and UINT8 quantization typically yield significant latency improvements at the potential cost of reduced model performance. The quantization process supports three methodologies.
+
     - **Static Quantization**: Utilizes a calibration dataset to calculate scale and zero points for activations offline, providing consistent quantization parameters across all forward passes. Requires setting `num_calibration_batches` to define the calibration dataset size.
+
     - **Dynamic Quantization**: Calculates scale and zero points on-the-fly during each forward pass, offering potentially higher accuracy at the cost of additional computational overhead.
+
     - **Auto Mixed Precision Quantization**: Automatically balances FP16 and FP32 precisions to maintain accuracy levels, particularly suitable for GPU execution. This process is automatic and requires no specific precision setting in the configuration.
-    Please note that not all modules may be supported for the specified quantization types. Refer to the [ONNX Runtime documentation](https://onnxruntime.ai/docs/) for more information.
-    The function also prepares the model by applying pre-processing optimizations before quantization, storing intermediate models in a designated `pre_processed` directory. The final quantized models are stored in a structured directory format under `mase_output/onnxrt`.
-    Directory structure for model storage:
-    ```
-    mase_output
-    └── onnxrt
-        └── model_task_dataset_date
-            ├── optimized
-            ├── pre_processed
-            ├── static_quantized
-            └── dynamic_quantized
-    ```
+
+    Please note that not all modules may be supported for the specified quantization types. Refer to the [ONNX Runtime documentation](https://onnxruntime.ai/docs/) for more information. The function also prepares the model by applying pre-processing optimizations before quantization, storing intermediate models in a designated `pre_processed` directory. The final quantized models are stored in a structured directory format under `mase_output/onnxrt`.
     Example of usage:
+
         graph = MaseGraph(...)
         processed_graph, metadata = onnx_runtime_interface_pass(graph, {'precision': 'int8', 'quantization_type': 'static'})
+
     This example demonstrates how to invoke the ONNX Runtime interface pass, specifying INT8 precision and static quantization type.
 
     :param graph: The model graph to be processed and quantized.
