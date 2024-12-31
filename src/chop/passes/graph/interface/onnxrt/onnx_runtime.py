@@ -10,7 +10,6 @@ from ...transforms.onnxrt.quantize import Quantizer
 
 
 def onnx_runtime_interface_pass(graph, pass_args=None):
-
     """Converts a PyTorch model within a MaseGraph to ONNX format and performs quantization as specified in the configuration. This function facilitates the conversion of a PyTorch model to ONNX format, leveraging ONNX Runtime (ONNXRT) for potential quantization and optimization. Depending on the `precision` parameter set in `passes.onnxruntime.default.config`, the model can be quantized to various numeric precisions including INT8, UINT8, INT16, UINT16, or FP16, affecting the model's performance and latency. Notably, INT8 and UINT8 quantization typically yield significant latency improvements at the potential cost of reduced model performance. The quantization process supports three methodologies.
 
     - **Static Quantization**: Utilizes a calibration dataset to calculate scale and zero points for activations offline, providing consistent quantization parameters across all forward passes. Requires setting `num_calibration_batches` to define the calibration dataset size.
