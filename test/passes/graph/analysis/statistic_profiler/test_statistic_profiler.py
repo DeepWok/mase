@@ -4,21 +4,6 @@ import logging
 import os
 import sys
 
-os.environ["PYTHONBREAKPOINT"] = "ipdb.set_trace"
-
-sys.path.append(
-    os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "..",
-        "..",
-        "..",
-        "..",
-        "..",
-        "..",
-        "machop",
-    )
-)
-
 from chop.dataset import MaseDataModule, get_dataset_info
 from chop.models import get_model, get_model_info
 from chop.passes.graph import (
@@ -33,6 +18,8 @@ from chop.passes.graph.analysis import (
 from chop.tools.logger import set_logging_verbosity
 from chop.ir.graph.mase_graph import MaseGraph
 from chop.tools.get_input import InputGenerator
+
+from chop.models.toy.toy_custom_fn import ToyCustomFnNet
 
 set_logging_verbosity("debug")
 
@@ -65,7 +52,9 @@ def test_statistic_profiler():
 
     dataset_info = get_dataset_info("cifar10")
     model = get_model(
-        "resnet18", task="cls", dataset_info=dataset_info, pretrained=False
+        checkpoint="resnet18",
+        pretrained=False,
+        dataset_info=dataset_info,
     )
 
     dummy_in = {"x": next(iter(datamodule.train_dataloader()))[0]}
@@ -97,3 +86,7 @@ def test_statistic_profiler():
 
     mg, _ = profile_statistics_analysis_pass(mg, pass_arg)
     mg, _ = report_node_meta_param_analysis_pass(mg, {"which": ("software",)})
+
+
+if __name__ == "__main__":
+    test_statistic_profiler()

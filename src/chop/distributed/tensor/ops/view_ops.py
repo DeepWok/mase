@@ -16,15 +16,15 @@ from typing import (
 
 import torch
 from torch import Tensor
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._op_schema import (
     OpSchema,
     OpStrategy,
     PlacementStrategy,
     RuntimeSchemaInfo,
     StrategyType,
 )
-from torch.distributed._tensor.api import Shard
-from torch.distributed._tensor.placement_types import DTensorSpec, Placement, Replicate
+from torch.distributed.tensor.api import Shard
+from torch.distributed.tensor.placement_types import _DTensorSpec, Placement, Replicate
 from torch.distributed.device_mesh import DeviceMesh
 
 from chop.distributed.tensor.ops.utils import register_op_strategy
@@ -616,7 +616,7 @@ def register_op_strategy_map(
             #       unshardable dims ...
             # FIXME: this can be wrong for situations where we have
             #        [Shard(0), Shard(0)]
-            input_tgt_spec = DTensorSpec(
+            input_tgt_spec = _DTensorSpec(
                 placements=tuple(input_tgt_placements),
                 mesh=input_src_spec.mesh,
                 tensor_meta=input_src_spec.tensor_meta,
@@ -625,7 +625,7 @@ def register_op_strategy_map(
                 generate_redistribute_costs(input_strategy, input_tgt_spec)
             ]
 
-            output_spec = DTensorSpec(mesh=mesh, placements=tuple(output_placements))
+            output_spec = _DTensorSpec(mesh=mesh, placements=tuple(output_placements))
             output_strategy.strategies.append(
                 PlacementStrategy(
                     output_specs=output_spec,

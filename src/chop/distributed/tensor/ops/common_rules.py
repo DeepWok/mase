@@ -2,15 +2,15 @@
 from typing import cast, Dict, List, Optional, Tuple
 
 import torch
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._op_schema import (
     _is_inplace_op,
     _is_out_variant_op,
     OpSchema,
     OutputSharding,
 )
-from torch.distributed._tensor._utils import compute_local_shape
-from torch.distributed._tensor.ops.utils import prod
-from torch.distributed._tensor.placement_types import DTensorSpec, TensorMeta
+from torch.distributed.tensor._utils import compute_local_shape
+from torch.distributed.tensor.ops.utils import prod
+from torch.distributed.tensor.placement_types import _DTensorSpec, TensorMeta
 
 
 def _replace_char_in_str(string: str, new_char: str, idx: int) -> str:
@@ -20,15 +20,15 @@ def _replace_char_in_str(string: str, new_char: str, idx: int) -> str:
 def _gen_reshard_suggestions(
     op_schema: OpSchema,
     input_dims: List[str],
-    input_specs: Tuple[DTensorSpec, ...],
+    input_specs: Tuple[_DTensorSpec, ...],
     dim_to_sharding: Dict[str, int],
     pending_sum: List[int],
 ) -> OutputSharding:
-    suggested_arg_specs: List[DTensorSpec] = []
+    suggested_arg_specs: List[_DTensorSpec] = []
     for input_dim, input_spec in zip(input_dims, input_specs):
         dim_map = [dim_to_sharding[dim] for dim in input_dim]
         suggested_arg_specs.append(
-            DTensorSpec.from_dim_map(
+            _DTensorSpec.from_dim_map(
                 mesh=input_spec.mesh,
                 dim_map=dim_map,
                 sums=pending_sum,
@@ -217,7 +217,7 @@ def einop_rule(
         input_specs[0].tensor_meta.dtype,
     )
     return OutputSharding(
-        DTensorSpec.from_dim_map(
+        _DTensorSpec.from_dim_map(
             input_specs[0].mesh,
             output_dim_map,
             pending_sums,
@@ -276,7 +276,7 @@ def pointwise_rule(op_schema: OpSchema, linearity: bool = False) -> OutputShardi
         for out_dimchar, mesh_dim in zip(out_dimchars, input_specs[0].dim_map):
             enforce_sharding[out_dimchar] = mesh_dim
     elif _is_out_variant_op(op_schema.op):
-        out_spec = cast(DTensorSpec, op_schema.kwargs_schema["out"])
+        out_spec = cast(_DTensorSpec, op_schema.kwargs_schema["out"])
         for out_dimchar, mesh_dim in zip(out_dimchars, out_spec.dim_map):
             enforce_sharding[out_dimchar] = mesh_dim
 

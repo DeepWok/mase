@@ -4,9 +4,9 @@ from typing import Optional, Sequence
 
 # Import all builtin dist tensor ops
 import torch
-import torch.distributed._tensor.random as random
+import torch.distributed.tensor._random as random
 
-from torch.distributed._tensor.placement_types import (
+from torch.distributed.tensor.placement_types import (
     Partial,
     Placement,
     Replicate,
@@ -40,7 +40,7 @@ def _dtensor_init_helper(
     placements=None,
     **kwargs,
 ) -> DTensor:
-    from torch.distributed._tensor.placement_types import DTensorSpec, TensorMeta
+    from torch.distributed.tensor.placement_types import _DTensorSpec, TensorMeta
 
     # if device_mesh is None, use the one from mesh resources
     device_mesh = device_mesh or _mesh_resources.get_current_mesh()
@@ -68,7 +68,7 @@ def _dtensor_init_helper(
         dtype = kwargs.get("dtype", torch.get_default_dtype())
 
         tensor_meta = TensorMeta(size, (0,), dtype)
-        spec = DTensorSpec(device_mesh, placements, tensor_meta=tensor_meta)
+        spec = _DTensorSpec(device_mesh, placements, tensor_meta=tensor_meta)
 
         if random.is_rng_supported_mesh(device_mesh) and not random._rng_tracker:
             random._rng_tracker = random.OffsetBasedRNGTracker()
@@ -79,7 +79,7 @@ def _dtensor_init_helper(
     else:
         local_tensor = init_op(local_shape, **kwargs)
 
-    spec = DTensorSpec(
+    spec = _DTensorSpec(
         device_mesh,
         tuple(placements),
         tensor_meta=TensorMeta(

@@ -9,7 +9,6 @@ from transformers.modeling_utils import PreTrainedModel, PretrainedConfig
 
 from ..base import SearchSpaceBase
 from ..utils import flatten_dict, unflatten_dict
-from .....models.manual import get_manual_model_quant_config_parser
 
 DEFAULT_QUANTIZATION_CONFIG = {
     "name": "integer",
@@ -39,9 +38,11 @@ class ManualHFModuleSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
         self.model = None  # we don't need the model anymore
 
         self.default_quant_config = DEFAULT_QUANTIZATION_CONFIG
-        self.quant_config_parser = get_manual_model_quant_config_parser(
-            config_cls=self.model_config_cls
-        )
+
+        # todo: redefine the quant_config_parser as getattr...
+        # self.quant_config_parser = get_manual_model_quant_config_parser(
+        #     config_cls=self.model_config_cls
+        # )
 
     def _rebuild_config(self, quant_config):
         config = self.model_config_cls.from_pretrained(

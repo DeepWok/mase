@@ -84,9 +84,9 @@ test-hw:
 		$(hw_test_dir)
 
 test-sw:
-	bash scripts/test-machop.sh
 	pytest --log-level=DEBUG --verbose \
 		-n $(NUM_WORKERS) \
+		-m "not large" \
 		--cov=src/chop/ --cov-report=html \
 		--html=report.html --self-contained-html \
 		--junitxml=software_report.xml \

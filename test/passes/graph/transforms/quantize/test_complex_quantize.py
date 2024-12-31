@@ -13,7 +13,7 @@ from pathlib import Path
 
 sys.path.append(Path(__file__).resolve().parents[5].as_posix())
 from chop.models import get_model_info
-from chop.models.toys.toy_custom_fn import ToyCustomFnNet
+from chop.models.toy.toy_custom_fn import ToyCustomFnNet
 from chop.passes.graph.analysis import (
     add_common_metadata_analysis_pass,
     init_metadata_analysis_pass,

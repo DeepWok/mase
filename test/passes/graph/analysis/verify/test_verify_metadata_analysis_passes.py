@@ -13,24 +13,10 @@ import sys
 
 import torch
 
-sys.path.append(
-    os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "..",
-        "..",
-        "..",
-        "..",
-        "..",
-        "..",
-        "machop",
-    )
-)
-
-print(sys.path)
 
 from chop.tools.logger import set_logging_verbosity
 from chop.ir.graph import MaseGraph
-from chop.models.toys.toy import ToyNet
+from chop.models.toy.toy import ToyNet
 from chop.passes.graph.analysis import (
     add_common_metadata_analysis_pass,
     add_software_metadata_analysis_pass,
@@ -60,3 +46,6 @@ def test_verify_metadata():
     mg, _ = add_hardware_metadata_analysis_pass(mg, {"dummy_in": dummy_in})
     # all three verify passes are bundled in one
     # mg, _ = verify_metadata_analysis_pass(mg, dummy_in)
+
+
+test_verify_metadata()

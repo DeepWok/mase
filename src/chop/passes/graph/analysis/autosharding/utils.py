@@ -1,8 +1,8 @@
 from typing import cast, Iterable, List, Sequence, Tuple, Union
-from torch.distributed._tensor.placement_types import DTensorSpec, Shard
+from torch.distributed.tensor.placement_types import _DTensorSpec, Shard
 
 
-def is_tensor_shardable(shape: Sequence[int], spec: DTensorSpec) -> bool:
+def is_tensor_shardable(shape: Sequence[int], spec: _DTensorSpec) -> bool:
     """Check if the shape is shardable according to the spec."""
     # number of shards in each tensor dimension
     shards_map = [1] * len(shape)

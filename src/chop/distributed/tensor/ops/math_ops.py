@@ -6,7 +6,7 @@ from enum import Enum
 from typing import cast, List, Optional, Sequence, Tuple, Union
 
 import torch
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._op_schema import (
     OpSchema,
     OpStrategy,
     PlacementList,
@@ -14,7 +14,7 @@ from torch.distributed._tensor._op_schema import (
     RuntimeSchemaInfo,
     TupleStrategy,
 )
-from torch.distributed._tensor.ops.utils import (
+from torch.distributed.tensor.ops.utils import (
     as_list,
     expand_to_full_mesh_op_strategy,
     generate_redistribute_costs,
@@ -23,8 +23,8 @@ from torch.distributed._tensor.ops.utils import (
     normalize_dims,
     normalize_to_torch_size,
 )
-from torch.distributed._tensor.placement_types import (
-    DTensorSpec,
+from torch.distributed.tensor.placement_types import (
+    _DTensorSpec,
     Partial,
     Placement,
     Replicate,
@@ -276,7 +276,7 @@ def common_reduction_strategy(
         else:
             input_placements = strtg.output_spec.placements
 
-        input_spec = DTensorSpec(
+        input_spec = _DTensorSpec(
             mesh=mesh,
             placements=input_placements,
             tensor_meta=strtg.output_spec.tensor_meta,
@@ -289,7 +289,7 @@ def common_reduction_strategy(
         redistribute_cost = [generate_redistribute_costs(input_strategy, input_spec)]
         reduction_strategy.strategies.append(
             PlacementStrategy(
-                output_specs=DTensorSpec(
+                output_specs=_DTensorSpec(
                     mesh=mesh,
                     placements=out_placements,
                 ),
@@ -423,7 +423,7 @@ def linalg_svd_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy:
     output_strategies: List[PlacementStrategy] = []
     for placement_strategy in input_strategy.strategies:
         replicate_placements = tuple(Replicate() for _ in range(mesh.ndim))
-        replicate_spec = DTensorSpec(
+        replicate_spec = _DTensorSpec(
             mesh=mesh,
             placements=replicate_placements,
             tensor_meta=placement_strategy.output_spec.tensor_meta,
@@ -455,7 +455,7 @@ def softmax_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy:
         input_src_spec = input_placement_strategy.output_spec
 
         # make sure input is replicated along the softmax dim
-        input_target_spec = DTensorSpec(
+        input_target_spec = _DTensorSpec(
             mesh=mesh,
             placements=replicate_reduction_dims(
                 input_src_spec.placements, [softmax_dim]
@@ -505,7 +505,7 @@ def softmax_backward_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrate
         )
 
         # make sure inputs are replicated along the softmax dim
-        tgt_spec = DTensorSpec(
+        tgt_spec = _DTensorSpec(
             mesh=mesh,
             placements=replicate_reduction_dims(src_spec.placements, [softmax_dim]),
         )
@@ -548,7 +548,7 @@ def nll_loss_forward_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrate
 
         # make sure input is replicated along the channel dim
         input_src_spec = input_placement_strategy.output_spec
-        input_expected_spec = DTensorSpec(
+        input_expected_spec = _DTensorSpec(
             mesh=mesh,
             placements=replicate_reduction_dims(
                 input_src_spec.placements, [channel_dim]
@@ -562,7 +562,7 @@ def nll_loss_forward_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrate
 
         # target doesn't have channel dim, and it follows input on other dims
         target_src_spec = target_strategy.strategies[idx].output_spec
-        target_expected_spec = DTensorSpec(
+        target_expected_spec = _DTensorSpec(
             mesh=mesh,
             placements=_skip_dim(input_expected_spec.placements, channel_dim),
             tensor_meta=target_src_spec.tensor_meta,
@@ -577,7 +577,7 @@ def nll_loss_forward_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrate
         if weight_strategy is not None:
             assert isinstance(weight_strategy, OpStrategy)
             weight_src_spec = weight_strategy.strategies[idx].output_spec
-            weight_expected_spec = DTensorSpec(
+            weight_expected_spec = _DTensorSpec(
                 mesh=mesh,
                 placements=_replicate_dims_start_at(weight_src_spec.placements),
                 tensor_meta=weight_src_spec.tensor_meta,
@@ -589,7 +589,7 @@ def nll_loss_forward_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrate
 
         if reduction == Reduction.NONE.value:
             output_expected_spec = target_expected_spec
-            total_weight_expected_spec = DTensorSpec(
+            total_weight_expected_spec = _DTensorSpec(
                 mesh=mesh, placements=tuple([Replicate()] * mesh.ndim)
             )
         else:
@@ -614,7 +614,7 @@ def nll_loss_forward_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrate
                 reduce_dims_map,
                 reduction_op,
             )
-            output_expected_spec = DTensorSpec(
+            output_expected_spec = _DTensorSpec(
                 mesh=mesh,
                 placements=out_placements,
             )
@@ -626,7 +626,7 @@ def nll_loss_forward_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrate
                 reduce_dims_map,
                 "sum",
             )
-            total_weight_expected_spec = DTensorSpec(
+            total_weight_expected_spec = _DTensorSpec(
                 mesh=mesh,
                 placements=total_weight_placements,
             )
@@ -673,7 +673,7 @@ def nll_loss_backward_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrat
 
         # make sure input is replicated along the channel dim
         input_src_spec = input_placement_strategy.output_spec
-        input_expected_spec = DTensorSpec(
+        input_expected_spec = _DTensorSpec(
             mesh=mesh,
             placements=replicate_reduction_dims(
                 input_src_spec.placements, [channel_dim]
@@ -687,7 +687,7 @@ def nll_loss_backward_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrat
 
         # target doesn't have channel dim, and it follows input on other dims
         target_src_spec = target_strategy.strategies[idx].output_spec
-        target_expected_spec = DTensorSpec(
+        target_expected_spec = _DTensorSpec(
             mesh=mesh,
             placements=_skip_dim(input_expected_spec.placements, channel_dim),
             tensor_meta=target_src_spec.tensor_meta,
@@ -703,7 +703,7 @@ def nll_loss_backward_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrat
         if reduction == Reduction.NONE.value:
             grad_out_expected_spec = target_expected_spec
         else:
-            grad_out_expected_spec = DTensorSpec(
+            grad_out_expected_spec = _DTensorSpec(
                 mesh=mesh,
                 placements=_replicate_dims_start_at(grad_out_src_spec.placements),
                 tensor_meta=grad_out_src_spec.tensor_meta,
@@ -718,7 +718,7 @@ def nll_loss_backward_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrat
         if weight_strategy is not None:
             assert isinstance(weight_strategy, OpStrategy)
             weight_src_spec = weight_strategy.strategies[idx].output_spec
-            weight_expected_spec = DTensorSpec(
+            weight_expected_spec = _DTensorSpec(
                 mesh=mesh,
                 placements=_replicate_dims_start_at(weight_src_spec.placements),
                 tensor_meta=weight_src_spec.tensor_meta,
@@ -730,7 +730,7 @@ def nll_loss_backward_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrat
 
         # total_weight should always be replicated
         total_weight_src_spec = total_weight_strategy.strategies[idx].output_spec
-        total_weight_expected_spec = DTensorSpec(
+        total_weight_expected_spec = _DTensorSpec(
             mesh=mesh,
             placements=_replicate_dims_start_at(total_weight_src_spec.placements),
             tensor_meta=total_weight_src_spec.tensor_meta,
@@ -798,7 +798,7 @@ def layer_norm_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy:
         # for the input tensor, we replicate it on the inner dims if necessary
         # TODO: we can avoid forcing the redistribution once we figure out
         # how to decompose layer norm
-        input_target_spec = DTensorSpec(
+        input_target_spec = _DTensorSpec(
             mesh=mesh,
             placements=_replicate_dims_start_at(input_src_spec.placements, axis),
             tensor_meta=input_src_spec.tensor_meta,
@@ -815,7 +815,7 @@ def layer_norm_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy:
             # for the weight tensor, we replicate it on all dims if necessary
             # TODO: we can avoid forcing the redistribution once we figure out
             # how to decompose layer norm
-            weight_target_spec = DTensorSpec(
+            weight_target_spec = _DTensorSpec(
                 mesh=mesh,
                 placements=_replicate_dims_start_at(weight_src_spec.placements),
                 tensor_meta=weight_src_spec.tensor_meta,
@@ -832,7 +832,7 @@ def layer_norm_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy:
             # for the bias tensor, we replicate it on all dims if necessary
             # TODO: we can avoid forcing the redistribution once we figure out
             # how to decompose layer norm
-            bias_target_spec = DTensorSpec(
+            bias_target_spec = _DTensorSpec(
                 mesh=mesh,
                 placements=_replicate_dims_start_at(bias_src_spec.placements),
                 tensor_meta=bias_src_spec.tensor_meta,
@@ -892,7 +892,7 @@ def layer_norm_bwd_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy
     out_tuple_strategy = OpStrategy([])
     for idx, input_placement_strategy in enumerate(input_strategy.strategies):
         # args for PlacementStrategy
-        output_specs_list: List[Optional[DTensorSpec]] = []
+        output_specs_list: List[Optional[_DTensorSpec]] = []
         op_args_target_specs = []
         redistribute_costs = []
 
@@ -908,7 +908,7 @@ def layer_norm_bwd_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy
             # TODO: now grad_out spec follows input spec. we may need
             # to change it to apply a pointwise rule over grad_out,
             # input, and weight.
-            grad_out_target_spec = DTensorSpec(
+            grad_out_target_spec = _DTensorSpec(
                 mesh=mesh,
                 placements=_replicate_dims_start_at(input_src_spec.placements, axis),
                 tensor_meta=input_src_spec.tensor_meta,
@@ -922,7 +922,7 @@ def layer_norm_bwd_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy
             output_specs_list.append(None)
 
         # arg: input
-        input_target_spec = DTensorSpec(
+        input_target_spec = _DTensorSpec(
             mesh=mesh,
             placements=_replicate_dims_start_at(input_src_spec.placements, axis),
             tensor_meta=input_src_spec.tensor_meta,
@@ -960,7 +960,7 @@ def layer_norm_bwd_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy
                 inp_placements, outer_dims, reduce_dims_map, "sum"
             )
             output_specs_list.append(
-                DTensorSpec(
+                _DTensorSpec(
                     mesh=mesh,
                     placements=out_placements,
                     tensor_meta=weight_src_spec.tensor_meta,
@@ -983,7 +983,7 @@ def layer_norm_bwd_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy
             # grad_out_spec via a local variable rather than the list. We just don't
             # see the case.
             grad_out_spec = output_specs_list[0]
-            assert isinstance(grad_out_spec, DTensorSpec)
+            assert isinstance(grad_out_spec, _DTensorSpec)
             # d_bias spec follows a reduction over grad_out
             inp_placements = _replicate_dims_start_at(grad_out_spec.placements, axis)
             reduce_dims_map = _infer_reduce_dims_map(
@@ -993,7 +993,7 @@ def layer_norm_bwd_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy
                 inp_placements, outer_dims, reduce_dims_map, "sum"
             )
             output_specs_list.append(
-                DTensorSpec(
+                _DTensorSpec(
                     mesh=mesh,
                     placements=out_placements,
                     tensor_meta=bias_src_spec.tensor_meta,

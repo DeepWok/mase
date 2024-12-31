@@ -1,20 +1,20 @@
 # Adapted from Pytorch Distributed DTensor API.
-# https://github.com/pytorch/pytorch/blob/main/torch/distributed/_tensor/ops/matrix_ops.py
+# https://github.com/pytorch/pytorch/blob/main/torch/distributed.tensor/ops/matrix_ops.py
 
 import torch
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._op_schema import (
     OpStrategy,
     PlacementStrategy,
     PlacementList,
 )
-from torch.distributed._tensor.placement_types import Replicate, Shard, Placement
+from torch.distributed.tensor.placement_types import Replicate, Shard, Placement
 from .basic_strategy import gen_einsum_strategies
-from torch.distributed._tensor.ops.utils import (
+from torch.distributed.tensor.ops.utils import (
     infer_broadcast_dims_map,
     map_placements_after_broadcast,
 )
-from torch.distributed._tensor.placement_types import (
-    DTensorSpec,
+from torch.distributed.tensor.placement_types import (
+    _DTensorSpec,
     Shard,
     TensorMeta,
 )
@@ -43,7 +43,7 @@ def transpose_strategy(
             for p in input_spec.placements
         ]
         transpose_strategy = PlacementStrategy(
-            output_specs=DTensorSpec(
+            output_specs=_DTensorSpec(
                 mesh=input_strategy.output_spec.mesh,
                 placements=tuple(output_placements),
                 tensor_meta=TensorMeta(
@@ -135,7 +135,7 @@ def _addmm_like_strategy(
         self_placements = map_placements_after_broadcast(
             out_spec.placements, mm_out_shape, broadcast_dims_map
         )
-        self_spec = DTensorSpec(mesh=mesh, placements=self_placements)
+        self_spec = _DTensorSpec(mesh=mesh, placements=self_placements)
 
         self_spec.tensor_meta = TensorMeta(
             shape=self_shape,

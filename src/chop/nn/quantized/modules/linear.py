@@ -65,7 +65,13 @@ class _LinearBase(torch.nn.Linear):
         device=None,
         dtype=None,
     ) -> None:
-        super().__init__(in_features, out_features, bias, device, dtype)
+        super().__init__(
+            in_features,
+            out_features,
+            bias,
+            device,
+            dtype,
+        )
         self.bypass = False
         self.pruning_masks = None
         # NOTE: Quantizers properties are not needed for now

@@ -2,21 +2,21 @@
 # implement matrix related ops for distributed tensor
 
 import torch
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._op_schema import (
     OpSchema,
     OpStrategy,
     PlacementList,
     PlacementStrategy,
 )
-from torch.distributed._tensor.ops.utils import (
+from torch.distributed.tensor.ops.utils import (
     expand_to_full_mesh_op_strategy,
     generate_redistribute_costs,
     infer_broadcast_dims_map,
     is_tensor_shardable,
     map_placements_after_broadcast,
 )
-from torch.distributed._tensor.placement_types import (
-    DTensorSpec,
+from torch.distributed.tensor.placement_types import (
+    _DTensorSpec,
     Placement,
     Replicate,
     Shard,
@@ -42,7 +42,7 @@ def transpose_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy:
             for p in input_spec.placements
         ]
         transpose_strategy = PlacementStrategy(
-            output_specs=DTensorSpec(
+            output_specs=_DTensorSpec(
                 mesh=input_strategy.output_spec.mesh,
                 placements=tuple(output_placements),
             ),
@@ -115,7 +115,7 @@ def _addmm_like_strategy(
         self_placements = map_placements_after_broadcast(
             out_spec.placements, mm_out_shape, broadcast_dims_map
         )
-        self_spec = DTensorSpec(mesh=mesh, placements=self_placements)
+        self_spec = _DTensorSpec(mesh=mesh, placements=self_placements)
 
         if is_tensor_shardable(mat1_strategy.shape, mat1_spec) and is_tensor_shardable(
             mat2_strategy.shape, mat2_spec
@@ -319,10 +319,10 @@ def constant_pad_nd_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrateg
     return OpStrategy(
         [
             PlacementStrategy(
-                output_specs=DTensorSpec(mesh, (Replicate(),)),
+                output_specs=_DTensorSpec(mesh, (Replicate(),)),
                 input_specs=(
-                    DTensorSpec(mesh, (Replicate(),)),
-                    DTensorSpec(mesh, (Replicate(),)),
+                    _DTensorSpec(mesh, (Replicate(),)),
+                    _DTensorSpec(mesh, (Replicate(),)),
                 ),
                 redistribute_cost=[[1]],
             )
@@ -412,7 +412,7 @@ def scaled_dot_product_efficient_attention_backward_strategy(
     # placement list stores placements of [outputs, inputs]
     # in the spda backward case, we have 4 tensor outputs and 8 or 9 tensor inputs
     # NOTE: Output sharding of grad_bias on heads dim if attn_bias is present;
-    #       otherwise grad_bias will be empty and its DTensorSpec will be removed.
+    #       otherwise grad_bias will be empty and its _DTensorSpec will be removed.
     # first we can always accept full replication for both inputs and outputs
     all_replicate: PlacementList = [Replicate()] * (12 + has_attn_bias)
 

@@ -1,11 +1,8 @@
 import logging
-import math
 
-# import chop.models.manual.rms_norm as rms
-import toml
-import torch
 import torch.fx as fx
-from torch.fx.passes.shape_prop import ShapeProp
+from torch import nn
+
 from chop.passes.graph.analysis.utils import (
     is_tensor_constant,
     match_and_filter,
@@ -19,10 +16,8 @@ from chop.ir.common import (
     MASE_IMPLICIT_FUNCS,
     MASE_MODULE_RELATED_FUNCS,
 )
-from chop.ir.graph.mase_metadata import MaseMetadata
 from chop.passes.graph.analysis.utils import fetch_attr, load_arg
-from tabulate import tabulate
-from torch import nn
+from chop.tools import get_hf_dummy_in
 
 from .common_metadata_layers import (
     analyse_common_parameters_attr,
@@ -122,6 +117,8 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "softshrink"
             elif isinstance(module, nn.LogSigmoid):
                 mase_op = "logsigmoid"
+            elif isinstance(module, nn.CrossEntropyLoss):
+                mase_op = "crossentropyloss"
             elif isinstance(module, GroupedQueryAttention):
                 mase_op = "grouped_query_attention"
             else:
@@ -204,22 +201,24 @@ def graph_iterator_for_mase_ops(graph):
 
 
 def graph_iterator_for_metadata(
-    graph, dummy_in=None, add_value=True, force_device_meta=False
+    graph,
+    dummy_in=None,
+    add_value=True,
+    force_device_meta=False,
 ):
     """
-    largely apated from https://pytorch.org/docs/stable/fx.html
+    largely adapted from https://pytorch.org/docs/stable/fx.html
     """
 
     model, fx_graph, modules = graph.model, graph.fx_graph, graph.modules
     env = {}
-    prev_result = None
 
     # force everything to be on device="meta"
     if force_device_meta:
         dummy_in = {k: v.to("meta") for k, v in dummy_in.items()}
         model = model.to("meta")
 
-    for node in graph.fx_graph.nodes:
+    for node in fx_graph.nodes:
         args, kwargs = None, None
         if node.op == "placeholder":
             result = dummy_in[node.name]
@@ -234,6 +233,7 @@ def graph_iterator_for_metadata(
             analyse_fn = analyse_common_parameters_function
         elif node.op == "call_method":
             self_obj, *args = load_arg(node.args, env)
+            print(self_obj)
             kwargs = load_arg(node.kwargs, env)
             result = getattr(self_obj, node.target)(*args, **kwargs)
             analyse_fn = analyse_common_parameters_method
@@ -244,13 +244,8 @@ def graph_iterator_for_metadata(
             analyse_fn = analyse_common_parameters_module
         elif node.op == "output":
             analyse_fn = analyse_common_parameters_output
-
-        # This is the only code specific to shape propagation.
-        # you can delete this `if` branch and this becomes
-        # a generic GraphModule interpreter.
-        # if isinstance(result, torch.Tensor):
-        #     node.shape = result.shape
-        #     node.dtype = result.dtype
+        else:
+            raise ValueError(f"Unknown node type: {node.op}")
 
         node.meta["mase"] = analyse_fn(
             node.meta["mase"], result, args, kwargs, add_value=add_value
@@ -294,7 +289,12 @@ def _add_graph_metadata(graph):
 
 
 def add_common_metadata_analysis_pass(
-    graph, pass_args={"dummy_in": None, "add_value": True, "force_device_meta": False}
+    graph,
+    pass_args={
+        "dummy_in": None,
+        "add_value": True,
+        "force_device_meta": False,
+    },
 ):
     """add common metadata
 
@@ -482,6 +482,16 @@ def add_common_metadata_analysis_pass(
         }
 
     """
+
+    if pass_args.get("dummy_in", None) is None and graph.is_huggingface:
+        dummy_in = get_hf_dummy_in(graph.model)
+        pass_args = {k: v for k, v in pass_args.items() if k != "dummy_in"}
+        pass_args["dummy_in"] = dummy_in
+    elif pass_args.get("dummy_in", None) is None:
+        print(type(graph.model))
+        raise ValueError(
+            "dummy_in must be provided for add_common_metadata_analysis_pass."
+        )
 
     logger.debug(graph.fx_graph)
     graph = graph_iterator_for_mase_ops(graph)

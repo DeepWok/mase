@@ -19,6 +19,7 @@ from .graph.analysis import (
 )
 from .graph.transforms import (
     prune_transform_pass,
+    prune_detach_hook_transform_pass,
     # prune_unwrap_transform_pass,
     quantize_transform_pass,
     summarize_quantization_analysis_pass,
@@ -33,6 +34,8 @@ from .graph.transforms import (
     emit_vivado_project_transform_pass,
     raise_granularity_transform_pass,
     patch_metadata_transform_pass,
+    insert_lora_adapter_transform_pass,
+    fuse_lora_weights_transform_pass,
 )
 from .module.analysis import calculate_avg_bits_module_analysis_pass
 from .module.transforms import quantize_module_transform_pass, resharding_transform_pass
