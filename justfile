@@ -12,7 +12,21 @@ test-sw:
 		--profile --profile-svg \
 		test/
 
+# This test will only focus on the typical hardware components
 test-hw:
+	# Activation_layers
+	python3 src/mase_components/activation_layers/test/fixed_relu_tb.py
+	# Cast
+	python3 src/mase_components/cast/test/fixed_cast_tb.py
+	# Linear layers
+	python3	src/mase_components/linear_layers/fixed_linear_layer/test/fixed_linear_tb.py
+	# MxInt
+	python3 src/mase_components/linear_layers/mxint_operators/test/mxint_linear_tb.py
+	# Memory
+	python3 src/mase_components/memory/test/fifo_tb.py
+
+# This test will test all the available component
+test-hardware-slow:
 	# Activation_layers
 	# python3 scripts/build-components.py
 	python3 src/mase_components/activation_layers/test/fixed_gelu_tb.py
@@ -75,7 +89,6 @@ test-hw:
 	# python3 src/mase_components/language_models/llmint8/test/llm_int8_top_tb.py
 
 	# Linear layers
-	# Linear Layer - fixed_linear_layer DEBUG: use bias causes crash
 	python3	src/mase_components/linear_layers/fixed_linear_layer/test/fixed_linear_tb.py
 	# python3 src/mase_components/linear_layers/fixed_linear_layer/test/binary_activation_binary_linear_tb.py
 	# python3 src/mase_components/linear_layers/fixed_linear_layer/test/fixed_activation_binary_linear_tb.py
