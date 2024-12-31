@@ -153,10 +153,10 @@ chop.nn.quantized.modules.tanh
    :undoc-members:
    :show-inheritance:
 
-chop.nn.quantized.modules.utils
+chop.nn.quantized.utils
 --------------------------------------------------
 
-.. automodule:: chop.nn.quantized.modules.utils
+.. automodule:: chop.nn.quantized.utils
    :members:
    :undoc-members:
    :show-inheritance:
