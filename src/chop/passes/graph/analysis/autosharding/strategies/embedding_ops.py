@@ -1,5 +1,5 @@
 # Adapted from Pytorch Distributed DTensor API.
-# https://github.com/pytorch/pytorch/blob/main/torch/distributed/_tensor/ops/embedding_ops.py
+# https://github.com/pytorch/pytorch/blob/main/torch/distributed.tensor/ops/embedding_ops.py
 
 from dataclasses import dataclass, field
 from typing import cast, List, Optional
@@ -7,18 +7,18 @@ import itertools
 
 import torch
 import torch.distributed._functional_collectives as funcol
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._op_schema import (
     OpSchema,
     OpStrategy,
     StrategyType,
     DTensorSpec,
     PlacementStrategy,
 )
-from torch.distributed._tensor.ops.utils import (
+from torch.distributed.tensor.ops.utils import (
     is_tensor_shardable,
     generate_redistribute_costs,
 )
-from torch.distributed._tensor.placement_types import (
+from torch.distributed.tensor.placement_types import (
     Partial,
     Placement,
     Replicate,

@@ -6,16 +6,16 @@ import operator
 from typing import cast, Iterable, List, Optional, Sequence, Tuple, Union
 
 import torch
-from torch.distributed._tensor._collective_utils import redistribute_cost
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._collective_utils import redistribute_cost
+from torch.distributed.tensor._op_schema import (
     OpSchema,
     OpStrategy,
     PlacementList,
     PlacementStrategy,
     RuntimeSchemaInfo,
 )
-from torch.distributed._tensor.device_mesh import DeviceMesh
-from torch.distributed._tensor.placement_types import (
+from torch.distributed.tensor.device_mesh import DeviceMesh
+from torch.distributed.tensor.placement_types import (
     DTensorSpec,
     Partial,
     Placement,

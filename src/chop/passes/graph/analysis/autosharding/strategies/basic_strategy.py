@@ -1,12 +1,12 @@
 # Adapted from Pytorch Distributed DTensor API.
-# https://github.com/pytorch/pytorch/blob/main/torch/distributed/_tensor/ops/basic_strategy.py
+# https://github.com/pytorch/pytorch/blob/main/torch/distributed.tensor/ops/basic_strategy.py
 
 import itertools
 from dataclasses import dataclass
 from typing import List, Set, Tuple
 
-from torch.distributed._tensor._op_schema import OpStrategy, PlacementStrategy
-from torch.distributed._tensor.placement_types import (
+from torch.distributed.tensor._op_schema import OpStrategy, PlacementStrategy
+from torch.distributed.tensor.placement_types import (
     DTensorSpec,
     _Partial,
     Placement,

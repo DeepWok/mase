@@ -1,19 +1,19 @@
 # Adapted from Pytorch Distributed DTensor API.
-# https://github.com/pytorch/pytorch/blob/main/torch/distributed/_tensor/ops/math_ops.py
+# https://github.com/pytorch/pytorch/blob/main/torch/distributed.tensor/ops/math_ops.py
 
 from typing import cast, List, Optional, Sequence, Tuple, Union
 
 import torch
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._op_schema import (
     OpStrategy,
     PlacementStrategy,
 )
-from torch.distributed._tensor.ops.utils import (
+from torch.distributed.tensor.ops.utils import (
     generate_redistribute_costs,
     normalize_dim,
     normalize_to_torch_size,
 )
-from torch.distributed._tensor.placement_types import (
+from torch.distributed.tensor.placement_types import (
     DTensorSpec,
     Placement,
     Replicate,

@@ -2,15 +2,15 @@
 # implement matrix related ops for distributed tensor
 
 import torch
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._op_schema import (
     OpSchema,
     OpStrategy,
     PlacementStrategy,
     StrategyType,
 )
-from torch.distributed._tensor.device_mesh import DeviceMesh
+from torch.distributed.tensor.device_mesh import DeviceMesh
 from chop.distributed.tensor.ops.utils import register_op_strategy
-from torch.distributed._tensor.placement_types import DTensorSpec, Replicate
+from torch.distributed.tensor.placement_types import _DTensorSpec, Replicate
 
 
 aten = torch.ops.aten

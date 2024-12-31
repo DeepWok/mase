@@ -2,20 +2,20 @@
 # implement matrix related ops for distributed tensor
 
 import torch
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._op_schema import (
     OpSchema,
     OpStrategy,
     PlacementList,
     PlacementStrategy,
 )
-from torch.distributed._tensor.ops.utils import (
+from torch.distributed.tensor.ops.utils import (
     expand_to_full_mesh_op_strategy,
     generate_redistribute_costs,
     infer_broadcast_dims_map,
     is_tensor_shardable,
     map_placements_after_broadcast,
 )
-from torch.distributed._tensor.placement_types import (
+from torch.distributed.tensor.placement_types import (
     DTensorSpec,
     Placement,
     Replicate,

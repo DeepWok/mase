@@ -242,8 +242,8 @@ def autosharding_analysis_pass(mg, pass_args: dict = {}):
     from .alpa import alpa_autosharding_pass
     from .megatron import megatron_autosharding_pass
 
-    from torch.distributed._tensor._op_schema import DTensorSpec
-    from torch.distributed._tensor.placement_types import Replicate
+    from torch.distributed.tensor._op_schema import _DTensorSpec
+    from torch.distributed.tensor.placement_types import Replicate
     from .alpa import alpa_autosharding_pass
     from .megatron import megatron_autosharding_pass
 

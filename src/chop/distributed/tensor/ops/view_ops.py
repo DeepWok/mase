@@ -16,15 +16,15 @@ from typing import (
 
 import torch
 from torch import Tensor
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._op_schema import (
     OpSchema,
     OpStrategy,
     PlacementStrategy,
     RuntimeSchemaInfo,
     StrategyType,
 )
-from torch.distributed._tensor.api import Shard
-from torch.distributed._tensor.placement_types import DTensorSpec, Placement, Replicate
+from torch.distributed.tensor.api import Shard
+from torch.distributed.tensor.placement_types import _DTensorSpec, Placement, Replicate
 from torch.distributed.device_mesh import DeviceMesh
 
 from chop.distributed.tensor.ops.utils import register_op_strategy

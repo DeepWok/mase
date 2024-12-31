@@ -5,18 +5,18 @@ import warnings
 from typing import Any, Callable, cast, Optional, Sequence, Tuple
 
 import torch
-import torch.distributed._tensor.random as random
+import torch.distributed.tensor._random as random
 import torch.nn as nn
-from torch.distributed._tensor._collective_utils import (
+from torch.distributed.tensor._collective_utils import (
     check_tensor_meta,
     mesh_broadcast,
 )
-from torch.distributed._tensor._redistribute import (
+from torch.distributed.tensor._redistribute import (
     Redistribute,
     redistribute_local_tensor,
 )
-from torch.distributed._tensor._utils import compute_global_tensor_info
-from torch.distributed._tensor.placement_types import (
+from torch.distributed.tensor._utils import compute_global_tensor_info
+from torch.distributed.tensor.placement_types import (
     DTensorSpec,
     Partial,
     Placement,
@@ -24,7 +24,7 @@ from torch.distributed._tensor.placement_types import (
     Shard,
     TensorMeta,
 )
-from torch.distributed._tensor.random import (
+from torch.distributed.tensor._random import (
     is_rng_supported_mesh,
     OffsetBasedRNGTracker,
 )

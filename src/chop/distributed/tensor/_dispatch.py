@@ -8,21 +8,21 @@ from typing import cast, Dict, List, Optional, Sequence, Tuple, TYPE_CHECKING
 
 import torch
 import torch.distributed as dist
-import torch.distributed._tensor.random as random
-from torch.distributed._tensor._op_schema import (
+import torch.distributed.tensor._random as random
+from torch.distributed.tensor._op_schema import (
     _is_inplace_op,
     _is_out_variant_op,
     OpInfo,
     OpSchema,
     OutputSpecType,
 )
-from torch.distributed._tensor._tp_conv import (
+from torch.distributed.tensor._tp_conv import (
     convolution_backward_handler,
     convolution_handler,
 )
-from torch.distributed._tensor._utils import try_find_mesh_from_args
-from torch.distributed._tensor.placement_types import DTensorSpec, Replicate, TensorMeta
-from torch.distributed._tensor.random import is_rng_supported_mesh
+from torch.distributed.tensor._utils import try_find_mesh_from_args
+from torch.distributed.tensor.placement_types import _DTensorSpec, Replicate, TensorMeta
+from torch.distributed.tensor._random import is_rng_supported_mesh
 
 
 if TYPE_CHECKING:

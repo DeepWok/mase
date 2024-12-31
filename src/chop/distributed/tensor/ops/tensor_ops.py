@@ -3,7 +3,7 @@
 from typing import cast, List, Optional, Sequence, Tuple
 
 import torch
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._op_schema import (
     _is_inplace_op,
     OpSchema,
     OpStrategy,
@@ -14,7 +14,7 @@ from torch.distributed._tensor._op_schema import (
     StrategyType,
     TupleStrategy,
 )
-from torch.distributed._tensor.placement_types import (
+from torch.distributed.tensor.placement_types import (
     DTensorSpec,
     Partial,
     Placement,

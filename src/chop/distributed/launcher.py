@@ -7,11 +7,8 @@ import torch.nn as nn
 import torch.distributed as dist
 import torch.multiprocessing as mp
 
-from torch.distributed._tensor import (
-    DeviceMesh,
-    Replicate,
-    Shard,
-)
+from torch.distributed.device_mesh import DeviceMesh
+from torch.distributed.tensor import Replicate, Shard
 
 from chop.distributed.tensor import distribute_module, distribute_tensor
 
@@ -65,7 +62,7 @@ def dist_model_fn(
     tensor_sharding_map={},
 ) -> None:
     """
-    This function gets called by torch.distributed._tensor.distribute_module on each module in the model.
+    This function gets called by torch.distributed.tensor.distribute_module on each module in the model.
     Each tensor in each module is distributed according to the sharding configuration in tensor_sharding_map.
     """
     if module in tensor_sharding_map:

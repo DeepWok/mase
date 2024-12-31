@@ -1,22 +1,22 @@
 # Adapted from Pytorch Distributed DTensor API.
-# https://github.com/pytorch/pytorch/blob/main/torch/distributed/_tensor/ops/pointwise_ops.py
+# https://github.com/pytorch/pytorch/blob/main/torch/distributed.tensor/ops/pointwise_ops.py
 
 from typing import List, Sequence, Tuple
 
 import torch
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._op_schema import (
     _is_inplace_op,
     _is_out_variant_op,
     OpStrategy,
     PlacementStrategy,
 )
-from torch.distributed._tensor.ops.utils import (
+from torch.distributed.tensor.ops.utils import (
     generate_redistribute_costs,
     infer_broadcast_dims_map,
     map_placements_after_broadcast,
     normalize_dim,
 )
-from torch.distributed._tensor.placement_types import (
+from torch.distributed.tensor.placement_types import (
     DTensorSpec,
     Partial,
     Placement,
