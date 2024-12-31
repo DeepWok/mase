@@ -22,7 +22,7 @@ from torch.distributed.tensor._utils import (
     compute_local_stride,
     try_find_mesh_from_args,
 )
-from torch.distributed.tensor import _DTensorSpec 
+from torch.distributed.tensor import _DTensorSpec
 from torch.distributed.tensor import _TensorMeta as TensorMeta
 from torch.distributed.device_mesh import DeviceMesh
 
