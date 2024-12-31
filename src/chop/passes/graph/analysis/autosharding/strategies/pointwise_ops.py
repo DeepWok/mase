@@ -17,7 +17,7 @@ from torch.distributed.tensor.ops.utils import (
     normalize_dim,
 )
 from torch.distributed.tensor.placement_types import (
-    DTensorSpec,
+    _DTensorSpec,
     Partial,
     Placement,
     Replicate,
@@ -111,7 +111,7 @@ def common_pointwise_strategy(
             else:
                 out_placements.append(placement)
 
-        input_specs: List[DTensorSpec] = []
+        input_specs: List[_DTensorSpec] = []
         # redistribute_costs: List[List[float]] = []
         for arg_node in meta.node.args:
             if not isinstance(arg_node, torch.fx.Node):
@@ -129,7 +129,7 @@ def common_pointwise_strategy(
                     common_shape,
                     input_arg_dims_map,
                 )
-                input_arg_target_spec = DTensorSpec(
+                input_arg_target_spec = _DTensorSpec(
                     mesh=mesh,
                     placements=input_target_placements,
                     tensor_meta=input_arg_spec.tensor_meta,
@@ -144,7 +144,7 @@ def common_pointwise_strategy(
         )
         pointwise_strategy.strategies.append(
             PlacementStrategy(
-                output_specs=DTensorSpec(
+                output_specs=_DTensorSpec(
                     mesh=mesh,
                     placements=tuple(out_placements),
                     tensor_meta=TensorMeta(

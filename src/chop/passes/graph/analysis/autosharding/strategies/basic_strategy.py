@@ -7,7 +7,7 @@ from typing import List, Set, Tuple
 
 from torch.distributed.tensor._op_schema import OpStrategy, PlacementStrategy
 from torch.distributed.tensor.placement_types import (
-    DTensorSpec,
+    _DTensorSpec,
     _Partial,
     Placement,
     Replicate,
@@ -176,7 +176,7 @@ def gen_einsum_strategies(
     for strategy_comb in strategy_combs:
         spec_list = []
         for specs in zip(*strategy_comb):
-            spec_list.append(DTensorSpec(mesh, tuple(specs)))
+            spec_list.append(_DTensorSpec(mesh, tuple(specs)))
         strat = PlacementStrategy(output_specs=spec_list[0], input_specs=spec_list[1:])
         all_strategies.append(strat)
 

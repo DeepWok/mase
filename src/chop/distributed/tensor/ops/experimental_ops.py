@@ -22,5 +22,5 @@ def slice_backward_rules(mesh: DeviceMesh, op_schema: OpSchema) -> StrategyType:
     slice_backward is a new_zeros + slice_scatter, we only allow replication
     on the input/output for now since new_zeros would produce replication
     """
-    replicate_spec = DTensorSpec(mesh, tuple([Replicate()] * mesh.ndim))
+    replicate_spec = _DTensorSpec(mesh, tuple([Replicate()] * mesh.ndim))
     return OpStrategy([PlacementStrategy(replicate_spec)])

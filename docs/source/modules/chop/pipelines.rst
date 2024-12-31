@@ -11,13 +11,13 @@ chop.pipelines.auto_pipeline
    :undoc-members:
    :show-inheritance:
 
-chop.pipelines.distributed_inference
--------------------------------------
+.. chop.pipelines.distributed_inference
+.. -------------------------------------
 
-.. automodule:: chop.pipelines.distributed_inference
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. .. automodule:: chop.pipelines.distributed_inference
+..    :members:
+..    :undoc-members:
+..    :show-inheritance:
 
 chop.pipelines.emit_verilog
 ----------------------------

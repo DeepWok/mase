@@ -166,7 +166,7 @@ def _extract_ilp(mg, mesh, pass_args={}):
             node_in_specs = [
                 (
                     [strategy.input_specs][arg_idx]
-                    if isinstance(strategy.input_specs, DTensorSpec)
+                    if isinstance(strategy.input_specs, _DTensorSpec)
                     else strategy.input_specs[arg_idx]
                 )
                 for strategy in node_op_strategy.strategies
@@ -286,7 +286,7 @@ def _mark_sharding(mg, pass_args):
         arg_specs = chosen_strategy.input_specs
         out_spec = chosen_strategy.output_specs
 
-        if isinstance(arg_specs, DTensorSpec):
+        if isinstance(arg_specs, _DTensorSpec):
             arg_specs = (arg_specs,)
 
         # Annotate arg metadata with chosen strategy

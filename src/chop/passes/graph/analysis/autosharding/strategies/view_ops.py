@@ -29,7 +29,7 @@ from torch.distributed.tensor.ops.utils import (
     prod,
 )
 from torch.distributed.tensor.placement_types import (
-    DTensorSpec,
+    _DTensorSpec,
     Placement,
     Replicate,
     TensorMeta,
@@ -605,13 +605,13 @@ def get_reshape_strategy(op):
             #       unshardable dims ...
             # FIXME: this can be wrong for situations where we have
             #        [Shard(0), Shard(0)]
-            input_tgt_spec = DTensorSpec(
+            input_tgt_spec = _DTensorSpec(
                 placements=tuple(input_tgt_placements),
                 mesh=input_src_spec.mesh,
                 tensor_meta=input_src_spec.tensor_meta,
             )
 
-            output_spec = DTensorSpec(
+            output_spec = _DTensorSpec(
                 mesh=mesh,
                 placements=tuple(output_placements),
                 tensor_meta=TensorMeta(

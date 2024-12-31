@@ -17,7 +17,7 @@ from torch.distributed.tensor._redistribute import (
 )
 from torch.distributed.tensor._utils import compute_global_tensor_info
 from torch.distributed.tensor.placement_types import (
-    DTensorSpec,
+    _DTensorSpec,
     Partial,
     Placement,
     Replicate,
@@ -89,7 +89,7 @@ class _ToTorchTensor(torch.autograd.Function):
         )
         tensor_stride = tuple(tensor_stride)
         grad_placements = grad_placements or dtensor_spec.placements
-        grad_spec = DTensorSpec(
+        grad_spec = _DTensorSpec(
             mesh,
             grad_placements,
             tensor_meta=TensorMeta(
@@ -157,7 +157,7 @@ class _FromTorchTensor(torch.autograd.Function):
                     input = input.contiguous()
                     mesh_broadcast(input, device_mesh, mesh_dim=idx)
 
-        dist_spec = DTensorSpec(
+        dist_spec = _DTensorSpec(
             device_mesh,
             placements,
             tensor_meta=TensorMeta(
@@ -187,7 +187,7 @@ class _FromTorchTensor(torch.autograd.Function):
         # local gradients directly
         if grad_output.placements != previous_placement:
             current_spec = grad_output._spec
-            target_spec = DTensorSpec(
+            target_spec = _DTensorSpec(
                 previous_device_mesh,
                 previous_placement,
                 tensor_meta=grad_output._spec.tensor_meta,
@@ -207,7 +207,7 @@ class _FromTorchTensor(torch.autograd.Function):
 
 class DTensor(torch.Tensor):  # pyre-ignore[13]: pyre is bad at __new__
     _local_tensor: torch.Tensor
-    _spec: DTensorSpec
+    _spec: _DTensorSpec
     __slots__ = ["_local_tensor", "_spec"]
 
     # class attribute that handles operator placements propagation
@@ -219,7 +219,7 @@ class DTensor(torch.Tensor):  # pyre-ignore[13]: pyre is bad at __new__
     def __new__(
         cls,
         local_tensor: torch.Tensor,
-        spec: DTensorSpec,
+        spec: _DTensorSpec,
         *,
         requires_grad: bool,
     ) -> "DTensor":
@@ -281,7 +281,7 @@ class DTensor(torch.Tensor):  # pyre-ignore[13]: pyre is bad at __new__
             stride=outer_stride,
             dtype=spec.tensor_meta.dtype,
         )
-        unflatten_spec = DTensorSpec(
+        unflatten_spec = _DTensorSpec(
             spec.mesh,
             spec.placements,
             tensor_meta=unflatten_tensor_meta,
@@ -695,7 +695,7 @@ def distribute_tensor(
     assert local_tensor is not None, "distributing a tensor should not be None"
     # detach the local tensor passed to DTensor since after the construction
     # of DTensor, autograd would work on top of DTensor instead of local tensor
-    spec = DTensorSpec(
+    spec = _DTensorSpec(
         mesh=device_mesh,
         placements=placements,
         tensor_meta=TensorMeta(

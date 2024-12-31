@@ -11,7 +11,7 @@ from torch.distributed.tensor._op_schema import (
     OpSchema,
     OpStrategy,
     StrategyType,
-    DTensorSpec,
+    _DTensorSpec,
     PlacementStrategy,
 )
 from torch.distributed.tensor.ops.utils import (
@@ -187,7 +187,7 @@ def expand_to_full_mesh_op_strategy(
         spec_list = []
         for specs in zip(*strategy_comb):
             spec_list.append(
-                DTensorSpec(
+                _DTensorSpec(
                     mesh,
                     tuple(specs),
                     tensor_meta=TensorMeta(

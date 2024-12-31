@@ -25,9 +25,9 @@ def convolution_rules(op_schema: OpSchema) -> OutputSharding:
         groups,
     ) = op_schema.args_schema
 
-    assert isinstance(input_spec, DTensorSpec)
-    assert isinstance(weight_spec, DTensorSpec)
-    assert isinstance(bias_spec, DTensorSpec)
+    assert isinstance(input_spec, _DTensorSpec)
+    assert isinstance(weight_spec, _DTensorSpec)
+    assert isinstance(bias_spec, _DTensorSpec)
     assert input_spec.tensor_meta is not None
     assert weight_spec.tensor_meta is not None
     in_shape = input_spec.tensor_meta.shape
@@ -55,7 +55,7 @@ def convolution_rules(op_schema: OpSchema) -> OutputSharding:
         input_spec.tensor_meta.dtype,
     )
     return OutputSharding(
-        DTensorSpec.from_dim_map(
+        _DTensorSpec.from_dim_map(
             input_spec.mesh,
             output_dim_map,
             pending_sums,
@@ -81,9 +81,9 @@ def convolution_backward_rules(op_schema: OpSchema) -> OutputSharding:
         output_mask,
     ) = op_schema.args_schema
 
-    assert isinstance(grad_output_spec, DTensorSpec)
-    assert isinstance(input_spec, DTensorSpec)
-    assert isinstance(weight_spec, DTensorSpec)
+    assert isinstance(grad_output_spec, _DTensorSpec)
+    assert isinstance(input_spec, _DTensorSpec)
+    assert isinstance(weight_spec, _DTensorSpec)
     assert isinstance(bias_shape_opt, List)
     assert input_spec.tensor_meta is not None
     weight_tensor_meta = weight_spec.tensor_meta
@@ -94,13 +94,13 @@ def convolution_backward_rules(op_schema: OpSchema) -> OutputSharding:
     )
 
     grad_input_spec = input_spec
-    grad_weight_spec = DTensorSpec.from_dim_map(
+    grad_weight_spec = _DTensorSpec.from_dim_map(
         input_spec.mesh,
         [-1, -1, -1, -1],
         [0],
         tensor_meta=weight_tensor_meta,
     )
-    grad_bias_spec = DTensorSpec.from_dim_map(
+    grad_bias_spec = _DTensorSpec.from_dim_map(
         input_spec.mesh,
         [-1],
         [0],

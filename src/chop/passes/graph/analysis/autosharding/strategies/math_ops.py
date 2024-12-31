@@ -14,7 +14,7 @@ from torch.distributed.tensor.ops.utils import (
     normalize_to_torch_size,
 )
 from torch.distributed.tensor.placement_types import (
-    DTensorSpec,
+    _DTensorSpec,
     Placement,
     Replicate,
     Shard,
@@ -67,7 +67,7 @@ def softmax_strategy(meta, mesh):
         input_src_spec = input_placement_strategy.output_spec
 
         # make sure input is replicated along the softmax dim
-        input_target_spec = DTensorSpec(
+        input_target_spec = _DTensorSpec(
             mesh=mesh,
             placements=replicate_reduction_dims(
                 input_src_spec.placements, [softmax_dim]
@@ -128,7 +128,7 @@ def layer_norm_strategy(meta, mesh):
         # for the input tensor, we replicate it on the inner dims if necessary
         # TODO: we can avoid forcing the redistribution once we figure out
         # how to decompose layer norm
-        input_target_spec = DTensorSpec(
+        input_target_spec = _DTensorSpec(
             mesh=mesh,
             placements=_replicate_dims_start_at(input_src_spec.placements, axis),
             tensor_meta=input_src_spec.tensor_meta,
@@ -149,7 +149,7 @@ def layer_norm_strategy(meta, mesh):
             # for the weight tensor, we replicate it on all dims if necessary
             # TODO: we can avoid forcing the redistribution once we figure out
             # how to decompose layer norm
-            weight_target_spec = DTensorSpec(
+            weight_target_spec = _DTensorSpec(
                 mesh=mesh,
                 placements=_replicate_dims_start_at(weight_src_spec.placements),
                 tensor_meta=weight_src_spec.tensor_meta,
@@ -166,7 +166,7 @@ def layer_norm_strategy(meta, mesh):
             # for the bias tensor, we replicate it on all dims if necessary
             # TODO: we can avoid forcing the redistribution once we figure out
             # how to decompose layer norm
-            bias_target_spec = DTensorSpec(
+            bias_target_spec = _DTensorSpec(
                 mesh=mesh,
                 placements=_replicate_dims_start_at(bias_src_spec.placements),
                 tensor_meta=bias_src_spec.tensor_meta,

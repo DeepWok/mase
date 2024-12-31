@@ -70,7 +70,7 @@ def _import_solution(
 
         # Annotate the metadata for each argument
         for arg, arg_spec in solution[node.name].get("args", {}).items():
-            node.meta["mase"]["common"]["args"][arg]["dtensor_spec"] = DTensorSpec(
+            node.meta["mase"]["common"]["args"][arg]["dtensor_spec"] = _DTensorSpec(
                 mesh=mesh,
                 placements=arg_spec,
             )
@@ -78,7 +78,7 @@ def _import_solution(
         # Annotate the metadata for each result
         for result, result_spec in solution[node.name].get("results", {}).items():
             node.meta["mase"]["common"]["results"][result]["dtensor_spec"] = (
-                DTensorSpec(
+                _DTensorSpec(
                     mesh=mesh,
                     placements=result_spec,
                 )
@@ -114,7 +114,7 @@ def _export_solution(mg, export_file: str = "ilp_solution.pkl"):
                 logger.warning(
                     f"DTensor spec not found for arg: {arg} in node: {node_name}. Assigning fully-replicated solution."
                 )
-                spec = DTensorSpec(
+                spec = _DTensorSpec(
                     None,
                     (Replicate(), Replicate()),
                 )
@@ -132,7 +132,7 @@ def _export_solution(mg, export_file: str = "ilp_solution.pkl"):
                 logger.warning(
                     f"DTensor spec not found for result: {result} in node: {node_name}. Assigning fully-replicated solution."
                 )
-                spec = DTensorSpec(
+                spec = _DTensorSpec(
                     None,
                     (Replicate(), Replicate()),
                 )

@@ -14,7 +14,7 @@ from torch.distributed.tensor.ops.utils import (
     map_placements_after_broadcast,
 )
 from torch.distributed.tensor.placement_types import (
-    DTensorSpec,
+    _DTensorSpec,
     Shard,
     TensorMeta,
 )
@@ -43,7 +43,7 @@ def transpose_strategy(
             for p in input_spec.placements
         ]
         transpose_strategy = PlacementStrategy(
-            output_specs=DTensorSpec(
+            output_specs=_DTensorSpec(
                 mesh=input_strategy.output_spec.mesh,
                 placements=tuple(output_placements),
                 tensor_meta=TensorMeta(
@@ -135,7 +135,7 @@ def _addmm_like_strategy(
         self_placements = map_placements_after_broadcast(
             out_spec.placements, mm_out_shape, broadcast_dims_map
         )
-        self_spec = DTensorSpec(mesh=mesh, placements=self_placements)
+        self_spec = _DTensorSpec(mesh=mesh, placements=self_placements)
 
         self_spec.tensor_meta = TensorMeta(
             shape=self_shape,
