@@ -53,7 +53,7 @@ requirements = [
     "matplotlib",
     "sphinx-rtd-theme",
     "sphinx-needs>=4",
-    "sphinx-test-reports",
+    "sphinx-test-reports @ git+https://github.com/useblocks/sphinx-test-reports",
     "sphinxcontrib-plantuml",
     "imageio",
     "imageio-ffmpeg",
