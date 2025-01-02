@@ -3,7 +3,7 @@ chop.passes.module
 
 
 Summary of Mase Module Analysis Passes
-----------------------------
+--------------------------------------
 
 .. list-table:: MASE module-level analysis passes 
   :widths: 20 40 40
@@ -23,7 +23,7 @@ Summary of Mase Module Analysis Passes
   module_analysis/quantization
 
 Summary of Mase Module Transform Passes
-----------------------------
+---------------------------------------
 
 .. list-table:: MASE module-level transform passes 
   :widths: 20 40 40

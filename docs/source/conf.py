@@ -43,6 +43,7 @@ extensions = [
     "sphinx_needs",
     "sphinxcontrib.plantuml",
     "myst_nb",
+    "sphinxcontrib.test_reports",
 ]
 
 myst_enable_extensions = [

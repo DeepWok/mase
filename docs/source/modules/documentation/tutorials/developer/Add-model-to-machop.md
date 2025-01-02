@@ -25,7 +25,6 @@ All models that Machop support are defined inside **mase-tools/machop/chop/model
 - function name of get-function should be in smaller case
 - keys of the dictionary should also be in smaller case
 
-####
 
 There's an example:
 ```python

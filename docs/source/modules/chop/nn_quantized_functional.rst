@@ -1,5 +1,5 @@
 chop.nn.quantized.functional
-====================
+============================
 
 chop.nn.quantized.functional.add
 --------------------------------------------------

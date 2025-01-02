@@ -1,7 +1,8 @@
 Quickstart
 =============================
 
-This page is a draft and should not be merged to main.
+This page is a draft and will be finished when the pipeline feature is completed.
+For now, you can following the tutorials to get started with Mase.
 
 Importing a model
 --------------------------------
