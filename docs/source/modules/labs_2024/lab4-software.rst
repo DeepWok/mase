@@ -35,7 +35,7 @@ In this lab, you will learn how to optimize ML code. We will go through three ap
 Learning tasks
 =============================
 
-1. Go through `"Lab 4 for Advanced Deep Learning Systems (ADLS) - Software Stream" <https://github.com/DeepWok/mase/blob/adls_2024/docs/labs/lab4-software.ipynb>`__ to understand how to use optimize your ML model.
+1. Go through `"Lab 4 for Advanced Deep Learning Systems (ADLS) - Software Stream" <https://github.com/DeepWok/mase/blob/main/docs/labs/lab4-software.ipynb>`__ to understand how to use optimize your ML model.
 
 Implementation tasks
 =============================

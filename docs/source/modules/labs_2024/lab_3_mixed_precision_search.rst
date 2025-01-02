@@ -29,7 +29,7 @@ You have looked at how to quantize models in lab0 and how to search for optimal 
 Learning tasks
 =============================
 
-1. Go through `"Tutorial 6: Mixed Precision Quantization Search with Mase and Optuna" <https://github.com/DeepWok/mase/blob/adls_2024/docs/source/modules/documentation/tutorials/tutorial_6_mixed_precision_search.ipynb>`__ to understand how to use Mase to search for optimal quantization schemes for a model.
+1. Go through `"Tutorial 6: Mixed Precision Quantization Search with Mase and Optuna" <https://github.com/DeepWok/mase/blob/main/docs/source/modules/documentation/tutorials/tutorial_6_mixed_precision_search.ipynb>`__ to understand how to use Mase to search for optimal quantization schemes for a model.
 
 Implementation tasks
 =============================

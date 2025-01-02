@@ -23,11 +23,20 @@
 
 ## Overview
 
-Machine learning accelerators have been used extensively to compute models with high performance and low power. Unfortunately, the development pace of ML models is much faster than the accelerator design cycle, leading to frequent changes in the hardware architecture requirements, rendering many accelerators obsolete. Existing design tools and frameworks can provide quick accelerator prototyping, but only for a limited range of models that fit into a single hardware device. With the emergence of large language models such as GPT-3, there is an increased need for hardware prototyping of large models within a many-accelerator system to ensure the hardware can scale with ever-growing model sizes.
+Mase is a Machine Learning compiler based on PyTorch FX, maintained by researchers at Imperial College London. We provide a set of tools for inference and training optimization of state-of-the-art language and vision models. The following features are supported, among others:
 
-MASE provides an efficient and scalable approach for exploring accelerator systems to compute large ML models by directly mapping onto an efficient streaming accelerator system. Over a set of ML models, MASE can achieve better energy efficiency to GPUs when computing inference for recent transformer models.
+- Efficient AI Optimization: 
+  MASE provides a set of composable tools for optimizing AI models. The tools are designed to be modular and can be used in a variety of ways to optimize models for different hardware targets. The tools can be used to optimize models for inference, training, or both. We support features such as the following:
 
-![Alt text](./docs/imgs/overview.png)
+  - Quantization Search: mixed-precision quantization of any PyTorch model. We support microscaling and other numerical formats, at various granularities.
+  - Quantization-Aware Training (QAT): finetuning quantized models to minimize accuracy loss.
+  - And more!
+
+- Hardware Generation: automatic generation of high-performance FPGA accelerators for arbitrary Pytorch models, through the Emit Verilog flow.
+
+- Distributed Deployment (Beta): Automatic parallelization of models across distributed GPU clusters, based on the Alpa algorithm.
+
+For more details, refer to the Tutorials. If you enjoy using the framework, you can support us by starring the repository on GitHub!
 
 
 ## MASE Publications
@@ -49,17 +58,19 @@ MASE provides an efficient and scalable approach for exploring accelerator syste
 ### Repository structure
 
 This repo contains the following directories:
-* `components` - Internal hardware library
-* `scripts` - Installation scripts  
-* `machop` - MASE's software stack
-* `hls` - HLS component of MASE
-* `mlir-air` - MLIR AIR for ACAP devices
+* `src/chop` - MASE's software stack
+* `src/mase_components` - Internal hardware library
+* `src/mase_cocotb` - Internal hardware testing flow
+* `src/mase_hls` - HLS component of MASE
+* `scripts` - Run and test scripts  
+* `test` - Unit testing 
 * `docs` - Documentation
+* `mlir-air` - MLIR AIR for ACAP devices
+* `setup.py` - Installation entry point
 * `Docker` - Docker container configurations
 
 ## MASE Dev Meetings
 
-* Subscribe [Mase Weekly Dev Meeting (Wednesday 4:30 UK time)](https://calendar.google.com/calendar/event?action=TEMPLATE&tmeid=N2lpc25mN3VoamE5NXVmdmY5ZW1tOWpmMGdfMjAyMzExMDFUMTYzMDAwWiBqYzI0ODlAY2FtLmFjLnVr&tmsrc=jc2489%40cam.ac.uk&scp=ALL). Everyone is welcomed!
 * Direct [Google Meet link](meet.google.com/fke-zvii-tgv)
 * Join the [Mase Slack](https://join.slack.com/t/mase-tools/shared_invite/zt-2gl60pvur-pktLLLAsYEJTxvYFgffCog)
 * If you want to discuss anything in future meetings, please add them as comments in the [meeting agenda](https://docs.google.com/document/d/12m96h7gOhhmikniXIu44FJ0sZ2mSxg9SqyX-Uu3s-tc/edit?usp=sharing) so we can review and add them.
