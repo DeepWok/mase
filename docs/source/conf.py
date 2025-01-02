@@ -43,9 +43,7 @@ extensions = [
     "sphinx_needs",
     "sphinxcontrib.plantuml",
     "myst_nb",
-    # TODO: rebuild
-    # this causes a problem on github ci
-    # "sphinxcontrib.test_reports",
+    "sphinxcontrib.test_reports",
 ]
 
 myst_enable_extensions = [
