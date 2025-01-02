@@ -1,5 +1,5 @@
 Advanced Deep Learning Systems: 2023/2024
-=============================
+==========================================
 
 The widespread adoption of deep learning methods has been largely driven by the availability of easy-to-use systems such as PyTorch and TensorFlow. However, it is less common for users to explore the internals of the libraries and understand how they function, as well as how to optimize the high-level code for hardware systems. When deep learning algorithms are deployed into custom hardware, they are often modified to run faster and more efficiently. This module will provide you with the basic concepts and principles of modern deep learning systems, and explore how optimizations can be applied from both the software and hardware aspects of the system stack.
 

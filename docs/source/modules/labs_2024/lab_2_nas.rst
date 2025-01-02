@@ -29,7 +29,7 @@ In this lab, you will learn how to use Mase to conduct a Neural Architecture Sea
 Learning tasks
 =============================
 
-1. Go through `"Tutorial 5: Neural Architecture Search (NAS) with Mase and Optuna" <https://github.com/DeepWok/mase/blob/adls_2024/docs/source/modules/documentation/tutorials/tutorial_5_nas_optuna.ipynb>`__ to understand how to use high-level hyperparameter optimization frameworks like optuna to conduct a NAS on BERT.
+1. Go through `"Tutorial 5: Neural Architecture Search (NAS) with Mase and Optuna" <https://github.com/DeepWok/mase/blob/main/docs/source/modules/documentation/tutorials/tutorial_5_nas_optuna.ipynb>`__ to understand how to use high-level hyperparameter optimization frameworks like optuna to conduct a NAS on BERT.
 
 Implementation tasks
 =============================

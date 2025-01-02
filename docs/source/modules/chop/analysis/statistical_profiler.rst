@@ -1,5 +1,5 @@
 chop.passes.graph.analysis.statistical\_profiler.profile_statistics
-=============================================================
+====================================================================
 
 
 profile\_statistics\_analysis\_pass

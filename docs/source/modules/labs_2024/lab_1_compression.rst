@@ -30,9 +30,9 @@ In this lab, you will learn how to use Mase to compress a Bert model using quant
 Learning tasks
 =============================
 
-1. Go through `"Tutorial 3: Running Quantization-Aware Training (QAT) on Bert" <https://github.com/DeepWok/mase/blob/adls_2024/docs/source/modules/documentation/tutorials/tutorial_3_qat.ipynb>`__ to learn how to quantize the Bert model and run post-quantization finetuning.
+1. Go through `"Tutorial 3: Running Quantization-Aware Training (QAT) on Bert" <https://github.com/DeepWok/mase/blob/main/docs/source/modules/documentation/tutorials/tutorial_3_qat.ipynb>`__ to learn how to quantize the Bert model and run post-quantization finetuning.
 
-2. Go through `"Tutorial 4: Unstructured Pruning on Bert" <https://github.com/DeepWok/mase/blob/adls_2024/docs/source/modules/documentation/tutorials/tutorial_4_pruning.ipynb>`__ to understand how to prune a quantized model for further compression.
+2. Go through `"Tutorial 4: Unstructured Pruning on Bert" <https://github.com/DeepWok/mase/blob/main/docs/source/modules/documentation/tutorials/tutorial_4_pruning.ipynb>`__ to understand how to prune a quantized model for further compression.
 
 Implementation tasks
 =============================

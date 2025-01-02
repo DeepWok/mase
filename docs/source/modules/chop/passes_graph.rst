@@ -3,7 +3,7 @@ chop.passes.graph
 
 
 Summary of MaseGraph Analysis Passes
--------------------------
+-------------------------------------
 
 .. list-table:: MaseGraph graph analysis passes 
   :widths: 20 40 40
@@ -86,7 +86,7 @@ Summary of MaseGraph Analysis Passes
 
 
 Summary of MaseGraph Transform Passes
---------------------------
+--------------------------------------
 
 .. list-table:: MaseGraph graph transform passes 
   :widths: 20 40 40
@@ -154,7 +154,7 @@ Summary of MaseGraph Transform Passes
 
 
 Summary of MaseGraph Interface Passes
---------------------------
+--------------------------------------
 
 .. list-table:: A summary of all MaseGraph interface passes 
   :widths: 20 40 40

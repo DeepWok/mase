@@ -52,7 +52,7 @@ requirements = [
     "onnxruntime",
     "matplotlib",
     "sphinx-rtd-theme",
-    "sphinx-needs",
+    "sphinx-needs>=4",
     "sphinx-test-reports",
     "sphinxcontrib-plantuml",
     "imageio",
