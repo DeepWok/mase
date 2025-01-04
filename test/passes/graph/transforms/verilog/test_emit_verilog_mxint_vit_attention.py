@@ -183,23 +183,17 @@ def test_emit_verilog_linear():
     mg, _ = passes.add_hardware_metadata_analysis_pass(
         mg, pass_args={"max_parallelism": [2] * 4}
     )
-    # wp1 = 8
-    # wp2 = 1
-    # manually_update_hardware_parallelism_param(
-    #     mg,
-    #     pass_args={
-    #         "fc1": {"din": [1, 2], "dout": [1, wp1]},
-    #         "fc2": {"din": [1, wp1], "dout": [1, wp2]},
-    #     },
-    # )
     mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
-    mg, _ = passes.emit_verilog_top_transform_pass(mg)
-    mg, _ = passes.emit_bram_transform_pass(mg)
-    mg, _ = passes.emit_internal_rtl_transform_pass(mg)
-    mg, _ = passes.emit_cocotb_transform_pass(
-        mg, pass_args={"wait_time": 100, "wait_unit": "ms", "batch_size": batch_size}
-    )
-    mg, _ = passes.emit_vivado_project_transform_pass(mg)
+    pass_args = {
+        "project_dir": Path("/scratch/cx922/mase/mxint_vit_attention"),
+    }
+    mg, _ = passes.emit_verilog_top_transform_pass(mg, pass_args)
+    mg, _ = passes.emit_bram_transform_pass(mg, pass_args)
+    mg, _ = passes.emit_internal_rtl_transform_pass(mg, pass_args)
+    # mg, _ = passes.emit_cocotb_transform_pass(
+    #     mg, pass_args={"wait_time": 100, "wait_unit": "ms", "batch_size": batch_size}
+    # )
+    mg, _ = passes.emit_vivado_project_transform_pass(mg, pass_args)
 
 
 def _simulate():

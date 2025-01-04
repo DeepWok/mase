@@ -214,7 +214,7 @@ def _emit_cocotb_tb(graph, pass_args={}):
 
 
 from mase_components.linear_layers.mxint_operators.test.utils import (
-    block_mxint_quant,
+    mxint_hardware,
     pack_tensor_to_mx_listed_chunk,
 )
 from mase_cocotb.interfaces.streaming import (

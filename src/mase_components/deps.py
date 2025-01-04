@@ -287,12 +287,20 @@ MASE_HW_DEPS = {
         "memory",
         "cast",
     ],
+    "linear_layers/mxint_operators/mxint_exp": [
+        "linear_layers/mxint_operators",
+        "common",
+        "memory",
+        "cast",
+        "generated_lut",
+    ],
     "linear_layers/mxint_operators/mxint_softmax": [
         "linear_layers/mxint_operators",
         "common",
         "memory",
         "cast",
         "scalar_operators/fixed",
+        "generated_lut",
     ],
     "linear_layers/mxint_operators/mxint_addition": [
         "linear_layers/mxint_operators",
@@ -385,6 +393,17 @@ MASE_HW_DEPS = {
         "linear_layers/mxint_operators",
         "common",
         "memory",
+    ],
+    "linear_layers/mxint_operators/mxint_layernorm_1d": [
+        "common",
+        "linear_layers/matmul",
+        "linear_layers/fixed_operators",
+        "scalar_operators/fixed",
+        "normalization_layers",
+        "cast",
+        "memory",
+        "generated_lut",
+        "linear_layers/mxint_operators",
     ],
     "linear_layers/mxint_operators/mxint_layernorm": [
         "common",

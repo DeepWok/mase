@@ -14,7 +14,7 @@ from mase_cocotb.interfaces.streaming import (
 )
 
 from mase_cocotb.runner import mase_runner
-from utils import mxint_quantize
+from mxint_quant import mxint_quant_block, mxint_hardware
 from typing import Literal, Optional, Tuple, Union, Dict, List
 import torch
 import math
@@ -34,9 +34,10 @@ def quantized_range_reduction(mx, ex, in_man_width, data_out_n_width):
         round_x = mx.reshape(-1) // 2**((in_man_frac_width-ex).reshape(-1))
         return torch.clamp(round_x, round_min, round_max)
     coefficient_quant_block = partial(
-        mxint_quantize, 
+        mxint_quant_block, 
         width=8,
-        exponent_width=4)
+        exponent_width=4, 
+        round_bits=4)
     _, mlog2_e, elog2_e = coefficient_quant_block(torch.log2(torch.tensor(math.e)))
     _, mln_2, eln_2 = coefficient_quant_block(torch.log(torch.tensor(2.0)))
     n = hardware_round(mx * mlog2_e, ex + elog2_e, (in_man_width - 1 + 7), data_out_n_width)
@@ -47,6 +48,7 @@ def quantized_range_reduction(mx, ex, in_man_width, data_out_n_width):
     print(shifted_mx)
     print(_ex - ex + (in_man_width - 1) - 7)
     mr = shifted_mx - _mx
+    breakpoint()
     # return mr as an fixedpoint ?.7 we can make it 2.7
     # return n as an integer number with width = data_out_width
     return mr, n
@@ -96,13 +98,14 @@ class MXIntRangeReductionTB(Testbench):
         for _ in range(self.num):
             torch.manual_seed(0)
             data = 49 * torch.rand(int(self.dut.BLOCK_SIZE)) - 24.5
-            (data_in, mdata_in, edata_in) = mxint_quantize(
+            (data_in, mdata_in, edata_in) = mxint_quant_block(
                 data,
                 int(self.dut.DATA_IN_MAN_WIDTH),
                 int(self.dut.DATA_IN_EXP_WIDTH),
+                4,
             )
             r,n = quantized_range_reduction(mdata_in, edata_in, int(self.dut.DATA_IN_MAN_WIDTH), int(self.dut.DATA_OUT_N_WIDTH))
-            inputs.append((mdata_in.int().tolist(), edata_in.int().tolist()))
+            inputs.append((mdata_in.int().tolist(), int(edata_in)))
             exp_r_outputs.append(r.int().tolist())
             exp_n_outputs.append(n.int().tolist())
         return inputs, exp_r_outputs, exp_n_outputs
@@ -165,5 +168,5 @@ if __name__ == "__main__":
         "DATA_OUT_N_WIDTH": 8,
         },
     ],
-    sim="questa",
+    sim="verilator",
     )

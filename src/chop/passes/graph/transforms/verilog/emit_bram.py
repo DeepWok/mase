@@ -174,8 +174,8 @@ module {node_param_name}_source #(
   // Cocotb/verilator does not support array flattening, so
   // we need to manually add some reshaping process.
   for (genvar j = 0; j < {_cap(verilog_param_name)}_PARALLELISM_DIM_0 * {_cap(verilog_param_name)}_PARALLELISM_DIM_1; j++)
-    assign mdata_out[j] = data_vector[{_cap(verilog_param_name)}_PRECISION_0*j+{_cap(verilog_param_name)}_PRECISION_0-1:{_cap(verilog_param_name)}_PRECISION_0*j];
-  assign edata_out = data_vector[TOTAL_WIDTH-1:TOTAL_WIDTH - {_cap(verilog_param_name)}_PRECISION_1];
+    assign mdata_out[j] = data_vector[{_cap(verilog_param_name)}_PRECISION_0*j+{_cap(verilog_param_name)}_PRECISION_0-1 + {_cap(verilog_param_name)}_PRECISION_1:{_cap(verilog_param_name)}_PRECISION_0*j + {_cap(verilog_param_name)}_PRECISION_1];
+  assign edata_out = data_vector[{_cap(verilog_param_name)}_PRECISION_1-1 : 0];
   assign data_out_valid = clear == 2;
 
 endmodule
@@ -440,9 +440,7 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
         exponent_width = node.meta["mase"].parameters["common"]["args"][
             verilog_param_name
         ]["precision"][1]
-        from mase_components.linear_layers.mxint_operators.test.utils import (
-            mxint_quantize,
-        )
+        from mase_components.linear_layers.mxint_operators.test.utils import mxint_quant_block
 
         line_buff = ""
 
@@ -457,8 +455,8 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
         for i in range(0, out_depth):
             line_buff = ""
             block_data = param_data[i * out_size : i * out_size + out_size]
-            value, mvalue, evalue = mxint_quantize(
-                torch.tensor(block_data), width, exponent_width
+            value, mvalue, evalue = mxint_quant_block(
+                torch.tensor(block_data), width, exponent_width, round_bits=8,
             )
 
             for j in range(0, out_size):
@@ -562,7 +560,7 @@ def emit_bram_handshake(node, rtl_dir):
                 rtl_dir, f"{node_name}_{param_verilog_name}_source.sv"
             )
             data_name = os.path.join(
-                rtl_dir, f"{node_name}_{param_verilog_name}_rom.dat"
+                f"sim_build/{node_name}_{param_verilog_name}_rom.dat"
             )
             if node.meta["mase"].parameters["common"]["quant_type"] == "mxint_hardware":
                 emit_mxint_parameters_in_mem_internal(

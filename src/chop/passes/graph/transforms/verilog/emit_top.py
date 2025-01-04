@@ -9,12 +9,12 @@ import torch.fx as fx
 from chop.passes.graph.utils import vf, v2p, init_project
 import mase_components.helper.generate_memory as gen_lut
 import torch.nn as nn
-
+import sys
+from pathlib import Path
 logger = logging.getLogger(__name__)
 from chop.nn.quantized.modules.layer_norm import LayerNormIntegerFloor
 from chop.nn.quantized.modules.attention import ViTAttentionInteger
 from .util import get_verilog_parameters
-from pathlib import Path
 
 # =============================================================================
 # Utilities
@@ -1155,7 +1155,7 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
                 func = "logsigmoid"
             elif isinstance(module, nn.Softmax):
                 func = "exp"
-            elif isinstance(module, nn.GELU):
+            elif isinstance(module, nn.GELU) or node.meta["mase"]["common"]["mase_op"] == "gelu":
                 func = "gelu"
             elif isinstance(module, LayerNormIntegerFloor):
                 func = "isqrt"
@@ -1164,6 +1164,8 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
             else:
                 func = "Unknown"
             mult = 1
+            sys.path.append(Path(__file__).resolve().parents[6].as_posix())
+            from mxint_quant import MXIntGELU
             if func != "Unknown":
                 if isinstance(module, ViTAttentionInteger):
                     d_in_width = node.meta["mase"].parameters["hardware"][
@@ -1201,6 +1203,19 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
                     d_out_f_width = node.meta["mase"].parameters["hardware"][
                         "verilog_param"
                     ]["ISQRT_OUT_PRECISION_1"]
+                elif isinstance(module, MXIntGELU):
+                    d_in_width = node.meta["mase"].parameters["hardware"][
+                        "verilog_param"
+                    ]["DATA_IN_0_PRECISION_0"] + 2
+                    d_in_f_width = node.meta["mase"].parameters["hardware"][
+                        "verilog_param"
+                    ]["DATA_IN_0_PRECISION_1"] - 1
+                    d_out_width = node.meta["mase"].parameters["hardware"][
+                        "verilog_param"
+                    ]["HASH_OUT_WIDTH"]
+                    d_out_f_width = node.meta["mase"].parameters["hardware"][
+                        "verilog_param"
+                    ]["HASH_OUT_WIDTH"] - 3
                 else:
                     d_in_width = node.meta["mase"].parameters["hardware"][
                         "verilog_param"
@@ -1214,6 +1229,7 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
                     d_out_f_width = node.meta["mase"].parameters["hardware"][
                         "verilog_param"
                     ]["DATA_OUT_0_PRECISION_1"]
+                logger.info(f"Generating LUT for {func}")
                 gen_lut.generate_sv_lut(
                     func,
                     d_in_width,
@@ -1223,6 +1239,6 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
                     path=rtl_dir,
                     path_with_dtype=False,
                     constant_mult=mult,
-                    floor=True,
+                    floor=False,
                 )
     return graph, {}

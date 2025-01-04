@@ -126,6 +126,7 @@ def test_emit_verilog_linear():
     model_args = {"vit_self_attention_integer": model_config}
     
     from functools import partial
+    from utils import updating_hardware_metadata_pass
     update_hardware_precision_param(mg, quan_args, model_args)
     updating_hardware_metadata_pass(mg, {
         "updating_funcs_list": [
@@ -170,10 +171,7 @@ def updating_for_patch_embed(node):
                 raise ValueError(f"Cannot find {dim} in {vp}")
 
     
-def updating_hardware_metadata_pass(mg, pass_args):
-    for node in mg.fx_graph.nodes: 
-        for func in pass_args["updating_funcs_list"]:
-            node = func(node)
+
     
             
         

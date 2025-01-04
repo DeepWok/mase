@@ -27,7 +27,7 @@ def excepthook(exc_type, exc_value, exc_traceback):
 sys.excepthook = excepthook
 # torch.manual_seed(0)
 # from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner
-from utils import MXIntLinear, MXIntLinearHardware
+from utils import MXIntLinearHardware
 
 
 class LinearTB(Testbench):
@@ -59,71 +59,46 @@ class LinearTB(Testbench):
             self.bias_driver.log.setLevel(logging.DEBUG)
             self.input_drivers["bias"] = self.bias_driver
 
-        self.data_out_0_monitor = MultiSignalErrorThresholdStreamMonitor(
+        self.data_out_0_monitor = MultiSignalStreamMonitor(
             dut.clk,
             (dut.mdata_out_0, dut.edata_out_0),
             dut.data_out_0_valid,
             dut.data_out_0_ready,
-            width=self.get_parameter("DATA_IN_0_PRECISION_0"),
-            signed=True,
             check=True,
-            error_bits=1,
         )
 
         self.output_monitors = {"out": self.data_out_0_monitor}
         # Model
-        # self.model = MXIntLinearHardware(
-        #     in_features=self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
-        #     out_features=self.get_parameter("DATA_OUT_0_TENSOR_SIZE_DIM_0"),
-        #     bias=True if self.get_parameter("HAS_BIAS") == 1 else False,
-        #     config={
-        #         "data_in_width": self.get_parameter("DATA_IN_0_PRECISION_0"),
-        #         "data_in_exponent_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
-        #         "data_in_parallelism": [
-        #             self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1"),
-        #             self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"),
-        #         ],
-        #         "weight_width": self.get_parameter("WEIGHT_PRECISION_0"),
-        #         "weight_exponent_width": self.get_parameter("WEIGHT_PRECISION_1"),
-        #         "weight_parallelism": [
-        #             self.get_parameter("WEIGHT_PARALLELISM_DIM_1"),
-        #             self.get_parameter("WEIGHT_PARALLELISM_DIM_0"),
-        #         ],
-        #         "bias_width": self.get_parameter("BIAS_PRECISION_0"),
-        #         "bias_exponent_width": self.get_parameter("BIAS_PRECISION_1"),
-        #         "bias_parallelism": [
-        #             self.get_parameter("BIAS_PARALLELISM_DIM_1"),
-        #             self.get_parameter("BIAS_PARALLELISM_DIM_0"),
-        #         ],
-        #         "data_out_width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
-        #         "data_out_exponent_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
-        #         "data_out_parallelism": [
-        #             self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_1"),
-        #             self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"),
-        #         ],
-        #     },
-        # )
-        self.model = MXIntLinear(
+        self.model = MXIntLinearHardware(
             in_features=self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
             out_features=self.get_parameter("DATA_OUT_0_TENSOR_SIZE_DIM_0"),
             bias=True if self.get_parameter("HAS_BIAS") == 1 else False,
-            config={
+            q_config={
                 "data_in_width": self.get_parameter("DATA_IN_0_PRECISION_0"),
                 "data_in_exponent_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
-                "data_in_parallelism_dim_1": self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1"),
-                "data_in_parallelism_dim_0": self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"),
+                "data_in_parallelism": [
+                    self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1"),
+                    self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"),
+                ],
                 "weight_width": self.get_parameter("WEIGHT_PRECISION_0"),
                 "weight_exponent_width": self.get_parameter("WEIGHT_PRECISION_1"),
-                "weight_parallelism_dim_1": self.get_parameter("WEIGHT_PARALLELISM_DIM_1"),
-                "weight_parallelism_dim_0": self.get_parameter("WEIGHT_PARALLELISM_DIM_0"),
+                "weight_parallelism": [
+                    self.get_parameter("WEIGHT_PARALLELISM_DIM_1"),
+                    self.get_parameter("WEIGHT_PARALLELISM_DIM_0"),
+                ],
                 "bias_width": self.get_parameter("BIAS_PRECISION_0"),
                 "bias_exponent_width": self.get_parameter("BIAS_PRECISION_1"),
-                "bias_parallelism_dim_1": self.get_parameter("BIAS_PARALLELISM_DIM_1"),
-                "bias_parallelism_dim_0": self.get_parameter("BIAS_PARALLELISM_DIM_0"),
+                "bias_parallelism": [
+                    self.get_parameter("BIAS_PARALLELISM_DIM_1"),
+                    self.get_parameter("BIAS_PARALLELISM_DIM_0"),
+                ],
                 "data_out_width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
                 "data_out_exponent_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
-                "data_out_parallelism_dim_1": self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_1"),
-                "data_out_parallelism_dim_0": self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"),
+                "data_out_parallelism": [
+                    self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_1"),
+                    self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"),
+                ],
+                "round_bits": self.get_parameter("ROUND_BITS"),
             },
         )
 
@@ -133,36 +108,17 @@ class LinearTB(Testbench):
         self.data_out_0_monitor.log.setLevel(logging.DEBUG)
 
     def preprocess_tensor_for_mxint(self, tensor, config, parallelism):
-        from utils import block_mxint_quant
+        from utils import mxint_hardware
         from utils import pack_tensor_to_mx_listed_chunk
 
-        (qtensor, mtensor, etensor) = block_mxint_quant(tensor, config, parallelism)
+        (qtensor, mtensor, etensor) = mxint_hardware(tensor, config, parallelism)
         tensor_inputs = pack_tensor_to_mx_listed_chunk(mtensor, etensor, parallelism)
-        return tensor_inputs
-
-    def preprocess_weight_tensor_for_mxint(self, tensor, config, parallelism):
-        from utils import mxint_quantize
-
-        t1, t0 = tensor.shape[0], tensor.shape[1]
-        p1, p0 = parallelism[0], parallelism[1]
-        reshaped_tensor = tensor.reshape(t1//p1, p1, t0//p0, p0).permute(0, 2, 1, 3)
-        reshaped_tensor = reshaped_tensor.reshape(-1, p1,p0)
-
-        tensor_inputs = []
-        for i in range(t1 * t0 //(p1*p0)):
-            etensors = []
-            mtensors = []
-            for j in range(p1):
-                (qtensor, mtensor, etensor) = mxint_quantize(reshaped_tensor[i][j], width=config["width"], exponent_width=config["exponent_width"])
-                etensors.append(int(etensor))
-                mtensors += mtensor.int().tolist()
-            tensor_inputs.append((mtensors, etensors))
-            
         return tensor_inputs
 
     def generate_inputs(self):
         return torch.randn(
             (
+                1,
                 self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_1"),
                 self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
             )
@@ -184,6 +140,7 @@ class LinearTB(Testbench):
                 config={
                     "width": self.get_parameter("DATA_IN_0_PRECISION_0"),
                     "exponent_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
+                    "round_bits": self.get_parameter("ROUND_BITS"),
                 },
                 parallelism=[
                     self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1"),
@@ -201,12 +158,15 @@ class LinearTB(Testbench):
                 config={
                     "width": self.get_parameter("WEIGHT_PRECISION_0"),
                     "exponent_width": self.get_parameter("WEIGHT_PRECISION_1"),
+                    "round_bits": 8,
                 },
                 parallelism=[
                     self.get_parameter("WEIGHT_PARALLELISM_DIM_1"),
                     self.get_parameter("WEIGHT_PARALLELISM_DIM_0"),
                 ],
             )
+            if self.get_parameter("CIRCULAR_WEIGHT") == 0:
+                weights = weights * self.get_parameter("IN_0_DEPTH_DIM_1")
             self.weight_driver.load_driver(weights)
 
             self.input_drivers = {"in0": self.data_in_0_driver, "in1": self.weight_driver}
@@ -219,12 +179,15 @@ class LinearTB(Testbench):
                     config={
                         "width": self.get_parameter("BIAS_PRECISION_0"),
                         "exponent_width": self.get_parameter("BIAS_PRECISION_1"),
+                        "round_bits": 8,
                     },
                     parallelism=[
                         self.get_parameter("BIAS_PARALLELISM_DIM_1"),
                         self.get_parameter("BIAS_PARALLELISM_DIM_0"),
                     ],
                 )
+                if self.get_parameter("CIRCULAR_WEIGHT") == 0:
+                    bias = bias * self.get_parameter("IN_0_DEPTH_DIM_1")
                 self.bias_driver.load_driver(bias)
                 self.input_drivers["in2"] = self.bias_driver
 
@@ -235,6 +198,7 @@ class LinearTB(Testbench):
                 config={
                     "width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
                     "exponent_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
+                    "round_bits": self.get_parameter("ROUND_BITS"),
                 },
                 parallelism=[
                     self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_1"),
@@ -325,11 +289,12 @@ def test_fixed_linear_regression():
                     "DATA_IN_0_PARALLELISM_DIM_1": 1,
                     "WEIGHT_TENSOR_SIZE_DIM_1": 192,
                     "WEIGHT_PARALLELISM_DIM_1": 32,
+                    "ROUND_BITS": 4,
                 },
                 # {
                 #     "HAS_BIAS": 1,
-                #     "DATA_IN_0_TENSOR_SIZE_DIM_0": 16,
-                #     "DATA_IN_0_PARALLELISM_DIM_0": 4,
+                #     "DATA_IN_0_TENSOR_SIZE_DIM_0": 2,
+                #     "DATA_IN_0_PARALLELISM_DIM_0": 2,
                 #     "DATA_IN_0_TENSOR_SIZE_DIM_1": 2,
                 #     "DATA_IN_0_PARALLELISM_DIM_1": 1,
                 #     "WEIGHT_TENSOR_SIZE_DIM_1": 2,

@@ -11,15 +11,14 @@ module fixed_rounding #(
     output [OUT_WIDTH - 1:0] data_out[IN_SIZE - 1:0]
 );
   for (genvar i = 0; i < IN_SIZE; i++) begin : parallel_round
-    fixed_signed_cast #(
+    fixed_round #(
         .IN_WIDTH(IN_WIDTH),
         .IN_FRAC_WIDTH(IN_FRAC_WIDTH),
         .OUT_WIDTH(OUT_WIDTH),
-        .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH),
-        .ROUND_FLOOR(1)
+        .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH)
     ) fr_inst (
-        .in_data (data_in[i]),
-        .out_data(data_out[i])
+        .data_in (data_in[i]),
+        .data_out(data_out[i])
     );
   end
 

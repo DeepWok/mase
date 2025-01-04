@@ -27,6 +27,10 @@ module unpacked_mx_split2_with_data #(
   logic [MAN_WIDTH * IN_SIZE + EXP_WIDTH - 1:0] data_in_flatten;
   logic [MAN_WIDTH * IN_SIZE + EXP_WIDTH - 1:0] fifo_data_out_flatten;
   logic [MAN_WIDTH * IN_SIZE + EXP_WIDTH - 1:0] straight_data_out_flatten;
+  // Add register slice at the end for FIFO outputs
+  logic [MAN_WIDTH-1:0] fifo_mdata_out_unreg[IN_SIZE - 1:0];
+  logic [EXP_WIDTH-1:0] fifo_edata_out_unreg;
+  logic fifo_data_out_unreg_valid, fifo_data_out_unreg_ready;
 
   // Input flattening
   for (genvar i = 0; i < IN_SIZE; i++) begin : reshape
@@ -45,8 +49,8 @@ module unpacked_mx_split2_with_data #(
       .data_in_valid(data_in_valid),
       .data_in_ready(data_in_ready),
       .fifo_data_out(fifo_data_out_flatten),
-      .fifo_data_out_valid(fifo_data_out_valid),
-      .fifo_data_out_ready(fifo_data_out_ready),
+      .fifo_data_out_valid(fifo_data_out_unreg_valid),
+      .fifo_data_out_ready(fifo_data_out_unreg_ready),
       .straight_data_out(straight_data_out_flatten),
       .straight_data_out_valid(straight_data_out_valid),
       .straight_data_out_ready(straight_data_out_ready)
@@ -54,9 +58,26 @@ module unpacked_mx_split2_with_data #(
 
   // Unflatten FIFO output
   for (genvar i = 0; i < IN_SIZE; i++) begin : unreshape_fifo
-    assign fifo_mdata_out[i] = fifo_data_out_flatten[i*MAN_WIDTH+MAN_WIDTH-1:i*MAN_WIDTH];
+    assign fifo_mdata_out_unreg[i] = fifo_data_out_flatten[i*MAN_WIDTH+MAN_WIDTH-1:i*MAN_WIDTH];
   end
-  assign fifo_edata_out = fifo_data_out_flatten[MAN_WIDTH*IN_SIZE+EXP_WIDTH-1:MAN_WIDTH*IN_SIZE];
+  assign fifo_edata_out_unreg = fifo_data_out_flatten[MAN_WIDTH*IN_SIZE+EXP_WIDTH-1:MAN_WIDTH*IN_SIZE];
+
+  mxint_skid_buffer #(
+      .DATA_PRECISION_0(MAN_WIDTH),
+      .DATA_PRECISION_1(EXP_WIDTH),
+      .IN_NUM(IN_SIZE)
+  ) fifo_out_reg_slice (
+      .clk(clk),
+      .rst(rst),
+      .mdata_in(fifo_mdata_out_unreg),
+      .edata_in(fifo_edata_out_unreg),
+      .data_in_valid(fifo_data_out_unreg_valid),
+      .data_in_ready(fifo_data_out_unreg_ready),
+      .mdata_out(fifo_mdata_out),
+      .edata_out(fifo_edata_out),
+      .data_out_valid(fifo_data_out_valid),
+      .data_out_ready(fifo_data_out_ready)
+  );
 
   // Unflatten straight output
   for (genvar i = 0; i < IN_SIZE; i++) begin : unreshape_straight

@@ -14,7 +14,6 @@ from mase_cocotb.interfaces.streaming import (
 )
 
 from mase_cocotb.runner import mase_runner
-from utils import mxint_quantize, block_mxint_quant, MxIntAccumulator
 from typing import Literal, Optional, Tuple, Union, Dict, List
 import torch
 import math
@@ -25,74 +24,6 @@ logger = logging.getLogger("testbench")
 logger.setLevel(logging.DEBUG)
 
 torch.manual_seed(10)
-
-def quantized_range_reduction(mx, ex, in_man_width, data_out_n_width):
-    """Vectorized range reduction"""
-    def hardware_round(mx, ex, in_man_frac_width, data_out_width):
-        round_max = 2**(data_out_width-1) - 1
-        round_min = -2**(data_out_width-1)
-        round_x = mx.reshape(-1) // 2**((in_man_frac_width-ex).reshape(-1))
-        return torch.clamp(round_x, round_min, round_max)
-    coefficient_quant_block = partial(
-        mxint_quantize, 
-        width=8,
-        exponent_width=4)
-    _, mlog2_e, elog2_e = coefficient_quant_block(torch.log2(torch.tensor(math.e)))
-    _, mln_2, eln_2 = coefficient_quant_block(torch.log(torch.tensor(2.0)))
-    n = hardware_round(mx * mlog2_e, ex + elog2_e, (in_man_width - 1 + 7), data_out_n_width)
-    print(n)
-    _mx = n * mln_2
-    _ex = eln_2
-    shifted_mx = mx // 2**(_ex - ex + (in_man_width - 1) - 7)
-    print(shifted_mx)
-    print(_ex - ex + (in_man_width - 1) - 7)
-    mr = shifted_mx - _mx
-    # return mr as an fixedpoint ?.7 we can make it 2.7
-    # return n as an integer number with width = data_out_width
-    return mr, n
-
-def fixed_exp(fr):
-    frac_width = 7
-    exp = 1*2**(frac_width) + fr + fr**2//2**(frac_width + 1) + fr**3*5//2**(frac_width + 4)
-    return exp
-    
-
-    
-def mxint_softmax(x, q_config):
-    # fixed_r, integer_n
-    in_man_width = q_config["in_man_width"]
-    in_exp_width = q_config["in_exp_width"]
-    data_out_n_width = q_config["data_out_n_width"]
-    data_out_man_width = q_config["data_out_man_width"]
-    data_out_frac_width = data_out_man_width - 1
-    data_out_exp_width = q_config["data_out_exp_width"]
-
-    shape = x.shape[0]
-    mout = torch.zeros_like(x)
-    eout = torch.zeros_like(x)
-
-    list_of_mexps = [] 
-    list_of_eexps = [] 
-    for i in range(shape):
-        _, mx, ex = mxint_quantize(x[i], in_man_width, in_exp_width)
-        fixed_r, integer_n = quantized_range_reduction(mx, ex, in_man_width, data_out_n_width)
-        # fixed_r will be 2.7 bits, integer_n will be data_out_n_width bits
-        mexp = fixed_exp(fixed_r)
-        eexp = integer_n
-        # currently we got mexp ?.7 bits, integer_n data_out_n_width bits
-        list_of_mexps.append(mexp)
-        list_of_eexps.append(eexp)
-    eexps = torch.stack(list_of_eexps)
-    mexps = torch.stack(list_of_mexps)
-    m_sum, e_sum = MxIntAccumulator(torch.stack(list_of_mexps), torch.stack(list_of_eexps))
-    extended_mexps = mexps * 2**(data_out_frac_width)
-    pre_cast_mout = extended_mexps // mexps
-    pre_cast_eout = eexps - e_sum
-    pre_cast_out = pre_cast_mout * 2**(pre_cast_eout - 7)
-    for i in range(shape):
-        _, mout[i], eout[i] = mxint_quantize(pre_cast_out[i], data_out_man_width, data_out_exp_width)
-    return mout, eout
-
 
 class MXIntSoftmaxTB(Testbench):
     def __init__(self, dut, num) -> None:
@@ -113,7 +44,7 @@ class MXIntSoftmaxTB(Testbench):
             (dut.mdata_out_0, dut.edata_out_0),
             dut.data_out_0_valid,
             dut.data_out_0_ready,
-            check=False,
+            check=True,
         )
 
         self.input_drivers = {
@@ -122,25 +53,56 @@ class MXIntSoftmaxTB(Testbench):
         self.output_monitors = {
             "out": self.data_out_0_monitor,
         }
-
+        self.data_out_0_monitor.log.setLevel(logging.DEBUG)
     def generate_inputs(self):
         inputs = []
         exp_outputs = []
         torch.manual_seed(0)
+        from mxint_quant.softmax import MXIntSoftmax
+        from mxint_quant.quantizers import mxint_hardware 
         for _ in range(self.num):
             data = 49 * torch.rand(int(self.dut.DATA_IN_0_DIM)) - 24.5
             q_config = {
-                "in_man_width": int(self.dut.DATA_IN_0_PRECISION_0),
-                "in_exp_width": int(self.dut.DATA_IN_0_PRECISION_1),
-                "data_out_n_width": int(self.dut.DATA_OUT_0_PRECISION_1),
-                "data_out_man_width": int(self.dut.DATA_OUT_0_PRECISION_0),
-                "data_out_exp_width": int(self.dut.DATA_OUT_0_PRECISION_1),
+                "data_in_width": int(self.dut.DATA_IN_0_PRECISION_0),
+                "data_in_exponent_width": int(self.dut.DATA_IN_0_PRECISION_1),
+                "block_size": int(self.dut.BLOCK_SIZE),
+                "data_out_width": int(self.dut.DATA_OUT_0_PRECISION_0),
+                "data_out_exponent_width": int(self.dut.DATA_OUT_0_PRECISION_1),
+                "data_width": int(self.dut.DATA_IN_0_PRECISION_0),
+                "data_exponent_width": int(self.dut.DATA_IN_0_PRECISION_1),
+                "data_r_width": int(self.dut.DATA_R_WIDTH),
+                "exp_sum_underflow_bits": int(self.dut.EXP_SUM_UNDERFLOW_BITS),
+                "division_underflow_bits": int(self.dut.DIVISION_UNDERFLOW_BITS),
             }
-            mout, eout = mxint_softmax(data, q_config)
-            shape = data.shape[0]
+            qdata_in, mdata_in, edata_in = mxint_hardware(
+                data, 
+                q_config = {
+                    "width": self.get_parameter("DATA_IN_0_PRECISION_0"),
+                    "exponent_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
+                    "round_bits": 4,
+                },
+                parallelism=[1, 1],
+            )
+
+            module = MXIntSoftmax(q_config)
+            qout, mout, eout = module(data)
+            qout, mout, eout = mxint_hardware(
+                qout, 
+                q_config = {
+                    "width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
+                    "exponent_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
+                    "round_bits": 4,
+                },
+                parallelism=[1, 1],
+            )
+            
+            mdata_in = mdata_in.reshape(-1)
+            edata_in = edata_in.reshape(-1)
+            mout = mout.reshape(-1)
+            eout = eout.reshape(-1)
+            shape = mdata_in.shape[0]
             for i in range(shape):
-                _, mdata_in, edata_in = mxint_quantize(data[i], q_config["in_man_width"], q_config["in_exp_width"])
-                inputs.append(([int(mdata_in)], int(edata_in)))
+                inputs.append(([int(mdata_in[i])], int(edata_in[i])))
                 exp_outputs.append(([int(mout[i])], int(eout[i])))
         return inputs, exp_outputs
 
@@ -161,7 +123,7 @@ class MXIntSoftmaxTB(Testbench):
 
 @cocotb.test()
 async def test(dut):
-    cocotb.start_soon(check_signal(dut))
+    # cocotb.start_soon(check_signal(dut))
     tb = MXIntSoftmaxTB(dut, num=20)
     await tb.run_test()
 
@@ -173,41 +135,41 @@ async def check_signal(dut):
         
         # Print all valid/ready signals
         print("\nValid/Ready Signals:")
-        print(f"data_in_0: {dut.data_in_0_valid.value}/{dut.data_in_0_ready.value}")
-        print(f"data_out_n: {dut.data_out_n_valid.value}/{dut.data_out_n_ready.value}")
-        print(f"data_out_r: {dut.data_out_r_valid.value}/{dut.data_out_r_ready.value}")
-        print(f"taylor_exp: {dut.taylor_exp_valid.value}/{dut.taylor_exp_ready.value}")
-        print(f"acc: {dut.acc_data_out_valid.value}/{dut.acc_data_out_ready.value}")
-        
-        # Print data values when valid and ready
-        if dut.data_in_0_valid.value == 1 and dut.data_in_0_ready.value == 1:
-            print("data_in_0 = ", [x.signed_integer for x in dut.mdata_in_0.value])
-        
-        if dut.data_out_n_valid.value == 1 and dut.data_out_n_ready.value == 1:
-            print("data_out_n = ", [x.signed_integer for x in dut.data_out_n.value])
-        
-        if dut.data_out_r_valid.value == 1 and dut.data_out_r_ready.value == 1:
-            print("data_out_r = ", [x.signed_integer for x in dut.data_out_r.value])
-            
-        if dut.taylor_exp_valid.value == 1 and dut.taylor_exp_ready.value == 1:
-            print("taylor_exp = ", dut.taylor_exp.value.signed_integer)
-            
-        if dut.acc_data_out_valid.value == 1 and dut.acc_data_out_ready.value == 1:
-            print("acc_data_out: mdata =", [x.signed_integer for x in dut.acc_mdata_out.value],
-                  "edata =", dut.acc_edata_out.value)
+        print(f"data_out_0: {dut.data_out_0_valid.value}/{dut.data_out_0_ready.value}")
         print("---")
 
+from mase_components.helper import generate_memory
+from pathlib import Path
+
+default_config = {
+    "DATA_IN_0_PRECISION_0": 8,
+    "DATA_IN_0_PRECISION_1": 4,
+    "DATA_IN_0_DIM": 8,
+    "DATA_OUT_0_PRECISION_0": 8,
+    "DATA_OUT_0_PRECISION_1": 4,
+    "DATA_R_WIDTH": 2,
+    "EXP_SUM_UNDERFLOW_BITS": 1,
+    "DIVISION_UNDERFLOW_BITS": 6,
+}
 if __name__ == "__main__":
+    valid_width = default_config["DATA_R_WIDTH"]
+    valid_frac_width = default_config["DATA_R_WIDTH"] - 1
+    hash_out_width = default_config["DATA_IN_0_PRECISION_0"]
+    hash_out_frac_width = default_config["DATA_IN_0_PRECISION_0"] - 2
+    generate_memory.generate_sv_lut(
+        "power2",
+        valid_width,
+        valid_frac_width,
+        hash_out_width,
+        hash_out_frac_width,
+        path=Path(__file__).parents[1] / "rtl",
+        constant_mult=1,
+        floor=False,
+    )
     mase_runner(
         trace=True,
         module_param_list=[
-            {
-            "DATA_IN_0_PRECISION_0": 8,
-            "DATA_IN_0_PRECISION_1": 4,
-            "DATA_IN_0_DIM": 8,
-            "DATA_OUT_0_PRECISION_0": 8,
-            "DATA_OUT_0_PRECISION_1": 4,
-            },
+            default_config,
         ],
         sim="verilator",
     )

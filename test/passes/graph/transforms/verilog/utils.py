@@ -41,6 +41,9 @@ def update_common_metadata_pass(mg, quan_args):
             if "mx_int_patch_embed" in node.name:
                 node.meta["mase"].parameters["common"]["mase_op"] = "mx_int_patch_embed"
                 mase_op = "mx_int_patch_embed"
+            elif "act" in node.name or "gelu" in node.name:
+                node.meta["mase"].parameters["common"]["mase_op"] = "gelu"
+                mase_op = "gelu"
         node_quan_config = parse_q_config(node, mase_op, quan_args)
         for arg, _ in node.meta["mase"].parameters["common"]["args"].items():
             if (
@@ -264,3 +267,8 @@ def delete_dim_of_batch_size(vp, node_name=None):
                 if key.endswith("3"):
                     pop_list.append(key)
     [vp.pop(key) for key in pop_list]
+
+def updating_hardware_metadata_pass(mg, pass_args):
+    for node in mg.fx_graph.nodes: 
+        for func in pass_args["updating_funcs_list"]:
+            node = func(node)

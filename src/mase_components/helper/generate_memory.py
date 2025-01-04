@@ -29,6 +29,7 @@ FUNCTION_TABLE = {
     "softshrink": nn.Softshrink(),
     "gelu": nn.GELU(),
     "exp": torch.exp,
+    "power2": lambda x: torch.pow(2, x),
     "softmax": torch.exp,
     "isqrt": isqrt,
 }
@@ -263,14 +264,14 @@ def lookup_to_sv_file(
 `timescale 1ns / 1ps
 /* verilator lint_off UNUSEDPARAM */
 module {function}_lut{end} #(
-    parameter DATA_IN_0_PRECISION_0  = 16,
-    parameter DATA_IN_0_PRECISION_1  = 8,
-    parameter DATA_OUT_0_PRECISION_0 = 16,
-    parameter DATA_OUT_0_PRECISION_1 = 8
+    parameter DATA_IN_0_PRECISION_0  = {in_data_width},
+    parameter DATA_IN_0_PRECISION_1  = {in_f_width},
+    parameter DATA_OUT_0_PRECISION_0 = {data_width},
+    parameter DATA_OUT_0_PRECISION_1 = {f_width}
 ) (
     /* verilator lint_off UNUSEDSIGNAL */
-    input  logic [7:0] data_in_0,
-    output logic [7:0] data_out_0
+    input  logic [{in_data_width - 1}:0] data_in_0,
+    output logic [{data_width - 1}:0] data_out_0
 );
 
 """
@@ -332,7 +333,7 @@ class GenerateSVLut:
         lut = self.generate_lut(lut_address)
         sv = self.generate_sv(lut)
 
-from mase_components.linear_layers.mxint_operators.test.utils import mxint_quantize
+from mase_components.linear_layers.mxint_operators.test.utils import mxint_quant_block
 class GenerateMxIntSVLut(GenerateSVLut):
     def quant_profile(self, bin_in):
         in_man_width, in_exp_width, out_man_width, out_exp_width = self.parameter["in_man_width"], self.parameter["in_exp_width"], self.parameter["out_man_width"], self.parameter["out_exp_width"]

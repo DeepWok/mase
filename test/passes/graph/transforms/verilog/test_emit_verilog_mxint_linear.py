@@ -81,11 +81,14 @@ quan_args = {
             "data_out_width": 8,
             "data_out_exponent_width": 8,
             "data_out_parallelism": [1, parallelism],
+            "round_bits": 4,
         }
     },
 }
 
 
+
+from mxint_quant import vit_module_level_quantize, VIT_CUSTOM_OPS
 @pytest.mark.dev
 def test_emit_verilog_linear():
     in_features = 192
@@ -94,7 +97,16 @@ def test_emit_verilog_linear():
     n = 196
     batch_size = 10
     linear = MLP(in_features, hidden_features, out_features)
-    mg = chop.MaseGraph(model=linear)
+    qlinear = vit_module_level_quantize(linear, q_config=quan_args)
+    qlinear.fc1.weight = torch.nn.Parameter(
+        10 * torch.randn(qlinear.fc1.weight.shape) - 5
+    )
+    model_path = "/scratch/cx922/mase/mlp_model.pth"
+    torch.save(qlinear.state_dict(), model_path)
+    print(f"Model saved to {model_path}")
+
+    mg = chop.MaseGraph(model=qlinear, custom_ops=VIT_CUSTOM_OPS)
+    # Save the whole model to a file
     torch.manual_seed(0)
     # Provide a dummy input for the graph so it can use for tracing
     x = torch.randn((batch_size, n, in_features))
@@ -102,44 +114,20 @@ def test_emit_verilog_linear():
 
     mg, _ = passes.init_metadata_analysis_pass(mg, None)
     # Increase weight range
-    mg.model.fc1.weight = torch.nn.Parameter(
-        10 * torch.randn(mg.model.fc1.weight.shape)
-    )
     mg, _ = passes.add_common_metadata_analysis_pass(mg, {"dummy_in": dummy_in})
-
-    mg, _ = passes.quantize_transform_pass(mg, quan_args)
-
     update_common_metadata_pass(mg, quan_args)
-    # from chop.passes.graph.transforms.verilog.insert_fork import insert_fifo_after_specified_modules
-    # mg, _ = insert_fifo_after_specified_modules(
-    #     mg, pass_args = {
-    #     "insert_fifo": ["linear"],
-    #     "max_parallelism": 2 # used for generating the fifo depth
-    #     }
-    # )
-    mg, _ = passes.add_hardware_metadata_analysis_pass(
-        mg, pass_args={"max_parallelism": [2] * 4}
-    )
+
+    mg, _ = passes.add_hardware_metadata_analysis_pass( mg, pass_args={"max_parallelism": [2] * 4})
     update_hardware_precision_param(mg, quan_args)
-    # wp1 = 8
-    # wp2 = 1
-    # manually_update_hardware_parallelism_param(
-    #     mg,
-    #     pass_args={
-    #         "fc1": {"din": [1, 2], "dout": [1, wp1]},
-    #         "fc2": {"din": [1, wp1], "dout": [1, wp2]},
-    #     },
-    # )
+
     mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
     pass_args = {
         "project_dir": Path("/scratch/cx922/mase/mxint_linear_m8e6"),
     }
+
     mg, _ = passes.emit_verilog_top_transform_pass(mg, pass_args)
     mg, _ = passes.emit_bram_transform_pass(mg, pass_args)
     mg, _ = passes.emit_internal_rtl_transform_pass(mg, pass_args)
-    # mg, _ = passes.emit_cocotb_transform_pass(
-    #     mg, pass_args={"wait_time": 100, "wait_unit": "ms", "batch_size": batch_size}
-    # )
     mg, _ = passes.emit_vivado_project_transform_pass(mg, pass_args)
 
 

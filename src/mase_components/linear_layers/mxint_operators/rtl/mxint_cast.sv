@@ -9,6 +9,7 @@ module mxint_cast #(
     parameter IN_EXP_WIDTH = 1,
     parameter OUT_MAN_WIDTH = 1,
     parameter OUT_EXP_WIDTH = 1,
+    parameter ROUND_BITS = 4,
     parameter BLOCK_SIZE = 1
 ) (
     /* verilator lint_off UNUSEDSIGNAL */
@@ -35,12 +36,16 @@ module mxint_cast #(
   localparam SHIFT_WIDTH = (OUT_EXP_WIDTH > IN_EXP_WIDTH) ? OUT_EXP_WIDTH + 1 : IN_EXP_WIDTH + 1;
   localparam SHIFT_DATA_WIDTH = OUT_MAN_WIDTH + 1;
 
+  localparam CAST_WIDTH = OUT_MAN_WIDTH + ROUND_BITS;
+
   logic [IN_MAN_WIDTH - 1:0] mdata_for_max [BLOCK_SIZE - 1:0];
   logic data_for_max_valid, data_for_max_ready;
 
   logic [IN_MAN_WIDTH-1:0] mdata_for_out [BLOCK_SIZE-1:0];
   logic [IN_EXP_WIDTH-1:0] edata_for_out;
   logic data_for_out_valid, data_for_out_ready;
+
+  logic [CAST_WIDTH-1:0] mdata_for_cast [BLOCK_SIZE-1:0];
 
   logic [LOG2_WIDTH - 1:0] log2_max_value;
   logic log2_max_value_valid, log2_max_value_ready;
@@ -53,6 +58,11 @@ module mxint_cast #(
   logic [SHIFT_DATA_WIDTH - 1:0] shift_buffer_data_for_out[BLOCK_SIZE - 1:0];
   logic [SHIFT_DATA_WIDTH - 1:0] shift_data[BLOCK_SIZE - 1:0][SHIFT_DATA_WIDTH - 1:0];
 
+    // Add intermediate signals
+    logic [OUT_MAN_WIDTH-1:0] mdata_out_unreg [BLOCK_SIZE-1:0];
+    logic [OUT_EXP_WIDTH-1:0] edata_out_unreg;
+    logic data_out_unreg_valid;
+    logic data_out_unreg_ready;
   unpacked_mx_split2_with_data #(
       .DEPTH($clog2(BLOCK_SIZE) + 1),
       .MAN_WIDTH(IN_MAN_WIDTH),
@@ -84,16 +94,33 @@ module mxint_cast #(
       .data_in_0(mdata_for_max),
       .data_in_0_valid(data_for_max_valid),
       .data_in_0_ready(data_for_max_ready),
-      .data_out_0(log2_max_value),
-      .data_out_0_valid(log2_max_value_valid),
-      .data_out_0_ready(log2_max_value_ready)
+      .data_out_0(log2_max_value_unreg),
+      .data_out_0_valid(log2_max_value_valid_unreg),
+      .data_out_0_ready(log2_max_value_ready_unreg)
+  );
+
+  // Add register slice after log2_max_abs
+  logic [LOG2_WIDTH-1:0] log2_max_value_unreg;
+  logic log2_max_value_valid_unreg, log2_max_value_ready_unreg;
+
+  skid_buffer #(
+      .DATA_WIDTH(LOG2_WIDTH)
+  ) log2_reg_slice (
+      .clk(clk),
+      .rst(rst),
+      .data_in(log2_max_value_unreg),
+      .data_in_valid(log2_max_value_valid_unreg),
+      .data_in_ready(log2_max_value_ready_unreg),
+      .data_out(log2_max_value),
+      .data_out_valid(log2_max_value_valid),
+      .data_out_ready(log2_max_value_ready)
   );
 
   join2 #() join_inst (
       .data_in_ready ({data_for_out_ready, log2_max_value_ready}),
       .data_in_valid ({data_for_out_valid, log2_max_value_valid}),
-      .data_out_valid(data_out_valid),
-      .data_out_ready(data_out_ready)
+      .data_out_valid(data_out_unreg_valid),
+      .data_out_ready(data_out_unreg_ready)
   );
 
   assign edata_out_full = $signed(
@@ -108,33 +135,52 @@ module mxint_cast #(
       .OUT_WIDTH(OUT_EXP_WIDTH)
   ) exp_clamp (
       .in_data (edata_out_full),
-      .out_data(edata_out)
+      .out_data(edata_out_unreg)
   );
 
   optimized_right_shift #(
       .IN_WIDTH(IN_MAN_WIDTH),
       .SHIFT_WIDTH(SHIFT_WIDTH),
-      .OUT_WIDTH(OUT_MAN_WIDTH),
+      .OUT_WIDTH(CAST_WIDTH),
       .BLOCK_SIZE(BLOCK_SIZE)
   ) ovshift_inst (
       .data_in(mdata_for_out),
       .shift_value(shift_value),
-      .data_out(mdata_out)
+      .data_out(mdata_for_cast)
   );
 
   assign shift_value = $signed(
-      edata_out
+      edata_out_unreg
   ) - $signed(
       edata_for_out
-  ) + IN_MAN_FRAC_WIDTH - (OUT_MAN_WIDTH - 1);
-  //   fixed_cast #(
-//       .IN_SIZE(BLOCK_SIZE),
-//       .IN_WIDTH(SHIFT_DATA_WIDTH),
-//       .IN_FRAC_WIDTH(),
-//       .OUT_WIDTH(OUT_MAN_WIDTH),
-//       .OUT_FRAC_WIDTH(0)
-//   ) fixed_cast_inst (
-//       .data_in(mdata_for_cast),
-//       .data_out(mdata_out)
-//   );
+  ) + IN_MAN_FRAC_WIDTH - (CAST_WIDTH - 1);
+    fixed_rounding #(
+        .IN_SIZE(BLOCK_SIZE),
+        .IN_WIDTH(CAST_WIDTH),
+        .IN_FRAC_WIDTH(CAST_WIDTH - 1),
+        .OUT_WIDTH(OUT_MAN_WIDTH),
+        .OUT_FRAC_WIDTH(OUT_MAN_WIDTH - 1)
+    ) fixed_cast_inst (
+        .data_in(mdata_for_cast),
+        .data_out(mdata_out_unreg)  // Changed to feed into skid buffer
+    );
+
+    // Add skid buffer at the end
+    mxint_skid_buffer #(
+        .DATA_PRECISION_0(OUT_MAN_WIDTH),
+        .DATA_PRECISION_1(OUT_EXP_WIDTH),
+        .IN_NUM(BLOCK_SIZE)
+    ) output_skid_buffer (
+        .clk(clk),
+        .rst(rst),
+        .mdata_in(mdata_out_unreg),
+        .edata_in(edata_out_unreg),
+        .data_in_valid(data_out_unreg_valid),
+        .data_in_ready(data_out_unreg_ready),
+        .mdata_out(mdata_out),
+        .edata_out(edata_out),
+        .data_out_valid(data_out_valid),
+        .data_out_ready(data_out_ready)
+    );
+
 endmodule
