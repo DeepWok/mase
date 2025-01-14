@@ -19,6 +19,7 @@ Reference:
 https://arxiv.org/pdf/1904.00938.pdf
 """
 
+
 class CNV_Toy(nn.Module):
     def __init__(self, num_classes):
         super().__init__()
