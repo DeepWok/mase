@@ -458,6 +458,10 @@ method_data = {
     },
     # https://pytorch.org/docs/stable/generated/torch.Tensor.detach.html
     "detach": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.ne.html#torch.Tensor.ne
+    "ne": {"input": "data_in", "other": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.int.html#torch-tensor-int
+    "int": {"memory_format": "config"},
 }
 
 # ----------------------------------------------------------
