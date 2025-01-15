@@ -20,6 +20,14 @@ https://arxiv.org/pdf/1904.00938.pdf
 """
 
 
+@register_mase_model(
+    "cnv-toy",
+    checkpoints=["cnv-toy"],
+    model_source="vision_others",
+    task_type="vision",
+    image_classification=True,
+    is_fx_traceable=True,
+)
 class CNV_Toy(nn.Module):
     def __init__(self, num_classes):
         super().__init__()
@@ -196,13 +204,13 @@ class CNV_Residual(nn.Module):
 
 
 # Getters ------------------------------------------------------------------------------
-@register_mase_checkpoint("cnv_toy")
+@register_mase_checkpoint("cnv-toy")
 def get_cnv_toy(
-    info,
     pretrained=False,
     **kwargs: Any,
 ):
     # image_size = info["image_size"]
+    info = kwargs["dataset_info"]
     num_classes = info.num_classes
     return CNV_Toy(num_classes)
 

@@ -27,7 +27,7 @@ from chop.passes.graph import (
 from chop.passes.graph.utils import deepcopy_mase_graph
 from chop.passes.graph.transforms.snn.ann2snn import ann2snn_transform_pass
 
-model_name = "cnv_toy"
+model_name = "cnv-toy"
 dataset_name = "cifar10"
 BATCH_SIZE = 32
 
@@ -90,7 +90,7 @@ input_generator = InputGenerator(
     which_dataloader="train",
 )
 
-model = models.get_model(model_name, "cls", dataset_info, pretrained=True)
+model = models.get_model(model_name, pretrained=False, dataset_info=dataset_info)
 
 
 # This line transforms a nn.Module to a MaseGraph
