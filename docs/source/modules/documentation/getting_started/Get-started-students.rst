@@ -5,7 +5,7 @@ For students at Imperial College London taking the Advanced Deep Learning System
 
 * Software stream students: you can run MASE on your local machine using Docker or Conda.
     * If you'd like to run batch jobs, you can use the Conda flow on the `ee-mill1` or `ee-mill3` servers.
-    * If you need GPU access for your ADLS project, for example to fine tune Pytorch models, you can use Colab by following the instructions `here <https://github.com/DeepWok/mase/blob/main/docs/labs/lab1.ipynb>`_.
+    * If you need GPU access for your ADLS project, for example to fine tune Pytorch models, you can use Colab by following the instructions `here <https://github.com/DeepWok/mase/blob/main/docs/labs/mase_colab.ipynb>`_.
 
 * Hardware stream students: if you're taking the ADLS module, you'll need Verilator. You can either use the Docker method (see instructions in the links) or install Verilator locally in your machine and use the Conda method instead.
     * If you need access to Vivado tools for your MSc/MEng project, you'll need to use the ``beholder1`` server. If you need Verilator as well, use Docker, otherwise Conda is also fine.
