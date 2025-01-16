@@ -444,7 +444,7 @@ class MaseGraph:
 
         logger.info(f"Exporting GraphModule to {fname}.pt")
         with open(f"{fname}.pt", "wb") as f:
-            torch.save(self.model, f)
+            torch.save(self.model.state_dict(), f)
 
         logger.info(f"Exporting MaseMetadata to {fname}.mz")
 
