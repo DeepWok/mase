@@ -28,7 +28,7 @@ git checkout -b your_branch_name
 ```shell
 # we suggest you to create a new conda environment for MASE, you can do this by running the following command
 # this creates separation for safe development and testing
-conda create -n mase python=3.11
+conda create -n mase python
 conda activate mase
 # checking , make sure you are using the correct python version and also the correct environment
 which python
