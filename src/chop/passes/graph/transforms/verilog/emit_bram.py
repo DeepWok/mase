@@ -126,7 +126,7 @@ module {node_param_name}_source #(
 
     parameter {_cap(verilog_param_name)}_PARALLELISM_DIM_0 = 1,
     parameter {_cap(verilog_param_name)}_PARALLELISM_DIM_1 = 1,
-    parameter OUT_DEPTH = {_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0 / {_cap(verilog_param_name)}_PARALLELISM_DIM_0
+    parameter OUT_DEPTH = ({_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0 / {_cap(verilog_param_name)}_PARALLELISM_DIM_0) * ({_cap(verilog_param_name)}_TENSOR_SIZE_DIM_1 / {_cap(verilog_param_name)}_PARALLELISM_DIM_1)
 ) (
     input clk,
     input rst,
@@ -148,12 +148,16 @@ module {node_param_name}_source #(
       end
     end
 
+  logic [1:0] clear;
+  always_ff @(posedge clk)
+    if (rst) clear <= 0;
+    else if ((data_out_ready == 1) && (clear != 2)) clear <= clear + 1;
   logic ce0;
-  assign ce0 = 1;
+  assign ce0 = data_out_ready;
 
-  logic [{_cap(verilog_param_name)}_PRECISION_0*{_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0-1:0] data_vector;
+  logic [{_cap(verilog_param_name)}_PRECISION_0*{_cap(verilog_param_name)}_PARALLELISM_DIM_0*{_cap(verilog_param_name)}_PARALLELISM_DIM_1-1:0] data_vector;
   {node_param_name} #(
-      .DATA_WIDTH({_cap(verilog_param_name)}_PRECISION_0 * {_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0),
+      .DATA_WIDTH({_cap(verilog_param_name)}_PRECISION_0 * {_cap(verilog_param_name)}_PARALLELISM_DIM_0 * {_cap(verilog_param_name)}_PARALLELISM_DIM_1),
       .ADDR_RANGE(OUT_DEPTH)
   ) {node_param_name}_mem (
       .clk(clk),
@@ -168,7 +172,7 @@ module {node_param_name}_source #(
   for (genvar j = 0; j < {_cap(verilog_param_name)}_PARALLELISM_DIM_0 * {_cap(verilog_param_name)}_PARALLELISM_DIM_1; j++)
     assign data_out[j] = data_vector[{_cap(verilog_param_name)}_PRECISION_0*j+{_cap(verilog_param_name)}_PRECISION_0-1:{_cap(verilog_param_name)}_PRECISION_0*j];
 
-  assign data_out_valid = 1;
+  assign data_out_valid = clear == 2;
 
 endmodule
 """
