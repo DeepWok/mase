@@ -23,7 +23,7 @@ The `fixed_softmax` module follows the dataflow streaming protocol and works by 
   <img src="https://raw.githubusercontent.com/DeepWok/mase/main/docs/source/imgs/activations/fixed_softmax.png" alt="img">
 </p>
 
-The module has the following parameters, following the hardware metadata standard (see [here](https://deepwok.github.io/mase/modules/api/analysis/add_metadata.html#add-hardware-metadata-analysis-pass)). Besides `PRECISION_DIM_*` parameters, which dictate the numerical precision, and `TENSOR_SIZE_DIM_*`, which is directly inferred from Pytorch tensor shapes, the following parameters can be adjusted to affect hardware performance.
+The module has the following parameters, following the hardware metadata standard (see [here](https://deepwok.github.io/mase/modules/chop/analysis/add_metadata.html#add-hardware-metadata-analysis-pass)). Besides `PRECISION_DIM_*` parameters, which dictate the numerical precision, and `TENSOR_SIZE_DIM_*`, which is directly inferred from Pytorch tensor shapes, the following parameters can be adjusted to affect hardware performance.
 
 | Parameter                    	| Default Value            	| Definition                                                                                                                                                                                                                                     	|
 |------------------------------	|--------------------------	|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	|
