@@ -4,7 +4,7 @@ from logging import getLogger
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from timm.models.layers import DropPath, to_2tuple, trunc_normal_
+from timm.layers import DropPath, to_2tuple, trunc_normal_
 from timm.models.vision_transformer import _cfg
 from chop.models.utils import register_mase_model
 
@@ -51,9 +51,7 @@ class Attention(nn.Module):
         sr_ratio=1,
     ):
         super().__init__()
-        assert (
-            dim % num_heads == 0
-        ), f"dim {dim} should be divided by num_heads {num_heads}."
+        assert dim % num_heads == 0, f"dim {dim} should be divided by num_heads {num_heads}."
 
         self.dim = dim
         self.num_heads = num_heads
@@ -73,27 +71,15 @@ class Attention(nn.Module):
 
     def forward(self, x, H, W):
         B, N, C = x.shape
-        q = (
-            self.q(x)
-            .reshape(B, N, self.num_heads, C // self.num_heads)
-            .permute(0, 2, 1, 3)
-        )
+        q = self.q(x).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)
 
         if self.sr_ratio > 1:
             x_ = x.permute(0, 2, 1).reshape(B, C, H, W)
             x_ = self.sr(x_).reshape(B, C, -1).permute(0, 2, 1)
             x_ = self.norm(x_)
-            kv = (
-                self.kv(x_)
-                .reshape(B, -1, 2, self.num_heads, C // self.num_heads)
-                .permute(2, 0, 3, 1, 4)
-            )
+            kv = self.kv(x_).reshape(B, -1, 2, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
         else:
-            kv = (
-                self.kv(x)
-                .reshape(B, -1, 2, self.num_heads, C // self.num_heads)
-                .permute(2, 0, 3, 1, 4)
-            )
+            kv = self.kv(x).reshape(B, -1, 2, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
         k, v = kv[0], kv[1]
 
         attn = (q @ k.transpose(-2, -1)) * self.scale
@@ -165,9 +151,7 @@ class PatchEmbed(nn.Module):
         #     f"img_size {img_size} should be divided by patch_size {patch_size}."
         self.H, self.W = img_size[0] // patch_size[0], img_size[1] // patch_size[1]
         self.num_patches = self.H * self.W
-        self.proj = nn.Conv2d(
-            in_chans, embed_dim, kernel_size=patch_size, stride=patch_size
-        )
+        self.proj = nn.Conv2d(in_chans, embed_dim, kernel_size=patch_size, stride=patch_size)
         self.norm = nn.LayerNorm(embed_dim)
 
     def forward(self, x):
@@ -218,9 +202,7 @@ class PyramidVisionTransformer(nn.Module):
         self.depths = depths
         self.num_stages = num_stages
 
-        dpr = [
-            x.item() for x in torch.linspace(0, drop_path_rate, sum(depths))
-        ]  # stochastic depth decay rule
+        dpr = [x.item() for x in torch.linspace(0, drop_path_rate, sum(depths))]  # stochastic depth decay rule
         cur = 0
 
         for i in range(num_stages):
@@ -230,11 +212,7 @@ class PyramidVisionTransformer(nn.Module):
                 in_chans=in_chans if i == 0 else embed_dims[i - 1],
                 embed_dim=embed_dims[i],
             )
-            num_patches = (
-                patch_embed.num_patches
-                if i != num_stages - 1
-                else patch_embed.num_patches + 1
-            )
+            num_patches = patch_embed.num_patches if i != num_stages - 1 else patch_embed.num_patches + 1
             pos_embed = nn.Parameter(torch.zeros(1, num_patches, embed_dims[i]))
             pos_drop = nn.Dropout(p=drop_rate)
 
@@ -268,9 +246,7 @@ class PyramidVisionTransformer(nn.Module):
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dims[3]))
 
         # classification head
-        self.head = (
-            nn.Linear(embed_dims[3], num_classes) if num_classes > 0 else nn.Identity()
-        )
+        self.head = nn.Linear(embed_dims[3], num_classes) if num_classes > 0 else nn.Identity()
 
         # init weights
         for i in range(num_stages):
@@ -298,9 +274,7 @@ class PyramidVisionTransformer(nn.Module):
 
     def reset_classifier(self, num_classes, global_pool=""):
         self.num_classes = num_classes
-        self.head = (
-            nn.Linear(self.embed_dim, num_classes) if num_classes > 0 else nn.Identity()
-        )
+        self.head = nn.Linear(self.embed_dim, num_classes) if num_classes > 0 else nn.Identity()
 
     def _get_pos_embed(self, pos_embed, patch_embed, H, W):
         if H * W == self.patch_embed1.num_patches:
@@ -308,9 +282,7 @@ class PyramidVisionTransformer(nn.Module):
         else:
             return (
                 F.interpolate(
-                    pos_embed.reshape(1, patch_embed.H, patch_embed.W, -1).permute(
-                        0, 3, 1, 2
-                    ),
+                    pos_embed.reshape(1, patch_embed.H, patch_embed.W, -1).permute(0, 3, 1, 2),
                     size=(H, W),
                     mode="bilinear",
                 )
