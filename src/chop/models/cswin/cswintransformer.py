@@ -112,7 +112,11 @@ class LePEAttention(nn.Module):
         H = W = int(np.sqrt(N))
         x = x.transpose(-2, -1).contiguous().view(B, C, H, W)
         x = img2windows(x, self.H_sp, self.W_sp)
-        x = x.reshape(-1, self.H_sp * self.W_sp, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3).contiguous()
+        x = (
+            x.reshape(-1, self.H_sp * self.W_sp, self.num_heads, C // self.num_heads)
+            .permute(0, 2, 1, 3)
+            .contiguous()
+        )
         return x
 
     def get_lepe(self, x, func):
@@ -122,12 +126,22 @@ class LePEAttention(nn.Module):
 
         H_sp, W_sp = self.H_sp, self.W_sp
         x = x.view(B, C, H // H_sp, H_sp, W // W_sp, W_sp)
-        x = x.permute(0, 2, 4, 1, 3, 5).contiguous().reshape(-1, C, H_sp, W_sp)  ### B', C, H', W'
+        x = (
+            x.permute(0, 2, 4, 1, 3, 5).contiguous().reshape(-1, C, H_sp, W_sp)
+        )  ### B', C, H', W'
 
         lepe = func(x)  ### B', C, H', W'
-        lepe = lepe.reshape(-1, self.num_heads, C // self.num_heads, H_sp * W_sp).permute(0, 1, 3, 2).contiguous()
+        lepe = (
+            lepe.reshape(-1, self.num_heads, C // self.num_heads, H_sp * W_sp)
+            .permute(0, 1, 3, 2)
+            .contiguous()
+        )
 
-        x = x.reshape(-1, self.num_heads, C // self.num_heads, self.H_sp * self.W_sp).permute(0, 1, 3, 2).contiguous()
+        x = (
+            x.reshape(-1, self.num_heads, C // self.num_heads, self.H_sp * self.W_sp)
+            .permute(0, 1, 3, 2)
+            .contiguous()
+        )
         return x, lepe
 
     def forward(self, qkv):
@@ -151,7 +165,9 @@ class LePEAttention(nn.Module):
         attn = self.attn_drop(attn)
 
         x = (attn @ v) + lepe
-        x = x.transpose(1, 2).reshape(-1, self.H_sp * self.W_sp, C)  # B head N N @ B head N C
+        x = x.transpose(1, 2).reshape(
+            -1, self.H_sp * self.W_sp, C
+        )  # B head N N @ B head N C
 
         ### Window2Img
         x = windows2img(x, self.H_sp, self.W_sp, H, W).view(B, -1, C)  # B H' W' C
@@ -271,7 +287,9 @@ def img2windows(img, H_sp, W_sp):
     """
     B, C, H, W = img.shape
     img_reshape = img.view(B, C, H // H_sp, H_sp, W // W_sp, W_sp)
-    img_perm = img_reshape.permute(0, 2, 4, 3, 5, 1).contiguous().reshape(-1, H_sp * W_sp, C)
+    img_perm = (
+        img_reshape.permute(0, 2, 4, 3, 5, 1).contiguous().reshape(-1, H_sp * W_sp, C)
+    )
     return img_perm
 
 
@@ -344,7 +362,9 @@ class CSWinTransformer(nn.Module):
         super().__init__()
         self.use_chk = use_chk
         self.num_classes = num_classes
-        self.num_features = self.embed_dim = embed_dim  # num_features for consistency with other models
+        self.num_features = self.embed_dim = (
+            embed_dim  # num_features for consistency with other models
+        )
         heads = num_heads
 
         self.stage1_conv_embed = nn.Sequential(
@@ -354,7 +374,9 @@ class CSWinTransformer(nn.Module):
         )
 
         curr_dim = embed_dim
-        dpr = [x.item() for x in torch.linspace(0, drop_path_rate, np.sum(depth))]  # stochastic depth decay rule
+        dpr = [
+            x.item() for x in torch.linspace(0, drop_path_rate, np.sum(depth))
+        ]  # stochastic depth decay rule
         self.stage1 = nn.ModuleList(
             [
                 CSWinBlock(
@@ -443,7 +465,9 @@ class CSWinTransformer(nn.Module):
 
         self.norm = norm_layer(curr_dim)
         # Classifier head
-        self.head = nn.Linear(curr_dim, num_classes) if num_classes > 0 else nn.Identity()
+        self.head = (
+            nn.Linear(curr_dim, num_classes) if num_classes > 0 else nn.Identity()
+        )
 
         trunc_normal_(self.head.weight, std=0.02)
         self.apply(self._init_weights)
@@ -468,7 +492,11 @@ class CSWinTransformer(nn.Module):
         if self.num_classes != num_classes:
             print("reset head to", num_classes)
             self.num_classes = num_classes
-            self.head = nn.Linear(self.out_dim, num_classes) if num_classes > 0 else nn.Identity()
+            self.head = (
+                nn.Linear(self.out_dim, num_classes)
+                if num_classes > 0
+                else nn.Identity()
+            )
             self.head = self.head.cuda()
             trunc_normal_(self.head.weight, std=0.02)
             if self.head.bias is not None:

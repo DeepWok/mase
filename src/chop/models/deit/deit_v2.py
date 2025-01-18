@@ -37,7 +37,11 @@ class Attention(nn.Module):
 
     def forward(self, x):
         B, N, C = x.shape
-        qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
+        qkv = (
+            self.qkv(x)
+            .reshape(B, N, 3, self.num_heads, C // self.num_heads)
+            .permute(2, 0, 3, 1, 4)
+        )
         q, k, v = qkv[0], qkv[1], qkv[2]
 
         q = q * self.scale
@@ -201,9 +205,13 @@ class Layer_scale_init_Block_paralx2(nn.Module):
             drop=drop,
         )
         self.gamma_1 = nn.Parameter(init_values * torch.ones((dim)), requires_grad=True)
-        self.gamma_1_1 = nn.Parameter(init_values * torch.ones((dim)), requires_grad=True)
+        self.gamma_1_1 = nn.Parameter(
+            init_values * torch.ones((dim)), requires_grad=True
+        )
         self.gamma_2 = nn.Parameter(init_values * torch.ones((dim)), requires_grad=True)
-        self.gamma_2_1 = nn.Parameter(init_values * torch.ones((dim)), requires_grad=True)
+        self.gamma_2_1 = nn.Parameter(
+            init_values * torch.ones((dim)), requires_grad=True
+        )
 
     def forward(self, x):
         x = (
@@ -276,8 +284,16 @@ class Block_paralx2(nn.Module):
         )
 
     def forward(self, x):
-        x = x + self.drop_path(self.attn(self.norm1(x))) + self.drop_path(self.attn1(self.norm11(x)))
-        x = x + self.drop_path(self.mlp(self.norm2(x))) + self.drop_path(self.mlp1(self.norm21(x)))
+        x = (
+            x
+            + self.drop_path(self.attn(self.norm1(x)))
+            + self.drop_path(self.attn1(self.norm11(x)))
+        )
+        x = (
+            x
+            + self.drop_path(self.mlp(self.norm2(x)))
+            + self.drop_path(self.mlp1(self.norm21(x)))
+        )
         return x
 
 
@@ -397,7 +413,9 @@ class vit_models(nn.Module):
         self.norm = norm_layer(embed_dim)
 
         self.feature_info = [dict(num_chs=embed_dim, reduction=0, module="head")]
-        self.head = nn.Linear(embed_dim, num_classes) if num_classes > 0 else nn.Identity()
+        self.head = (
+            nn.Linear(embed_dim, num_classes) if num_classes > 0 else nn.Identity()
+        )
 
         trunc_normal_(self.pos_embed, std=0.02)
         trunc_normal_(self.cls_token, std=0.02)
@@ -424,7 +442,9 @@ class vit_models(nn.Module):
 
     def reset_classifier(self, num_classes, global_pool=""):
         self.num_classes = num_classes
-        self.head = nn.Linear(self.embed_dim, num_classes) if num_classes > 0 else nn.Identity()
+        self.head = (
+            nn.Linear(self.embed_dim, num_classes) if num_classes > 0 else nn.Identity()
+        )
 
     def forward_features(self, x):
         B = x.shape[0]
@@ -455,7 +475,9 @@ class vit_models(nn.Module):
 # DeiT III: Revenge of the ViT (https://arxiv.org/abs/2204.07118)
 
 
-def deit_tiny_patch16_LS(pretrained=False, img_size=224, pretrained_21k=False, **kwargs):
+def deit_tiny_patch16_LS(
+    pretrained=False, img_size=224, pretrained_21k=False, **kwargs
+):
     model = vit_models(
         img_size=img_size,
         patch_size=16,
@@ -469,12 +491,16 @@ def deit_tiny_patch16_LS(pretrained=False, img_size=224, pretrained_21k=False, *
         **kwargs,
     )
     if pretrained:
-        logger.warning(f"The pretrained weight for deit_tiny_patch16_LS is not available. Model randomly initialized.")
+        logger.warning(
+            f"The pretrained weight for deit_tiny_patch16_LS is not available. Model randomly initialized."
+        )
 
     return model
 
 
-def deit_small_patch16_LS(pretrained=False, img_size=224, pretrained_21k=False, **kwargs):
+def deit_small_patch16_LS(
+    pretrained=False, img_size=224, pretrained_21k=False, **kwargs
+):
     model = vit_models(
         img_size=img_size,
         patch_size=16,
@@ -495,13 +521,17 @@ def deit_small_patch16_LS(pretrained=False, img_size=224, pretrained_21k=False, 
         else:
             name += "1k.pth"
 
-        checkpoint = torch.hub.load_state_dict_from_url(url=name, map_location="cpu", check_hash=True)
+        checkpoint = torch.hub.load_state_dict_from_url(
+            url=name, map_location="cpu", check_hash=True
+        )
         model.load_state_dict(checkpoint["model"])
 
     return model
 
 
-def deit_medium_patch16_LS(pretrained=False, img_size=224, pretrained_21k=False, **kwargs):
+def deit_medium_patch16_LS(
+    pretrained=False, img_size=224, pretrained_21k=False, **kwargs
+):
     model = vit_models(
         patch_size=16,
         embed_dim=512,
@@ -515,18 +545,24 @@ def deit_medium_patch16_LS(pretrained=False, img_size=224, pretrained_21k=False,
     )
     model.default_cfg = _cfg()
     if pretrained:
-        name = "https://dl.fbaipublicfiles.com/deit/deit_3_medium_" + str(img_size) + "_"
+        name = (
+            "https://dl.fbaipublicfiles.com/deit/deit_3_medium_" + str(img_size) + "_"
+        )
         if pretrained_21k:
             name += "21k.pth"
         else:
             name += "1k.pth"
 
-        checkpoint = torch.hub.load_state_dict_from_url(url=name, map_location="cpu", check_hash=True)
+        checkpoint = torch.hub.load_state_dict_from_url(
+            url=name, map_location="cpu", check_hash=True
+        )
         model.load_state_dict(checkpoint["model"])
     return model
 
 
-def deit_base_patch16_LS(pretrained=False, img_size=224, pretrained_21k=False, **kwargs):
+def deit_base_patch16_LS(
+    pretrained=False, img_size=224, pretrained_21k=False, **kwargs
+):
     model = vit_models(
         img_size=img_size,
         patch_size=16,
@@ -546,12 +582,16 @@ def deit_base_patch16_LS(pretrained=False, img_size=224, pretrained_21k=False, *
         else:
             name += "1k.pth"
 
-        checkpoint = torch.hub.load_state_dict_from_url(url=name, map_location="cpu", check_hash=True)
+        checkpoint = torch.hub.load_state_dict_from_url(
+            url=name, map_location="cpu", check_hash=True
+        )
         model.load_state_dict(checkpoint["model"])
     return model
 
 
-def deit_large_patch16_LS(pretrained=False, img_size=224, pretrained_21k=False, **kwargs):
+def deit_large_patch16_LS(
+    pretrained=False, img_size=224, pretrained_21k=False, **kwargs
+):
     model = vit_models(
         img_size=img_size,
         patch_size=16,
@@ -571,12 +611,16 @@ def deit_large_patch16_LS(pretrained=False, img_size=224, pretrained_21k=False, 
         else:
             name += "1k.pth"
 
-        checkpoint = torch.hub.load_state_dict_from_url(url=name, map_location="cpu", check_hash=True)
+        checkpoint = torch.hub.load_state_dict_from_url(
+            url=name, map_location="cpu", check_hash=True
+        )
         model.load_state_dict(checkpoint["model"])
     return model
 
 
-def deit_huge_patch14_LS(pretrained=False, img_size=224, pretrained_21k=False, **kwargs):
+def deit_huge_patch14_LS(
+    pretrained=False, img_size=224, pretrained_21k=False, **kwargs
+):
     model = vit_models(
         img_size=img_size,
         patch_size=14,
@@ -596,12 +640,16 @@ def deit_huge_patch14_LS(pretrained=False, img_size=224, pretrained_21k=False, *
         else:
             name += "1k_v1.pth"
 
-        checkpoint = torch.hub.load_state_dict_from_url(url=name, map_location="cpu", check_hash=True)
+        checkpoint = torch.hub.load_state_dict_from_url(
+            url=name, map_location="cpu", check_hash=True
+        )
         model.load_state_dict(checkpoint["model"])
     return model
 
 
-def deit_huge_patch14_52_LS(pretrained=False, img_size=224, pretrained_21k=False, **kwargs):
+def deit_huge_patch14_52_LS(
+    pretrained=False, img_size=224, pretrained_21k=False, **kwargs
+):
     model = vit_models(
         img_size=img_size,
         patch_size=14,
@@ -615,11 +663,15 @@ def deit_huge_patch14_52_LS(pretrained=False, img_size=224, pretrained_21k=False
         **kwargs,
     )
     if pretrained:
-        logger.warning(f"The pretrained weight is not available. Model randomly initialized.")
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model
 
 
-def deit_huge_patch14_26x2_LS(pretrained=False, img_size=224, pretrained_21k=False, **kwargs):
+def deit_huge_patch14_26x2_LS(
+    pretrained=False, img_size=224, pretrained_21k=False, **kwargs
+):
     model = vit_models(
         img_size=img_size,
         patch_size=14,
@@ -633,7 +685,9 @@ def deit_huge_patch14_26x2_LS(pretrained=False, img_size=224, pretrained_21k=Fal
         **kwargs,
     )
     if pretrained:
-        logger.warning(f"The pretrained weight is not available. Model randomly initialized.")
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model
 
 
@@ -674,7 +728,9 @@ def deit_huge_patch14_26x2_LS(pretrained=False, img_size=224, pretrained_21k=Fal
 #     return model
 
 
-def deit_Giant_48_patch14_LS(pretrained=False, img_size=224, pretrained_21k=False, **kwargs):
+def deit_Giant_48_patch14_LS(
+    pretrained=False, img_size=224, pretrained_21k=False, **kwargs
+):
     model = vit_models(
         img_size=img_size,
         patch_size=14,
@@ -688,11 +744,15 @@ def deit_Giant_48_patch14_LS(pretrained=False, img_size=224, pretrained_21k=Fals
         **kwargs,
     )
     if pretrained:
-        logger.warning(f"The pretrained weight is not available. Model randomly initialized.")
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model
 
 
-def deit_giant_40_patch14_LS(pretrained=False, img_size=224, pretrained_21k=False, **kwargs):
+def deit_giant_40_patch14_LS(
+    pretrained=False, img_size=224, pretrained_21k=False, **kwargs
+):
     model = vit_models(
         img_size=img_size,
         patch_size=14,
@@ -707,14 +767,18 @@ def deit_giant_40_patch14_LS(pretrained=False, img_size=224, pretrained_21k=Fals
     )
     # model.default_cfg = _cfg()
     if pretrained:
-        logger.warning(f"The pretrained weight is not available. Model randomly initialized.")
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model
 
 
 # Models from Three things everyone should know about Vision Transformers (https://arxiv.org/pdf/2203.09795.pdf)
 
 
-def deit_small_patch16_36_LS(pretrained=False, img_size=224, pretrained_21k=False, **kwargs):
+def deit_small_patch16_36_LS(
+    pretrained=False, img_size=224, pretrained_21k=False, **kwargs
+):
     model = vit_models(
         img_size=img_size,
         patch_size=16,
@@ -728,11 +792,15 @@ def deit_small_patch16_36_LS(pretrained=False, img_size=224, pretrained_21k=Fals
         **kwargs,
     )
     if pretrained:
-        logger.warning(f"The pretrained weight is not available. Model randomly initialized.")
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model
 
 
-def deit_small_patch16_36(pretrained=False, img_size=224, pretrained_21k=False, **kwargs):
+def deit_small_patch16_36(
+    pretrained=False, img_size=224, pretrained_21k=False, **kwargs
+):
     model = vit_models(
         img_size=img_size,
         patch_size=16,
@@ -745,11 +813,15 @@ def deit_small_patch16_36(pretrained=False, img_size=224, pretrained_21k=False, 
         **kwargs,
     )
     if pretrained:
-        logger.warning(f"The pretrained weight is not available. Model randomly initialized.")
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model
 
 
-def deit_small_patch16_18x2_LS(pretrained=False, img_size=224, pretrained_21k=False, **kwargs):
+def deit_small_patch16_18x2_LS(
+    pretrained=False, img_size=224, pretrained_21k=False, **kwargs
+):
     model = vit_models(
         img_size=img_size,
         patch_size=16,
@@ -763,11 +835,15 @@ def deit_small_patch16_18x2_LS(pretrained=False, img_size=224, pretrained_21k=Fa
         **kwargs,
     )
     if pretrained:
-        logger.warning(f"The pretrained weight is not available. Model randomly initialized.")
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model
 
 
-def deit_small_patch16_18x2(pretrained=False, img_size=224, pretrained_21k=False, **kwargs):
+def deit_small_patch16_18x2(
+    pretrained=False, img_size=224, pretrained_21k=False, **kwargs
+):
     model = vit_models(
         img_size=img_size,
         patch_size=16,
@@ -781,11 +857,15 @@ def deit_small_patch16_18x2(pretrained=False, img_size=224, pretrained_21k=False
         **kwargs,
     )
     if pretrained:
-        logger.warning(f"The pretrained weight is not available. Model randomly initialized.")
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model
 
 
-def deit_base_patch16_18x2_LS(pretrained=False, img_size=224, pretrained_21k=False, **kwargs):
+def deit_base_patch16_18x2_LS(
+    pretrained=False, img_size=224, pretrained_21k=False, **kwargs
+):
     model = vit_models(
         img_size=img_size,
         patch_size=16,
@@ -799,11 +879,15 @@ def deit_base_patch16_18x2_LS(pretrained=False, img_size=224, pretrained_21k=Fal
         **kwargs,
     )
     if pretrained:
-        logger.warning(f"The pretrained weight is not available. Model randomly initialized.")
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model
 
 
-def deit_base_patch16_18x2(pretrained=False, img_size=224, pretrained_21k=False, **kwargs):
+def deit_base_patch16_18x2(
+    pretrained=False, img_size=224, pretrained_21k=False, **kwargs
+):
     model = vit_models(
         img_size=img_size,
         patch_size=16,
@@ -817,11 +901,15 @@ def deit_base_patch16_18x2(pretrained=False, img_size=224, pretrained_21k=False,
         **kwargs,
     )
     if pretrained:
-        logger.warning(f"The pretrained weight is not available. Model randomly initialized.")
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model
 
 
-def deit_base_patch16_36x1_LS(pretrained=False, img_size=224, pretrained_21k=False, **kwargs):
+def deit_base_patch16_36x1_LS(
+    pretrained=False, img_size=224, pretrained_21k=False, **kwargs
+):
     model = vit_models(
         img_size=img_size,
         patch_size=16,
@@ -835,11 +923,15 @@ def deit_base_patch16_36x1_LS(pretrained=False, img_size=224, pretrained_21k=Fal
         **kwargs,
     )
     if pretrained:
-        logger.warning(f"The pretrained weight is not available. Model randomly initialized.")
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model
 
 
-def deit_base_patch16_36x1(pretrained=False, img_size=224, pretrained_21k=False, **kwargs):
+def deit_base_patch16_36x1(
+    pretrained=False, img_size=224, pretrained_21k=False, **kwargs
+):
     model = vit_models(
         img_size=img_size,
         patch_size=16,
@@ -852,5 +944,7 @@ def deit_base_patch16_36x1(pretrained=False, img_size=224, pretrained_21k=False,
         **kwargs,
     )
     if pretrained:
-        logger.warning(f"The pretrained weight is not available. Model randomly initialized.")
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model

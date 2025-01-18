@@ -43,17 +43,25 @@ class QuantizedAttention(nn.Module):
         # sr_ratio=1,
     ):
         super().__init__()
-        assert dim % num_heads == 0, f"dim {dim} should be divided by num_heads {num_heads}."
+        assert (
+            dim % num_heads == 0
+        ), f"dim {dim} should be divided by num_heads {num_heads}."
         self.config = config
         self.dim = dim
         self.num_heads = num_heads
         head_dim = dim // num_heads
         self.scale = qk_scale or head_dim**-0.5
 
-        self.q = get_quantized_cls("linear", config["q_proj"])(dim, dim, bias=qkv_bias, config=config["q_proj"])
-        self.kv = get_quantized_cls("linear", config["q_proj"])(dim, dim * 2, bias=qkv_bias, config=config["kv_proj"])
+        self.q = get_quantized_cls("linear", config["q_proj"])(
+            dim, dim, bias=qkv_bias, config=config["q_proj"]
+        )
+        self.kv = get_quantized_cls("linear", config["q_proj"])(
+            dim, dim * 2, bias=qkv_bias, config=config["kv_proj"]
+        )
         self.attn_drop = nn.Dropout(attn_drop)
-        self.proj = get_quantized_cls("linear", config["z_proj"])(dim, dim, bias=True, config=config["z_proj"])
+        self.proj = get_quantized_cls("linear", config["z_proj"])(
+            dim, dim, bias=True, config=config["z_proj"]
+        )
         self.proj_drop = nn.Dropout(proj_drop)
 
         # self.sr_ratio = sr_ratio
@@ -64,7 +72,11 @@ class QuantizedAttention(nn.Module):
     # def forward(self, x, H, W):
     def forward(self, x):
         B, N, C = x.shape
-        q = self.q(x).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)
+        q = (
+            self.q(x)
+            .reshape(B, N, self.num_heads, C // self.num_heads)
+            .permute(0, 2, 1, 3)
+        )
 
         # if self.sr_ratio > 1:
         #     x_ = x.permute(0, 2, 1).reshape(B, C, H, W)
@@ -76,14 +88,20 @@ class QuantizedAttention(nn.Module):
         #         .permute(2, 0, 3, 1, 4)
         #     )
         # else:
-        kv = self.kv(x).reshape(B, -1, 2, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
+        kv = (
+            self.kv(x)
+            .reshape(B, -1, 2, self.num_heads, C // self.num_heads)
+            .permute(2, 0, 3, 1, 4)
+        )
         k, v = kv[0], kv[1]
         attn = get_quantized_func("matmul", self.config["attn_matmul"])(
             q, k.transpose(-2, -1), self.config["attn_matmul"]
         )
         attn = QHashSoftmax(self.config["softmax"])(attn, self.scale)
         attn = self.attn_drop(attn)
-        x = get_quantized_func("matmul", self.config["z_matmul"])(attn, v, self.config["z_matmul"])
+        x = get_quantized_func("matmul", self.config["z_matmul"])(
+            attn, v, self.config["z_matmul"]
+        )
         x = x.transpose(1, 2).reshape(B, N, C)
         x = self.proj(x)
         x = self.proj_drop(x)
@@ -171,7 +189,9 @@ class QuantizedBlock(nn.Module):
 class QuantizedPatchEmbed(nn.Module):
     """Image to Patch Embedding"""
 
-    def __init__(self, img_size=224, patch_size=16, in_chans=3, embed_dim=768, config=None):
+    def __init__(
+        self, img_size=224, patch_size=16, in_chans=3, embed_dim=768, config=None
+    ):
         super().__init__()
         img_size = to_2tuple(img_size)
         patch_size = to_2tuple(patch_size)
@@ -235,7 +255,11 @@ class QuantizedPyramidVisionTransformer(nn.Module):
                 embed_dim=embed_dims[i],
                 config=config["patch_embed"],
             )
-            num_patches = patch_embed.num_patches if i != num_stages - 1 else patch_embed.num_patches + 1
+            num_patches = (
+                patch_embed.num_patches
+                if i != num_stages - 1
+                else patch_embed.num_patches + 1
+            )
             pos_embed = nn.Parameter(torch.zeros(1, num_patches, embed_dims[i]))
             pos_drop = nn.Dropout(p=drop_rate)
 
@@ -283,7 +307,9 @@ class QuantizedPyramidVisionTransformer(nn.Module):
         else:
             return (
                 F.interpolate(
-                    pos_embed.reshape(1, patch_embed.H, patch_embed.W, -1).permute(0, 3, 1, 2),
+                    pos_embed.reshape(1, patch_embed.H, patch_embed.W, -1).permute(
+                        0, 3, 1, 2
+                    ),
                     size=(H, W),
                     mode="bilinear",
                 )
@@ -312,7 +338,9 @@ class QuantizedPyramidVisionTransformer(nn.Module):
                 pos_embed = torch.cat((pos_embed[:, 0:1], pos_embed_), dim=1)
             else:
                 pos_embed = self._get_pos_embed(pos_embed, patch_embed, H, W)
-            pos_add = get_quantized_func("add", self.config["pos_add"])(x, pos_embed, self.config["pos_add"])
+            pos_add = get_quantized_func("add", self.config["pos_add"])(
+                x, pos_embed, self.config["pos_add"]
+            )
             x = pos_drop(pos_add)
             for blk in block:
                 x = blk(x)
