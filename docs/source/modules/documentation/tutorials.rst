@@ -12,7 +12,7 @@ See below a summary of the main tutorials:
 .. figure:: tutorials/imgs/tutorial_overview.png
    :width: 80%
    :align: center
-   
+
    Overview of the main Mase tutorials.
 
 Core Tutorials
@@ -36,7 +36,7 @@ The following show how to effectively run Neural Architecture Search (NAS) and m
 .. toctree::
    :maxdepth: 1
 
-   tutorials/tutorial_5_nas
+   tutorials/tutorial_5_nas_optuna
    tutorials/tutorial_6_mixed_precision_search
 
 Inference Deployment
@@ -55,7 +55,7 @@ Advanced Topics
 ---------------
 
 .. toctree::
-    :titlesonly:
+   :titlesonly:
 
    tutorials/advanced/tensorRT_quantization_tutorial
    tutorials/advanced/onnxrt_quantization_tutorial
@@ -68,9 +68,9 @@ Developer Guide
 If you'd like to contribute to Mase, you may find the following resources useful.
 
 .. toctree::
-    :titlesonly:
+   :titlesonly:
 
    tutorials/developer/Add-model-to-machop
    tutorials/developer/doc_writing
    tutorials/developer/how_to_extend_search
-    
+

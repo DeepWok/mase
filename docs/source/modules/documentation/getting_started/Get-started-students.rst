@@ -25,14 +25,16 @@ SSH into an Imperial server
 VS Code (optional)
 ------------------
 
-My suggestion to work on the server is to install VS Code on your local machine and develop with it. You can also use your own IDE for the project, such as `emacs` or `vim`. 
+My suggestion to work on the server is to install VS Code on your local machine and develop with it. You can also use your own IDE for the project, such as `emacs` or `vim`.
 
 1. Download and install `VS Code <https://code.visualstudio.com/>`_.
 2. Click the *extension* icon on the left bar (Cntrl + Shift + x), and search for *Remote - SSH* and *Remote Development* packages and install them.
 3. Click *Help* at the top and choose *Show All Commands* (Cntrl + Shift + P) and open the console to run a few commands.
+
   - Type :code:`ssh` in the console and choose *Remote SSH - Add New SSH Host*
   - Then you are asked to enter your ssh command, in our case, use: :code:`ssh username@ee-beholder1.ee.ic.ac.uk`
   - Enter your password and you are in! (You may be asked to choose the platform for the first time, choose *Linux*).
+
 4. Click *File* at the top-left and choose *Open Folder* to add the directory where you do your work to the explorer.
 5. To use Terminal, you can click *Terminal* on the top and choose *New Terminal*.
 
