@@ -7,7 +7,7 @@
    :align: center
 
 Lab 4 (Software Stream) Performance Engineering
-~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. raw:: html
 
