@@ -12,6 +12,8 @@ logger = logging.getLogger(__name__)
 
 from pathlib import Path
 
+torch.manual_seed(0)
+
 import cocotb
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor

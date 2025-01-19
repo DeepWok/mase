@@ -49,7 +49,7 @@ def emit_parameters_in_mem_internal(node, param_name, file_name, data_name):
             f"{_cap(verilog_param_name)}_PARALLELISM_DIM_1"
         ]
     )
-    out_depth = int(total_size / out_size)
+    out_depth = int((total_size + out_size - 1) / out_size)
     out_width = int(
         node.meta["mase"].parameters["common"]["args"][verilog_param_name]["precision"][
             0
@@ -126,7 +126,7 @@ module {node_param_name}_source #(
 
     parameter {_cap(verilog_param_name)}_PARALLELISM_DIM_0 = 1,
     parameter {_cap(verilog_param_name)}_PARALLELISM_DIM_1 = 1,
-    parameter OUT_DEPTH = ({_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0 / {_cap(verilog_param_name)}_PARALLELISM_DIM_0) * ({_cap(verilog_param_name)}_TENSOR_SIZE_DIM_1 / {_cap(verilog_param_name)}_PARALLELISM_DIM_1)
+    parameter OUT_DEPTH = (({_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0 + {_cap(verilog_param_name)}_PARALLELISM_DIM_0 - 1) / {_cap(verilog_param_name)}_PARALLELISM_DIM_0) * (({_cap(verilog_param_name)}_TENSOR_SIZE_DIM_1 + {_cap(verilog_param_name)}_PARALLELISM_DIM_1 - 1) / {_cap(verilog_param_name)}_PARALLELISM_DIM_1)
 ) (
     input clk,
     input rst,
@@ -205,7 +205,7 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
             f"{_cap(verilog_param_name)}_PARALLELISM_DIM_1"
         ]
     )
-    out_depth = int(total_size / out_size)
+    out_depth = int((total_size + out_size - 1) / out_size)
 
     data_buff = ""
     param_data = node.meta["mase"].module.get_parameter(param_name).data
@@ -245,7 +245,11 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
         for i in range(0, out_depth):
             line_buff = ""
             for j in range(0, out_size):
-                value = param_data[i * out_size + out_size - 1 - j]
+                if i * out_size + out_size - 1 - j >= len(param_data):
+                    value = 0
+                else:
+                    value = param_data[i * out_size + out_size - 1 - j]
+
                 value = integer_quantizer_for_hw(
                     torch.tensor(value), width, frac_width
                 ).item()
@@ -253,10 +257,14 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
                 value_bits = value[value.find("0b") + 2 :]
                 value_bits = "0" * (width - len(value_bits)) + value_bits
                 assert len(value_bits) == width
-                line_buff += value_bits
+                # TODO: do we need to convert to hex here...?
+                value_bits = hex(int(value_bits, 2))
+                value_bits = value_bits[value_bits.find("0x") + 2 :]
+                value_bits = "0" * (width // 4 - len(value_bits)) + value_bits
+                data_buff += value_bits
 
-            hex_buff = hex(int(line_buff, 2))
-            data_buff += hex_buff[hex_buff.find("0x") + 2 :] + "\n"
+            # hex_buff = hex(int(line_buff, 2))
+            data_buff += line_buff + "\n"
     else:
         assert False, "Emitting non-fixed parameters is not supported."
 
