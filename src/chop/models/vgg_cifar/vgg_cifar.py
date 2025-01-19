@@ -1,0 +1,65 @@
+# Original code: https://raw.githubusercontent.com/pytorch/vision/main/torchvision/models/vgg.py
+# Paper code https://github.com/Thinklab-SJTU/twns/blob/2c192c38559ffe168139c9e519a053c295ca1313/cls/litenet.py#L86
+
+import torch
+import torch.nn as nn
+from chop.models.utils import register_mase_model, register_mase_checkpoint
+
+
+@register_mase_model(
+    "vgg7_cifar",
+    checkpoints=["vgg7_cifar"],
+    model_source="vision_others",
+    task_type="vision",
+    image_classification=True,
+    is_fx_traceable=True,
+)
+class VGG7(nn.Module):
+    def __init__(self, image_size: list[int], num_classes: int) -> None:
+        super().__init__()
+        self.feature_layers = nn.Sequential(
+            nn.Conv2d(image_size[0], 128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128, momentum=0.9),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(128, 128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128, momentum=0.9),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Conv2d(128, 256, kernel_size=3, padding=1),
+            nn.BatchNorm2d(256, momentum=0.9),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(256, 256, kernel_size=3, padding=1),
+            nn.BatchNorm2d(256, momentum=0.9),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Conv2d(256, 512, kernel_size=3, padding=1),
+            nn.BatchNorm2d(512, momentum=0.9),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(512, 512, kernel_size=3, padding=1),
+            nn.BatchNorm2d(512, momentum=0.9),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2),
+        )
+        self.classifier = nn.Sequential(
+            nn.Linear(8192, 1024),
+            nn.ReLU(inplace=True),
+            nn.Linear(1024, 1024),
+            nn.ReLU(inplace=True),
+        )
+
+        self.last_layer = nn.Linear(1024, num_classes)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.feature_layers(x)
+        x = x.view(-1, 512 * 4 * 4)
+        x = self.classifier(x)
+        x = self.last_layer(x)
+        return x
+
+
+@register_mase_checkpoint("vgg7_cifar")
+def get_vgg7(pretrained=False, **kwargs) -> VGG7:
+    info = kwargs["dataset_info"]
+    image_size = info.image_size
+    num_classes = info.num_classes
+    return VGG7(image_size, num_classes)

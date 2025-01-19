@@ -9,8 +9,8 @@ from transformers.activations import GELUActivation
 import chop.passes as passes
 import chop.actions as actions
 from chop.ir import MaseGraph
-from chop.models.patched.mistral import MistralConfig, MistralModel
-from chop.models.patched.mistral.modeling_mistral import MistralAttention
+from chop.models.mistral import MistralConfig, MistralModel
+from chop.models.mistral.modeling_mistral import MistralAttention
 from chop.passes.graph.utils import deepsetattr
 
 # from chop.nn.quantized import MistralAttentionInteger
@@ -135,7 +135,7 @@ def get_default_qconfig():
     }
 
 
-@pytest.mark.skip(reason="Not working")
+@pytest.mark.skip(reason="Fixing needed")
 def test_emit_verilog_mistral_smoke():
     config = MistralConfig()
     config.num_hidden_layers = 3

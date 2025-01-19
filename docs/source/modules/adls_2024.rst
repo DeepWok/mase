@@ -1,0 +1,43 @@
+Advanced Deep Learning Systems: 2024/2025
+=========================================
+
+The widespread adoption of deep learning methods has been largely driven by the availability of easy-to-use systems such as PyTorch and TensorFlow. However, it is less common for users to explore the internals of the libraries and understand how they function, as well as how to optimize the high-level code for hardware systems. When deep learning algorithms are deployed into custom hardware, they are often modified to run faster and more efficiently. This module will provide you with the basic concepts and principles of modern deep learning systems, and explore how optimizations can be applied from both the software and hardware aspects of the system stack.
+
+Learning Outcomes
+------------------------------
+
+On successful completion of this module, you'll be able to :
+
+    1. Analyze the design principles of modern machine learning systems
+    
+    2. Argue the mapping of high-level Python code in Pytorch or Tensorflow into actual hardware (such as GPUs and FPGAs)
+
+    3. Assess the potential benefits of software and hardware optimizations
+    
+    4. Argue by comparing and contrasting how various vision and language models can benefit from different optimizations and being mapped to hardware.
+
+Syllabus
+------------------------------
+
+This module covers the following topics:
+    1. Introduction to modern ML systems and frameworks, ML models and their characteristics (Transformers, Convolutional Networks, 3D CNNs, Vision Transformers, Graph Neural Networks and Generative models such as VAEs and Diffusion Models) (3 hours)
+    2. Modern ML Compilers (including the concept of Computational Graphs, Parallelism and Graph-level optimization) (2 hours)
+    3. Model Compression (including Low Rank Approximation, Pruning, Quantization and Adaptive Compute), Hardware acceleration (including Commodity hardware, Custom hardware and MLPerf), Automated Machine Learning (including Network Architecture Search, Reinforcement Learning based NAS, Gradient-based NAS and Weight-sharing) (4 hours)
+    4. Deep Learning Training (including Backpropagation, Scalability, Data parallel vs. Model parallel and Multi-GPU/Node training) (2 hours) and Systems for various Deep Learning paradigms (including Federated Learning and Large Scale ML on the Cloud) (1 hour).
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Lab Materials
+
+    labs_2024/lab_0_introduction
+    labs_2024/lab_1_compression
+    labs_2024/lab_2_nas
+    labs_2024/lab_3_mixed_precision_search
+    labs_2024/lab4-hardware
+    labs_2024/lab4-software
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Additional Resources
+
+    labs_2024/setup_docker_env

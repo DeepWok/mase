@@ -4,6 +4,8 @@ from time import time
 import dill
 
 from chop.tools import get_logger
+from chop.passes.utils import register_mase_pass
+
 from .mesh_model import MeshModel
 
 logger = get_logger(__name__)
@@ -68,7 +70,7 @@ def _import_solution(
 
         # Annotate the metadata for each argument
         for arg, arg_spec in solution[node.name].get("args", {}).items():
-            node.meta["mase"]["common"]["args"][arg]["dtensor_spec"] = DTensorSpec(
+            node.meta["mase"]["common"]["args"][arg]["dtensor_spec"] = _DTensorSpec(
                 mesh=mesh,
                 placements=arg_spec,
             )
@@ -76,7 +78,7 @@ def _import_solution(
         # Annotate the metadata for each result
         for result, result_spec in solution[node.name].get("results", {}).items():
             node.meta["mase"]["common"]["results"][result]["dtensor_spec"] = (
-                DTensorSpec(
+                _DTensorSpec(
                     mesh=mesh,
                     placements=result_spec,
                 )
@@ -112,7 +114,7 @@ def _export_solution(mg, export_file: str = "ilp_solution.pkl"):
                 logger.warning(
                     f"DTensor spec not found for arg: {arg} in node: {node_name}. Assigning fully-replicated solution."
                 )
-                spec = DTensorSpec(
+                spec = _DTensorSpec(
                     None,
                     (Replicate(), Replicate()),
                 )
@@ -130,7 +132,7 @@ def _export_solution(mg, export_file: str = "ilp_solution.pkl"):
                 logger.warning(
                     f"DTensor spec not found for result: {result} in node: {node_name}. Assigning fully-replicated solution."
                 )
-                spec = DTensorSpec(
+                spec = _DTensorSpec(
                     None,
                     (Replicate(), Replicate()),
                 )
@@ -205,6 +207,11 @@ def _get_sharding_map(mg):
     return tensor_sharding_map
 
 
+@register_mase_pass(
+    name="autosharding_analysis_pass",
+    dependencies=["torch"],
+    requires_nightly_torch=True,
+)
 def autosharding_analysis_pass(mg, pass_args: dict = {}):
     """Annotate the metadata of each operator in the graph with a parallelization strategy.
 
@@ -232,9 +239,11 @@ def autosharding_analysis_pass(mg, pass_args: dict = {}):
     - preload_solution (optional) -> bool : If set to true, preload autosharding solution from file.
     - ilp_solution_file (optional) -> str : File to export the autosharding solution to. Defaults to: "ilp_solution.pkl".
     """
+    from .alpa import alpa_autosharding_pass
+    from .megatron import megatron_autosharding_pass
 
-    from torch.distributed._tensor._op_schema import DTensorSpec
-    from torch.distributed._tensor.placement_types import Replicate
+    from torch.distributed.tensor._op_schema import _DTensorSpec
+    from torch.distributed.tensor.placement_types import Replicate
     from .alpa import alpa_autosharding_pass
     from .megatron import megatron_autosharding_pass
 

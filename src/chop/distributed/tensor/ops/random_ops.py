@@ -1,12 +1,12 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates
 import torch
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._op_schema import (
     OpSchema,
     OpStrategy,
     PlacementStrategy,
     StrategyType,
 )
-from torch.distributed._tensor.ops.utils import is_tensor_partial
+from torch.distributed.tensor.ops.utils import is_tensor_partial
 from chop.distributed.tensor.ops.utils import register_op_strategy
 from torch.distributed.device_mesh import DeviceMesh
 

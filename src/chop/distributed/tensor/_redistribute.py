@@ -5,9 +5,9 @@ from typing import cast, Dict, List, NamedTuple, Tuple
 
 import torch
 import torch.distributed._functional_collectives as funcol
-from torch.distributed._tensor.device_mesh import DeviceMesh
-from torch.distributed._tensor.placement_types import (
-    DTensorSpec,
+from torch.distributed.tensor.device_mesh import DeviceMesh
+from torch.distributed.tensor.placement_types import (
+    _DTensorSpec,
     Partial,
     Placement,
     Replicate,
@@ -48,8 +48,8 @@ def _replicate_then_shard(val: _TransformInfo) -> int:
 
 @lru_cache(maxsize=None)
 def _gen_transform_infos(
-    src_spec: DTensorSpec,
-    dst_spec: DTensorSpec,
+    src_spec: _DTensorSpec,
+    dst_spec: _DTensorSpec,
 ) -> List[_TransformInfo]:
     """
     Generate the transform infos from the source placements to the target placements.
@@ -139,15 +139,15 @@ def _gen_transform_infos(
 
 def redistribute_local_tensor(
     local_tensor: torch.Tensor,
-    current_spec: DTensorSpec,
-    target_spec: DTensorSpec,
+    current_spec: _DTensorSpec,
+    target_spec: _DTensorSpec,
     *,
     async_op: bool = False,
     is_backward: bool = False,
 ) -> torch.Tensor:
     """
-    This redistribute the local tensor (torch.Tensor) from the current DTensorSpec to
-    the target DTensorSpec, which involves the necessary collective calls to transform
+    This redistribute the local tensor (torch.Tensor) from the current _DTensorSpec to
+    the target _DTensorSpec, which involves the necessary collective calls to transform
     the local shard of the DTensor from its current spec to the target spec.
     """
 
@@ -275,7 +275,7 @@ class Redistribute(torch.autograd.Function):
         ctx.async_op = async_op
 
         if current_spec.placements != placements:
-            target_spec = DTensorSpec(
+            target_spec = _DTensorSpec(
                 device_mesh, placements, tensor_meta=input._spec.tensor_meta
             )
 
@@ -317,7 +317,7 @@ class Redistribute(torch.autograd.Function):
             else:
                 normalized_placements.append(previous_placement)
 
-        spec = DTensorSpec(
+        spec = _DTensorSpec(
             previous_spec.device_mesh,
             tuple(normalized_placements),
             tensor_meta=TensorMeta(

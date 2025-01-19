@@ -40,9 +40,10 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
-    "myst_parser",
     "sphinx_needs",
     "sphinxcontrib.plantuml",
+    "myst_nb",
+    "sphinxcontrib.test_reports",
 ]
 
 myst_enable_extensions = [
@@ -77,14 +78,9 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "sphinx_rtd_theme"
+html_theme = "sphinx_book_theme"
 # check the options here https://sphinx-rtd-theme.readthedocs.io/en/stable/configuring.html
 html_theme_options = {}
-
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
 
 autodoc_default_options = {
     "members": True,
@@ -93,3 +89,5 @@ autodoc_default_options = {
     "undoc-members": True,
     "exclude-members": "__weakref__",
 }
+
+nb_execution_mode = "off"

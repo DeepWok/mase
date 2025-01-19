@@ -50,9 +50,7 @@ def test_conv_bn_fusion():
     model_info = models.get_model_info(MODEL)
     dummy_input = get_dummy_input(model_info, data_module, "cls")
 
-    model = models.get_model(
-        MODEL, task="cls", dataset_info=dataset_info, pretrained=True
-    )
+    model = models.get_model(MODEL, dataset_info=dataset_info, pretrained=True)
     model.eval()  # NOTE: This is a requirement for fusion to work
 
     graph = MaseGraph(model=model)

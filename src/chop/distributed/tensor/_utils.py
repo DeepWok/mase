@@ -1,10 +1,10 @@
 from typing import cast, List, Sequence, Tuple
 
 import torch
-import torch.distributed._tensor.api as dtensor
+import torch.distributed.tensor.api as dtensor
 from torch._prims_common import ShapeType
-from torch.distributed._tensor.placement_types import (
-    DTensorSpec,
+from torch.distributed.tensor.placement_types import (
+    _DTensorSpec,
     Partial,
     Placement,
     Replicate,
@@ -192,12 +192,12 @@ def try_find_mesh_from_args(
     NOTE: we can optimize this search if needed
     """
     for arg in args:
-        if isinstance(arg, (dtensor.DTensor, DTensorSpec)):
+        if isinstance(arg, (dtensor.DTensor, _DTensorSpec)):
             return arg.device_mesh
         elif (
             isinstance(arg, (list, tuple))
             and len(arg) > 0
-            and isinstance(arg[0], (dtensor.DTensor, DTensorSpec))
+            and isinstance(arg[0], (dtensor.DTensor, _DTensorSpec))
         ):
             return arg[0].device_mesh
 

@@ -8,21 +8,21 @@ from typing import cast, Dict, List, Optional, Sequence, Tuple, TYPE_CHECKING
 
 import torch
 import torch.distributed as dist
-import torch.distributed._tensor.random as random
-from torch.distributed._tensor._op_schema import (
+import torch.distributed.tensor._random as random
+from torch.distributed.tensor._op_schema import (
     _is_inplace_op,
     _is_out_variant_op,
     OpInfo,
     OpSchema,
     OutputSpecType,
 )
-from torch.distributed._tensor._tp_conv import (
+from torch.distributed.tensor._tp_conv import (
     convolution_backward_handler,
     convolution_handler,
 )
-from torch.distributed._tensor._utils import try_find_mesh_from_args
-from torch.distributed._tensor.placement_types import DTensorSpec, Replicate, TensorMeta
-from torch.distributed._tensor.random import is_rng_supported_mesh
+from torch.distributed.tensor._utils import try_find_mesh_from_args
+from torch.distributed.tensor.placement_types import _DTensorSpec, Replicate, TensorMeta
+from torch.distributed.tensor._random import is_rng_supported_mesh
 
 
 if TYPE_CHECKING:
@@ -150,7 +150,7 @@ class OpDispatcher:
                 local_results: object = None
             else:
 
-                def default_tensor(spec: DTensorSpec) -> torch.Tensor:
+                def default_tensor(spec: _DTensorSpec) -> torch.Tensor:
                     if spec.tensor_meta is not None:
                         shape = spec.tensor_meta.shape
                         dtype = spec.tensor_meta.dtype
@@ -163,7 +163,7 @@ class OpDispatcher:
                     else:
                         raise RuntimeError(f"{spec} has no tensor metadata.")
 
-                if isinstance(spec, DTensorSpec):
+                if isinstance(spec, _DTensorSpec):
                     # return a Tensor value
                     local_results = default_tensor(spec)
                 elif isinstance(spec, Sequence):
@@ -243,7 +243,7 @@ class OpDispatcher:
             for argument in op_call._schema.arguments:
                 if argument.is_out:
                     out_dt = cast(dtensor.DTensor, kwargs[argument.name])
-                    out_dt._spec = cast(DTensorSpec, output_specs[spec_idx])
+                    out_dt._spec = cast(_DTensorSpec, output_specs[spec_idx])
                     out_dts.append(out_dt)
                     spec_idx += 1
 
@@ -271,7 +271,7 @@ class OpDispatcher:
         new_local_args: List[object] = []
         for i, arg_spec in enumerate(op_info.flat_args_schema):
             reshard_arg_spec = flatten_args_schema_to_reshard[i]
-            if isinstance(arg_spec, DTensorSpec):
+            if isinstance(arg_spec, _DTensorSpec):
                 local_tensor = cast(torch.Tensor, op_info.local_args[i])
                 if arg_spec != reshard_arg_spec:
                     resharded_local_tensor = redistribute_local_tensor(
@@ -311,7 +311,7 @@ class OpDispatcher:
 
         def try_get_replicate_spec(
             tensor_arg: torch.Tensor, mesh: "DeviceMesh"
-        ) -> DTensorSpec:
+        ) -> _DTensorSpec:
             # tensor_arg is an instance of torch.Tensor and could be an arg or kwarg.
             if tensor_arg.numel() == 1 and tensor_arg.ndim == 1:
                 warnings.warn(
@@ -328,7 +328,7 @@ class OpDispatcher:
                 or self._allow_implicit_replication
             ):
                 # scalar tensor can be safely treated as replicated
-                replication_spec = DTensorSpec(
+                replication_spec = _DTensorSpec(
                     mesh,
                     (Replicate(),) * mesh.ndim,
                     tensor_meta=TensorMeta(
@@ -408,11 +408,11 @@ class OpDispatcher:
         if isinstance(res, torch.Tensor):
             if spec is not None:
                 assert isinstance(
-                    spec, DTensorSpec
-                ), f"output spec does not match with output! Expected DTensorSpec, got {spec}."
+                    spec, _DTensorSpec
+                ), f"output spec does not match with output! Expected _DTensorSpec, got {spec}."
                 return dtensor.DTensor(res, spec, requires_grad=res.requires_grad)
             else:
-                # if output does not have a DTensorSpec due to specific ops, it must be a scalar tensor
+                # if output does not have a _DTensorSpec due to specific ops, it must be a scalar tensor
                 assert res.ndim == 0, "output tensor should be scalar!"
                 return res
         elif isinstance(res, (list, tuple)):

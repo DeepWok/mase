@@ -27,7 +27,22 @@ from chop.passes.module import PASSES as MODULE_PASSES
 logger = logging.getLogger(__name__)
 
 
-def pre_transform_load(load_name: str, load_type: str, model: torch.nn.Module):
+def pre_transform_load(
+    load_name: str,
+    load_type: str,
+    model: torch.nn.Module,
+):
+    """
+    Load the model if a checkpoint is provided.
+
+    Args:
+        load_name (str): _description_
+        load_type (str): _description_
+        model (torch.nn.Module): _description_
+
+    Returns:
+        _type_: _description_
+    """
     if load_name is not None and load_type in ["pt", "pl"]:
         model = load_model(load_name=load_name, load_type=load_type, model=model)
     return model
@@ -35,8 +50,8 @@ def pre_transform_load(load_name: str, load_type: str, model: torch.nn.Module):
 
 def transform(
     model: torch.nn.Module,
-    model_info,
-    model_name,
+    model_info: dict,
+    model_name: str,
     data_module,
     task: str,
     config: str,
@@ -45,6 +60,24 @@ def transform(
     load_type: str = None,
     accelerator: str = "auto",
 ):
+    """
+    Transform the model based on the configuration.
+
+    Args:
+        model (torch.nn.Module): _description_
+        model_info (dict): _description_
+        model_name (str): _description_
+        data_module (_type_): _description_
+        task (str): _description_
+        config (str): _description_
+        save_dir (str, optional): _description_. Defaults to None.
+        load_name (str, optional): _description_. Defaults to None.
+        load_type (str, optional): _description_. Defaults to None.
+        accelerator (str, optional): _description_. Defaults to "auto".
+
+    Raises:
+        ValueError: _description_
+    """
     accelerator = parse_accelerator(accelerator)
     model = pre_transform_load(load_name=load_name, load_type=load_type, model=model)
     model.to(accelerator)
@@ -94,6 +127,24 @@ def transform_module(
     load_type: str = None,
     accelerator: str = "auto",
 ):
+    """
+    Transform the model at Pytorch module level.
+
+    Args:
+        model (torch.nn.Module): _description_
+        model_info (_type_): _description_
+        model_name (_type_): _description_
+        data_module (_type_): _description_
+        task (str): _description_
+        config (str): _description_
+        save_dir (str, optional): _description_. Defaults to None.
+        load_name (str, optional): _description_. Defaults to None.
+        load_type (str, optional): _description_. Defaults to None.
+        accelerator (str, optional): _description_. Defaults to "auto".
+
+    Returns:
+        _type_: _description_
+    """
     accelerator = parse_accelerator(accelerator)
     model = pre_transform_load(load_name=load_name, load_type=load_type, model=model)
     model.to(accelerator)
@@ -136,6 +187,24 @@ def transform_graph(
     load_type: str = None,
     accelerator: str = "auto",
 ):
+    """
+    Transform the model at FX graph level.
+
+    Args:
+        model (torch.nn.Module): _description_
+        model_info (_type_): _description_
+        model_name (_type_): _description_
+        data_module (_type_): _description_
+        task (str): _description_
+        config (str): _description_
+        save_dir (str, optional): _description_. Defaults to None.
+        load_name (str, optional): _description_. Defaults to None.
+        load_type (str, optional): _description_. Defaults to None.
+        accelerator (str, optional): _description_. Defaults to "auto".
+
+    Returns:
+        _type_: _description_
+    """
     accelerator = parse_accelerator(accelerator)
     model = pre_transform_load(load_name=load_name, load_type=load_type, model=model)
     model.to(accelerator)

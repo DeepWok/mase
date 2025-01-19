@@ -2,11 +2,11 @@ import itertools
 
 import torch
 import torch.nn.functional as F
-from torch.distributed._tensor._op_schema import OpStrategy, PlacementStrategy
-from torch.distributed._tensor.placement_types import (
+from torch.distributed.tensor._op_schema import OpStrategy, PlacementStrategy
+from torch.distributed.tensor.placement_types import (
     Replicate,
     Shard,
-    DTensorSpec,
+    _DTensorSpec,
     TensorMeta,
 )
 
@@ -52,7 +52,7 @@ def placeholder_or_getattr_strategy(meta, mesh, skip_fully_replicated=False):
     for sharding in itertools.product(opts, repeat=2):
         if skip_fully_replicated and sharding == (Replicate(), Replicate()):
             continue
-        spec = DTensorSpec(mesh=mesh, placements=sharding, tensor_meta=tensor_meta)
+        spec = _DTensorSpec(mesh=mesh, placements=sharding, tensor_meta=tensor_meta)
         shardings.append(PlacementStrategy(input_specs=spec, output_specs=spec))
     return OpStrategy(shardings)
 
@@ -78,7 +78,7 @@ def fully_replicated_strategy(meta, mesh):
         arg = meta["common"]["args"][first_arg_key]
         in_shape, in_dtype = find_shape_and_dtype(arg)
 
-    in_spec = DTensorSpec(
+    in_spec = _DTensorSpec(
         mesh,
         sharding,
         tensor_meta=TensorMeta(
@@ -94,7 +94,7 @@ def fully_replicated_strategy(meta, mesh):
         else "type"
     )
     out_dtype = meta["common"]["results"]["data_out_0"][dtype_key]
-    out_spec = DTensorSpec(
+    out_spec = _DTensorSpec(
         mesh,
         sharding,
         tensor_meta=TensorMeta(

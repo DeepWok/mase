@@ -2,7 +2,7 @@
 from typing import List, Sequence, Tuple
 
 import torch
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._op_schema import (
     _is_inplace_op,
     _is_out_variant_op,
     OpSchema,
@@ -12,14 +12,14 @@ from torch.distributed._tensor._op_schema import (
     StrategyType,
     TupleStrategy,
 )
-from torch.distributed._tensor.ops.utils import (
+from torch.distributed.tensor.ops.utils import (
     generate_redistribute_costs,
     infer_broadcast_dims_map,
     map_placements_after_broadcast,
     normalize_dim,
 )
-from torch.distributed._tensor.placement_types import (
-    DTensorSpec,
+from torch.distributed.tensor.placement_types import (
+    _DTensorSpec,
     Partial,
     Placement,
     Replicate,
@@ -473,7 +473,7 @@ def common_pointwise_strategy(
             else:
                 out_placements.append(placement)
 
-        input_specs: List[DTensorSpec] = []
+        input_specs: List[_DTensorSpec] = []
         redistribute_costs: List[List[float]] = []
         for idx, input_arg in enumerate(args_schema):
             if isinstance(input_arg, OpStrategy):
@@ -487,7 +487,7 @@ def common_pointwise_strategy(
                     common_shape,
                     input_arg_dims_map,
                 )
-                input_arg_target_spec = DTensorSpec(
+                input_arg_target_spec = _DTensorSpec(
                     mesh=mesh,
                     placements=input_target_placements,
                     tensor_meta=input_arg_spec.tensor_meta,
@@ -499,7 +499,7 @@ def common_pointwise_strategy(
 
         pointwise_strategy.strategies.append(
             PlacementStrategy(
-                output_specs=DTensorSpec(
+                output_specs=_DTensorSpec(
                     mesh=mesh,
                     placements=tuple(out_placements),
                 ),

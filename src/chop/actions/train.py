@@ -26,34 +26,43 @@ from chop.tools.utils import parse_accelerator, to_numpy_if_tensor
 logger = logging.getLogger(__name__)
 
 
-# class CustomFSDPStrategy(DDPStrategy):
-#     def configure_ddp(self):
-#         # model = DistributedDataParallel(model)
-#         fsdp_model = FullyShardedDataParallel(
-#             self.model,
-#             # fsdp_auto_wrap_policy=default_auto_wrap_policy,
-#             # cpu_offload=CPUOffload(offload_params=True),
-#         )
-#         self.model = fsdp_model
-
-
 def train(
-    model,
-    model_info,
-    data_module,
-    dataset_info,
-    task,
-    optimizer,
-    learning_rate,
-    weight_decay,
-    scheduler_args,
-    plt_trainer_args,
-    auto_requeue,
-    save_path,
-    visualizer,
-    load_name,
-    load_type,
+    model: pl.LightningModule,
+    model_info: dict,
+    data_module: pl.LightningDataModule,
+    dataset_info: dict,
+    task: str,
+    optimizer: str,
+    learning_rate: float,
+    weight_decay: float,
+    scheduler_args: dict,
+    plt_trainer_args: dict,
+    auto_requeue: bool,
+    save_path: str,
+    visualizer: TensorBoardLogger,
+    load_name: str,
+    load_type: str,
 ):
+    """
+    Train the model using PyTorch Lightning.
+
+    Args:
+        model (pl.LightningModule): Model to be trained.
+        model_info (dict): Information about the model.
+        data_module (pl.LightningDataModule): Data module for the model.
+        dataset_info (dict): Information about the dataset.
+        task (str): Task to be performed.
+        optimizer (str): Optimizer to be used.
+        learning_rate (float): Learning rate for the optimizer.
+        weight_decay (float): Weight decay for the optimizer.
+        scheduler_args (dict): Arguments for the scheduler.
+        plt_trainer_args (dict): Arguments for PyTorch Lightning Trainer.
+        auto_requeue (bool): Requeue on SLURM.
+        save_path (str): Path to save the model.
+        visualizer (TensorBoardLogger): Tensorboard logger.
+        load_name (str): Name of the checkpoint to load.
+        load_type (str): Type of the checkpoint to load.
+    """
     if save_path is not None:
         # if save_path is None, the model will not be saved
         if not os.path.isdir(save_path):
@@ -80,17 +89,6 @@ def train(
     else:
         plugins = None
     plt_trainer_args["plugins"] = plugins
-
-    # Check optimizer
-    # if plt_trainer_args["strategy"] in ["deepspeed_stage_3"]:
-    #     assert optimizer in [
-    #         "FusedAdam",
-    #         "fused_adam",
-    #     ], "optimizer should be 'fused_adam' given --strategy={}".format(
-    #         plt_trainer_args["strategy"]
-    #     )
-    # elif plt_trainer_args["strategy"] in ["fsdp_custom"]:
-    #     plt_trainer_args["strategy"] = CustomFSDPStrategy()
 
     wrapper_cls = get_model_wrapper(model_info, task)
 

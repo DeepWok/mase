@@ -6,17 +6,17 @@ import operator
 from typing import cast, Iterable, List, Optional, Sequence, Tuple, Union
 
 import torch
-from torch.distributed._tensor._collective_utils import redistribute_cost
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._collective_utils import redistribute_cost
+from torch.distributed.tensor._op_schema import (
     OpSchema,
     OpStrategy,
     PlacementList,
     PlacementStrategy,
     RuntimeSchemaInfo,
 )
-from torch.distributed._tensor.device_mesh import DeviceMesh
-from torch.distributed._tensor.placement_types import (
-    DTensorSpec,
+from torch.distributed.tensor.device_mesh import DeviceMesh
+from torch.distributed.tensor.placement_types import (
+    _DTensorSpec,
     Partial,
     Placement,
     Replicate,
@@ -137,7 +137,7 @@ def prod(xs: Iterable[int]) -> int:
     return functools.reduce(operator.mul, xs, 1)
 
 
-def is_tensor_shardable(shape: Sequence[int], spec: DTensorSpec) -> bool:
+def is_tensor_shardable(shape: Sequence[int], spec: _DTensorSpec) -> bool:
     """Check if the shape is shardable according to the spec."""
     # number of shards in each tensor dimension
     shards_map = [1] * len(shape)
@@ -155,7 +155,7 @@ def is_tensor_shardable(shape: Sequence[int], spec: DTensorSpec) -> bool:
     return True
 
 
-def is_tensor_evenly_shardable(shape: Sequence[int], spec: DTensorSpec) -> bool:
+def is_tensor_evenly_shardable(shape: Sequence[int], spec: _DTensorSpec) -> bool:
     """Check if the shape is evenly shardable according to the spec."""
     # number of shards in each tensor dimension
     shards_map = [1] * len(shape)
@@ -171,12 +171,12 @@ def is_tensor_evenly_shardable(shape: Sequence[int], spec: DTensorSpec) -> bool:
     return True
 
 
-def is_tensor_dim_sharded(spec: DTensorSpec, dim: int) -> bool:
+def is_tensor_dim_sharded(spec: _DTensorSpec, dim: int) -> bool:
     """Return True if tensor dim is sharded."""
     return any(p.is_shard(dim) for p in spec.placements)
 
 
-def is_tensor_partial(spec: DTensorSpec) -> bool:
+def is_tensor_partial(spec: _DTensorSpec) -> bool:
     """Return True if tensor is partial on the mesh."""
     return any(p.is_partial() for p in spec.placements)
 
@@ -227,7 +227,7 @@ def map_placements_after_broadcast(
 
 
 def generate_redistribute_costs(
-    src_strategy: OpStrategy, dst_spec: DTensorSpec
+    src_strategy: OpStrategy, dst_spec: _DTensorSpec
 ) -> List[float]:
     redistribute_costs: List[float] = []
     for strat in src_strategy.strategies:
@@ -251,15 +251,15 @@ def expand_to_full_mesh_op_strategy(
 
     all_strategies = []
     for strategy_comb in strategy_combs:
-        spec_list: List[Optional[DTensorSpec]] = []
+        spec_list: List[Optional[_DTensorSpec]] = []
         for specs in zip(*strategy_comb):
             if specs[0] is not None:
-                spec_list.append(DTensorSpec(mesh, specs))
+                spec_list.append(_DTensorSpec(mesh, specs))
             else:
                 spec_list.append(None)
 
-        input_specs: List[DTensorSpec] = [
-            s for s in spec_list[input_index:] if isinstance(s, DTensorSpec)
+        input_specs: List[_DTensorSpec] = [
+            s for s in spec_list[input_index:] if isinstance(s, _DTensorSpec)
         ]
 
         input_args_strategy = op_schema.args_strategy

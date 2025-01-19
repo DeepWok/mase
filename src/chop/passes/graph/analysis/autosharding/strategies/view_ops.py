@@ -1,5 +1,5 @@
 # Adapted from Pytorch Distributed DTensor API.
-# https://github.com/pytorch/pytorch/blob/main/torch/distributed/_tensor/ops/view_ops.py
+# https://github.com/pytorch/pytorch/blob/main/torch/distributed.tensor/ops/view_ops.py
 
 from dataclasses import dataclass
 from typing import (
@@ -17,19 +17,19 @@ from typing import (
 
 import torch
 from torch import Tensor
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._op_schema import (
     OpStrategy,
     PlacementStrategy,
 )
-from torch.distributed._tensor.api import Shard
-from torch.distributed._tensor.ops.utils import (
+from torch.distributed.tensor.api import Shard
+from torch.distributed.tensor.ops.utils import (
     generate_redistribute_costs,
     normalize_dim,
     normalize_dims,
     prod,
 )
-from torch.distributed._tensor.placement_types import (
-    DTensorSpec,
+from torch.distributed.tensor.placement_types import (
+    _DTensorSpec,
     Placement,
     Replicate,
     TensorMeta,
@@ -605,13 +605,13 @@ def get_reshape_strategy(op):
             #       unshardable dims ...
             # FIXME: this can be wrong for situations where we have
             #        [Shard(0), Shard(0)]
-            input_tgt_spec = DTensorSpec(
+            input_tgt_spec = _DTensorSpec(
                 placements=tuple(input_tgt_placements),
                 mesh=input_src_spec.mesh,
                 tensor_meta=input_src_spec.tensor_meta,
             )
 
-            output_spec = DTensorSpec(
+            output_spec = _DTensorSpec(
                 mesh=mesh,
                 placements=tuple(output_placements),
                 tensor_meta=TensorMeta(

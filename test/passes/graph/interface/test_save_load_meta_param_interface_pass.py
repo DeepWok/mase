@@ -7,20 +7,7 @@ import sys
 
 import torch
 from chop.ir.graph import MaseGraph
-from chop.models.toys.toy_custom_fn import ToyCustomFnNet
-
-sys.path.append(
-    os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "..",
-        "..",
-        "..",
-        "..",
-        "..",
-        "..",
-        "machop",
-    )
-)
+from chop.models.toy.toy_custom_fn import ToyCustomFnNet
 
 
 from chop.passes.graph.interface import (
@@ -34,6 +21,7 @@ from chop.passes.graph.analysis import (
     init_metadata_analysis_pass,
 )
 
+# temporarily disabled
 # def test_meta_param_interface_pass():
 #     mlp = ToyCustomFnNet(image_size=(1, 28, 28), num_classes=10)
 #     mg = MaseGraph(model=mlp)

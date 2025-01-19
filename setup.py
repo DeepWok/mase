@@ -48,12 +48,12 @@ requirements = [
     "stable-baselines3[extra]",
     "h5py",
     "scikit-learn",
-    "scipy",
+    "scipy==1.14.1",
     "onnxruntime",
     "matplotlib",
     "sphinx-rtd-theme",
-    "sphinx-needs",
-    "sphinx-test-reports",
+    "sphinx-needs>=4",
+    "sphinx-test-reports @ git+https://github.com/useblocks/sphinx-test-reports",
     "sphinxcontrib-plantuml",
     "imageio",
     "imageio-ffmpeg",
@@ -94,6 +94,7 @@ requirements = [
     "myst-nb",
     "sphinx-book-theme",
     "pydot",
+    "attr-dot-dict",
 ]
 
 setup(

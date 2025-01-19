@@ -10,8 +10,8 @@ from transformers.activations import GELUActivation
 import chop.passes as passes
 import chop.actions as actions
 from chop.ir import MaseGraph
-from chop.models.patched.llama import LlamaConfig, LlamaModel
-from chop.models.patched.llama.modeling_llama import LlamaAttention
+from chop.models.llama import LlamaConfig, LlamaModel
+from chop.models.llama.modeling_llama import LlamaAttention
 from chop.passes.graph.utils import deepsetattr
 
 # from chop.nn.quantized import LlamaAttentionInteger
@@ -134,7 +134,7 @@ def get_default_qconfig():
     }
 
 
-@pytest.mark.skip(reason="Not working")
+@pytest.mark.skip(reason="Fixing needed")
 def test_emit_verilog_llama_smoke():
     config = LlamaConfig()
     # config.num_hidden_layers = 3
@@ -152,6 +152,6 @@ def test_emit_verilog_llama_smoke():
     )
 
 
-if __name__ == "__main__":
-    generate_sv_lut("silu", 8, 3, data_width=8, f_width=3, path_with_dtype=False)
-    test_emit_verilog_llama_smoke()
+# if __name__ == "__main__":
+#     generate_sv_lut("silu", 8, 3, data_width=8, f_width=3, path_with_dtype=False)
+#     test_emit_verilog_llama_smoke()

@@ -1,16 +1,16 @@
 # Adapted from Pytorch Distributed DTensor API.
-# https://github.com/pytorch/pytorch/blob/main/torch/distributed/_tensor/ops/tensor_ops.py
+# https://github.com/pytorch/pytorch/blob/main/torch/distributed.tensor/ops/tensor_ops.py
 
-from torch.distributed._tensor._op_schema import (
+from torch.distributed.tensor._op_schema import (
     OpStrategy,
     PlacementStrategy,
     StrategyType,
 )
-from torch.distributed._tensor.ops.utils import (
+from torch.distributed.tensor.ops.utils import (
     is_tensor_partial,
 )
-from torch.distributed._tensor.placement_types import (
-    DTensorSpec,
+from torch.distributed.tensor.placement_types import (
+    _DTensorSpec,
     Partial,
     Replicate,
     TensorMeta,
@@ -46,12 +46,12 @@ def tensor_op_strategy(meta, mesh) -> StrategyType:
 
     default_strategy = []
     for strategy in select_strategy.strategies:
-        # we create new DTensorSpecs even for default strategy to assure that
+        # we create new _DTensorSpecs even for default strategy to assure that
         # the tensor metas are distinct between the arguments and outputs
         default_strategy.append(
             PlacementStrategy(
                 input_specs=(
-                    DTensorSpec(
+                    _DTensorSpec(
                         mesh=strategy.output_spec.mesh,
                         placements=strategy.output_spec.placements,
                         tensor_meta=TensorMeta(
@@ -60,7 +60,7 @@ def tensor_op_strategy(meta, mesh) -> StrategyType:
                     ),
                 )
                 * len(meta.node.args),
-                output_specs=DTensorSpec(
+                output_specs=_DTensorSpec(
                     mesh=strategy.output_spec.mesh,
                     placements=strategy.output_spec.placements,
                     tensor_meta=TensorMeta(
@@ -96,7 +96,7 @@ def tensor_equal_strategy(meta, mesh) -> StrategyType:
         if is_tensor_partial(arg_spec):
             # if the arg_spec have partial, reshard to replicate
             # otherwise local shard tensor comparison would be invalid
-            output_spec = DTensorSpec(
+            output_spec = _DTensorSpec(
                 mesh=arg_spec.mesh,
                 placements=tuple(
                     Replicate() if isinstance(p, Partial) else p
