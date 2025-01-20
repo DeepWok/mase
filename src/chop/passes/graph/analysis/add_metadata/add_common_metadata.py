@@ -121,6 +121,8 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "crossentropyloss"
             elif isinstance(module, GroupedQueryAttention):
                 mase_op = "grouped_query_attention"
+            elif isinstance(module, nn.Flatten):
+                mase_op = "flatten"
             else:
                 mase_op = None
                 for module_cls in graph.model.custom_ops["modules"].keys():
