@@ -124,7 +124,9 @@ def trace_torch_module(
             custom_modules = ()
 
         def wrap_is_leaf_module(hf_is_leaf_module):
-            def is_leaf_module(self, m: torch.nn.Module, module_qualified_name: str) -> bool:
+            def is_leaf_module(
+                self, m: torch.nn.Module, module_qualified_name: str
+            ) -> bool:
                 is_hf_built_in_leaf_module = hf_is_leaf_module(
                     self,
                     m,
@@ -187,7 +189,9 @@ def trace_torch_module(
 
         if patched_nodes is not None:
             graph_module.patched_op_names = [
-                obj.__name__.lower() for obj in model.patched_nodes["layers"] + model.patched_nodes["functions"]
+                obj.__name__.lower()
+                for obj in model.patched_nodes["layers"]
+                + model.patched_nodes["functions"]
             ]
             # these are layers we believe the user will provide system verilog for
             graph_module.patched_custom_layers = model.patched_nodes["layers"]
@@ -309,7 +313,9 @@ class MaseGraph:
                 hf_input_names=hf_input_names,
             )
         else:
-            raise ValueError(f"Expected fx.GraphModule or nn.Module, but received model: {type(model)}")
+            raise ValueError(
+                f"Expected fx.GraphModule or nn.Module, but received model: {type(model)}"
+            )
 
         # Initialize metadata for each node
         # todo: will need to move metadata analysis passes into chop.ir for this to work
@@ -338,7 +344,9 @@ class MaseGraph:
         Returns:
             MaseGraph: Constructed MaseGraph.
         """
-        assert isinstance(model, torch.nn.Module), f"model must be a torch.nn.Module. Received: {type(model)}"
+        assert isinstance(
+            model, torch.nn.Module
+        ), f"model must be a torch.nn.Module. Received: {type(model)}"
 
         graph_module = trace_torch_module(model, cf_args, custom_ops)
         return cls(
