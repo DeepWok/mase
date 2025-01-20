@@ -5,7 +5,7 @@ from logging import getLogger
 
 import torch
 import torch.nn as nn
-from timm.models.layers import trunc_normal_
+from timm.layers import trunc_normal_
 from timm.models.vision_transformer import VisionTransformer, _cfg
 from chop.models.utils import register_mase_model
 

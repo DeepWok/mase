@@ -5,7 +5,7 @@ from logging import getLogger
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from timm.models.layers import DropPath, to_2tuple, trunc_normal_
+from timm.layers import DropPath, to_2tuple, trunc_normal_
 from timm.models.vision_transformer import _cfg
 from chop.models.utils import register_mase_model
 

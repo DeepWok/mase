@@ -6,8 +6,8 @@
    :alt: logo
    :align: center
 
-Lab 4 (Hardware Stream) Emitting Hardware 
-~~~~~
+Lab 4 (Hardware Stream) Emitting Hardware
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. raw:: html
 
