@@ -58,5 +58,6 @@ python -c "import chop"
 3. (Optional but suggested) You can also run the Machop test stack to ensure the codebase is running correctly by running the following command.
 
 ```bash
-pytest machop/test
+just test-sw
+just test-hw
 ```
