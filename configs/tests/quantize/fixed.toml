@@ -13,3 +13,6 @@ weight_width = 8
 weight_frac_width = 3
 bias_width = 8
 bias_frac_width = 3
+data_out_width = 8
+data_out_frac_width = 3
+floor=true

@@ -27,6 +27,11 @@ QUANT_ARITH_ENTRIES = {
         "weight_entries": ("weight_width", "weight_frac_width"),
         "data_in_entries": ("data_in_width", "data_in_frac_width"),
         "bias_entries": ("bias_width", "bias_frac_width"),
+        "data_out_entries": (
+            "data_out_width",
+            "data_out_frac_width",
+        ),
+        "additional_layers_entries": ("floor"),
     },
     "lutnet": {
         "weight_entries": (
@@ -75,6 +80,7 @@ QUANT_ARITH_ENTRIES = {
         "additional_layers_entries": {
             "additional_layers_inputs",
             "additional_layers_outputs",
+            "floor",
         },
     },
     "binary": {

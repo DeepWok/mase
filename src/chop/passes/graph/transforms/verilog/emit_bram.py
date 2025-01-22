@@ -7,7 +7,7 @@ import time
 import torch
 
 from chop.passes.graph.utils import vf, v2p, get_module_by_name, init_project
-from chop.nn.quantizers import integer_quantizer_for_hw
+from chop.nn.quantizers import integer_quantizer_for_hw, integer_floor_quantizer_for_hw
 
 logger = logging.getLogger(__name__)
 from pathlib import Path
@@ -240,6 +240,11 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
             "precision"
         ][1]
 
+        if node.meta["mase"].module.config.get("floor", False):
+            base_quantizer = integer_floor_quantizer_for_hw
+        else:
+            base_quantizer = integer_quantizer_for_hw
+
         scale = 2**frac_width
         thresh = 2**width
         for i in range(0, out_depth):
@@ -250,20 +255,17 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
                 else:
                     value = param_data[i * out_size + out_size - 1 - j]
 
-                value = integer_quantizer_for_hw(
-                    torch.tensor(value), width, frac_width
-                ).item()
-                value = str(bin(int(value * scale) % thresh))
+                # TODO: please clear this up later
+                value = base_quantizer(torch.tensor(value), width, frac_width).item()
+                value = str(bin(value))
                 value_bits = value[value.find("0b") + 2 :]
                 value_bits = "0" * (width - len(value_bits)) + value_bits
                 assert len(value_bits) == width
-                # TODO: do we need to convert to hex here...?
                 value_bits = hex(int(value_bits, 2))
                 value_bits = value_bits[value_bits.find("0x") + 2 :]
                 value_bits = "0" * (width // 4 - len(value_bits)) + value_bits
-                data_buff += value_bits
+                line_buff = value_bits + line_buff
 
-            # hex_buff = hex(int(line_buff, 2))
             data_buff += line_buff + "\n"
     else:
         assert False, "Emitting non-fixed parameters is not supported."
