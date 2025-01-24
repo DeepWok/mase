@@ -63,10 +63,10 @@ class LSQInteger(nn.Module):
         self.debug = False
         self.tfwriter = None
         self.global_step = 0.0
-        self.name = "myquan"
+        self.name = "LSQInteger"
 
     def __repr__(self):
-        return f"MyQuan(level={self.level}, sym={self.sym}, pos_max={self.pos_max}, neg_min={self.neg_min}, s={self.s.data})"
+        return f"LSQInteger(level={self.level}, sym={self.sym}, pos_max={self.pos_max}, neg_min={self.neg_min}, s={self.s.data})"
 
     def reset(self):
         self.history_max = torch.tensor(0.0)

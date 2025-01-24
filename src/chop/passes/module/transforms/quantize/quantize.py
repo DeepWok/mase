@@ -2,7 +2,7 @@ import torch
 
 from chop.nn.quantized.modules import quantized_module_map
 from ...module_modify_helper import replace_by_name, instantiate_module
-from ...utils import match_a_pattern, check_is_huggingface_model
+from ...state_dict_map import match_a_pattern, check_is_huggingface_model
 
 
 def get_config(config: dict, name: str):

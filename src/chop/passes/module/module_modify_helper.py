@@ -1,3 +1,4 @@
+from chop.passes.module.state_dict_map import SPECIAL_CONVERT_PATTERNS
 import torch
 
 from functools import reduce, partial
@@ -5,6 +6,7 @@ from copy import deepcopy
 import logging
 
 from transformers.models.roberta.modeling_roberta import (
+    RobertaSelfAttention,
     RobertaSdpaSelfAttention,
     RobertaClassificationHead,
     RobertaIntermediate,
@@ -14,11 +16,29 @@ from transformers.models.roberta.modeling_roberta import (
 
 roberta_prefix_map = {
     RobertaSdpaSelfAttention: "roberta_self_attention",
+    RobertaSelfAttention: "roberta_self_attention",
     RobertaIntermediate: "roberta_intermediate",
     RobertaOutput: "roberta_output",
     RobertaSelfOutput: "roberta_self_output",
     RobertaClassificationHead: "roberta_classification_head",
 }
+
+
+def check_module_instance(module, prefix_map):
+    """
+    Check if the given module is an instance of any class in the prefix_map. If it is, return the corresponding prefix.
+    Args:
+        module (object): The module to check.
+        prefix_map (dict): A dictionary where keys are classes and values are prefixes.
+    Returns:
+        tuple: A tuple containing a boolean indicating if the module is an instance of any class in the prefix_map,
+               and the corresponding prefix if it is an instance, otherwise None.
+    """
+
+    for cls in prefix_map.keys():
+        if isinstance(module, cls):
+            return True, roberta_prefix_map[cls]
+    return False, None
 
 
 def weight_replacement(x, y):
@@ -57,7 +77,14 @@ def set_module_by_name(
 
 def replace_by_name(network, name, module):
     original = get_module_by_name(network, name)
-    new = weight_replacement(original, module)
+
+    # state_dict replacement
+    special_replacement = (type(original), type(module)) in SPECIAL_CONVERT_PATTERNS
+    if special_replacement:
+        new = SPECIAL_CONVERT_PATTERNS[(type(original), type(module))](original, module)
+    else:
+        new = weight_replacement(original, module)
+
     network = set_module_by_name(network, name, new)
     return network
 
@@ -98,29 +125,74 @@ def instantiate_conv2d(module, postfix, module_map, additional_module_args):
     return conv2d
 
 
-def instantiate_roberta_module(module, postfix, module_map, additional_module_args):
-    prefix = roberta_prefix_map[type(module)]
+def instantiate_embedding(module, postfix, module_map, additional_module_args):
+    embedding_cls = module_map[f"embedding_{postfix}"]
+    embedding = embedding_cls(
+        num_embeddings=module.num_embeddings,
+        embedding_dim=module.embedding_dim,
+        padding_idx=module.padding_idx,
+        max_norm=module.max_norm,
+        norm_type=module.norm_type,
+        scale_grad_by_freq=module.scale_grad_by_freq,
+        sparse=module.sparse,
+        **additional_module_args,
+    )
+    return embedding
+
+
+def instantiate_layernorm(module, postfix, module_map, additional_module_args):
+    layernorm_cls = module_map[f"layernorm_{postfix}"]
+    has_bias = not (module.bias is None)
+    layernorm = layernorm_cls(
+        normalized_shape=module.normalized_shape,
+        eps=module.eps,
+        elementwise_affine=module.elementwise_affine,
+        bias=has_bias,
+        **additional_module_args,
+    )
+    return layernorm
+
+
+def instantiate_roberta_module(
+    module, postfix, prefix, module_map, module_args, network_args
+):
     roberta_cls = module_map[f"{prefix}_{postfix}"]
 
-    model_config = additional_module_args["network_config"]
-    q_config = additional_module_args["config"]
-
     roberta_module = roberta_cls(
-        config=model_config,
-        q_config=q_config,
+        config=network_args,
+        q_config=module_args,
     )
     return roberta_module
 
 
 def instantiate_module(module, postfix, module_map, additional_module_args):
+    is_roberta, roberta_layer_name = check_module_instance(module, roberta_prefix_map)
+
+    module_args = additional_module_args["config"]
+    network_args = additional_module_args.get("network_config", None)
+
     if isinstance(module, torch.nn.Linear):
-        module = instantiate_linear(module, postfix, module_map, additional_module_args)
+        module = instantiate_linear(module, postfix, module_map, module_args)
     elif isinstance(module, torch.nn.Conv2d):
-        module = instantiate_conv2d(module, postfix, module_map, additional_module_args)
-    elif type(module) in roberta_prefix_map.keys():
+        module = instantiate_conv2d(module, postfix, module_map, module_args)
+    elif isinstance(module, torch.nn.Embedding):
+        module = instantiate_embedding(module, postfix, module_map, module_args)
+    elif isinstance(module, torch.nn.LayerNorm):
+        module = instantiate_layernorm(module, postfix, module_map, module_args)
+    elif is_roberta:
         module = instantiate_roberta_module(
-            module, postfix, module_map, additional_module_args
+            module, postfix, roberta_layer_name, module_map, module_args, network_args
         )
     else:
         raise ValueError(f"{module} is not supported.")
     return module
+
+
+def manual_instantiate_module(module, module_name, module_map, additional_module_args):
+    """
+    manually replace a module with a new one that doesn't share the base class
+    The additional_module_args MUST match the configuration argument of the new module
+    Often use in ann2snn conversion. Converting activation module or quantizor module to neurons.
+    """
+    new_module = module_map[module_name](**additional_module_args["config"])
+    return new_module
