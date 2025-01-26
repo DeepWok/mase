@@ -30,9 +30,6 @@ from .mrr_op import (
 )
 
 
-
-
-
 # """
 # Description:
 # Author: Jiaqi Gu (jqgu@utexas.edu)

@@ -50,6 +50,7 @@ from train_mnist_cnn import test, train, Net
 #         x = self.fc3(x)
 #         return x
 
+
 def load_my_model(model_path, device="cpu"):
     # Load the model from the .pt file
     loaded_model = torch.load(model_path, map_location=device)
@@ -85,6 +86,7 @@ def test_optical_module_transform_pass():
     }
     optical_module_transform_pass(mnist_cnn, pass_args)
     # torch.save(onn_cnn, "mase_output/onn_cnn.pt")
+
 
 test_optical_module_transform_pass()
 
@@ -175,15 +177,14 @@ test_optical_module_transform_pass()
 #             test(onn_model, device, test_loader)
 #             scheduler.step()
 
-        
+
 #         torch.save(onn_model.state_dict(), "mase_output/trained_onn.pt")
-        
+
 #         print("-------------- Testing the trained onn model -------------------")
 #         test(onn_model, device, test_loader)
 #         _, _ = report_trainable_parameters_analysis_pass(onn_model)
 
 
-    
 # def perform_optical_module_transform_pass(model, save_path="mase_output/onn_cnn.pt"):
 #     # pass_args = {
 #     #     "by": "type",

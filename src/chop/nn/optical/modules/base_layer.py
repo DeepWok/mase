@@ -5,6 +5,7 @@ Date: 2021-06-08 18:55:05
 LastEditors: Jiaqi Gu (jqgu@utexas.edu)
 LastEditTime: 2021-06-08 18:55:05
 """
+
 from typing import Any, Dict, Optional
 import torch
 from torch import nn
@@ -24,7 +25,7 @@ class ONNBaseLayer(nn.Module):
 
     def reset_parameters(self) -> None:
         raise NotImplementedError
-    
+
     @classmethod
     def from_layer(cls, layer: nn.Module, *args, **kwargs) -> nn.Module:
         raise NotImplementedError
@@ -38,10 +39,14 @@ class ONNBaseLayer(nn.Module):
     def disable_fast_forward(self) -> None:
         self.fast_forward_flag = False
 
-    def set_phase_variation(self, noise_std: float, random_state: Optional[int] = None) -> None:
+    def set_phase_variation(
+        self, noise_std: float, random_state: Optional[int] = None
+    ) -> None:
         self.phase_noise_std = noise_std
 
-    def set_gamma_noise(self, noise_std: float, random_state: Optional[int] = None) -> None:
+    def set_gamma_noise(
+        self, noise_std: float, random_state: Optional[int] = None
+    ) -> None:
         self.gamma_noise_std = noise_std
 
     def set_crosstalk_factor(self, crosstalk_factor: float) -> None:

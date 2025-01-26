@@ -2,7 +2,9 @@ import torch
 
 from chop.nn.optical.modules import optical_module_map
 from chop.passes.module.module_modify_helper import replace_by_name, instantiate_module
-from chop.passes.module.transforms.optical.module_transform_helper import replace_by_name_optical
+from chop.passes.module.transforms.optical.module_transform_helper import (
+    replace_by_name_optical,
+)
 
 
 def get_config(config: dict, name: str):

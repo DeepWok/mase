@@ -5,6 +5,7 @@ Date: 2022-04-18 14:19:57
 LastEditors: Jiaqi Gu (jqgu@utexas.edu)
 LastEditTime: 2022-04-18 16:21:37
 """
+
 from typing import Optional
 
 import numpy as np
@@ -43,7 +44,7 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
         in_features: int,
         out_features: int,
         bias: bool = False,
-        config = None,
+        config=None,
         # miniblock: int = 4,
         # ### mrr parameter
         # MORRConfig=MORRConfig_20um_MQ,
@@ -66,7 +67,7 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
 
         self.v_max = 10.8
         self.v_pi = 4.36
-        self.gamma = np.pi / self.v_pi ** 2
+        self.gamma = np.pi / self.v_pi**2
         self.w_bit = 32
         self.in_bit = 32
 
@@ -77,12 +78,14 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
         self.mrr_a = morr_config.attenuation_factor
         self.mrr_r = morr_config.coupling_factor
         self.trainable_morr_bias = config.get("trainable_morr_bias", MORRConfig_20um_MQ)
-        self.trainable_morr_scale = config.get("trainable_morr_scale", MORRConfig_20um_MQ)
+        self.trainable_morr_scale = config.get(
+            "trainable_morr_scale", MORRConfig_20um_MQ
+        )
         self.device = device
         ### calculate FWHM (rad)
         self.morr_fwhm = (
             -4
-            * np.pi ** 2
+            * np.pi**2
             * morr_config.radius
             * morr_config.effective_index
             * (
@@ -96,7 +99,9 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
         self.x_zero_pad = None
         self.morr_output_scale = None  ## learnable balancing factors implelemt by MRRs
         self.morr_input_bias = None  ## round-trip phase shift bias within MORR
-        self.morr_input_scale = None  ## scaling factor for the round-trip phase shift within MORR
+        self.morr_input_scale = (
+            None  ## scaling factor for the round-trip phase shift within MORR
+        )
         self.morr_gain = (
             100 / (self.in_features // self.miniblock)
         ) ** 0.5  ## TIA gain, calculated such that output variance is around 1
@@ -137,7 +142,11 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
 
         self.weight = Parameter(
             torch.ones(
-                self.grid_dim_y, self.grid_dim_x, self.miniblock, device=self.device, dtype=torch.float
+                self.grid_dim_y,
+                self.grid_dim_x,
+                self.miniblock,
+                device=self.device,
+                dtype=torch.float,
             )
         )
         ### Learnable balancing factor (morr_output_scale)
@@ -148,12 +157,22 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
         if self.trainable_morr_bias:
             ### initialize with the finest-granularity, i.e., per mini-block
             self.morr_input_bias = Parameter(
-                torch.zeros(self.grid_dim_y, self.grid_dim_x, device=self.device, dtype=torch.float)
+                torch.zeros(
+                    self.grid_dim_y,
+                    self.grid_dim_x,
+                    device=self.device,
+                    dtype=torch.float,
+                )
             )
         if self.trainable_morr_scale:
             ### initialize with the finest-granularity, i.e., per mini-block
             self.morr_input_scale = Parameter(
-                torch.zeros(self.grid_dim_y, self.grid_dim_x, device=self.device, dtype=torch.float)
+                torch.zeros(
+                    self.grid_dim_y,
+                    self.grid_dim_x,
+                    device=self.device,
+                    dtype=torch.float,
+                )
             )
 
     def reset_parameters(self, morr_init: bool = False) -> None:
@@ -175,11 +194,16 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
                 torch.tensor([0]).float(), a=self.mrr_a, r=self.mrr_r, intensity=True
             )
             t2 = mrr_roundtrip_phase_to_tr_fused(
-                torch.tensor([self.morr_fwhm * 2.4]).float(), a=self.mrr_a, r=self.mrr_r, intensity=True
+                torch.tensor([self.morr_fwhm * 2.4]).float(),
+                a=self.mrr_a,
+                r=self.mrr_r,
+                intensity=True,
             )
-            g = ((t2 - t1) / (2.4 * self.morr_fwhm)).item()  ## 0~2.4 FWHM slope as a linear approximation
+            g = (
+                (t2 - t1) / (2.4 * self.morr_fwhm)
+            ).item()  ## 0~2.4 FWHM slope as a linear approximation
 
-            self.sigma_out_scale = 4 / (3 * self.grid_dim_x ** 0.5 * g * self.morr_fwhm)
+            self.sigma_out_scale = 4 / (3 * self.grid_dim_x**0.5 * g * self.morr_fwhm)
             self.out_scale_quant_gain = None
             init.normal_(self.morr_output_scale, 0, self.sigma_out_scale)
         else:
@@ -218,13 +242,17 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
                 morr_scale = self.morr_scale * self.weight_quant_gain
             else:
                 morr_scale = self.weight_quant_gain
-            weight = weight.mul(morr_scale)  ### gain factor from Tanh used in quantization
+            weight = weight.mul(
+                morr_scale
+            )  ### gain factor from Tanh used in quantization
 
             ### quantize learnable balancing factor
             morr_output_scale = self.morr_output_scale_quantizer(self.morr_output_scale)
         else:
             weight = self.weight.abs()  # positive only
-            morr_output_scale = self.morr_output_scale - self.morr_output_scale.data.mean()
+            morr_output_scale = (
+                self.morr_output_scale - self.morr_output_scale.data.mean()
+            )
 
         if self.finegrain_drop_mask is not None:
             weight = weight.mul(self.finegrain_drop_mask.float())
@@ -251,7 +279,9 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
     def disable_fast_forward(self) -> None:
         self.fast_forward_flag = False
 
-    def set_gamma_noise(self, noise_std: float, random_state: Optional[int] = None) -> None:
+    def set_gamma_noise(
+        self, noise_std: float, random_state: Optional[int] = None
+    ) -> None:
         self.gamma_noise_std = noise_std
 
     def load_parameters(self, param_dict) -> None:
@@ -275,14 +305,18 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
         ### voltage to power, which is proportional to the phase shift
         return x * x
 
-    def set_crosstalk_coupling_matrix(self, coupling_factor: float, drop_perc: float = 0) -> None:
+    def set_crosstalk_coupling_matrix(
+        self, coupling_factor: float, drop_perc: float = 0
+    ) -> None:
         ### crosstalk coupling matrix is a symmetric matrix, but the intra-MORR crosstalk can be taken as a round-trip phase shift scaling factor, which is proportional to the number of segments after pruned.
         ### drop-perc is the pruning percentage.
         assert 0 <= coupling_factor <= 1, logger.error(
             f"Coupling factor must in [0,1], but got {coupling_factor}"
         )
 
-        self.crosstalk_factor = 1 + max(3, (self.miniblock * (1 - drop_perc) - 1)) * coupling_factor
+        self.crosstalk_factor = (
+            1 + max(3, (self.miniblock * (1 - drop_perc) - 1)) * coupling_factor
+        )
 
     def enable_crosstalk(self) -> None:
         self.enable_thermal_crosstalk = True
@@ -316,7 +350,9 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
         if self.morr_input_bias is None:
             return None
         # return 2 * self.morr_fwhm * torch.sigmoid(self.morr_input_bias.unsqueeze(0).unsqueeze(-1))
-        return self.morr_fwhm * torch.tanh(self.morr_input_bias.unsqueeze(0).unsqueeze(-1))
+        return self.morr_fwhm * torch.tanh(
+            self.morr_input_bias.unsqueeze(0).unsqueeze(-1)
+        )
 
     @property
     def morr_scale(self) -> Tensor:
@@ -324,7 +360,9 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
             return None
         return torch.sigmoid(self.morr_input_scale.unsqueeze(-1)) + 0.2  # [p, q, 1]
 
-    def propagate_morr(self, weight: Tensor, x: Tensor, morr_output_scale: Tensor) -> Tensor:
+    def propagate_morr(
+        self, weight: Tensor, x: Tensor, morr_output_scale: Tensor
+    ) -> Tensor:
         """
         @description: propagate through the analytically calculated transfer matrix of molg. We implement circulant matrix multiplication using fast circ matmul
         @param weight {torch.Tensor} two phase shifters in the MZI-based attenuators
@@ -420,7 +458,10 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
         if self.in_features_pad > self.in_features:
             if self.x_zero_pad is None or self.x_zero_pad.size(0) != x.size(0):
                 self.x_zero_pad = torch.zeros(
-                    x.size(0), self.in_features_pad - self.in_features, device=x.device, dtype=x.dtype
+                    x.size(0),
+                    self.in_features_pad - self.in_features,
+                    device=x.device,
+                    dtype=x.dtype,
                 )
             x = torch.cat([x, self.x_zero_pad], dim=1)
 

@@ -70,7 +70,10 @@ def profile(func=None, timer=True):
             local_time = time.time()
             res = func(*args, **kw)
             end_time = time.time()
-            print("[I] <%s> runtime: %.3f ms" % (func.__name__, (end_time - local_time) * 1000))
+            print(
+                "[I] <%s> runtime: %.3f ms"
+                % (func.__name__, (end_time - local_time) * 1000)
+            )
         else:
             res = func(*args, **kw)
         return res
@@ -84,11 +87,13 @@ def print_stat(x, message="", verbose=True):
             if torch.is_complex(x):
                 x = torch.view_as_real(x)
             print(
-                message + f"min = {x.data.min().item():-15f} max = {x.data.max().item():-15f} mean = {x.data.mean().item():-15f} std = {x.data.std().item():-15f}"
+                message
+                + f"min = {x.data.min().item():-15f} max = {x.data.max().item():-15f} mean = {x.data.mean().item():-15f} std = {x.data.std().item():-15f}"
             )
         elif isinstance(x, np.ndarray):
             print(
-                message + f"min = {np.min(x):-15f} max = {np.max(x):-15f} mean = {np.mean(x):-15f} std = {np.std(x):-15f}"
+                message
+                + f"min = {np.min(x):-15f} max = {np.max(x):-15f} mean = {np.mean(x):-15f} std = {np.std(x):-15f}"
             )
 
 
@@ -127,7 +132,7 @@ class TorchTracemalloc(object):
         return self
 
     def _b2mb(self, x):
-        return x / 2 ** 20
+        return x / 2**20
 
     def __exit__(self, *exc):
         self.end = self._b2mb(torch.cuda.memory_allocated())
@@ -181,13 +186,17 @@ class CustomFormatter(logging.Formatter):
         return formatter.format(record)
 
 
-def setup_default_logging(default_level=logging.INFO, default_file_level=logging.INFO, log_path=""):
+def setup_default_logging(
+    default_level=logging.INFO, default_file_level=logging.INFO, log_path=""
+):
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(CustomFormatter())
     logging.root.addHandler(console_handler)
     logging.root.setLevel(default_level)
     if log_path:
-        file_handler = logging.handlers.RotatingFileHandler(log_path, maxBytes=(1024 ** 2 * 2), backupCount=3)
+        file_handler = logging.handlers.RotatingFileHandler(
+            log_path, maxBytes=(1024**2 * 2), backupCount=3
+        )
         file_formatter = logging.Formatter(
             "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s"
         )
@@ -197,7 +206,13 @@ def setup_default_logging(default_level=logging.INFO, default_file_level=logging
 
 
 class Logger(object):
-    def __init__(self, console=True, logfile=None, console_level=logging.INFO, logfile_level=logging.INFO):
+    def __init__(
+        self,
+        console=True,
+        logfile=None,
+        console_level=logging.INFO,
+        logfile_level=logging.INFO,
+    ):
         super().__init__()
         self.logfile = logfile
         self.console_level = console_level
@@ -242,9 +257,16 @@ class Logger(object):
         self.logger.critical(message)
 
 
-def get_logger(name="default", default_level=logging.INFO, default_file_level=logging.INFO, log_path=""):
+def get_logger(
+    name="default",
+    default_level=logging.INFO,
+    default_file_level=logging.INFO,
+    log_path="",
+):
     setup_default_logging(
-        default_level=default_level, default_file_level=default_file_level, log_path=log_path
+        default_level=default_level,
+        default_file_level=default_file_level,
+        log_path=log_path,
     )
     return logging.getLogger(name)
 

@@ -82,7 +82,14 @@ def uniform_quantize_new(k, gradient_clip=False):
                 n = float(2**k - 1)
                 # out = torch.round(input * n) / n
                 # out = (torch.clamp(torch.round(input / scale + zero_point), 0, n) - zero_point) * scale
-                out = input.div(scale).add_(zero_point).round_().clamp_(0, n).sub_(zero_point).mul_(scale)
+                out = (
+                    input.div(scale)
+                    .add_(zero_point)
+                    .round_()
+                    .clamp_(0, n)
+                    .sub_(zero_point)
+                    .mul_(scale)
+                )
             return out
 
         @staticmethod
@@ -108,7 +115,7 @@ def ewgs_quantize(num_levels, gradient_clip=False, scaling_factor: float = 1e-3)
 
         @staticmethod
         def forward(ctx, input):
-            out = input.mul(num_levels - 1).round_().mul_(1/(num_levels - 1))
+            out = input.mul(num_levels - 1).round_().mul_(1 / (num_levels - 1))
 
             ctx._scaling_factor = scaling_factor
             ctx.save_for_backward(input - out)
@@ -128,7 +135,9 @@ def ewgs_quantize(num_levels, gradient_clip=False, scaling_factor: float = 1e-3)
 
 
 class input_quantize_fn(torch.nn.Module):
-    def __init__(self, in_bit, alg="dorefa", device=torch.device("cuda:0"), quant_ratio=1.0):
+    def __init__(
+        self, in_bit, alg="dorefa", device=torch.device("cuda:0"), quant_ratio=1.0
+    ):
         """Input quantizer with Quant_Noise supported
         Args:
             in_bit (int): Input quantization bitwidth.
@@ -139,9 +148,14 @@ class input_quantize_fn(torch.nn.Module):
         assert 1 <= in_bit <= 32
         self.in_bit = in_bit
         self.alg = alg
-        assert alg in {"dorefa", "normal"}, f"Only support (dorefa, normal), but got {alg}"
+        assert alg in {
+            "dorefa",
+            "normal",
+        }, f"Only support (dorefa, normal), but got {alg}"
         self.quant_ratio = quant_ratio
-        assert 0 <= quant_ratio <= 1, logging.error(f"Wrong quant ratio. Must in [0,1], but got {quant_ratio}")
+        assert 0 <= quant_ratio <= 1, logging.error(
+            f"Wrong quant ratio. Must in [0,1], but got {quant_ratio}"
+        )
         self.device = device
 
         # define quant style
@@ -182,7 +196,10 @@ class input_quantize_fn(torch.nn.Module):
         self.in_bit = bit
 
     def set_alg(self, alg: str) -> None:
-        assert alg in {"dorefa", "normal"}, f"Only support (dorefa, normal), but got {alg}"
+        assert alg in {
+            "dorefa",
+            "normal",
+        }, f"Only support (dorefa, normal), but got {alg}"
         if alg != self.alg:
             if alg == "dorefa":
                 self.uniform_q = uniform_quantize(k=self.in_bit)
@@ -212,14 +229,18 @@ class input_quantize_fn(torch.nn.Module):
                 0.99,
                 1,
             ][min(self.in_bit, 16)]
-        assert 0 <= quant_ratio <= 1, logging.error(f"Wrong quant ratio. Must in [0,1], but got {quant_ratio}")
+        assert 0 <= quant_ratio <= 1, logging.error(
+            f"Wrong quant ratio. Must in [0,1], but got {quant_ratio}"
+        )
         self.quant_ratio = quant_ratio
 
     def forward(self, x):
         if self.quant_ratio < 1 and self.training:
             ### implementation from fairseq
             ### must fully quantize during inference
-            quant_noise_mask = torch.empty_like(x, dtype=torch.bool).bernoulli_(1 - self.quant_ratio)
+            quant_noise_mask = torch.empty_like(x, dtype=torch.bool).bernoulli_(
+                1 - self.quant_ratio
+            )
         else:
             quant_noise_mask = None
 
@@ -271,7 +292,9 @@ class weight_quantize_fn(torch.nn.Module):
             quant_ratio (float, optional): Quantization ratio to support full-precision gradient flow. Defaults to 1.0.
         """
         super(weight_quantize_fn, self).__init__()
-        assert 1 <= w_bit <= 32, logging.error(f"Only support 1 - 32 bit quantization, but got {w_bit}")
+        assert 1 <= w_bit <= 32, logging.error(
+            f"Only support 1 - 32 bit quantization, but got {w_bit}"
+        )
         self.w_bit = w_bit
         self.alg = alg
         self.mode = mode
@@ -279,7 +302,9 @@ class weight_quantize_fn(torch.nn.Module):
             f"Only support (dorefa, dorefa_sym, qnn, dorefa_pos) algorithms, but got {alg}"
         )
         self.quant_ratio = quant_ratio
-        assert 0 <= quant_ratio <= 1, logging.error(f"Wrong quant ratio. Must in [0,1], but got {quant_ratio}")
+        assert 0 <= quant_ratio <= 1, logging.error(
+            f"Wrong quant ratio. Must in [0,1], but got {quant_ratio}"
+        )
         self.uniform_q = uniform_quantize(k=w_bit, gradient_clip=True)
 
     def set_quant_ratio(self, quant_ratio=None):
@@ -304,7 +329,9 @@ class weight_quantize_fn(torch.nn.Module):
                 0.99,
                 1,
             ][min(self.w_bit, 16)]
-        assert 0 <= quant_ratio <= 1, logging.error(f"Wrong quant ratio. Must in [0,1], but got {quant_ratio}")
+        assert 0 <= quant_ratio <= 1, logging.error(
+            f"Wrong quant ratio. Must in [0,1], but got {quant_ratio}"
+        )
         self.quant_ratio = quant_ratio
 
     def set_bitwidth(self, bit: int) -> None:
@@ -317,7 +344,9 @@ class weight_quantize_fn(torch.nn.Module):
         if self.quant_ratio < 1 and self.training:
             ### implementation from fairseq
             ### must fully quantize during inference
-            quant_noise_mask = torch.empty_like(x, dtype=torch.bool).bernoulli_(1 - self.quant_ratio)
+            quant_noise_mask = torch.empty_like(x, dtype=torch.bool).bernoulli_(
+                1 - self.quant_ratio
+            )
         else:
             quant_noise_mask = None
 
@@ -333,14 +362,18 @@ class weight_quantize_fn(torch.nn.Module):
                     weight_q = (self.uniform_q(x / E) * E + E) / 2  # [0, E]
                     if quant_noise_mask is not None:
                         x = (x + E) / 2
-                        noise = weight_q.data.sub_(x.data).masked_fill_(quant_noise_mask, 0)
+                        noise = weight_q.data.sub_(x.data).masked_fill_(
+                            quant_noise_mask, 0
+                        )
                         ### unquantized weights have to follow reparameterization, i.e., tanh and scale
                         weight_q = x + noise
                 elif self.alg == "dorefa_sym":
                     E = x.data.abs().mean()
                     weight_q = self.uniform_q(x / E) * E  # [-E, E]
                     if quant_noise_mask is not None:
-                        noise = weight_q.data.sub_(x.data).masked_fill_(quant_noise_mask, 0)
+                        noise = weight_q.data.sub_(x.data).masked_fill_(
+                            quant_noise_mask, 0
+                        )
                         ### unquantized weights have to follow reparameterization, i.e., tanh and scale
                         weight_q = x + noise
                 else:
@@ -352,7 +385,9 @@ class weight_quantize_fn(torch.nn.Module):
                 # weight = weight / 2 + 0.5
                 weight_q = self.uniform_q(weight)
                 if quant_noise_mask is not None:
-                    noise = weight_q.data.sub_(weight.data).masked_fill_(quant_noise_mask, 0)
+                    noise = weight_q.data.sub_(weight.data).masked_fill_(
+                        quant_noise_mask, 0
+                    )
                     ### unquantized weights have to follow reparameterization, i.e., tanh and scale
                     weight_q = weight + noise
 
@@ -362,7 +397,9 @@ class weight_quantize_fn(torch.nn.Module):
                 # weight = weight / 2 + 0.5
                 weight_q = self.uniform_q(weight / (2 * r) + 0.5) * (2 * r) - r
                 if quant_noise_mask is not None:
-                    noise = weight_q.data.sub_(weight.data).masked_fill_(quant_noise_mask, 0)
+                    noise = weight_q.data.sub_(weight.data).masked_fill_(
+                        quant_noise_mask, 0
+                    )
                     ### unquantized weights have to follow reparameterization, i.e., tanh
                     weight_q = weight + noise
             elif self.alg == "dorefa_pos":
@@ -372,7 +409,9 @@ class weight_quantize_fn(torch.nn.Module):
                 # weight = weight / 2 + 0.5
                 weight_q = self.uniform_q(weight / (2 * r)) * 2 * r
                 if quant_noise_mask is not None:
-                    noise = weight_q.data.sub_(weight.data).masked_fill_(quant_noise_mask, 0)
+                    noise = weight_q.data.sub_(weight.data).masked_fill_(
+                        quant_noise_mask, 0
+                    )
                     ### unquantized weights have to follow reparameterization, i.e., tanh
                     weight_q = weight + noise
 
@@ -484,7 +523,9 @@ class PACT_Act(torch.nn.Module):
         super(PACT_Act, self).__init__()
         self.precision = precision
         self.device = device
-        self.alpha = torch.nn.Parameter(torch.Tensor((alpha,)).to(device), requires_grad=backprop_alpha)
+        self.alpha = torch.nn.Parameter(
+            torch.Tensor((alpha,)).to(device), requires_grad=backprop_alpha
+        )
         self.alpha_p = alpha
         self.statistics_only = statistics_only
         self.deployment = False
@@ -493,10 +534,18 @@ class PACT_Act(torch.nn.Module):
         # self.requantization_factor = requantization_factor
 
         # these are only used to gather statistics
-        self.max = torch.nn.Parameter(torch.zeros_like(self.alpha.data).to(device), requires_grad=False)
-        self.min = torch.nn.Parameter(torch.zeros_like(self.alpha.data).to(device), requires_grad=False)
-        self.running_mean = torch.nn.Parameter(torch.zeros_like(self.alpha.data).to(device), requires_grad=False)
-        self.running_var = torch.nn.Parameter(torch.ones_like(self.alpha.data).to(device), requires_grad=False)
+        self.max = torch.nn.Parameter(
+            torch.zeros_like(self.alpha.data).to(device), requires_grad=False
+        )
+        self.min = torch.nn.Parameter(
+            torch.zeros_like(self.alpha.data).to(device), requires_grad=False
+        )
+        self.running_mean = torch.nn.Parameter(
+            torch.zeros_like(self.alpha.data).to(device), requires_grad=False
+        )
+        self.running_var = torch.nn.Parameter(
+            torch.ones_like(self.alpha.data).to(device), requires_grad=False
+        )
 
         self.precise = False
 
@@ -508,7 +557,9 @@ class PACT_Act(torch.nn.Module):
         self.eps_static = self.alpha.clone().detach() / (2.0 ** (self.precision) - 1)
         self.alpha_static = self.alpha.clone().detach()
         # D is selected as a power-of-two
-        D = 2.0 ** torch.ceil(torch.log2(self.requantization_factor * self.eps_static / self.eps_in))
+        D = 2.0 ** torch.ceil(
+            torch.log2(self.requantization_factor * self.eps_static / self.eps_in)
+        )
         if not limit_at_32_bits:
             self.D = D
         else:
@@ -568,7 +619,9 @@ class PACT_Act(torch.nn.Module):
                 self.max[:] = max(self.max.item(), x.max())
                 self.min[:] = min(self.min.item(), x.min())
                 self.running_mean[:] = 0.9 * self.running_mean.item() + 0.1 * x.mean()
-                self.running_var[:] = 0.9 * self.running_var.item() + 0.1 * x.std() * x.std()
+                self.running_var[:] = (
+                    0.9 * self.running_var.item() + 0.1 * x.std() * x.std()
+                )
             return x
         else:
             eps = self.alpha / (2.0 ** (self.precision) - 1)

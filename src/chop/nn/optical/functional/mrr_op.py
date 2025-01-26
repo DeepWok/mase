@@ -67,7 +67,9 @@ def mrr_tr_to_roundtrip_phase(t, a, r):
     assert 0 <= a <= 1, logging.error(f"Expect a from [0,1] but got {a}")
     assert 0 <= r <= 1, logging.error(f"Expect r from [0,1] but got {r}")
     # given a and r, the curve is fixed, the max and min may not be 1 and 0
-    cos_phi = ((a * a + r * r - t * (1 + r * r * a * a)) / (2 * (1 - t) * a * r)).clamp(0, 1)
+    cos_phi = ((a * a + r * r - t * (1 + r * r * a * a)) / (2 * (1 - t) * a * r)).clamp(
+        0, 1
+    )
 
     if isinstance(cos_phi, torch.Tensor):
         return cos_phi.acos(), cos_phi
@@ -120,7 +122,9 @@ def mrr_roundtrip_phase_to_tr(
 
 
 @torch.jit.script
-def mrr_roundtrip_phase_to_tr_fused(rt_phi, a: float = 0.8, r: float = 0.9, intensity: bool = False):
+def mrr_roundtrip_phase_to_tr_fused(
+    rt_phi, a: float = 0.8, r: float = 0.9, intensity: bool = False
+):
     """
     description:  round trip phase shift to field transmission
     rt_phi {torch.Tensor or np.ndarray} abs of roundtrip phase shift (abs(phase lag)). range from abs([-pi, 0])=[0, pi]\\
@@ -151,7 +155,9 @@ def mrr_roundtrip_phase_to_tr_fused(rt_phi, a: float = 0.8, r: float = 0.9, inte
 
 
 @torch.jit.script
-def mrr_roundtrip_phase_to_tr_grad_fused(rt_phi, a: float = 0.8, r: float = 0.9, intensity: bool = False):
+def mrr_roundtrip_phase_to_tr_grad_fused(
+    rt_phi, a: float = 0.8, r: float = 0.9, intensity: bool = False
+):
     """
     description:  round trip phase shift to the gradient of field transmission
     rt_phi {torch.Tensor or np.ndarray} abs of roundtrip phase shift (abs(phase lag)). range from abs([-pi, 0])=[0, pi]\\
@@ -161,22 +167,24 @@ def mrr_roundtrip_phase_to_tr_grad_fused(rt_phi, a: float = 0.8, r: float = 0.9,
     return g {torch.Tensor or np.ndarray} the gradient of mrr through port field/intensity transmission
     """
     if not intensity:
-        g = (a * r * (a ** 2 - 1) * (r ** 2 - 1) * rt_phi.sin()) / (
-            (a ** 2 + r ** 2 - 2 * a * r * rt_phi.cos()) ** (1 / 2)
-            * (a ** 2 * r ** 2 + 1 - 2 * a * r * rt_phi.cos()) ** 1.5
+        g = (a * r * (a**2 - 1) * (r**2 - 1) * rt_phi.sin()) / (
+            (a**2 + r**2 - 2 * a * r * rt_phi.cos()) ** (1 / 2)
+            * (a**2 * r**2 + 1 - 2 * a * r * rt_phi.cos()) ** 1.5
         )
     else:
-        g = ((a ** 2 - 1) * (r ** 2 - 1) * 2 * a * r * rt_phi.sin()) / (
-            a ** 2 * r ** 2 + 1 - 2 * a * r * rt_phi.cos()
+        g = ((a**2 - 1) * (r**2 - 1) * 2 * a * r * rt_phi.sin()) / (
+            a**2 * r**2 + 1 - 2 * a * r * rt_phi.cos()
         ) ** 2
     return g
 
 
-def mrr_roundtrip_phase_to_tr_func(a: float = 0.8, r: float = 0.9, intensity: bool = False):
+def mrr_roundtrip_phase_to_tr_func(
+    a: float = 0.8, r: float = 0.9, intensity: bool = False
+):
     c1 = -2 * a * r
     c2 = a * a + r * r
     c3 = 1 + r * r * a * a - a * a - r * r
-    c4 = (a ** 2 - 1) * (r ** 2 - 1) * 2 * a * r
+    c4 = (a**2 - 1) * (r**2 - 1) * 2 * a * r
 
     class MRRRoundTripPhaseToTrFunction(torch.autograd.Function):
         @staticmethod
@@ -202,7 +210,9 @@ def mrr_roundtrip_phase_to_tr_func(a: float = 0.8, r: float = 0.9, intensity: bo
                 numerator = input.sin().mul_(c4)
             else:
                 numerator = input.sin().mul_(c4 / 2)
-                denominator = denominator.sub(1).pow_(1.5).mul_(denominator.sub(c3).sqrt_())
+                denominator = (
+                    denominator.sub(1).pow_(1.5).mul_(denominator.sub(c3).sqrt_())
+                )
             grad_input = numerator.div_(denominator).mul_(grad_output)
             return grad_input
 
@@ -334,7 +344,9 @@ def mrr_filter(x, t, a=0.9, r=0.8):
     return out
 
 
-def morr_filter(rt_phi, tr_poly_coeff=None, a=0.9, r=0.8, x=None, coherent=False, intensity=False):
+def morr_filter(
+    rt_phi, tr_poly_coeff=None, a=0.9, r=0.8, x=None, coherent=False, intensity=False
+):
     """
     description: from round trip phase shift to output signal \\
     rt_phi {torch.Tensor or np.ndarray, Optional} round trip phase shift. Default set to None \\
@@ -349,16 +361,22 @@ def morr_filter(rt_phi, tr_poly_coeff=None, a=0.9, r=0.8, x=None, coherent=False
     if not coherent:
         if x is None:
             # unit laser input with incoherent light, 1e^j0
-            t = mrr_roundtrip_phase_to_tr(rt_phi, a=a, r=r, poly_coeff=tr_poly_coeff, intensity=intensity)
+            t = mrr_roundtrip_phase_to_tr(
+                rt_phi, a=a, r=r, poly_coeff=tr_poly_coeff, intensity=intensity
+            )
             return t
         else:
             # incoherent light with non-unit input, input must be real number
-            t = mrr_roundtrip_phase_to_tr(rt_phi, a=a, r=r, poly_coeff=tr_poly_coeff, intensity=intensity)
+            t = mrr_roundtrip_phase_to_tr(
+                rt_phi, a=a, r=r, poly_coeff=tr_poly_coeff, intensity=intensity
+            )
             return x * t
     else:
         if x is None:
             # coherent light with unit laser, 1e^j0, treat morr as a mrr modulator
-            phase = polar_to_complex(mag=None, angle=mrr_roundtrip_phase_to_out_phase(rt_phi, a, r))
+            phase = polar_to_complex(
+                mag=None, angle=mrr_roundtrip_phase_to_out_phase(rt_phi, a, r)
+            )
             return phase
         else:
             # coherent light with complex input
@@ -375,7 +393,9 @@ def mrr_fwhm_to_ng(a, r, radius, lambda0, fwhm):
     fwhm {float} bandwidth or full width half maximum (unit: nm)\\
     return n_g {float} Group index of the MRR
     """
-    n_g = (1 - r * a) * lambda0 ** 2 / (2 * np.pi * np.pi * radius * (r * a) ** 0.5 * fwhm)
+    n_g = (
+        (1 - r * a) * lambda0**2 / (2 * np.pi * np.pi * radius * (r * a) ** 0.5 * fwhm)
+    )
     return n_g
 
 
@@ -388,7 +408,7 @@ def mrr_ng_to_fsr(lambda0, n_g, radius):
     radius {float} Radius of the MRR (unit: nm)\\
     return fsr {float} Free-spectral range
     """
-    fsr = lambda0 ** 2 / (n_g * 2 * np.pi * radius)
+    fsr = lambda0**2 / (n_g * 2 * np.pi * radius)
     return fsr
 
 
@@ -400,5 +420,5 @@ def mrr_finesse(a, r):
     return finesse {float} Finesse of the MRR
     """
     ra = r * a
-    finesse = np.pi * ra ** 0.5 / (1 - ra)
+    finesse = np.pi * ra**0.5 / (1 - ra)
     return finesse

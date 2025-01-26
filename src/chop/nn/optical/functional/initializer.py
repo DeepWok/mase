@@ -5,6 +5,7 @@ Date: 2021-06-06 01:57:16
 LastEditors: Jiaqi Gu (jqgu@utexas.edu)
 LastEditTime: 2021-06-06 01:57:18
 """
+
 import numpy as np
 import torch
 
@@ -83,7 +84,7 @@ def morr_uniform_(tensor, MORRConfig, n_op=4, biased=False, gain=1):
     """
     morr_fwhm = (
         -4
-        * np.pi ** 2
+        * np.pi**2
         * MORRConfig.radius
         * MORRConfig.effective_index
         * (
@@ -124,7 +125,7 @@ def morr_uniform(tensor, MORRConfig, n_op=4, biased=False, gain=1):
     """
     morr_fwhm = (
         -4
-        * np.pi ** 2
+        * np.pi**2
         * MORRConfig.radius
         * MORRConfig.effective_index
         * (

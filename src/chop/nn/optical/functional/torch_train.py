@@ -17,6 +17,7 @@ import numpy as np
 import torch
 from scipy import interpolate
 from torch.nn.modules.batchnorm import _BatchNorm
+
 try:
     from torchsummary import summary
 except:
@@ -48,26 +49,26 @@ __all__ = [
     "enable_bn",
 ]
 
+
 class DeterministicCtx:
-   def __init__(self, random_state: int | None = None) -> None:
-       self.random_state = random_state
+    def __init__(self, random_state: int | None = None) -> None:
+        self.random_state = random_state
 
+    def __enter__(self):
+        self.random_state = random.getstate()
+        self.numpy_random_state = np.random.get_state()
+        self.torch_random_state = torch.random.get_rng_state()
+        self.torch_cuda_random_state = torch.cuda.get_rng_state()
+        set_torch_deterministic(self.random_state)
+        return self
 
-   def __enter__(self):
-       self.random_state = random.getstate()
-       self.numpy_random_state = np.random.get_state()
-       self.torch_random_state = torch.random.get_rng_state()
-       self.torch_cuda_random_state = torch.cuda.get_rng_state()
-       set_torch_deterministic(self.random_state)
-       return self
+    def __exit__(self, *args):
+        random.setstate(self.random_state)
+        np.random.seed(self.numpy_random_state)
+        np.random.set_state(self.numpy_random_state)
+        torch.random.set_rng_state(self.torch_random_state)
+        torch.cuda.set_rng_state(self.torch_cuda_random_state)
 
-
-   def __exit__(self, *args):
-       random.setstate(self.random_state)
-       np.random.seed(self.numpy_random_state)
-       np.random.set_state(self.numpy_random_state)
-       torch.random.set_rng_state(self.torch_random_state)
-       torch.cuda.set_rng_state(self.torch_cuda_random_state)
 
 def set_torch_deterministic(random_state: int = 0) -> None:
     random_state = int(random_state) % (2**32)

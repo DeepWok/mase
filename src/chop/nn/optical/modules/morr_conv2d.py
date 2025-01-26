@@ -4,6 +4,7 @@ Date: 2021-01-27 01:08:44
 LastEditors: Jiaqi Gu (jqgu@utexas.edu)
 LastEditTime: 2021-07-18 00:40:18
 """
+
 from typing import Optional, Tuple
 
 import numpy as np
@@ -71,7 +72,7 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
         dilation: _size = 1,
         groups: int = 1,
         bias: bool = True,
-        padding_mode = None,
+        padding_mode=None,
         # miniblock: int = 4,
         # ### morr parameter
         # MORRConfig=MORRConfig_20um_MQ,
@@ -79,7 +80,7 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
         # ### trainable MORR nonlinearity
         # trainable_morr_bias: bool = False,
         # trainable_morr_scale: bool = False,
-        config = None,
+        config=None,
         device: Device = torch.device("cuda"),
     ) -> None:
         super(AllPassMORRCirculantConv2d, self).__init__()
@@ -89,7 +90,6 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
         trainable_morr_bias = config.get("trainable_morr_bias", False)
         trainable_morr_scale = config.get("trainable_morr_scale", False)
 
-
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.kernel_size = _pair(kernel_size)
@@ -97,8 +97,12 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
         self.padding = _pair(padding)
         self.dilation = _pair(dilation)
         self.groups = groups
-        assert groups == 1, f"Currently group convolution is not supported, but got group: {groups}"
-        self.in_channels_flat = self.in_channels * self.kernel_size[0] * self.kernel_size[1]
+        assert (
+            groups == 1
+        ), f"Currently group convolution is not supported, but got group: {groups}"
+        self.in_channels_flat = (
+            self.in_channels * self.kernel_size[0] * self.kernel_size[1]
+        )
         self.grid_dim_x = int(np.ceil(self.in_channels_flat / miniblock))
         self.grid_dim_y = int(np.ceil(self.out_channels / miniblock))
         self.in_channels_pad = self.grid_dim_x * miniblock
@@ -107,7 +111,7 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
 
         self.v_max = 10.8
         self.v_pi = 4.36
-        self.gamma = np.pi / self.v_pi ** 2
+        self.gamma = np.pi / self.v_pi**2
         self.w_bit = 32
         self.in_bit = 32
         self.MORRConfig = MORRConfig
@@ -121,7 +125,7 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
         ### calculate FWHM (rad)
         self.morr_fwhm = (
             -4
-            * np.pi ** 2
+            * np.pi**2
             * MORRConfig.radius
             * MORRConfig.effective_index
             * (
@@ -135,7 +139,9 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
         self.x_zero_pad = None
         self.morr_output_scale = None  ## learnable balancing factors implelemt by MRRs
         self.morr_input_bias = None  ## round-trip phase shift bias within MORR
-        self.morr_input_scale = None  ## scaling factor for the round-trip phase shift within MORR
+        self.morr_input_scale = (
+            None  ## scaling factor for the round-trip phase shift within MORR
+        )
         self.morr_gain = (
             100 / (self.in_channels_flat // self.miniblock)
         ) ** 0.5  ## set this TIA gain such that output variance is around 1
@@ -178,21 +184,37 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
         ### MORR weights
         self.weight = Parameter(
             torch.ones(
-                self.grid_dim_y, self.grid_dim_x, self.miniblock, device=self.device, dtype=torch.float
+                self.grid_dim_y,
+                self.grid_dim_x,
+                self.miniblock,
+                device=self.device,
+                dtype=torch.float,
             )
         )
         ### learnable balancing factor achieved by MRRs (morr_output_scale)
         ### We use a single scaling factor for each block
-        self.morr_output_scale = Parameter(torch.zeros(max(1, self.grid_dim_x // 2) + 1, device=self.device))
+        self.morr_output_scale = Parameter(
+            torch.zeros(max(1, self.grid_dim_x // 2) + 1, device=self.device)
+        )
         if self.trainable_morr_bias:
             ### initialize with the finest-granularity, i.e., per mini-block
             self.morr_input_bias = Parameter(
-                torch.zeros(self.grid_dim_y, self.grid_dim_x, device=self.device, dtype=torch.float)
+                torch.zeros(
+                    self.grid_dim_y,
+                    self.grid_dim_x,
+                    device=self.device,
+                    dtype=torch.float,
+                )
             )
         if self.trainable_morr_scale:
             ### initialize with the finest-granularity, i.e., per mini-block
             self.morr_input_scale = Parameter(
-                torch.zeros(self.grid_dim_y, self.grid_dim_x, device=self.device, dtype=torch.float)
+                torch.zeros(
+                    self.grid_dim_y,
+                    self.grid_dim_x,
+                    device=self.device,
+                    dtype=torch.float,
+                )
             )
 
     def reset_parameters(self, morr_init: bool = False) -> None:
@@ -212,11 +234,16 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
                 torch.tensor([0]).float(), a=self.mrr_a, r=self.mrr_r, intensity=True
             )
             t2 = mrr_roundtrip_phase_to_tr_fused(
-                torch.tensor([self.morr_fwhm * 2.4]).float(), a=self.mrr_a, r=self.mrr_r, intensity=True
+                torch.tensor([self.morr_fwhm * 2.4]).float(),
+                a=self.mrr_a,
+                r=self.mrr_r,
+                intensity=True,
             )
-            g = ((t2 - t1) / (2.4 * self.morr_fwhm)).item()  ## 0~2.4 FWHM slope as a linear approximation
+            g = (
+                (t2 - t1) / (2.4 * self.morr_fwhm)
+            ).item()  ## 0~2.4 FWHM slope as a linear approximation
 
-            self.sigma_out_scale = 4 / (3 * self.grid_dim_x ** 0.5 * g * self.morr_fwhm)
+            self.sigma_out_scale = 4 / (3 * self.grid_dim_x**0.5 * g * self.morr_fwhm)
             self.out_scale_quant_gain = None
             init.normal_(self.morr_output_scale, 0, self.sigma_out_scale)
 
@@ -260,7 +287,9 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
     def disable_fast_forward(self) -> None:
         self.fast_forward_flag = False
 
-    def set_gamma_noise(self, noise_std: float, random_state: Optional[int] = None) -> None:
+    def set_gamma_noise(
+        self, noise_std: float, random_state: Optional[int] = None
+    ) -> None:
         self.gamma_noise_std = noise_std
 
     def load_parameters(self, param_dict) -> None:
@@ -284,7 +313,9 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
         ### voltage to power, which is proportional to the phase shift
         return x * x
 
-    def set_crosstalk_coupling_matrix(self, coupling_factor: float, drop_perc: float = 0) -> None:
+    def set_crosstalk_coupling_matrix(
+        self, coupling_factor: float, drop_perc: float = 0
+    ) -> None:
         ### crosstalk coupling matrix is a symmetric matrix, but the intra-MORR crosstalk can be taken as a round-trip phase shift scaling factor, which is proportional to the number of segments after pruned.
         ### See SqueezeLight paper
         ### drop-perc is the pruning percentage.
@@ -292,7 +323,9 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
             f"Coupling factor must in [0,1], but got {coupling_factor}"
         )
 
-        self.crosstalk_factor = 1 + max(3, (self.miniblock * (1 - drop_perc) - 1)) * coupling_factor
+        self.crosstalk_factor = (
+            1 + max(3, (self.miniblock * (1 - drop_perc) - 1)) * coupling_factor
+        )
 
     def enable_crosstalk(self) -> None:
         self.enable_thermal_crosstalk = True
@@ -327,7 +360,9 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
 
     @property
     def morr_bias(self) -> Tensor:
-        return self.morr_fwhm * torch.tanh(self.morr_input_bias.unsqueeze(0).unsqueeze(-1))
+        return self.morr_fwhm * torch.tanh(
+            self.morr_input_bias.unsqueeze(0).unsqueeze(-1)
+        )
 
     def propagate_morr(self, weight: Tensor, x: Tensor) -> Tensor:
         """
@@ -352,7 +387,9 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
         x = weight.matmul(x).squeeze(-1)  # [h*w*bs, p, q, k]
 
         if self.enable_phase_noise and self.phase_noise_std > 1e-5:
-            x = x + torch.zeros_like(x).normal_(0, self.phase_noise_std)  # [h*w*bs, p, q, k]
+            x = x + torch.zeros_like(x).normal_(
+                0, self.phase_noise_std
+            )  # [h*w*bs, p, q, k]
 
         ### input scaling, learnable MORR nonlinearity
         if self.trainable_morr_scale:
@@ -370,7 +407,9 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
         if self.w_bit < 16:
             morr_output_scale = self.morr_output_scale_quantizer(self.morr_output_scale)
             if self.out_scale_quant_gain is None:
-                self.out_scale_quant_gain = self.sigma_out_scale / morr_output_scale.data.std().item()
+                self.out_scale_quant_gain = (
+                    self.sigma_out_scale / morr_output_scale.data.std().item()
+                )
             morr_output_scale = morr_output_scale.mul(
                 self.out_scale_quant_gain
             )  ### gain factor from Tanh used in quantization
@@ -392,7 +431,9 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
                 scale = scale_pad
         scale = scale.unsqueeze(0).unsqueeze(0).unsqueeze(0)  # [1, 1, 1, q]
 
-        x = scale.matmul(x)  # [1,1,1,q]x[h_out*w_out*bs, p, q, k]=[h_out*w_out*bs, p, 1, k]
+        x = scale.matmul(
+            x
+        )  # [1,1,1,q]x[h_out*w_out*bs, p, q, k]=[h_out*w_out*bs, p, 1, k]
         x = x.view(x.size(0), -1).t()  # [p*k, h_out*w_out*bs]
         if self.out_channels_pad > self.out_channels:
             x = x[: self.out_channels, :]  # [outc, h_out*w_out*bs]
@@ -407,7 +448,12 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
             X,
             stride=self.stride[0],
             padding=self.padding[0],
-            w_size=(self.out_channels, self.in_channels, self.kernel_size[0], self.kernel_size[1]),
+            w_size=(
+                self.out_channels,
+                self.in_channels,
+                self.kernel_size[0],
+                self.kernel_size[1],
+            ),
         )
         ## zero-padding X_col
         if self.in_channels_pad > self.in_channels_flat:
@@ -450,8 +496,12 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
         """
         get the output features size
         """
-        h_out = (img_height - self.kernel_size[0] + 2 * self.padding[0]) / self.stride[0] + 1
-        w_out = (img_width - self.kernel_size[1] + 2 * self.padding[1]) / self.stride[1] + 1
+        h_out = (img_height - self.kernel_size[0] + 2 * self.padding[0]) / self.stride[
+            0
+        ] + 1
+        w_out = (img_width - self.kernel_size[1] + 2 * self.padding[1]) / self.stride[
+            1
+        ] + 1
         return (int(h_out), int(w_out))
 
     def forward(self, x: Tensor) -> Tensor:
