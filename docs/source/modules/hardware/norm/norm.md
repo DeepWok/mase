@@ -12,7 +12,7 @@ Note that it implements all normalization layers with the assumption that `affin
 
 ## Parameter Overview
 
-The module has the following parameters, following the hardware metadata standard (see [here](https://deepwok.github.io/mase/modules/api/analysis/add_metadata.html#add-hardware-metadata-analysis-pass)). Besides `PRECISION_DIM_*` parameters, which dictate the numerical precision, and `TENSOR_SIZE_DIM_*`, which is directly inferred from Pytorch tensor shapes, the following parameters can be adjusted to affect hardware performance.
+The module has the following parameters, following the hardware metadata standard (see [here](https://deepwok.github.io/mase/modules/chop/analysis/add_metadata.html#add-hardware-metadata-analysis-pass)). Besides `PRECISION_DIM_*` parameters, which dictate the numerical precision, and `TENSOR_SIZE_DIM_*`, which is directly inferred from Pytorch tensor shapes, the following parameters can be adjusted to affect hardware performance.
 
 | Parameter                   | Description |
 | -----                       | -----       |

@@ -123,6 +123,8 @@ class StreamMonitor(Monitor):
         return data
 
     def _check(self, got, exp):
+        self.log.debug("Got %s, Expected %s" % (got, exp))
+
         def _check_sig(got, exp):
             if not np.equal(got, exp).all():
                 self.log.error(

@@ -31,17 +31,30 @@ def linearInteger(
     x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
     # check bias quantizer, if not, use weight quantizer
     b_width, b_frac_width = config["bias_width"], config["bias_frac_width"]
+
+    # TODO: remove out_config in the future (some tb are still using out_config), use config instead
     if out_config is not None:
         out_width, out_frac_width = (
             out_config["data_out_width"],
             out_config["data_out_frac_width"],
         )
+    elif "data_out_width" in config:
+        out_width, out_frac_width = (
+            config["data_out_width"],
+            config["data_out_frac_width"],
+        )
+
     floor = config.get("floor", False)
     base_quantizer = integer_floor_quantizer if floor else integer_quantizer
     w_quantizer = partial(base_quantizer, width=w_width, frac_width=w_frac_width)
     x_quantizer = partial(base_quantizer, width=x_width, frac_width=x_frac_width)
     b_quantizer = partial(base_quantizer, width=b_width, frac_width=b_frac_width)
+
     if out_config is not None:
+        out_quantizer = partial(
+            base_quantizer, width=out_width, frac_width=out_frac_width
+        )
+    elif "data_out_width" in config:
         out_quantizer = partial(
             base_quantizer, width=out_width, frac_width=out_frac_width
         )
@@ -49,9 +62,11 @@ def linearInteger(
     x = x_quantizer(x)
     weight = w_quantizer(weight)
     bias = b_quantizer(bias) if bias is not None else None
-
     out = F.linear(x, weight, bias)
-    if out_config is not None:
+
+    if "data_out_width" in config:
+        out = out_quantizer(out)
+    elif out_config is not None:
         out = out_quantizer(out)
     return out
 

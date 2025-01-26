@@ -41,7 +41,7 @@ Tasks
 =====
 
 1. Read `this
-   page <https://jianyicheng.github.io/mase-tools/modules/analysis/add_metadata.html#add-hardware-metadata-analysis-pass>`__
+   page <https://deepwok.github.io/mase/modules/chop/analysis/add_metadata.html#add-hardware-metadata-analysis-pass>`__
    for more information on the hardware metadata pass. Why we have such
    a metadata setup? How is this different from the software metadata?
 

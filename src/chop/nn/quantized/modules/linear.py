@@ -105,10 +105,13 @@ class LinearInteger(_LinearBase):
         dtype=None,
         config=None,
         out_config=None,
-        floor=False,
+        floor=None,
     ) -> None:
         super().__init__(in_features, out_features, bias, device, dtype)
         assert config is not None, "config is None!"
+        # Add floor attribute to the config
+        if floor is not None:
+            config["floor"] = floor
         self.config = config
         self.out_config = out_config
         self.bypass = config.get("bypass", False)
