@@ -26,29 +26,30 @@ from torch.optim.lr_scheduler import StepLR
 
 from train_mnist_cnn import test, train, Net
 
-# --------------------------------------------------
-#   Model specifications
-# --------------------------------------------------
-# class MLP(torch.nn.Module):
-#     """
-#     Toy quantized FC model for digit recognition on MNIST
-#     """
+class Net(nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+        self.conv1 = nn.Conv2d(1, 32, 3, 1)
+        self.conv2 = nn.Conv2d(32, 64, 3, 1)
+        self.dropout1 = nn.Dropout(0.25)
+        self.dropout2 = nn.Dropout(0.5)
+        self.fc1 = nn.Linear(9216, 128)
+        self.fc2 = nn.Linear(128, 10)
 
-#     def __init__(self) -> None:
-#         super().__init__()
-
-#         self.fc1 = nn.Linear(28 * 28, 28 * 28)
-#         self.fc2 = nn.Linear(28 * 28, 28 * 28 * 4)
-#         self.fc3 = nn.Linear(28 * 28 * 4, 10)
-
-#     def forward(self, x):
-#         x = torch.flatten(x, start_dim=1, end_dim=-1)
-#         x = torch.nn.functional.relu(self.fc1(x))
-#         # w = torch.randn((4, 28 * 28))
-#         # x = torch.nn.functional.relu(nn.functional.linear(x, w))
-#         x = torch.nn.functional.relu(self.fc2(x))
-#         x = self.fc3(x)
-#         return x
+    def forward(self, x):
+        x = self.conv1(x)
+        x = F.relu(x)
+        x = self.conv2(x)
+        x = F.relu(x)
+        x = F.max_pool2d(x, 2)
+        x = self.dropout1(x)
+        x = torch.flatten(x, 1)
+        x = self.fc1(x)
+        x = F.relu(x)
+        x = self.dropout2(x)
+        x = self.fc2(x)
+        output = F.log_softmax(x, dim=1)
+        return output
 
 
 def load_my_model(model_path, device="cpu"):
@@ -60,8 +61,9 @@ def load_my_model(model_path, device="cpu"):
 
 
 def test_optical_module_transform_pass():
-    model_path = "mase_output/sample_mnist_cnn.pt"
-    mnist_cnn = load_my_model(model_path)
+    # model_path = "mase_output/sample_mnist_cnn.pt"
+    # mnist_cnn = load_my_model(model_path)
+    model = Net()
     # Sanity check and report
     pass_args = {
         "by": "name",
@@ -84,11 +86,19 @@ def test_optical_module_transform_pass():
             }
         },
     }
-    optical_module_transform_pass(mnist_cnn, pass_args)
+    optical_module_transform_pass(model, pass_args)
     # torch.save(onn_cnn, "mase_output/onn_cnn.pt")
 
-
 test_optical_module_transform_pass()
+
+
+
+
+
+
+
+
+
 
 # if __name__ == '__main__':
 #     finetune = False
