@@ -24,7 +24,7 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import StepLR
 
-from train_mnist_cnn import test, train, Net
+# from train_mnist_cnn import test, train, Net
 
 
 class Net(nn.Module):
