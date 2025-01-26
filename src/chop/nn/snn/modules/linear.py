@@ -165,14 +165,14 @@ class LinearUnfoldBias(nn.Linear):
         #     B,N = x.shape
         # elif x.ndim == 3:
         #     B,C,N = x.shape
-        # N = self.linear.out_features
+        # N = self.out_features
         if x.dim() == 3:
             B, N, _ = x.shape
-            D = self.linear.out_features
+            D = self.out_features
             shape_new = (B, N, D)
         elif x.dim() == 2:
             B, _ = x.shape
-            D = self.linear.out_features
+            D = self.out_features
             shape_new = (B, D)
         if self.zero_output is None:
             self.zero_output = torch.zeros(
@@ -183,8 +183,8 @@ class LinearUnfoldBias(nn.Linear):
             self.is_work = False
             if self.realize_time > 0:
                 output = self.zero_output + (
-                    self.linear.bias.data.unsqueeze(0) / self.steps
-                    if self.linear.bias is not None
+                    self.bias.data.unsqueeze(0) / self.steps
+                    if self.bias is not None
                     else 0.0
                 )
                 self.realize_time = self.realize_time - 1
@@ -192,17 +192,17 @@ class LinearUnfoldBias(nn.Linear):
                 return output
             return self.zero_output
 
-        output = self.linear(x)
+        output = super().forward(x)
 
         if self.neuron_type == "IF":
             pass
         else:
-            if self.linear.bias is None:
+            if self.bias is None:
                 pass
             else:
-                output = output - self.linear.bias.data.unsqueeze(0)
+                output = output - self.bias.data.unsqueeze(0)
                 if self.realize_time > 0:
-                    output = output + self.linear.bias.data.unsqueeze(0) / self.steps
+                    output = output + self.bias.data.unsqueeze(0) / self.steps
                     self.realize_time = self.realize_time - 1
 
         self.is_work = True

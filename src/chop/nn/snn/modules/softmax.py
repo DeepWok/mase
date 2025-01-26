@@ -17,10 +17,11 @@ class SoftmaxZIPTF(nn.Softmax, base.StepModule):
     https://arxiv.org/pdf/2406.03470
     """
 
-    def __init__(self) -> None:
-        super().__init__(dim=-1)
+    def __init__(self, dim=-1, step_mode="s") -> None:
+        super().__init__(dim=dim)
         self.X = 0.0
         self.Y_pre = 0.0
+        self.step_mode = step_mode
 
     def reset(self):
         self.X = 0.0
