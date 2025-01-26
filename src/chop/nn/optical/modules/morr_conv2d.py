@@ -71,16 +71,25 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
         dilation: _size = 1,
         groups: int = 1,
         bias: bool = True,
-        miniblock: int = 4,
-        ### morr parameter
-        MORRConfig=MORRConfig_20um_MQ,
-        morr_init: bool = True,  # whether to use initialization method customized for MORR
-        ### trainable MORR nonlinearity
-        trainable_morr_bias: bool = False,
-        trainable_morr_scale: bool = False,
+        padding_mode = None,
+        # miniblock: int = 4,
+        # ### morr parameter
+        # MORRConfig=MORRConfig_20um_MQ,
+        # morr_init: bool = True,  # whether to use initialization method customized for MORR
+        # ### trainable MORR nonlinearity
+        # trainable_morr_bias: bool = False,
+        # trainable_morr_scale: bool = False,
+        config = None,
         device: Device = torch.device("cuda"),
     ) -> None:
         super(AllPassMORRCirculantConv2d, self).__init__()
+        miniblock = config.get("miniblock", 4)
+        MORRConfig = config.get("MORRConfig", MORRConfig_20um_MQ)
+        morr_init = config.get("morr_init", True)
+        trainable_morr_bias = config.get("trainable_morr_bias", False)
+        trainable_morr_scale = config.get("trainable_morr_scale", False)
+
+
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.kernel_size = _pair(kernel_size)

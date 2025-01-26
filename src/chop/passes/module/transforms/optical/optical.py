@@ -1,8 +1,8 @@
 import torch
 
 from chop.nn.optical.modules import optical_module_map
-from ...module_modify_helper import replace_by_name, instantiate_module
-from ...module_transform_helper import replace_by_name_optical
+from chop.passes.module.module_modify_helper import replace_by_name, instantiate_module
+from chop.passes.module.transforms.optical.module_transform_helper import replace_by_name_optical
 
 
 def get_config(config: dict, name: str):
@@ -36,12 +36,12 @@ def optical_by_type(network, pass_args):
 
 
 def optical_by_name(network, pass_args):
-    quantize_names = pass_args.keys()
+    optical_names = pass_args.keys()
     n_m = {}
     for n, m in network.named_modules():
         n_m[n] = m
     for n, m in n_m.items():
-        if n in quantize_names:
+        if n in optical_names:
             quan_config = pass_args[n]
 
             quan_config = quan_config["config"]
