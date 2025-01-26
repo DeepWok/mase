@@ -26,6 +26,7 @@ from torch.optim.lr_scheduler import StepLR
 
 from train_mnist_cnn import test, train, Net
 
+
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
@@ -89,15 +90,8 @@ def test_optical_module_transform_pass():
     optical_module_transform_pass(model, pass_args)
     # torch.save(onn_cnn, "mase_output/onn_cnn.pt")
 
+
 test_optical_module_transform_pass()
-
-
-
-
-
-
-
-
 
 
 # if __name__ == '__main__':
