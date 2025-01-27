@@ -4,6 +4,7 @@ import torch
 from functools import reduce, partial
 from copy import deepcopy
 import logging
+import inspect
 
 from transformers.models.roberta.modeling_roberta import (
     RobertaSelfAttention,
@@ -95,33 +96,60 @@ instantiation of different supported modules
 
 
 def instantiate_linear(module, postfix, module_map, additional_module_args):
-    # if isinstance(module, torch.nn.Linear):
     linear_cls = module_map[f"linear_{postfix}"]
     has_bias = not (module.bias is None)
-    linear = linear_cls(
-        in_features=module.in_features,
-        out_features=module.out_features,
-        bias=has_bias,
-        **additional_module_args,
-    )
+
+    # TODO: some transformed modules have "config" as an argument then extract the additional_module_args from it. Some directly take the additional_module_args.
+    # Need to handle this better
+    if "config" in inspect.signature(linear_cls.__init__).parameters:
+        linear = linear_cls(
+            in_features=module.in_features,
+            out_features=module.out_features,
+            bias=has_bias,
+            config=additional_module_args,
+        )
+    else:
+        linear = linear_cls(
+            in_features=module.in_features,
+            out_features=module.out_features,
+            bias=has_bias,
+            **additional_module_args,
+        )
+
     return linear
 
 
 def instantiate_conv2d(module, postfix, module_map, additional_module_args):
     conv2d_cls = module_map[f"conv2d_{postfix}"]
     has_bias = not (module.bias is None)
-    conv2d = conv2d_cls(
-        in_channels=module.in_channels,
-        out_channels=module.out_channels,
-        kernel_size=module.kernel_size,
-        stride=module.stride,
-        padding=module.padding,
-        dilation=module.dilation,
-        groups=module.groups,
-        bias=has_bias,
-        padding_mode=module.padding_mode,
-        **additional_module_args,
-    )
+    # TODO: some transformed modules have "config" as an argument then extract the additional_module_args from it. Some directly take the additional_module_args.
+    # Need to handle this better
+    if "config" in inspect.signature(conv2d.__init__).parameters:
+        conv2d = conv2d_cls(
+            in_channels=module.in_channels,
+            out_channels=module.out_channels,
+            kernel_size=module.kernel_size,
+            stride=module.stride,
+            padding=module.padding,
+            dilation=module.dilation,
+            groups=module.groups,
+            bias=has_bias,
+            padding_mode=module.padding_mode,
+            config=additional_module_args,
+        )
+    else:
+        conv2d = conv2d_cls(
+            in_channels=module.in_channels,
+            out_channels=module.out_channels,
+            kernel_size=module.kernel_size,
+            stride=module.stride,
+            padding=module.padding,
+            dilation=module.dilation,
+            groups=module.groups,
+            bias=has_bias,
+            padding_mode=module.padding_mode,
+            **additional_module_args,
+        )
     return conv2d
 
 
