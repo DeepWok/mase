@@ -67,7 +67,7 @@ def test_ann2snn_module_transform_pass():
     # f.close()
 
     #
-    quan_pass_args = {
+    convert_pass_args = {
         "by": "regex_name",
         "roberta\.encoder\.layer\.\d+\.attention\.self": {
             "config": {
@@ -77,8 +77,8 @@ def test_ann2snn_module_transform_pass():
             },
         },
     }
-    mg, _ = ann2snn_module_transform_pass(mg, quan_pass_args)
-    quan_pass_args = {
+    mg, _ = ann2snn_module_transform_pass(mg, convert_pass_args)
+    convert_pass_args = {
         "by": "type",
         "embedding": {
             "config": {
@@ -121,7 +121,7 @@ def test_ann2snn_module_transform_pass():
             },
         },
     }
-    mg, _ = ann2snn_module_transform_pass(mg, quan_pass_args)
+    mg, _ = ann2snn_module_transform_pass(mg, convert_pass_args)
 
     # f = open(f"spiking_model_arch.txt", "w")
     # f.write(str(mg))
