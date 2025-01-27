@@ -26,7 +26,7 @@ requirements = [
     "toml",
     "GitPython",
     "colorlog",
-    "cocotb[bus]==1.8.0",
+    "cocotb[bus]",
     "pytest",
     "pytorch-lightning",
     "transformers",
