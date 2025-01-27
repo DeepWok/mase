@@ -15,6 +15,7 @@ MASE_IMPLICIT_FUNCS = [
     # Memory ops and tensor reshapes
     "to",
     "bool",
+    "int",
     "flatten",
     "squeeze",
     "unsqueeze",
