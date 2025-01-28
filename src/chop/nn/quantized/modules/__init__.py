@@ -9,6 +9,8 @@ from .roberta import (
     RobertaSelfOutputLSQInteger,
 )
 
+from .llama import LlamaAttentionLSQInteger
+
 # from .add import AddInteger
 from .conv1d import (
     Conv1dBlockFP,
@@ -293,8 +295,13 @@ quantized_roberta_module_map = {
     "roberta_self_output_lsqinteger": RobertaSelfOutputLSQInteger,
 }
 
-quantized_module_map = {
-    **quantized_basic_module_map,
-    **quantized_bert_module_map,
-    **quantized_roberta_module_map,
+quantized_llama_module_map = {
+    "llama_self_attention_lsqinteger": LlamaAttentionLSQInteger,
 }
+
+quantized_module_map = (
+    quantized_basic_module_map
+    | quantized_bert_module_map
+    | quantized_roberta_module_map
+    | quantized_llama_module_map
+)

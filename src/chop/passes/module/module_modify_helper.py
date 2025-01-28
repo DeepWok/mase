@@ -15,6 +15,10 @@ from transformers.models.roberta.modeling_roberta import (
     RobertaSelfOutput,
 )
 
+from transformers.models.llama.modeling_llama import (
+    LlamaAttention,
+)
+
 roberta_prefix_map = {
     RobertaSdpaSelfAttention: "roberta_self_attention",
     RobertaSelfAttention: "roberta_self_attention",
@@ -22,6 +26,10 @@ roberta_prefix_map = {
     RobertaOutput: "roberta_output",
     RobertaSelfOutput: "roberta_self_output",
     RobertaClassificationHead: "roberta_classification_head",
+}
+
+llama_prefix_map = {
+    LlamaAttention: "llama_self_attention",
 }
 
 
@@ -35,10 +43,9 @@ def check_module_instance(module, prefix_map):
         tuple: A tuple containing a boolean indicating if the module is an instance of any class in the prefix_map,
                and the corresponding prefix if it is an instance, otherwise None.
     """
-
-    for cls in prefix_map.keys():
+    for cls, name in prefix_map.items():
         if isinstance(module, cls):
-            return True, roberta_prefix_map[cls]
+            return True, name
     return False, None
 
 
@@ -193,8 +200,22 @@ def instantiate_roberta_module(
     return roberta_module
 
 
+def instantiate_llama_module(
+    module, postfix, prefix, module_map, module_args, network_args
+):
+    llama_cls = module_map[f"{prefix}_{postfix}"]
+
+    llama_module = llama_cls(
+        config=network_args,
+        layer_idx=module.layer_idx,
+        q_config=module_args,
+    )
+    return llama_module
+
+
 def instantiate_module(module, postfix, module_map, additional_module_args):
     is_roberta, roberta_layer_name = check_module_instance(module, roberta_prefix_map)
+    is_llama, llama_layer_name = check_module_instance(module, llama_prefix_map)
 
     module_args = additional_module_args["config"]
     network_args = additional_module_args.get("network_config", None)
@@ -210,6 +231,10 @@ def instantiate_module(module, postfix, module_map, additional_module_args):
     elif is_roberta:
         module = instantiate_roberta_module(
             module, postfix, roberta_layer_name, module_map, module_args, network_args
+        )
+    elif is_llama:
+        module = instantiate_llama_module(
+            module, postfix, llama_layer_name, module_map, module_args, network_args
         )
     else:
         raise ValueError(f"{module} is not supported.")
