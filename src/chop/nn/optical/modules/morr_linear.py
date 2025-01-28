@@ -52,7 +52,7 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
         # ### trainable MORR nonlinearity
         # trainable_morr_bias: bool = False,
         # trainable_morr_scale: bool = False,
-        device: Device = torch.device("cuda"),
+        device: Device = torch.device("cuda" if torch.cuda.is_available() else "cpu"),
     ) -> None:
         super(AllPassMORRCirculantLinear, self).__init__()
         self.in_features = in_features

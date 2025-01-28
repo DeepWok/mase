@@ -81,7 +81,7 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
         # trainable_morr_bias: bool = False,
         # trainable_morr_scale: bool = False,
         config=None,
-        device: Device = torch.device("cuda"),
+        device: Device = torch.device("cuda" if torch.cuda.is_available() else "cpu"),
     ) -> None:
         super(AllPassMORRCirculantConv2d, self).__init__()
         miniblock = config.get("miniblock", 4)

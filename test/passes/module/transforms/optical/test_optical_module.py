@@ -14,17 +14,6 @@ sys.path.append(Path(__file__).resolve().parents[5].as_posix())
 
 # from chop.passes.module.transforms import quantize_module_transform_pass
 from chop.passes.module.transforms import optical_module_transform_pass
-from chop.passes.module import report_trainable_parameters_analysis_pass
-
-import argparse
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torchvision import datasets, transforms
-from torch.optim.lr_scheduler import StepLR
-
-# from train_mnist_cnn import test, train, Net
 
 
 class Net(nn.Module):
