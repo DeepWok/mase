@@ -77,56 +77,56 @@ convert_pass_args = {
     },
 }
 mg, _ = ann2snn_module_transform_pass(mg, convert_pass_args)
-    # convert_pass_args = {
-    #     "by": "type",
-    #     "embedding": {
-    #         "config": {
-    #             "name": "zip_tf",
-    #         },
-    #     },
-    #     "linear": {
-    #         "config": {
-    #             "name": "unfold_bias",
-    #             "level": 32,
-    #             "neuron_type": "ST-BIF",
-    #         },
-    #     },
-    #     "conv2d": {
-    #         "config": {
-    #             "name": "zip_tf",
-    #             "level": 32,
-    #             "neuron_type": "ST-BIF",
-    #         },
-    #     },
-    #     "layernorm": {
-    #         "config": {
-    #             "name": "zip_tf",
-    #         },
-    #     },
-    #     "relu": {
-    #         "manual_instantiate": True,
-    #         "config": {
-    #             "name": "identity",
-    #         },
-    #     },
-    #     "lsqinteger": {
-    #         "manual_instantiate": True,
-    #         "config": {
-    #             "name": "st_bif",
-    #             # Default values. These would be replaced by the values from the LSQInteger module, so it has no effect.
-    #             # "q_threshold": 1,
-    #             # "level": 32,
-    #             # "sym": True,
-    #         },
-    #     },
-    # }
-    # mg, _ = ann2snn_module_transform_pass(mg, convert_pass_args)
+# convert_pass_args = {
+#     "by": "type",
+#     "embedding": {
+#         "config": {
+#             "name": "zip_tf",
+#         },
+#     },
+#     "linear": {
+#         "config": {
+#             "name": "unfold_bias",
+#             "level": 32,
+#             "neuron_type": "ST-BIF",
+#         },
+#     },
+#     "conv2d": {
+#         "config": {
+#             "name": "zip_tf",
+#             "level": 32,
+#             "neuron_type": "ST-BIF",
+#         },
+#     },
+#     "layernorm": {
+#         "config": {
+#             "name": "zip_tf",
+#         },
+#     },
+#     "relu": {
+#         "manual_instantiate": True,
+#         "config": {
+#             "name": "identity",
+#         },
+#     },
+#     "lsqinteger": {
+#         "manual_instantiate": True,
+#         "config": {
+#             "name": "st_bif",
+#             # Default values. These would be replaced by the values from the LSQInteger module, so it has no effect.
+#             # "q_threshold": 1,
+#             # "level": 32,
+#             # "sym": True,
+#         },
+#     },
+# }
+# mg, _ = ann2snn_module_transform_pass(mg, convert_pass_args)
 
-    # f = open(f"spiking_model_arch.txt", "w")
-    # f.write(str(mg))
-    # f.close()
+# f = open(f"spiking_model_arch.txt", "w")
+# f.write(str(mg))
+# f.close()
 
-    # return mg
+# return mg
 
 
 # import datasets as hf_datasets
