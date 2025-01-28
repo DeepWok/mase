@@ -126,6 +126,8 @@ def test_ann2snn_module_transform_pass():
     # f.write(str(mg))
     # f.close()
 
+    return mg
+
 
 # import datasets as hf_datasets
 # sst2 = hf_datasets.load_dataset("gpt3mix/sst2")
@@ -142,4 +144,4 @@ def test_ann2snn_module_transform_pass():
 # if_save_model = False
 # checkpoint = None
 
-test_ann2snn_module_transform_pass()
+mg = test_ann2snn_module_transform_pass()
