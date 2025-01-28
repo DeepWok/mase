@@ -66,17 +66,17 @@ def test_ann2snn_module_transform_pass():
     # f.write(str(mg))
     # f.close()
 
-    # convert_pass_args = {
-    #     "by": "regex_name",
-    #     "roberta\.encoder\.layer\.\d+\.attention\.self": {
-    #         "config": {
-    #             "name": "zip_tf",
-    #             "level": 32,
-    #             "neuron_type": "ST-BIF",
-    #         },
-    #     },
-    # }
-    # mg, _ = ann2snn_module_transform_pass(mg, convert_pass_args)
+    convert_pass_args = {
+        "by": "regex_name",
+        "roberta\.encoder\.layer\.\d+\.attention\.self": {
+            "config": {
+                "name": "zip_tf",
+                "level": 32,
+                "neuron_type": "ST-BIF",
+            },
+        },
+    }
+    mg, _ = ann2snn_module_transform_pass(mg, convert_pass_args)
     # convert_pass_args = {
     #     "by": "type",
     #     "embedding": {
