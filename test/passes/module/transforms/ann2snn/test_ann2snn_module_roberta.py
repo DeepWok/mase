@@ -27,56 +27,56 @@ for param in bert.parameters():
     param.requires_grad = True  # QAT training
 
 
-def test_ann2snn_module_transform_pass():
-    quan_pass_args = {
-        "by": "regex_name",
-        "roberta\.encoder\.layer\.\d+\.attention\.self": {
-            "config": {
-                "name": "lsqinteger",
-                "level": 32,
-            }
-        },
-        "roberta\.encoder\.layer\.\d+\.attention\.output": {
-            "config": {
-                "name": "lsqinteger",
-                "level": 32,
-            }
-        },
-        "roberta\.encoder\.layer\.\d+\.output": {
-            "config": {
-                "name": "lsqinteger",
-                "level": 32,
-            }
-        },
-        "roberta\.encoder\.layer\.\d+\.intermediate": {
-            "config": {
-                "name": "lsqinteger",
-                "level": 32,
-            }
-        },
-        "classifier": {
-            "config": {
-                "name": "lsqinteger",
-                "level": 32,
-            }
-        },
-    }
-    mg, _ = quantize_module_transform_pass(bert, quan_pass_args)
-    # f = open(f"qann_model_arch.txt", "w")
-    # f.write(str(mg))
-    # f.close()
+# def test_ann2snn_module_transform_pass():
+quan_pass_args = {
+    "by": "regex_name",
+    "roberta\.encoder\.layer\.\d+\.attention\.self": {
+        "config": {
+            "name": "lsqinteger",
+            "level": 32,
+        }
+    },
+    "roberta\.encoder\.layer\.\d+\.attention\.output": {
+        "config": {
+            "name": "lsqinteger",
+            "level": 32,
+        }
+    },
+    "roberta\.encoder\.layer\.\d+\.output": {
+        "config": {
+            "name": "lsqinteger",
+            "level": 32,
+        }
+    },
+    "roberta\.encoder\.layer\.\d+\.intermediate": {
+        "config": {
+            "name": "lsqinteger",
+            "level": 32,
+        }
+    },
+    "classifier": {
+        "config": {
+            "name": "lsqinteger",
+            "level": 32,
+        }
+    },
+}
+mg, _ = quantize_module_transform_pass(bert, quan_pass_args)
+# f = open(f"qann_model_arch.txt", "w")
+# f.write(str(mg))
+# f.close()
 
-    convert_pass_args = {
-        "by": "regex_name",
-        "roberta\.encoder\.layer\.\d+\.attention\.self": {
-            "config": {
-                "name": "zip_tf",
-                "level": 32,
-                "neuron_type": "ST-BIF",
-            },
+convert_pass_args = {
+    "by": "regex_name",
+    "roberta\.encoder\.layer\.\d+\.attention\.self": {
+        "config": {
+            "name": "zip_tf",
+            "level": 32,
+            "neuron_type": "ST-BIF",
         },
-    }
-    mg, _ = ann2snn_module_transform_pass(mg, convert_pass_args)
+    },
+}
+mg, _ = ann2snn_module_transform_pass(mg, convert_pass_args)
     # convert_pass_args = {
     #     "by": "type",
     #     "embedding": {
@@ -126,7 +126,7 @@ def test_ann2snn_module_transform_pass():
     # f.write(str(mg))
     # f.close()
 
-    return mg
+    # return mg
 
 
 # import datasets as hf_datasets
@@ -144,4 +144,4 @@ def test_ann2snn_module_transform_pass():
 # if_save_model = False
 # checkpoint = None
 
-mg = test_ann2snn_module_transform_pass()
+# mg = test_ann2snn_module_transform_pass()
