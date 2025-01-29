@@ -360,6 +360,8 @@ module_data = {
     # chop.nn.modules.lora.LoRALinear
     "loralinear": {"input": "data_in"},
     "grouped_query_attention": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.Flatten.html#flatten
+    "flatten": {"input": "data_in", "start_dim": "config", "end_dim": "config"},
 }
 
 
@@ -566,7 +568,6 @@ def _annotate_arg_metadata(
                     arg_meta["value"] = x
                 meta["common"]["args"][f"data_in_{data_in_itr}"] = arg_meta
                 data_in_itr += 1
-
         # Unknown data_in type or config argument
         else:
             # Don't increment the iterator for config arguments, but
@@ -602,6 +603,9 @@ def _annotate_arg_metadata(
                 arg_meta["value"] = v
             meta["common"]["args"][f"data_in_{data_in_itr}"] = arg_meta
             data_in_itr += 1
+        elif k == "inplace":
+            # although inplace is marked as a config type, it is in fact just a boolean flag
+            meta["common"]["args"][k] = v
         else:
             # otherwise this must be a configuration parameter in meta
             # meta_kwargs[k] = v

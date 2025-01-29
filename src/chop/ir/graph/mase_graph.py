@@ -107,6 +107,12 @@ def trace_torch_module(
     Returns:
         fx.GraphModule: Traced model as a fx.GraphModule.
     """
+    # Forces contiguous memory layout for all parameters
+    state_dict = model.state_dict()
+    for name, param in state_dict.items():
+        state_dict[name] = param.contiguous()
+    model.load_state_dict(state_dict)
+
     # * HuggingFace model
     if isinstance(model, PreTrainedModel):
         tracer_cls = HFTracer

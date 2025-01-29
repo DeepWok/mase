@@ -1,5 +1,6 @@
 from .pruning import prune_transform_pass, prune_detach_hook_transform_pass
 from .quantize import quantize_transform_pass, summarize_quantization_analysis_pass
+from .snn import ann2snn_transform_pass
 from .verilog import (
     emit_bram_transform_pass,
     emit_internal_rtl_transform_pass,

@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 from .util import get_verilog_parameters
 from pathlib import Path
 
+from chop.ir.common import MASE_IMPLICIT_FUNCS
+
 # =============================================================================
 # Utilities
 # =============================================================================
@@ -61,12 +63,23 @@ def param_needs_signals(node, param, value, qualifier="data_in"):
 
 def is_real_input_arg(node, arg_idx):
     return (
-        # module parameter arguments are appended after fx args
+        # Check if the argument index is within bounds
         arg_idx < len(node.args)
-        # Drop None arguments
+        # Ensure the argument is an instance of fx.Node
         and isinstance(node.args[arg_idx], fx.Node)
-        # Drop arguments that are inputs to this node, but not the whole graph
-        and node.args[arg_idx].op == "placeholder"
+    ) and (
+        # Check if the argument is in the implicit functions list
+        node.args[arg_idx] in MASE_IMPLICIT_FUNCS
+        or (
+            # Check if the argument is an implicit function
+            node.args[arg_idx].meta["mase"].parameters["common"]["mase_type"]
+            == "implicit_func"
+        )
+        or (
+            # Check if the argument is a placeholder input
+            node.args[arg_idx].op
+            == "placeholder"
+        )
     )
 
 

@@ -201,6 +201,9 @@ class InputGenerator:
         self.max_batches = max_batches
         self.current_batch = 0
 
+    def __len__(self):
+        return len(self.dataloader)
+
     def __iter__(self):
         return self
 

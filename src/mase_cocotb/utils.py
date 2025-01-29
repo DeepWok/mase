@@ -12,7 +12,7 @@ sys.path.append("../")
 from mase_cocotb.z_qlayers import quantize_to_int
 
 from functools import partial
-from chop.nn.quantizers import integer_quantizer
+from chop.nn.quantizers import integer_quantizer, integer_floor_quantizer
 
 
 # Apparently this function only exists in Python 3.12 ...
@@ -103,7 +103,7 @@ def product_dict(**kwargs):
 
 def fixed_preprocess_tensor(tensor: Tensor, q_config: dict, parallelism: list) -> list:
     """Preprocess a tensor before driving it into the DUT.
-    1. Quantize to requested fixed-point precision.
+    1. Quantize to requested fixed-point precision using floor rounding.
     2. Convert to integer format to be compatible with Cocotb drivers.
     3. Split into blocks according to parallelism in each dimension.
 
@@ -125,12 +125,11 @@ def fixed_preprocess_tensor(tensor: Tensor, q_config: dict, parallelism: list) -
     tensor = tensor.view((-1, tensor.shape[-1]))
 
     # Quantize
-    quantizer = partial(integer_quantizer, **q_config)
+    quantizer = partial(integer_floor_quantizer, **q_config)
     q_tensor = quantizer(tensor)
 
     # Convert to integer format
     q_tensor = (q_tensor * 2 ** q_config["frac_width"]).int()
-    q_tensor = signed_to_unsigned(q_tensor, bits=q_config["width"])
 
     # Split into chunks according to parallelism in each dimension
     # parallelism[0]: along rows, parallelism[1]: along columns

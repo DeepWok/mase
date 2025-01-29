@@ -3,7 +3,7 @@ from logging import getLogger
 import torch
 import torch.nn as nn
 import toml
-from timm.models.layers import to_2tuple, trunc_normal_
+from timm.layers import to_2tuple, trunc_normal_
 import torch.nn.functional as F
 
 __all__ = ["get_pvt_quant"]

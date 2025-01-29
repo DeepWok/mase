@@ -384,6 +384,15 @@ def transform_graph(
                 PASSES["summarize_quantization"](
                     graph, {"save_dir": pass_save_dir, "original_graph": ori_graph}
                 )
+            case "ann2snn":
+                input_generator = InputGenerator(
+                    model_info=model_info,
+                    data_module=data_module,
+                    task=task,
+                    which_dataloader="train",
+                )
+                pass_config["train_data_loader"] = input_generator
+                graph, _ = PASSES[pass_name](graph, pass_args=pass_config)
             case "profile_statistics":
                 input_generator = InputGenerator(
                     model_info=model_info,
