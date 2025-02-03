@@ -1,4 +1,4 @@
-## Tutorial 1: Introduction
+## Tutorial 1 (Lab 0): Introduction
 
 ### Run-Time Error
 Here is the run-time error encountered during the session:
@@ -10,7 +10,7 @@ bert_encoder_layer_0_attention_self_key: None, bert_encoder_layer_0_attention_se
 add_7: None}!
 ```
 
-## Tutorial 2: Lora Finetune
+## Tutorial 2 (Lab 0): Lora Finetune
 
 ### Removing attention_mask, labels from hf_input_names and its effect on the graphs:
 The graph was created with and without the extra information and compared.
@@ -20,19 +20,28 @@ Firstly, having no labels meant that at the end of the process, there is no cros
 
 ## Tutorial 3 (Lab 1): QAT
 Insert plots for tutorial 3 (lab 1).
-Best model that was most condensed was fixed width 16 (8,8) which was saved.
+![Fixed point width vs highest achieved accuracy](fixed_point_width_vs_accuracy.png) 
+![PTQ and QAT comparison vs highest achieved accuracy](ptq_vs_qat_accuracy.png) 
+
+The best model that was most condensed was fixed width 16 (8,8) which was saved.
 
 
 ## Tutorial 4 (Lab 1): Pruning
-Insert plots for tutorial 4 (lab 1).
-l1 norm performed better than random in all cases and allowed for more drastic pruning.
+![Sparsity vs highest achieved accuracy](highest_accuracy_by_sparsity.png) 
+![Random vs L1-Norm comparison](pruning_accuracy_by_sparsity.png) 
+
+L1-norm performed better than random in all cases and allowed for more drastic pruning.
 
 
 ## Tutorial 5 (Lab 2): Nas Optuna
-Insert "combined_optuna_results.png".
+![Random vs Grid vs TPE search method comparison](combined_optuna_results.png) 
+
 TPE found the highest accuracy combination the fastest and reached the highest accuracy, therefore was the best search method.
 TPE was then used in part b, and compression-aware search ran and tested.
 
+![Effects of compression and post-compression fine-tuning](compression_aware_results.png) 
+
+No compression eventually performed the best, mainly due to the compression being quite severe, but the compression aware training method reach similar accuracy levels to the non-compressed model with a much smaller model size.
 
 ## Tutorial 6 (Lab 3): Mixed Precision Search
 
