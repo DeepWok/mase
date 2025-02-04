@@ -44,7 +44,51 @@ TPE was then used in part b, and compression-aware search ran and tested.
 No compression eventually performed the best, mainly due to the compression being quite severe, but the compression aware training method reach similar accuracy levels to the non-compressed model with a much smaller model size.
 
 ## Tutorial 6 (Lab 3): Mixed Precision Search
+![Number of trails vs maximum achieved accuracy](optuna_search_results.png)
+
+TPE Sampler was used to search for the optimal configuration, which was found on the 3rd iteration.
+The search was then extended to contain the following quantised configuartions for each layer:
+
+- torch.nn.Linear (no quantisation)
+- LinearInteger, 
+- LinearMinifloatDenorm
+- LinearMinifloatIEEE
+- LinearLog
+- LinearBlockFP
+- LinearBlockLog
+- LinearBinary
+- LinearBinaryScaling
+
+(I wasn't able to use LinearBlockMinifloat without errors and LinearBinaryResidualSign had not been implemented yet so these were ommited.) I initially used the Optuna sampler (TPE in this case) to search for the optimal layer types which yielded the following results.
+
+![Number of trails vs maximum achieved accuracy](extended_optuna_search_results_2_curves.png)
+
+After realising seperate curves for each precision were wanted, the code was rewritten to do 5 iterations of 3 epochs for each layer type. Here are these results.
+
+![Maximum achieved accuracy after 5 iterations for each precision layer type](optuna_combined_precision_progress.png)
+The LinearLog and LinearBlockLog were both found to be completely inneffective (maybe implemented incorrectly), with LinearBinary and LinearBinaryScaling found not much higher in accuracy achieved.
+
+To see the trends in the rest of the results, here is a zoomed in view of these.
+![Best performing precision layer types](optuna_combined_precision_progress_zoomed.png)
+
+## Lab 4: ADLS Software Stream
 
 
 
 
+1.
+   a. Modify the code and investigate why this is the case?
+   b. If you change the `device` to `cuda`, do you observe the same thing?
+2. In the second part of Lab 4 (kernel fusion), we looked at a fused SDPA kernel.
+   a. Now, extend the profiling to the SDPA kernel, compare its runtime behavior with the naive implementation.
+   b. If you change the `device` to `cuda`, do you observe the same thing?
+3. In the third part of lab4 (Custom kernel), we go through how to write MXINT8 dequantization kernel and bind it to Python.
+   a. How does MXINT8 benefit custom hardware if both the activation and weights in a linear layer are quantized to MXINT8?
+   b. What is the purpose of the variable `dont_need_abs` and `bias` in the C++ for loop?
+   c. How does `cta_tiler` partition data for copying to shared memory in CUDA kernel? How does `layout_sX` partition threads in a threadlock for computation? (Challenge)
+   d. Why the saved GPU memory is not exactly (32 - (4+8/32))/32 = 86.7% of the FP32 model?
+
+
+
+
+Check all questions are fully answered/described.
