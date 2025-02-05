@@ -43,6 +43,10 @@ from .layernorm import LayerNormZIPTF
 
 from .softmax import SoftmaxZIPTF
 
+from .gelu import GELUZIPTF
+
+from .silu import SiLUZIPTF
+
 from .spiking_self_attention import (
     DSSA,
     GWFFN,
@@ -88,6 +92,8 @@ spiking_varied_module_map = {
     "softmax_zip_tf": SoftmaxZIPTF,
     "layernorm_zip_tf": LayerNormZIPTF,
     "embedding_zip_tf": EmbeddingZIPTF,
+    "gelu_zip_tf": GELUZIPTF,
+    "silu_zip_tf": SiLUZIPTF,
 }
 
 spiking_neuron_module_map = {
