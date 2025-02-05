@@ -13,6 +13,11 @@ from chop.nn.snn.modules import Conv2d, BatchNorm2d
 import chop.nn.snn.modules.surrogate as surrogate
 from chop.nn.snn.modules.neuron import LIFNode, ParametricLIFNode
 
+"""
+This file contains the implementation of the Spiking Self-Attention module. Spikeformer
+https://arxiv.org/abs/2403.14302
+"""
+
 
 class Conv1x1(Conv2d):
     def __init__(
