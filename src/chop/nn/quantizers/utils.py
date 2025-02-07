@@ -155,17 +155,15 @@ class BinaryZeroScaled(InplaceFunction):
     @staticmethod
     def alpha(tensor):
         absvalue = tensor.abs()
-
-        dims = list(range(1, tensor.ndimension()))  
+        dims = list(range(1, tensor.ndimension()))
         alpha = absvalue.mean(dim=dims, keepdim=True)
         return alpha.view(-1, 1)
 
     @staticmethod
     def forward(ctx, input, _threshold):
         alpha = BinaryZeroScaled.alpha(input)
-
         pos_one = torch.where(input > 0, 1.0, 0.0)
-        expand_size = [-1] + [1] * (input.ndimension() - 1)  
+        expand_size = [-1] + [1] * (input.ndimension() - 1)
         alpha = alpha.view(*expand_size)
         output = pos_one * alpha.expand_as(input)
         return output
