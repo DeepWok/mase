@@ -158,7 +158,6 @@ class BinaryZeroScaled(InplaceFunction):
 
         dims = list(range(1, tensor.ndimension()))  
         alpha = absvalue.mean(dim=dims, keepdim=True)
-
         return alpha.view(-1, 1)
 
     @staticmethod
