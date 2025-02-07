@@ -147,5 +147,5 @@ def plot_extended_optuna_search_results_v2(csv_filepath):
 
 
 # Run both plots
-# plot_extended_optuna_search_results("extended_optuna_results.csv")
+plot_extended_optuna_search_results("extended_optuna_results.csv")
 plot_extended_optuna_search_results_v2("optuna_combined_results.csv")

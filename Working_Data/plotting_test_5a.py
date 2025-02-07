@@ -3,20 +3,12 @@ import matplotlib.ticker as mticker
 import pandas as pd
 
 def plot_combined_optuna_results(csv_paths):
-    """
-    Loads multiple Optuna study results from CSV files, computes the running max accuracy 
-    for each, and creates a combined plot for all search methods.
-    """
     plt.figure(figsize=(10, 6))
 
     for csv_path in csv_paths:
-        # Load the CSV file
         data = pd.read_csv(csv_path)
-        
-        # Extract accuracy values
         accuracies = data["accuracy"].tolist()
         
-        # Compute the running maximum
         running_max = []
         current_max = float('-inf')
         for acc in accuracies:
@@ -58,8 +50,6 @@ def plot_combined_optuna_results(csv_paths):
     plt.savefig('combined_optuna_results.png', dpi=300)
     plt.show()
 
-
-# Example usage: Replace these file paths with your actual CSV file paths
 csv_paths = [
     'random_study_trials.csv',
     'grid_study_trials.csv',

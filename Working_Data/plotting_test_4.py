@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 
-# Corrected results structure
 results = [
     {
         "sparsity": 0.1,
@@ -149,12 +148,3 @@ def plot_pruning_results_separated(results):
 
 # Call the function
 plot_pruning_results_separated(results)
-
-# {'sparsity': 0.2, 'l1_initial_pruned_accuracy': 0.83992, 'l1_fine_tuned_accuracy': 0.85832, 'rand_initial_pruned_accuracy': 0.6308, 'rand_fine_tuned_accuracy': 0.8232}
-# {'sparsity': 0.3, 'l1_initial_pruned_accuracy': 0.83004, 'l1_fine_tuned_accuracy': 0.85504, 'rand_initial_pruned_accuracy': 0.54652, 'rand_fine_tuned_accuracy': 0.80812}
-# {'sparsity': 0.4, 'l1_initial_pruned_accuracy': 0.80796, 'l1_fine_tuned_accuracy': 0.8468, 'rand_initial_pruned_accuracy': 0.50972, 'rand_fine_tuned_accuracy': 0.78696}
-# {'sparsity': 0.5, 'l1_initial_pruned_accuracy': 0.76728, 'l1_fine_tuned_accuracy': 0.84148, 'rand_initial_pruned_accuracy': 0.5066, 'rand_fine_tuned_accuracy': 0.74436}
-# {'sparsity': 0.6, 'l1_initial_pruned_accuracy': 0.563, 'l1_fine_tuned_accuracy': 0.82284, 'rand_initial_pruned_accuracy': 0.5046, 'rand_fine_tuned_accuracy': 0.52732}
-# {'sparsity': 0.7, 'l1_initial_pruned_accuracy': 0.54052, 'l1_fine_tuned_accuracy': 0.8098, 'rand_initial_pruned_accuracy': 0.50292, 'rand_fine_tuned_accuracy': 0.50436}
-# {'sparsity': 0.8, 'l1_initial_pruned_accuracy': 0.50076, 'l1_fine_tuned_accuracy': 0.76204, 'rand_initial_pruned_accuracy': 0.49896, 'rand_fine_tuned_accuracy': 0.504}
-# {'sparsity': 0.9, 'l1_initial_pruned_accuracy': 0.50312, 'l1_fine_tuned_accuracy': 0.56104, 'rand_initial_pruned_accuracy': 0.50224, 'rand_fine_tuned_accuracy': 0.5034}
