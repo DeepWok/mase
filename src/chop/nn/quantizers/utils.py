@@ -153,9 +153,12 @@ class BinaryZeroScaled(InplaceFunction):
     """
 
     @staticmethod
-    def alpha(tensor):  # determine batch means
+    def alpha(tensor):
         absvalue = tensor.abs()
-        alpha = absvalue.mean(dim=(1, 2, 3), keepdims=True)
+
+        dims = list(range(1, tensor.ndimension()))  
+        alpha = absvalue.mean(dim=dims, keepdim=True)
+
         return alpha.view(-1, 1)
 
     @staticmethod
