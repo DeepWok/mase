@@ -166,9 +166,9 @@ class BinaryZeroScaled(InplaceFunction):
         alpha = BinaryZeroScaled.alpha(input)
 
         pos_one = torch.where(input > 0, 1.0, 0.0)
-        output = pos_one * alpha.view(-1, 1, 1, 1).expand(
-            -1, input.size()[1], input.size()[2], input.size()[3]
-        )
+        expand_size = [-1] + [1] * (input.ndimension() - 1)  
+        alpha = alpha.view(*expand_size)
+        output = pos_one * alpha.expand_as(input)
         return output
 
     @staticmethod
