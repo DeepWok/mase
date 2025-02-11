@@ -32,7 +32,7 @@ The module has the following parameters, following the hardware metadata standar
 | Parameter                    	| Default Value            	| Definition                                                                                                                                                                                                                                     	|
 |------------------------------	|--------------------------	|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	|
 | DATA_IN_0_PARALLELISM_DIM_0  	| 4                        	| Number of elements per transaction at the input interface. Dictates the number of transactions to compute the full layer.                                                                                                                      	|
-| WEIGHT_PARALLELISM_DIM_0     	| 4                        	| Number of columns of the weights matrix per transaction at the weights interface. This is equivalent to the number of dot product modules. Also dictates the number of backpressure cycles on the input interface (see [Latency Analysis](#latency-analysis) below) 	|
+| WEIGHT_PARALLELISM_DIM_0     	| 4                        	| Number of columns of the weights matrix per transaction at the weights interface. This is equivalent to the number of dot product modules. Also dictates the number of backpressure cycles on the input interface (see Latency Analysis below) 	|
 | DATA_OUT_0_PARALLELISM_DIM_0 	| WEIGHT_PARALLELISM_DIM_0 	| Number of elements per transaction at the output interface.                                                                                                                                                                                    	|
 | BIAS_PARALLELISM_DIM_0       	| WEIGHT_PARALLELISM_DIM_0 	| Number of elements per transaction at the bias interface. Dictates the number of fixed-point adders.                                                                                                                                                                                     	|
 
@@ -56,7 +56,7 @@ The same process is repeated with the second input sub-vector $X_2$ and weight s
   <img src="https://raw.githubusercontent.com/DeepWok/mase/main/docs/source/imgs/linear/matrix_multiply3.png" alt="img">
 </p>
 
-## <a name="latency_analaysis"></a> Latency Analysis
+## Latency Analysis
 
 The time taken to compute a linear layer using the `fixed_linear` module, $L_{FL}$ can be broken down into 2 phases, the input driving phase $L_L$, and the pipeline unloading phase $L_U$ that begins after the last input beat is transferred.
 

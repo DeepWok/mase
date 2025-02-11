@@ -54,7 +54,7 @@ set_logging_verbosity("info")
     I0329 13:46:21.531338 140128553666368 logger.py:44] Set logging level to info
 
 
-We then load in a demonstration toml file and set the relevant pass arguments (this is all done automatically if we were to use the command line, see [Section 2](#section-2-int8-quantization))
+We then load in a demonstration toml file and set the relevant pass arguments (this is all done automatically if we were to use the command line, see Section 2).
 
 
 ```python
@@ -120,8 +120,8 @@ mg = MaseGraph(model=model)
 Next, we train the `jsc-toy` model using the machop `train` action with the config from the toml file. You may want to switch to GPU for this task - it will not affect the cpu optimizations later on.
 
 
-```python
-!ch train --config {JSC_TOML_PATH} --accelerator gpu
+```bash
+ch train --config {JSC_TOML_PATH} --accelerator gpu
 ```
 
 Then we load in the checkpoint. You will have to adjust this according to where it has been stored in the mase_output directory.
@@ -154,7 +154,7 @@ We then run the `onnx_runtime_interface_pass` which completes the optimizations 
 - `onnx_path` (the optimized model)
 - `onnx_dynamic_quantized_path` (the dynamically )
 
-In this case, since we are not quantizing the model, only the `onnx_path` is available. 
+In this case, since we are not quantizing the model, only the `onnx_path` is available.
 
 The models are also stored in the directory:
 ```
@@ -178,7 +178,7 @@ mg, onnx_meta = onnx_runtime_interface_pass(mg, pass_args=onnx_config)
     I0327 14:20:12.539771 140012160939840 onnx_runtime.py:50] Project will be created at /root/mase/mase_output/onnxrt/jsc-toy_cls_jsc_2024-03-27
     [32mINFO    [0m [34mONNX Conversion Complete. Stored ONNX model to /root/mase/mase_output/onnxrt/jsc-toy_cls_jsc_2024-03-27/optimized/version_1/model.onnx[0m
     I0327 14:20:12.751212 140012160939840 onnx_runtime.py:68] ONNX Conversion Complete. Stored ONNX model to /root/mase/mase_output/onnxrt/jsc-toy_cls_jsc_2024-03-27/optimized/version_1/model.onnx
-    [32mINFO    [0m [34mONNX Model Summary: 
+    [32mINFO    [0m [34mONNX Model Summary:
     +-------+----------------------------------+--------------------+--------------------------------------------------------------------------------------------------------------------------+-------------------------------------------+---------------------+
     | Index |               Name               |        Type        |                                                          Inputs                                                          |                  Outputs                  |      Attributes     |
     +-------+----------------------------------+--------------------+--------------------------------------------------------------------------------------------------------------------------+-------------------------------------------+---------------------+
@@ -194,7 +194,7 @@ mg, onnx_meta = onnx_runtime_interface_pass(mg, pass_args=onnx_config)
     |   9   | /seq_blocks.9/BatchNormalization | BatchNormalization | /seq_blocks.8/Gemm_output_0, seq_blocks.9.weight, seq_blocks.9.bias, seq_blocks.9.running_mean, seq_blocks.9.running_var | /seq_blocks.9/BatchNormalization_output_0 |  epsilon, momentum  |
     |   10  |       /seq_blocks.10/Relu        |        Relu        |                                        /seq_blocks.9/BatchNormalization_output_0                                         |                     37                    |                     |
     +-------+----------------------------------+--------------------+--------------------------------------------------------------------------------------------------------------------------+-------------------------------------------+---------------------+[0m
-    I0327 14:20:12.757548 140012160939840 onnx_runtime.py:90] ONNX Model Summary: 
+    I0327 14:20:12.757548 140012160939840 onnx_runtime.py:90] ONNX Model Summary:
     +-------+----------------------------------+--------------------+--------------------------------------------------------------------------------------------------------------------------+-------------------------------------------+---------------------+
     | Index |               Name               |        Type        |                                                          Inputs                                                          |                  Outputs                  |      Attributes     |
     +-------+----------------------------------+--------------------+--------------------------------------------------------------------------------------------------------------------------+-------------------------------------------+---------------------+
@@ -237,7 +237,7 @@ _, _ = runtime_analysis_pass(mg_original, pass_args=runtime_analysis_config)
     |   Average GPU Power Usage    |   21.816 W    |
     | Inference Energy Consumption | 0.0048292 mWh |
     +------------------------------+---------------+[0m
-    I0327 14:20:19.793779 140012160939840 analysis.py:398] 
+    I0327 14:20:19.793779 140012160939840 analysis.py:398]
     Results jsc-toy:
     +------------------------------+---------------+
     |      Metric (Per Batch)      |     Value     |
@@ -280,7 +280,7 @@ _, _ = runtime_analysis_pass(onnx_meta['onnx_path'], pass_args=runtime_analysis_
     |   Average GPU Power Usage    |   21.575 W    |
     | Inference Energy Consumption | 0.0013275 mWh |
     +------------------------------+---------------+[0m
-    I0327 14:20:35.876071 140012160939840 analysis.py:398] 
+    I0327 14:20:35.876071 140012160939840 analysis.py:398]
     Results jsc-toy-onnx:
     +------------------------------+---------------+
     |      Metric (Per Batch)      |     Value     |
@@ -298,14 +298,14 @@ _, _ = runtime_analysis_pass(onnx_meta['onnx_path'], pass_args=runtime_analysis_
     I0327 14:20:35.878773 140012160939840 analysis.py:84] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-27/onnx/version_0/model.json
 
 
-As shown above, the latency of the cpu inference is around 3.5x less with the `jsc-toy` model without compromising accuracy simply by using the optimizations of ONNXRT. 
+As shown above, the latency of the cpu inference is around 3.5x less with the `jsc-toy` model without compromising accuracy simply by using the optimizations of ONNXRT.
 
 Lets now run the same optimzations, this time using a GPU and a larger model - the `vgg7`.  We will also utilse the chop action from the terminal which runs the same `onnx_runtime_interface_pass` pass.
 
 First lets train the `vgg7` model using the machop `train` action with the config from the new toml file and then load the trained checkpoint it into the `transform` pass.
 
 
-```python
+```bash
 VGG_TOML_PATH = "../../../machop/configs/onnx/vgg7_gpu_quant.toml"
 
 # !ch train --config {VGG_TOML_PATH}
@@ -313,7 +313,7 @@ VGG_TOML_PATH = "../../../machop/configs/onnx/vgg7_gpu_quant.toml"
 # Load in the checkpoint from the previous train - modify accordingly
 VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ckpt"
 
-!ch transform --config {VGG_TOML_PATH} --load {VGG_CHECKPOINT_PATH} --load-type pl 
+ch transform --config {VGG_TOML_PATH} --load {VGG_CHECKPOINT_PATH} --load-type pl
 ```
 
     [2024-03-28 23:09:44,122] [INFO] [real_accelerator.py:191:get_accelerator] Setting ds_accelerator to cuda (auto detect)
@@ -387,7 +387,7 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     I0328 23:10:35.119032 140014036379456 onnx_runtime.py:90] Project will be created at /root/mase/mase_output/onnxrt/vgg7_cls_cifar10_2024-03-28
     [32mINFO    [0m [34mONNX Conversion Complete. Stored ONNX model to /root/mase/mase_output/onnxrt/vgg7_cls_cifar10_2024-03-28/optimized/version_3/model.onnx[0m
     I0328 23:10:43.779212 140014036379456 onnx_runtime.py:108] ONNX Conversion Complete. Stored ONNX model to /root/mase/mase_output/onnxrt/vgg7_cls_cifar10_2024-03-28/optimized/version_3/model.onnx
-    [32mINFO    [0m [34mONNX Model Summary: 
+    [32mINFO    [0m [34mONNX Model Summary:
     +-------+----------------------------+----------+---------------------------------------------------------------------+-------------------------------------+---------------------------------------------------+
     | Index |            Name            |   Type   |                                Inputs                               |               Outputs               |                     Attributes                    |
     +-------+----------------------------+----------+---------------------------------------------------------------------+-------------------------------------+---------------------------------------------------+
@@ -414,7 +414,7 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     |   20  |     /classifier.3/Relu     |   Relu   |                     /classifier.2/Gemm_output_0                     |     /classifier.3/Relu_output_0     |                                                   |
     |   21  |      /last_layer/Gemm      |   Gemm   |   /classifier.3/Relu_output_0, last_layer.weight, last_layer.bias   |                  76                 |                alpha, beta, transB                |
     +-------+----------------------------+----------+---------------------------------------------------------------------+-------------------------------------+---------------------------------------------------+[0m
-    I0328 23:10:43.897069 140014036379456 onnx_runtime.py:146] ONNX Model Summary: 
+    I0328 23:10:43.897069 140014036379456 onnx_runtime.py:146] ONNX Model Summary:
     +-------+----------------------------+----------+---------------------------------------------------------------------+-------------------------------------+---------------------------------------------------+
     | Index |            Name            |   Type   |                                Inputs                               |               Outputs               |                     Attributes                    |
     +-------+----------------------------+----------+---------------------------------------------------------------------+-------------------------------------+---------------------------------------------------+
@@ -485,7 +485,7 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     |   Average GPU Power Usage    |  50.352 W   |
     | Inference Energy Consumption | 0.12032 mWh |
     +------------------------------+-------------+[0m
-    I0328 23:15:43.756563 140014036379456 runtime_analysis.py:521] 
+    I0328 23:15:43.756563 140014036379456 runtime_analysis.py:521]
     Results vgg7:
     +------------------------------+-------------+
     |      Metric (Per Batch)      |    Value    |
@@ -521,7 +521,7 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     |   Average GPU Power Usage    |   55.829 W   |
     | Inference Energy Consumption | 0.094099 mWh |
     +------------------------------+--------------+[0m
-    I0328 23:15:53.476423 140014036379456 runtime_analysis.py:521] 
+    I0328 23:15:53.476423 140014036379456 runtime_analysis.py:521]
     Results vgg7-onnx:
     +------------------------------+--------------+
     |      Metric (Per Batch)      |    Value     |
@@ -560,7 +560,7 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     |   Average GPU Power Usage    |  54.555 W   |
     | Inference Energy Consumption | 0.14388 mWh |
     +------------------------------+-------------+[0m
-    I0328 23:16:03.469463 140014036379456 runtime_analysis.py:521] 
+    I0328 23:16:03.469463 140014036379456 runtime_analysis.py:521]
     Results vgg7-onnx:
     +------------------------------+-------------+
     |      Metric (Per Batch)      |    Value    |
@@ -599,7 +599,7 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     |   Average GPU Power Usage    |  22.86 W   |
     | Inference Energy Consumption | 0.1748 mWh |
     +------------------------------+------------+[0m
-    I0328 23:18:23.964464 140014036379456 runtime_analysis.py:521] 
+    I0328 23:18:23.964464 140014036379456 runtime_analysis.py:521]
     Results vgg7-onnx:
     +------------------------------+------------+
     |      Metric (Per Batch)      |   Value    |
@@ -635,7 +635,7 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     |   Average GPU Power Usage    |   50.354 W   |
     | Inference Energy Consumption | 0.076714 mWh |
     +------------------------------+--------------+[0m
-    I0328 23:18:33.854084 140014036379456 runtime_analysis.py:521] 
+    I0328 23:18:33.854084 140014036379456 runtime_analysis.py:521]
     Results vgg7-onnx:
     +------------------------------+--------------+
     |      Metric (Per Batch)      |    Value     |
@@ -653,13 +653,13 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     I0328 23:18:33.855542 140014036379456 runtime_analysis.py:143] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/onnx/version_12/model.json
 
 
-As shown above, the latency of the gpu inference is 30% less with the `vgg7` model without compromising accuracy simply by using the optimizations of ONNXRT. 
+As shown above, the latency of the gpu inference is 30% less with the `vgg7` model without compromising accuracy simply by using the optimizations of ONNXRT.
 
-We will now look at quantization to further speed up the model. 
+We will now look at quantization to further speed up the model.
 
 ## Section 2. Quantization
 
-We may quantize either using FP16 or INT8 by setting the `precision` parameter in `passes.onnxruntime.default.config` to `'fp16'` or `'int8'` respectively. INT8 quantization will show the most notable latency improvements but is more likely to lower performance. 
+We may quantize either using FP16 or INT8 by setting the `precision` parameter in `passes.onnxruntime.default.config` to `'fp16'` or `'int8'` respectively. INT8 quantization will show the most notable latency improvements but is more likely to lower performance.
 
 There are three types of quantization for ONNXRT and can be set in `onnxruntime.default.config` under `quantization_types`. The differences of the first two are for how they calibrate i.e. set the scale and zero points which are only relevant for integer based quantization:
 - **Static Quantization**:
@@ -670,26 +670,27 @@ There are three types of quantization for ONNXRT and can be set in `onnxruntime.
     - The scale and zero point of activations are calculated on-the-fly (online) and are specific for each forward pass.
     - This approach is more accurate but introduces extra computational overhead
 
-The `onnx_runtime_interface_pass` pass also supports mixed precision. This is an automatic only procedure, where ONNXRT finds a minimal set of ops to skip while retaining a certain level of accuracy, converting most of the ops to float16 but leaving some in float32. 
+The `onnx_runtime_interface_pass` pass also supports mixed precision. This is an automatic only procedure, where ONNXRT finds a minimal set of ops to skip while retaining a certain level of accuracy, converting most of the ops to float16 but leaving some in float32.
 - **Auto Mixed Precision Quantization**:
     - Automatically adjusts between FP16 and FP32 precisions to retain certain level of accuracy
     - The `precision` parameter does not need to be set in the config since the whole process is automatic.
     - Unfortunately, this process is currently only supported on GPU.
     - This approach is most beneficial when INT8 or FP16 exclusive quantizations (static or dynamic) are giving poor results.
 
-All three methodolgies first pre-procsses the model before quantization adding further optimizations. This intermidate model is stored to the `pre-processed` directory. 
+All three methodolgies first pre-procsses the model before quantization adding further optimizations. This intermidate model is stored to the `pre-processed` directory.
 
-For this example, we will set the `precision` to `'uint8'` (since `ConvInteger` node is not currently supported for `'int8'` on ONNXRT GPU execution provider). 
+For this example, we will set the `precision` to `'uint8'` (since `ConvInteger` node is not currently supported for `'int8'` on ONNXRT GPU execution provider).
 
 We will also set the `precision_types` to `['static', 'dynamic', 'auto']` to compare all three quantization methods, whilst keeping the other settings the exact same for a fair comparison against the optimized `vgg7` model used in the previous section.
 
 
-```python
+```bash
 VGG_TOML_PATH = "../../../machop/configs/onnx/vgg7_gpu_quant.toml"
 VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ckpt"
 !ch transform --config {VGG_TOML_PATH} --load {VGG_CHECKPOINT_PATH} --load-type pl
 ```
 
+```text
     [2024-03-29 13:49:26,029] [INFO] [real_accelerator.py:191:get_accelerator] Setting ds_accelerator to cuda (auto detect)
     INFO: Seed set to 0
     WARNING: Logging before flag parsing goes to stderr.
@@ -761,7 +762,7 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     I0329 13:50:32.508896 139783521261376 onnx_runtime.py:90] Project will be created at /root/mase/mase_output/onnxrt/vgg7_cls_cifar10_2024-03-29
     [32mINFO    [0m [34mONNX Conversion Complete. Stored ONNX model to /root/mase/mase_output/onnxrt/vgg7_cls_cifar10_2024-03-29/optimized/version_0/model.onnx[0m
     I0329 13:50:53.587861 139783521261376 onnx_runtime.py:108] ONNX Conversion Complete. Stored ONNX model to /root/mase/mase_output/onnxrt/vgg7_cls_cifar10_2024-03-29/optimized/version_0/model.onnx
-    [32mINFO    [0m [34mONNX Model Summary: 
+    [32mINFO    [0m [34mONNX Model Summary:
     +-------+----------------------------+----------+---------------------------------------------------------------------+-------------------------------------+---------------------------------------------------+
     | Index |            Name            |   Type   |                                Inputs                               |               Outputs               |                     Attributes                    |
     +-------+----------------------------+----------+---------------------------------------------------------------------+-------------------------------------+---------------------------------------------------+
@@ -788,7 +789,7 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     |   20  |     /classifier.3/Relu     |   Relu   |                     /classifier.2/Gemm_output_0                     |     /classifier.3/Relu_output_0     |                                                   |
     |   21  |      /last_layer/Gemm      |   Gemm   |   /classifier.3/Relu_output_0, last_layer.weight, last_layer.bias   |                  76                 |                alpha, beta, transB                |
     +-------+----------------------------+----------+---------------------------------------------------------------------+-------------------------------------+---------------------------------------------------+[0m
-    I0329 13:50:53.719763 139783521261376 onnx_runtime.py:146] ONNX Model Summary: 
+    I0329 13:50:53.719763 139783521261376 onnx_runtime.py:146] ONNX Model Summary:
     +-------+----------------------------+----------+---------------------------------------------------------------------+-------------------------------------+---------------------------------------------------+
     | Index |            Name            |   Type   |                                Inputs                               |               Outputs               |                     Attributes                    |
     +-------+----------------------------+----------+---------------------------------------------------------------------+-------------------------------------+---------------------------------------------------+
@@ -859,7 +860,7 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     |   Average GPU Power Usage    | 52.579 W  |
     | Inference Energy Consumption | 0.125 mWh |
     +------------------------------+-----------+[0m
-    I0329 13:55:58.685605 139783521261376 runtime_analysis.py:521] 
+    I0329 13:55:58.685605 139783521261376 runtime_analysis.py:521]
     Results vgg7:
     +------------------------------+-----------+
     |      Metric (Per Batch)      |   Value   |
@@ -895,7 +896,7 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     |   Average GPU Power Usage    |   53.26 W    |
     | Inference Energy Consumption | 0.089695 mWh |
     +------------------------------+--------------+[0m
-    I0329 13:56:20.459139 139783521261376 runtime_analysis.py:521] 
+    I0329 13:56:20.459139 139783521261376 runtime_analysis.py:521]
     Results vgg7-onnx:
     +------------------------------+--------------+
     |      Metric (Per Batch)      |    Value     |
@@ -934,7 +935,7 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     |   Average GPU Power Usage    |  58.211 W   |
     | Inference Energy Consumption | 0.14364 mWh |
     +------------------------------+-------------+[0m
-    I0329 13:56:42.742136 139783521261376 runtime_analysis.py:521] 
+    I0329 13:56:42.742136 139783521261376 runtime_analysis.py:521]
     Results vgg7-onnx:
     +------------------------------+-------------+
     |      Metric (Per Batch)      |    Value    |
@@ -973,7 +974,7 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     |   Average GPU Power Usage    |  22.924 W  |
     | Inference Energy Consumption | 0.0742 mWh |
     +------------------------------+------------+[0m
-    I0329 13:59:46.169317 139783521261376 runtime_analysis.py:521] 
+    I0329 13:59:46.169317 139783521261376 runtime_analysis.py:521]
     Results vgg7-onnx:
     +------------------------------+------------+
     |      Metric (Per Batch)      |   Value    |
@@ -1009,7 +1010,7 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     |   Average GPU Power Usage    |   49.313 W   |
     | Inference Energy Consumption | 0.067374 mWh |
     +------------------------------+--------------+[0m
-    I0329 14:00:07.487649 139783521261376 runtime_analysis.py:521] 
+    I0329 14:00:07.487649 139783521261376 runtime_analysis.py:521]
     Results vgg7-onnx:
     +------------------------------+--------------+
     |      Metric (Per Batch)      |    Value     |
@@ -1029,6 +1030,6 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     I0329 14:06:04.342311 139783521261376 save_and_load.py:147] Saved mase graph to /root/mase/mase_output/vgg7_cls_cifar10_2024-03-29/software/transform/transformed_ckpt
     [32mINFO    [0m [34mTransformation is completed[0m
     I0329 14:06:04.342653 139783521261376 cli.py:388] Transformation is completed
+```
 
-
-As we can see, the optimized onnx model still outperforms Pytorch on the VGG model due to it's runtime optimizations. The static performs the best, then the automatic mixed precision which outperforms the dynamic quantization due to its requirement of calculating activations on-the-fly. 
+As we can see, the optimized onnx model still outperforms Pytorch on the VGG model due to it's runtime optimizations. The static performs the best, then the automatic mixed precision which outperforms the dynamic quantization due to its requirement of calculating activations on-the-fly.

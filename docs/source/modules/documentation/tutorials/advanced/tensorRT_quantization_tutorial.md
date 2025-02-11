@@ -5,11 +5,11 @@ This notebook is designed to show the features of the TensorRT passes integrated
 ## Section 1. INT8 Quantization
 Firstly, we will show you how to do a int8 quantization of a simple model, `jsc-toy`, and compare the quantized model to the original model using the `Machop API`. The quantization process is split into the following stages, each using their own individual pass, and are explained in depth at each subsection:
 
-1. [Fake quantization](#section-11-fake-quantization): `tensorrt_fake_quantize_transform_pass`
-2. [Calibration](#section-12-calibration): `tensorrt_calibrate_transform_pass`
-3. [Quantized Aware Training](#section-13-quantized-aware-training-qat): `tensorrt_fine_tune_transform_pass`
-4. [Quantization](#section-14-tensorrt-quantization): `tensorrt_engine_interface_pass`
-5. [Analysis](#section-15-performance-analysis): `tensorrt_analysis_pass`
+1. Fake quantization: `tensorrt_fake_quantize_transform_pass`
+2. Calibration: `tensorrt_calibrate_transform_pass`
+3. Quantized Aware Training: `tensorrt_fine_tune_transform_pass`
+4. Quantization: `tensorrt_engine_interface_pass`
+5. Analysis: `tensorrt_analysis_pass`
 
 We start by loading in the required libraries and passes required for the notebook as well as ensuring the correct path is set for machop to be used.
 
@@ -63,7 +63,7 @@ set_logging_verbosity("info")
     I0329 12:52:20.742465 139924298352448 logger.py:44] Set logging level to info
 
 
-Next, we load in the toml file used for quantization. To view the configuration, click [here](../../../machop/configs/tensorrt/jsc_toy_INT8_quantization_by_type.toml).
+Next, we load in the toml file used for quantization.
 
 
 ```python
@@ -136,8 +136,8 @@ mg = MaseGraph(model=model)
 Next, we train the `jsc-toy` model using the machop `train` action with the config from the toml file.
 
 
-```python
-!ch train --config {JSC_TOML_PATH}
+```bash
+ch train --config {JSC_TOML_PATH}
 ```
 
 Then we load in the checkpoint. You will have to adjust this according to where it has been stored in the mase_output directory.
@@ -169,12 +169,12 @@ mg_original = deepcopy_mase_graph(mg)
 
 Firstly, we fake quantize the module in order to perform calibration and fine tuning before actually quantizing - this is only used if we have int8 calibration as other precisions are not currently supported within [pytorch-quantization](https://docs.nvidia.com/deeplearning/tensorrt/pytorch-quantization-toolkit/docs/index.html#) library.
 
-This is acheived through the `tensorrt_fake_quantize_transform_pass` which goes through the model, either by type or by name, replaces each layer appropriately to a fake quantized form if the `quantize` parameter is set in the default config (`passes.tensorrt.default.config`) or on a per name or type basis. 
+This is acheived through the `tensorrt_fake_quantize_transform_pass` which goes through the model, either by type or by name, replaces each layer appropriately to a fake quantized form if the `quantize` parameter is set in the default config (`passes.tensorrt.default.config`) or on a per name or type basis.
 
 Currently the quantizable layers are:
 - Linear
-- Conv1d, Conv2d, Conv3d 
-- ConvTranspose1d, ConvTranspose2d, ConvTranspose3d 
+- Conv1d, Conv2d, Conv3d
+- ConvTranspose1d, ConvTranspose2d, ConvTranspose3d
 - MaxPool1d, MaxPool2d, MaxPool3d
 - AvgPool1d, AvgPool2d, AvgPool3d
 - LSTM, LSTMCell
@@ -202,7 +202,7 @@ summarize_quantization_analysis_pass(mg_original, mg)
     | ReLU            | relu         |       4 |         0 |           4 |
     | output          | output       |       1 |         0 |           1 |
     | x               | placeholder  |       1 |         0 |           1 |[0m
-    I0329 12:52:41.851252 139924298352448 summary.py:85] 
+    I0329 12:52:41.851252 139924298352448 summary.py:85]
     | Original type   | OP           |   Total |   Changed |   Unchanged |
     |-----------------+--------------+---------+-----------+-------------|
     | BatchNorm1d     | batch_norm1d |       4 |         0 |           4 |
@@ -212,16 +212,16 @@ summarize_quantization_analysis_pass(mg_original, mg)
     | x               | placeholder  |       1 |         0 |           1 |
 
 
-As you can see we have succesfully fake quantized all linear layers inside `jsc-toy`. This means that we will be able to simulate a quantized model in order to calibrate and fine tune it. This fake quantization was done on typewise i.e. for linear layers only. See [Section 4](#section-4-layer-wise-mixed-precision) for how to apply quantization layerwise - i.e. only first and second layers for example.
+As you can see we have succesfully fake quantized all linear layers inside `jsc-toy`. This means that we will be able to simulate a quantized model in order to calibrate and fine tune it. This fake quantization was done on typewise i.e. for linear layers only. See Section 4 for how to apply quantization layerwise - i.e. only first and second layers for example.
 
 ### Section 1.2 Calibration
 
-Next, we perform calibration using the `tensorrt_calibrate_transform_pass`. Calibration is achieved by passing data samples to the quantizer and deciding the best amax for activations. 
+Next, we perform calibration using the `tensorrt_calibrate_transform_pass`. Calibration is achieved by passing data samples to the quantizer and deciding the best amax for activations.
 
 Calibrators can be added as a search space parameter to examine the best performing calibrator. The calibrators have been included in the toml as follows.
 For example: `calibrators = ["percentile", "mse", "entropy"]`
 
-Note: 
+Note:
 - To use `percentile` calibration, a list of percentiles must be given
 - To use `max` calibration, the `histogram` weight and input calibrators must be removed and replaced with `max`. This will use global maximum absolute value to calibrate the model.
 - If `post_calibration_analysis` is set true the `tensorrt_analysis_pass` will be run for each calibrator tested to evaluate the most suitable calibrator for the model.
@@ -300,7 +300,7 @@ mg, _ = tensorrt_calibrate_transform_pass(mg, pass_args=tensorrt_config)
     |   Average GPU Power Usage    |   22.239 W   |
     | Inference Energy Consumption | 0.018661 mWh |
     +------------------------------+--------------+[0m
-    I0329 12:52:49.573626 139924298352448 runtime_analysis.py:521] 
+    I0329 12:52:49.573626 139924298352448 runtime_analysis.py:521]
     Results jsc-toy:
     +------------------------------+--------------+
     |      Metric (Per Batch)      |    Value     |
@@ -354,7 +354,7 @@ mg, _ = tensorrt_calibrate_transform_pass(mg, pass_args=tensorrt_config)
     |   Average GPU Power Usage    |   22.21 W    |
     | Inference Energy Consumption | 0.018664 mWh |
     +------------------------------+--------------+[0m
-    I0329 12:52:53.233150 139924298352448 runtime_analysis.py:521] 
+    I0329 12:52:53.233150 139924298352448 runtime_analysis.py:521]
     Results jsc-toy:
     +------------------------------+--------------+
     |      Metric (Per Batch)      |    Value     |
@@ -408,7 +408,7 @@ mg, _ = tensorrt_calibrate_transform_pass(mg, pass_args=tensorrt_config)
     |   Average GPU Power Usage    |   22.252 W   |
     | Inference Energy Consumption | 0.017687 mWh |
     +------------------------------+--------------+[0m
-    I0329 12:52:56.441818 139924298352448 runtime_analysis.py:521] 
+    I0329 12:52:56.441818 139924298352448 runtime_analysis.py:521]
     Results jsc-toy:
     +------------------------------+--------------+
     |      Metric (Per Batch)      |    Value     |
@@ -462,7 +462,7 @@ mg, _ = tensorrt_calibrate_transform_pass(mg, pass_args=tensorrt_config)
     |   Average GPU Power Usage    |   22.426 W   |
     | Inference Energy Consumption | 0.018681 mWh |
     +------------------------------+--------------+[0m
-    I0329 12:53:05.428555 139924298352448 runtime_analysis.py:521] 
+    I0329 12:53:05.428555 139924298352448 runtime_analysis.py:521]
     Results jsc-toy:
     +------------------------------+--------------+
     |      Metric (Per Batch)      |    Value     |
@@ -516,7 +516,7 @@ mg, _ = tensorrt_calibrate_transform_pass(mg, pass_args=tensorrt_config)
     |   Average GPU Power Usage    |   22.525 W   |
     | Inference Energy Consumption | 0.018149 mWh |
     +------------------------------+--------------+[0m
-    I0329 12:53:22.697756 139924298352448 runtime_analysis.py:521] 
+    I0329 12:53:22.697756 139924298352448 runtime_analysis.py:521]
     Results jsc-toy:
     +------------------------------+--------------+
     |      Metric (Per Batch)      |    Value     |
@@ -538,7 +538,7 @@ mg, _ = tensorrt_calibrate_transform_pass(mg, pass_args=tensorrt_config)
     I0329 12:53:22.701544 139924298352448 calibrate.py:213] Succeeded in calibrating the model in PyTorch!
 
 
-From the results, the 99% `percentile` clips too many values during the amax calibration, compromising the loss. However 99.99% demonstrates higher validation accuracy alongside `mse` and `entropy` for `jsc-toy`. For such a small model, the methods are not highly distinguished, however for larger models this calibration process will be important for ensuring the quantized model still performs well. 
+From the results, the 99% `percentile` clips too many values during the amax calibration, compromising the loss. However 99.99% demonstrates higher validation accuracy alongside `mse` and `entropy` for `jsc-toy`. For such a small model, the methods are not highly distinguished, however for larger models this calibration process will be important for ensuring the quantized model still performs well.
 
 ### Section 1.3 Quantized Aware Training (QAT)
 
@@ -576,14 +576,14 @@ mg, _ = tensorrt_fine_tune_transform_pass(mg, pass_args=tensorrt_config)
 
 
     I0329 12:53:59.800536 139924298352448 cuda.py:61] LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
-    I0329 12:53:59.814722 139924298352448 model_summary.py:94] 
+    I0329 12:53:59.814722 139924298352448 model_summary.py:94]
       | Name      | Type               | Params
     -------------------------------------------------
-    0 | model     | GraphModule        | 327   
-    1 | loss_fn   | CrossEntropyLoss   | 0     
-    2 | acc_train | MulticlassAccuracy | 0     
-    3 | loss_val  | MeanMetric         | 0     
-    4 | loss_test | MeanMetric         | 0     
+    0 | model     | GraphModule        | 327
+    1 | loss_fn   | CrossEntropyLoss   | 0
+    2 | acc_train | MulticlassAccuracy | 0
+    3 | loss_val  | MeanMetric         | 0
+    4 | loss_test | MeanMetric         | 0
     -------------------------------------------------
     327       Trainable params
     0         Non-trainable params
@@ -620,7 +620,7 @@ mg, _ = tensorrt_fine_tune_transform_pass(mg, pass_args=tensorrt_config)
 
 After QAT, we are now ready to convert the model to a tensorRT engine so that it can be run with the superior inference speeds. To do so, we use the `tensorrt_engine_interface_pass` which converts the `MaseGraph`'s model from a Pytorch one to an ONNX format as an intermediate stage of the conversion.
 
-During the conversion process, the `.onnx` and `.trt` files are stored to their respective folders shown in [Section 1.3](#section-13-quantized-aware-training-qat).
+During the conversion process, the `.onnx` and `.trt` files are stored to their respective folders shown in Section 1.3.
 
 This interface pass returns a dictionary containing the `onnx_path` and `trt_engine_path`.
 
@@ -677,7 +677,7 @@ _, _ = runtime_analysis_pass(meta['trt_engine_path'], pass_args=runtime_analysis
     |   Average GPU Power Usage    |   23.792 W    |
     | Inference Energy Consumption | 0.0057535 mWh |
     +------------------------------+---------------+[0m
-    I0329 13:03:32.504800 139924298352448 runtime_analysis.py:521] 
+    I0329 13:03:32.504800 139924298352448 runtime_analysis.py:521]
     Results jsc-toy:
     +------------------------------+---------------+
     |      Metric (Per Batch)      |     Value     |
@@ -709,7 +709,7 @@ _, _ = runtime_analysis_pass(meta['trt_engine_path'], pass_args=runtime_analysis
     |   Average GPU Power Usage    |    23.043 W    |
     | Inference Energy Consumption | 0.00085532 mWh |
     +------------------------------+----------------+[0m
-    I0329 13:03:34.503784 139924298352448 runtime_analysis.py:521] 
+    I0329 13:03:34.503784 139924298352448 runtime_analysis.py:521]
     Results jsc-toy-trt_quantized:
     +------------------------------+----------------+
     |      Metric (Per Batch)      |     Value      |
@@ -727,19 +727,18 @@ _, _ = runtime_analysis_pass(meta['trt_engine_path'], pass_args=runtime_analysis
     I0329 13:03:34.506492 139924298352448 runtime_analysis.py:143] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-29/tensorrt/version_0/model.json
 
 
-As shown above, the latency has decreased around 6x with the `jsc-toy` model without compromising accuracy due to the well calibrated amax and quantization-aware fine tuning and additional runtime optimizations from TensorRT. The inference energy consumption has thus also dropped tremendously and this is an excellent demonstration for the need to quantize in industry especially for LLMs in order to reduce energy usage. 
+As shown above, the latency has decreased around 6x with the `jsc-toy` model without compromising accuracy due to the well calibrated amax and quantization-aware fine tuning and additional runtime optimizations from TensorRT. The inference energy consumption has thus also dropped tremendously and this is an excellent demonstration for the need to quantize in industry especially for LLMs in order to reduce energy usage.
 
 ## Section 2. FP16 Quantization
 
-We will now load in a new toml configuration that uses fp16 instead of int8, whilst keeping the other settings the exact same for a fair comparison. This time however, we will use chop from the terminal which runs all the passes showcased in [Section 1](#section-1---int8-quantization).
+We will now load in a new toml configuration that uses fp16 instead of int8, whilst keeping the other settings the exact same for a fair comparison. This time however, we will use chop from the terminal which runs all the passes showcased in Section 1.
 
-Since float quantization does not require calibration, nor is it supported by `pytorch-quantization`, the model will not undergo fake quantization; for the time being this unfortunately means QAT is unavailable and only undergoes Post Training Quantization (PTQ). 
+Since float quantization does not require calibration, nor is it supported by `pytorch-quantization`, the model will not undergo fake quantization; for the time being this unfortunately means QAT is unavailable and only undergoes Post Training Quantization (PTQ).
 
 
-```python
+```text
 JSC_FP16_BY_TYPE_TOML = "../../../machop/configs/tensorrt/jsc_toy_FP16_quantization_by_type.toml"
 !ch transform --config {JSC_FP16_BY_TYPE_TOML} --load {JSC_CHECKPOINT_PATH} --load-type pl
-```
 
     8808.24s - pydevd: Sending message related to process being replaced timed-out after 5 seconds
     [2024-03-28 09:37:03,989] [INFO] [real_accelerator.py:191:get_accelerator] Setting ds_accelerator to cuda (auto detect)
@@ -811,7 +810,7 @@ JSC_FP16_BY_TYPE_TOML = "../../../machop/configs/tensorrt/jsc_toy_FP16_quantizat
     | ReLU            | relu         |       4 |         0 |           4 |
     | output          | output       |       1 |         0 |           1 |
     | x               | placeholder  |       1 |         0 |           1 |[0m
-    I0328 09:37:11.551648 140201001654080 summary.py:85] 
+    I0328 09:37:11.551648 140201001654080 summary.py:85]
     | Original type   | OP           |   Total |   Changed |   Unchanged |
     |-----------------+--------------+---------+-----------+-------------|
     | BatchNorm1d     | batch_norm1d |       4 |         0 |           4 |
@@ -849,7 +848,7 @@ JSC_FP16_BY_TYPE_TOML = "../../../machop/configs/tensorrt/jsc_toy_FP16_quantizat
     |   Average GPU Power Usage    |   22.024 W    |
     | Inference Energy Consumption | 0.0049148 mWh |
     +------------------------------+---------------+[0m
-    I0328 09:37:36.951404 140201001654080 runtime_analysis.py:437] 
+    I0328 09:37:36.951404 140201001654080 runtime_analysis.py:437]
     Results jsc-toy:
     +------------------------------+---------------+
     |      Metric (Per Batch)      |     Value     |
@@ -871,7 +870,7 @@ JSC_FP16_BY_TYPE_TOML = "../../../machop/configs/tensorrt/jsc_toy_FP16_quantizat
     ------|---------|----------|----------------------|----------------------|-----------------------
     0     | Input   | FLOAT    | (64, 16)               | (64, 16)               | input
     1     | Output  | FLOAT    | (64, 5)                | (64, 5)                | 37[0m
-    I0328 09:37:36.960667 140201001654080 runtime_analysis.py:167] 
+    I0328 09:37:36.960667 140201001654080 runtime_analysis.py:167]
     TensorRT Engine Input/Output Information:
     Index | Type    | DataType | Static Shape         | Dynamic Shape        | Name
     ------|---------|----------|----------------------|----------------------|-----------------------
@@ -893,7 +892,7 @@ JSC_FP16_BY_TYPE_TOML = "../../../machop/configs/tensorrt/jsc_toy_FP16_quantizat
     |   Average GPU Power Usage    |    21.706 W    |
     | Inference Energy Consumption | 0.00055067 mWh |
     +------------------------------+----------------+[0m
-    I0328 09:37:43.052305 140201001654080 runtime_analysis.py:437] 
+    I0328 09:37:43.052305 140201001654080 runtime_analysis.py:437]
     Results jsc-toy-trt_quantized:
     +------------------------------+----------------+
     |      Metric (Per Batch)      |     Value      |
@@ -913,7 +912,7 @@ JSC_FP16_BY_TYPE_TOML = "../../../machop/configs/tensorrt/jsc_toy_FP16_quantizat
     I0328 09:37:43.132117 140201001654080 save_and_load.py:147] Saved mase graph to /root/mase/mase_output/jsc-toy_cls_jsc_2024-03-28/software/transform/transformed_ckpt
     [32mINFO    [0m [34mTransformation is completed[0m
     I0328 09:37:43.132461 140201001654080 cli.py:383] Transformation is completed
-
+```
 
 As you can see, `fp16` acheives a slighty higher test accuracy but a slightly lower latency (~30%) from that of int8 quantization; it is still ~2.5x faster than the unquantized model. Now lets apply quantization to a more complicated model.
 
@@ -925,31 +924,30 @@ In this case, we set:
 - The `by` parameter to `type`
 - The `quantize` parameter to true for `passes.tensorrt.conv2d.config` and `precision` parameter to 'int8'.
 - The `input` and `weight` quantize axis for the conv2d layers.
-- The default `passes.tensorrt.default.config` precision to true. 
+- The default `passes.tensorrt.default.config` precision to true.
 
 During the TensorRT quantization, the model's conv2d layers will be converted to an int8 fake quantized form, whilst the linear layers are kept to their default 'fp16'. Calibration of the conv2d layers and then fine tuning will be undergone before quantization and inference.
 
-You may either download a pretrained model [here](https://imperiallondon-my.sharepoint.com/:f:/g/personal/zz7522_ic_ac_uk/Emh3VT7Q_qRFmnp8kDrcgDoBwGUuzLwwKNtX8ZAt368jJQ?e=gsKONa), otherwise train it yourself as shown below. 
+You may either download a pretrained model [here](https://imperiallondon-my.sharepoint.com/:f:/g/personal/zz7522_ic_ac_uk/Emh3VT7Q_qRFmnp8kDrcgDoBwGUuzLwwKNtX8ZAt368jJQ?e=gsKONa), otherwise train it yourself as shown below.
 
 
-```python
+```bash
 VGG_TYPEWISE_TOML = "../../../machop/configs/tensorrt/vgg7_typewise_mixed_precision.toml"
 
-!ch train --config {VGG_TYPEWISE_TOML}
+ch train --config {VGG_TYPEWISE_TOML}
 ```
 
-We will now load the checkpoint in, quantize the model and compare it to the unquantized version as we did in [Section 1.5](#section-15-performance-analysis)
+We will now load the checkpoint in, quantize the model and compare it to the unquantized version as we did in Section 1.5
 
 
-```python
+```bash
 # Change this checkpoint path accordingly
 VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ckpt"
 ```
 
 
-```python
-!ch transform --config {VGG_TYPEWISE_TOML} --load {VGG_CHECKPOINT_PATH} --load-type pl
-```
+```text
+ch transform --config {VGG_TYPEWISE_TOML} --load {VGG_CHECKPOINT_PATH} --load-type pl
 
     [2024-03-28 23:00:09,016] [INFO] [real_accelerator.py:191:get_accelerator] Setting ds_accelerator to cuda (auto detect)
     INFO: Seed set to 0
@@ -1033,7 +1031,7 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     | output          | output       |       1 |         0 |           1 |
     | view            | view         |       1 |         0 |           1 |
     | x               | placeholder  |       1 |         0 |           1 |[0m
-    I0328 23:00:37.270473 139939454809920 summary.py:85] 
+    I0328 23:00:37.270473 139939454809920 summary.py:85]
     | Original type   | OP           |   Total |   Changed |   Unchanged |
     |-----------------+--------------+---------+-----------+-------------|
     | BatchNorm2d     | batch_norm2d |       6 |         0 |           6 |
@@ -1161,7 +1159,7 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     |   Average GPU Power Usage    |  59.019 W   |
     | Inference Energy Consumption | 0.24777 mWh |
     +------------------------------+-------------+[0m
-    I0328 23:00:55.766893 139939454809920 runtime_analysis.py:521] 
+    I0328 23:00:55.766893 139939454809920 runtime_analysis.py:521]
     Results vgg7:
     +------------------------------+-------------+
     |      Metric (Per Batch)      |    Value    |
@@ -1233,7 +1231,7 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     |   Average GPU Power Usage    |  59.653 W   |
     | Inference Energy Consumption | 0.25317 mWh |
     +------------------------------+-------------+[0m
-    I0328 23:01:07.450706 139939454809920 runtime_analysis.py:521] 
+    I0328 23:01:07.450706 139939454809920 runtime_analysis.py:521]
     Results vgg7:
     +------------------------------+-------------+
     |      Metric (Per Batch)      |    Value    |
@@ -1270,14 +1268,14 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     Files already downloaded and verified
     Files already downloaded and verified
     I0328 23:01:12.623627 139939454809920 cuda.py:61] LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
-    I0328 23:01:12.632704 139939454809920 model_summary.py:94] 
+    I0328 23:01:12.632704 139939454809920 model_summary.py:94]
       | Name      | Type               | Params
     -------------------------------------------------
     0 | model     | GraphModule        | 14.0 M
-    1 | loss_fn   | CrossEntropyLoss   | 0     
-    2 | acc_train | MulticlassAccuracy | 0     
-    3 | loss_val  | MeanMetric         | 0     
-    4 | loss_test | MeanMetric         | 0     
+    1 | loss_fn   | CrossEntropyLoss   | 0
+    2 | acc_train | MulticlassAccuracy | 0
+    3 | loss_val  | MeanMetric         | 0
+    4 | loss_test | MeanMetric         | 0
     -------------------------------------------------
     14.0 M    Trainable params
     0         Non-trainable params
@@ -1645,7 +1643,7 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     |   Average GPU Power Usage    |  58.043 W  |
     | Inference Energy Consumption | 0.1441 mWh |
     +------------------------------+------------+[0m
-    I0328 23:06:47.111017 139939454809920 runtime_analysis.py:521] 
+    I0328 23:06:47.111017 139939454809920 runtime_analysis.py:521]
     Results vgg7:
     +------------------------------+------------+
     |      Metric (Per Batch)      |   Value    |
@@ -1677,7 +1675,7 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     |   Average GPU Power Usage    |  52.687 W   |
     | Inference Energy Consumption | 0.12441 mWh |
     +------------------------------+-------------+[0m
-    I0328 23:07:00.676242 139939454809920 runtime_analysis.py:521] 
+    I0328 23:07:00.676242 139939454809920 runtime_analysis.py:521]
     Results vgg7-trt_quantized:
     +------------------------------+-------------+
     |      Metric (Per Batch)      |    Value    |
@@ -1693,13 +1691,13 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     +------------------------------+-------------+
     [32mINFO    [0m [34mRuntime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/tensorrt/version_7/model.json[0m
     I0328 23:07:00.677799 139939454809920 runtime_analysis.py:143] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/tensorrt/version_7/model.json
+```
 
-
-By quantizing all convolutional layers to INT8 and maintaining fp16 precision for the linear layers we see a marginal decrease in latency whilst maintaining a comparable accuracy. By experimenting with precisions on a per type basis, you may find insights that work best for your model. 
+By quantizing all convolutional layers to INT8 and maintaining fp16 precision for the linear layers we see a marginal decrease in latency whilst maintaining a comparable accuracy. By experimenting with precisions on a per type basis, you may find insights that work best for your model.
 
 ## Section 4. Layer-wise Mixed Precision
 
-So far we have strictly quantized either in int8 or fp16. Now, we will show how to conduct layerwise mixed precision using the same `vgg7` model. In this case we will show how for instance, layer 0 and 1 can be set to fp16, while the remaining layers can be int8 quantized. 
+So far we have strictly quantized either in int8 or fp16. Now, we will show how to conduct layerwise mixed precision using the same `vgg7` model. In this case we will show how for instance, layer 0 and 1 can be set to fp16, while the remaining layers can be int8 quantized.
 
 For this, we set:
 - The `by` parameter to `name`
@@ -1708,11 +1706,10 @@ For this, we set:
 - The `precision` to 'int8' for `passes.tensorrt.feature_layers_2.config and passes.tensorrt.feature_layers_3.config` (although this is not necessary since the default is already set to 'int8')
 
 
-```python
+```text
 VGG_LAYERWISE_TOML = "../../../machop/configs/tensorrt/vgg7_layerwise_mixed_precision.toml"
 
-!ch transform --config {VGG_LAYERWISE_TOML} --load {VGG_CHECKPOINT_PATH} --load-type pl
-```
+ch transform --config {VGG_LAYERWISE_TOML} --load {VGG_CHECKPOINT_PATH} --load-type pl
 
     [2024-03-28 23:25:51,157] [INFO] [real_accelerator.py:191:get_accelerator] Setting ds_accelerator to cuda (auto detect)
     INFO: Seed set to 0
@@ -1796,7 +1793,7 @@ VGG_LAYERWISE_TOML = "../../../machop/configs/tensorrt/vgg7_layerwise_mixed_prec
     | output          | output       |       1 |         0 |           1 |
     | view            | view         |       1 |         0 |           1 |
     | x               | placeholder  |       1 |         0 |           1 |[0m
-    I0328 23:26:12.941653 140449214740288 summary.py:85] 
+    I0328 23:26:12.941653 140449214740288 summary.py:85]
     | Original type   | OP           |   Total |   Changed |   Unchanged |
     |-----------------+--------------+---------+-----------+-------------|
     | BatchNorm2d     | batch_norm2d |       6 |         0 |           6 |
@@ -1956,7 +1953,7 @@ VGG_LAYERWISE_TOML = "../../../machop/configs/tensorrt/vgg7_layerwise_mixed_prec
     |   Average GPU Power Usage    |  57.532 W   |
     | Inference Energy Consumption | 0.28607 mWh |
     +------------------------------+-------------+[0m
-    I0328 23:26:29.263397 140449214740288 runtime_analysis.py:521] 
+    I0328 23:26:29.263397 140449214740288 runtime_analysis.py:521]
     Results vgg7:
     +------------------------------+-------------+
     |      Metric (Per Batch)      |    Value    |
@@ -2040,7 +2037,7 @@ VGG_LAYERWISE_TOML = "../../../machop/configs/tensorrt/vgg7_layerwise_mixed_prec
     |   Average GPU Power Usage    |  57.867 W   |
     | Inference Energy Consumption | 0.29145 mWh |
     +------------------------------+-------------+[0m
-    I0328 23:26:40.146152 140449214740288 runtime_analysis.py:521] 
+    I0328 23:26:40.146152 140449214740288 runtime_analysis.py:521]
     Results vgg7:
     +------------------------------+-------------+
     |      Metric (Per Batch)      |    Value    |
@@ -2099,7 +2096,7 @@ VGG_LAYERWISE_TOML = "../../../machop/configs/tensorrt/vgg7_layerwise_mixed_prec
     |   Average GPU Power Usage    |  55.687 W   |
     | Inference Energy Consumption | 0.12102 mWh |
     +------------------------------+-------------+[0m
-    I0328 23:07:00.676242 139939454809920 runtime_analysis.py:521] 
+    I0328 23:07:00.676242 139939454809920 runtime_analysis.py:521]
     Results vgg7-trt_quantized:
     +------------------------------+-------------+
     |      Metric (Per Batch)      |    Value    |
@@ -2115,6 +2112,6 @@ VGG_LAYERWISE_TOML = "../../../machop/configs/tensorrt/vgg7_layerwise_mixed_prec
     +------------------------------+-------------+
     [32mINFO    [0m [34mRuntime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/tensorrt/version_8/model.json[0m
     I0328 23:07:00.677799 139939454809920 runtime_analysis.py:143] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/tensorrt/version_8/model.json
-
+```
 
 In this case, we can see through the quantized summary that one convolutional layer (feature_layers_1) has not been quantized as its precision will be configured to 'fp16' in the tensorrt engine conversion stage whilst the remaining convolutional and linear layers have been quantized.

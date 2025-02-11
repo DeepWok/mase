@@ -8,7 +8,7 @@ where:
 - α = 1.6732632423543772848170429916717
 - scale = 1.0507009873554804934193349852946
 
-### Parameters
+## Parameters
 
 - `inplace` (bool, optional): Can optionally do the operation in-place. Default: False.
 
@@ -30,7 +30,7 @@ A hybrid approach is used for implementing exponential function $e^{-|x|}$ for a
 
 2. **Representation of Binary Number**:
   The N-bit binary number $a = b_{N-1}b_{N-2}...b_1b_0$ is represented, where $b_0$ is the least significant bit, and each bit $b_i$ has a place value $p_i$ given by $p_i = 2^{-P} \times 2^i$.
-  
+
 3. **Exponential Computation**:
     $e^{-a} = \prod e^{-p_i \times b_i}$
 
