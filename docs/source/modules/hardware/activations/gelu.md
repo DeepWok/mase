@@ -11,7 +11,7 @@ When the approximate argument is set to 'tanh', GELU is estimated with:
 
 `GELU(x) = 0.5 * x * (1 + Tanh(2/π * (x + 0.044715 * x^3)))`
 
-### Parameters:
+## Parameters:
 
 - `approximate` (str, optional): The GELU approximation algorithm to use: 'none' | 'tanh'. Default: 'none'.
 
