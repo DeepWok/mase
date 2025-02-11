@@ -7,21 +7,23 @@ LastEditTime: 2022-04-18 16:21:37
 """
 
 from typing import Optional
+import logging
 
 import numpy as np
 import torch
 import torch.fft
-from ..functional import toeplitz
-from ..functional import logger
-from ..functional import morr_uniform_
-from ..functional import input_quantize_fn, weight_quantize_fn
 from torch import Tensor
 from torch.nn import Parameter, init
 from torch.types import Device
-from ..functional import MORRConfig_20um_MQ
-from ..functional import mrr_roundtrip_phase_to_tr_func, mrr_roundtrip_phase_to_tr_fused
 
+from ..utils import MORRConfig_20um_MQ
+from ..utils import mrr_roundtrip_phase_to_tr_func, mrr_roundtrip_phase_to_tr_fused
+from ..utils import toeplitz
+from ..utils import morr_uniform_
+from ..utils import input_quantize_fn, weight_quantize_fn
 from .base_layer import ONNBaseLayer
+
+logger = logging.getLogger(__name__)
 
 __all__ = ["AllPassMORRCirculantLinear"]
 
@@ -45,14 +47,7 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
         out_features: int,
         bias: bool = False,
         config=None,
-        # miniblock: int = 4,
-        # ### mrr parameter
-        # MORRConfig=MORRConfig_20um_MQ,
-        # morr_init: bool = True,
-        # ### trainable MORR nonlinearity
-        # trainable_morr_bias: bool = False,
-        # trainable_morr_scale: bool = False,
-        device: Device = torch.device("cuda" if torch.cuda.is_available() else "cpu"),
+        device: Device = torch.device("cpu"),
     ) -> None:
         super(AllPassMORRCirculantLinear, self).__init__()
         self.in_features = in_features

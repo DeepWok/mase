@@ -1,7 +1,5 @@
 import torch
 import torch.nn as nn
-import numpy as np
-from chop.nn.optical.modules import optical_module_map
 from chop.passes.module.module_modify_helper import (
     get_module_by_name,
     set_module_by_name,

@@ -6,23 +6,25 @@ LastEditTime: 2021-07-18 00:40:18
 """
 
 from typing import Optional, Tuple
+import logging
 
 import numpy as np
 import torch
 import torch.fft
-from ..functional import im2col_2d, toeplitz
-from ..functional import logger
-from ..functional import morr_uniform_
-from ..functional import input_quantize_fn, weight_quantize_fn
 from torch import Tensor, nn
 from torch.nn import Parameter, init
 from torch.nn.modules.utils import _pair
 from torch.types import Device, _size
-from ..functional import MORRConfig_20um_MQ
-from ..functional import mrr_roundtrip_phase_to_tr_func, mrr_roundtrip_phase_to_tr_fused
 
+from ..utils import MORRConfig_20um_MQ
+from ..utils import mrr_roundtrip_phase_to_tr_func, mrr_roundtrip_phase_to_tr_fused
+from ..utils import im2col_2d, toeplitz
+from ..utils import morr_uniform_
+from ..utils import input_quantize_fn, weight_quantize_fn
 
 from .base_layer import ONNBaseLayer
+
+logger = logging.getLogger(__name__)
 
 __all__ = ["AllPassMORRCirculantConv2d"]
 
@@ -72,18 +74,13 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
         dilation: _size = 1,
         groups: int = 1,
         bias: bool = True,
-        padding_mode=None,
-        # miniblock: int = 4,
-        # ### morr parameter
-        # MORRConfig=MORRConfig_20um_MQ,
-        # morr_init: bool = True,  # whether to use initialization method customized for MORR
-        # ### trainable MORR nonlinearity
-        # trainable_morr_bias: bool = False,
-        # trainable_morr_scale: bool = False,
+        padding_mode=None,  # @johnny: unused argument
         config=None,
-        device: Device = torch.device("cuda" if torch.cuda.is_available() else "cpu"),
+        device: Device = torch.device("cpu"),
     ) -> None:
         super(AllPassMORRCirculantConv2d, self).__init__()
+        assert config is not None
+
         miniblock = config.get("miniblock", 4)
         MORRConfig = config.get("MORRConfig", MORRConfig_20um_MQ)
         morr_init = config.get("morr_init", True)
@@ -365,14 +362,16 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
         )
 
     def propagate_morr(self, weight: Tensor, x: Tensor) -> Tensor:
+        """Propagate through the analytically calculated transfer matrix of MORR.
+
+        :param weight: First column vectors in the block-circulant matrix.
+        :type weight: Tensor
+        :param x: Input tensor.
+        :type x: Tensor
+
+        :return: Output of MORR array.
+        :rtype: Tensor
         """
-        @description: propagate through the analytically calculated transfer matrix of morr.
-        @param weight {torch.Tensor} first column vectors in the block-circulant matrix
-        @param x {torch.Tensor} input
-        @return: y {torch.Tensor} output of MORR array
-        """
-        ### weights: [p, q, k]
-        ### x: [ks*ks*inc, h_out*w_out*bs]
 
         x = x.t()  # [h_out*w_out*bs, ks*ks*inc]
         x = x.view(x.size(0), self.grid_dim_x, self.miniblock)  # [h_out*w_out*bs, q, k]
