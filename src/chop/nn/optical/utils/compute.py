@@ -19,8 +19,6 @@ from torch.autograd import grad
 from torch.nn.modules.utils import _pair
 from torch.types import Device, _size
 
-from .torch_train import set_torch_deterministic
-
 __all__ = [
     "shift",
     "Krylov",
@@ -68,6 +66,17 @@ __all__ = [
     "get_conv2d_flops",
     "interp1d",
 ]
+
+
+def set_torch_deterministic(random_state: int = 0) -> None:
+    random_state = int(random_state) % (2**32)
+    torch.manual_seed(random_state)
+    np.random.seed(random_state)
+    if torch.cuda.is_available():
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        torch.cuda.manual_seed_all(random_state)
+    random.seed(random_state)
 
 
 def shift(v: Tensor, f: float = 1) -> Tensor:
