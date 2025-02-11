@@ -46,7 +46,7 @@ TroubleShooting
 
 You may find that you have to use `Python3.11` but Google Colab only provides `Python3.10`. In this case, you can use the following command to force the kernel ot use `Python3.11`:
 
-.. code-block:: python
+.. code-block:: text
 
    #The code below installs 3.11 (assuming you now have 3.10 in colab) and restarts environment, so you can run your cells.
    import sys #for version checker

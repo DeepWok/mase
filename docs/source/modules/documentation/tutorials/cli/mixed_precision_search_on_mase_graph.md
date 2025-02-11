@@ -4,13 +4,13 @@ This tutorial shows how to search for mixed-precision quantization strategy for 
 
 ## Commands
 
-First we train a model on the dataset. After training for some epochs, we get a model with some validation accuracy. The checkpoint is saved at an auto-created location. You can refer to [Run the train action with the CLI](../train/simple_train_flow.md) for more detailed explanation.
+First we train a model on the dataset. After training for some epochs, we get a model with some validation accuracy. The checkpoint is saved at an auto-created location. You can refer to Run the train action with the CLI for more detailed explanation.
 
 The reason why we need a pre-trained model is because we would like to do a post-training-quantization (PTQ) search. This means the quantization happens on a pre-trained model. We then use the PTQ accuracy as a proxy signal for our search.
 
 
 ```bash
-cd src 
+cd src
 ./ch train jsc-tiny jsc --max-epochs 3 --batch-size 256 --accelerator cpu --project tmp --debug --cpu 0
 ```
 
@@ -151,7 +151,7 @@ The entire searching log is saved in `../mase_output/jsc-tiny/software/search_ck
 
 Here is part of the `log.json`
 
-```json
+```text
 {
     "0":{
         "number":0,
