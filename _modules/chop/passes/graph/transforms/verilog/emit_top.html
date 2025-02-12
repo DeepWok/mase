@@ -1,0 +1,1300 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>chop.passes.graph.transforms.verilog.emit_top &#8212; MASE 0.0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common_css/need_style.css?v=678fb11e" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/modern.css?v=803738c0" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-test-results/common.css?v=9ec2c1d5" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../../../../_static/jquery.js?v=5d32c60e"></script>
+    <script src="../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="../../../../../../_static/documentation_options.js?v=e645c8fa"></script>
+    <script src="../../../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../../../../../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+    <script src="../../../../../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+    <script src="../../../../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+    <script src="../../../../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+    <script src="../../../../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/chop/passes/graph/transforms/verilog/emit_top';</script>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">MASE 0.0.1 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../../modules/documentation/installation.html">Installation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/getting_started/Get-started-using-Anaconda.html">Getting Started using Conda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/getting_started/Get-started-using-Docker.html">Getting Started using Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/getting_started/Get-started-using-Nix.html">Getting Started using Nix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/getting_started/Get-started-students.html">Additional Instructions for Imperial College Students</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../../modules/documentation/tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/tutorial_1_introduction_to_mase.html">Tutorial 1: Introduction to the Mase IR, MaseGraph and Torch FX passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/tutorial_2_lora_finetune.html">Tutorial 2: Finetuning Bert for Sequence Classification using a LoRA adapter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/tutorial_3_qat.html">Tutorial 3: Running Quantization-Aware Training (QAT) on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/tutorial_4_pruning.html">Tutorial 4: Unstructured Pruning on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/tutorial_5_nas_optuna.html">Tutorial 5: Neural Architecture Search (NAS) with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/tutorial_6_mixed_precision_search.html">Tutorial 6: Mixed Precision Quantization Search with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/tutorial_7_distributed_deployment.html">Tutorial 7: Deploying a Model for Inference on Distributed Clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/tutorial_8_emit_verilog.html">Tutorial 8: Autogenerating an FPGA accelerator for a Transformer Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/tutorial_9_kernel_fusion.html">Tutorial 9: Running Kernel Fusion for Inference Acceleration on GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/advanced/tensorRT_quantization_tutorial.html">Advanced: TensorRT Quantization Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/advanced/onnxrt_quantization_tutorial.html">Advanced: ONNX Runtime Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/advanced/cli.html">Advanced: Using Mase CLI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/developer/Add-model-to-machop.html">Developer: Guide on how to add a new model into Machop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/developer/doc_writing.html">Developer: How to write documentations in MASE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/developer/how_to_extend_search.html">Developer: How to extend search</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/health.html">Repository Health</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../../modules/documentation/specifications.html">Coding Style Specifications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/specifications/C-coding-style-specifications.html">C/C++ Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/specifications/Python-coding-style-specifications.html">Python Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/specifications/Verilog-coding-style-specifications.html">Verilog Coding Style Specifications</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../../modules/machop.html">Machop Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/chop/actions.html">chop.actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/chop/datasets.html">chop.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/chop/distributed.html">chop.distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/chop/ir.html">chop.ir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/chop/models.html">chop.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/chop/nn.html">chop.nn</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../../modules/chop/nn_quantized.html">chop.nn.quantized</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../../modules/chop/nn_quantized_functional.html">chop.nn.quantized.functional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../../modules/chop/nn_quantized_modules.html">chop.nn.quantized.modules</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../../modules/chop/passes.html">chop.passes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../../../modules/chop/passes_module.html">chop.passes.module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/module_analysis/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/module_transform/quantization.html">chop.passes.module.transform.quantize</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../../../modules/chop/passes_graph.html">chop.passes.graph</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/analysis/add_metadata.html">chop.passes.graph.analysis.add_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/analysis/autosharding.html">chop.passes.graph.analysis.autosharding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/analysis/init_metadata.html">chop.passes.graph.analysis.init_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/analysis/report.html">chop.passes.graph.analysis.report</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/analysis/statistical_profiler.html">chop.passes.graph.analysis.statistical_profiler.profile_statistics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/analysis/verify.html">chop.passes.graph.analysis.verify.verify</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/analysis/quantization.html">chop.passes.graph.calculate_avg_bits_mg_analysis_pass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/analysis/pruning.html">chop.passes.graph.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/analysis/runtime.html">chop.passes.graph.analysis.runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/transform/pruning.html">chop.passes.transform.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/transform/quantize.html">chop.passes.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/transform/verilog.html">chop.passes.transform.verilog</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/transform/utils.html">chop.passes.transform.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/transform/tensorrt.html">chop.passes.transform.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/interface/save_and_load.html">chop.passes.interface.save_and_load</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/interface/tensorrt.html">chop.passes.interface.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/interface/onnxrt.html">chop.passes.interface.onnxrt</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/chop/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/chop/tools.html">chop.tools</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../../modules/hardware/hardware_documentation.html">Hardware Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../../modules/hardware/activations.html">Activations</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../../modules/hardware/activations/gelu.html">GELU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../../modules/hardware/activations/selu.html">SELU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../../modules/hardware/activations/softplus.html">SoftPlus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../../modules/hardware/activations/softsign.html">SoftSign</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../../modules/hardware/activations/tanh.html">Tanh</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../../modules/hardware/arithmetic.html">Arithmetic Units</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../../modules/hardware/arithmetic/mac.html">Multiply-Accumulate (MAC) Unit</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../../modules/hardware/axi.html">AXI Components</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../../modules/hardware/axi/read_master.html">AXI Read Master</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../../modules/hardware/buffers.html">Buffers</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../../modules/hardware/buffers/hybrid_buffer.html">Hybrid Buffer</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../../modules/hardware/linear.html">Linear Layer</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../../modules/hardware/linear/fixed_linear.html">Fixed-Point Linear Layer</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../../modules/hardware/memory.html">Memory Components</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../../modules/hardware/memory/matrix_bank.html">Matrix Bank</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../../modules/hardware/norm.html">Normalization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../../modules/hardware/norm/batch_norm_2d.html">Batch Norm 2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../../modules/hardware/norm/group_norm_2d.html">Group Norm 2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../../modules/hardware/norm/norm.html">Normalization Module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../../modules/hardware/norm/rms_norm_2d.html">RMS Norm 2D</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../../modules/hardware/systolic_modules.html">Systolic Modules</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../../modules/hardware/systolic_modules/output_stationary.html">Output Stationary Systolic Module</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Deep Learning Systems</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../../modules/adls_2024.html">Advanced Deep Learning Systems: 2024/2025</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2024/lab_0_introduction.html">Lab 0: Introduction to Mase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2024/lab_1_compression.html">Lab 1: Model Compression (Quantization and Pruning)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2024/lab_2_nas.html">Lab 2: Neural Architecture Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2024/lab_3_mixed_precision_search.html">Lab 3: Mixed Precision Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2024/lab4-hardware.html">Lab 4 (Hardware Stream) Emitting Hardware</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2024/lab4-software.html">Lab 4 (Software Stream) Performance Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2024/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../../modules/adls_2023.html">Advanced Deep Learning Systems: 2023/2024</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2023/lab1.html">Lab 1 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2023/lab2.html">Lab 2 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2023/lab3.html">Lab 3 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2023/lab4-hardware.html">Lab 4 (Hardware Stream) for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2023/lab4-software.html">Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2023/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for chop.passes.graph.transforms.verilog.emit_top</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Dict</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Process</span><span class="p">,</span> <span class="n">Queue</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.fx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.passes.graph.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">vf</span><span class="p">,</span> <span class="n">v2p</span><span class="p">,</span> <span class="n">init_project</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mase_components.helper.generate_memory</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen_lut</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_verilog_parameters</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.ir.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">MASE_IMPLICIT_FUNCS</span>
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Utilities</span>
+<span class="c1"># =============================================================================</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_remove_last_comma</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">string</span><span class="p">[</span><span class="mi">0</span> <span class="p">:</span> <span class="n">string</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_cap</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    capitalize a string</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_input_name</span><span class="p">(</span><span class="n">from_node</span><span class="p">,</span> <span class="n">to_node</span><span class="p">):</span>
+    <span class="c1"># Find name of to_node argument that comes from from_node</span>
+
+    <span class="k">if</span> <span class="n">from_node</span> <span class="o">==</span> <span class="n">to_node</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;data_in_0&quot;</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">to_node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">val</span><span class="p">[</span><span class="s2">&quot;from&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">from_node</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">key</span>
+    <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Cannot find edge from </span><span class="si">{</span><span class="n">from_node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">to_node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">param_needs_signals</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">qualifier</span><span class="o">=</span><span class="s2">&quot;data_in&quot;</span><span class="p">):</span>
+    <span class="c1"># Don&#39;t emit if it&#39;s function constant, but emit for any data_in or data_out</span>
+    <span class="c1"># And any other parameters with storage interface specified as BRAM</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="c1"># Constant function arguments don&#39;t have precision/shape info</span>
+        <span class="c1"># TODO: change common metadata so constant arguments are passed with</span>
+        <span class="c1"># is_constant flag</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">qualifier</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;interface&quot;</span><span class="p">][</span><span class="n">param</span><span class="p">][</span><span class="s2">&quot;storage&quot;</span><span class="p">]</span>
+            <span class="o">==</span> <span class="s2">&quot;BRAM&quot;</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">is_real_input_arg</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">arg_idx</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="c1"># Check if the argument index is within bounds</span>
+        <span class="n">arg_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="c1"># Ensure the argument is an instance of fx.Node</span>
+        <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">arg_idx</span><span class="p">],</span> <span class="n">fx</span><span class="o">.</span><span class="n">Node</span><span class="p">)</span>
+    <span class="p">)</span> <span class="ow">and</span> <span class="p">(</span>
+        <span class="c1"># Check if the argument is in the implicit functions list</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">arg_idx</span><span class="p">]</span> <span class="ow">in</span> <span class="n">MASE_IMPLICIT_FUNCS</span>
+        <span class="ow">or</span> <span class="p">(</span>
+            <span class="c1"># Check if the argument is an implicit function</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">arg_idx</span><span class="p">]</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_type&quot;</span><span class="p">]</span>
+            <span class="o">==</span> <span class="s2">&quot;implicit_func&quot;</span>
+        <span class="p">)</span>
+        <span class="ow">or</span> <span class="p">(</span>
+            <span class="c1"># Check if the argument is a placeholder input</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">arg_idx</span><span class="p">]</span><span class="o">.</span><span class="n">op</span>
+            <span class="o">==</span> <span class="s2">&quot;placeholder&quot;</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Verilog parameters</span>
+<span class="c1"># =============================================================================</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">VerilogParameterEmitter</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">emit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">parameter_map</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Emit parameters at the top-level for the top-level module</span>
+
+<span class="sd">        Returns Tuple:</span>
+<span class="sd">        1) list of parameters as a string to be embedded in Verilog file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">nodes_in</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes_in</span>
+        <span class="n">nodes_out</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes_out</span>
+        <span class="n">node_in_name</span> <span class="o">=</span> <span class="n">vf</span><span class="p">(</span><span class="n">nodes_in</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">node_out_name</span> <span class="o">=</span> <span class="n">vf</span><span class="p">(</span><span class="n">nodes_out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="n">parameters</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="c1"># Write node parameters</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">parameter_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">parameters</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;    parameter </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">,</span><span class="se">\n</span><span class="s2">&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">_remove_last_comma</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Verilog interface</span>
+<span class="c1"># =============================================================================</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">VerilogInterfaceEmitter</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">emit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">parameter_map</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Emit interface signal declarations for the top-level module</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">nodes_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes_in</span>
+        <span class="n">nodes_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes_out</span>
+
+        <span class="n">interface</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="c1"># TODO: here we just enumerate the inputs of the input nodes - which may be</span>
+        <span class="c1"># order insensitive and require manual connection when adding the graph to</span>
+        <span class="c1"># a system.</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes_in</span><span class="p">:</span>
+            <span class="n">node_name</span> <span class="o">=</span> <span class="n">vf</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">arg_idx</span><span class="p">,</span> <span class="n">arg</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="p">):</span>
+                <span class="k">if</span> <span class="n">is_real_input_arg</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">arg_idx</span><span class="p">):</span>
+                    <span class="c1"># if &quot;data_in&quot; in arg:</span>
+                    <span class="n">arg_name</span> <span class="o">=</span> <span class="n">_cap</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+                    <span class="n">parallelism_params</span> <span class="o">=</span> <span class="p">[</span>
+                        <span class="n">param</span>
+                        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">parameter_map</span>
+                        <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">arg_name</span><span class="si">}</span><span class="s2">_PARALLELISM_DIM&quot;</span><span class="p">)</span>
+                    <span class="p">]</span>
+                    <span class="n">interface</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    input  [</span><span class="si">{</span><span class="n">arg_name</span><span class="si">}</span><span class="s2">_PRECISION_0-1:0] data_in_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="s1">&#39;*&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parallelism_params</span><span class="p">)</span><span class="si">}</span><span class="s2">-1:0],</span>
+<span class="s2">    input  data_in_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_valid,</span>
+<span class="s2">    output data_in_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_ready,&quot;&quot;&quot;</span>
+                    <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes_out</span><span class="p">:</span>
+            <span class="n">node_name</span> <span class="o">=</span> <span class="n">vf</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;results&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="s2">&quot;data_out&quot;</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+                    <span class="n">result_name</span> <span class="o">=</span> <span class="n">_cap</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                    <span class="n">parallelism_params</span> <span class="o">=</span> <span class="p">[</span>
+                        <span class="n">param</span>
+                        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">parameter_map</span>
+                        <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">result_name</span><span class="si">}</span><span class="s2">_PARALLELISM_DIM&quot;</span><span class="p">)</span>
+                    <span class="p">]</span>
+                    <span class="n">interface</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    output  [</span><span class="si">{</span><span class="n">result_name</span><span class="si">}</span><span class="s2">_PRECISION_0-1:0] data_out_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="s1">&#39;*&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parallelism_params</span><span class="p">)</span><span class="si">}</span><span class="s2">-1:0],</span>
+<span class="s2">    output  data_out_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_valid,</span>
+<span class="s2">    input data_out_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_ready,&quot;&quot;&quot;</span>
+                    <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># TODO: emit off-chip parameter interface</span>
+
+        <span class="k">return</span> <span class="n">_remove_last_comma</span><span class="p">(</span><span class="n">interface</span><span class="p">)</span>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Verilog signals</span>
+<span class="c1"># =============================================================================</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">VerilogSignalEmitter</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_emit_signals_top_internal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">parameter_map</span><span class="p">):</span>
+        <span class="n">signals</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">node_name</span> <span class="o">=</span> <span class="n">vf</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="c1"># Input signals</span>
+        <span class="k">for</span> <span class="n">arg</span><span class="p">,</span> <span class="n">arg_info</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg_info</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Skip off-chip parameters as they will be directly connected to the top level</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="s2">&quot;data_in&quot;</span> <span class="ow">in</span> <span class="n">arg</span>
+                <span class="ow">or</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;interface&quot;</span><span class="p">][</span><span class="n">arg</span><span class="p">][</span><span class="s2">&quot;storage&quot;</span><span class="p">]</span>
+                <span class="o">==</span> <span class="s2">&quot;BRAM&quot;</span>
+            <span class="p">):</span>
+                <span class="n">arg_name</span> <span class="o">=</span> <span class="n">v2p</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+                <span class="n">parallelism_params</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">param</span>
+                    <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">parameter_map</span>
+                    <span class="k">if</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">arg_name</span><span class="si">}</span><span class="s2">_PARALLELISM_DIM&quot;</span> <span class="ow">in</span> <span class="n">param</span>
+                <span class="p">]</span>
+
+                <span class="c1"># Getitem argument always get mapped to port 0 irrespective of</span>
+                <span class="c1"># actual argument index</span>
+                <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;getitem&quot;</span><span class="p">:</span>
+                    <span class="n">arg</span> <span class="o">=</span> <span class="s2">&quot;data_in_0&quot;</span>
+
+                <span class="n">signals</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">logic [</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">arg_name</span><span class="si">}</span><span class="s2">_PRECISION_0-1:0]  </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2">        [</span><span class="si">{</span><span class="s1">&#39;*&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parallelism_params</span><span class="p">)</span><span class="si">}</span><span class="s2">-1:0];</span>
+<span class="s2">logic                             </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2">_valid;</span>
+<span class="s2">logic                             </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2">_ready;&quot;&quot;&quot;</span>
+
+        <span class="c1"># Output signals</span>
+        <span class="k">for</span> <span class="n">result</span><span class="p">,</span> <span class="n">result_info</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;results&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result_info</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Skip off-chip parameters as they will be directly connected to the top level</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="s2">&quot;data_out&quot;</span> <span class="ow">in</span> <span class="n">result</span>
+                <span class="ow">or</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;interface&quot;</span><span class="p">][</span><span class="n">result</span><span class="p">][</span>
+                    <span class="s2">&quot;storage&quot;</span>
+                <span class="p">]</span>
+                <span class="o">==</span> <span class="s2">&quot;BRAM&quot;</span>
+            <span class="p">):</span>
+                <span class="n">result_name</span> <span class="o">=</span> <span class="n">v2p</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                <span class="n">parallelism_params</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">param</span>
+                    <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">parameter_map</span>
+                    <span class="k">if</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">result_name</span><span class="si">}</span><span class="s2">_PARALLELISM_DIM&quot;</span> <span class="ow">in</span> <span class="n">param</span>
+                <span class="p">]</span>
+                <span class="n">signals</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">logic [</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">result_name</span><span class="si">}</span><span class="s2">_PRECISION_0-1:0]  </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">        [</span><span class="si">{</span><span class="s1">&#39;*&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parallelism_params</span><span class="p">)</span><span class="si">}</span><span class="s2">-1:0];</span>
+<span class="s2">logic                             </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">_valid;</span>
+<span class="s2">logic                             </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">_ready;&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">signals</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_emit_signals_top_hls</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">parameter_map</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        TODO</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">node_name</span> <span class="o">=</span> <span class="n">vf</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="c1"># Control signals for HLS component</span>
+        <span class="n">signals</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">logic </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_start;</span>
+<span class="s2">logic </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_done;</span>
+<span class="s2">logic </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_idle;</span>
+<span class="s2">logic </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_ready;</span>
+<span class="s2">logic </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_ce;&quot;&quot;&quot;</span>
+
+        <span class="c1"># Input signals</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># No internal signals if the memory is stored off chip</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">param_needs_signals</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">qualifier</span><span class="o">=</span><span class="s2">&quot;data_in&quot;</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="n">cap_key</span> <span class="o">=</span> <span class="n">v2p</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s2">&quot;shape&quot;</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="s2">&quot;data_in&quot;</span><span class="p">:</span>
+                <span class="n">a_width</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">size</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">depth</span> <span class="o">=</span> <span class="n">parameter_map</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">cap_key</span><span class="si">}</span><span class="s2">_DEPTH&quot;</span><span class="p">]</span>
+                <span class="n">a_width</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">depth</span> <span class="o">*</span> <span class="n">size</span><span class="p">))</span>
+
+            <span class="n">signals</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">logic [</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">cap_key</span><span class="si">}</span><span class="s2">_PRECISION_0-1:0]  </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_q0;</span>
+<span class="s2">logic [</span><span class="si">{</span><span class="n">a_width</span><span class="si">}</span><span class="s2">-1:0]                    </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_address0;</span>
+<span class="s2">logic                                    </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_ce0;&quot;&quot;&quot;</span>
+
+        <span class="c1"># Output signals</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;results&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># No internal signals if the memory is stored off chip</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">param_needs_signals</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">qualifier</span><span class="o">=</span><span class="s2">&quot;data_out&quot;</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="n">cap_key</span> <span class="o">=</span> <span class="n">v2p</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s2">&quot;shape&quot;</span><span class="p">])</span>
+            <span class="n">a_width</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">size</span><span class="p">))</span>
+            <span class="n">signals</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">logic [</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">cap_key</span><span class="si">}</span><span class="s2">_PRECISION_0-1:0]  </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_d0;</span>
+<span class="s2">logic [</span><span class="si">{</span><span class="n">a_width</span><span class="si">}</span><span class="s2">-1:0]                    </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_address0;</span>
+<span class="s2">logic                                    </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_ce0;</span>
+<span class="s2">logic                                    </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_we0;&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">signals</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">emit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">parameter_map</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Emit internal signal declarations for the top-level module</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">signals</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;is_implicit&quot;</span><span class="p">]:</span>
+                <span class="k">continue</span>
+            <span class="n">node_name</span> <span class="o">=</span> <span class="n">vf</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">signals</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">// --------------------------</span>
+<span class="s2">//   </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2"> signals</span>
+<span class="s2">// --------------------------&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="s2">&quot;INTERNAL&quot;</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;toolchain&quot;</span><span class="p">]:</span>
+                <span class="n">signals</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_emit_signals_top_internal</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">parameter_map</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;toolchain&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;HLS&quot;</span><span class="p">:</span>
+                <span class="n">signals</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_emit_signals_top_hls</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">parameter_map</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Unknown node toolchain for signal declarations.&quot;</span>
+
+        <span class="k">return</span> <span class="n">signals</span>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Verilog components (INTERNAL)</span>
+<span class="c1"># =============================================================================</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">VerilogInternalComponentEmitter</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_emit_module_parameters_top_internal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">parameter_map</span><span class="p">):</span>
+        <span class="n">node_name</span> <span class="o">=</span> <span class="n">vf</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">component_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_source&quot;</span>
+        <span class="n">component_name_inst</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">component_name</span><span class="si">}</span><span class="s2">_0&quot;</span>
+
+        <span class="n">parameters</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;verilog_param&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="si">}</span><span class="s2">_&quot;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+                <span class="n">parameters</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;    .</span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">),</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="n">_remove_last_comma</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="si">{</span><span class="n">component_name</span><span class="si">}</span><span class="s2"> #(</span>
+<span class="si">{</span><span class="n">parameters</span><span class="si">}</span>
+<span class="s2">) </span><span class="si">{</span><span class="n">component_name_inst</span><span class="si">}</span><span class="s2"> (</span>
+<span class="s2">    .clk(clk),</span>
+<span class="s2">    .rst(rst),</span>
+<span class="s2">    .data_out(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">),</span>
+<span class="s2">    .data_out_ready(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_ready),</span>
+<span class="s2">    .data_out_valid(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_valid)</span>
+<span class="s2">);</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_emit_getitem_signals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Getitem nodes have arg list like (None, None, None, Arg, None, None)</span>
+<span class="sd">        where the meaningful arg is at an arbitrary index, but always maps to</span>
+<span class="sd">        data_in_0 interface of the hardware</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">node_name</span> <span class="o">=</span> <span class="n">vf</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    .data_in_0       (</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_data_in_0),</span>
+<span class="s2">    .data_in_0_valid (</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_data_in_0_valid),</span>
+<span class="s2">    .data_in_0_ready (</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_data_in_0_ready),</span>
+<span class="s2">    </span>
+<span class="s2">    .data_out_0       (</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_data_out_0),</span>
+<span class="s2">    .data_out_0_valid (</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_data_out_0_valid),</span>
+<span class="s2">    .data_out_0_ready (</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_data_out_0_ready),</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">emit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">parameter_map</span><span class="p">):</span>
+        <span class="n">node_name</span> <span class="o">=</span> <span class="n">vf</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">component_name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;module&quot;</span><span class="p">]</span>
+        <span class="n">signals</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="c1"># Emit component instantiation parameters</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;verilog_param&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">key_value</span> <span class="o">=</span> <span class="n">parameter_map</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+            <span class="n">debug_info</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;// = </span><span class="si">{</span><span class="n">key_value</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">parameters</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;    .</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">), </span><span class="si">{</span><span class="n">debug_info</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;&quot;&quot;</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="n">_remove_last_comma</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
+
+        <span class="c1"># Handle getitem nodes separately since an arbitrary argument index</span>
+        <span class="c1"># will always be mapped to data_in_0 interface of the hardware</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;getitem&quot;</span><span class="p">:</span>
+            <span class="n">signals</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_emit_getitem_signals</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="c1"># All other node types</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Emit component instantiation input signals</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="s2">&quot;inplace&quot;</span> <span class="ow">in</span> <span class="n">key</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="k">continue</span>
+                <span class="n">signals</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    .</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">),</span>
+<span class="s2">    .</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_valid(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_valid),</span>
+<span class="s2">    .</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_ready(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_ready),</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+
+            <span class="c1"># Emit component instantiation output signals</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;results&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">signals</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    .</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">),</span>
+<span class="s2">    .</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_valid(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_valid),</span>
+<span class="s2">    .</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_ready(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_ready),</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Remove final comma in signal list</span>
+        <span class="n">signals</span> <span class="o">=</span> <span class="n">_remove_last_comma</span><span class="p">(</span><span class="n">signals</span><span class="p">)</span>
+
+        <span class="c1"># Combine component instantiation</span>
+        <span class="n">components</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">// </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span>
+<span class="si">{</span><span class="n">component_name</span><span class="si">}</span><span class="s2"> #(</span>
+<span class="si">{</span><span class="n">parameters</span><span class="si">}</span>
+<span class="s2">) </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_inst (</span>
+<span class="s2">    .clk(clk),</span>
+<span class="s2">    .rst(rst),</span>
+<span class="si">{</span><span class="n">signals</span><span class="si">}</span>
+<span class="s2">);</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+        <span class="c1"># Emit module parameter instances (e.g. weights and biases)</span>
+        <span class="k">for</span> <span class="n">arg</span><span class="p">,</span> <span class="n">arg_info</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="s2">&quot;data_in&quot;</span> <span class="ow">in</span> <span class="n">arg</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg_info</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="n">components</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_emit_module_parameters_top_internal</span><span class="p">(</span>
+                <span class="n">arg</span><span class="p">,</span> <span class="n">arg_info</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">parameter_map</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">components</span>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Verilog components (HLS)</span>
+<span class="c1"># =============================================================================</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">VerilogHLSComponentEmitter</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_emit_module_parameters_top_hls</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">parameter_map</span><span class="p">):</span>
+        <span class="n">node_name</span> <span class="o">=</span> <span class="n">vf</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">cap_key</span> <span class="o">=</span> <span class="n">v2p</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">component_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_source&quot;</span>
+        <span class="n">component_name_inst</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_0&quot;</span>
+
+        <span class="n">size_debug_info</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s2">&quot;shape&quot;</span><span class="p">])</span>
+        <span class="n">a_width</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">size_debug_info</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="si">{</span><span class="n">component_name</span><span class="si">}</span><span class="s2"> #(</span>
+<span class="s2">    .DATA_WIDTH(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">cap_key</span><span class="si">}</span><span class="s2">_PRECISION_0),</span>
+<span class="s2">    .ADDR_RANGE(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">cap_key</span><span class="si">}</span><span class="s2">_TENSOR_SIZE_0),</span>
+<span class="s2">    .ADDR_WIDTH(</span><span class="si">{</span><span class="n">a_width</span><span class="si">}</span><span class="s2">)</span>
+<span class="s2">) </span><span class="si">{</span><span class="n">component_name_inst</span><span class="si">}</span><span class="s2"> (</span>
+<span class="s2">    .clk(clk),</span>
+<span class="s2">    .reset(rst),</span>
+
+<span class="s2">    .address0(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_address0),</span>
+<span class="s2">    .ce0(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_ce0),</span>
+<span class="s2">    .q0(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_q0)</span>
+<span class="s2">);</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">emit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">parameter_map</span><span class="p">):</span>
+        <span class="n">node_name</span> <span class="o">=</span> <span class="n">vf</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">component_name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;module&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Emit kernel instance</span>
+        <span class="n">signals</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">signals</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    .</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_address0(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_address0),</span>
+<span class="s2">    .</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_ce0(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_ce0),</span>
+<span class="s2">    .</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_q0(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_q0),</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;results&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">signals</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    .</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_address0(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_address0),</span>
+<span class="s2">    .</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_ce0(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_ce0),</span>
+<span class="s2">    .</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_we0(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_we0),</span>
+<span class="s2">    .</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_d0(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_d0),</span>
+<span class="s2">&quot;&quot;&quot;</span>
+        <span class="n">signals</span> <span class="o">=</span> <span class="n">_remove_last_comma</span><span class="p">(</span><span class="n">signals</span><span class="p">)</span>
+        <span class="n">components</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">// </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span>
+<span class="si">{</span><span class="n">component_name</span><span class="si">}</span><span class="s2"> #(</span>
+<span class="s2">) </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_inst (</span>
+<span class="s2">    .ap_clk(clk),</span>
+<span class="s2">    .ap_rst(rst),</span>
+
+<span class="s2">    .ap_start(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_start),</span>
+<span class="s2">    .ap_idle(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_idle),</span>
+<span class="s2">    .ap_ready(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_ready),</span>
+<span class="s2">    .ap_done(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_done),</span>
+<span class="s2">    .ap_ce(</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_ce),</span>
+<span class="si">{</span><span class="n">signals</span><span class="si">}</span>
+<span class="s2">);</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+        <span class="c1"># Emit parameter instance</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># Skip the parameter instance if the memory is stored off chip</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">param_needs_signals</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">qualifier</span><span class="o">=</span><span class="s2">&quot;data_in&quot;</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">components</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_emit_module_parameters_top_hls</span><span class="p">(</span>
+                <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">parameter_map</span>
+            <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;results&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># Skip the parameter instance if the memory is stored off chip</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">param_needs_signals</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">qualifier</span><span class="o">=</span><span class="s2">&quot;data_out&quot;</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">components</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_emit_module_parameters_top_hls</span><span class="p">(</span>
+                <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">parameter_map</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">components</span>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Verilog components</span>
+<span class="c1"># =============================================================================</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">VerilogComponentEmitter</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">internal_emitter</span> <span class="o">=</span> <span class="n">VerilogInternalComponentEmitter</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hls_emitter</span> <span class="o">=</span> <span class="n">VerilogHLSComponentEmitter</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">emit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">parameter_map</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Emit component declarations for the top-level module</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">components</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">// --------------------------</span>
+<span class="s2">//   Component instantiation</span>
+<span class="s2">// --------------------------</span>
+<span class="s2">&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;is_implicit&quot;</span><span class="p">]:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="s2">&quot;INTERNAL&quot;</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;toolchain&quot;</span><span class="p">]:</span>
+                <span class="n">components</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">internal_emitter</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">parameter_map</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;toolchain&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;HLS&quot;</span><span class="p">:</span>
+                <span class="n">components</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hls_emitter</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">parameter_map</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Unknown node toolchain for signal declarations.&quot;</span>
+
+        <span class="k">return</span> <span class="n">components</span>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Verilog wires</span>
+<span class="c1"># =============================================================================</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">VerilogWireEmitter</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">parameter_map</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameter_map</span> <span class="o">=</span> <span class="n">parameter_map</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">wires</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">// --------------------------</span>
+<span class="s2">//   Interconnections</span>
+<span class="s2">// --------------------------</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_emit_top_wires</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">nodes_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes_in</span>
+        <span class="n">nodes_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes_out</span>
+
+        <span class="c1"># ============================================================</span>
+        <span class="c1"># Top level wires</span>
+        <span class="c1"># ============================================================</span>
+
+        <span class="n">wires</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="c1"># TODO: here we just enumerate the inputs of the input nodes - which may be</span>
+        <span class="c1"># order insensitive and require manual connection when adding the graph to</span>
+        <span class="c1"># a system.</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes_in</span><span class="p">:</span>
+            <span class="n">node_name</span> <span class="o">=</span> <span class="n">vf</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">arg_idx</span><span class="p">,</span> <span class="n">arg</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="p">):</span>
+                <span class="k">if</span> <span class="n">is_real_input_arg</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">arg_idx</span><span class="p">):</span>
+                    <span class="n">wires</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">assign data_in_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_ready = </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2">_ready;</span>
+<span class="s2">assign </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2">_valid    = data_in_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_valid;</span>
+<span class="s2">assign </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2">    = data_in_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+                    <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes_out</span><span class="p">:</span>
+            <span class="n">node_name</span> <span class="o">=</span> <span class="n">vf</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;results&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="s2">&quot;data_out&quot;</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+                    <span class="n">wires</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">assign data_out_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_valid = </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">_valid;</span>
+<span class="s2">assign </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">_ready    = data_out_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_ready;</span>
+<span class="s2">assign data_out_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+                    <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># TODO: emit off-chip parameter interface</span>
+
+        <span class="k">return</span> <span class="n">wires</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_emit_getitem_wires</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Getitem nodes may receive an output from an arbitrary index of the parent node,</span>
+<span class="sd">        which is always driven to port 0 of the getitem node</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">from_name</span> <span class="o">=</span> <span class="n">vf</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">to_name</span> <span class="o">=</span> <span class="n">vf</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">select</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">assign </span><span class="si">{</span><span class="n">from_name</span><span class="si">}</span><span class="s2">_data_out_</span><span class="si">{</span><span class="n">select</span><span class="si">}</span><span class="s2">_ready  = </span><span class="si">{</span><span class="n">to_name</span><span class="si">}</span><span class="s2">_data_in_0_ready;</span>
+<span class="s2">assign </span><span class="si">{</span><span class="n">to_name</span><span class="si">}</span><span class="s2">_data_in_0_valid    = </span><span class="si">{</span><span class="n">from_name</span><span class="si">}</span><span class="s2">_data_out_</span><span class="si">{</span><span class="n">select</span><span class="si">}</span><span class="s2">_valid;</span>
+<span class="s2">assign </span><span class="si">{</span><span class="n">to_name</span><span class="si">}</span><span class="s2">_data_in_0 = </span><span class="si">{</span><span class="n">from_name</span><span class="si">}</span><span class="s2">_data_out_</span><span class="si">{</span><span class="n">select</span><span class="si">}</span><span class="s2">;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_emit_node2node_wires</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">nodes_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes_in</span>
+
+        <span class="n">wires</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="c1"># Skip implicit nodes</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;is_implicit&quot;</span><span class="p">]</span>
+                <span class="c1"># Input nodes were already connected by the previous process</span>
+                <span class="ow">or</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes_in</span>
+            <span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Getitem nodes are handled separately</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;getitem&quot;</span><span class="p">:</span>
+                <span class="n">wires</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_emit_getitem_wires</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="n">to_name</span> <span class="o">=</span> <span class="n">vf</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">node_in</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">all_input_nodes</span><span class="p">):</span>
+                <span class="n">from_name</span> <span class="o">=</span> <span class="n">vf</span><span class="p">(</span><span class="n">node_in</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">wires</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">assign </span><span class="si">{</span><span class="n">from_name</span><span class="si">}</span><span class="s2">_data_out_0_ready  = </span><span class="si">{</span><span class="n">to_name</span><span class="si">}</span><span class="s2">_data_in_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_ready;</span>
+<span class="s2">assign </span><span class="si">{</span><span class="n">to_name</span><span class="si">}</span><span class="s2">_data_in_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_valid    = </span><span class="si">{</span><span class="n">from_name</span><span class="si">}</span><span class="s2">_data_out_0_valid;</span>
+<span class="s2">assign </span><span class="si">{</span><span class="n">to_name</span><span class="si">}</span><span class="s2">_data_in_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">from_name</span><span class="si">}</span><span class="s2">_data_out_0;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">wires</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">emit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Emit internal signal connections for the top-level module</span>
+<span class="sd">        This includes two interconnection types:</span>
+<span class="sd">        1. Type casting between inputs and outputs</span>
+<span class="sd">        2. Interface casting between inputs and outputs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">wires</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_emit_top_wires</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wires</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_emit_node2node_wires</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">wires</span>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Emit Verilog</span>
+<span class="c1"># =============================================================================</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">VerilogEmitter</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameter_map</span> <span class="o">=</span> <span class="n">get_verilog_parameters</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">emit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">top_name</span><span class="p">):</span>
+        <span class="n">parameters_to_emit</span> <span class="o">=</span> <span class="n">VerilogParameterEmitter</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span>
+            <span class="n">graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_map</span>
+        <span class="p">)</span>
+
+        <span class="n">interface_to_emit</span> <span class="o">=</span> <span class="n">VerilogInterfaceEmitter</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span>
+            <span class="n">graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_map</span>
+        <span class="p">)</span>
+
+        <span class="n">signals_to_emit</span> <span class="o">=</span> <span class="n">VerilogSignalEmitter</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_map</span><span class="p">)</span>
+
+        <span class="n">components_to_emit</span> <span class="o">=</span> <span class="n">VerilogComponentEmitter</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span>
+            <span class="n">graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_map</span>
+        <span class="p">)</span>
+
+        <span class="n">wires_to_emit</span> <span class="o">=</span> <span class="n">VerilogWireEmitter</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_map</span><span class="p">)</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+
+        <span class="n">time_to_emit</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">/%m/%Y %H:%M:%S&quot;</span><span class="p">)</span>
+
+        <span class="n">module_inst</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">// =====================================</span>
+<span class="s2">//     Mase Hardware</span>
+<span class="s2">//     Model: </span><span class="si">{}</span>
+<span class="s2">//     </span><span class="si">{}</span>
+<span class="s2">// =====================================</span>
+<span class="s2">`timescale 1ns/1ps</span>
+<span class="s2">module </span><span class="si">{}</span><span class="s2"> #(</span>
+<span class="si">{}</span>
+<span class="s2">) (</span>
+<span class="s2">    input clk,</span>
+<span class="s2">    input rst,</span>
+<span class="si">{}</span>
+<span class="s2">);</span>
+<span class="si">{}</span>
+<span class="si">{}</span>
+<span class="si">{}</span>
+<span class="s2">endmodule</span>
+<span class="s2">    &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">top_name</span><span class="p">,</span>
+            <span class="n">time_to_emit</span><span class="p">,</span>
+            <span class="n">top_name</span><span class="p">,</span>
+            <span class="n">parameters_to_emit</span><span class="p">,</span>
+            <span class="n">interface_to_emit</span><span class="p">,</span>
+            <span class="n">signals_to_emit</span><span class="p">,</span>
+            <span class="n">components_to_emit</span><span class="p">,</span>
+            <span class="n">wires_to_emit</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">module_inst</span>
+
+
+<div class="viewcode-block" id="emit_verilog_top_transform_pass">
+<a class="viewcode-back" href="../../../../../../modules/chop/transform/verilog.html#chop.passes.graph.transforms.verilog.emit_verilog_top_transform_pass">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">emit_verilog_top_transform_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="p">{}):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Emit the top-level model design in Verilog</span>
+
+<span class="sd">    :param graph: a MaseGraph</span>
+<span class="sd">    :type graph: MaseGraph</span>
+<span class="sd">    :param pass_args: this pass requires additional arguments which is explained below, defaults to {}</span>
+<span class="sd">    :type pass_args: _type_, optional</span>
+<span class="sd">    :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)</span>
+<span class="sd">    :rtype: tuple(MaseGraph, Dict)</span>
+
+
+<span class="sd">    - pass_args</span>
+<span class="sd">        - project_dir -&gt; str : the directory of the project for cosimulation</span>
+<span class="sd">        - top_name -&gt; str : top-level name</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Emitting Verilog...&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Create project directory, and the verilog is emmited to {project_name}/hardware/rtl</span>
+    <span class="n">project_dir</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">pass_args</span><span class="p">[</span><span class="s2">&quot;project_dir&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;project_dir&quot;</span> <span class="ow">in</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">else</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;.mase&quot;</span> <span class="o">/</span> <span class="s2">&quot;top&quot;</span>
+    <span class="p">)</span>
+    <span class="n">top_name</span> <span class="o">=</span> <span class="n">pass_args</span><span class="p">[</span><span class="s2">&quot;top_name&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;top_name&quot;</span> <span class="ow">in</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;top&quot;</span>
+    <span class="n">init_project</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span>
+    <span class="n">rtl_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s2">&quot;hardware&quot;</span><span class="p">,</span> <span class="s2">&quot;rtl&quot;</span><span class="p">)</span>
+
+    <span class="n">top</span> <span class="o">=</span> <span class="n">VerilogEmitter</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">top_name</span><span class="p">)</span>
+
+    <span class="n">top_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rtl_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">top_name</span><span class="si">}</span><span class="s2">.sv&quot;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">top_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">top_design</span><span class="p">:</span>
+        <span class="n">top_design</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">top</span><span class="p">)</span>
+
+    <span class="c1"># Code to generate the LUTs for activation functions. Currently here because RTL dir is required.</span>
+    <span class="c1"># Move to verilog emitter if you can pass path somehow.</span>
+    <span class="c1"># Alternatively, add a class to the emitter that can be called to generate LUTs, for LUT based implementations of activation functions,</span>
+    <span class="c1"># or other functions that require LUTs such as PolyLUT or LUTnet neurons.</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="c1"># print(vars(node))</span>
+        <span class="c1"># print(type(node))</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;call_module&quot;</span><span class="p">:</span>
+            <span class="n">module</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">named_modules</span><span class="p">())[</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">SiLU</span><span class="p">):</span>
+                <span class="n">func</span> <span class="o">=</span> <span class="s2">&quot;silu&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">ELU</span><span class="p">):</span>
+                <span class="n">func</span> <span class="o">=</span> <span class="s2">&quot;elu&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">):</span>
+                <span class="n">func</span> <span class="o">=</span> <span class="s2">&quot;sigmoid&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">LogSigmoid</span><span class="p">):</span>
+                <span class="n">func</span> <span class="o">=</span> <span class="s2">&quot;logsigmoid&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Softmax</span><span class="p">):</span>
+                <span class="n">func</span> <span class="o">=</span> <span class="s2">&quot;exp&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">func</span> <span class="o">=</span> <span class="s2">&quot;Unknown&quot;</span>
+
+            <span class="k">if</span> <span class="n">func</span> <span class="o">!=</span> <span class="s2">&quot;Unknown&quot;</span><span class="p">:</span>
+                <span class="n">d_in_width</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;verilog_param&quot;</span><span class="p">][</span>
+                    <span class="s2">&quot;DATA_IN_0_PRECISION_0&quot;</span>
+                <span class="p">]</span>
+                <span class="n">d_in_f_width</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span>
+                    <span class="s2">&quot;verilog_param&quot;</span>
+                <span class="p">][</span><span class="s2">&quot;DATA_IN_0_PRECISION_1&quot;</span><span class="p">]</span>
+                <span class="n">d_out_width</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;verilog_param&quot;</span><span class="p">][</span>
+                    <span class="s2">&quot;DATA_OUT_0_PRECISION_0&quot;</span>
+                <span class="p">]</span>
+                <span class="n">d_out_f_width</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span>
+                    <span class="s2">&quot;verilog_param&quot;</span>
+                <span class="p">][</span><span class="s2">&quot;DATA_OUT_0_PRECISION_1&quot;</span><span class="p">]</span>
+                <span class="n">gen_lut</span><span class="o">.</span><span class="n">generate_sv_lut</span><span class="p">(</span>
+                    <span class="n">func</span><span class="p">,</span>
+                    <span class="n">d_in_width</span><span class="p">,</span>
+                    <span class="n">d_in_f_width</span><span class="p">,</span>
+                    <span class="n">d_out_width</span><span class="p">,</span>
+                    <span class="n">d_out_f_width</span><span class="p">,</span>
+                    <span class="n">path</span><span class="o">=</span><span class="n">rtl_dir</span><span class="p">,</span>
+                    <span class="n">path_with_dtype</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="p">)</span>
+    <span class="k">return</span> <span class="n">graph</span><span class="p">,</span> <span class="p">{}</span></div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By DeepWok
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, DeepWok.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
