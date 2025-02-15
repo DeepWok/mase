@@ -82,7 +82,7 @@ cd machop
 ```
 
 When the search is done, the best quantization config will be printed out. Since we run multi-objective search. There may be multiple best trials found by Optuna.
-```txt
+```text
 Best trial(s):
 |    |   number | software_metrics                     | hardware_metrics                                     | scaled_metrics                                  |
 |----+----------+--------------------------------------+------------------------------------------------------+-------------------------------------------------|
@@ -100,7 +100,7 @@ Here is part of the `log.json` recording all search details.
 
 For example, `log["0"]["user_attrs_sampled_config"]` is the sampled quantization config of trial 0. Expand it and you will set the precision of each matmul/linear layer's operands.
 
-```json
+```text
 {
     "0":{
         "number":0,
@@ -120,8 +120,8 @@ For example, `log["0"]["user_attrs_sampled_config"]` is the sampled quantization
                     "bias_width":2,
                     "bias_frac_width":8
                 }
-            },
-            ...
+            }
+            // ...
         },
         "user_attrs_scaled_metrics":{
             "accuracy":0.5,
@@ -154,8 +154,8 @@ For example, `log["0"]["user_attrs_sampled_config"]` is the sampled quantization
                     "bias_width":4,
                     "bias_frac_width":3
                 }
-            },
-            ...
+            }
+            // ...
         },
         "user_attrs_scaled_metrics":{
             "accuracy":0.5747232437,
@@ -169,7 +169,7 @@ For example, `log["0"]["user_attrs_sampled_config"]` is the sampled quantization
         "datetime_start":1694095031290,
         "datetime_complete":1694095032462,
         "duration":1172
-    },
-    ...
+    }
+    // ...
 }
 ```

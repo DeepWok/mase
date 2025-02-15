@@ -16,7 +16,7 @@ In this case, we can try a toymodel, the command looks like the following
 
 ```bash
 # assuming you you are at the our-stuff/mase directory
-cd src 
+cd src
 ./ch train toy toy_tiny --config ../configs/archive/test/train.toml --max-epochs 3
 ```
 
@@ -24,7 +24,7 @@ cd src
 
 You can fetch all command-line arguments:
 
-```bash
+```text
 [nix-shell:~/Projects/mase/src]$ ./ch -help
 INFO     Set logging level to debug
 WARNING  TensorRT pass is unavailable because the following dependencies are not installed: pytorch_quantization, tensorrt, pycuda, cuda.
@@ -180,7 +180,7 @@ This directory includes
 
 ### Training Logs
 
-MASE creates [Tensorboard](https://pytorch.org/tutorials/recipes/recipes/tensorboard_with_pytorch.html) or [wandb](https://wandb.ai/site) logs for the training flow - allowing tracking and visualizing metrics such as loss and accuracy. The log files are in `<output_dir>/software/tensorboard/lightning_logs/version_<n>`. 
+MASE creates [Tensorboard](https://pytorch.org/tutorials/recipes/recipes/tensorboard_with_pytorch.html) or [wandb](https://wandb.ai/site) logs for the training flow - allowing tracking and visualizing metrics such as loss and accuracy. The log files are in `<output_dir>/software/tensorboard/lightning_logs/version_<n>`.
 
 Run Tensorboard to visualise the logs using:
 
@@ -213,7 +213,7 @@ To test the model trained above you can use:
 
 ```bash
 # After training, you will have your checkpoint under mase-tools/mase_output
-# For example, the checkpoint is under ../mase_output/toy_classification_toy-tiny_2023-07-03/software/training_ckpts/best.ckpt 
+# For example, the checkpoint is under ../mase_output/toy_classification_toy-tiny_2023-07-03/software/training_ckpts/best.ckpt
 ./ch test toy toy_tiny --config ../configs/archive/test/train.toml --load ../mase_output/toy_classification_toy_tiny_2024-06-13/software/training_ckpts/best.ckpt```
 
 
@@ -383,7 +383,7 @@ cd machop
 ```
 
 When the search is done, the best quantization config will be printed out. Since we run multi-objective search. There may be multiple best trials found by Optuna.
-```txt
+```text
 Best trial(s):
 |    |   number | software_metrics                     | hardware_metrics                                     | scaled_metrics                                  |
 |----+----------+--------------------------------------+------------------------------------------------------+-------------------------------------------------|
@@ -401,7 +401,7 @@ Here is part of the `log.json` recording all search details.
 
 For example, `log["0"]["user_attrs_sampled_config"]` is the sampled quantization config of trial 0. Expand it and you will set the precision of each matmul/linear layer's operands.
 
-```json
+```text
 {
     "0":{
         "number":0,
@@ -481,13 +481,13 @@ This tutorial shows how to search for mixed-precision quantization strategy for 
 
 ### Commands
 
-First we train a model on the dataset. After training for some epochs, we get a model with some validation accuracy. The checkpoint is saved at an auto-created location. You can refer to [Run the train action with the CLI](../train/simple_train_flow.md) for more detailed explanation.
+First we train a model on the dataset. After training for some epochs, we get a model with some validation accuracy. The checkpoint is saved at an auto-created location. You can refer to *Run the train action with the CLI* for more detailed explanation.
 
 The reason why we need a pre-trained model is because we would like to do a post-training-quantization (PTQ) search. This means the quantization happens on a pre-trained model. We then use the PTQ accuracy as a proxy signal for our search.
 
 
 ```bash
-cd src 
+cd src
 ./ch train jsc-tiny jsc --max-epochs 3 --batch-size 256 --accelerator cpu --project tmp --debug --cpu 0
 ```
 
@@ -628,7 +628,7 @@ The entire searching log is saved in `../mase_output/jsc-tiny/software/search_ck
 
 Here is part of the `log.json`
 
-```json
+```text
 {
     "0":{
         "number":0,

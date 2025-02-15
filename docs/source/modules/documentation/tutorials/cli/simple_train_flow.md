@@ -12,7 +12,7 @@ In this case, we can try a toymodel, the command looks like the following
 
 ```bash
 # assuming you you are at the our-stuff/mase directory
-cd src 
+cd src
 ./ch train toy toy_tiny --config ../configs/archive/test/train.toml --max-epochs 3
 ```
 
@@ -20,7 +20,7 @@ cd src
 
 You can fetch all command-line arguments:
 
-```bash
+```text
 [nix-shell:~/Projects/mase/src]$ ./ch -help
 INFO     Set logging level to debug
 WARNING  TensorRT pass is unavailable because the following dependencies are not installed: pytorch_quantization, tensorrt, pycuda, cuda.
@@ -176,7 +176,7 @@ This directory includes
 
 ## Training Logs
 
-MASE creates [Tensorboard](https://pytorch.org/tutorials/recipes/recipes/tensorboard_with_pytorch.html) or [wandb](https://wandb.ai/site) logs for the training flow - allowing tracking and visualizing metrics such as loss and accuracy. The log files are in `<output_dir>/software/tensorboard/lightning_logs/version_<n>`. 
+MASE creates [Tensorboard](https://pytorch.org/tutorials/recipes/recipes/tensorboard_with_pytorch.html) or [wandb](https://wandb.ai/site) logs for the training flow - allowing tracking and visualizing metrics such as loss and accuracy. The log files are in `<output_dir>/software/tensorboard/lightning_logs/version_<n>`.
 
 Run Tensorboard to visualise the logs using:
 
@@ -209,5 +209,5 @@ To test the model trained above you can use:
 
 ```bash
 # After training, you will have your checkpoint under mase-tools/mase_output
-# For example, the checkpoint is under ../mase_output/toy_classification_toy-tiny_2023-07-03/software/training_ckpts/best.ckpt 
+# For example, the checkpoint is under ../mase_output/toy_classification_toy-tiny_2023-07-03/software/training_ckpts/best.ckpt
 ./ch test toy toy_tiny --config ../configs/archive/test/train.toml --load ../mase_output/toy_classification_toy_tiny_2024-06-13/software/training_ckpts/best.ckpt```
