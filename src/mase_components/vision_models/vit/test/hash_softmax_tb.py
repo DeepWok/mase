@@ -45,11 +45,7 @@ class VerificationCase:
             },
         }
         self.d_config = {
-            "softmax": {
-                "in_size": 1,
-                "out_size": 1,
-                "in_depth": 4,
-            },
+            "softmax": {"in_size": 1, "out_size": 1, "in_depth": 4,},
         }
         in_size = self.d_config["softmax"]["in_size"]
         out_size = self.d_config["softmax"]["out_size"]

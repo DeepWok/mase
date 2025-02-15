@@ -100,9 +100,7 @@ class MaseMetadata:
     known_storage = ["BRAM"]
 
     def __init__(
-        self,
-        node=None,
-        model=None,
+        self, node=None, model=None,
     ):
         # Top-level model
         self.model = model

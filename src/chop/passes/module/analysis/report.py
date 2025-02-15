@@ -26,8 +26,7 @@ def get_submodule_summary(name: str, module: nn.Module, level: int = 0):
 
 
 def report_trainable_parameters_analysis_pass(
-    module: torch.nn.Module,
-    pass_args: dict = {},
+    module: torch.nn.Module, pass_args: dict = {},
 ):
     submodule_summary, total_params = get_submodule_summary("", module)
     table = [(name, params) for _, name, params in submodule_summary]

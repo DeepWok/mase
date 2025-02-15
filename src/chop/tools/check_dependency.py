@@ -23,9 +23,7 @@ def check_deps_tensorRT_pass(silent: bool = True):
     return all(availabilities)
 
 
-def find_missing_dependencies(
-    pass_name: str,
-):
+def find_missing_dependencies(pass_name: str,):
     dependencies = PassFactory._dependencies_dict.get(pass_name, None)
 
     if dependencies is None:
@@ -40,8 +38,7 @@ def find_missing_dependencies(
 
 
 def check_dependencies(
-    pass_name: str,
-    silent: bool = True,
+    pass_name: str, silent: bool = True,
 ):
     unavailable_deps = find_missing_dependencies(pass_name)
 

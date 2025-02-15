@@ -48,8 +48,7 @@ def _replicate_then_shard(val: _TransformInfo) -> int:
 
 @lru_cache(maxsize=None)
 def _gen_transform_infos(
-    src_spec: _DTensorSpec,
-    dst_spec: _DTensorSpec,
+    src_spec: _DTensorSpec, dst_spec: _DTensorSpec,
 ) -> List[_TransformInfo]:
     """
     Generate the transform infos from the source placements to the target placements.
@@ -88,9 +87,7 @@ def _gen_transform_infos(
                 # calculate and save the logical shape for this sharding
                 mesh_dim_size = device_mesh.size(mesh_dim=i)
                 local_shard_size, _ = src._local_shard_size_on_dim(
-                    current_logical_shape[src.dim],
-                    mesh_dim_size,
-                    my_coordinate[i],
+                    current_logical_shape[src.dim], mesh_dim_size, my_coordinate[i],
                 )
                 new_logical_shape = list(current_logical_shape)
                 new_logical_shape[src.dim] = local_shard_size
@@ -288,11 +285,7 @@ class Redistribute(torch.autograd.Function):
             output = input._local_tensor
             target_spec = current_spec
 
-        return dtensor.DTensor(
-            output,
-            target_spec,
-            requires_grad=input.requires_grad,
-        )
+        return dtensor.DTensor(output, target_spec, requires_grad=input.requires_grad,)
 
     @staticmethod
     def backward(ctx, grad_output: "dtensor.DTensor"):  # type: ignore[override]
@@ -327,9 +320,7 @@ class Redistribute(torch.autograd.Function):
             ),
         )
         output_dtensor = dtensor.DTensor(
-            output,
-            spec,
-            requires_grad=grad_output.requires_grad,
+            output, spec, requires_grad=grad_output.requires_grad,
         )
 
         return (

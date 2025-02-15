@@ -39,8 +39,7 @@ def add_component_source(node):
     if mase_op == "user_defined_module":
         for custom_op, op_info in node.meta["mase"].model.custom_ops["modules"].items():
             if isinstance(
-                deepgetattr(node.meta["mase"].model, node.target),
-                custom_op,
+                deepgetattr(node.meta["mase"].model, node.target), custom_op,
             ):
                 node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_RTL"
                 node.meta["mase"]["hardware"]["module"] = op_info["module"]

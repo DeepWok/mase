@@ -37,7 +37,7 @@ class LPW_Pow2TB(Testbench):
         self.in_driver = StreamDriver(dut.clk, dut.in_data, dut.in_valid, dut.in_ready)
 
         # 0.1% bit error
-        self.error_threshold_bits = ceil((2**self.IN_WIDTH) * 0.001)
+        self.error_threshold_bits = ceil((2 ** self.IN_WIDTH) * 0.001)
 
         self.output_monitor = ErrorThresholdStreamMonitor(
             dut.clk,
@@ -53,10 +53,10 @@ class LPW_Pow2TB(Testbench):
 
     def sweep_inputs(self):
         negative_nums = torch.arange(
-            start=2 ** (self.IN_WIDTH - 1), end=2**self.IN_WIDTH, dtype=torch.int32
+            start=2 ** (self.IN_WIDTH - 1), end=2 ** self.IN_WIDTH, dtype=torch.int32
         )
         zero_to_one = torch.arange(
-            start=0, end=2**self.IN_FRAC_WIDTH, dtype=torch.int32  # one
+            start=0, end=2 ** self.IN_FRAC_WIDTH, dtype=torch.int32  # one
         )
         return torch.cat((negative_nums, zero_to_one)).tolist()
 
@@ -68,14 +68,14 @@ class LPW_Pow2TB(Testbench):
                 # Negative Numbers
                 torch.randint(
                     low=2 ** (self.IN_WIDTH - 1),
-                    high=2**self.IN_WIDTH,
+                    high=2 ** self.IN_WIDTH,
                     size=(negative_nums,),
                     dtype=torch.int32,
                 ),
                 # Numbers between 0 and 1
                 torch.randint(
                     low=0,
-                    high=2**self.IN_FRAC_WIDTH,
+                    high=2 ** self.IN_FRAC_WIDTH,
                     size=(zero_to_one_nums,),
                     dtype=torch.int32,
                 ),
@@ -85,10 +85,10 @@ class LPW_Pow2TB(Testbench):
 
     def model(self, inputs):
         in_t = torch.tensor(inputs)
-        num = sign_extend_t(in_t, self.IN_WIDTH) / (2**self.IN_FRAC_WIDTH)
-        res = 2**num
-        res = (res * 2**self.OUT_FRAC_WIDTH).int()
-        res = torch.clamp(res, 0, 2**self.OUT_WIDTH - 1)
+        num = sign_extend_t(in_t, self.IN_WIDTH) / (2 ** self.IN_FRAC_WIDTH)
+        res = 2 ** num
+        res = (res * 2 ** self.OUT_FRAC_WIDTH).int()
+        res = torch.clamp(res, 0, 2 ** self.OUT_WIDTH - 1)
         return res.tolist()
 
     async def run_test(self, batches, us):
@@ -128,7 +128,7 @@ async def sweep(dut):
     tb.in_driver.load_driver(inputs)
     tb.output_monitor.load_monitor(exp_out)
 
-    ns = ((2**tb.IN_WIDTH) * 1000) // 5
+    ns = ((2 ** tb.IN_WIDTH) * 1000) // 5
     logger.info("Waiting %d ns..." % ns)
     await Timer(ns, "ns")
     assert tb.output_monitor.exp_queue.empty()
@@ -137,14 +137,14 @@ async def sweep(dut):
     recv_log = tb.output_monitor.recv_log
     assert len(exp_out) == len(recv_log)
 
-    x = sign_extend_t(torch.tensor(inputs), tb.IN_WIDTH) / (2**tb.IN_FRAC_WIDTH)
-    ref = 2**x
-    ref *= 2**tb.OUT_FRAC_WIDTH  # scale up
-    ref = torch.clamp(ref, 0, 2**tb.OUT_WIDTH - 1)
+    x = sign_extend_t(torch.tensor(inputs), tb.IN_WIDTH) / (2 ** tb.IN_FRAC_WIDTH)
+    ref = 2 ** x
+    ref *= 2 ** tb.OUT_FRAC_WIDTH  # scale up
+    ref = torch.clamp(ref, 0, 2 ** tb.OUT_WIDTH - 1)
 
-    software_ref = ref / (2**tb.OUT_FRAC_WIDTH)
-    software_res = [x / (2**tb.OUT_FRAC_WIDTH) for x in exp_out]
-    hardware_res = [x / (2**tb.OUT_FRAC_WIDTH) for x in recv_log]
+    software_ref = ref / (2 ** tb.OUT_FRAC_WIDTH)
+    software_res = [x / (2 ** tb.OUT_FRAC_WIDTH) for x in exp_out]
+    hardware_res = [x / (2 ** tb.OUT_FRAC_WIDTH) for x in recv_log]
 
     data = pd.DataFrame(
         {
@@ -174,10 +174,7 @@ async def sweep(dut):
             ),
             color=alt.Color("Type"),
         )
-        .properties(
-            width=600,
-            height=220,
-        )
+        .properties(width=600, height=220,)
     )
 
     error_data = data[["x", "hardware error"]]
@@ -188,10 +185,7 @@ async def sweep(dut):
             x=alt.X("x").title(f"x (Q{tb.IN_WIDTH}.{tb.IN_FRAC_WIDTH} Fixed-point)"),
             y=alt.Y("hardware error").title(f"Error"),
         )
-        .properties(
-            width=600,
-            height=100,
-        )
+        .properties(width=600, height=100,)
     )
 
     (curve_fig & error_fig).save(
@@ -302,12 +296,7 @@ def test_high_width():
 def test_smoke():
     mase_runner(
         module_param_list=[
-            {
-                "IN_WIDTH": 8,
-                "IN_FRAC_WIDTH": 4,
-                "OUT_WIDTH": 8,
-                "OUT_FRAC_WIDTH": 4,
-            }
+            {"IN_WIDTH": 8, "IN_FRAC_WIDTH": 4, "OUT_WIDTH": 8, "OUT_FRAC_WIDTH": 4,}
         ]
     )
 

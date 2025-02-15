@@ -181,8 +181,7 @@ def test_quantize_lutnet_conv2d():
     first_table = connection[0]
     assert any(initialized_weight[0, :] == first_table) and any(
         initialized_weight[
-            input_c * k_w * k_h * output_c * (lutnet_config["data_in_levels"] - 1),
-            :,
+            input_c * k_w * k_h * output_c * (lutnet_config["data_in_levels"] - 1), :,
         ]
         == first_table
     )

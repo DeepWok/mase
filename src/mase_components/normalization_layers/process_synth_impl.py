@@ -103,19 +103,14 @@ def gather_data(build_dir: Path):
 if __name__ == "__main__":
     data = gather_data(Path("build"))
     data["ns"] = data["clk_period"] - data["wns"]
-    data["fmax"] = 1 / (data["ns"] * (10**-9))
+    data["fmax"] = 1 / (data["ns"] * (10 ** -9))
     data["fmax_mhz"] = data["fmax"] / 1_000_000
 
     print(data)
 
     def plot(col):
-        alt.Chart(data).mark_line().encode(
-            x="width",
-            y=col,
-            color="norm",
-        ).properties(
-            width=400,
-            height=200,
+        alt.Chart(data).mark_line().encode(x="width", y=col, color="norm",).properties(
+            width=400, height=200,
         ).save(f"{col}_plot.png", scale_factor=3)
 
     plot("wns")

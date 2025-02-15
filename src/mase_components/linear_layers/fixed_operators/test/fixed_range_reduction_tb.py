@@ -20,7 +20,7 @@ class VerificationCase(Testbench):
         self.assign_self_params(["WIDTH"])
 
     def generate_inputs(self):
-        samples = 2**self.WIDTH
+        samples = 2 ** self.WIDTH
         return [val for val in range(0, samples)], samples
 
     def model(self, inputs):
@@ -71,7 +71,6 @@ import pytest
 
 @pytest.mark.skip(reason="Needs to be fixed.")
 def test_fixed_range_reduction():
-
     def full_sweep():
         parameter_list = []
         for width in range(1, 17):

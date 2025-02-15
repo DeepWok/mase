@@ -139,9 +139,7 @@ class NeRFVision(nn.Module, output_ch=4):
 
 # Getters ------------------------------------------------------------------------------
 def get_nerf(
-    info,
-    pretrained=False,
-    **kwargs: Any,
+    info, pretrained=False, **kwargs: Any,
 ):
     # image_size = info["image_size"]
     num_classes = info.num_classes

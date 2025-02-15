@@ -36,7 +36,7 @@ def calculate_modules(module, in_data, out_data):
             # Kernel size here can be either a single int for square kernel
             # or a tuple (see
             # https://pytorch.org/docs/stable/nn.html#torch.nn.MaxPool2d )
-            window_size = module.kernel_size**2
+            window_size = module.kernel_size ** 2
         else:
             window_size = module.kernel_size[0] * module.kernel_size[1]
 

@@ -363,21 +363,15 @@ class Conv2dLog(_Conv2dBase):
         )
 
         self.w_quantizer = partial(
-            log_quantizer,
-            width=w_width,
-            exponent_bias=w_exponent_bias,
+            log_quantizer, width=w_width, exponent_bias=w_exponent_bias,
         )
 
         self.x_quantizer = partial(
-            log_quantizer,
-            width=x_width,
-            exponent_bias=x_exponent_bias,
+            log_quantizer, width=x_width, exponent_bias=x_exponent_bias,
         )
 
         self.b_quantizer = partial(
-            log_quantizer,
-            width=b_width,
-            exponent_bias=b_exponent_bias,
+            log_quantizer, width=b_width, exponent_bias=b_exponent_bias,
         )
 
 
@@ -430,21 +424,15 @@ class Conv2dLog(_Conv2dBase):
         )
 
         self.w_quantizer = partial(
-            log_quantizer,
-            width=w_width,
-            exponent_bias=w_exponent_bias,
+            log_quantizer, width=w_width, exponent_bias=w_exponent_bias,
         )
 
         self.x_quantizer = partial(
-            log_quantizer,
-            width=x_width,
-            exponent_bias=x_exponent_bias,
+            log_quantizer, width=x_width, exponent_bias=x_exponent_bias,
         )
 
         self.b_quantizer = partial(
-            log_quantizer,
-            width=b_width,
-            exponent_bias=b_exponent_bias,
+            log_quantizer, width=b_width, exponent_bias=b_exponent_bias,
         )
 
 
@@ -1140,10 +1128,7 @@ class Conv2dLUT(torch.nn.Module):
         )
 
         self.unfold = torch.nn.Unfold(
-            kernel_size=kernel_size,
-            dilation=dilation,
-            padding=padding,
-            stride=stride,
+            kernel_size=kernel_size, dilation=dilation, padding=padding, stride=stride,
         )
 
         self.fold = torch.nn.Fold(
@@ -1243,11 +1228,7 @@ class Conv2dLUT(torch.nn.Module):
             expanded_input, targets, initalize
         ).squeeze()  # [10, 589824]
         output = output.view(
-            batch_size,
-            self.out_channels,
-            self._out_dim(0),
-            self._out_dim(1),
-            -1,
+            batch_size, self.out_channels, self._out_dim(0), self._out_dim(1), -1,
         ).sum(
             -1
         )  # [10, 256, 1, 1, 2304] -> [10, 256, 1, 1]
@@ -1430,10 +1411,10 @@ class Conv2DLogicNets(_Conv2dBase):
             return self.decode(self.lut_forward(x))
 
     def encode(self, input: Tensor) -> Tensor:
-        return input * 2**self.x_frac_width
+        return input * 2 ** self.x_frac_width
 
     def decode(self, input: Tensor) -> Tensor:
-        return input / 2**self.x_frac_width
+        return input / 2 ** self.x_frac_width
 
     def math_forward(self, input: Tensor) -> Tensor:
         return self.y_quantizer(

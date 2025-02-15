@@ -12,31 +12,15 @@ import logging
 
 
 __all__ = [
-    "uniform_quantize_cpu",
-    "pact_quantize",
-    "PACT_Act",
-    "uniform_quantize",
-    "uniform_quantize_new",
-    "ewgs_quantize",
+    # "uniform_quantize_cpu",
+    # "pact_quantize",
+    # "PACT_Act",
+    # "uniform_quantize",
+    # "uniform_quantize_new",
+    # "ewgs_quantize",
     "input_quantize_fn",
     "weight_quantize_fn",
 ]
-
-
-class uniform_quantize_cpu(object):
-    def __init__(self, bits):
-        super(uniform_quantize_cpu).__init__()
-        self.bits = bits
-
-    def __call__(self, input):
-        if self.bits == 32:
-            out = input
-        elif self.bits == 1:
-            out = np.sign(input)
-        else:
-            n = float(2**self.bits - 1)
-            out = np.round(input * n) / n
-        return out
 
 
 def uniform_quantize(k, gradient_clip=False):
@@ -48,7 +32,7 @@ def uniform_quantize(k, gradient_clip=False):
             elif k == 1:
                 out = torch.sign(input)
             else:
-                n = float(2**k - 1)
+                n = float(2 ** k - 1)
                 out = torch.round(input * n) / n
             return out
 
@@ -79,7 +63,7 @@ def uniform_quantize_new(k, gradient_clip=False):
             elif k == 1:
                 out = torch.sign(input)
             else:
-                n = float(2**k - 1)
+                n = float(2 ** k - 1)
                 # out = torch.round(input * n) / n
                 # out = (torch.clamp(torch.round(input / scale + zero_point), 0, n) - zero_point) * scale
                 out = (
@@ -100,38 +84,6 @@ def uniform_quantize_new(k, gradient_clip=False):
             return grad_input, None, None
 
     return qfn.apply
-
-
-def ewgs_quantize(num_levels, gradient_clip=False, scaling_factor: float = 1e-3):
-    class EWGS_quantizer(torch.autograd.Function):
-        """
-        Network Quantization with Element-wise Gradient Scaling, CVPR 2021
-        https://github.com/cvlab-yonsei/EWGS/blob/main/CIFAR10/custom_modules.py
-        x_in: continuous inputs within the range of [0,1]
-        num_levels: number of discrete levels
-        scaling_factor: backward scaling factor, typically fixed to 1e-3
-        x_out: discretized version of x_in within the range of [0,1]
-        """
-
-        @staticmethod
-        def forward(ctx, input):
-            out = input.mul(num_levels - 1).round_().mul_(1 / (num_levels - 1))
-
-            ctx._scaling_factor = scaling_factor
-            ctx.save_for_backward(input - out)
-            return out
-
-        @staticmethod
-        def backward(ctx, grad_output):
-            diff = ctx.saved_tensors[0]
-            delta = ctx._scaling_factor
-            scale = diff.mul_(grad_output.sign()).mul_(delta).add_(1)
-            grad_input = grad_output * scale
-            if gradient_clip:
-                grad_input.clamp_(-1, 1)
-            return grad_input
-
-    return EWGS_quantizer.apply
 
 
 class input_quantize_fn(torch.nn.Module):
@@ -181,7 +133,7 @@ class input_quantize_fn(torch.nn.Module):
                     qscheme=torch.per_tensor_affine,
                     reduce_range=False,
                     quant_min=0,
-                    quant_max=2**self.in_bit - 1,
+                    quant_max=2 ** self.in_bit - 1,
                 ).to(self.device)
             else:
                 self.obs = None
@@ -428,201 +380,3 @@ class weight_quantize_fn(torch.nn.Module):
                 assert NotImplementedError
 
         return weight_q
-
-
-# PACT activation: https://arxiv.org/pdf/1805.06085.pdf
-class PACT_QuantFunc(torch.autograd.Function):
-    r"""PACT (PArametrized Clipping acTivation) quantization function for activations.
-        Implements a :py:class:`torch.autograd.Function` for quantizing activations in :math:`Q` bits using the PACT strategy.
-        In forward propagation, the function is defined as
-
-        .. math::
-            \mathbf{y} = f(\mathbf{x}) = 1/\varepsilon \cdot \left\lfloor\mathrm{clip}_{ [0,\alpha) } (\mathbf{x})\right\rfloor \cdot \varepsilon
-
-        where :math:`\varepsilon` is the quantization precision:
-
-        .. math::
-            \varepsilon = \alpha / (2^Q - 1)
-
-        In backward propagation, using the Straight-Through Estimator, the gradient of the function is defined as
-
-        .. math::
-            \mathbf{\nabla}_\mathbf{x} \mathcal{L} &\doteq \mathbf{\nabla}_\mathbf{y} \mathcal{L}
-
-        It can be applied by using its static `.apply` method:
-
-    :param input: the tensor containing :math:`x`, the activations to be quantized.
-    :type  input: `torch.Tensor`
-    :param eps: the precomputed value of :math:`\varepsilon`.
-    :type  eps: `torch.Tensor` or float
-    :param alpha: the value of :math:`\alpha`.
-    :type  alpha: `torch.Tensor` or float
-    :param delta: constant to sum to `eps` for numerical stability (default unused, 0 ).
-    :type  delta: `torch.Tensor` or float
-
-    :return: The quantized input activations tensor.
-    :rtype:  `torch.Tensor`
-    """
-
-    @staticmethod
-    def forward(ctx, input, eps, alpha):
-        where_input_clipped = (input < 0) | (input >= alpha)
-        where_input_ltalpha = input < alpha
-        ctx.save_for_backward(where_input_clipped, where_input_ltalpha)
-        return ((input / (eps)).floor() * eps).clamp(0.0, alpha.data[0] - eps.data[0])
-
-    @staticmethod
-    def backward(ctx, grad_output):
-        # see Hubara et al., Section 2.3
-        where_input_clipped, where_input_ltalpha = ctx.saved_tensors
-        # zero = torch.zeros(1, device=where_input_nonclipped.device)
-        grad_input = grad_output.masked_fill(where_input_clipped, 0)
-        # grad_input = torch.where(where_input_nonclipped, grad_output, zero)
-        grad_alpha = grad_output.masked_fill(where_input_ltalpha, 0).sum().expand(1)
-        # grad_alpha = torch.where(where_input_gtalpha, grad_output, zero).sum().expand(1)
-        return grad_input, None, grad_alpha
-
-
-pact_quantize = PACT_QuantFunc.apply
-
-
-class PACT_Act(torch.nn.Module):
-    r"""PACT (PArametrized Clipping acTivation) activation.
-    Implements a :py:class:`torch.nn.Module` to implement PACT-style activations. It is meant to replace :py:class:`torch.nn.ReLU`, :py:class:`torch.nn.ReLU6` and
-    similar activations in a PACT-quantized network.
-    This layer can also operate in a special mode, defined by the `statistics_only` member, in which the layer runs in
-    forward-prop without quantization, collecting statistics on the activations that can then be
-    used to reset the value of :math:`\alpha`.
-    In this mode, the layer collects:
-    - tensor-wise maximum value ever seen
-    - running average with momentum 0.9
-    - running variance with momentum 0.9
-    """
-
-    def __init__(
-        self,
-        precision=None,
-        alpha=1.0,
-        backprop_alpha=True,
-        statistics_only=False,
-        leaky=None,
-        device=torch.device("cuda"),
-    ):
-        r"""Constructor. Initializes a :py:class:`torch.nn.Parameter` for :math:`\alpha` and sets
-            up the initial value of the `statistics_only` member.
-        :param precision: instance defining the current quantization level (default `None`).
-        :type  precision: :py:class:`nemo.precision.Precision`
-        :param alpha: the value of :math:`\alpha`.
-        :type  alpha: `torch.Tensor` or float
-        :param backprop_alpha: default `True`; if `False`, do not update the value of `\alpha` with backpropagation.
-        :type  backprop_alpha: bool
-        :param statistics_only: initialization value of `statistics_only` member.
-        :type  statistics_only: bool
-        """
-
-        super(PACT_Act, self).__init__()
-        self.precision = precision
-        self.device = device
-        self.alpha = torch.nn.Parameter(
-            torch.Tensor((alpha,)).to(device), requires_grad=backprop_alpha
-        )
-        self.alpha_p = alpha
-        self.statistics_only = statistics_only
-        self.deployment = False
-        self.eps_in = None
-        self.leaky = leaky
-        # self.requantization_factor = requantization_factor
-
-        # these are only used to gather statistics
-        self.max = torch.nn.Parameter(
-            torch.zeros_like(self.alpha.data).to(device), requires_grad=False
-        )
-        self.min = torch.nn.Parameter(
-            torch.zeros_like(self.alpha.data).to(device), requires_grad=False
-        )
-        self.running_mean = torch.nn.Parameter(
-            torch.zeros_like(self.alpha.data).to(device), requires_grad=False
-        )
-        self.running_var = torch.nn.Parameter(
-            torch.ones_like(self.alpha.data).to(device), requires_grad=False
-        )
-
-        self.precise = False
-
-    def set_static_precision(self, limit_at_32_bits=True, **kwargs):
-        r"""Sets static parameters used only for deployment."""
-        # item() --> conversion to float
-        # apparently causes a slight, but not invisibile, numerical divergence
-        # between FQ and QD stages
-        self.eps_static = self.alpha.clone().detach() / (2.0 ** (self.precision) - 1)
-        self.alpha_static = self.alpha.clone().detach()
-        # D is selected as a power-of-two
-        D = 2.0 ** torch.ceil(
-            torch.log2(self.requantization_factor * self.eps_static / self.eps_in)
-        )
-        if not limit_at_32_bits:
-            self.D = D
-        else:
-            self.D = min(D, 2.0 ** (32 - 1 - (self.precision)))
-
-    def get_output_eps(self, eps_in):
-        r"""Get the output quantum (:math:`\varepsilon`) given the input one.
-        :param eps_in: input quantum :math:`\varepsilon_{in}`.
-        :type  eps_in: :py:class:`torch.Tensor`
-        :return: output quantum :math:`\varepsilon_{out}`.
-        :rtype:  :py:class:`torch.Tensor`
-        """
-
-        return self.alpha / (2.0 ** (self.precision) - 1)
-
-    def reset_alpha(self, use_max=True, nb_std=5.0):
-        r"""Reset the value of :math:`\alpha`. If `use_max` is `True`, then the highest tensor-wise value collected
-            in the statistics collection phase is used. If `False`, the collected standard deviation multiplied by
-            `nb_std` is used as a parameter
-        :param use_max: if True, use the tensor-wise maximum value collected in the statistics run as new :math:`\alpha` (default True).
-        :type  use_max: bool
-        :param nb_std: number of standard deviations to be used to initialize :math:`\alpha` if `use_max` is False.
-        :type  nb_std: float
-        """
-
-        if use_max:
-            self.alpha.data[0] = self.max.item()
-        else:
-            self.alpha.data[0] = nb_std * torch.sqrt(self.running_var).item()
-
-    def get_statistics(self):
-        r"""Returns the statistics collected up to now.
-
-        :return: The collected statistics (maximum, running average, running variance).
-        :rtype:  tuple of floats
-        """
-        return self.max.item(), self.running_mean.item(), self.running_var.item()
-
-    def forward(self, x):
-        r"""Forward-prop function for PACT-quantized activations.
-
-        See :py:class:`nemo.quant.pact_quant.PACT_QuantFunc` for details on the normal operation performed by this layer.
-        In statistics mode, it uses a normal ReLU and collects statistics in the background.
-        :param x: input activations tensor.
-        :type  x: :py:class:`torch.Tensor`
-
-        :return: output activations tensor.
-        :rtype:  :py:class:`torch.Tensor`
-        """
-
-        if self.statistics_only:
-            if self.leaky is None:
-                x = torch.nn.functional.relu(x)
-            else:
-                x = torch.nn.functional.leaky_relu(x, self.leaky)
-            with torch.no_grad():
-                self.max[:] = max(self.max.item(), x.max())
-                self.min[:] = min(self.min.item(), x.min())
-                self.running_mean[:] = 0.9 * self.running_mean.item() + 0.1 * x.mean()
-                self.running_var[:] = (
-                    0.9 * self.running_var.item() + 0.1 * x.std() * x.std()
-                )
-            return x
-        else:
-            eps = self.alpha / (2.0 ** (self.precision) - 1)
-            return pact_quantize(x, eps, self.alpha + eps)

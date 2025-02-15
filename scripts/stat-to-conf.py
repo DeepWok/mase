@@ -41,12 +41,7 @@ default_base = {
 }
 
 
-def set_stat(
-    entry_name: str,
-    mean=None,
-    median=None,
-    max=None,
-) -> dict[str, Any]:
+def set_stat(entry_name: str, mean=None, median=None, max=None,) -> dict[str, Any]:
     """Return a dictionary containing the format of the stats required to use
     ternary quantiser. If statistics are not specified, "NA" will be set as the value,
     this interally is being interpreted as None when the .toml is loaded"""

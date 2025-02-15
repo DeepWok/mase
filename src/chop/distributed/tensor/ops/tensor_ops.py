@@ -76,10 +76,7 @@ register_op_strategy(
 
 
 @register_op_strategy(
-    [
-        aten.equal.default,
-        aten.is_same_size.default,
-    ]
+    [aten.equal.default, aten.is_same_size.default,]
 )
 def equal_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> StrategyType:
     # equal_strategy deals with ops that comparing two tensor, we need to make sure
@@ -128,8 +125,7 @@ def equal_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> StrategyType:
     schema_info=RuntimeSchemaInfo(1, ["dtype"]),
 )
 @register_op_strategy(
-    [aten.full_like.default],
-    schema_info=RuntimeSchemaInfo(2, ["dtype"]),
+    [aten.full_like.default], schema_info=RuntimeSchemaInfo(2, ["dtype"]),
 )
 @register_op_strategy(
     [
@@ -696,8 +692,7 @@ def prop_index(op_schema: OpSchema) -> OutputSharding:
         )
         result = OutputSharding(
             output_spec=_DTensorSpec(
-                mesh=values_spec.mesh,
-                placements=value_placements,
+                mesh=values_spec.mesh, placements=value_placements,
             )
         )
         return result
@@ -784,10 +779,7 @@ def split_rule(op_schema: OpSchema) -> OutputSharding:
         else split_size_or_sections
     )
     output_spec_list = [
-        _DTensorSpec(
-            mesh=input_spec.mesh,
-            placements=input_spec.placements,
-        )
+        _DTensorSpec(mesh=input_spec.mesh, placements=input_spec.placements,)
         for _ in range(len(output_size_list))
     ]
     return OutputSharding(output_spec_list)

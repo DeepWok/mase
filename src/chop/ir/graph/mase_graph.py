@@ -76,13 +76,7 @@ class MaseTracer(fx.Tracer):
         is_fx_built_in_leaf_module = super().is_leaf_module(m, module_qualified_name)
         is_mase_leaf_layers = isinstance(m, MASE_LEAF_LAYERS)
         is_custom_layer = isinstance(m, self.custom_leaf_layers)
-        return any(
-            (
-                is_fx_built_in_leaf_module,
-                is_mase_leaf_layers,
-                is_custom_layer,
-            )
-        )
+        return any((is_fx_built_in_leaf_module, is_mase_leaf_layers, is_custom_layer,))
 
 
 def trace_torch_module(
@@ -128,19 +122,13 @@ def trace_torch_module(
                 self, m: torch.nn.Module, module_qualified_name: str
             ) -> bool:
                 is_hf_built_in_leaf_module = hf_is_leaf_module(
-                    self,
-                    m,
-                    module_qualified_name,
+                    self, m, module_qualified_name,
                 )
                 is_custom_module = isinstance(m, custom_modules)
                 is_mase_leaf_layer = isinstance(m, MASE_LEAF_LAYERS)
 
                 return any(
-                    (
-                        is_hf_built_in_leaf_module,
-                        is_custom_module,
-                        is_mase_leaf_layer,
-                    )
+                    (is_hf_built_in_leaf_module, is_custom_module, is_mase_leaf_layer,)
                 )
 
             return is_leaf_module
@@ -152,9 +140,7 @@ def trace_torch_module(
         )
 
         graph_module = hf_symbolic_trace(
-            model,
-            tracer_cls=tracer_cls,
-            input_names=hf_input_names,
+            model, tracer_cls=tracer_cls, input_names=hf_input_names,
         )
         graph_module.custom_ops = custom_ops
 
@@ -307,10 +293,7 @@ class MaseGraph:
             self.model.additional_inputs = []
         elif isinstance(model, torch.nn.Module):
             self.model = trace_torch_module(
-                model,
-                cf_args,
-                custom_ops,
-                hf_input_names=hf_input_names,
+                model, cf_args, custom_ops, hf_input_names=hf_input_names,
             )
         else:
             raise ValueError(
@@ -349,16 +332,11 @@ class MaseGraph:
         ), f"model must be a torch.nn.Module. Received: {type(model)}"
 
         graph_module = trace_torch_module(model, cf_args, custom_ops)
-        return cls(
-            model=graph_module,
-            cf_args=cf_args,
-        )
+        return cls(model=graph_module, cf_args=cf_args,)
 
     @classmethod
     def from_checkpoint(
-        cls,
-        checkpoint: str,
-        propagate_missing_metadata: bool = True,
+        cls, checkpoint: str, propagate_missing_metadata: bool = True,
     ):
         """
         Load a MaseGraph from a checkpoint. A MaseGraph checkpoint consists of two files:
@@ -393,18 +371,12 @@ class MaseGraph:
         for node in mg.nodes:
             if node.name in loaded_meta.keys():
                 parameters = loaded_meta[node.name]
-                node.meta["mase"] = MaseMetadata(
-                    node=node,
-                    model=loaded_model,
-                )
+                node.meta["mase"] = MaseMetadata(node=node, model=loaded_model,)
                 node.meta["mase"].parameters = parameters
             else:
                 # todo: propagate metadata for missing nodes
                 logger.warning(f"Node {node.name} not found in loaded metadata.")
-                node.meta["mase"] = MaseMetadata(
-                    node=node,
-                    model=loaded_model,
-                )
+                node.meta["mase"] = MaseMetadata(node=node, model=loaded_model,)
 
         for attr in [
             "class_for_deserialization",
@@ -417,8 +389,7 @@ class MaseGraph:
         return mg
 
     def export(
-        self,
-        fname: str = "masegraph",
+        self, fname: str = "masegraph",
     ):
         """
         Export the MaseGraph to a pair of files: {fname}.pt and {fname}.mz.

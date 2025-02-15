@@ -274,21 +274,15 @@ class Conv1dLog(_Conv1dBase):
         )
 
         self.w_quantizer = partial(
-            log_quantizer,
-            width=w_width,
-            exponent_bias=w_exponent_bias,
+            log_quantizer, width=w_width, exponent_bias=w_exponent_bias,
         )
 
         self.x_quantizer = partial(
-            log_quantizer,
-            width=x_width,
-            exponent_bias=x_exponent_bias,
+            log_quantizer, width=x_width, exponent_bias=x_exponent_bias,
         )
 
         self.b_quantizer = partial(
-            log_quantizer,
-            width=b_width,
-            exponent_bias=b_exponent_bias,
+            log_quantizer, width=b_width, exponent_bias=b_exponent_bias,
         )
 
 

@@ -108,8 +108,7 @@ class VerificationCase:
         depth_in_num = int(self.in_num / self.tile_in_num)
         depth_out_features = int(self.out_features / self.tile_out_features)
         self.outputs = RandomSink(
-            samples=samples * depth_out_features * depth_in_num,
-            debug=debug,
+            samples=samples * depth_out_features * depth_in_num, debug=debug,
         )
         self.ref = self.sw_compute()
 
@@ -471,8 +470,7 @@ def runner():
     )
     for _ in range(1):
         runner.test(
-            hdl_toplevel="fixed_mlp",
-            test_module="fixed_mlp_tb",
+            hdl_toplevel="fixed_mlp", test_module="fixed_mlp_tb",
         )
 
 

@@ -56,11 +56,11 @@ def _fixed_group_norm_2d_model(
     logger.debug("Diff:")
     logger.debug(diff[0])
 
-    squares = diff**2
+    squares = diff ** 2
     logger.debug("Squares:")
     logger.debug(squares[0])
-    squares_int = (squares * (2**square_frac_width)).int()
-    logger.debug(squares * (2**square_frac_width))
+    squares_int = (squares * (2 ** square_frac_width)).int()
+    logger.debug(squares * (2 ** square_frac_width))
 
     sum_squares = torch.sum(squares, dim=(1, 2, 3), keepdim=True)
     sum_squares = integer_floor_quantizer(
@@ -81,10 +81,12 @@ def _fixed_group_norm_2d_model(
     logger.debug(f"{var[0]}")
 
     # Clamp down variance to isqrt width
-    var_clamp = torch.clamp(var, 0.0, ((2**isqrt_width) - 1) / (2**isqrt_frac_width))
+    var_clamp = torch.clamp(
+        var, 0.0, ((2 ** isqrt_width) - 1) / (2 ** isqrt_frac_width)
+    )
     logger.debug("Variance Clamped:")
     logger.debug(f"{var_clamp[0]}")
-    var_clamp_int = (var_clamp * (2**isqrt_frac_width)).int()
+    var_clamp_int = (var_clamp * (2 ** isqrt_frac_width)).int()
 
     # Inverse Square Root calculation
     lut_pow = ceil(log2(len(isqrt_lut)))
@@ -104,7 +106,7 @@ def _fixed_group_norm_2d_model(
     logger.debug("INV SQRT INT:")
     logger.debug(f"{inv_sqrt_int[0]}")
 
-    inv_sqrt = inv_sqrt_int / (2**isqrt_frac_width)
+    inv_sqrt = inv_sqrt_int / (2 ** isqrt_frac_width)
     logger.debug("Inverse SQRT:")
     logger.debug(f"{inv_sqrt[0]}")
 

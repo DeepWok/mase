@@ -34,9 +34,9 @@ def _integer_quantize(
         int_max = 2 ** (width - 1) - 1
     else:
         int_min = 0
-        int_max = 2**width - 1
+        int_max = 2 ** width - 1
     # thresh = 2 ** (width - 1)
-    scale = 2**frac_width
+    scale = 2 ** frac_width
 
     if isinstance(x, (Tensor, ndarray)):
         return my_clamp(my_round(x.mul(scale)), int_min, int_max).div(scale)
@@ -57,8 +57,8 @@ def _integer_floor_quantize(
         int_max = 2 ** (width - 1) - 1
     else:
         int_min = 0
-        int_max = 2**width - 1
-    scale = 2**frac_width
+        int_max = 2 ** width - 1
+    scale = 2 ** frac_width
 
     if isinstance(x, (Tensor, ndarray)):
         return my_clamp(my_floor(x.mul(scale)), int_min, int_max).div(scale)

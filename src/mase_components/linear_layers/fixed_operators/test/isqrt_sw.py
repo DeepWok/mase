@@ -13,7 +13,7 @@ def find_msb(x: int, width: int) -> int:
 def float_to_int(x: float, int_width: int, frac_width: int) -> int:
     integer = int(x)
     x -= integer
-    res = integer * (2**frac_width)
+    res = integer * (2 ** frac_width)
     for i in range(1, frac_width + 1):
         power = 2 ** (-i)
         if power <= x:
@@ -23,8 +23,8 @@ def float_to_int(x: float, int_width: int, frac_width: int) -> int:
 
 
 def int_to_float(x: int, int_width: int, frac_width: int) -> float:
-    integer = x / (2**frac_width)
-    fraction = x - integer * 2**frac_width
+    integer = x / (2 ** frac_width)
+    fraction = x - integer * 2 ** frac_width
     res = integer
 
     for i in range(1, frac_width + 1):
@@ -85,7 +85,7 @@ def fixed_lut_index_sw(x_red: int, width: int, lut_pow: int) -> int:
         res = 0
     else:
         res = x_red - 2 ** (width - 1)
-    res = res * 2**lut_pow
+    res = res * 2 ** lut_pow
     res = res / 2 ** (width - 1)
     # FORMAT OUTPUT: Q(WIDTH).0
     return int(res)
@@ -258,7 +258,7 @@ def test_sw_model():
 
 def debug_single():
     lut_pow = 5
-    lut_size = 2**lut_pow
+    lut_size = 2 ** lut_pow
     int_width = 2
     frac_width = 1
     width = int_width + frac_width

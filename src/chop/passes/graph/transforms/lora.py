@@ -10,8 +10,7 @@ logger.setLevel("INFO")
 
 
 def insert_lora_adapter_transform_pass(
-    mg: MaseGraph,
-    pass_args={},
+    mg: MaseGraph, pass_args={},
 ):
 
     rank = pass_args.get("rank", 0)
@@ -42,8 +41,7 @@ def insert_lora_adapter_transform_pass(
 
 
 def fuse_lora_weights_transform_pass(
-    mg: MaseGraph,
-    pass_args={},
+    mg: MaseGraph, pass_args={},
 ):
     for node in mg.nodes:
         target = (

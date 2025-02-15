@@ -62,10 +62,7 @@ class Memorize(BaseInitializer):
             key = row.detach().cpu().flatten().sign().numpy().tolist()
             new_weights.append(key)
         new_weights = torch.tensor(
-            new_weights,
-            dtype=torch.float32,
-            requires_grad=True,
-            device=self.device,
+            new_weights, dtype=torch.float32, requires_grad=True, device=self.device,
         ).view(-1, self.kk)
         return new_weights
 

@@ -58,7 +58,7 @@ class Attention(nn.Module):
         self.dim = dim
         self.num_heads = num_heads
         head_dim = dim // num_heads
-        self.scale = qk_scale or head_dim**-0.5
+        self.scale = qk_scale or head_dim ** -0.5
 
         self.q = nn.Linear(dim, dim, bias=qkv_bias)
         self.kv = nn.Linear(dim, dim * 2, bias=qkv_bias)
@@ -182,12 +182,7 @@ class PatchEmbed(nn.Module):
 
 @register_mase_model(
     "pvt",
-    checkpoints=[
-        "pvt_tiny",
-        "pvt_small",
-        "pvt_medium",
-        "pvt_large",
-    ],
+    checkpoints=["pvt_tiny", "pvt_small", "pvt_medium", "pvt_large",],
     model_source="vision_others",
     task_type="vision",
     image_classification=True,

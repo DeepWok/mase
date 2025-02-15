@@ -281,10 +281,7 @@ class LanguageModelingDatasetAlpaca(LanguageModelingBase):
 
         prompt_len = prompt_tokenized.ne(tokenizer.pad_token_id).sum().item()
         target_tokenized[:prompt_len] = ignore_id
-        return dict(
-            input_ids=input_ids,
-            labels=target_tokenized,
-        )
+        return dict(input_ids=input_ids, labels=target_tokenized,)
 
     def prepare_data(self):
         dataset_dict = self._download_dataset()
@@ -316,10 +313,7 @@ class LanguageModelingDatasetAlpaca(LanguageModelingBase):
         dataset_dict = self._download_dataset()
         dataset_dict = dataset_dict["train"].train_test_split(test_size=0.1, seed=42)
         dataset_dict = hf_datasets.DatasetDict(
-            {
-                "train": dataset_dict["train"],
-                "validation": dataset_dict["test"],
-            }
+            {"train": dataset_dict["train"], "validation": dataset_dict["test"],}
         )
         dataset_dict = dataset_dict.map(
             function=partial(

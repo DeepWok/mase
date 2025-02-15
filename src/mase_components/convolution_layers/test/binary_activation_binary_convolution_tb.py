@@ -244,9 +244,7 @@ class VerificationCase:
             bias    = \n\
             {} \n\
             ".format(
-                data,
-                weight,
-                bias,
+                data, weight, bias,
             )
         )
         for i in range(self.samples):

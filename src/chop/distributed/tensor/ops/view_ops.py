@@ -238,9 +238,7 @@ def dim_flatten(ndim: int, start_dim=0, end_dim=-1) -> DimMap:
 
 
 def dim_movedim(
-    ndim: int,
-    input: Union[int, Sequence[int]],
-    destination: Union[int, Sequence[int]],
+    ndim: int, input: Union[int, Sequence[int]], destination: Union[int, Sequence[int]],
 ) -> DimMap:
     input = normalize_dims(input, ndim)
     destination = normalize_dims(destination, ndim)
@@ -606,10 +604,7 @@ def register_op_strategy_map(
             input_src_spec = input_placement_strategy.output_spec
 
             input_tgt_placements, output_placements = propagate_shape_and_sharding(
-                input_src_spec.placements,
-                tuple(global_in_shape),
-                rules,
-                mesh.shape,
+                input_src_spec.placements, tuple(global_in_shape), rules, mesh.shape,
             )
 
             # TODO: optimize this. we shouldn't simply blindly replicate

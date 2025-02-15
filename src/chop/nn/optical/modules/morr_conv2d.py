@@ -86,6 +86,7 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
         morr_init = config.get("morr_init", True)
         trainable_morr_bias = config.get("trainable_morr_bias", False)
         trainable_morr_scale = config.get("trainable_morr_scale", False)
+        device = config.get("device", device)
 
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -108,7 +109,7 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
 
         self.v_max = 10.8
         self.v_pi = 4.36
-        self.gamma = np.pi / self.v_pi**2
+        self.gamma = np.pi / self.v_pi ** 2
         self.w_bit = 32
         self.in_bit = 32
         self.MORRConfig = MORRConfig
@@ -122,7 +123,7 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
         ### calculate FWHM (rad)
         self.morr_fwhm = (
             -4
-            * np.pi**2
+            * np.pi ** 2
             * MORRConfig.radius
             * MORRConfig.effective_index
             * (
@@ -240,7 +241,7 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
                 (t2 - t1) / (2.4 * self.morr_fwhm)
             ).item()  ## 0~2.4 FWHM slope as a linear approximation
 
-            self.sigma_out_scale = 4 / (3 * self.grid_dim_x**0.5 * g * self.morr_fwhm)
+            self.sigma_out_scale = 4 / (3 * self.grid_dim_x ** 0.5 * g * self.morr_fwhm)
             self.out_scale_quant_gain = None
             init.normal_(self.morr_output_scale, 0, self.sigma_out_scale)
 

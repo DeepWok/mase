@@ -6,9 +6,7 @@ from torch.nn import functional as F
 
 from transformers.models.bert.modeling_bert import BertSelfAttention
 
-from chop.nn.quantized.modules.linear import (
-    LinearInteger,
-)
+from chop.nn.quantized.modules.linear import LinearInteger
 from chop.nn.quantized.functional import fixed_softermax
 from chop.nn.quantized.functional import matmul_integer
 

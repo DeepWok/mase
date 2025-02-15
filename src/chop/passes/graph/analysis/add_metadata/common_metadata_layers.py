@@ -231,10 +231,7 @@ func_data = {
     },
     # Inserted ops from the replace_method_with_function pass
     "torch_size": {"input": "data_in", "dim": "config"},
-    "torch_contiguous": {
-        "input": "data_in",
-        "memory_format": "config",
-    },
+    "torch_contiguous": {"input": "data_in", "memory_format": "config",},
     # arbitrary length - support up to 4
     "torch_expand": {
         "input": "data_in",
@@ -257,11 +254,7 @@ func_data = {
         "shape_2": "config",
         "shape_3": "config",
     },
-    "torch_split": {
-        "input": "data_in",
-        "split_size": "config",
-        "dim": "config",
-    },
+    "torch_split": {"input": "data_in", "split_size": "config", "dim": "config",},
     "torch_permute": {
         "input": "data_in",
         "dim_0": "config",
@@ -269,11 +262,7 @@ func_data = {
         "dim_2": "config",
         "dim_3": "config",
     },
-    "torch_transpose": {
-        "input": "data_in",
-        "dim0": "config",
-        "dim1": "config",
-    },
+    "torch_transpose": {"input": "data_in", "dim0": "config", "dim1": "config",},
     # DTensor ops
     "dtensor_arange": {
         "device_mesh": "config",
@@ -287,9 +276,7 @@ func_data = {
         "requires_grad": "config",
     },
     # tensor constructor
-    "tensor": {
-        "data": "data_in",
-    },
+    "tensor": {"data": "data_in",},
     # https://pytorch.org/docs/stable/generated/torch.nn.functional.dropout.html
     "dropout": {
         "input": "data_in",
@@ -353,10 +340,7 @@ module_data = {
     "softmax": {"input": "data_in"},
     "gelu": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html
-    "crossentropyloss": {
-        "input": "data_in",
-        "target": "data_in",
-    },
+    "crossentropyloss": {"input": "data_in", "target": "data_in",},
     # chop.nn.modules.lora.LoRALinear
     "loralinear": {"input": "data_in"},
     "grouped_query_attention": {"input": "data_in"},
@@ -405,24 +389,15 @@ method_data = {
         "size_3": "config",
     },
     # Tensor.max(dim=None, keepdim=False)
-    "max": {
-        "dim": "config",
-        "keepdim": "config",
-    },
+    "max": {"dim": "config", "keepdim": "config",},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.sum.html
-    "sum": {
-        "dim": "config",
-        "keepdim": "config",
-    },
+    "sum": {"dim": "config", "keepdim": "config",},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.round.html
     "round": {},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.floor.html
     "floor": {},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.clamp.html
-    "clamp": {
-        "min": "config",
-        "max": "config",
-    },
+    "clamp": {"min": "config", "max": "config",},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.dim.html
     "dim": {},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.permute.html#torch.Tensor.permute
@@ -451,11 +426,7 @@ method_data = {
     # https://pytorch.org/docs/stable/generated/torch.Tensor.type_as.html
     "type_as": {"tensor": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.index_select.html
-    "index_select": {
-        "input": "data_in",
-        "dim": "config",
-        "index": "data_in",
-    },
+    "index_select": {"input": "data_in", "dim": "config", "index": "data_in",},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.detach.html
     "detach": {"input": "data_in"},
 }
@@ -508,11 +479,7 @@ def deepgetattr(obj, attr):
 
 
 def _annotate_arg_metadata(
-    meta: MaseMetadata,
-    args: list,
-    kwargs: dict,
-    func_data: dict,
-    add_value: bool,
+    meta: MaseMetadata, args: list, kwargs: dict, func_data: dict, add_value: bool,
 ):
     """
     Analyse target args and kwargs received from shape propagation to annotate combined meta["mase"]["args"]
@@ -621,9 +588,7 @@ def _annotate_arg_metadata(
 
 
 def _annotate_result_metadata(
-    meta: MaseMetadata,
-    result,
-    add_value: bool,
+    meta: MaseMetadata, result, add_value: bool,
 ) -> MaseMetadata:
     """
     Analyse the result from running the target to annotate the meta["mase"]["results"] dictionary with metadata.

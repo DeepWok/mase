@@ -51,7 +51,7 @@ class FixedUnsignedCastTB(Testbench):
         )
 
     def generate_inputs(self):
-        return torch.arange(2**self.IN_WIDTH)
+        return torch.arange(2 ** self.IN_WIDTH)
 
     def rounding_mode(self):
         if self.ROUND_FLOOR:
@@ -64,10 +64,10 @@ class FixedUnsignedCastTB(Testbench):
             raise Exception("Rounding mode not recognised.")
 
     def model(self, inputs):
-        float_input = inputs / (2**self.IN_FRAC_WIDTH)
-        scaled_float = float_input * (2**self.OUT_FRAC_WIDTH)
+        float_input = inputs / (2 ** self.IN_FRAC_WIDTH)
+        scaled_float = float_input * (2 ** self.OUT_FRAC_WIDTH)
         rounded = torch.floor(scaled_float)
-        model_out = torch.clamp(rounded, 0, (2**self.OUT_WIDTH - 1))
+        model_out = torch.clamp(rounded, 0, (2 ** self.OUT_WIDTH - 1))
         return model_out
 
     async def run_test(self):

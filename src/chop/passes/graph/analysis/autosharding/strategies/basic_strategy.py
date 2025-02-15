@@ -86,10 +86,7 @@ class EinsumDims:
 
 
 def gen_einsum_strategies(
-    equation: str,
-    mesh: tuple,
-    *,
-    linearity: bool = False,
+    equation: str, mesh: tuple, *, linearity: bool = False,
 ) -> OpStrategy:
     """
     Generate a strategy list for the ops that follow einsum style notation.

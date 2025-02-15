@@ -22,7 +22,7 @@ class VerificationCase(Testbench):
         self.assign_self_params(["WIDTH", "LUT_POW"])
 
     def generate_inputs(self):
-        samples = 2**self.WIDTH
+        samples = 2 ** self.WIDTH
         data_x = []
         msb_indices = []
         for x in range(samples):
@@ -94,7 +94,6 @@ import pytest
 
 @pytest.mark.skip(reason="Needs to be fixed.")
 def test_fixed_lut_index():
-
     def full_sweep():
         parameter_list = []
         lut_pow = 5

@@ -11,9 +11,7 @@ from .compute import (
     toeplitz,
 )
 
-from .initializer import (
-    morr_uniform_,
-)
+from .initializer import morr_uniform_
 
 from .quantize import (
     input_quantize_fn,

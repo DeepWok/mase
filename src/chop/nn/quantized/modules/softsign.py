@@ -121,9 +121,7 @@ class SoftsignLog(_SoftsignBase):
             config["data_in_exponent_bias"],
         )
         self.x_quantizer = partial(
-            log_quantizer,
-            width=x_width,
-            exponent_bias=x_exponent_bias,
+            log_quantizer, width=x_width, exponent_bias=x_exponent_bias,
         )
 
 
@@ -141,9 +139,7 @@ class SoftsignLog(_SoftsignBase):
             config["data_in_exponent_bias"],
         )
         self.x_quantizer = partial(
-            log_quantizer,
-            width=x_width,
-            exponent_bias=x_exponent_bias,
+            log_quantizer, width=x_width, exponent_bias=x_exponent_bias,
         )
 
 

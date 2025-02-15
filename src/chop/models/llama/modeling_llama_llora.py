@@ -195,10 +195,7 @@ def apply_rotary_pos_emb(q, k, cos, sin, position_ids):
 
 class LlamaMLP(nn.Module):
     def __init__(
-        self,
-        hidden_size: int,
-        intermediate_size: int,
-        hidden_act: str,
+        self, hidden_size: int, intermediate_size: int, hidden_act: str,
     ):
         super().__init__()
         # fmt: off

@@ -6,9 +6,7 @@ import math
 from typing import Optional, Tuple
 from functools import partial
 
-from chop.nn.quantized.functional.matmul import (
-    generic_matmul_integer,
-)
+from chop.nn.quantized.functional.matmul import generic_matmul_integer
 from chop.nn.quantizers.integer import integer_quantizer
 
 
@@ -65,10 +63,7 @@ class BertSelfAttentionHeadInteger(_BertSelfAttentionHeadBase):
     def __init__(self, config, q_config: dict = None) -> None:
         super().__init__(config)
 
-        self.query_quantizer = partial(
-            integer_quantizer,
-            **q_config,
-        )
+        self.query_quantizer = partial(integer_quantizer, **q_config,)
         self.key_quantizer = partial(integer_quantizer, **q_config)
         self.value_quantizer = partial(integer_quantizer, **q_config)
 

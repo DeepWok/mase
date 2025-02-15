@@ -2,13 +2,7 @@ from .utils import clog2, get_fixed_ty, new_fixed_ty
 
 
 def buffer_gen(
-    writer,
-    x_width=16,
-    x_frac_width=8,
-    x_row=3,
-    x_col=2,
-    x_row_depth=3,
-    x_col_depth=2,
+    writer, x_width=16, x_frac_width=8, x_row=3, x_col=2, x_row_depth=3, x_col_depth=2,
 ):
     """
     This script generates a buffer in HLS

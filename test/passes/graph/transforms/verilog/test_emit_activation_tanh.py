@@ -75,11 +75,7 @@ def test_emit_activation_tanh():
     mg, _ = add_common_metadata_analysis_pass(mg, {"dummy_in": dummy_in})
 
     config_file = os.path.join(
-        os.path.abspath(""),
-        "configs",
-        "tests",
-        "quantize",
-        "fixed.toml",
+        os.path.abspath(""), "configs", "tests", "quantize", "fixed.toml",
     )
     with open(config_file, "r") as f:
         quan_args = toml.load(f)["passes"]["quantize"]

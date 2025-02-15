@@ -244,10 +244,12 @@ class IFNode(BaseNode):
             self.v_float_to_tensor(x_seq[0])
             if self.v_reset is None:
                 if self.store_v_seq:
-                    spike_seq, self.v, self.v_seq = (
-                        self.jit_eval_multi_step_forward_soft_reset_with_v_seq(
-                            x_seq, self.v, self.v_threshold
-                        )
+                    (
+                        spike_seq,
+                        self.v,
+                        self.v_seq,
+                    ) = self.jit_eval_multi_step_forward_soft_reset_with_v_seq(
+                        x_seq, self.v, self.v_threshold
                     )
                 else:
                     spike_seq, self.v = self.jit_eval_multi_step_forward_soft_reset(
@@ -255,10 +257,12 @@ class IFNode(BaseNode):
                     )
             else:
                 if self.store_v_seq:
-                    spike_seq, self.v, self.v_seq = (
-                        self.jit_eval_multi_step_forward_hard_reset_with_v_seq(
-                            x_seq, self.v, self.v_threshold, self.v_reset
-                        )
+                    (
+                        spike_seq,
+                        self.v,
+                        self.v_seq,
+                    ) = self.jit_eval_multi_step_forward_hard_reset_with_v_seq(
+                        x_seq, self.v, self.v_threshold, self.v_reset
                     )
                 else:
                     spike_seq, self.v = self.jit_eval_multi_step_forward_hard_reset(

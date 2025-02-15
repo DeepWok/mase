@@ -18,12 +18,7 @@ torch_matmul = torch.matmul
 class LinearFunction(torch.autograd.Function):
     @staticmethod
     def forward(
-        ctx,
-        input,
-        weight,
-        bias=None,
-        mx_specs=None,
-        name=None,
+        ctx, input, weight, bias=None, mx_specs=None, name=None,
     ):
         # element-wise quantize for input
         bf_in = quantize_elemwise_op(
@@ -90,9 +85,7 @@ class LinearFunction(torch.autograd.Function):
         in_dim = weight.shape[1]
 
         grad_output = quantize_elemwise_op(
-            grad_output,
-            mx_specs=ctx.mx_specs,
-            round=ctx.mx_specs["round_grad_input"],
+            grad_output, mx_specs=ctx.mx_specs, round=ctx.mx_specs["round_grad_input"],
         )
 
         #####################################################
@@ -122,9 +115,7 @@ class LinearFunction(torch.autograd.Function):
         # Compute grad_weight
         grad_weight = torch_matmul(qex_grad_output.transpose(0, 1), qex_input)
         grad_weight = quantize_elemwise_op(
-            grad_weight,
-            mx_specs=ctx.mx_specs,
-            round=ctx.mx_specs["round_grad_weight"],
+            grad_weight, mx_specs=ctx.mx_specs, round=ctx.mx_specs["round_grad_weight"],
         )
 
         #####################################################
@@ -150,9 +141,7 @@ class LinearFunction(torch.autograd.Function):
         # Compute grad_input
         grad_input = torch_matmul(qos_grad_output, qos_weight)
         grad_input = quantize_elemwise_op(
-            grad_input,
-            mx_specs=ctx.mx_specs,
-            round=ctx.mx_specs["round_grad_input"],
+            grad_input, mx_specs=ctx.mx_specs, round=ctx.mx_specs["round_grad_input"],
         )
 
         #####################################################
@@ -172,11 +161,7 @@ class LinearFunction(torch.autograd.Function):
 
 
 def linear(
-    input,
-    weight,
-    bias=None,
-    mx_specs=None,
-    name=None,
+    input, weight, bias=None, mx_specs=None, name=None,
 ):
     mx_assert_test(mx_specs)
     if mx_specs is None:
@@ -189,12 +174,7 @@ def linear(
 
 class Linear(torch.nn.Linear):
     def __init__(
-        self,
-        in_features,
-        out_features,
-        bias=True,
-        mx_specs=None,
-        name=None,
+        self, in_features, out_features, bias=True, mx_specs=None, name=None,
     ):
         mx_assert_test(mx_specs)
         self.mx_none = mx_specs is None

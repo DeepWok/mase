@@ -499,8 +499,7 @@ class EfficientNet(nn.Module):
 
 
 def _efficientnet_conf(
-    arch: str,
-    **kwargs: Any,
+    arch: str, **kwargs: Any,
 ) -> Tuple[Sequence[Union[MBConvConfig, FusedMBConvConfig]], Optional[int]]:
     inverted_residual_setting: Sequence[Union[MBConvConfig, FusedMBConvConfig]]
     if arch.startswith("efficientnet_b"):
@@ -592,9 +591,7 @@ def _efficientnet(
 
 
 def get_efficientnet_b0(
-    info: Dict,
-    pretrained: bool = False,
-    **kwargs: Any,
+    info: Dict, pretrained: bool = False, **kwargs: Any,
 ):
     num_classes = info.num_classes
     if pretrained:
@@ -616,9 +613,7 @@ def get_efficientnet_b0(
 
 
 def get_efficientnet_b3(
-    info: Dict,
-    pretrained: bool = False,
-    **kwargs: Any,
+    info: Dict, pretrained: bool = False, **kwargs: Any,
 ):
     num_classes = info.num_classes
     if pretrained:
@@ -641,9 +636,7 @@ def get_efficientnet_b3(
 
 
 def get_efficientnet_v2_s(
-    info: Dict,
-    pretrained: bool = False,
-    **kwargs: Any,
+    info: Dict, pretrained: bool = False, **kwargs: Any,
 ):
     num_classes = info.num_classes
     if pretrained:
@@ -663,9 +656,7 @@ def get_efficientnet_v2_s(
 
 
 def get_efficientnet_v2_m(
-    info: Dict,
-    pretrained: bool = False,
-    **kwargs: Any,
+    info: Dict, pretrained: bool = False, **kwargs: Any,
 ):
     num_classes = info.num_classes
     if pretrained:
@@ -685,9 +676,7 @@ def get_efficientnet_v2_m(
 
 
 def get_efficientnet_v2_l(
-    info: Dict,
-    pretrained: bool = False,
-    **kwargs: Any,
+    info: Dict, pretrained: bool = False, **kwargs: Any,
 ):
     num_classes = info.num_classes
     if pretrained:

@@ -9,9 +9,7 @@ from cocotb.triggers import Timer
 from mase_cocotb.runner import mase_runner
 
 
-from mase_components.helper.generate_memory import (
-    generate_sv_lut,
-)
+from mase_components.helper.generate_memory import generate_sv_lut
 
 
 DATA_IN_0_PRECISION_1 = 8
@@ -31,13 +29,13 @@ async def cocotb_test_fixed_gelu(dut):
     resolution = (max_value - min_value) / (num_values - 1)
 
     # Convert the resolution into fixed-point format
-    resolution_fixed_point = int(resolution * (2**DATA_IN_0_PRECISION_1))
+    resolution_fixed_point = int(resolution * (2 ** DATA_IN_0_PRECISION_1))
 
     # Generate the equidistant values
     values = np.linspace(min_value, max_value, num_values)
 
     # Convert values to fixed-point format
-    values_fixed_point = np.round(values * (2**DATA_IN_0_PRECISION_1)).astype(int)
+    values_fixed_point = np.round(values * (2 ** DATA_IN_0_PRECISION_1)).astype(int)
 
     tensor_tanh = torch.Tensor(values)
 
@@ -48,9 +46,9 @@ async def cocotb_test_fixed_gelu(dut):
 
     for i in range(87):
         # a = tanh_values[i]
-        b = max_value * (2**DATA_IN_0_PRECISION_1) - resolution_fixed_point * (i - 1)
+        b = max_value * (2 ** DATA_IN_0_PRECISION_1) - resolution_fixed_point * (i - 1)
 
-        a = [b / (2**DATA_IN_0_PRECISION_1)]
+        a = [b / (2 ** DATA_IN_0_PRECISION_1)]
         tensor_tanh = torch.Tensor(a)
         c = model(tensor_tanh)
 
@@ -58,7 +56,7 @@ async def cocotb_test_fixed_gelu(dut):
 
         # Scale Tanh output to fixed-point range and convert to integers
         scaled_value = np.round(
-            tanh_value_numpy * (2**DATA_OUT_0_PRECISION_1)
+            tanh_value_numpy * (2 ** DATA_OUT_0_PRECISION_1)
         ).astype(int)
 
         dut.data_in_0[0].value = b

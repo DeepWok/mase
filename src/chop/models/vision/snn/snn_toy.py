@@ -26,9 +26,7 @@ class SNN_toy(nn.Module):
 
 # Getters ------------------------------------------------------------------------------
 def get_snn_toy(
-    info,
-    pretrained=False,
-    **kwargs: Any,
+    info, pretrained=False, **kwargs: Any,
 ):
     tau = info["tau"]
     num_classes = info.num_classes

@@ -27,7 +27,7 @@ class FifoTB(Testbench):
         # self.output_monitor.log.setLevel("DEBUG")
 
     def generate_inputs(self, num=20):
-        return [randint(0, (2**self.DATA_WIDTH) - 1) for _ in range(num)]
+        return [randint(0, (2 ** self.DATA_WIDTH) - 1) for _ in range(num)]
 
 
 @cocotb.test()
@@ -120,12 +120,7 @@ async def cocotb_test_soak(dut):
 @pytest.mark.dev
 def test_fifo():
     mase_runner(
-        module_param_list=[
-            {"DEPTH": 1},
-            {"DEPTH": 7},
-            {"DEPTH": 8},
-            {"DEPTH": 81},
-        ],
+        module_param_list=[{"DEPTH": 1}, {"DEPTH": 7}, {"DEPTH": 8}, {"DEPTH": 81},],
         trace=True,
     )
 

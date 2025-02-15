@@ -35,10 +35,7 @@ DEFAULT_CIFAR_PREPROCESS_ARGS = {
 
 def _get_cifar_default_transform(train: bool, mean: tuple[float], std: tuple[float]):
     if train:
-        transform = create_transform(
-            **DEFAULT_CIFAR_PREPROCESS_ARGS,
-            is_training=True,
-        )
+        transform = create_transform(**DEFAULT_CIFAR_PREPROCESS_ARGS, is_training=True,)
         transform.transforms[0] = tv_transforms.RandomCrop(
             DEFAULT_CIFAR_PREPROCESS_ARGS["input_size"], padding=4
         )

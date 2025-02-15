@@ -106,10 +106,7 @@ mase_hls  ...
 
     parser = ArgumentParser(usage=USAGE)
     parser.add_argument(
-        "--op",
-        dest="op",
-        default=None,
-        help="Op name to explore",
+        "--op", dest="op", default=None, help="Op name to explore",
     )
     parser.add_argument(
         "--dir",

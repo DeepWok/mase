@@ -52,9 +52,7 @@ def test_statistic_profiler():
 
     dataset_info = get_dataset_info("cifar10")
     model = get_model(
-        checkpoint="resnet18",
-        pretrained=False,
-        dataset_info=dataset_info,
+        checkpoint="resnet18", pretrained=False, dataset_info=dataset_info,
     )
 
     dummy_in = {"x": next(iter(datamodule.train_dataloader()))[0]}
@@ -68,15 +66,9 @@ def test_statistic_profiler():
 
     pass_arg = {
         "by": "type",
-        "target_weight_nodes": [
-            "conv2d",
-        ],
-        "target_activation_nodes": [
-            "relu",
-        ],
-        "weight_statistics": {
-            "variance_precise": {"device": "cpu", "dims": "all"},
-        },
+        "target_weight_nodes": ["conv2d",],
+        "target_activation_nodes": ["relu",],
+        "weight_statistics": {"variance_precise": {"device": "cpu", "dims": "all"},},
         "activation_statistics": {
             "variance_precise": {"device": "cpu", "dims": "all"},
         },

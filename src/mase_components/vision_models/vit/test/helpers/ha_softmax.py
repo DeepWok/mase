@@ -5,8 +5,8 @@ from chop.nn.quantizers import integer_quantizer as _integer_quantize
 
 
 def quantize_to_int(x: Tensor, width: int, frac_width: int):
-    x = _integer_quantize(x, width, frac_width) * (2**frac_width)
-    x = x.int() & (2**width - 1)
+    x = _integer_quantize(x, width, frac_width) * (2 ** frac_width)
+    x = x.int() & (2 ** width - 1)
     return x
 
 
@@ -25,7 +25,7 @@ def twos_complement_to_float(binary_string: str, width: int, frac_width: int):
         integer_magnitude = -(2 ** (width - 1)) + integer_magnitude
 
     # Calculate scaling factor
-    scaling_factor = 2**frac_width
+    scaling_factor = 2 ** frac_width
 
     # Calculate floating-point value
     float_value = integer_magnitude / scaling_factor
@@ -79,8 +79,7 @@ def generate_table_div_software(width, out_width, out_frac_width):
 
 class QHashSoftmax(torch.nn.Module):
     def __init__(
-        self,
-        config,
+        self, config,
     ):
         super(QHashSoftmax, self).__init__()
         self.in_width = config["data_in_width"]
@@ -109,7 +108,7 @@ class QHashSoftmax(torch.nn.Module):
         # quantize to div_width
         one_over_div = _integer_quantize(exp_sum // exp, self.div_width + 1, 0)
         one_over_div = torch.where(
-            exp == 0, torch.tensor(2**self.div_width - 1), one_over_div
+            exp == 0, torch.tensor(2 ** self.div_width - 1), one_over_div
         )
         one_over_div = torch.tensor(one_over_div, dtype=int)
 

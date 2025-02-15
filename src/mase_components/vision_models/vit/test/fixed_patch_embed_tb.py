@@ -50,14 +50,14 @@ class VerificationCase:
         self.pe_unroll_kernel_out = 3
         self.pe_unroll_in_c = 3
         self.pe_unroll_embed_dim = 8
-        self.num_patch = int(self.in_y * self.in_x // (self.patch_size**2))
+        self.num_patch = int(self.in_y * self.in_x // (self.patch_size ** 2))
 
         # self.num_classes = 10
         # self.head_unroll_out_x = 5
         self.samples = samples
 
         self.pe_iter_weight = int(
-            (self.patch_size**2)
+            (self.patch_size ** 2)
             * self.in_c
             * self.embed_dim
             / self.pe_unroll_kernel_out
@@ -247,10 +247,7 @@ class VerificationCase:
             unroll_out_channels,
         ).permute(0, 3, 1, 4, 2)
 
-        w_tensor = w_tensor.reshape(
-            -1,
-            unroll_out_channels * unroll_kernel_out,
-        )
+        w_tensor = w_tensor.reshape(-1, unroll_out_channels * unroll_kernel_out,)
         w_in = w_tensor.type(torch.int).flip(0).tolist()
         # bias_pack
         bias_tensor = bias.repeat(samples, 1).reshape(-1, unroll_out_channels)
