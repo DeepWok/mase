@@ -19,6 +19,7 @@ from transformers.models.llama.modeling_llama import (
 )
 
 import logging
+from torch.utils.tensorboard import SummaryWriter
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +28,7 @@ class LlamaAttentionLSQInteger(nn.Module):
     """Multi-headed attention from 'Attention Is All You Need' paper"""
 
     def __init__(self, config: LlamaConfig, layer_idx: int, q_config: dict = None):
+        tfwriter = SummaryWriter("runs/llamaAttention" + str(layer_idx))
         super().__init__()
         self.config = config
         self.layer_idx = layer_idx
@@ -61,11 +63,19 @@ class LlamaAttentionLSQInteger(nn.Module):
             bias=config.attention_bias,
         )
 
-        self.query_quan = LSQInteger(level=q_config["level"], sym=True)
-        self.key_quan = LSQInteger(level=q_config["level"], sym=True)
-        self.value_quan = LSQInteger(level=q_config["level"], sym=True)
-        self.attn_quan = LSQInteger(level=q_config["level"], sym=False)
-        self.after_attn_quan = LSQInteger(level=q_config["level"], sym=False)
+        self.query_quan = LSQInteger(
+            level=q_config["level"], sym=True, tfwriter=tfwriter
+        )
+        self.key_quan = LSQInteger(level=q_config["level"], sym=True, tfwriter=tfwriter)
+        self.value_quan = LSQInteger(
+            level=q_config["level"], sym=True, tfwriter=tfwriter
+        )
+        self.attn_quan = LSQInteger(
+            level=q_config["level"], sym=False, tfwriter=tfwriter
+        )
+        self.after_attn_quan = LSQInteger(
+            level=q_config["level"], sym=False, tfwriter=tfwriter
+        )
 
     def forward(
         self,
@@ -123,27 +133,6 @@ class LlamaAttentionLSQInteger(nn.Module):
         attn_output = torch.matmul(attn_weights, value_states)
         attn_output = self.after_attn_quan(attn_output)
         attn_output = attn_output.transpose(1, 2).contiguous()
-
-        # attention_interface: Callable = eager_attention_forward
-        # if self.config._attn_implementation != "eager":
-        #     if self.config._attn_implementation == "sdpa" and kwargs.get("output_attentions", False):
-        #         logger.warning_once(
-        #             "`torch.nn.functional.scaled_dot_product_attention` does not support `output_attentions=True`. Falling back to "
-        #             'eager attention. This warning can be removed using the argument `attn_implementation="eager"` when loading the model.'
-        #         )
-        #     else:
-        #         attention_interface = ALL_ATTENTION_FUNCTIONS[self.config._attn_implementation]
-
-        # attn_output, attn_weights = attention_interface(
-        #     self,
-        #     query_states,
-        #     key_states,
-        #     value_states,
-        #     attention_mask,
-        #     dropout=0.0 if not self.training else self.attention_dropout,
-        #     scaling=self.scaling,
-        #     **kwargs,
-        # )
 
         attn_output = attn_output.reshape(*input_shape, -1).contiguous()
         attn_output = self.o_proj(attn_output)
