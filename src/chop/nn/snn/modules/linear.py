@@ -19,6 +19,7 @@ class Linear(nn.Linear, base.StepModule):
         super().__init__(in_features, out_features, bias)
         self.step_mode = step_mode
 
+
 # TODO: Merge this with StepModule?
 class LinearUnfoldBias(nn.Linear):
     def __init__(

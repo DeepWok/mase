@@ -1,6 +1,7 @@
 import math
 import torch
 import torch.nn as nn
+from torch.utils.tensorboard import SummaryWriter
 
 
 def grad_scale(x, scale):
@@ -60,8 +61,8 @@ class LSQInteger(nn.Module):
         self.s = nn.Parameter(torch.tensor(1.0))
         self.batch_init = 20
         self.init_state = 0
-        self.debug = False
-        self.tfwriter = None
+        self.debug = True
+        self.tfwriter = kwargs["tfwriter"] if "tfwriter" in kwargs else None
         self.global_step = 0.0
         self.name = "LSQInteger"
 
@@ -133,7 +134,7 @@ class LSQInteger(nn.Module):
                 .cpu(),
                 global_step=self.global_step,
             )
-            self.debug = False
+            # self.debug = False
             self.tfwriter = None
             self.name = ""
             self.global_step = 0.0
