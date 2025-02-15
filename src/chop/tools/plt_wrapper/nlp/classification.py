@@ -41,9 +41,7 @@ class NLPClassificationModelWrapper(WrapperBase):
             )
         else:
             outputs = self.model(
-                input_ids,
-                attention_mask=attention_mask,
-                labels=labels,
+                input_ids, attention_mask=attention_mask, labels=labels,
             )
 
         return outputs

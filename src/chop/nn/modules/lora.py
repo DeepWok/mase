@@ -93,11 +93,7 @@ class LoraLayer:
 class LinearLora(nn.Linear, LoraLayer):
     # Lora implemented in a dense layer
     def __init__(
-        self,
-        in_features: int,
-        out_features: int,
-        config: dict = None,
-        **kwargs,
+        self, in_features: int, out_features: int, config: dict = None, **kwargs,
     ):
         self.config = config
         init_lora_weights = self.config.get("init_lora_weights", True)
@@ -222,12 +218,7 @@ def mark_only_lora_as_trainable(model: nn.Module, bias: str = "none") -> None:
 # Simple Lora implementation from https://pytorch.org/torchtune/stable/tutorials/lora_finetune.html
 class LoRALinear(nn.Module):
     def __init__(
-        self,
-        in_dim: int,
-        out_dim: int,
-        rank: int,
-        alpha: float,
-        dropout: float,
+        self, in_dim: int, out_dim: int, rank: int, alpha: float, dropout: float,
     ):
         super().__init__()
         # These are the weights from the original pretrained model

@@ -50,16 +50,11 @@ def convolution_rules(op_schema: OpSchema) -> OutputSharding:
     pending_sums = input_spec.sums
 
     tensor_meta = TensorMeta(
-        torch.Size(output_shape),
-        output_stride,
-        input_spec.tensor_meta.dtype,
+        torch.Size(output_shape), output_stride, input_spec.tensor_meta.dtype,
     )
     return OutputSharding(
         _DTensorSpec.from_dim_map(
-            input_spec.mesh,
-            output_dim_map,
-            pending_sums,
-            tensor_meta=tensor_meta,
+            input_spec.mesh, output_dim_map, pending_sums, tensor_meta=tensor_meta,
         )
     )
 
@@ -88,22 +83,14 @@ def convolution_backward_rules(op_schema: OpSchema) -> OutputSharding:
     assert input_spec.tensor_meta is not None
     weight_tensor_meta = weight_spec.tensor_meta
     bias_tensor_meta = TensorMeta(
-        torch.Size(bias_shape_opt),
-        (1,),
-        input_spec.tensor_meta.dtype,
+        torch.Size(bias_shape_opt), (1,), input_spec.tensor_meta.dtype,
     )
 
     grad_input_spec = input_spec
     grad_weight_spec = _DTensorSpec.from_dim_map(
-        input_spec.mesh,
-        [-1, -1, -1, -1],
-        [0],
-        tensor_meta=weight_tensor_meta,
+        input_spec.mesh, [-1, -1, -1, -1], [0], tensor_meta=weight_tensor_meta,
     )
     grad_bias_spec = _DTensorSpec.from_dim_map(
-        input_spec.mesh,
-        [-1],
-        [0],
-        tensor_meta=bias_tensor_meta,
+        input_spec.mesh, [-1], [0], tensor_meta=bias_tensor_meta,
     )
     return OutputSharding([grad_input_spec, grad_weight_spec, grad_bias_spec])

@@ -46,9 +46,7 @@ class NLPLanguageModelingModelWrapper(WrapperBase):
 
         self.log("train_loss_step", loss, prog_bar=True)
         self.log(
-            "train_perplexity_step",
-            perplexity,
-            prog_bar=True,
+            "train_perplexity_step", perplexity, prog_bar=True,
         )
 
         return loss

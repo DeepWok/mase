@@ -92,7 +92,7 @@ def get_factors(n):
             set(
                 functools.reduce(
                     list.__add__,
-                    ([i, n // i] for i in range(1, int(n**0.5) + 1) if n % i == 0),
+                    ([i, n // i] for i in range(1, int(n ** 0.5) + 1) if n % i == 0),
                 )
             )
         )
@@ -184,9 +184,7 @@ def init_Conv2dLUT_weight(
     # Initialize the weight based on the trained binaried network
     # weight shape of the lagrange trainer [tables_count, self.kk]
     input_mask = new_module.input_mask.reshape(
-        -1,
-        in_channels * kernel_size[0] * kernel_size[1] * k,
-        3,
+        -1, in_channels * kernel_size[0] * kernel_size[1] * k, 3,
     )  # [oc, k * kh * kw * ic ,3[ic,kh,kw]]
     expanded_original_weight = original_weight[
         np.arange(out_channels)[:, np.newaxis],

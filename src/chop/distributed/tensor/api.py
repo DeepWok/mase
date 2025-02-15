@@ -64,9 +64,7 @@ aten = torch.ops.aten
 class _ToTorchTensor(torch.autograd.Function):
     @staticmethod
     def forward(  # type: ignore[override]
-        ctx,
-        input: "DTensor",
-        grad_placements: Optional[Sequence[Placement]],
+        ctx, input: "DTensor", grad_placements: Optional[Sequence[Placement]],
     ):
         ctx.dtensor_spec = input._spec
         ctx.grad_placements = grad_placements
@@ -100,11 +98,7 @@ class _ToTorchTensor(torch.autograd.Function):
         )
 
         return (
-            DTensor(
-                grad_output,
-                grad_spec,
-                requires_grad=grad_output.requires_grad,
-            ),
+            DTensor(grad_output, grad_spec, requires_grad=grad_output.requires_grad,),
             None,
         )
 
@@ -160,11 +154,7 @@ class _FromTorchTensor(torch.autograd.Function):
         dist_spec = _DTensorSpec(
             device_mesh,
             placements,
-            tensor_meta=TensorMeta(
-                tensor_shape,
-                tensor_stride,
-                input.dtype,
-            ),
+            tensor_meta=TensorMeta(tensor_shape, tensor_stride, input.dtype,),
         )
 
         # We want a fresh Tensor object that shares memory with the input tensor
@@ -217,11 +207,7 @@ class DTensor(torch.Tensor):  # pyre-ignore[13]: pyre is bad at __new__
     @staticmethod
     @torch._disable_dynamo
     def __new__(
-        cls,
-        local_tensor: torch.Tensor,
-        spec: _DTensorSpec,
-        *,
-        requires_grad: bool,
+        cls, local_tensor: torch.Tensor, spec: _DTensorSpec, *, requires_grad: bool,
     ) -> "DTensor":
         """
         Construct a DTensor from a local tensor, device mesh, and placement and
@@ -277,20 +263,12 @@ class DTensor(torch.Tensor):  # pyre-ignore[13]: pyre is bad at __new__
         local_tensor = inner_tensors["_local_tensor"]
         spec, requires_grad = flatten_spec
         unflatten_tensor_meta = TensorMeta(
-            shape=outer_size,
-            stride=outer_stride,
-            dtype=spec.tensor_meta.dtype,
+            shape=outer_size, stride=outer_stride, dtype=spec.tensor_meta.dtype,
         )
         unflatten_spec = _DTensorSpec(
-            spec.mesh,
-            spec.placements,
-            tensor_meta=unflatten_tensor_meta,
+            spec.mesh, spec.placements, tensor_meta=unflatten_tensor_meta,
         )
-        return DTensor(
-            local_tensor,
-            unflatten_spec,
-            requires_grad=requires_grad,
-        )
+        return DTensor(local_tensor, unflatten_spec, requires_grad=requires_grad,)
 
     def __coerce_tangent_metadata__(self):
         if not any(isinstance(p, Partial) for p in self.placements):
@@ -303,8 +281,7 @@ class DTensor(torch.Tensor):  # pyre-ignore[13]: pyre is bad at __new__
     def __coerce_same_metadata_as_tangent__(self, flatten_spec):
         (spec, _) = flatten_spec  # Result of tensor_flatten()
         return self.redistribute(
-            device_mesh=self.device_mesh,
-            placements=spec.placements,
+            device_mesh=self.device_mesh, placements=spec.placements,
         )
 
     @classmethod
@@ -312,11 +289,7 @@ class DTensor(torch.Tensor):  # pyre-ignore[13]: pyre is bad at __new__
     # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     def __torch_dispatch__(cls, func, types, args=(), kwargs=None):
-        return DTensor._op_dispatcher.dispatch(
-            func,
-            args,
-            kwargs or {},
-        )
+        return DTensor._op_dispatcher.dispatch(func, args, kwargs or {},)
 
     @staticmethod
     def from_local(
@@ -394,12 +367,7 @@ class DTensor(torch.Tensor):  # pyre-ignore[13]: pyre is bad at __new__
         # created should flow back the gradients to the local_tensor, so we call an autograd
         # function to construct the dist tensor instead.
         return _FromTorchTensor.apply(  # pyre-ignore[16]: autograd func
-            local_tensor,
-            device_mesh,
-            tuple(placements),
-            run_check,
-            shape,
-            stride,
+            local_tensor, device_mesh, tuple(placements), run_check, shape, stride,
         )
 
     def to_local(
@@ -699,9 +667,7 @@ def distribute_tensor(
         mesh=device_mesh,
         placements=placements,
         tensor_meta=TensorMeta(
-            shape=tensor.size(),
-            stride=tensor.stride(),
-            dtype=tensor.dtype,
+            shape=tensor.size(), stride=tensor.stride(), dtype=tensor.dtype,
         ),
     )
     return DTensor(

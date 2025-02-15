@@ -128,7 +128,7 @@ class _NormPartial(Partial):
         if self.reduce_op == "sum":
             assert isinstance(self.norm_type, (int, float)), f"{self.norm_type}"
             if self.norm_type != 0 and self.norm_type != 1:
-                return tensor**self.norm_type
+                return tensor ** self.norm_type
         return tensor
 
     def _post_reduce_transform(self, tensor: torch.Tensor) -> torch.Tensor:
@@ -289,10 +289,7 @@ def common_reduction_strategy(
         redistribute_cost = [generate_redistribute_costs(input_strategy, input_spec)]
         reduction_strategy.strategies.append(
             PlacementStrategy(
-                output_specs=_DTensorSpec(
-                    mesh=mesh,
-                    placements=out_placements,
-                ),
+                output_specs=_DTensorSpec(mesh=mesh, placements=out_placements,),
                 input_specs=(input_spec,),
                 redistribute_cost=redistribute_cost,
             )
@@ -478,10 +475,7 @@ def softmax_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy:
 
 
 @register_op_strategy(
-    [
-        aten._log_softmax_backward_data.default,
-        aten._softmax_backward_data.default,
-    ],
+    [aten._log_softmax_backward_data.default, aten._softmax_backward_data.default,],
     schema_info=RuntimeSchemaInfo(2),
 )
 def softmax_backward_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy:
@@ -614,21 +608,14 @@ def nll_loss_forward_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrate
                 reduce_dims_map,
                 reduction_op,
             )
-            output_expected_spec = _DTensorSpec(
-                mesh=mesh,
-                placements=out_placements,
-            )
+            output_expected_spec = _DTensorSpec(mesh=mesh, placements=out_placements,)
 
             # whether reduction is sum or mean, the total weight has to be summed up if not replicated
             total_weight_placements = map_placements_after_reduction(
-                target_expected_spec.placements,
-                reduce_dims,
-                reduce_dims_map,
-                "sum",
+                target_expected_spec.placements, reduce_dims, reduce_dims_map, "sum",
             )
             total_weight_expected_spec = _DTensorSpec(
-                mesh=mesh,
-                placements=total_weight_placements,
+                mesh=mesh, placements=total_weight_placements,
             )
 
         output_strategy.strategies.append(
@@ -761,8 +748,7 @@ def rlog(msg):
 
 
 @register_op_strategy(
-    [aten.native_layer_norm.default],
-    schema_info=RuntimeSchemaInfo(1),
+    [aten.native_layer_norm.default], schema_info=RuntimeSchemaInfo(1),
 )
 def layer_norm_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy:
     # args must be: input, normalized_shape, weight, bias, eps
@@ -856,8 +842,7 @@ def layer_norm_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy:
 
 
 @register_op_strategy(
-    [aten.native_layer_norm_backward.default],
-    schema_info=RuntimeSchemaInfo(2),
+    [aten.native_layer_norm_backward.default], schema_info=RuntimeSchemaInfo(2),
 )
 def layer_norm_bwd_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy:
     # args must be: grad_out, input, normalized_shape, mean, rstd,
@@ -1014,8 +999,7 @@ def layer_norm_bwd_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy
 
 
 @register_op_strategy(
-    [aten.topk.default],
-    schema_info=RuntimeSchemaInfo(2),
+    [aten.topk.default], schema_info=RuntimeSchemaInfo(2),
 )
 def topk_strategy(mesh: DeviceMesh, op_schema: OpSchema) -> OpStrategy:
     input_strategy = cast(OpStrategy, op_schema.args_schema[0])

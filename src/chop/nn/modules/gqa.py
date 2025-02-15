@@ -127,12 +127,7 @@ class GroupedQueryAttention(nn.Module):
     #     return x
 
     def _attention_mechanism(
-        self,
-        query: Tensor,
-        key: Tensor,
-        value: Tensor,
-        batch_size: int,
-        seq_len: int,
+        self, query: Tensor, key: Tensor, value: Tensor, batch_size: int, seq_len: int,
     ):
         key = repeat_kv(key, n_rep=self.group_size)
         value = repeat_kv(value, n_rep=self.group_size)
@@ -169,9 +164,7 @@ if __name__ == "__main__":
     GROUPS = 4
 
     gqa_module = GroupedQueryAttention(
-        embed_dim=EMBED_DIM,
-        num_heads=NUM_HEADS,
-        num_kv_heads=GROUPS,
+        embed_dim=EMBED_DIM, num_heads=NUM_HEADS, num_kv_heads=GROUPS,
     )
 
     x_in = torch.rand(BATCH, SEQ_LEN, EMBED_DIM)

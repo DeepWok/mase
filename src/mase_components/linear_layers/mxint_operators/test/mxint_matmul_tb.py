@@ -48,16 +48,10 @@ class MXIntMatmulTB(Testbench):
 
         self.log.setLevel(logging.DEBUG)
         self.a_driver = MultiSignalStreamDriver(
-            dut.clk,
-            (dut.ma_data, dut.ea_data),
-            dut.a_valid,
-            dut.a_ready,
+            dut.clk, (dut.ma_data, dut.ea_data), dut.a_valid, dut.a_ready,
         )
         self.b_driver = MultiSignalStreamDriver(
-            dut.clk,
-            (dut.mb_data, dut.eb_data),
-            dut.b_valid,
-            dut.b_ready,
+            dut.clk, (dut.mb_data, dut.eb_data), dut.b_valid, dut.b_ready,
         )
 
         self.output_monitor = MultiSignalStreamMonitor(

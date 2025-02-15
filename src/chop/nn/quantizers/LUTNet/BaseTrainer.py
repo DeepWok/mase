@@ -38,7 +38,7 @@ class BaseTrainer(torch.nn.Linear):
             levels (int): Number of residual level to use.
         """
         self.k = k
-        self.kk = 2**k
+        self.kk = 2 ** k
         self.binarization_level = binarization_level
         self.input_expanded = input_expanded
         self.tables_count = tables_count

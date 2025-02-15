@@ -48,8 +48,7 @@ class ShardingPropagator:
     def __init__(self) -> None:
         self.op_to_rules: Dict[OpOverload, Callable[[OpSchema], OutputSharding]] = {}
         self.op_strategy_funcs: Dict[
-            OpOverload,
-            Callable[[DeviceMesh, OpSchema], StrategyType],
+            OpOverload, Callable[[DeviceMesh, OpSchema], StrategyType],
         ] = {}
         # op map to save static argnum to decide to reuse sharding prop cache or re-run sharding prop
         self.op_to_schema_info: Dict[OpOverload, RuntimeSchemaInfo] = {}
@@ -344,10 +343,8 @@ class ShardingPropagator:
                             expected_input_spec = selected_strategies[idx].input_spec(
                                 tensor_or_list_tensor_arg_idx
                             )
-                            expected_input_spec = (
-                                expected_input_spec.shallow_copy_with_tensor_meta(
-                                    arg_spec.tensor_meta
-                                )
+                            expected_input_spec = expected_input_spec.shallow_copy_with_tensor_meta(
+                                arg_spec.tensor_meta
                             )
                             if arg_spec.placements != expected_input_spec.placements:
                                 needs_redistribute = True
@@ -363,10 +360,8 @@ class ShardingPropagator:
                         expected_input_spec = selected_strategies[0].input_spec(
                             tensor_or_list_tensor_arg_idx
                         )
-                        expected_input_spec = (
-                            expected_input_spec.shallow_copy_with_tensor_meta(
-                                arg.tensor_meta
-                            )
+                        expected_input_spec = expected_input_spec.shallow_copy_with_tensor_meta(
+                            arg.tensor_meta
                         )
                         if arg.placements != expected_input_spec.placements:
                             needs_redistribute = True

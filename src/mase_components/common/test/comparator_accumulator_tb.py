@@ -33,7 +33,9 @@ class ComparatorAccumulatorTB(Testbench):
         )
 
     def generate_inputs(self, batches=3):
-        return [randint(0, 2**self.DATA_WIDTH - 1) for _ in range(self.DEPTH * batches)]
+        return [
+            randint(0, 2 ** self.DATA_WIDTH - 1) for _ in range(self.DEPTH * batches)
+        ]
 
     def model(self, inputs):
 
@@ -152,7 +154,5 @@ if __name__ == "__main__":
     cfgs = signed_max_min_cfgs(cfgs)
 
     mase_runner(
-        module_param_list=cfgs,
-        trace=True,
-        jobs=12,
+        module_param_list=cfgs, trace=True, jobs=12,
     )

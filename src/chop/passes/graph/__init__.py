@@ -46,9 +46,7 @@ from .interface import (
 
 from .transforms.quantize.quant_parsers import parse_node_config
 
-from chop.passes.graph.analysis.runtime.runtime_analysis import (
-    runtime_analysis_pass,
-)
+from chop.passes.graph.analysis.runtime.runtime_analysis import runtime_analysis_pass
 
 from .interface import tensorrt_engine_interface_pass
 
@@ -151,6 +149,6 @@ if check_dependencies("tensorrt_calibrate_transform_pass"):
 
 if check_dependencies("tensorrt_fake_quantize_transform_pass"):
     TRANSFORM_PASSES.append("tensorrt_fake_quantize_transform_pass")
-    PASSES["tensorrt_fake_quantize_transform_pass"] = (
-        tensorrt_fake_quantize_transform_pass
-    )
+    PASSES[
+        "tensorrt_fake_quantize_transform_pass"
+    ] = tensorrt_fake_quantize_transform_pass

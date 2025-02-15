@@ -4,12 +4,8 @@ import torch
 from typing import Any
 import numpy as np
 
-from chop.nn.quantized.modules.conv2d import (
-    Conv2dBinaryResidualSign,
-)
-from chop.nn.quantized.modules.linear import (
-    LinearBinaryResidualSign,
-)
+from chop.nn.quantized.modules.conv2d import Conv2dBinaryResidualSign
+from chop.nn.quantized.modules.linear import LinearBinaryResidualSign
 from chop.models.utils import register_mase_model, register_mase_checkpoint
 
 """
@@ -206,8 +202,7 @@ class CNV_Residual(nn.Module):
 # Getters ------------------------------------------------------------------------------
 @register_mase_checkpoint("cnv-toy")
 def get_cnv_toy(
-    pretrained=False,
-    **kwargs: Any,
+    pretrained=False, **kwargs: Any,
 ):
     # image_size = info["image_size"]
     info = kwargs["dataset_info"]
@@ -217,8 +212,7 @@ def get_cnv_toy(
 
 @register_mase_checkpoint("cnv")
 def get_cnv(
-    pretrained=False,
-    **kwargs: Any,
+    pretrained=False, **kwargs: Any,
 ):
     # image_size = info["image_size"]
     info = kwargs["dataset_info"]
@@ -228,8 +222,7 @@ def get_cnv(
 
 @register_mase_checkpoint("cnv_residual")
 def get_cnv_residual(
-    pretrained=False,
-    **kwargs: Any,
+    pretrained=False, **kwargs: Any,
 ):
     # image_size = info["image_size"]
     info = kwargs["dataset_info"]

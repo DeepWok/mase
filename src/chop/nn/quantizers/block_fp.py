@@ -47,10 +47,10 @@ def _block_fp_quantize(
     if exponent_bias in (None, "none", "None"):
         exponent_bias = 2 ** (exponent_width - 1) - 1
 
-    exponent_max = 2**exponent_width - 1 - exponent_bias
+    exponent_max = 2 ** exponent_width - 1 - exponent_bias
     exponent_min = -exponent_bias
 
-    mantissa_integer_max = 2**mantissa_bits - 1
+    mantissa_integer_max = 2 ** mantissa_bits - 1
     # sign
     per_block_sign = torch.sign(blocked_x + 1e-9)
     # exponent
@@ -58,14 +58,14 @@ def _block_fp_quantize(
     per_block_exponent = torch.ceil(torch.log2(per_block_max))
     per_block_exponent = my_clamp(per_block_exponent, exponent_min, exponent_max)
     # mantissa
-    per_block_mantissa = per_block_value / 2**per_block_exponent
-    shift = 2**mantissa_bits
+    per_block_mantissa = per_block_value / 2 ** per_block_exponent
+    shift = 2 ** mantissa_bits
     per_block_mantissa_integer = my_clamp(
         my_round(per_block_mantissa * shift), 0, mantissa_integer_max
     )
     per_block_mantissa = per_block_mantissa_integer / shift
 
-    per_block_msfp = per_block_sign * (2**per_block_exponent) * per_block_mantissa
+    per_block_msfp = per_block_sign * (2 ** per_block_exponent) * per_block_mantissa
     msfp_x = unblock(
         per_block_msfp,
         x_shape_before_blocking=x_shape_before_blocking,
@@ -133,10 +133,5 @@ def block_fp_quantizer(
 
     """
     return BlockFPQuantize.apply(
-        x,
-        width,
-        exponent_width,
-        exponent_bias,
-        block_size,
-        skip_first_dim,
+        x, width, exponent_width, exponent_bias, block_size, skip_first_dim,
     )

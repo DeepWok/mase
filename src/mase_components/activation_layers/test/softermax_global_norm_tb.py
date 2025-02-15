@@ -46,7 +46,7 @@ class SoftermaxGlobalNormTB(Testbench):
 
         # Specify Error Threshold
         self.percentage_error = 0.05  # 5%
-        self.error_threshold_bits = ceil(self.percentage_error * (2**self.OUT_WIDTH))
+        self.error_threshold_bits = ceil(self.percentage_error * (2 ** self.OUT_WIDTH))
 
         self.output_monitor = ErrorThresholdStreamMonitor(
             dut.clk,
@@ -63,15 +63,15 @@ class SoftermaxGlobalNormTB(Testbench):
     def generate_inputs(self, batches=10):
         # TODO: Take a look at all zero case again
         local_vals = torch.randint(
-            1, 2**self.IN_VALUE_WIDTH, size=(batches * self.DEPTH, self.PARALLELISM)
+            1, 2 ** self.IN_VALUE_WIDTH, size=(batches * self.DEPTH, self.PARALLELISM)
         )
         local_max = torch.randint(
-            0, 2**self.IN_MAX_WIDTH, size=(batches * self.DEPTH, 1)
+            0, 2 ** self.IN_MAX_WIDTH, size=(batches * self.DEPTH, 1)
         )
 
         logger.debug("local_vals: %s" % (local_vals))
         logger.debug(
-            "local_vals (float): %s" % (local_vals / (2**self.IN_VALUE_FRAC_WIDTH))
+            "local_vals (float): %s" % (local_vals / (2 ** self.IN_VALUE_FRAC_WIDTH))
         )
         logger.debug("local_max: %s" % (local_max))
         logger.debug(
@@ -87,7 +87,7 @@ class SoftermaxGlobalNormTB(Testbench):
         for batch in batched_in:
             local_vals, local_max = list(zip(*batch))
             local_vals = torch.tensor(list(local_vals), dtype=torch.float) / (
-                2**self.IN_VALUE_FRAC_WIDTH
+                2 ** self.IN_VALUE_FRAC_WIDTH
             )
             local_max = torch.tensor(list(local_max), dtype=torch.float)
             local_max = sign_extend_t(
@@ -97,7 +97,7 @@ class SoftermaxGlobalNormTB(Testbench):
             global_max = local_max.max()
             adj_amt = global_max - local_max.reshape(self.DEPTH, 1)
             adj_values = integer_floor_quantizer(
-                x=local_vals / (2**adj_amt),
+                x=local_vals / (2 ** adj_amt),
                 width=self.IN_VALUE_WIDTH,
                 frac_width=self.IN_VALUE_FRAC_WIDTH,
                 is_signed=False,
@@ -226,10 +226,7 @@ if __name__ == "__main__":
         for cfg in cfgs:
             for in_width in [4, 7, 10]:
                 new_cfgs.append(
-                    {
-                        **cfg,
-                        "IN_VALUE_WIDTH": in_width,
-                    }
+                    {**cfg, "IN_VALUE_WIDTH": in_width,}
                 )
         return new_cfgs
 
@@ -238,10 +235,7 @@ if __name__ == "__main__":
         for cfg in cfgs:
             for in_max in [2, 3, 4]:
                 new_cfgs.append(
-                    {
-                        **cfg,
-                        "IN_MAX_WIDTH": in_max,
-                    }
+                    {**cfg, "IN_MAX_WIDTH": in_max,}
                 )
         return new_cfgs
 
@@ -256,7 +250,5 @@ if __name__ == "__main__":
 
     # cfgs = [{'TOTAL_DIM': 32, 'PARALLELISM': 4, 'IN_VALUE_WIDTH': 16, 'IN_MAX_WIDTH': 2}]
     mase_runner(
-        module_param_list=cfgs,
-        trace=True,
-        jobs=12,
+        module_param_list=cfgs, trace=True, jobs=12,
     )

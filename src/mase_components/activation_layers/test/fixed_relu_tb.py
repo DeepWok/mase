@@ -47,7 +47,7 @@ my_round = MyRound.apply
 def quantize(x, bits, bias):  # bits = 32
     """Do linear quantization to input according to a scale and number of bits"""
     thresh = 2 ** (bits - 1)
-    scale = 2**bias
+    scale = 2 ** bias
     return my_clamp(my_round(x.mul(scale)), -thresh, thresh - 1).div(scale)
 
 
@@ -83,7 +83,7 @@ class VerificationCase:
 
     def get_dut_input(self, i):
         inputs = self.inputs[i]
-        shifted_integers = (inputs * (2**self.bias)).int()
+        shifted_integers = (inputs * (2 ** self.bias)).int()
         return shifted_integers.numpy().tolist()
 
     def get_dut_output(self, i):
@@ -92,7 +92,7 @@ class VerificationCase:
         return shifted_integers
 
     def convert_to_fixed(self, x):
-        return (x * (2**self.bias)).int().numpy().tolist()
+        return (x * (2 ** self.bias)).int().numpy().tolist()
 
 
 @cocotb.test()

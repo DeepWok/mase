@@ -78,16 +78,13 @@ def test_export_fx_graph_bert():
 
 @pytest.mark.skip
 def test_export_fx_graph_mistral():
-    export_fx_graph_model(
-        "mistral-community/Mistral-7B-v0.2",
-    )
+    export_fx_graph_model("mistral-community/Mistral-7B-v0.2",)
 
 
 @pytest.mark.skip
 def test_export_fx_graph_whisper():
     export_fx_graph_model(
-        "openai/whisper-tiny",
-        skip_export=True,
+        "openai/whisper-tiny", skip_export=True,
     )
 
 

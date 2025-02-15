@@ -89,10 +89,7 @@ class GroupedQueryAttentionInteger(_GroupedQueryAttentionBase):
         )
 
         self.v_matmul_func = partial(
-            matmul_integer,
-            config=config,
-            out_config=out_config,
-            floor=floor,
+            matmul_integer, config=config, out_config=out_config, floor=floor,
         )
 
         o_projection_q_config = {

@@ -34,9 +34,7 @@ def _download_lego_dataset(path: Path) -> None:
 
     # Unzip the file
     subprocess.run(
-        f"unzip {folder_path.as_posix()} -d {path.as_posix()}",
-        shell=True,
-        check=True,
+        f"unzip {folder_path.as_posix()} -d {path.as_posix()}", shell=True, check=True,
     )
 
 

@@ -68,9 +68,7 @@ def simulate(
         else:
             raise ValueError(f"Unrecognized simulator: {simulator}")
 
-        includes = [
-            project_dir / "hardware" / "rtl",
-        ] + [
+        includes = [project_dir / "hardware" / "rtl",] + [
             Path(mase_components.__file__).parent / module / "rtl"
             for module in get_modules()
         ]

@@ -34,11 +34,7 @@ __all__ = [
 
 
 def _dtensor_init_helper(
-    init_op,
-    size: torch.Size,
-    device_mesh=None,
-    placements=None,
-    **kwargs,
+    init_op, size: torch.Size, device_mesh=None, placements=None, **kwargs,
 ) -> DTensor:
     from torch.distributed.tensor.placement_types import _DTensorSpec, TensorMeta
 
@@ -82,18 +78,10 @@ def _dtensor_init_helper(
     spec = _DTensorSpec(
         device_mesh,
         tuple(placements),
-        tensor_meta=TensorMeta(
-            size,
-            torch_stride,
-            local_tensor.dtype,
-        ),
+        tensor_meta=TensorMeta(size, torch_stride, local_tensor.dtype,),
     )
 
-    return DTensor(
-        local_tensor,
-        spec,
-        requires_grad=kwargs["requires_grad"],
-    )
+    return DTensor(local_tensor, spec, requires_grad=kwargs["requires_grad"],)
 
 
 def ones(

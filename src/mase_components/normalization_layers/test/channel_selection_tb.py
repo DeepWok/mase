@@ -61,7 +61,6 @@ import pytest
 
 @pytest.mark.skip(reason="Needs to be fixed.")
 def test_channel_selection():
-
     def gen_cfg(num_channels, num_blocks):
         return {"NUM_CHANNELS": num_channels, "NUM_SPATIAL_BLOCKS": num_blocks}
 

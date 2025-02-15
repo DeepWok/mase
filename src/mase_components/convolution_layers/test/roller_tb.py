@@ -195,9 +195,7 @@ def runner():
     print(extra_args)
     runner = get_runner(sim)()
     runner.build(
-        verilog_sources=verilog_sources,
-        toplevel="roller",
-        extra_args=extra_args,
+        verilog_sources=verilog_sources, toplevel="roller", extra_args=extra_args,
     )
 
     runner.test(toplevel="roller", py_module="roller_tb")

@@ -6,9 +6,7 @@ from torch.distributed.tensor._op_schema import (
     PlacementStrategy,
     StrategyType,
 )
-from torch.distributed.tensor.ops.utils import (
-    is_tensor_partial,
-)
+from torch.distributed.tensor.ops.utils import is_tensor_partial
 from torch.distributed.tensor.placement_types import (
     _DTensorSpec,
     Partial,

@@ -114,9 +114,7 @@ class MatMulFunction(torch.autograd.Function):
         in1, in2 = ctx.saved_tensors
 
         grad_out = quantize_elemwise_op(
-            grad_out,
-            mx_specs=ctx.mx_specs,
-            round=ctx.mx_specs["round_grad_input"],
+            grad_out, mx_specs=ctx.mx_specs, round=ctx.mx_specs["round_grad_input"],
         )
 
         #####################################################
@@ -160,14 +158,10 @@ class MatMulFunction(torch.autograd.Function):
 
         # element-wise quantize for grad_in1 and grad_in2
         grad_in1 = quantize_elemwise_op(
-            grad_in1,
-            mx_specs=ctx.mx_specs,
-            round=ctx.mx_specs["round_grad_input"],
+            grad_in1, mx_specs=ctx.mx_specs, round=ctx.mx_specs["round_grad_input"],
         )
         grad_in2 = quantize_elemwise_op(
-            grad_in2,
-            mx_specs=ctx.mx_specs,
-            round=ctx.mx_specs["round_grad_input"],
+            grad_in2, mx_specs=ctx.mx_specs, round=ctx.mx_specs["round_grad_input"],
         )
 
         #####################################################

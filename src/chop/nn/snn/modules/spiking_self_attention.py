@@ -145,9 +145,7 @@ class GWFFN(nn.Module):
         super().__init__()
         inner_channels = in_channels * ratio
         self.up = nn.Sequential(
-            activation(),
-            Conv1x1(in_channels, inner_channels),
-            BN(inner_channels),
+            activation(), Conv1x1(in_channels, inner_channels), BN(inner_channels),
         )
         self.conv = nn.ModuleList()
         for _ in range(num_conv):
@@ -163,9 +161,7 @@ class GWFFN(nn.Module):
                 )
             )
         self.down = nn.Sequential(
-            activation(),
-            Conv1x1(inner_channels, in_channels),
-            BN(in_channels),
+            activation(), Conv1x1(inner_channels, in_channels), BN(in_channels),
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

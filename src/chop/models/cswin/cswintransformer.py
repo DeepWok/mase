@@ -90,7 +90,7 @@ class LePEAttention(nn.Module):
         self.num_heads = num_heads
         head_dim = dim // num_heads
         # NOTE scale factor was wrong in my original version, can set manually to be compat with prev weights
-        self.scale = qk_scale or head_dim**-0.5
+        self.scale = qk_scale or head_dim ** -0.5
         if idx == -1:
             H_sp, W_sp = self.resolution, self.resolution
         elif idx == 0:
@@ -362,9 +362,9 @@ class CSWinTransformer(nn.Module):
         super().__init__()
         self.use_chk = use_chk
         self.num_classes = num_classes
-        self.num_features = self.embed_dim = (
-            embed_dim  # num_features for consistency with other models
-        )
+        self.num_features = (
+            self.embed_dim
+        ) = embed_dim  # num_features for consistency with other models
         heads = num_heads
 
         self.stage1_conv_embed = nn.Sequential(

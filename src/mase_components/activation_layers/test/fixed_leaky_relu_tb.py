@@ -28,9 +28,9 @@ def get_in_and_out(x, fn, width, frac_width):
     ins = integer_quantizer(x, width=width, frac_width=frac_width)
     y = fn(x)
     outs = integer_quantizer(y, width=width, frac_width=frac_width)
-    outs = outs * 2**frac_width
+    outs = outs * 2 ** frac_width
     outs = outs.int()
-    ins = ins * 2**frac_width
+    ins = ins * 2 ** frac_width
     ins = ins.int()
     return (ins, outs)
 
@@ -78,7 +78,7 @@ async def cocotb_test(dut):
     logger.info(f"Reset finished")
     tb.data_out_0_monitor.ready.value = 1
 
-    inputs, exp_outs = tb.generate_inputs_outputs(8, 4, 2**-4)
+    inputs, exp_outs = tb.generate_inputs_outputs(8, 4, 2 ** -4)
 
     tb.data_in_0_driver.append(inputs.tolist())
 

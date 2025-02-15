@@ -61,8 +61,7 @@ class ManualHFModuleSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
                 with init_empty_weights():
                     model = self.model_cls(config)
                 device_map = infer_auto_device_map(
-                    model,
-                    no_split_module_classes=model._no_split_modules,
+                    model, no_split_module_classes=model._no_split_modules,
                 )
                 model = load_checkpoint_and_dispatch(
                     model, checkpoint=self.model_name, device_map=device_map

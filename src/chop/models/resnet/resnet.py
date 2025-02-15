@@ -157,13 +157,7 @@ class Bottleneck(nn.Module):
 
 @register_mase_model(
     name="resnet",
-    checkpoints=[
-        "resnet18",
-        "resnet34",
-        "resnet50",
-        "resnet101",
-        "wide_resnet50_2",
-    ],
+    checkpoints=["resnet18", "resnet34", "resnet50", "resnet101", "wide_resnet50_2",],
     model_source="torchvision",
     task_type="vision",
     image_classification=True,
@@ -337,10 +331,7 @@ def _resnet(
 
 
 @register_mase_checkpoint("resnet18")
-def get_resnet18(
-    pretrained: bool = False,
-    **kwargs: Any,
-) -> ResNet:
+def get_resnet18(pretrained: bool = False, **kwargs: Any,) -> ResNet:
     """ResNet-18 from `Deep Residual Learning for Image Recognition <https://arxiv.org/pdf/1512.03385.pdf>`__."""
     if pretrained:
         pretrained_weight_cls = ResNet18_Weights.IMAGENET1K_V1
@@ -348,18 +339,12 @@ def get_resnet18(
         pretrained_weight_cls = None
 
     return _resnet(
-        BasicBlock,
-        [2, 2, 2, 2],
-        pretrained_weight_cls=pretrained_weight_cls,
-        **kwargs,
+        BasicBlock, [2, 2, 2, 2], pretrained_weight_cls=pretrained_weight_cls, **kwargs,
     )
 
 
 @register_mase_checkpoint("resnet34")
-def get_resnet34(
-    pretrained: bool = False,
-    **kwargs: Any,
-) -> ResNet:
+def get_resnet34(pretrained: bool = False, **kwargs: Any,) -> ResNet:
     """ResNet-34 from `Deep Residual Learning for Image Recognition <https://arxiv.org/pdf/1512.03385.pdf>`__."""
     if pretrained:
         pretrained_weight_cls = ResNet34_Weights.IMAGENET1K_V1
@@ -367,18 +352,12 @@ def get_resnet34(
         pretrained_weight_cls = None
 
     return _resnet(
-        BasicBlock,
-        [2, 2, 2, 2],
-        pretrained_weight_cls=pretrained_weight_cls,
-        **kwargs,
+        BasicBlock, [2, 2, 2, 2], pretrained_weight_cls=pretrained_weight_cls, **kwargs,
     )
 
 
 @register_mase_checkpoint("resnet50")
-def get_resnet50(
-    pretrained: bool = False,
-    **kwargs: Any,
-) -> ResNet:
+def get_resnet50(pretrained: bool = False, **kwargs: Any,) -> ResNet:
     """ResNet-50 from `Deep Residual Learning for Image Recognition <https://arxiv.org/pdf/1512.03385.pdf>`__."""
     info = kwargs["dataset_info"]
     if pretrained:
@@ -387,18 +366,12 @@ def get_resnet50(
         pretrained_weight_cls = None
 
     return _resnet(
-        Bottleneck,
-        [3, 4, 6, 3],
-        pretrained_weight_cls=pretrained_weight_cls,
-        **kwargs,
+        Bottleneck, [3, 4, 6, 3], pretrained_weight_cls=pretrained_weight_cls, **kwargs,
     )
 
 
 @register_mase_checkpoint("resnet101")
-def get_resnet101(
-    pretrained: bool = False,
-    **kwargs: Any,
-) -> ResNet:
+def get_resnet101(pretrained: bool = False, **kwargs: Any,) -> ResNet:
     """ResNet-101 from `Deep Residual Learning for Image Recognition <https://arxiv.org/pdf/1512.03385.pdf>`__."""
     info = kwargs["dataset_info"]
     if pretrained:
@@ -407,17 +380,13 @@ def get_resnet101(
         pretrained_weight_cls = None
 
     return _resnet(
-        BasicBlock,
-        [2, 2, 2, 2],
-        pretrained_weight_cls=pretrained_weight_cls,
-        **kwargs,
+        BasicBlock, [2, 2, 2, 2], pretrained_weight_cls=pretrained_weight_cls, **kwargs,
     )
 
 
 @register_mase_checkpoint("wide_resnet50_2")
 def get_wide_resnet50_2(
-    pretrained: bool = False,
-    **kwargs,
+    pretrained: bool = False, **kwargs,
 ):
     """
     `Wide Residual Networks <https://arxiv.org/abs/1605.07146>`_.
@@ -435,8 +404,5 @@ def get_wide_resnet50_2(
 
     _ovewrite_named_param(kwargs, "width_per_group", 64 * 2)
     return _resnet(
-        Bottleneck,
-        [3, 4, 6, 3],
-        pretrained_weight_cls=pretrained_weight_cls,
-        **kwargs,
+        Bottleneck, [3, 4, 6, 3], pretrained_weight_cls=pretrained_weight_cls, **kwargs,
     )

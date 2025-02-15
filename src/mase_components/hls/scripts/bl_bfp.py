@@ -1,12 +1,6 @@
 import os, sys
 
-sys.path.append(
-    os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "..",
-        "..",
-    )
-)
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..",))
 
 from hls.bfp_arith import bfp_mm_gen
 from hls.bfp_arith import bfp_add_gen
@@ -14,12 +8,7 @@ from hls import HLSWriter
 
 
 def get_big_little_bfp(
-    HIGH_MAN_WIDTH=7,
-    LOW_MAN_WIDTH=3,
-    X_ROW=1,
-    X_COL=4096,
-    W_COL=11008,
-    A_COL=32,
+    HIGH_MAN_WIDTH=7, LOW_MAN_WIDTH=3, X_ROW=1, X_COL=4096, W_COL=11008, A_COL=32,
 ):
     W_ROW = X_COL
     A_ROW = X_COL

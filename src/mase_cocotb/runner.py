@@ -110,10 +110,7 @@ def _single_test(
             verilog_sources=sources,
             includes=includes,
             hdl_toplevel=module,
-            build_args=[
-                *tool_args,
-                *extra_build_args,
-            ],
+            build_args=[*tool_args, *extra_build_args,],
             # Do not use params in hierarchical verilation
             parameters=module_params if not hierarchical else {},
             build_dir=test_work_dir,
@@ -312,14 +309,10 @@ def simulate_pass(
         verilog_sources=[rtl_dir / "top.sv"],
         includes=[rtl_dir],
         hdl_toplevel="top",
-        build_args=[
-            *_verilator_args(False, trace) * extra_build_args,
-        ],
+        build_args=[*_verilator_args(False, trace) * extra_build_args,],
         parameters=module_params,
         build_dir=sim_dir,
     )
     runner.test(
-        hdl_toplevel="top",
-        test_module="test",
-        results_xml="results.xml",
+        hdl_toplevel="top", test_module="test", results_xml="results.xml",
     )

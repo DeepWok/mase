@@ -483,9 +483,7 @@ def common_pointwise_strategy(
                     common_shape, input_arg_spec.shape
                 )
                 input_target_placements = map_placements_after_broadcast(
-                    tuple(out_placements),
-                    common_shape,
-                    input_arg_dims_map,
+                    tuple(out_placements), common_shape, input_arg_dims_map,
                 )
                 input_arg_target_spec = _DTensorSpec(
                     mesh=mesh,
@@ -499,10 +497,7 @@ def common_pointwise_strategy(
 
         pointwise_strategy.strategies.append(
             PlacementStrategy(
-                output_specs=_DTensorSpec(
-                    mesh=mesh,
-                    placements=tuple(out_placements),
-                ),
+                output_specs=_DTensorSpec(mesh=mesh, placements=tuple(out_placements),),
                 input_specs=input_specs,
                 redistribute_cost=redistribute_costs,
             )

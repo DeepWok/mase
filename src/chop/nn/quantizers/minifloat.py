@@ -5,10 +5,7 @@ from .utils import my_clamp, my_round
 
 
 def _minifloat_denorm_quantize(
-    x: Tensor,
-    width: int,
-    exponent_width: int,
-    exponent_bias: int = None,
+    x: Tensor, width: int, exponent_width: int, exponent_bias: int = None,
 ):
     """
     - Converts IEEE FP32/64 to minifloat without the implicit leading bit in mantissas.
@@ -37,10 +34,10 @@ def _minifloat_denorm_quantize(
     if exponent_bias in (None, "none", "None"):
         exponent_bias = 2 ** (exponent_width - 1) - 1
 
-    exponent_max = 2**exponent_width - 1 - exponent_bias
+    exponent_max = 2 ** exponent_width - 1 - exponent_bias
     exponent_min = -exponent_bias
     # if the mantissa is an integer, the max mantissa value will be (2**mantissa_bits -1)
-    shifted_mantissa_max = 2**mantissa_bits - 1
+    shifted_mantissa_max = 2 ** mantissa_bits - 1
     shifted_mantissa_min = 0
 
     sign = torch.sign(x + 1e-9)
@@ -52,8 +49,8 @@ def _minifloat_denorm_quantize(
 
     # divide value by clipped exponent. this ensures the simulated minifloat value is correct
     # when x is too large (minifloat will saturate) or too close to 0.
-    mantissa = value / 2**exponent
-    shift = 2**mantissa_bits
+    mantissa = value / 2 ** exponent
+    shift = 2 ** mantissa_bits
     shifted_mantissa = my_round(mantissa * shift)
     # clip the integer mantissa.
     shifted_mantissa = my_clamp(
@@ -71,11 +68,7 @@ def _minifloat_denorm_quantize(
 class MinifloatDenormQuantize(torch.autograd.Function):
     @staticmethod
     def forward(
-        ctx,
-        x: Tensor,
-        width: int,
-        exponent_width: int,
-        exponent_bias: int = None,
+        ctx, x: Tensor, width: int, exponent_width: int, exponent_bias: int = None,
     ):
         return _minifloat_denorm_quantize(
             x, width=width, exponent_width=exponent_width, exponent_bias=exponent_bias
@@ -88,10 +81,7 @@ class MinifloatDenormQuantize(torch.autograd.Function):
 
 
 def minifloat_denorm_quantizer(
-    x: Tensor,
-    width: int,
-    exponent_width: int,
-    exponent_bias: int = None,
+    x: Tensor, width: int, exponent_width: int, exponent_bias: int = None,
 ):
     """
     - Converts IEEE FP32/64 to minifloat without the implicit leading bit in mantissas.
@@ -148,11 +138,11 @@ def _minifloat_ieee_quantize(
     if exponent_bias in (None, "none", "None"):
         exponent_bias = 2 ** (exponent_width - 1) - 1
     # upper and lower bound of shifted exponent
-    exponent_max = 2**exponent_width - 1 - exponent_bias
+    exponent_max = 2 ** exponent_width - 1 - exponent_bias
     exponent_min = -exponent_bias
     # upper and lower bound of shifted minifloat mantissa
-    shift = 2**mantissa_bits
-    shifted_mantissa_max = 2**mantissa_bits - 1
+    shift = 2 ** mantissa_bits
+    shifted_mantissa_max = 2 ** mantissa_bits - 1
     shifted_mantissa_min = 0
 
     sign = torch.sign(x + 1e-9)
@@ -162,9 +152,9 @@ def _minifloat_ieee_quantize(
     exponent = torch.floor(torch.log2(value + 1e-9))
     exponent = my_clamp(exponent, exponent_min, exponent_max)
 
-    mantissa = value / 2**exponent
+    mantissa = value / 2 ** exponent
 
-    shift = 2**mantissa_bits
+    shift = 2 ** mantissa_bits
     # fmt: off
     # if the clipped exponent is zero, the minifloat is in a subnormal form
     # this `is_normal` also help the grad keeps 1 if input x is 0, or the zero-initialized value will be trapped in 0

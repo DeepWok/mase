@@ -24,31 +24,23 @@ class VerificationCase(Testbench):
     def __init__(self, dut):
         super().__init__(dut, dut.clk, dut.rst)
         self.assign_self_params(
-            [
-                "IN_WIDTH",
-                "IN_FRAC_WIDTH",
-                "LUT_POW",
-            ]
+            ["IN_WIDTH", "IN_FRAC_WIDTH", "LUT_POW",]
         )
 
         self.input_driver = StreamDriver(
             dut.clk, dut.in_data, dut.in_valid, dut.in_ready
         )
         self.output_monitor = StreamMonitor(
-            dut.clk,
-            dut.out_data,
-            dut.out_valid,
-            dut.out_ready,
-            name="Output ISQRT",
+            dut.clk, dut.out_data, dut.out_valid, dut.out_ready, name="Output ISQRT",
         )
 
     def generate_inputs(self, num=10000):
-        maxnum = (2**self.IN_WIDTH) - 1
+        maxnum = (2 ** self.IN_WIDTH) - 1
         return [random.randint(0, maxnum) for _ in range(num)], num
 
     def model(self, data_in):
         ref = []
-        lut_size = 2**self.LUT_POW
+        lut_size = 2 ** self.LUT_POW
         lut = make_lut(lut_size, self.IN_WIDTH)
         for x in data_in:
             expected = isqrt_sw2(
@@ -127,7 +119,7 @@ if __name__ == "__main__":
     makedirs(mem_dir, exist_ok=True)
 
     def single_cfg(width, frac_width, lut_pow, str_id):
-        lut_size = 2**lut_pow
+        lut_size = 2 ** lut_pow
         lut = make_lut(lut_size, width)
         mem_path = mem_dir / f"lutmem-{str_id}.mem"
         write_memb(mem_path, lut, width)

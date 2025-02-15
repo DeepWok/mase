@@ -53,7 +53,7 @@ class SoftermaxLocalWindowTB(Testbench):
 
     def generate_inputs(self, batches=10):
         return [
-            [randint(0, 2**self.IN_WIDTH - 1) for _ in range(self.PARALLELISM)]
+            [randint(0, 2 ** self.IN_WIDTH - 1) for _ in range(self.PARALLELISM)]
             for _ in range(batches)
         ]
 
@@ -80,7 +80,7 @@ class SoftermaxLocalWindowTB(Testbench):
         sign_ext = sign_extend_t(
             torch.tensor(inputs, dtype=torch.float), bits=self.IN_WIDTH
         )
-        float_inputs = sign_ext / (2**self.IN_FRAC_WIDTH)
+        float_inputs = sign_ext / (2 ** self.IN_FRAC_WIDTH)
         # float_inputs = torch.tensor([[-31.5, -32]])
         rounded_inputs_float, rounded_inputs_uint = _fixed_signed_cast_model(
             float_inputs, self.MAX_WIDTH, 0, False, "floor"
@@ -89,9 +89,9 @@ class SoftermaxLocalWindowTB(Testbench):
         local_max_uint = signed_to_unsigned(local_max.int(), self.MAX_WIDTH)
 
         difference = float_inputs - local_max
-        pow2 = 2**difference
+        pow2 = 2 ** difference
         res = torch.clamp(
-            (pow2 * 2**self.OUT_FRAC_WIDTH).int(), 0, 2**self.OUT_WIDTH - 1
+            (pow2 * 2 ** self.OUT_FRAC_WIDTH).int(), 0, 2 ** self.OUT_WIDTH - 1
         )
 
         logger.debug("float_inputs: %s" % float_inputs)

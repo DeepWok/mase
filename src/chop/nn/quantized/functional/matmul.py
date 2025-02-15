@@ -176,14 +176,10 @@ def generic_matmul_log(x, y, config, style="matmul"):
         )
 
         x_quantizer = partial(
-            log_quantizer,
-            width=x_width,
-            exponent_bias=x_exponent_bias,
+            log_quantizer, width=x_width, exponent_bias=x_exponent_bias,
         )
         y_quantizer = partial(
-            log_quantizer,
-            width=y_width,
-            exponent_bias=y_exponent_bias,
+            log_quantizer, width=y_width, exponent_bias=y_exponent_bias,
         )
         x = x_quantizer(x)
         y = y_quantizer(y)

@@ -8,16 +8,8 @@ w = torch.rand(10, 10)
 d_man_width = 12
 w_man_width = 8
 e_width = 4
-(data_in, mdata_in, edata_in) = mxint_quantize(
-    data,
-    d_man_width,
-    e_width,
-)
-(weight, mweight, eweight) = mxint_quantize(
-    w,
-    w_man_width,
-    e_width,
-)
+(data_in, mdata_in, edata_in) = mxint_quantize(data, d_man_width, e_width,)
+(weight, mweight, eweight) = mxint_quantize(w, w_man_width, e_width,)
 linear = torch.nn.Linear(10, 10, bias=False)
 linear.weight = torch.nn.Parameter(weight)
 target_x = linear(data_in)
@@ -36,7 +28,7 @@ def hardware_quant(hardware_in, be_value, e_width, width):
     exponent_bias = 2 ** (e_width - 1) - 1
 
     # exponent
-    exponent_max = 2**e_width - 1 - exponent_bias
+    exponent_max = 2 ** e_width - 1 - exponent_bias
     exponent_min = -exponent_bias
     exponent = (
         torch.ceil(torch.log2(hardware_in.abs().max())) + be_value - exponent_bias
@@ -48,7 +40,7 @@ def hardware_quant(hardware_in, be_value, e_width, width):
     breakpoint()
     mantissa = torch.clamp(mantissa.floor(), int_min, int_max)
 
-    msfp_x = (2**exponent) * mantissa
+    msfp_x = (2 ** exponent) * mantissa
     return msfp_x, mantissa, exponent
 
 

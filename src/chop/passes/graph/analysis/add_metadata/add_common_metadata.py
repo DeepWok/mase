@@ -203,10 +203,7 @@ def graph_iterator_for_mase_ops(graph):
 
 
 def graph_iterator_for_metadata(
-    graph,
-    dummy_in=None,
-    add_value=True,
-    force_device_meta=False,
+    graph, dummy_in=None, add_value=True, force_device_meta=False,
 ):
     """
     largely adapted from https://pytorch.org/docs/stable/fx.html
@@ -291,12 +288,7 @@ def _add_graph_metadata(graph):
 
 
 def add_common_metadata_analysis_pass(
-    graph,
-    pass_args={
-        "dummy_in": None,
-        "add_value": True,
-        "force_device_meta": False,
-    },
+    graph, pass_args={"dummy_in": None, "add_value": True, "force_device_meta": False,},
 ):
     """add common metadata
 

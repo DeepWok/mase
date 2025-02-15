@@ -42,9 +42,7 @@ class QuantizeBfloatFunction(torch.autograd.Function):
     @staticmethod
     def backward(ctx, grad_output):
         grad_input = quantize_elemwise_op(
-            grad_output,
-            mx_specs=ctx.mx_specs,
-            round=ctx.round,
+            grad_output, mx_specs=ctx.mx_specs, round=ctx.round,
         )
 
         return (grad_input, None, None)

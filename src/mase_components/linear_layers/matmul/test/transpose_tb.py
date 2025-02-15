@@ -56,11 +56,7 @@ def generate_random_params(num=3):
     cfgs = list()
     for _ in range(num):
         cfgs.append(
-            {
-                "WIDTH": randint(1, 16),
-                "DIM0": randint(2, 12),
-                "DIM1": randint(2, 12),
-            }
+            {"WIDTH": randint(1, 16), "DIM0": randint(2, 12), "DIM1": randint(2, 12),}
         )
     return cfgs
 

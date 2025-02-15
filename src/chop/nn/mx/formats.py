@@ -52,14 +52,14 @@ class ElemFormat(Enum):
 def _get_min_norm(ebits):
     """Valid for all float formats"""
     emin = 2 - (2 ** (ebits - 1))
-    return 0 if ebits == 0 else 2**emin
+    return 0 if ebits == 0 else 2 ** emin
 
 
 def _get_max_norm(ebits, mbits):
     """Valid only for floats that define NaN"""
     assert ebits >= 5, "invalid for floats that don't define NaN"
     emax = 0 if ebits == 0 else 2 ** (ebits - 1) - 1
-    return 2**emax * float(2 ** (mbits - 1) - 1) / 2 ** (mbits - 2)
+    return 2 ** emax * float(2 ** (mbits - 1) - 1) / 2 ** (mbits - 2)
 
 
 _FORMAT_CACHE = {}
@@ -121,9 +121,9 @@ def _get_format_params(fmt):
         raise Exception("Unknown element format %s" % fmt)
 
     if fmt != ElemFormat.fp8_e4m3:
-        max_norm = 2**emax * float(2 ** (mbits - 1) - 1) / 2 ** (mbits - 2)
+        max_norm = 2 ** emax * float(2 ** (mbits - 1) - 1) / 2 ** (mbits - 2)
     else:
-        max_norm = 2**emax * 1.75  # FP8 has custom max_norm
+        max_norm = 2 ** emax * 1.75  # FP8 has custom max_norm
 
     min_norm = _get_min_norm(ebits)
 

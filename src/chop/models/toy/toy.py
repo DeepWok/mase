@@ -160,8 +160,7 @@ class ToyConvNet(nn.Module):
 # Getters ------------------------------------------------------------------------------
 @register_mase_checkpoint("toy")
 def get_toynet(
-    pretrained=False,
-    **kwargs: Any,
+    pretrained=False, **kwargs: Any,
 ):
     info = kwargs["dataset_info"]
     image_size = info.image_size
@@ -170,9 +169,7 @@ def get_toynet(
 
 
 def get_toy_tiny(
-    info,
-    pretrained=False,
-    **kwargs: Any,
+    info, pretrained=False, **kwargs: Any,
 ):
     image_size = info.image_size
     num_classes = info.num_classes
@@ -180,9 +177,7 @@ def get_toy_tiny(
 
 
 def get_toy_testmodel(
-    info,
-    pretrained=False,
-    **kwargs: Any,
+    info, pretrained=False, **kwargs: Any,
 ):
     image_size = info["image_size"]
     num_classes = info.num_classes
@@ -191,9 +186,7 @@ def get_toy_testmodel(
 
 
 def get_toy_convnet(
-    info,
-    pretrained=False,
-    **kwargs: Any,
+    info, pretrained=False, **kwargs: Any,
 ):
     # NOTE: The model isn't configurable through the CLI or a configuration file yet.
     num_classes = info.num_classes

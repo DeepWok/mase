@@ -23,10 +23,7 @@ def deepgetattr(obj, attr, default=None):
 
 
 def _import_solution(
-    mg,
-    solution: dict,
-    mesh: MeshModel,
-    extrapolate_sharding: bool = True,
+    mg, solution: dict, mesh: MeshModel, extrapolate_sharding: bool = True,
 ):
     """Import an autosharding solution into the metadata of the MaseGraph.
 
@@ -71,18 +68,14 @@ def _import_solution(
         # Annotate the metadata for each argument
         for arg, arg_spec in solution[node.name].get("args", {}).items():
             node.meta["mase"]["common"]["args"][arg]["dtensor_spec"] = _DTensorSpec(
-                mesh=mesh,
-                placements=arg_spec,
+                mesh=mesh, placements=arg_spec,
             )
 
         # Annotate the metadata for each result
         for result, result_spec in solution[node.name].get("results", {}).items():
-            node.meta["mase"]["common"]["results"][result]["dtensor_spec"] = (
-                _DTensorSpec(
-                    mesh=mesh,
-                    placements=result_spec,
-                )
-            )
+            node.meta["mase"]["common"]["results"][result][
+                "dtensor_spec"
+            ] = _DTensorSpec(mesh=mesh, placements=result_spec,)
 
     return mg, {}
 
@@ -114,10 +107,7 @@ def _export_solution(mg, export_file: str = "ilp_solution.pkl"):
                 logger.warning(
                     f"DTensor spec not found for arg: {arg} in node: {node_name}. Assigning fully-replicated solution."
                 )
-                spec = _DTensorSpec(
-                    None,
-                    (Replicate(), Replicate()),
-                )
+                spec = _DTensorSpec(None, (Replicate(), Replicate()),)
             else:
                 spec = arg_info["dtensor_spec"]
 
@@ -132,10 +122,7 @@ def _export_solution(mg, export_file: str = "ilp_solution.pkl"):
                 logger.warning(
                     f"DTensor spec not found for result: {result} in node: {node_name}. Assigning fully-replicated solution."
                 )
-                spec = _DTensorSpec(
-                    None,
-                    (Replicate(), Replicate()),
-                )
+                spec = _DTensorSpec(None, (Replicate(), Replicate()),)
             else:
                 spec = result_info["dtensor_spec"]
             out_dict[node_name]["results"][result] = spec.placements
@@ -197,9 +184,7 @@ def _get_sharding_map(mg):
             if module not in tensor_sharding_map:
                 tensor_sharding_map[module] = {
                     "node": node.name,
-                    "sharding": {
-                        attr: out_specs,
-                    },
+                    "sharding": {attr: out_specs,},
                 }
             else:
                 tensor_sharding_map[module]["sharding"][attr] = out_specs
@@ -302,8 +287,11 @@ def autosharding_analysis_pass(mg, pass_args: dict = {}):
     if not pass_args.get(f"skip_forward", False):
         tensor_sharding_map = _get_sharding_map(mg)
 
-    return mg, {
-        "autosharding_time": autosharding_time,
-        "tensor_sharding_map": tensor_sharding_map,
-        **pass_outs,
-    }
+    return (
+        mg,
+        {
+            "autosharding_time": autosharding_time,
+            "tensor_sharding_map": tensor_sharding_map,
+            **pass_outs,
+        },
+    )
