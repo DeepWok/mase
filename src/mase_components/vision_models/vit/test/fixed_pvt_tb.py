@@ -49,7 +49,7 @@ class VerificationCase:
         self.in_x = 224
         self.embed_dim = 384
         self.patch_size = 16
-        self.num_patch = self.in_y * self.in_x // (self.patch_size ** 2)
+        self.num_patch = self.in_y * self.in_x // (self.patch_size**2)
 
         self.num_heads = 6
         self.mlp_ratio = 2
@@ -64,7 +64,7 @@ class VerificationCase:
         self.head_unroll_out_x = 1
 
         self.pe_iter_weight = int(
-            (self.patch_size ** 2)
+            (self.patch_size**2)
             * self.in_c
             * self.embed_dim
             / self.pe_unroll_kernel_out
@@ -1148,7 +1148,10 @@ class VerificationCase:
             unroll_out_channels,
         ).permute(0, 3, 1, 4, 2)
 
-        w_tensor = w_tensor.reshape(-1, unroll_out_channels * unroll_kernel_out,)
+        w_tensor = w_tensor.reshape(
+            -1,
+            unroll_out_channels * unroll_kernel_out,
+        )
         w_in = w_tensor.type(torch.int).flip(0).tolist()
         # bias_pack
         bias_tensor = bias.repeat(samples, 1).reshape(-1, unroll_out_channels)
@@ -1511,7 +1514,8 @@ def runner():
         build_args=extra_args,
     )
     runner.test(
-        hdl_toplevel="fixed_pvt", test_module="fixed_pvt_tb",
+        hdl_toplevel="fixed_pvt",
+        test_module="fixed_pvt_tb",
     )
 
 

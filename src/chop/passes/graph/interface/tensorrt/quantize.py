@@ -21,7 +21,6 @@ if find_spec("pytorch_quantization") is None or find_spec("tensorrt") is None:
             "pytorch_quantization is not installed. Cannot use tensorrt quantize pass."
         )
 
-
 else:
     import tensorrt as trt
     from pytorch_quantization import quant_modules, calib

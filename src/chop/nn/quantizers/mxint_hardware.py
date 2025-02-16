@@ -19,7 +19,7 @@ def mxint_quant_block(
     """
     exponent_bias = 2 ** (exponent_width - 1)
 
-    exponent_max = 2 ** exponent_width - 1 - exponent_bias
+    exponent_max = 2**exponent_width - 1 - exponent_bias
     exponent_min = -exponent_bias
 
     # exponent
@@ -29,9 +29,9 @@ def mxint_quant_block(
     # mantissa
     int_min = -(2 ** (width - 1))
     int_max = 2 ** (width - 1) - 1
-    mantissa = x / 2 ** exponent
+    mantissa = x / 2**exponent
     mantissa = torch.clamp(mantissa.floor(), int_min, int_max)
-    q_x = (2 ** exponent) * mantissa
+    q_x = (2**exponent) * mantissa
     return q_x
 
 

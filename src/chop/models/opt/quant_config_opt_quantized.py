@@ -32,7 +32,9 @@ An example of quant_config for opt
 
 
 def create_a_layer_config(
-    linear_qc: dict = None, bmm_qc: dict = None, layer_qc=None,
+    linear_qc: dict = None,
+    bmm_qc: dict = None,
+    layer_qc=None,
 ) -> dict:
     if (layer_qc is None and bmm_qc is None) and layer_qc is None:
         raise ValueError("Must provide either (linear_qc & bmm_qc ) or layer_qc")

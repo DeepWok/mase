@@ -64,7 +64,10 @@ class SoftermaxTB(Testbench):
         self.model = partial(
             fixed_softermax,
             dim=0,
-            q_config={"width": self.IN_WIDTH, "frac_width": self.IN_FRAC_WIDTH,},
+            q_config={
+                "width": self.IN_WIDTH,
+                "frac_width": self.IN_FRAC_WIDTH,
+            },
         )
 
         # Set verbosity of driver and monitor loggers to debug
@@ -72,7 +75,9 @@ class SoftermaxTB(Testbench):
         # self.out_data_monitor.log.setLevel(logging.DEBUG)
 
     def generate_inputs(self, batches):
-        return torch.randn((batches, self.TOTAL_DIM),)
+        return torch.randn(
+            (batches, self.TOTAL_DIM),
+        )
 
     async def run_test(self, batches, us):
         await self.reset()
@@ -88,7 +93,10 @@ class SoftermaxTB(Testbench):
             self.log.debug(f"Processing inputs: {batch}")
             driver_input = fixed_preprocess_tensor(
                 tensor=batch,
-                q_config={"width": self.IN_WIDTH, "frac_width": self.IN_FRAC_WIDTH,},
+                q_config={
+                    "width": self.IN_WIDTH,
+                    "frac_width": self.IN_FRAC_WIDTH,
+                },
                 parallelism=[self.PARALLELISM],
             )
             self.in_data_driver.load_driver(driver_input)
@@ -97,7 +105,10 @@ class SoftermaxTB(Testbench):
             self.log.debug(f"Processing outputs: {exp_out}")
             outs = fixed_preprocess_tensor(
                 tensor=exp_out,
-                q_config={"width": self.OUT_WIDTH, "frac_width": self.OUT_FRAC_WIDTH,},
+                q_config={
+                    "width": self.OUT_WIDTH,
+                    "frac_width": self.OUT_FRAC_WIDTH,
+                },
                 parallelism=[self.PARALLELISM],
             )
             self.out_data_monitor.load_monitor(outs)

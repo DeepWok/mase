@@ -133,7 +133,9 @@ def test_fixed_softermax_smoke():
     """
     mase_runner(
         trace=True,
-        module_param_list=[get_fixed_softermax_config(),],
+        module_param_list=[
+            get_fixed_softermax_config(),
+        ],
         # skip_build=True,
     )
 

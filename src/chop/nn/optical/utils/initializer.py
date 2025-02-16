@@ -31,7 +31,7 @@ def morr_uniform_(tensor, MORRConfig, n_op=4, biased=False, gain=1):
     """
     morr_fwhm = (
         -4
-        * np.pi ** 2
+        * np.pi**2
         * MORRConfig.radius
         * MORRConfig.effective_index
         * (

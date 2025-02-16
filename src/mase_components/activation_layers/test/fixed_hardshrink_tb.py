@@ -62,11 +62,11 @@ class Hardshrinktb(Testbench):
         # cond = torch.logical_not(torch.logical_and(inputs <= self.thresh*2**self.fracw, inputs >= -1 * self.thresh *2**self.fracw))
         # out = torch.where(cond, inputs, torch.tensor(0))
         # unsignedout = torch.where(out < 0, torch.tensor(out % (2**self.width)), out)
-        m = torch.nn.Hardshrink(self.thresh * 2 ** self.fracw)(inputs.to(torch.float))
+        m = torch.nn.Hardshrink(self.thresh * 2**self.fracw)(inputs.to(torch.float))
         mout = m.clamp(
             min=-1 * 2 ** (self.outputwidth - 1), max=2 ** (self.outputwidth - 1) - 1
         )
-        m2 = torch.where(mout < 0, torch.tensor(mout % (2 ** self.outputwidth)), mout)
+        m2 = torch.where(mout < 0, torch.tensor(mout % (2**self.outputwidth)), mout)
         return m2.to(torch.int32).tolist()
 
     def generate_inputs(self, w, fracw):
@@ -75,7 +75,7 @@ class Hardshrinktb(Testbench):
         )
         realinp = torch.randn(self.samples)
         inputs = self.dquantizer(realinp)
-        intinp = (inputs * 2 ** self.fracw).to(torch.int64)
+        intinp = (inputs * 2**self.fracw).to(torch.int64)
         intinp.clamp(
             min=-(2 ** (self.width - self.fracw - 1)),
             max=2 ** (self.width - self.fracw - 1) - 1,

@@ -60,10 +60,10 @@ def generate_lookup(data_width: int, f_width: int, function: str, type="hex"):
         count += 1
         iarr.append(i)
         val = quanter(f(torch.tensor(i)))  # entry in the lookup table
-        lut[
-            doubletofx(data_width=data_width, f_width=f_width, num=i, type=type)
-        ] = doubletofx(
-            data_width=data_width, f_width=f_width, num=val.item(), type=type
+        lut[doubletofx(data_width=data_width, f_width=f_width, num=i, type=type)] = (
+            doubletofx(
+                data_width=data_width, f_width=f_width, num=val.item(), type=type
+            )
         )
         i += 2 ** -(f_width)
     return lut

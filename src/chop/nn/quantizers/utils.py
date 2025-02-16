@@ -224,8 +224,16 @@ class TernaryScaled(InplaceFunction):
         alpha = TernaryScaled.alpha(input, delta)
 
         output = torch.zeros_like(input)
-        pos_one = torch.where(input > delta, 1.0, 0.0,)
-        neg_one = torch.where(input < -delta, -1.0, 0.0,)
+        pos_one = torch.where(
+            input > delta,
+            1.0,
+            0.0,
+        )
+        neg_one = torch.where(
+            input < -delta,
+            -1.0,
+            0.0,
+        )
         output = (pos_one + neg_one) * alpha.view(-1, 1, 1, 1).expand(
             -1, input.size()[1], input.size()[2], input.size()[3]
         )
@@ -287,8 +295,16 @@ class Ternary(InplaceFunction):
         alpha = TernaryScaled.alpha(input, delta)
 
         output = torch.zeros_like(input)
-        pos_one = torch.where(input > delta, 1.0, 0.0,)
-        neg_one = torch.where(input < -delta, -1.0, 0.0,)
+        pos_one = torch.where(
+            input > delta,
+            1.0,
+            0.0,
+        )
+        neg_one = torch.where(
+            input < -delta,
+            -1.0,
+            0.0,
+        )
         output = pos_one + neg_one
         return output
 
@@ -397,7 +413,8 @@ def _block_1d_bias(x: Tensor, block_shape: List[int]):
 
 
 def _unblock_to_1d_bias(
-    blocked_x: Tensor, x_shape_before_blocking: List[int],
+    blocked_x: Tensor,
+    x_shape_before_blocking: List[int],
 ):
     """
     blocked bias shape: [num_blocks, block_size] -> [output_features]
@@ -592,7 +609,10 @@ def unblock(
             return _unblock_to_2d_activation(blocked_x, x_shape_before_blocking)
         else:
             return _unblock_to_2d_weight(
-                blocked_x, x_shape_before_blocking, padded_x_shape, block_shape,
+                blocked_x,
+                x_shape_before_blocking,
+                padded_x_shape,
+                block_shape,
             )
     elif len(x_shape_before_blocking) == 3:
         if skipped_first_dim_when_blocking:

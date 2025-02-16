@@ -561,7 +561,9 @@ class BertQuantizedIntermediate(nn.Module):
         super().__init__()
         # self.dense = nn.Linear(config.hidden_size, config.intermediate_size)
         self.dense = get_quantized_cls("linear", quant_config["dense"])(
-            config.hidden_size, config.intermediate_size, config=quant_config["dense"],
+            config.hidden_size,
+            config.intermediate_size,
+            config=quant_config["dense"],
         )
         self.quant_config = quant_config
         if isinstance(config.hidden_act, str):
@@ -580,7 +582,9 @@ class BertQuantizedOutput(nn.Module):
         super().__init__()
         # self.dense = nn.Linear(config.intermediate_size, config.hidden_size)
         self.dense = get_quantized_cls("linear", quant_config["dense"])(
-            config.intermediate_size, config.hidden_size, config=quant_config["dense"],
+            config.intermediate_size,
+            config.hidden_size,
+            config=quant_config["dense"],
         )
         self.quant_config = quant_config
         self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)

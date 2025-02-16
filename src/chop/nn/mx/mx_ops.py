@@ -281,7 +281,10 @@ def _quantize_mx(
     else:
         # Get shared exponents
         shared_exp = _shared_exponents(
-            A, method=shared_exp_method, axes=shared_exp_axes, ebits=0,
+            A,
+            method=shared_exp_method,
+            axes=shared_exp_axes,
+            ebits=0,
         )
 
         # Flush subnormal FP32 inputs to zero
@@ -296,7 +299,7 @@ def _quantize_mx(
         shared_exp[shared_exp > scale_emax] = float("NaN")
         shared_exp[shared_exp < -scale_emax] = -scale_emax
 
-        A = A / (2 ** shared_exp)
+        A = A / (2**shared_exp)
 
         A = _quantize_elemwise_core(
             A,
@@ -309,7 +312,7 @@ def _quantize_mx(
             custom_cuda=custom_cuda,
         )
 
-        A = A * (2 ** shared_exp)
+        A = A * (2**shared_exp)
 
     # Undo tile reshaping
     if block_size:

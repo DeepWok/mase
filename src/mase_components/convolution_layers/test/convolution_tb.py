@@ -130,7 +130,11 @@ class ConvArithTB(Testbench):
         # out2 = get_manual_result(x, w, b, 2,1,2,2,4,4,0,0,12,4)
         # data_in_pack
 
-        x = q2i(x, config["data_in_width"], config["data_in_frac_width"],)
+        x = q2i(
+            x,
+            config["data_in_width"],
+            config["data_in_frac_width"],
+        )
 
         self.log.info(f"x = {x}")
         # from (samples, c, h, w) to (samples*h*w*c/unroll_in_c, unroll_in_c)
@@ -140,8 +144,16 @@ class ConvArithTB(Testbench):
 
         self.log.info(f"weight = {w}")
         self.log.info(f"bias = {b}")
-        w = q2i(w, config["weight_width"], config["weight_frac_width"],)
-        b = q2i(b, config["bias_width"], config["bias_frac_width"],)
+        w = q2i(
+            w,
+            config["weight_width"],
+            config["weight_frac_width"],
+        )
+        b = q2i(
+            b,
+            config["bias_width"],
+            config["bias_frac_width"],
+        )
         self.log.info(f"weight = {w}")
         self.log.info(f"bias = {b}")
         hw_w, hw_b = self.conv_pack(
@@ -157,7 +169,11 @@ class ConvArithTB(Testbench):
             unroll_kernel_out=self.get_parameter("UNROLL_KERNEL_OUT"),
             unroll_out_channels=self.get_parameter("UNROLL_OUT_C"),
         )
-        exp_out = q2i(out, config["out_width"], config["out_frac_width"],)
+        exp_out = q2i(
+            out,
+            config["out_width"],
+            config["out_frac_width"],
+        )
         exp_out = (
             exp_out.reshape(
                 -1, self.get_parameter("OUT_C"), self.get_parameter("SLIDING_NUM")
@@ -207,7 +223,10 @@ class ConvArithTB(Testbench):
             unroll_out_channels,
         ).permute(0, 3, 1, 4, 2)
 
-        w_tensor = w_tensor.reshape(-1, unroll_out_channels * unroll_kernel_out,)
+        w_tensor = w_tensor.reshape(
+            -1,
+            unroll_out_channels * unroll_kernel_out,
+        )
         w_in = w_tensor.type(torch.int).tolist()
         # bias_pack
         bias_tensor = (
@@ -313,7 +332,10 @@ def test_fixed_linear_smoke():
     Some quick tests to check if the module is working.
     """
     mase_runner(
-        trace=True, module_param_list=[get_fixed_conv_config(),],
+        trace=True,
+        module_param_list=[
+            get_fixed_conv_config(),
+        ],
     )
 
 

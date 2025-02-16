@@ -191,7 +191,13 @@ quan_args = {
     "by": "type",
     "default": {"config": {"name": None}},
     "fuse": True,
-    "relu": {"config": {"name": "IFNode", "mode": "99.9%", "momentum": 0.1,}},
+    "relu": {
+        "config": {
+            "name": "IFNode",
+            "mode": "99.9%",
+            "momentum": 0.1,
+        }
+    },
     "train_data_loader": input_generator,
     "device": "cpu",  # "device": "cuda",
 }

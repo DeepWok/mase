@@ -27,10 +27,22 @@ def add_common_metadata(model_cls_name: str) -> MaseGraph:
     # mg.fx_graph.print_tabular()
 
     input_ids = torch.randint(
-        0, config.vocab_size, (1, 128, config.hidden_size,), device="meta",
+        0,
+        config.vocab_size,
+        (
+            1,
+            128,
+            config.hidden_size,
+        ),
+        device="meta",
     )
     mg, _ = passes.add_common_metadata_analysis_pass(
-        mg, pass_args={"dummy_in": {"input_ids": input_ids,},},
+        mg,
+        pass_args={
+            "dummy_in": {
+                "input_ids": input_ids,
+            },
+        },
     )
     return mg
 

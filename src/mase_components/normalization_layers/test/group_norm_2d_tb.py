@@ -79,7 +79,7 @@ class GroupNorm2dTB(Testbench):
         self.out_width_tup = self.OUT_WIDTH, self.OUT_FRAC_WIDTH
 
         # Inverse Square Root LUT
-        self.isqrt_lut = make_lut(2 ** 5, 16)
+        self.isqrt_lut = make_lut(2**5, 16)
 
         self.num_groups = randint(2, 3)
         self.total_channels = self.GROUP_CHANNELS * self.num_groups
@@ -141,7 +141,7 @@ class GroupNorm2dTB(Testbench):
             -1, self.total_channels, self.TOTAL_DIM1, self.TOTAL_DIM0
         )
         x = sign_extend_t(x, self.IN_WIDTH).to(dtype=torch.float32) / (
-            2 ** self.IN_FRAC_WIDTH
+            2**self.IN_FRAC_WIDTH
         )
 
         # Float Model
@@ -239,7 +239,12 @@ def test_group_norm_2d():
     makedirs(mem_dir, exist_ok=True)
 
     def isqrt_width(
-        total_dim0, total_dim1, compute_dim0, compute_dim1, group_channels, in_width,
+        total_dim0,
+        total_dim1,
+        compute_dim0,
+        compute_dim1,
+        group_channels,
+        in_width,
     ):
         depth_dim0 = total_dim0 // compute_dim0
         depth_dim1 = total_dim1 // compute_dim1
@@ -269,7 +274,7 @@ def test_group_norm_2d():
         isqrt_w = isqrt_width(
             total_dim0, total_dim1, compute_dim0, compute_dim1, channels, in_width
         )
-        lut = make_lut(2 ** LUT_POW, isqrt_w)
+        lut = make_lut(2**LUT_POW, isqrt_w)
         mem_path = mem_dir / f"lutmem-{str_id}.mem"
         write_memb(mem_path, lut, isqrt_w)
         params = {

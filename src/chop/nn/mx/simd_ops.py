@@ -307,7 +307,7 @@ class SIMDSquare(torch.autograd.Function):
         else:
             ctx.save_for_backward(in1)
 
-        return vec_quantize(qin1 ** 2, mx_specs=mx_specs)
+        return vec_quantize(qin1**2, mx_specs=mx_specs)
 
     @staticmethod
     def backward(ctx, g):

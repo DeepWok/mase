@@ -95,7 +95,8 @@ def runner():
         extra_args.append(f"-G{k}={v}")
 
     mase_runner(
-        trace=True, module_param_list=[test_case.get_dut_parameters()],
+        trace=True,
+        module_param_list=[test_case.get_dut_parameters()],
     )
 
 

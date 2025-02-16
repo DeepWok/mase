@@ -310,7 +310,10 @@ def gen_forward_codes(
         params.append(("v_reset", "const float &"))
 
     params.extend(
-        [("neuron_num", "const int &"), ("numel", "const int &"),]
+        [
+            ("neuron_num", "const int &"),
+            ("numel", "const int &"),
+        ]
     )
     params_name = []
     for item in params:

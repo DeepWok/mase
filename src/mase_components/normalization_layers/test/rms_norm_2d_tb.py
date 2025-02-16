@@ -151,7 +151,7 @@ class RMSNorm2dTB(Testbench):
         x = torch.stack(matrix_list).reshape(
             -1, self.CHANNELS, self.TOTAL_DIM1, self.TOTAL_DIM0
         )
-        x = sign_extend_t(x, width).to(dtype=torch.float32) / (2 ** frac_width)
+        x = sign_extend_t(x, width).to(dtype=torch.float32) / (2**frac_width)
         return x
 
     def output_monitor_split(self, x, width, frac_width):
@@ -248,7 +248,12 @@ def test_rms_norm_2d():
     makedirs(mem_dir, exist_ok=True)
 
     def isqrt_width(
-        total_dim0, total_dim1, compute_dim0, compute_dim1, group_channels, in_width,
+        total_dim0,
+        total_dim1,
+        compute_dim0,
+        compute_dim1,
+        group_channels,
+        in_width,
     ):
         depth_dim0 = total_dim0 // compute_dim0
         depth_dim1 = total_dim1 // compute_dim1
@@ -277,7 +282,7 @@ def test_rms_norm_2d():
         isqrt_w = isqrt_width(
             total_dim0, total_dim1, compute_dim0, compute_dim1, channels, in_width
         )
-        lut = make_lut(2 ** LUT_POW, isqrt_w)
+        lut = make_lut(2**LUT_POW, isqrt_w)
         mem_path = mem_dir / f"lutmem-{str_id}.mem"
         write_memb(mem_path, lut, isqrt_w)
         params = {

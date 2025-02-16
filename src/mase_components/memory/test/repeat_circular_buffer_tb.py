@@ -30,7 +30,7 @@ class CircularBufferTB(Testbench):
         inputs = []
         for _ in range(num):
             inputs.extend(
-                [random.randint(0, 2 ** self.DATA_WIDTH - 1) for _ in range(self.SIZE)]
+                [random.randint(0, 2**self.DATA_WIDTH - 1) for _ in range(self.SIZE)]
             )
         return inputs
 

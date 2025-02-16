@@ -44,7 +44,11 @@ class FixedSelfAttentionHeadTB(Testbench):
         )
 
         self.out_monitor = StreamMonitor(
-            dut.clk, dut.out, dut.out_valid, dut.out_ready, check=False,
+            dut.clk,
+            dut.out,
+            dut.out_valid,
+            dut.out_ready,
+            check=False,
         )
 
         # Model
@@ -56,7 +60,8 @@ class FixedSelfAttentionHeadTB(Testbench):
             "frac_width": self.get_parameter("IN_DATA_PRECISION_1"),
         }
         self.model = BertSelfAttentionHeadInteger(
-            config=self.config, q_config=self.q_config,
+            config=self.config,
+            q_config=self.q_config,
         )
 
         # Set verbosity of driver and monitor loggers to debug
@@ -114,21 +119,27 @@ class FixedSelfAttentionHeadTB(Testbench):
         # * Load the query driver
         self.log.info(f"Processing query inputs: {inputs['query_layer']}")
         query_inputs = self.preprocess_tensor(
-            tensor=inputs["query_layer"], config=self.q_config, parallelism=parallelism,
+            tensor=inputs["query_layer"],
+            config=self.q_config,
+            parallelism=parallelism,
         )
         self.query_driver.load_driver(query_inputs)
 
         # * Load the key driver
         self.log.info(f"Processing key inputs: {inputs['key_layer']}")
         key_inputs = self.preprocess_tensor(
-            tensor=inputs["key_layer"], config=self.q_config, parallelism=parallelism,
+            tensor=inputs["key_layer"],
+            config=self.q_config,
+            parallelism=parallelism,
         )
         self.key_driver.load_driver(key_inputs)
 
         # * Load the value driver
         self.log.info(f"Processing value inputs: {inputs['value_layer']}")
         value_inputs = self.preprocess_tensor(
-            tensor=inputs["value_layer"], config=self.q_config, parallelism=parallelism,
+            tensor=inputs["value_layer"],
+            config=self.q_config,
+            parallelism=parallelism,
         )
         self.value_driver.load_driver(value_inputs)
 
@@ -187,11 +198,18 @@ def test_fixed_self_attention_head_smoke():
 
     # * Generate exponential LUT for softmax
     generate_memory.generate_sv_lut(
-        "exp", 16, 3, 16, 3, path=Path(__file__).parents[1] / "rtl",
+        "exp",
+        16,
+        3,
+        16,
+        3,
+        path=Path(__file__).parents[1] / "rtl",
     )
     mase_runner(
         trace=True,
-        module_param_list=[get_fixed_self_attention_head_config(),],
+        module_param_list=[
+            get_fixed_self_attention_head_config(),
+        ],
         skip_build=False,
     )
 

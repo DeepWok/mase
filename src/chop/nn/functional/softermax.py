@@ -11,7 +11,7 @@ def softermax(input: Tensor, dim: int) -> Tensor:
         Tensor: Output tensor
     """
     out = input - input.max(dim=dim, keepdim=True).values.floor()
-    out = 2 ** out
+    out = 2**out
     row_sum = out.sum(dim=dim, keepdim=True)
     # Elementwise division
     out = out / row_sum

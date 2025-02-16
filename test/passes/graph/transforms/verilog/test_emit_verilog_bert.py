@@ -174,7 +174,10 @@ def emit_verilog_bert(
     mg, _ = bert_update_metadata(mg, q_config)
 
     mg, _ = passes.add_hardware_metadata_analysis_pass(
-        mg, pass_args={"max_parallelism": [max_parallelism] * 4,},
+        mg,
+        pass_args={
+            "max_parallelism": [max_parallelism] * 4,
+        },
     )
 
     # * Save the metadata to a file for debugging
@@ -190,7 +193,11 @@ def emit_verilog_bert(
     mg, _ = passes.emit_bram_transform_pass(mg)
     mg, _ = passes.emit_internal_rtl_transform_pass(mg)
     mg, _ = passes.emit_cocotb_transform_pass(
-        mg, pass_args={"wait_time": wait_count, "wait_unit": wait_unit,},
+        mg,
+        pass_args={
+            "wait_time": wait_count,
+            "wait_unit": wait_unit,
+        },
     )
     mg, _ = passes.emit_vivado_project_transform_pass(mg)
 

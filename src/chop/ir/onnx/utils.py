@@ -188,7 +188,10 @@ ONNX_OP_MAPPING = {
         "target": torch.mean,
         "input_mapping": ["input"],
         "attribute_mapping": {"keepdims": "", "axes": ""},
-        "attribute_transform": {"keepdims": None, "axes": None,},
+        "attribute_transform": {
+            "keepdims": None,
+            "axes": None,
+        },
         "attribute_default": {"keepdims": 1, "axes": None},
     },
     "Expand": {
@@ -332,7 +335,9 @@ ONNX_OP_MAPPING = {
         "input_mapping": ["input"],
         "attribute_mapping": {"perm": "dims"},
         "attribute_transform": {"perm": lambda x: [i for i in x]},
-        "attribute_default": {"perm": None,},
+        "attribute_default": {
+            "perm": None,
+        },
     },
     "Max": {
         "fx_op": "call_function",

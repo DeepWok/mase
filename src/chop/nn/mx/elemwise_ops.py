@@ -33,16 +33,16 @@ from .formats import _get_min_norm, _get_max_norm
 # exponents smaller than -126
 def _safe_lshift(x, bits, exp):
     if exp is None:
-        return x * (2 ** bits)
+        return x * (2**bits)
     else:
-        return x / (2 ** exp) * (2 ** bits)
+        return x / (2**exp) * (2**bits)
 
 
 def _safe_rshift(x, bits, exp):
     if exp is None:
-        return x / (2 ** bits)
+        return x / (2**bits)
     else:
-        return x / (2 ** bits) * (2 ** exp)
+        return x / (2**bits) * (2**exp)
 
 
 def _round_mantissa(A, bits, round, clamp=False):

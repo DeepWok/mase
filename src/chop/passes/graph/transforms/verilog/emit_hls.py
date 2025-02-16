@@ -121,7 +121,12 @@ csynth_design
     # Call Vitis HLS for synthesis
     vitis_hls = os.path.abspath(
         os.path.join(
-            os.path.dirname(__file__), "..", "..", "..", "scripts", "run-vitis-hls.sh",
+            os.path.dirname(__file__),
+            "..",
+            "..",
+            "..",
+            "scripts",
+            "run-vitis-hls.sh",
         )
     )
     assert os.path.isfile(

@@ -44,7 +44,7 @@ class VerificationCase:
     def sw_cast(self, inputs):
         outputs = (
             integer_floor_quantizer(inputs, self.out_width, self.out_frac_width)
-            * 2 ** self.out_frac_width
+            * 2**self.out_frac_width
         )
         # breakpoint()
         return outputs

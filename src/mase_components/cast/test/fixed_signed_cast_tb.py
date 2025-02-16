@@ -18,7 +18,7 @@ import pytest
 def _fixed_signed_cast_model(
     float_input, out_width, out_frac_width, symmetric, rounding_mode
 ):
-    scaled_float = float_input * (2 ** out_frac_width)
+    scaled_float = float_input * (2**out_frac_width)
     if rounding_mode == "floor":
         out_int = my_floor(scaled_float)
     elif rounding_mode == "round_nearest_half_even":
@@ -30,7 +30,7 @@ def _fixed_signed_cast_model(
         -(2 ** (out_width - 1)) + 1 if symmetric else -(2 ** (out_width - 1)),
         (2 ** (out_width - 1)) - 1,
     )
-    out_float = out_int / (2 ** out_frac_width)
+    out_float = out_int / (2**out_frac_width)
     # out_uint is a non-differentiable path
     out_uint = signed_to_unsigned(out_int.int(), out_width)
     return out_float, out_uint
@@ -58,9 +58,9 @@ class FixedSignedCastTB(Testbench):
         )
 
     def generate_inputs(self):
-        uints = torch.arange(2 ** self.IN_WIDTH)
+        uints = torch.arange(2**self.IN_WIDTH)
         num_int = sign_extend_t(uints, self.IN_WIDTH)
-        num_float = num_int / (2 ** self.IN_FRAC_WIDTH)
+        num_float = num_int / (2**self.IN_FRAC_WIDTH)
         return num_int, num_float
 
     def rounding_mode(self):
@@ -150,7 +150,10 @@ def test_fixed_signed_cast():
         l = list()
         for cfg in cfg_list:
             l.extend(
-                [{**cfg, "SYMMETRIC": 0}, {**cfg, "SYMMETRIC": 1},]
+                [
+                    {**cfg, "SYMMETRIC": 0},
+                    {**cfg, "SYMMETRIC": 1},
+                ]
             )
         return l
 

@@ -128,11 +128,31 @@ def neurons_random_fan_in(
 
 
 weight_criteria_map = {
-    "local": {"elementwise": {"random": random, "l1-norm": l1,}},
-    "global": {"elementwise": {"random": random, "l1-norm": global_weight_l1,}},
+    "local": {
+        "elementwise": {
+            "random": random,
+            "l1-norm": l1,
+        }
+    },
+    "global": {
+        "elementwise": {
+            "random": random,
+            "l1-norm": global_weight_l1,
+        }
+    },
 }
 
 activation_criteria_map = {
-    "local": {"elementwise": {"random": random, "l1-norm": l1,}},
-    "global": {"elementwise": {"random": random, "l1-norm": global_activation_l1,}},
+    "local": {
+        "elementwise": {
+            "random": random,
+            "l1-norm": l1,
+        }
+    },
+    "global": {
+        "elementwise": {
+            "random": random,
+            "l1-norm": global_activation_l1,
+        }
+    },
 }

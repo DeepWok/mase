@@ -78,8 +78,8 @@ def int_floor_quantizer(x: Tensor, width: int, frac_width: int, signed=True):
         int_max = 2 ** (width - 1) - 1
     else:
         int_min = 0
-        int_max = 2 ** width - 1
-    scale = 2 ** frac_width
+        int_max = 2**width - 1
+    scale = 2**frac_width
     return torch.clamp(torch.floor(x.mul(scale)), int_min, int_max).div(scale)
 
 

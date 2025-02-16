@@ -54,7 +54,9 @@ class Quantizer:
             )
 
         quantized_model = quantize_dynamic(
-            model_path, quantized_model_path, weight_type=precision,
+            model_path,
+            quantized_model_path,
+            weight_type=precision,
         )
 
         self.logger.info("Quantization complete. Model is now dynamically quantized.")

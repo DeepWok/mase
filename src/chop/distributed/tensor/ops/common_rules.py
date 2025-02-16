@@ -37,7 +37,10 @@ def _gen_reshard_suggestions(
         )
     suggested_schema = OpSchema(op_schema.op, tuple(suggested_arg_specs), {})
     suggested_schema._inplace_rewrap_schema_suggestion(op_schema)
-    return OutputSharding(None, redistribute_schema=suggested_schema,)
+    return OutputSharding(
+        None,
+        redistribute_schema=suggested_schema,
+    )
 
 
 def einop_rule(
@@ -215,7 +218,10 @@ def einop_rule(
     )
     return OutputSharding(
         _DTensorSpec.from_dim_map(
-            input_specs[0].mesh, output_dim_map, pending_sums, tensor_meta=tensor_meta,
+            input_specs[0].mesh,
+            output_dim_map,
+            pending_sums,
+            tensor_meta=tensor_meta,
         )
     )
 
@@ -275,5 +281,8 @@ def pointwise_rule(op_schema: OpSchema, linearity: bool = False) -> OutputShardi
             enforce_sharding[out_dimchar] = mesh_dim
 
     return einop_rule(
-        fmt, op_schema, linearity=linearity, enforce_sharding=enforce_sharding,
+        fmt,
+        op_schema,
+        linearity=linearity,
+        enforce_sharding=enforce_sharding,
     )

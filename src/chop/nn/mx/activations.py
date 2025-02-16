@@ -434,7 +434,10 @@ class SiLUFunction(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, grad_output):
-        (y, sig_x,) = ctx.saved_tensors
+        (
+            y,
+            sig_x,
+        ) = ctx.saved_tensors
 
         grad_output = vec_quantize(grad_output, mx_specs=ctx.mx_specs)
         temp = vec_sub(1.0, sig_x, mx_specs=ctx.mx_specs)

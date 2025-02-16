@@ -189,7 +189,12 @@ class VGG11_Weights(WeightsEnum):
         meta={
             **_COMMON_META,
             "num_params": 132863336,
-            "_metrics": {"ImageNet-1K": {"acc@1": 69.020, "acc@5": 88.628,}},
+            "_metrics": {
+                "ImageNet-1K": {
+                    "acc@1": 69.020,
+                    "acc@5": 88.628,
+                }
+            },
             "_ops": 7.609,
             "_file_size": 506.84,
         },
@@ -204,7 +209,12 @@ class VGG11_BN_Weights(WeightsEnum):
         meta={
             **_COMMON_META,
             "num_params": 132868840,
-            "_metrics": {"ImageNet-1K": {"acc@1": 70.370, "acc@5": 89.810,}},
+            "_metrics": {
+                "ImageNet-1K": {
+                    "acc@1": 70.370,
+                    "acc@5": 89.810,
+                }
+            },
             "_ops": 7.609,
             "_file_size": 506.881,
         },
@@ -219,7 +229,12 @@ class VGG13_Weights(WeightsEnum):
         meta={
             **_COMMON_META,
             "num_params": 133047848,
-            "_metrics": {"ImageNet-1K": {"acc@1": 69.928, "acc@5": 89.246,}},
+            "_metrics": {
+                "ImageNet-1K": {
+                    "acc@1": 69.928,
+                    "acc@5": 89.246,
+                }
+            },
             "_ops": 11.308,
             "_file_size": 507.545,
         },
@@ -234,7 +249,12 @@ class VGG13_BN_Weights(WeightsEnum):
         meta={
             **_COMMON_META,
             "num_params": 133053736,
-            "_metrics": {"ImageNet-1K": {"acc@1": 71.586, "acc@5": 90.374,}},
+            "_metrics": {
+                "ImageNet-1K": {
+                    "acc@1": 71.586,
+                    "acc@5": 90.374,
+                }
+            },
             "_ops": 11.308,
             "_file_size": 507.59,
         },
@@ -249,7 +269,12 @@ class VGG16_Weights(WeightsEnum):
         meta={
             **_COMMON_META,
             "num_params": 138357544,
-            "_metrics": {"ImageNet-1K": {"acc@1": 71.592, "acc@5": 90.382,}},
+            "_metrics": {
+                "ImageNet-1K": {
+                    "acc@1": 71.592,
+                    "acc@5": 90.382,
+                }
+            },
             "_ops": 15.47,
             "_file_size": 527.796,
         },
@@ -269,7 +294,10 @@ class VGG16_Weights(WeightsEnum):
             "categories": None,
             "recipe": "https://github.com/amdegroot/ssd.pytorch#training-ssd",
             "_metrics": {
-                "ImageNet-1K": {"acc@1": float("nan"), "acc@5": float("nan"),}
+                "ImageNet-1K": {
+                    "acc@1": float("nan"),
+                    "acc@5": float("nan"),
+                }
             },
             "_ops": 15.47,
             "_file_size": 527.802,
@@ -290,7 +318,12 @@ class VGG16_BN_Weights(WeightsEnum):
         meta={
             **_COMMON_META,
             "num_params": 138365992,
-            "_metrics": {"ImageNet-1K": {"acc@1": 73.360, "acc@5": 91.516,}},
+            "_metrics": {
+                "ImageNet-1K": {
+                    "acc@1": 73.360,
+                    "acc@5": 91.516,
+                }
+            },
             "_ops": 15.47,
             "_file_size": 527.866,
         },
@@ -305,7 +338,12 @@ class VGG19_Weights(WeightsEnum):
         meta={
             **_COMMON_META,
             "num_params": 143667240,
-            "_metrics": {"ImageNet-1K": {"acc@1": 72.376, "acc@5": 90.876,}},
+            "_metrics": {
+                "ImageNet-1K": {
+                    "acc@1": 72.376,
+                    "acc@5": 90.876,
+                }
+            },
             "_ops": 19.632,
             "_file_size": 548.051,
         },
@@ -320,7 +358,12 @@ class VGG19_BN_Weights(WeightsEnum):
         meta={
             **_COMMON_META,
             "num_params": 143678248,
-            "_metrics": {"ImageNet-1K": {"acc@1": 74.218, "acc@5": 91.842,}},
+            "_metrics": {
+                "ImageNet-1K": {
+                    "acc@1": 74.218,
+                    "acc@5": 91.842,
+                }
+            },
             "_ops": 19.632,
             "_file_size": 548.143,
         },

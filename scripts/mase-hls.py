@@ -44,17 +44,33 @@ class MaseHLS:
 
     def quick_test(self):
         shutil.copy(
-            os.path.join(self.root, "test", "test_in.mlir",),
-            os.path.join(self.root, "test", "test.mlir",),
+            os.path.join(
+                self.root,
+                "test",
+                "test_in.mlir",
+            ),
+            os.path.join(
+                self.root,
+                "test",
+                "test.mlir",
+            ),
         )
         result = False
         cmd = [
             "mase-opt",
             "--preprocess-func=func-name=relu",
             "--canonicalize",
-            os.path.join(self.root, "test", "test.mlir",),
+            os.path.join(
+                self.root,
+                "test",
+                "test.mlir",
+            ),
             "-o",
-            os.path.join(self.root, "test", "test1.mlir",),
+            os.path.join(
+                self.root,
+                "test",
+                "test1.mlir",
+            ),
         ]
         result |= self.execute(cmd, log_output=True, cwd=self.root)
 
@@ -67,7 +83,11 @@ class MaseHLS:
             #                 "test",
             #                 "test.cpp",
             #             ),
-            os.path.join(self.root, "test", "test1.mlir",),
+            os.path.join(
+                self.root,
+                "test",
+                "test1.mlir",
+            ),
             "--debug",
         ]
         result |= self.execute(cmd, log_output=True, cwd=self.root)

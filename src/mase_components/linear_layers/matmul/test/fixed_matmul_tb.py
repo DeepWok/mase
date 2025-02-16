@@ -147,7 +147,10 @@ class VerificationCase:
         weight_tensor = {} \n\
         data_in = {} \n\
         weight_in = {} ".format(
-                data_tensor, weight_tensor, data_in, weight_in,
+                data_tensor,
+                weight_tensor,
+                data_in,
+                weight_in,
             )
         )
         data_in.reverse()
@@ -378,7 +381,8 @@ def runner():
         build_args=extra_args,
     )
     runner.test(
-        hdl_toplevel="fixed_matmul", test_module="fixed_matmul_tb",
+        hdl_toplevel="fixed_matmul",
+        test_module="fixed_matmul_tb",
     )
 
 

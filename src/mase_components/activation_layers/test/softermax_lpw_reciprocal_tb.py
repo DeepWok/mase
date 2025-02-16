@@ -38,7 +38,7 @@ class LPW_Reciprocal2TB(Testbench):
 
         # Specify Error Threshold
         self.percentage_error = 0.05  # 5%
-        self.error_threshold_bits = ceil(self.percentage_error * (2 ** self.OUT_WIDTH))
+        self.error_threshold_bits = ceil(self.percentage_error * (2**self.OUT_WIDTH))
 
         self.output_monitor = ErrorThresholdStreamMonitor(
             dut.clk,
@@ -53,17 +53,17 @@ class LPW_Reciprocal2TB(Testbench):
         )
 
     def generate_inputs(self, batches=100):
-        return [randint(0, 2 ** self.IN_WIDTH - 1) for _ in range(batches)]
+        return [randint(0, 2**self.IN_WIDTH - 1) for _ in range(batches)]
 
     def sweep_input(self):
-        return list(range(2 ** self.IN_WIDTH))
+        return list(range(2**self.IN_WIDTH))
 
     def model(self, inputs):
-        in_t = torch.tensor(inputs) / (2 ** self.IN_FRAC_WIDTH)
+        in_t = torch.tensor(inputs) / (2**self.IN_FRAC_WIDTH)
         recip = 1.0 / in_t
-        res = torch.floor(recip * 2 ** self.OUT_FRAC_WIDTH)
+        res = torch.floor(recip * 2**self.OUT_FRAC_WIDTH)
         res = torch.nan_to_num(res)
-        res = torch.clamp(res, 0, 2 ** self.OUT_WIDTH - 1)
+        res = torch.clamp(res, 0, 2**self.OUT_WIDTH - 1)
         res = res.int()
         return res.tolist()
 
@@ -107,14 +107,14 @@ async def sweep(dut):
     recv_log = tb.output_monitor.recv_log
     assert len(exp_out) == len(recv_log)
 
-    x = torch.tensor(inputs) / (2 ** tb.IN_FRAC_WIDTH)
+    x = torch.tensor(inputs) / (2**tb.IN_FRAC_WIDTH)
     ref = 1.0 / x
-    ref *= 2 ** tb.OUT_FRAC_WIDTH  # scale up
-    ref = torch.clamp(ref, 0, 2 ** tb.OUT_WIDTH - 1)
+    ref *= 2**tb.OUT_FRAC_WIDTH  # scale up
+    ref = torch.clamp(ref, 0, 2**tb.OUT_WIDTH - 1)
 
-    software_ref = ref / (2 ** tb.OUT_FRAC_WIDTH)
-    software_res = [x / (2 ** tb.OUT_FRAC_WIDTH) for x in exp_out]
-    hardware_res = [x / (2 ** tb.OUT_FRAC_WIDTH) for x in recv_log]
+    software_ref = ref / (2**tb.OUT_FRAC_WIDTH)
+    software_res = [x / (2**tb.OUT_FRAC_WIDTH) for x in exp_out]
+    hardware_res = [x / (2**tb.OUT_FRAC_WIDTH) for x in recv_log]
 
     data = pd.DataFrame(
         {
@@ -150,7 +150,10 @@ async def sweep(dut):
             ),
             color=alt.Color("Type"),
         )
-        .properties(width=600, height=300,)
+        .properties(
+            width=600,
+            height=300,
+        )
     )
 
     error_data = data[["x", "hardware error"]]
@@ -161,7 +164,10 @@ async def sweep(dut):
             x=alt.X("x").title(f"x (Q{tb.IN_WIDTH}.{tb.IN_FRAC_WIDTH} Fixed-point)"),
             y=alt.Y("hardware error").title(f"Error"),
         )
-        .properties(width=600, height=100,)
+        .properties(
+            width=600,
+            height=100,
+        )
     )
 
     (curve_fig & error_fig).save(
@@ -216,7 +222,7 @@ def width_cfgs():
     for width in range(2, 16 + 1):
         frac_width = width // 2
         if frac_width < 3:
-            entries = 2 ** frac_width
+            entries = 2**frac_width
         else:
             entries = 8
         cfgs.append(
@@ -254,7 +260,9 @@ def test_width_cfgs():
             "OUT_FRAC_WIDTH": 4,
         }
     ]
-    mase_runner(module_param_list=cfgs,)
+    mase_runner(
+        module_param_list=cfgs,
+    )
 
 
 def test_smoke():

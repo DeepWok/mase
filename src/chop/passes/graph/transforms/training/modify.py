@@ -65,7 +65,10 @@ def attach_backward_fn(q_fn: torch.autograd.Function, mase_op: str, q_fn_cfg: di
 
 
 def create_new_module(
-    mase_op: str, original_module: nn.Module, config: dict, node_meta: dict,
+    mase_op: str,
+    original_module: nn.Module,
+    config: dict,
+    node_meta: dict,
 ):
     original_module_cls = type(original_module)
 

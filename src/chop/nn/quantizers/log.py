@@ -8,7 +8,9 @@ from .utils import my_clamp, my_round
 
 
 def _log_quantize(
-    x: Tensor | ndarray, width: int, exponent_bias: int | Tensor | ndarray | None,
+    x: Tensor | ndarray,
+    width: int,
+    exponent_bias: int | Tensor | ndarray | None,
 ):
     """
     - Use non-uniform, base-2 logarithmic representation to encode IEEE FP32/64
@@ -30,16 +32,16 @@ def _log_quantize(
     if exponent_bias in (None, "none", "None"):
         exponent_bias = 2 ** (exponent_bits - 1) - 1
 
-    exponent_max = 2 ** exponent_bits - 1 - exponent_bias
+    exponent_max = 2**exponent_bits - 1 - exponent_bias
     exponent_min = -exponent_bias
-    min_pos = 2 ** exponent_min
+    min_pos = 2**exponent_min
 
     sign = torch.sign(x + min_pos * 0.1)
     value = torch.abs(x) + min_pos * 0.1
 
     exponent = my_clamp(my_round(torch.log2(value)), exponent_min, exponent_max)
 
-    return sign * (2 ** exponent)
+    return sign * (2**exponent)
 
 
 class LogQuantize(torch.autograd.Function):
@@ -56,7 +58,9 @@ class LogQuantize(torch.autograd.Function):
 
 
 def log_quantizer(
-    x: Tensor | ndarray, width: int, exponent_bias: int | Tensor | ndarray | None,
+    x: Tensor | ndarray,
+    width: int,
+    exponent_bias: int | Tensor | ndarray | None,
 ):
     """
     Convert IEEE FP32/64 to base-2 log quantized values

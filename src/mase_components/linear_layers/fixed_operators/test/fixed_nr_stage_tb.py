@@ -24,12 +24,12 @@ class VerificationCase(Testbench):
         self.assign_self_params(["WIDTH"])
 
     def generate_inputs(self, lut_pow):
-        samples = 2 ** self.WIDTH
+        samples = 2**self.WIDTH
         int_width = 1
         frac_width = self.WIDTH - 1
         data_x = []
         initial_guesses = []
-        lut_size = 2 ** lut_pow
+        lut_size = 2**lut_pow
         lut = make_lut(lut_size, self.WIDTH)
         # NOTE: since negative values are not supported by fixed formats since
         # isqrt only outputs positive results we cannot test every single com-

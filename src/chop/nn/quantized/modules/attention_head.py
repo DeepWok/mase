@@ -63,7 +63,10 @@ class BertSelfAttentionHeadInteger(_BertSelfAttentionHeadBase):
     def __init__(self, config, q_config: dict = None) -> None:
         super().__init__(config)
 
-        self.query_quantizer = partial(integer_quantizer, **q_config,)
+        self.query_quantizer = partial(
+            integer_quantizer,
+            **q_config,
+        )
         self.key_quantizer = partial(integer_quantizer, **q_config)
         self.value_quantizer = partial(integer_quantizer, **q_config)
 

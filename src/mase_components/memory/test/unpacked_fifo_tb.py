@@ -26,7 +26,7 @@ class UnpackedFifoTB(Testbench):
 
     def generate_inputs(self, batches=20):
         return [
-            [randint(0, (2 ** self.DATA_WIDTH) - 1) for _ in range(self.IN_NUM)]
+            [randint(0, (2**self.DATA_WIDTH) - 1) for _ in range(self.IN_NUM)]
             for _ in range(batches)
         ]
 

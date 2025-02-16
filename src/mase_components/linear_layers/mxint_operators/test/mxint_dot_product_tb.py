@@ -40,7 +40,10 @@ class MXIntDotProductTB(Testbench):
             dut.data_in_0_ready,
         )
         self.weight_driver = MultiSignalStreamDriver(
-            dut.clk, (dut.mweight, dut.eweight), dut.weight_valid, dut.weight_ready,
+            dut.clk,
+            (dut.mweight, dut.eweight),
+            dut.weight_valid,
+            dut.weight_ready,
         )
 
         self.data_out_0_monitor = MultiSignalStreamMonitor(
@@ -64,7 +67,9 @@ class MXIntDotProductTB(Testbench):
             )
             w = torch.rand(int(self.dut.BLOCK_SIZE))
             (weight, mweight, eweight) = mxint_quantize(
-                w, int(self.dut.WEIGHT_PRECISION_0), int(self.dut.WEIGHT_PRECISION_1),
+                w,
+                int(self.dut.WEIGHT_PRECISION_0),
+                int(self.dut.WEIGHT_PRECISION_1),
             )
             mdp_out = mdata_in @ mweight
             edp_out = edata_in + eweight

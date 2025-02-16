@@ -75,10 +75,16 @@ class ConvTranspose2dFunction(torch.autograd.Function):
         #   weight is (in_channels, out_channels/groups, ...)
         # quantize along in_channels
         qid_input = quantize_mx_op(
-            bf_in, mx_specs, elem_format=mx_specs["a_elem_format"], axes=[1],
+            bf_in,
+            mx_specs,
+            elem_format=mx_specs["a_elem_format"],
+            axes=[1],
         )
         qid_weight = quantize_mx_op(
-            bf_weight, mx_specs, elem_format=mx_specs["w_elem_format"], axes=[0],
+            bf_weight,
+            mx_specs,
+            elem_format=mx_specs["w_elem_format"],
+            axes=[0],
         )
 
         # compute output
@@ -108,7 +114,9 @@ class ConvTranspose2dFunction(torch.autograd.Function):
         input, weight = ctx.saved_tensors
 
         grad_output = quantize_elemwise_op(
-            grad_output, mx_specs=ctx.mx_specs, round=ctx.mx_specs["round_grad_input"],
+            grad_output,
+            mx_specs=ctx.mx_specs,
+            round=ctx.mx_specs["round_grad_input"],
         )
 
         #####################################################
@@ -118,7 +126,10 @@ class ConvTranspose2dFunction(torch.autograd.Function):
         #   output is (batch, out_channels, ...)
         # quantize along the batch dim
         qex_input = quantize_mx_op(
-            input, ctx.mx_specs, elem_format=ctx.mx_specs["a_elem_format"], axes=[0],
+            input,
+            ctx.mx_specs,
+            elem_format=ctx.mx_specs["a_elem_format"],
+            axes=[0],
         )
         qex_grad_output = quantize_mx_op(
             grad_output,
@@ -139,7 +150,9 @@ class ConvTranspose2dFunction(torch.autograd.Function):
 
         # element-wise quantize for grad_weight
         grad_weight = quantize_elemwise_op(
-            grad_weight, mx_specs=ctx.mx_specs, round=ctx.mx_specs["round_grad_weight"],
+            grad_weight,
+            mx_specs=ctx.mx_specs,
+            round=ctx.mx_specs["round_grad_weight"],
         )
 
         #####################################################
@@ -149,7 +162,10 @@ class ConvTranspose2dFunction(torch.autograd.Function):
         #   output is (batch, out_channels, ...)
         # reduction dim is out_channels
         qod_weight = quantize_mx_op(
-            weight, ctx.mx_specs, elem_format=ctx.mx_specs["w_elem_format"], axes=[1],
+            weight,
+            ctx.mx_specs,
+            elem_format=ctx.mx_specs["w_elem_format"],
+            axes=[1],
         )
         qod_grad_output = quantize_mx_op(
             grad_output,
@@ -171,7 +187,9 @@ class ConvTranspose2dFunction(torch.autograd.Function):
 
         # element-wise quantize for grad_input
         grad_input = quantize_elemwise_op(
-            grad_input, mx_specs=ctx.mx_specs, round=ctx.mx_specs["round_grad_input"],
+            grad_input,
+            mx_specs=ctx.mx_specs,
+            round=ctx.mx_specs["round_grad_input"],
         )
 
         #####################################################

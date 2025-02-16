@@ -195,16 +195,28 @@ class FixedGroupedQueryAttentionTB(Testbench):
 
         if self.HAS_BIAS == 1:
             self.bias_q_driver = StreamDriver(
-                dut.clk, dut.bias_query, dut.bias_query_valid, dut.bias_query_ready,
+                dut.clk,
+                dut.bias_query,
+                dut.bias_query_valid,
+                dut.bias_query_ready,
             )
             self.bias_k_driver = StreamDriver(
-                dut.clk, dut.bias_key, dut.bias_key_valid, dut.bias_key_ready,
+                dut.clk,
+                dut.bias_key,
+                dut.bias_key_valid,
+                dut.bias_key_ready,
             )
             self.bias_v_driver = StreamDriver(
-                dut.clk, dut.bias_value, dut.bias_value_valid, dut.bias_value_ready,
+                dut.clk,
+                dut.bias_value,
+                dut.bias_value_valid,
+                dut.bias_value_ready,
             )
             self.bias_o_driver = StreamDriver(
-                dut.clk, dut.bias_output, dut.bias_output_valid, dut.bias_output_ready,
+                dut.clk,
+                dut.bias_output,
+                dut.bias_output_valid,
+                dut.bias_output_ready,
             )
 
         self.error_threshold = 2
@@ -469,11 +481,11 @@ class FixedGroupedQueryAttentionTB(Testbench):
         num_v_weight_beats_sent = self.weight_v_driver.num_beats
         num_o_weight_beats_sent = self.weight_o_driver.num_beats
 
-        input_beats_per_sec = num_input_beats_sent / (nanosec * (10 ** -9))
-        num_q_beats_per_sec = num_q_weight_beats_sent / (nanosec * (10 ** -9))
-        num_k_beats_per_sec = num_k_weight_beats_sent / (nanosec * (10 ** -9))
-        num_v_beats_per_sec = num_v_weight_beats_sent / (nanosec * (10 ** -9))
-        num_o_beats_per_sec = num_o_weight_beats_sent / (nanosec * (10 ** -9))
+        input_beats_per_sec = num_input_beats_sent / (nanosec * (10**-9))
+        num_q_beats_per_sec = num_q_weight_beats_sent / (nanosec * (10**-9))
+        num_k_beats_per_sec = num_k_weight_beats_sent / (nanosec * (10**-9))
+        num_v_beats_per_sec = num_v_weight_beats_sent / (nanosec * (10**-9))
+        num_o_beats_per_sec = num_o_weight_beats_sent / (nanosec * (10**-9))
 
         self.log.info("Test length (ns): %.4f" % nanosec)
 
@@ -591,7 +603,9 @@ def test_fixed_linear_smoke():
     ]
 
     mase_runner(
-        module_param_list=cfgs, hierarchical=True, template=True,
+        module_param_list=cfgs,
+        hierarchical=True,
+        template=True,
     )
 
 
@@ -603,7 +617,9 @@ def test_parallelism_sweep():
             cfgs.append(get_config(16, 128, 8, 4, embedding_par, seq_par))
 
     mase_runner(
-        module_param_list=cfgs, hierarchical=True, template=True,
+        module_param_list=cfgs,
+        hierarchical=True,
+        template=True,
     )
 
 
@@ -615,7 +631,9 @@ def test_small_parallelism():
             cfgs.append(get_config(16, 128, 8, 4, embedding_par, seq_par))
 
     mase_runner(
-        module_param_list=cfgs, hierarchical=True, template=True,
+        module_param_list=cfgs,
+        hierarchical=True,
+        template=True,
     )
 
 
@@ -625,7 +643,9 @@ def test_heads_sweep():
         cfgs.append(get_config(256, 256, 16, kv_heads, 16, 1))
 
     mase_runner(
-        module_param_list=cfgs, hierarchical=True, template=True,
+        module_param_list=cfgs,
+        hierarchical=True,
+        template=True,
     )
 
 
@@ -637,7 +657,9 @@ def test_bitwidth_sweep():
         )
 
     mase_runner(
-        module_param_list=cfgs, hierarchical=True, template=True,
+        module_param_list=cfgs,
+        hierarchical=True,
+        template=True,
     )
 
 

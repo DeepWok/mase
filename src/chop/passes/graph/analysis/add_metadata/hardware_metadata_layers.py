@@ -64,13 +64,17 @@ INTERNAL_COMP = {
     "relu": [
         {
             "name": "fixed_relu",
-            "dependence_files": ["activation_layers/rtl/fixed_relu.sv",],
+            "dependence_files": [
+                "activation_layers/rtl/fixed_relu.sv",
+            ],
         },
     ],
     "hardshrink": [
         {
             "name": "fixed_hardshrink",
-            "dependence_files": ["activation_layers/rtl/fixed_hardshrink.sv",],
+            "dependence_files": [
+                "activation_layers/rtl/fixed_hardshrink.sv",
+            ],
         },
     ],
     "silu": [
@@ -103,7 +107,9 @@ INTERNAL_COMP = {
     "softshrink": [
         {
             "name": "fixed_softshrink",
-            "dependence_files": ["activation_layers/rtl/fixed_softshrink.sv",],
+            "dependence_files": [
+                "activation_layers/rtl/fixed_softshrink.sv",
+            ],
         },
     ],
     "logsigmoid": [
@@ -132,13 +138,17 @@ INTERNAL_COMP = {
     "selu": [
         {
             "name": "fixed_selu",
-            "dependence_files": ["activation_layers/rtl/fixed_selu.sv",],
+            "dependence_files": [
+                "activation_layers/rtl/fixed_selu.sv",
+            ],
         },
     ],
     "tanh": [
         {
             "name": "fixed_tanh",
-            "dependence_files": ["activation_layers/rtl/fixed_tanh.sv",],
+            "dependence_files": [
+                "activation_layers/rtl/fixed_tanh.sv",
+            ],
         },
     ],
     "gelu": [
@@ -162,13 +172,17 @@ INTERNAL_COMP = {
     "softplus": [
         {
             "name": "fixed_softplus",
-            "dependence_files": ["activation_layers/rtl/fixed_softplus.sv",],
+            "dependence_files": [
+                "activation_layers/rtl/fixed_softplus.sv",
+            ],
         },
     ],
     "add": [
         {
             "name": "fixed_adder",
-            "dependence_files": ["linear_layers/fixed_operators/rtl/fixed_adder.sv",],
+            "dependence_files": [
+                "linear_layers/fixed_operators/rtl/fixed_adder.sv",
+            ],
         }
     ],
     "mul": [
@@ -185,7 +199,14 @@ INTERNAL_COMP = {
             "dependence_files": ["common/rtl/df_split.sv", "common/rtl/split2.sv"],
         }
     ],
-    "getitem": [{"name": "buffer", "dependence_files": ["memory/rtl/buffer.sv",],}],
+    "getitem": [
+        {
+            "name": "buffer",
+            "dependence_files": [
+                "memory/rtl/buffer.sv",
+            ],
+        }
+    ],
     "grouped_query_attention": [
         {
             "name": "fixed_gqa_wrapper",

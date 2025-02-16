@@ -81,7 +81,11 @@ def fully_replicated_strategy(meta, mesh):
     in_spec = _DTensorSpec(
         mesh,
         sharding,
-        tensor_meta=TensorMeta(shape=in_shape, stride=None, dtype=in_dtype,),
+        tensor_meta=TensorMeta(
+            shape=in_shape,
+            stride=None,
+            dtype=in_dtype,
+        ),
     )
 
     dtype_key = (

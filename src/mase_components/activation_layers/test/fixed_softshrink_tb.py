@@ -142,8 +142,8 @@ class fixed_softshrink_tb(Testbench):
         )  # match output
         logger.info(f"EXP - FLOAT OUTPUT: \n{m}")
         m = self.out_dquantizer(m)
-        m2 = (m * 2 ** self.outputfracw).to(torch.int64)
-        m2 = m2.clone().detach() % (2 ** self.outputwidth)
+        m2 = (m * 2**self.outputfracw).to(torch.int64)
+        m2 = m2.clone().detach() % (2**self.outputwidth)
 
         return m2
 
@@ -154,7 +154,7 @@ class fixed_softshrink_tb(Testbench):
         )
         logger.info(f"FLOAT INPUT: \n{inputs}")
         inputs = self.in_dquantizer(inputs)
-        intinp = (inputs * 2 ** self.frac_width).to(torch.int64)
+        intinp = (inputs * 2**self.frac_width).to(torch.int64)
         return intinp, inputs
 
     def doubletofx(self, num, data_width, f_width, type="bin"):

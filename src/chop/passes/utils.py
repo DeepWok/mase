@@ -23,7 +23,9 @@ def _nightly_torch_installed():
         return False
 
 
-def find_missing_dependencies(pass_name: str,):
+def find_missing_dependencies(
+    pass_name: str,
+):
     dependencies = PassFactory._dependencies_dict.get(pass_name, None)
 
     if dependencies is None:
@@ -38,7 +40,9 @@ def find_missing_dependencies(pass_name: str,):
 
 
 def register_mase_pass(
-    name: str, dependencies: list = [], requires_nightly_torch: bool = False,
+    name: str,
+    dependencies: list = [],
+    requires_nightly_torch: bool = False,
 ):
     """This decorator registers a mase pass as PassFactory class attributes which can be used globally."""
 

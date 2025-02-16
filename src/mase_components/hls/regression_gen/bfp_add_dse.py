@@ -1,7 +1,13 @@
 # TODO: Temporary working solution
 import sys, os
 
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..",))
+sys.path.append(
+    os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        "..",
+        "..",
+    )
+)
 
 from hls.regression_gen.utils import (
     DSE_MODES,
@@ -151,7 +157,8 @@ def bfp_add_dse(mode=None, top=None, threads=16):
                             if mode in ["report", "all"]:
                                 top_name = "bfp_add_2"
                                 hr = get_hls_results(
-                                    project=os.path.join(top, file_name), top=top_name,
+                                    project=os.path.join(top, file_name),
+                                    top=top_name,
                                 )
                                 data_points.append(
                                     [

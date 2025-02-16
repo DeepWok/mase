@@ -56,14 +56,12 @@ class Hardswishtb(Testbench):
 
     def exp(self, inputs):
         # Run the model with the provided inputs and return the outputs
-        tmp0 = 3 * 2 ** self.fracw
+        tmp0 = 3 * 2**self.fracw
         tmp1 = inputs + tmp0
-        tmp2 = tmp1 * (2 ** -3) + tmp1 * (2 ** -4)
+        tmp2 = tmp1 * (2**-3) + tmp1 * (2**-4)
         # qtmps = self.dquantizer(tmp2)
         tmp3 = tmp2 * inputs
-        unsignedout = torch.where(
-            tmp3 < 0, torch.tensor(tmp3 % (2 ** self.width)), tmp3
-        )
+        unsignedout = torch.where(tmp3 < 0, torch.tensor(tmp3 % (2**self.width)), tmp3)
         # return unsignedout.tolist()
         return unsignedout
 
@@ -73,7 +71,7 @@ class Hardswishtb(Testbench):
         )
         realinp = torch.randn(self.samples)
         inputs = self.dquantizer(realinp)
-        intinp = (inputs * 2 ** self.fracw).to(torch.int64)
+        intinp = (inputs * 2**self.fracw).to(torch.int64)
         intinp.clamp(
             min=-(2 ** (self.width - self.fracw - 1)),
             max=2 ** (self.width - self.fracw - 1) - 1,

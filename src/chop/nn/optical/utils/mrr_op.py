@@ -78,7 +78,7 @@ def mrr_roundtrip_phase_to_tr_func(
     c1 = -2 * a * r
     c2 = a * a + r * r
     c3 = 1 + r * r * a * a - a * a - r * r
-    c4 = (a ** 2 - 1) * (r ** 2 - 1) * 2 * a * r
+    c4 = (a**2 - 1) * (r**2 - 1) * 2 * a * r
 
     class MRRRoundTripPhaseToTrFunction(torch.autograd.Function):
         @staticmethod

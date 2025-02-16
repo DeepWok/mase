@@ -116,7 +116,7 @@ def add_norm_metadata_gen_lut_analysis_pass(mg, config={}):
 
     mem_dir = Path(__file__).parent / "build" / "norm" / "mem"
     makedirs(mem_dir, exist_ok=True)
-    lut = make_lut(2 ** LUT_POW, ISQRT_WIDTH)
+    lut = make_lut(2**LUT_POW, ISQRT_WIDTH)
     mem_path = mem_dir / f"norm_isqrt_lut.mem"
     write_memb(mem_path, lut, ISQRT_WIDTH)
     mem_id = 0
@@ -224,10 +224,23 @@ def test_emit_verilog_norm():
     shape = [10, 4, 8, 8]
 
     normalizations = [
-        nn.BatchNorm2d(num_features=shape[1], affine=False,),
-        nn.LayerNorm(normalized_shape=shape[1:], elementwise_affine=False,),
-        nn.GroupNorm(num_groups=2, num_channels=shape[1], affine=False,),
-        nn.InstanceNorm2d(num_features=shape[1], affine=False,),
+        nn.BatchNorm2d(
+            num_features=shape[1],
+            affine=False,
+        ),
+        nn.LayerNorm(
+            normalized_shape=shape[1:],
+            elementwise_affine=False,
+        ),
+        nn.GroupNorm(
+            num_groups=2,
+            num_channels=shape[1],
+            affine=False,
+        ),
+        nn.InstanceNorm2d(
+            num_features=shape[1],
+            affine=False,
+        ),
         # rms.RMSNorm(
         #     normalized_shape=shape[1:],
         # ),

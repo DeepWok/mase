@@ -143,14 +143,14 @@ class RepVGGBlock(nn.Module):
             .detach()
         )
 
-        l2_loss_circle = (K3 ** 2).sum() - (
+        l2_loss_circle = (K3**2).sum() - (
             K3[:, :, 1:2, 1:2] ** 2
         ).sum()  # The L2 loss of the "circle" of weights in 3x3 kernel. Use regular L2 on them.
         eq_kernel = (
             K3[:, :, 1:2, 1:2] * t3 + K1 * t1
         )  # The equivalent resultant central point of 3x3 kernel.
         l2_loss_eq_kernel = (
-            eq_kernel ** 2 / (t3 ** 2 + t1 ** 2)
+            eq_kernel**2 / (t3**2 + t1**2)
         ).sum()  # Normalize for an L2 coefficient comparable to regular L2.
         return l2_loss_eq_kernel + l2_loss_circle
 

@@ -88,7 +88,10 @@ def create_a_layer_config(
     return qc
 
 
-def _parse_and_complete_config(config: dict, num_hidden_layers: int,) -> dict:
+def _parse_and_complete_config(
+    config: dict,
+    num_hidden_layers: int,
+) -> dict:
     assert "default" in config, "Must provide a default config"
     default_qc: dict = config["default"]
     linear_qc: dict = parse_node_config(

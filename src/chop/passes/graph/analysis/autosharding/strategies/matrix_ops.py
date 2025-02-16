@@ -24,7 +24,10 @@ from ..utils import is_tensor_shardable
 from chop.ir.graph import MaseMetadata
 
 
-def transpose_strategy(meta: MaseMetadata, mesh: tuple,) -> OpStrategy:
+def transpose_strategy(
+    meta: MaseMetadata,
+    mesh: tuple,
+) -> OpStrategy:
 
     parent_node = meta.node.args[0]
     self_strategy = parent_node.meta["mase"]["software"]["autosharding"]["op_strategy"]
@@ -56,7 +59,11 @@ def transpose_strategy(meta: MaseMetadata, mesh: tuple,) -> OpStrategy:
     return OpStrategy(strategies=transpose_strategies)
 
 
-def _mm_like_strategy(mm_equation: str, meta: MaseMetadata, mesh: tuple,) -> OpStrategy:
+def _mm_like_strategy(
+    mm_equation: str,
+    meta: MaseMetadata,
+    mesh: tuple,
+) -> OpStrategy:
     self_shape, mat2_shape = [arg["shape"] for arg in meta["common"]["args"].values()]
     # generate all possible strategies for mm
     mm_strategy = gen_einsum_strategies(mm_equation, mesh)
@@ -95,7 +102,9 @@ def _mm_like_strategy(mm_equation: str, meta: MaseMetadata, mesh: tuple,) -> OpS
 
 
 def _addmm_like_strategy(
-    mm_equation: str, meta: MaseMetadata, mesh: tuple,
+    mm_equation: str,
+    meta: MaseMetadata,
+    mesh: tuple,
 ) -> OpStrategy:
 
     self_shape, mat1_shape, mat2_shape = [
@@ -161,24 +170,37 @@ def _addmm_like_strategy(
     return mm_strategy
 
 
-def mm_strategy(meta: MaseMetadata, mesh: tuple,) -> OpStrategy:
+def mm_strategy(
+    meta: MaseMetadata,
+    mesh: tuple,
+) -> OpStrategy:
     return _mm_like_strategy("mk,kn->mn", meta, mesh)
 
 
-def addmm_strategy(meta: MaseMetadata, mesh: tuple,) -> OpStrategy:
+def addmm_strategy(
+    meta: MaseMetadata,
+    mesh: tuple,
+) -> OpStrategy:
     return _addmm_like_strategy("mk,kn->mn", meta, mesh)
 
 
-def bmm_strategy(meta: MaseMetadata, mesh: tuple,) -> OpStrategy:
+def bmm_strategy(
+    meta: MaseMetadata,
+    mesh: tuple,
+) -> OpStrategy:
     return _mm_like_strategy("bmk,bkn->bmn", meta, mesh)
 
 
-def baddmm_strategy(meta: MaseMetadata, mesh: tuple,) -> OpStrategy:
+def baddmm_strategy(
+    meta: MaseMetadata,
+    mesh: tuple,
+) -> OpStrategy:
     return _addmm_like_strategy("bmk,bkn->bmn", meta, mesh)
 
 
 def scaled_dot_product_flash_attention_strategy(
-    meta: MaseMetadata, mesh: tuple,
+    meta: MaseMetadata,
+    mesh: tuple,
 ) -> OpStrategy:
     # NOTE: currently we only support some simple strategies to support tensor parallelism
     # TODO: sdpa might be a good candidate for us to explore decomposed sharding propagation

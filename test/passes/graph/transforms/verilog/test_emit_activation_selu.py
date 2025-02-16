@@ -77,7 +77,11 @@ def test_emit_activation_selu():
     )
 
     config_file = os.path.join(
-        os.path.abspath(""), "configs", "tests", "quantize", "fixed.toml",
+        os.path.abspath(""),
+        "configs",
+        "tests",
+        "quantize",
+        "fixed.toml",
     )
     with open(config_file, "r") as f:
         quan_args = toml.load(f)["passes"]["quantize"]

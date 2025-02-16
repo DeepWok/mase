@@ -111,9 +111,15 @@ def run_with_config(config_file):
 
     profile_pass_arg = {
         "by": "type",
-        "target_weight_nodes": ["conv2d",],
-        "target_activation_nodes": ["conv2d",],
-        "weight_statistics": {"variance_precise": {"device": "cpu", "dims": "all"},},
+        "target_weight_nodes": [
+            "conv2d",
+        ],
+        "target_activation_nodes": [
+            "conv2d",
+        ],
+        "weight_statistics": {
+            "variance_precise": {"device": "cpu", "dims": "all"},
+        },
         "activation_statistics": {
             "variance_precise": {"device": "cpu", "dims": "all"},
         },

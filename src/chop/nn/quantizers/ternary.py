@@ -45,7 +45,8 @@ def ternary_quantizer(
         # )
     if scaling_factor:
         x = ternarised_scaled_op(
-            x, threshold,  # abs_mean=mean
+            x,
+            threshold,  # abs_mean=mean
         )  # [mean, 0 ,-mean] # this function determines the mean on the fly, maybe we could make an alternative which uses the metadata?
     else:
         x = ternarised_op(x, threshold)  # [1, 0 ,-1]

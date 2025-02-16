@@ -34,7 +34,7 @@ class ComparatorTreeTB(Testbench):
 
     def generate_inputs(self, batches=3):
         return [
-            [randint(0, 2 ** self.DATA_WIDTH - 1) for _ in range(self.SIZE)]
+            [randint(0, 2**self.DATA_WIDTH - 1) for _ in range(self.SIZE)]
             for _ in range(batches)
         ]
 
@@ -136,5 +136,6 @@ if __name__ == "__main__":
     cfgs = signed_max_min_cfgs(cfgs)
 
     mase_runner(
-        module_param_list=cfgs, trace=True,
+        module_param_list=cfgs,
+        trace=True,
     )

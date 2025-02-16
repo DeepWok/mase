@@ -147,7 +147,9 @@ def runner():
     print(extra_args)
     runner = get_runner(sim)
     runner.build(
-        verilog_sources=verilog_sources, hdl_toplevel="hash_exp", build_args=extra_args,
+        verilog_sources=verilog_sources,
+        hdl_toplevel="hash_exp",
+        build_args=extra_args,
     )
 
     runner.test(hdl_toplevel="hash_exp", test_module="hash_exp_tb")

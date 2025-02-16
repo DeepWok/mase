@@ -158,7 +158,7 @@ class BatchNorm2dTB(Testbench):
             -1, self.NUM_CHANNELS, self.TOTAL_DIM1, self.TOTAL_DIM0
         )
         x = sign_extend_t(x, self.IN_WIDTH).to(dtype=torch.float32) / (
-            2 ** self.IN_FRAC_WIDTH
+            2**self.IN_FRAC_WIDTH
         )
 
         # Float Model
@@ -397,7 +397,8 @@ def test_batch_norm_2d():
     ]
 
     mase_runner(
-        module_param_list=test_cfgs, trace=True,
+        module_param_list=test_cfgs,
+        trace=True,
     )
 
 

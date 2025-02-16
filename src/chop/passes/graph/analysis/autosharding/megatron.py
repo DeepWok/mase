@@ -3,7 +3,9 @@ from .mesh_model import MeshModel
 
 
 def megatron_autosharding_pass(
-    mg: MaseGraph, mesh: MeshModel, pass_args: dict,
+    mg: MaseGraph,
+    mesh: MeshModel,
+    pass_args: dict,
 ):
     for node in mg.fx_graph.nodes:
         meta = node.meta["mase"]["common"]

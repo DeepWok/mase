@@ -105,7 +105,9 @@ setup(
     author_email="a.zhao@imperial.ac.uk, jianyi.cheng17@imperial.ac.uk, chengzhang98@outlook.com, pedro.gimenes19@imperial.ac.uk",
     license_files=("LICENSE",),
     python_requires=">=3.11.9",
-    package_dir={"": "src",},
+    package_dir={
+        "": "src",
+    },
     packages=find_packages("src"),
     install_requires=requirements,
 )

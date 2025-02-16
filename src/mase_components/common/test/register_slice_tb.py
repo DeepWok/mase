@@ -60,7 +60,9 @@ def in_out_wave(dut, name):
     )
     logger.debug(
         "{}  State: (shift_reg, buffer) = ({},{})".format(
-            name, int(dut.shift_reg.value), int(dut.buffer.value),
+            name,
+            int(dut.shift_reg.value),
+            int(dut.buffer.value),
         )
     )
 

@@ -74,7 +74,10 @@ def get_resharding_cost(
         and (dest[0] == SpmdShard.R)
     ):
         ag_dim = 1 if src[0] == dest[0] else 0
-        return mesh.all_gather_cost(num_bytes=num_bytes, mesh_dim=ag_dim,)
+        return mesh.all_gather_cost(
+            num_bytes=num_bytes,
+            mesh_dim=ag_dim,
+        )
 
     # All-to-all
     # E.g. (R, S_0) -> (S_0, R), (S_1, R) -> (R, S_1)
@@ -82,7 +85,10 @@ def get_resharding_cost(
         # all to all
         a2a_dim = src[0].value if src[0] != SpmdShard.R else src[1].value
         try:
-            return mesh.all_to_all_cost(num_bytes=num_bytes, mesh_dim=a2a_dim,)
+            return mesh.all_to_all_cost(
+                num_bytes=num_bytes,
+                mesh_dim=a2a_dim,
+            )
         except:
             assert False
 

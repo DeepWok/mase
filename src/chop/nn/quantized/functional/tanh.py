@@ -107,7 +107,9 @@ def tanh_log(x, inplace=False, config=None):
         )
 
         x_quantizer = partial(
-            log_quantizer, width=x_width, exponent_bias=x_exponent_bias,
+            log_quantizer,
+            width=x_width,
+            exponent_bias=x_exponent_bias,
         )
 
         return F.tanh(x_quantizer(x), inplace=inplace)

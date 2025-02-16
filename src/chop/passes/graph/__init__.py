@@ -149,6 +149,6 @@ if check_dependencies("tensorrt_calibrate_transform_pass"):
 
 if check_dependencies("tensorrt_fake_quantize_transform_pass"):
     TRANSFORM_PASSES.append("tensorrt_fake_quantize_transform_pass")
-    PASSES[
-        "tensorrt_fake_quantize_transform_pass"
-    ] = tensorrt_fake_quantize_transform_pass
+    PASSES["tensorrt_fake_quantize_transform_pass"] = (
+        tensorrt_fake_quantize_transform_pass
+    )

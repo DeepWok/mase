@@ -72,7 +72,10 @@ def linearInteger(
 
 
 def linearMinifloatDenorm(
-    x: Tensor, weight: Tensor, bias: Tensor = None, config: dict = None,
+    x: Tensor,
+    weight: Tensor,
+    bias: Tensor = None,
+    config: dict = None,
 ):
     w_width, w_exponent_width, w_exponent_bias = (
         config["weight_width"],
@@ -119,7 +122,10 @@ def linearMinifloatDenorm(
 
 
 def linearMinifloatIEEE(
-    x: Tensor, weight: Tensor, bias: Tensor = None, config: dict = None,
+    x: Tensor,
+    weight: Tensor,
+    bias: Tensor = None,
+    config: dict = None,
 ):
     w_width, w_exponent_width, w_exponent_bias = (
         config["weight_width"],
@@ -166,7 +172,10 @@ def linearMinifloatIEEE(
 
 
 def linearMinifloatIEEE(
-    x: Tensor, weight: Tensor, bias: Tensor = None, config: dict = None,
+    x: Tensor,
+    weight: Tensor,
+    bias: Tensor = None,
+    config: dict = None,
 ):
     w_width, w_exponent_width, w_exponent_bias = (
         config["weight_width"],
@@ -213,7 +222,10 @@ def linearMinifloatIEEE(
 
 
 def linearLog(
-    x: Tensor, weight: Tensor, bias: Tensor = None, config: dict = None,
+    x: Tensor,
+    weight: Tensor,
+    bias: Tensor = None,
+    config: dict = None,
 ):
     w_width, w_exponent_bias = (
         config["weight_width"],
@@ -228,11 +240,23 @@ def linearLog(
         config["bias_exponent_bias"],
     )
 
-    w_quantizer = partial(log_quantizer, width=w_width, exponent_bias=w_exponent_bias,)
+    w_quantizer = partial(
+        log_quantizer,
+        width=w_width,
+        exponent_bias=w_exponent_bias,
+    )
 
-    x_quantizer = partial(log_quantizer, width=x_width, exponent_bias=x_exponent_bias,)
+    x_quantizer = partial(
+        log_quantizer,
+        width=x_width,
+        exponent_bias=x_exponent_bias,
+    )
 
-    b_quantizer = partial(log_quantizer, width=b_width, exponent_bias=b_exponent_bias,)
+    b_quantizer = partial(
+        log_quantizer,
+        width=b_width,
+        exponent_bias=b_exponent_bias,
+    )
 
     x = x_quantizer(x)
     weight = w_quantizer(weight)
@@ -242,7 +266,10 @@ def linearLog(
 
 
 def linearBlockFP(
-    x: Tensor, weight: Tensor, bias: Tensor = None, config: dict = None,
+    x: Tensor,
+    weight: Tensor,
+    bias: Tensor = None,
+    config: dict = None,
 ):
     # establish quantizers
     w_width, w_exponent_width, w_exponent_bias, w_block_size = (
@@ -300,7 +327,10 @@ def linearBlockFP(
 
 
 def linearBlockMinifloat(
-    x: Tensor, weight: Tensor, bias: Tensor = None, config: dict = None,
+    x: Tensor,
+    weight: Tensor,
+    bias: Tensor = None,
+    config: dict = None,
 ):
     # establish quantizers
     w_width, w_exponent_width, w_exponent_bias_width, w_block_size = (
@@ -358,7 +388,10 @@ def linearBlockMinifloat(
 
 
 def linearBlockLog(
-    x: Tensor, weight: Tensor, bias: Tensor = None, config: dict = None,
+    x: Tensor,
+    weight: Tensor,
+    bias: Tensor = None,
+    config: dict = None,
 ):
     # establish quantizers
     w_width, w_exponent_bias_width, w_block_size = (
@@ -410,7 +443,10 @@ def linearBlockLog(
 
 
 def linearBinary(
-    x: Tensor, weight: Tensor, bias: Tensor = None, config: dict = None,
+    x: Tensor,
+    weight: Tensor,
+    bias: Tensor = None,
+    config: dict = None,
 ):
     w_stochastic = config["weight_stochastic"]
     w_bipolar = config["weight_bipolar"]
@@ -426,7 +462,10 @@ def linearBinary(
 
 
 def linearBinaryScaling(
-    x: Tensor, weight: Tensor, bias: Tensor = None, config: dict = None,
+    x: Tensor,
+    weight: Tensor,
+    bias: Tensor = None,
+    config: dict = None,
 ):
     """
     Binary scaling variant of the linear transformation layer.
@@ -474,7 +513,10 @@ def linearBinaryScaling(
 
 
 def linearTernary(
-    x: Tensor, weight: Tensor, bias: Tensor = None, config: dict = None,
+    x: Tensor,
+    weight: Tensor,
+    bias: Tensor = None,
+    config: dict = None,
 ):
     w_scaling_factor = config["weight_scaling_factor"]
     w_mean = get_stats(config, "weight_mean")
@@ -498,19 +540,28 @@ def linearTernary(
 
 
 def linearBinaryResidualSign(
-    x: Tensor, weight: Tensor, bias: Tensor = None, config: dict = None,
+    x: Tensor,
+    weight: Tensor,
+    bias: Tensor = None,
+    config: dict = None,
 ):
     raise NotImplementedError
 
 
 def linearLUT(
-    x: Tensor, weight: Tensor, bias: Tensor = None, config: dict = None,
+    x: Tensor,
+    weight: Tensor,
+    bias: Tensor = None,
+    config: dict = None,
 ):
     raise NotImplementedError
 
 
 def linearLogicNets(
-    x: Tensor, weight: Tensor, bias: Tensor = None, config: dict = None,
+    x: Tensor,
+    weight: Tensor,
+    bias: Tensor = None,
+    config: dict = None,
 ):
     raise NotImplementedError
 

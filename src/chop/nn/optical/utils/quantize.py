@@ -32,7 +32,7 @@ def uniform_quantize(k, gradient_clip=False):
             elif k == 1:
                 out = torch.sign(input)
             else:
-                n = float(2 ** k - 1)
+                n = float(2**k - 1)
                 out = torch.round(input * n) / n
             return out
 
@@ -63,7 +63,7 @@ def uniform_quantize_new(k, gradient_clip=False):
             elif k == 1:
                 out = torch.sign(input)
             else:
-                n = float(2 ** k - 1)
+                n = float(2**k - 1)
                 # out = torch.round(input * n) / n
                 # out = (torch.clamp(torch.round(input / scale + zero_point), 0, n) - zero_point) * scale
                 out = (
@@ -133,7 +133,7 @@ class input_quantize_fn(torch.nn.Module):
                     qscheme=torch.per_tensor_affine,
                     reduce_range=False,
                     quant_min=0,
-                    quant_max=2 ** self.in_bit - 1,
+                    quant_max=2**self.in_bit - 1,
                 ).to(self.device)
             else:
                 self.obs = None

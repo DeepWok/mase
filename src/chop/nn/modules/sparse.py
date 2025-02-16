@@ -92,7 +92,11 @@ class SparseLayer:
 
 class LinearSparse(nn.Linear, SparseLayer):
     def __init__(
-        self, in_features: int, out_features: int, config: dict = None, **kwargs,
+        self,
+        in_features: int,
+        out_features: int,
+        config: dict = None,
+        **kwargs,
     ):
         self.config = config
         init_sparse_weights = self.config.get("init_sparse_weights", True)
@@ -155,7 +159,9 @@ class LinearSparse(nn.Linear, SparseLayer):
     def update_weight_selection(self, k):
         w_flat = self.weight.flatten()
         _, self.idx = torch.topk(
-            self.index_method(w_flat, self.idx_method), k, sorted=True,
+            self.index_method(w_flat, self.idx_method),
+            k,
+            sorted=True,
         )
         self.selected_weights = torch.gather(w_flat, dim=0, index=self.idx)
 
@@ -186,7 +192,10 @@ class LinearSparse(nn.Linear, SparseLayer):
 
             # Scatter adapted values into weight tensor
             adapted_weights = torch.scatter(
-                self.zero_tensor.to(x.device), dim=0, index=self.idx, src=scaled_output,
+                self.zero_tensor.to(x.device),
+                dim=0,
+                index=self.idx,
+                src=scaled_output,
             ).view(self.unflattened_size)
 
             self.step += 1
@@ -194,7 +203,9 @@ class LinearSparse(nn.Linear, SparseLayer):
             x = x.to(sparse.weight.dtype)
 
             result = F.linear(
-                dropout(x), transpose(new_weight, self.fan_in_fan_out), bias=self.bias,
+                dropout(x),
+                transpose(new_weight, self.fan_in_fan_out),
+                bias=self.bias,
             )
 
         else:

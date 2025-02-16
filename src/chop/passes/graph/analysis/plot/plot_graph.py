@@ -4,7 +4,10 @@ from torch.fx.passes import graph_drawer
 
 
 def plot_graph_analysis_pass(
-    graph, pass_args={"file_name": None,},
+    graph,
+    pass_args={
+        "file_name": None,
+    },
 ):
     graph.draw(pass_args["file_name"])
     # nx_graph = nx.DiGraph()

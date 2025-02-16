@@ -236,7 +236,9 @@ def dim_flatten(ndim: int, start_dim=0, end_dim=-1) -> DimMap:
 
 
 def dim_movedim(
-    ndim: int, input: Union[int, Sequence[int]], destination: Union[int, Sequence[int]],
+    ndim: int,
+    input: Union[int, Sequence[int]],
+    destination: Union[int, Sequence[int]],
 ) -> DimMap:
     input = normalize_dims(input, ndim)
     destination = normalize_dims(destination, ndim)
@@ -620,7 +622,8 @@ def get_reshape_strategy(op):
             )
             output_strategy.strategies.append(
                 PlacementStrategy(
-                    output_specs=output_spec, input_specs=(input_tgt_spec,),
+                    output_specs=output_spec,
+                    input_specs=(input_tgt_spec,),
                 )
             )
 

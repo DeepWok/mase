@@ -40,7 +40,7 @@ def _block_log_quantize(
 
     per_block_max_exponent = torch.ceil(torch.log2(per_block_max))
     per_block_bias = my_clamp(
-        2 ** exponent_bits - 1 - per_block_max_exponent, 0, 2 ** exponent_bias_width - 1
+        2**exponent_bits - 1 - per_block_max_exponent, 0, 2**exponent_bias_width - 1
     )
 
     per_block_lq_x = _log_quantize(blocked_x, width=width, exponent_bias=per_block_bias)
@@ -98,5 +98,9 @@ def block_log_quantizer(
     - `block_size`: a list of integers where each integer is the block size along the corresponding dim
     """
     return BlockLogQuantize.apply(
-        x, width, exponent_bias_width, block_size, skip_first_dim,
+        x,
+        width,
+        exponent_bias_width,
+        block_size,
+        skip_first_dim,
     )

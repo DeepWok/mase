@@ -40,8 +40,8 @@ class SimpleMatMulTB(Testbench):
             ]
         )
 
-        self.X_MAX = 2 ** self.X_WIDTH - 1
-        self.Y_MAX = 2 ** self.Y_WIDTH - 1
+        self.X_MAX = 2**self.X_WIDTH - 1
+        self.Y_MAX = 2**self.Y_WIDTH - 1
 
         self.x_driver = StreamDriver(dut.clk, dut.x_data, dut.x_valid, dut.x_ready)
         self.y_driver = StreamDriver(dut.clk, dut.y_data, dut.y_valid, dut.y_ready)
@@ -87,10 +87,10 @@ class SimpleMatMulTB(Testbench):
 
         logger.debug("Sign Extended & Scaled")
         X_input = sign_extend_t(X_input, self.X_WIDTH).type(torch.float32) / (
-            2 ** self.X_FRAC_WIDTH
+            2**self.X_FRAC_WIDTH
         )
         Y_input = sign_extend_t(Y_input, self.Y_WIDTH).type(torch.float32) / (
-            2 ** self.Y_FRAC_WIDTH
+            2**self.Y_FRAC_WIDTH
         )
         logger.debug(X_input)
         logger.debug(Y_input)

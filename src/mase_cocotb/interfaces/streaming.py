@@ -17,7 +17,14 @@ def _sign_extend(value: int, bits: int):
 
 
 class StreamDriver(Driver):
-    def __init__(self, clk, data, valid, ready, record_num_beats=False,) -> None:
+    def __init__(
+        self,
+        clk,
+        data,
+        valid,
+        ready,
+        record_num_beats=False,
+    ) -> None:
         super().__init__()
         self.clk = clk
         self.data = data
@@ -67,7 +74,14 @@ class StreamDriver(Driver):
 
 class StreamMonitor(Monitor):
     def __init__(
-        self, clk, data, valid, ready, check=True, name=None, unsigned=False,
+        self,
+        clk,
+        data,
+        valid,
+        ready,
+        check=True,
+        name=None,
+        unsigned=False,
     ):
         super().__init__(clk, check=check, name=name)
         self.clk = clk
@@ -151,9 +165,9 @@ class StreamMonitorFloat(StreamMonitor):
 
     def _check(self, got, exp):
         if self.check:
-            float_got = [x * 2 ** -self.frac_width for x in got]
-            float_exp = [x * 2 ** -self.frac_width for x in exp]
-            if not np.isclose(float_got, float_exp, atol=2 ** -self.frac_width).all():
+            float_got = [x * 2**-self.frac_width for x in got]
+            float_exp = [x * 2**-self.frac_width for x in exp]
+            if not np.isclose(float_got, float_exp, atol=2**-self.frac_width).all():
                 # raise TestFailure("\nGot \n%s, \nExpected \n%s" % (got, exp))
                 raise TestFailure(
                     f"\nGot int \n{got}, \nExpected int \n{exp} \nGot float \n{float_got}, \nExpected float \n{float_exp}"

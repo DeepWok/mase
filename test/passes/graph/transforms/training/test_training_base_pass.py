@@ -170,7 +170,11 @@ def test_training_base_backward_only():
         "default": {"config": {"name": None}},
         "linear": {
             "config": {
-                "forward": {"bypass": True, "pass": "quantize", "name": "integer",},
+                "forward": {
+                    "bypass": True,
+                    "pass": "quantize",
+                    "name": "integer",
+                },
                 "backward": {
                     "pass": "quantize",
                     "name": "integer",

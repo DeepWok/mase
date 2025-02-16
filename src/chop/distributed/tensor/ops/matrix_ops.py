@@ -384,7 +384,10 @@ def scaled_dot_product_efficient_attention_strategy(
     single_mesh_dim_strategies.append(num_heads_dim_sharding)
 
     return expand_to_full_mesh_op_strategy(
-        mesh, op_schema, single_mesh_dim_strategies, input_index=4,
+        mesh,
+        op_schema,
+        single_mesh_dim_strategies,
+        input_index=4,
     )
 
 
@@ -449,5 +452,8 @@ def scaled_dot_product_efficient_attention_backward_strategy(
     single_mesh_dim_strategies.append(num_heads_dim_sharding)
 
     return expand_to_full_mesh_op_strategy(
-        mesh, op_schema, single_mesh_dim_strategies, input_index=4,
+        mesh,
+        op_schema,
+        single_mesh_dim_strategies,
+        input_index=4,
     )

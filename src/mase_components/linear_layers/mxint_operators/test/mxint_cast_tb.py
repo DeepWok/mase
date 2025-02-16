@@ -29,7 +29,10 @@ class MXINTVectorMultTB(Testbench):
             self.log = SimLog("%s" % (type(self).__qualname__))
 
         self.data_in_0_driver = MultiSignalStreamDriver(
-            dut.clk, (dut.mdata_in, dut.edata_in), dut.data_in_valid, dut.data_in_ready,
+            dut.clk,
+            (dut.mdata_in, dut.edata_in),
+            dut.data_in_valid,
+            dut.data_in_ready,
         )
 
         self.data_out_0_monitor = MultiSignalStreamMonitor(
@@ -48,10 +51,14 @@ class MXINTVectorMultTB(Testbench):
         for _ in range(self.num):
             data = 20 * torch.rand(int(self.dut.BLOCK_SIZE))
             (data_in, mdata_in, edata_in) = mxint_quantize(
-                data, int(self.dut.IN_MAN_WIDTH), int(self.dut.IN_EXP_WIDTH),
+                data,
+                int(self.dut.IN_MAN_WIDTH),
+                int(self.dut.IN_EXP_WIDTH),
             )
             exp_out, mexp_out, eexp_out = mxint_quantize(
-                data_in, int(self.dut.OUT_MAN_WIDTH), int(self.dut.OUT_EXP_WIDTH),
+                data_in,
+                int(self.dut.OUT_MAN_WIDTH),
+                int(self.dut.OUT_EXP_WIDTH),
             )
             breakpoint()
             inputs.append((mdata_in.int().tolist(), edata_in.int().tolist()))

@@ -243,8 +243,16 @@ SOFTWARE_PARAM_ANALYSIS_LAYERS = {
         "getitem": analyze_software_meta_param_implicit_func_default,
         "getattr": analyze_software_meta_param_implicit_func_default,
     },
-    "placeholder": {"placeholder": analyze_software_meta_param_placeholder,},
-    "get_attr": {"get_attr": analyze_software_meta_param_get_attr,},
-    "output": {"output": analyze_software_meta_param_output,},
-    "patched_func": {"default": analyze_software_meta_param_patched_func_default,},
+    "placeholder": {
+        "placeholder": analyze_software_meta_param_placeholder,
+    },
+    "get_attr": {
+        "get_attr": analyze_software_meta_param_get_attr,
+    },
+    "output": {
+        "output": analyze_software_meta_param_output,
+    },
+    "patched_func": {
+        "default": analyze_software_meta_param_patched_func_default,
+    },
 }

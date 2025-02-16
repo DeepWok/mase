@@ -27,7 +27,10 @@ QUANT_ARITH_ENTRIES = {
         "weight_entries": ("weight_width", "weight_frac_width"),
         "data_in_entries": ("data_in_width", "data_in_frac_width"),
         "bias_entries": ("bias_width", "bias_frac_width"),
-        "data_out_entries": ("data_out_width", "data_out_frac_width",),
+        "data_out_entries": (
+            "data_out_width",
+            "data_out_frac_width",
+        ),
         "additional_layers_entries": ("floor"),
     },
     "lutnet": {
@@ -62,9 +65,18 @@ QUANT_ARITH_ENTRIES = {
             "weight_width",
             "weight_frac_width",
         ),
-        "bias_entries": ("bias_width", "bias_frac_width",),
-        "data_in_entries": ("data_in_width", "data_in_frac_width",),
-        "data_out_entries": ("data_out_width", "data_out_frac_width",),
+        "bias_entries": (
+            "bias_width",
+            "bias_frac_width",
+        ),
+        "data_in_entries": (
+            "data_in_width",
+            "data_in_frac_width",
+        ),
+        "data_out_entries": (
+            "data_out_width",
+            "data_out_frac_width",
+        ),
         "additional_layers_entries": {
             "additional_layers_inputs",
             "additional_layers_outputs",
@@ -72,9 +84,21 @@ QUANT_ARITH_ENTRIES = {
         },
     },
     "binary": {
-        "weight_entries": ("weight_width", "weight_stochastic", "weight_bipolar",),
-        "data_in_entries": ("data_in_width", "data_in_stochastic", "data_in_bipolar",),
-        "bias_entries": ("bias_width", "bias_stochastic", "bias_bipolar",),
+        "weight_entries": (
+            "weight_width",
+            "weight_stochastic",
+            "weight_bipolar",
+        ),
+        "data_in_entries": (
+            "data_in_width",
+            "data_in_stochastic",
+            "data_in_bipolar",
+        ),
+        "bias_entries": (
+            "bias_width",
+            "bias_stochastic",
+            "bias_bipolar",
+        ),
     },
     "binary_residual": {
         "weight_entries": (
@@ -90,7 +114,11 @@ QUANT_ARITH_ENTRIES = {
             "data_in_residual_sign",
             "data_in_levels",  # data_in_levels (int): number of residual levels to use in lutnet
         ),
-        "bias_entries": ("bias_width", "bias_stochastic", "bias_bipolar",),
+        "bias_entries": (
+            "bias_width",
+            "bias_stochastic",
+            "bias_bipolar",
+        ),
     },
     "binary_residual": {
         "weight_entries": (
@@ -106,7 +134,11 @@ QUANT_ARITH_ENTRIES = {
             "data_in_residual_sign",
             "data_in_levels",  # data_in_levels (int): number of residual levels to use in lutnet
         ),
-        "bias_entries": ("bias_width", "bias_stochastic", "bias_bipolar",),
+        "bias_entries": (
+            "bias_width",
+            "bias_stochastic",
+            "bias_bipolar",
+        ),
     },
     "ternary": {
         "weight_entries": (
@@ -213,7 +245,11 @@ QUANT_ARITH_ENTRIES = {
             "data_in_exponent_bias_width",
             "data_in_block_size",
         ),
-        "bias_entries": ("bias_width", "bias_exponent_bias_width", "bias_block_size",),
+        "bias_entries": (
+            "bias_width",
+            "bias_exponent_bias_width",
+            "bias_block_size",
+        ),
     },
     "mxint_hardware": {
         "weight_entries": (
@@ -226,7 +262,11 @@ QUANT_ARITH_ENTRIES = {
             "data_in_exponent_width",
             "data_in_parallelism",
         ),
-        "bias_entries": ("bias_width", "bias_exponent_width", "bias_parallelism",),
+        "bias_entries": (
+            "bias_width",
+            "bias_exponent_width",
+            "bias_parallelism",
+        ),
     },
 }
 
@@ -349,10 +389,22 @@ MASE_OP_TO_ENTRIES = {
         ("name", "data_in_entries"),
         ("weight_entries", "bias_entries", "bypass"),
     ),
-    "layer_norm": (("name", "data_in_entries"), ("bypass",),),
-    "group_norm": (("name", "data_in_entries"), ("bypass",),),
-    "instance_norm2d": (("name", "data_in_entries"), ("bypass",),),
-    "rms_norm": (("name", "data_in_entries"), ("bypass",),),
+    "layer_norm": (
+        ("name", "data_in_entries"),
+        ("bypass",),
+    ),
+    "group_norm": (
+        ("name", "data_in_entries"),
+        ("bypass",),
+    ),
+    "instance_norm2d": (
+        ("name", "data_in_entries"),
+        ("bypass",),
+    ),
+    "rms_norm": (
+        ("name", "data_in_entries"),
+        ("bypass",),
+    ),
     "grouped_query_attention": (
         ("name", "data_in_entries", "weight_entries"),
         ("bypass", "bias_entries"),

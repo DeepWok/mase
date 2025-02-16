@@ -53,7 +53,7 @@ def _softmax_model(l: list[int], parallelism: int, pow2=False):
 
     for diff, vals in zip(local_max_diff, local_values_buffer):
         if pow2:
-            adj = [x * (2 ** -diff) for x in vals]
+            adj = [x * (2**-diff) for x in vals]
         else:
             adj = [x * exp(-diff) for x in vals]
         norm += sum(adj)

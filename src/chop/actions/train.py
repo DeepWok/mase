@@ -109,7 +109,8 @@ def train(
     trainer = pl.Trainer(**plt_trainer_args)
 
     trainer.fit(
-        pl_model, datamodule=data_module,
+        pl_model,
+        datamodule=data_module,
     )
 
     # Save the trained model along with relevant metadata in the training_ckpts folder.

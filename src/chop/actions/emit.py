@@ -41,7 +41,10 @@ def emit(
     data_module.prepare_data()
     data_module.setup()
     dummy_in = get_dummy_input(
-        model_info=model_info, data_module=data_module, task=task, device="cpu",
+        model_info=model_info,
+        data_module=data_module,
+        task=task,
+        device="cpu",
     )
     mg, _ = add_common_metadata_analysis_pass(
         mg, {"dummy_in": dummy_in, "add_value": False}

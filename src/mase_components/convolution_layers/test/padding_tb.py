@@ -96,9 +96,9 @@ class VerificationCase:
             for j in range(in_channels):
                 for k in range(in_height):
                     for s in range(in_width):
-                        re_data_tensor[i][j][k + padding_height][
-                            s + padding_width
-                        ] = data_tensor[i][k][s][j]
+                        re_data_tensor[i][j][k + padding_height][s + padding_width] = (
+                            data_tensor[i][k][s][j]
+                        )
 
         return re_data_tensor
 
@@ -248,7 +248,9 @@ def runner():
     print(extra_args)
     runner = get_runner(sim)
     runner.build(
-        verilog_sources=verilog_sources, hdl_toplevel="padding", build_args=extra_args,
+        verilog_sources=verilog_sources,
+        hdl_toplevel="padding",
+        build_args=extra_args,
     )
 
     runner.test(hdl_toplevel="padding", test_module="padding_tb")

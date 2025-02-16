@@ -245,8 +245,8 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
         else:
             base_quantizer = integer_quantizer_for_hw
 
-        scale = 2 ** frac_width
-        thresh = 2 ** width
+        scale = 2**frac_width
+        thresh = 2**width
         for i in range(0, out_depth):
             line_buff = ""
             for j in range(0, out_size):
@@ -301,8 +301,8 @@ def emit_parameters_in_dat_hls(node, param_name, file_name):
             "precision"
         ][1]
 
-        scale = 2 ** frac_width
-        thresh = 2 ** width
+        scale = 2**frac_width
+        thresh = 2**width
         for i in range(0, out_depth):
             line_buff = ""
             for j in range(0, out_size):

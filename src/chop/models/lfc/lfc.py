@@ -42,7 +42,9 @@ class LFC(nn.Module):
 
 # Getters ------------------------------------------------------------------------------
 def get_lfc(
-    info, pretrained=False, **kwargs: Any,
+    info,
+    pretrained=False,
+    **kwargs: Any,
 ):
     image_size = info["image_size"]
     num_classes = info.num_classes

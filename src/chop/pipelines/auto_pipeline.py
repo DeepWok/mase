@@ -12,7 +12,11 @@ class AutoPipeline:
     The output of each pass is stored in a dictionary and can be accessed by the next pass.
     """
 
-    def __init__(self, pass_groups=None, run_training: bool = False,) -> None:
+    def __init__(
+        self,
+        pass_groups=None,
+        run_training: bool = False,
+    ) -> None:
         """Initializes the AutoPipeline.
 
         Args:
@@ -22,7 +26,11 @@ class AutoPipeline:
         self.pass_outputs = [{}] * len(pass_groups)
 
     def _run_pass_group(
-        self, mg: MaseGraph, pass_group: list, pass_args: dict, skip_passes: list = [],
+        self,
+        mg: MaseGraph,
+        pass_group: list,
+        pass_args: dict,
+        skip_passes: list = [],
     ):
         pass_outputs = {}
 
@@ -48,7 +56,10 @@ class AutoPipeline:
         return mg, pass_outputs
 
     def __call__(
-        self, mg: MaseGraph, pass_args: dict, skip_passes: list = [],
+        self,
+        mg: MaseGraph,
+        pass_args: dict,
+        skip_passes: list = [],
     ):
 
         for idx, pass_group in enumerate(self.pass_groups):
@@ -59,7 +70,10 @@ class AutoPipeline:
             )
 
             mg, pass_outputs = self._run_pass_group(
-                mg, pass_group, pass_args, skip_passes,
+                mg,
+                pass_group,
+                pass_args,
+                skip_passes,
             )
 
             self.pass_outputs[idx] = pass_outputs

@@ -26,7 +26,7 @@ class SingleElementRepeatTB(Testbench):
         )
 
     def generate_inputs(self, num=10):
-        return [random.randint(0, 2 ** self.DATA_WIDTH - 1) for _ in range(num)]
+        return [random.randint(0, 2**self.DATA_WIDTH - 1) for _ in range(num)]
 
     def model(self, inputs):
         exp_out = []
@@ -103,5 +103,7 @@ if __name__ == "__main__":
     ]
 
     mase_runner(
-        module_param_list=cfgs, trace=True, jobs=8,
+        module_param_list=cfgs,
+        trace=True,
+        jobs=8,
     )

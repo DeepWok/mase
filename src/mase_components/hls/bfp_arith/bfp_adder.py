@@ -2,7 +2,11 @@ from .utils import clog2, get_bfp_ty, new_bfp_ty
 
 
 def bfp_adder_gen(
-    writer, x_exp_width=16, x_man_width=8, w_exp_width=16, w_man_width=8,
+    writer,
+    x_exp_width=16,
+    x_man_width=8,
+    w_exp_width=16,
+    w_man_width=8,
 ):
     """
     This script generates a element-level bfp add in HLS

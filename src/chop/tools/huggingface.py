@@ -39,7 +39,10 @@ def get_hf_dummy_in(model):
     tokenizer = AutoTokenizer.from_pretrained(checkpoint)
 
     dummy_input = tokenizer(
-        ["AI may take over the world one day", "This is why you should learn ADLS",],
+        [
+            "AI may take over the world one day",
+            "This is why you should learn ADLS",
+        ],
         return_tensors="pt",
     )
 
@@ -50,7 +53,9 @@ def get_hf_dummy_in(model):
 
 
 def get_tokenized_dataset(
-    dataset: str, checkpoint: str, return_tokenizer: bool = False,
+    dataset: str,
+    checkpoint: str,
+    return_tokenizer: bool = False,
 ):
     """
     Tokenizes a dataset using the AutoTokenizer from Huggingface.
@@ -76,7 +81,10 @@ def get_tokenized_dataset(
     tokenizer = AutoTokenizer.from_pretrained(checkpoint)
 
     def tokenize_function(example):
-        return tokenizer(example["text"], truncation=True,)
+        return tokenizer(
+            example["text"],
+            truncation=True,
+        )
 
     # Tokenize
     tokenized_datasets = raw_datasets.map(tokenize_function, batched=True)

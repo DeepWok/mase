@@ -15,7 +15,9 @@ from chop.tools.utils import parse_accelerator
 logger = logging.getLogger(__name__)
 
 
-def parse_search_config(search_config: dict,):
+def parse_search_config(
+    search_config: dict,
+):
     """
     Parse search config from a dict or a toml file and do sanity check. The search config must consist of two parts: strategy and search_space.
 

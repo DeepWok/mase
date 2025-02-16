@@ -33,7 +33,10 @@ def distributed_average_timing(fn, repeat, args):
     times = []
     for itr in range(repeat):
         rlog(
-            logger, dist.get_rank(), f"Running teration {itr}", "debug",
+            logger,
+            dist.get_rank(),
+            f"Running teration {itr}",
+            "debug",
         )
         dist.barrier(async_op=True)
         start = time()
@@ -42,7 +45,10 @@ def distributed_average_timing(fn, repeat, args):
         end = time()
         times.append(end - start)
         rlog(
-            logger, dist.get_rank(), f"Time taken: {end - start}s", "debug",
+            logger,
+            dist.get_rank(),
+            f"Time taken: {end - start}s",
+            "debug",
         )
 
     return result, sum(times[2:]) / len(times[2:])
@@ -132,7 +138,11 @@ def device_fn(
         distribute_tensor(in_tensor, mesh, [Replicate(), Replicate()])
         for in_tensor in inputs
     ]
-    _, time_taken = distributed_average_timing(fn=model, repeat=10, args=inputs,)
+    _, time_taken = distributed_average_timing(
+        fn=model,
+        repeat=10,
+        args=inputs,
+    )
     rlog(logger, rank, f"Forward pass finished. Time taken: {time_taken}", level="info")
 
     dist.destroy_process_group()

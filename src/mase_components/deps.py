@@ -17,7 +17,11 @@ MASE_HW_DEPS = {
         "activation_layers",
         "scalar_operators/fixed",
     ],
-    "activation_layers/fixed_gelu": ["common", "memory", "activation_layers",],
+    "activation_layers/fixed_gelu": [
+        "common",
+        "memory",
+        "activation_layers",
+    ],
     "activation_layers/fixed_softsign": [
         "common",
         "activation_layers",
@@ -123,7 +127,11 @@ MASE_HW_DEPS = {
         "common",
         "cast",
     ],
-    "language_models/llmint8/scatter": ["language_models/llmint8", "memory", "common",],
+    "language_models/llmint8/scatter": [
+        "language_models/llmint8",
+        "memory",
+        "common",
+    ],
     # Linear
     "linear_layers/fixed_linear_layer/fixed_linear": [
         "cast",

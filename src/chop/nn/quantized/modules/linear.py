@@ -66,7 +66,11 @@ class _LinearBase(torch.nn.Linear):
         dtype=None,
     ) -> None:
         super().__init__(
-            in_features, out_features, bias, device, dtype,
+            in_features,
+            out_features,
+            bias,
+            device,
+            dtype,
         )
         self.bypass = False
         self.pruning_masks = None
@@ -444,7 +448,9 @@ class LinearBinaryResidualSign(_LinearBase):
         if self.binary_training:
             w = self.w_quantizer(self.weight)
             return F.linear(
-                x_expanded, w * self.gamma.abs() * self.pruning_masks, self.bias,
+                x_expanded,
+                w * self.gamma.abs() * self.pruning_masks,
+                self.bias,
             )
         else:
             self.weigh = self.weight.data.clamp_(-1, 1)
@@ -554,7 +560,9 @@ class LinearLUT(torch.nn.Module):
         output = output.view(batch_size, -1)
         assert output.shape[-1] == self.tables_count
         output = output.view(
-            batch_size, self.out_features, int(self.tables_count / self.out_features),
+            batch_size,
+            self.out_features,
+            int(self.tables_count / self.out_features),
         )
         output = output.sum(-1)
         if self.bias is not None:
@@ -765,10 +773,10 @@ class LinearLogicNets(_LinearBase):
         return y
 
     def encode(self, input: Tensor) -> Tensor:
-        return input * 2 ** self.x_frac_width
+        return input * 2**self.x_frac_width
 
     def decode(self, input: Tensor) -> Tensor:
-        return input / 2 ** self.x_frac_width
+        return input / 2**self.x_frac_width
 
     def forward(self, x: Tensor) -> Tensor:
         if self.is_lut_inference:

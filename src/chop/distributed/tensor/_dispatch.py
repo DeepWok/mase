@@ -42,7 +42,9 @@ logger = logging.getLogger(__name__)
 
 
 def decompose_handler(
-    op_call: torch._ops.OpOverload, args: Tuple[object, ...], kwargs: Dict[str, object],
+    op_call: torch._ops.OpOverload,
+    args: Tuple[object, ...],
+    kwargs: Dict[str, object],
 ) -> object:
     """
     Decomposes a op to core ATen op, this handler is mostly here
@@ -56,7 +58,9 @@ def decompose_handler(
 
 
 def is_same_size_handler(
-    op_call: torch._ops.OpOverload, args: Tuple[object, ...], kwargs: Dict[str, object],
+    op_call: torch._ops.OpOverload,
+    args: Tuple[object, ...],
+    kwargs: Dict[str, object],
 ) -> bool:
     lhs = cast(torch.Tensor, args[0])
     rhs = cast(torch.Tensor, args[1])
@@ -251,7 +255,8 @@ class OpDispatcher:
 
     @staticmethod
     def redistribute_local_args(
-        op_info: OpInfo, suggested_input_schema: OpSchema,
+        op_info: OpInfo,
+        suggested_input_schema: OpSchema,
     ) -> None:
         # NOTE: it's very rare that we need to reshard kwargs so we intentionally skip it
 

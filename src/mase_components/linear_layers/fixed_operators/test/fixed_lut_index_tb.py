@@ -22,7 +22,7 @@ class VerificationCase(Testbench):
         self.assign_self_params(["WIDTH", "LUT_POW"])
 
     def generate_inputs(self):
-        samples = 2 ** self.WIDTH
+        samples = 2**self.WIDTH
         data_x = []
         msb_indices = []
         for x in range(samples):

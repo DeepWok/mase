@@ -41,7 +41,7 @@ def _block_minifloat_quantize(
         per_block_max[per_block_max == 0] = per_block_max[per_block_max != 0].min()
 
     per_block_exponent_bias = my_clamp(
-        torch.floor(torch.log2(per_block_max)), 0, 2 ** exponent_bias_width - 1
+        torch.floor(torch.log2(per_block_max)), 0, 2**exponent_bias_width - 1
     )
     per_block_bm_x = _minifloat_ieee_quantize(
         blocked_x,
@@ -118,5 +118,10 @@ def block_minifloat_quantizer(
 
     """
     return BlockMinifloatQuantize.apply(
-        x, width, exponent_width, exponent_bias_width, block_size, skip_first_dim,
+        x,
+        width,
+        exponent_width,
+        exponent_bias_width,
+        block_size,
+        skip_first_dim,
     )

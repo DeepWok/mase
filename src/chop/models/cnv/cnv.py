@@ -202,7 +202,8 @@ class CNV_Residual(nn.Module):
 # Getters ------------------------------------------------------------------------------
 @register_mase_checkpoint("cnv-toy")
 def get_cnv_toy(
-    pretrained=False, **kwargs: Any,
+    pretrained=False,
+    **kwargs: Any,
 ):
     # image_size = info["image_size"]
     info = kwargs["dataset_info"]
@@ -212,7 +213,8 @@ def get_cnv_toy(
 
 @register_mase_checkpoint("cnv")
 def get_cnv(
-    pretrained=False, **kwargs: Any,
+    pretrained=False,
+    **kwargs: Any,
 ):
     # image_size = info["image_size"]
     info = kwargs["dataset_info"]
@@ -222,7 +224,8 @@ def get_cnv(
 
 @register_mase_checkpoint("cnv_residual")
 def get_cnv_residual(
-    pretrained=False, **kwargs: Any,
+    pretrained=False,
+    **kwargs: Any,
 ):
     # image_size = info["image_size"]
     info = kwargs["dataset_info"]
