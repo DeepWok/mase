@@ -377,7 +377,7 @@ class MaseGraph:
             MaseGraph: Loaded MaseGraph.
         """
         with open(f"{checkpoint}.pt", "rb") as f:
-            loaded_model = torch.load(f)
+            loaded_model = torch.load(f, weights_only=False)
 
         assert isinstance(
             loaded_model, fx.GraphModule
