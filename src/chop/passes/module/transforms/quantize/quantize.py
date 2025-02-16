@@ -2,6 +2,7 @@ import torch
 
 from chop.nn.quantized.modules import quantized_module_map
 from ...module_modify_helper import replace_by_name, instantiate_module
+from ...state_dict_map import match_a_pattern, check_is_huggingface_model
 
 
 def get_config(config: dict, name: str):
@@ -35,6 +36,8 @@ def quantize_by_type(network, pass_args):
 
 
 def quantize_by_name(network, pass_args):
+    is_huggingface_model = check_is_huggingface_model(network)
+
     quantize_names = pass_args.keys()
     n_m = {}
     for n, m in network.named_modules():
@@ -46,10 +49,46 @@ def quantize_by_name(network, pass_args):
             quan_config = quan_config["config"]
             postfix = quan_config.pop("name")
 
+            additional_module_args = (
+                {"config": quan_config, "network_config": network.config}
+                if is_huggingface_model
+                else {"config": quan_config}
+            )
+
             new_m = instantiate_module(
-                m, postfix, quantized_module_map, {"config": quan_config}
+                m, postfix, quantized_module_map, additional_module_args
             )
             network = replace_by_name(network, n, new_m)
+    return network
+
+
+def quantize_by_regex_name(network, pass_args):
+    is_huggingface_model = check_is_huggingface_model(network)
+
+    patterns = list(pass_args.keys())
+    n_m = {}
+    for n, m in network.named_modules():
+        n_m[n] = m
+
+    for n, m in n_m.items():
+        matched_pattern = match_a_pattern(n, patterns)
+        if not matched_pattern:
+            continue
+
+        quan_config = pass_args[matched_pattern]["config"]
+        postfix = quan_config["name"]
+
+        additional_module_args = (
+            {"config": quan_config, "network_config": network.config}
+            if is_huggingface_model
+            else {"config": quan_config}
+        )
+
+        new_m = instantiate_module(
+            m, postfix, quantized_module_map, additional_module_args
+        )
+        network = replace_by_name(network, n, new_m)
+
     return network
 
 
@@ -97,6 +136,8 @@ def quantize_module_transform_pass(network, pass_args):
             network = quantize_by_type(network, pass_args)
         case "name":
             network = quantize_by_name(network, pass_args)
+        case "regex_name":
+            network = quantize_by_regex_name(network, pass_args)
         case _:
             raise ValueError(f'Unsupported quantize "by": {by}')
     return network, {}
