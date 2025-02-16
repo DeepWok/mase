@@ -8,6 +8,6 @@ The MAC units in each PE perform the multiply-accumulate operation over 2 cycles
 
 ![Systolic Array](https://raw.githubusercontent.com/DeepWok/mase/main/docs/source/imgs/hardware/sys_array_pe.png)
 
-### Systolic Module Driver
+## Systolic Module Driver
 
 The Systolic Module Driver generates pulse signals in the format required to drive the read interface of an on-chip buffer such that data signals are made available with the required timing for the processing elements of a systolic module. This is achieved through a shift register of size BUFFER_SLOT_COUNT. After receiving a starting pulse, the least significant bit is set to 1. Subsequently, the register shifts after every shift pulse, up to a runtime-parametrizable pulse limit count parameter (this is set to the number of output features for the layer being executed). The driver should then pulse a subsequent BUFFER_SLOT_COUNT times until the register is flushed.
