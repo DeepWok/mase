@@ -1,9 +1,9 @@
-"""
-Author: Jiaqi Gu (jqgu@utexas.edu)
-Date: 2021-01-27 01:08:44
-LastEditors: Jiaqi Gu (jqgu@utexas.edu)
-LastEditTime: 2021-07-18 00:40:18
-"""
+# """
+# Author: Jiaqi Gu (jqgu@utexas.edu)
+# Date: 2021-01-27 01:08:44
+# LastEditors: Jiaqi Gu (jqgu@utexas.edu)
+# LastEditTime: 2021-07-18 00:40:18
+# """
 
 from typing import Optional, Tuple
 import logging
@@ -30,11 +30,11 @@ __all__ = ["AllPassMORRCirculantConv2d"]
 
 
 class AllPassMORRCirculantConv2d(ONNBaseLayer):
-    """
-    All-pass MORR Conv2d layer, assumes (1) block-circulant matrix (2) differential rails (3) learnable balancing factors.
-    J. Gu, et al., "SqueezeLight: Towards Scalable Optical Neural Networks with Multi-Operand Ring Resonators"
-    https://doi.org/10.23919/DATE51398.2021.9474147
-    """
+    # """
+    # All-pass MORR Conv2d layer, assumes (1) block-circulant matrix (2) differential rails (3) learnable balancing factors.
+    # J. Gu, et al., "SqueezeLight: Towards Scalable Optical Neural Networks with Multi-Operand Ring Resonators"
+    # https://doi.org/10.23919/DATE51398.2021.9474147
+    # """
 
     __constants__ = [
         "stride",
@@ -262,9 +262,9 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
             init.uniform_(self.bias, 0, 0)
 
     def sync_parameters(self, src: str = "weight") -> None:
-        """
-        description: synchronize all parameters from the source parameters
-        """
+        # """
+        # description: synchronize all parameters from the source parameters
+        # """
 
         raise NotImplementedError
 
@@ -291,10 +291,10 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
         self.gamma_noise_std = noise_std
 
     def load_parameters(self, param_dict) -> None:
-        """
-        description: update parameters based on this parameter dictionary\\
-        param param_dict {dict of dict} {layer_name: {param_name: param_tensor, ...}, ...}
-        """
+        # """
+        # description: update parameters based on this parameter dictionary\\
+        # param param_dict {dict of dict} {layer_name: {param_name: param_tensor, ...}, ...}
+        # """
         for name, param in param_dict.items():
             getattr(self, name).data.copy_(param)
 
@@ -363,16 +363,16 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
         )
 
     def propagate_morr(self, weight: Tensor, x: Tensor) -> Tensor:
-        """Propagate through the analytically calculated transfer matrix of MORR.
+        # """Propagate through the analytically calculated transfer matrix of MORR.
 
-        :param weight: First column vectors in the block-circulant matrix.
-        :type weight: Tensor
-        :param x: Input tensor.
-        :type x: Tensor
+        # :param weight: First column vectors in the block-circulant matrix.
+        # :type weight: Tensor
+        # :param x: Input tensor.
+        # :type x: Tensor
 
-        :return: Output of MORR array.
-        :rtype: Tensor
-        """
+        # :return: Output of MORR array.
+        # :rtype: Tensor
+        # """
 
         x = x.t()  # [h_out*w_out*bs, ks*ks*inc]
         x = x.view(x.size(0), self.grid_dim_x, self.miniblock)  # [h_out*w_out*bs, q, k]
@@ -493,9 +493,9 @@ class AllPassMORRCirculantConv2d(ONNBaseLayer):
             self.weight.data.masked_fill_(~mask.view_as(self.weight.data), 0)
 
     def get_output_dim(self, img_height: int, img_width: int) -> Tuple[int, int]:
-        """
-        get the output features size
-        """
+        # """
+        # get the output features size
+        # """
         h_out = (img_height - self.kernel_size[0] + 2 * self.padding[0]) / self.stride[
             0
         ] + 1

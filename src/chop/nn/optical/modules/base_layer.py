@@ -1,10 +1,10 @@
-"""
-Description:
-Author: Jiaqi Gu (jqgu@utexas.edu)
-Date: 2021-06-08 18:55:05
-LastEditors: Jiaqi Gu (jqgu@utexas.edu)
-LastEditTime: 2021-06-08 18:55:05
-"""
+# """
+# Description:
+# Author: Jiaqi Gu (jqgu@utexas.edu)
+# Date: 2021-06-08 18:55:05
+# LastEditors: Jiaqi Gu (jqgu@utexas.edu)
+# LastEditTime: 2021-06-08 18:55:05
+# """
 
 from typing import Any, Dict, Optional
 import torch
@@ -59,10 +59,10 @@ class ONNBaseLayer(nn.Module):
         self.in_bit = in_bit
 
     def load_parameters(self, param_dict: Dict[str, Any]) -> None:
-        """
-        description: update parameters based on this parameter dictionary\\
-        param param_dict {dict of dict} {param_name: param_tensor, ...}
-        """
+        # """
+        # description: update parameters based on this parameter dictionary\\
+        # param param_dict {dict of dict} {param_name: param_tensor, ...}
+        # """
         for name, param in param_dict.items():
             getattr(self, name).data.copy_(param)
 

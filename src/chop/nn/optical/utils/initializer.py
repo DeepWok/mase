@@ -1,10 +1,10 @@
-"""
-Description:
-Author: Jiaqi Gu (jqgu@utexas.edu)
-Date: 2021-06-06 01:57:16
-LastEditors: Jiaqi Gu (jqgu@utexas.edu)
-LastEditTime: 2021-06-06 01:57:18
-"""
+# """
+# Description:
+# Author: Jiaqi Gu (jqgu@utexas.edu)
+# Date: 2021-06-06 01:57:16
+# LastEditors: Jiaqi Gu (jqgu@utexas.edu)
+# LastEditTime: 2021-06-06 01:57:18
+# """
 
 import numpy as np
 import torch
@@ -20,15 +20,15 @@ __all__ = [
 
 
 def morr_uniform_(tensor, MORRConfig, n_op=4, biased=False, gain=1):
-    """
-    description: Uniform initialization for MORR array based tensor core [SqueezeLight, Gu+, DATE'21]. We only consider how n_op influence one MORR's output. How to balance vector length should be considered in learnable balancing factor\\
-    @tensor {torch.Tensor} weight tensor/parameter\\
-    @MORRConfig {Config} MORR configuration defined in the onnlib/model/layer/device/mrr\\
-    @n_op {int scalar} Number of operands on an MORR\\
-    @biased {bool} biased=True, weight in [0, L]; otherwise in [-L/2, L/2].\\
-    @gain {float} Gain due to activation. ReLU=sqrt(2), Tanh=5/3, Clamp(0,1)=2\\
-    return {}
-    """
+    # """
+    # description: Uniform initialization for MORR array based tensor core [SqueezeLight, Gu+, DATE'21]. We only consider how n_op influence one MORR's output. How to balance vector length should be considered in learnable balancing factor\\
+    # @tensor {torch.Tensor} weight tensor/parameter\\
+    # @MORRConfig {Config} MORR configuration defined in the onnlib/model/layer/device/mrr\\
+    # @n_op {int scalar} Number of operands on an MORR\\
+    # @biased {bool} biased=True, weight in [0, L]; otherwise in [-L/2, L/2].\\
+    # @gain {float} Gain due to activation. ReLU=sqrt(2), Tanh=5/3, Clamp(0,1)=2\\
+    # return {}
+    # """
     morr_fwhm = (
         -4
         * np.pi**2

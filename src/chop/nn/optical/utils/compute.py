@@ -1,10 +1,10 @@
-"""
-Description:
-Author: Jiaqi Gu (jqgu@utexas.edu)
-Date: 2021-06-06 02:17:08
-LastEditors: Jiaqi Gu (jqgu@utexas.edu)
-LastEditTime: 2021-06-06 02:17:08
-"""
+# """
+# Description:
+# Author: Jiaqi Gu (jqgu@utexas.edu)
+# Date: 2021-06-06 02:17:08
+# LastEditors: Jiaqi Gu (jqgu@utexas.edu)
+# LastEditTime: 2021-06-06 02:17:08
+# """
 
 import contextlib
 import logging
@@ -52,11 +52,11 @@ def _get_toeplitz_indices(n: int, device: Device) -> Tensor:
 
 
 def toeplitz(col: Tensor) -> Tensor:
-    """
-    Efficient Toeplitz matrix generation from the first column. The column vector must in the last dimension. Batch generation is supported. Suitable for AutoGrad. Circulant matrix multiplication is ~4x faster than rfft-based implementation!\\
-    @col {torch.Tensor} (Batched) column vectors.\\
-    return out {torch.Tensor} (Batched) circulant matrices
-    """
+    # """
+    # Efficient Toeplitz matrix generation from the first column. The column vector must in the last dimension. Batch generation is supported. Suitable for AutoGrad. Circulant matrix multiplication is ~4x faster than rfft-based implementation!\\
+    # @col {torch.Tensor} (Batched) column vectors.\\
+    # return out {torch.Tensor} (Batched) circulant matrices
+    # """
     n = col.size(-1)
     indices = _get_toeplitz_indices(n, device=col.device)
     return col[..., indices]
@@ -97,15 +97,15 @@ def im2col_2d(
 
 
 def complex_mult(X: Tensor, Y: Tensor) -> Tensor:
-    """Complex-valued element-wise multiplication
+    # """Complex-valued element-wise multiplication
 
-    Args:
-        X (Tensor): Real tensor with last dim of 2 or complex tensor
-        Y (Tensor): Real tensor with last dim of 2 or complex tensor
+    # Args:
+    #     X (Tensor): Real tensor with last dim of 2 or complex tensor
+    #     Y (Tensor): Real tensor with last dim of 2 or complex tensor
 
-    Returns:
-        Tensor: tensor with the same type as input
-    """
+    # Returns:
+    #     Tensor: tensor with the same type as input
+    # """
     if not torch.is_complex(X) and not torch.is_complex(Y):
         assert (
             X.shape[-1] == 2 and Y.shape[-1] == 2
@@ -153,15 +153,15 @@ def _polynomial_order_base(order: int, device: Device) -> Tensor:
 
 
 def polynomial(x: Tensor | np.ndarray, coeff: Tensor | np.ndarray) -> Tensor:
-    """calculate polynomial function of x given coefficient coeff
+    # """calculate polynomial function of x given coefficient coeff
 
-    Args:
-        x (Tensor): input tensor
-        coeff (Tensor): Tensor of shape [n], where n is the degree of polynomial. Orders: [n, n-1, ..., 2, 1, constant]
+    # Args:
+    #     x (Tensor): input tensor
+    #     coeff (Tensor): Tensor of shape [n], where n is the degree of polynomial. Orders: [n, n-1, ..., 2, 1, constant]
 
-    Returns:
-        Tensor: output tensor coeff[0]*x^n + coeff[1]*x^{n-1} + ... + coeff[n-1]*x + coeff[n]
-    """
+    # Returns:
+    #     Tensor: output tensor coeff[0]*x^n + coeff[1]*x^{n-1} + ... + coeff[n-1]*x + coeff[n]
+    # """
     # xs = [x]
     # for i in range(2, coeff.size(0)):
     #     xs.append(xs[-1]*x)

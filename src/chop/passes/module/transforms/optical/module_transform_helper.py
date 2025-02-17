@@ -27,11 +27,11 @@ def weight_replacement_optical(original, new_module):
 
 
 def weight_replacement_linear_optical(x, y):
-    """
-    Replace the weights of AllPassMORRCirculantLinear (y)
-    with those from a standard nn.Linear (x).
-    Focuses only on weight copying (no bias copying).
-    """
+    # """
+    # Replace the weights of AllPassMORRCirculantLinear (y)
+    # with those from a standard nn.Linear (x).
+    # Focuses only on weight copying (no bias copying).
+    # """
 
     # Fetch original linear weight [out_features, in_features]
     W = x.weight.data  # shape: (out_features, in_features)
@@ -74,15 +74,15 @@ def weight_replacement_linear_optical(x, y):
 
 
 def weight_replacement_conv2d_optical(x, y):
-    """
-    Replace the weights (and bias, if present) of a standard nn.Conv2d (x)
-    into an AllPassMORRCirculantConv2d (y).
+    # """
+    # Replace the weights (and bias, if present) of a standard nn.Conv2d (x)
+    # into an AllPassMORRCirculantConv2d (y).
 
-    Args:
-        x (nn.Conv2d):    A standard PyTorch Conv2d module
-        y (AllPassMORRCirculantConv2d): An already-constructed optical Conv2d
-                                        module into which we copy weights/bias.
-    """
+    # Args:
+    #     x (nn.Conv2d):    A standard PyTorch Conv2d module
+    #     y (AllPassMORRCirculantConv2d): An already-constructed optical Conv2d
+    #                                     module into which we copy weights/bias.
+    # """
     with torch.no_grad():
         # 1) Copy bias (if both x and y actually have one).
         if x.bias is not None and y.bias is not None:

@@ -1,10 +1,10 @@
-"""
-Description:
-Author: Jiaqi Gu (jqgu@utexas.edu)
-Date: 2021-06-06 03:15:00
-LastEditors: Jiaqi Gu (jqgu@utexas.edu)
-LastEditTime: 2021-06-06 03:15:00
-"""
+# """
+# Description:
+# Author: Jiaqi Gu (jqgu@utexas.edu)
+# Date: 2021-06-06 03:15:00
+# LastEditors: Jiaqi Gu (jqgu@utexas.edu)
+# LastEditTime: 2021-06-06 03:15:00
+# """
 
 import numpy as np
 import torch
@@ -48,12 +48,12 @@ def uniform_quantize(k, gradient_clip=False):
 
 ############ add observer and new quant based on range and zeropoint for activation
 def uniform_quantize_new(k, gradient_clip=False):
-    """
-    Support uniform quantization with auto-adjusted input data range
-    args:
-        k: bitwidth
-        scale, zeropoint: obtained from observer
-    """
+    # """
+    # Support uniform quantization with auto-adjusted input data range
+    # args:
+    #     k: bitwidth
+    #     scale, zeropoint: obtained from observer
+    # """
 
     class qfn(torch.autograd.Function):
         @staticmethod
@@ -90,12 +90,12 @@ class input_quantize_fn(torch.nn.Module):
     def __init__(
         self, in_bit, alg="dorefa", device=torch.device("cuda:0"), quant_ratio=1.0
     ):
-        """Input quantizer with Quant_Noise supported
-        Args:
-            in_bit (int): Input quantization bitwidth.
-            device (Device, optional): torch Device. Defaults to torch.device("cuda:0").
-            quant_ratio (float, optional): Quantization ratio. Defaults to 1.0.
-        """
+        # """Input quantizer with Quant_Noise supported
+        # Args:
+        #     in_bit (int): Input quantization bitwidth.
+        #     device (Device, optional): torch Device. Defaults to torch.device("cuda:0").
+        #     quant_ratio (float, optional): Quantization ratio. Defaults to 1.0.
+        # """
         super(input_quantize_fn, self).__init__()
         assert 1 <= in_bit <= 32
         self.in_bit = in_bit
@@ -235,14 +235,14 @@ class input_quantize_fn(torch.nn.Module):
 
 class weight_quantize_fn(torch.nn.Module):
     def __init__(self, w_bit, mode="oconv", alg="dorefa", quant_ratio=1.0):
-        """Differentiable weight quantizer. Support different algorithms. Support Quant-Noise with partial quantization.
+        # """Differentiable weight quantizer. Support different algorithms. Support Quant-Noise with partial quantization.
 
-        Args:
-            w_bit (int): quantization bitwidth
-            mode (str, optional): Different mode indicates different NN architectures. Defaults to "oconv".
-            alg (str, optional): Quantization algorithms. [dorefa, dorefa_sym, qnn, dorefa_pos] Defaults to "dorefa".
-            quant_ratio (float, optional): Quantization ratio to support full-precision gradient flow. Defaults to 1.0.
-        """
+        # Args:
+        #     w_bit (int): quantization bitwidth
+        #     mode (str, optional): Different mode indicates different NN architectures. Defaults to "oconv".
+        #     alg (str, optional): Quantization algorithms. [dorefa, dorefa_sym, qnn, dorefa_pos] Defaults to "dorefa".
+        #     quant_ratio (float, optional): Quantization ratio to support full-precision gradient flow. Defaults to 1.0.
+        # """
         super(weight_quantize_fn, self).__init__()
         assert 1 <= w_bit <= 32, logging.error(
             f"Only support 1 - 32 bit quantization, but got {w_bit}"

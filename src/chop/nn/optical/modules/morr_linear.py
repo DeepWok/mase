@@ -1,10 +1,10 @@
-"""
-Description:
-Author: Jiaqi Gu (jqgu@utexas.edu)
-Date: 2022-04-18 14:19:57
-LastEditors: Jiaqi Gu (jqgu@utexas.edu)
-LastEditTime: 2022-04-18 16:21:37
-"""
+# """
+# Description:
+# Author: Jiaqi Gu (jqgu@utexas.edu)
+# Date: 2022-04-18 14:19:57
+# LastEditors: Jiaqi Gu (jqgu@utexas.edu)
+# LastEditTime: 2022-04-18 16:21:37
+# """
 
 from typing import Optional
 import logging
@@ -29,11 +29,11 @@ __all__ = ["AllPassMORRCirculantLinear"]
 
 
 class AllPassMORRCirculantLinear(ONNBaseLayer):
-    """
-    All-pass MORR Linear layer, assumes (1) block-circulant matrix (2) differential rails (3) learnable balancing factors.
-    J. Gu, et al., "SqueezeLight: Towards Scalable Optical Neural Networks with Multi-Operand Ring Resonators"
-    https://doi.org/10.23919/DATE51398.2021.9474147
-    """
+    # """
+    # All-pass MORR Linear layer, assumes (1) block-circulant matrix (2) differential rails (3) learnable balancing factors.
+    # J. Gu, et al., "SqueezeLight: Towards Scalable Optical Neural Networks with Multi-Operand Ring Resonators"
+    # https://doi.org/10.23919/DATE51398.2021.9474147
+    # """
 
     __constants__ = ["in_features", "out_features"]
     in_features: int
@@ -219,9 +219,9 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
             init.uniform_(self.bias, 0, 0)
 
     def sync_parameters(self, src: str = "weight") -> None:
-        """
-        description: synchronize all parameters from the source parameters
-        """
+        # """
+        # description: synchronize all parameters from the source parameters
+        # """
 
         raise NotImplementedError
 
@@ -280,10 +280,10 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
         self.gamma_noise_std = noise_std
 
     def load_parameters(self, param_dict) -> None:
-        """
-        description: update parameters based on this parameter dictionary\\
-        param param_dict {dict of dict} {layer_name: {param_name: param_tensor, ...}, ...}
-        """
+        # """
+        # description: update parameters based on this parameter dictionary\\
+        # param param_dict {dict of dict} {layer_name: {param_name: param_tensor, ...}, ...}
+        # """
         for name, param in param_dict.items():
             getattr(self, name).data.copy_(param)
 
@@ -358,13 +358,13 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
     def propagate_morr(
         self, weight: Tensor, x: Tensor, morr_output_scale: Tensor
     ) -> Tensor:
-        """
-        @description: propagate through the analytically calculated transfer matrix of molg. We implement circulant matrix multiplication using fast circ matmul
-        @param weight {torch.Tensor} two phase shifters in the MZI-based attenuators
-        @param x {torch.Tensor} complex-valued input
-        @param morr_output_scale {torch.Tensor} learnable balancing factors
-        @return: y {torch.Tensor} output of attenuators
-        """
+        # """
+        # @description: propagate through the analytically calculated transfer matrix of molg. We implement circulant matrix multiplication using fast circ matmul
+        # @param weight {torch.Tensor} two phase shifters in the MZI-based attenuators
+        # @param x {torch.Tensor} complex-valued input
+        # @param morr_output_scale {torch.Tensor} learnable balancing factors
+        # @return: y {torch.Tensor} output of attenuators
+        # """
         ### x : [bs, q, k]
         ### weights: [p, q, k]
         ### morr_output_scale: [1, 1, 1, q]
@@ -391,34 +391,34 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
         x = self.mrr_roundtrip_phase_to_tr(x)  # 3x faster than autograd
 
         ## implement balancing factor as dot-product
-        """
-        if(self.w_bit < 16):
-            morr_output_scale = self.morr_output_scale_quantizer(self.morr_output_scale)
-            if(self.sigma_out_scale_quant_gain is None):
-                self.sigma_out_scale_quant_gain = self.sigma_out_scale / morr_output_scale.data.std().item()
-            morr_output_scale = morr_output_scale.mul(self.sigma_out_scale_quant_gain)### gain factor from Tanh used in quantization
-        else:
-            morr_output_scale = self.morr_output_scale
-        # morr_output_scale = morr_output_scale * self.morr_gain
-        scale = morr_output_scale[..., :-1, :]
-        scale_pad = morr_output_scale[..., -1:, :]
+        # """
+        # if(self.w_bit < 16):
+        #     morr_output_scale = self.morr_output_scale_quantizer(self.morr_output_scale)
+        #     if(self.sigma_out_scale_quant_gain is None):
+        #         self.sigma_out_scale_quant_gain = self.sigma_out_scale / morr_output_scale.data.std().item()
+        #     morr_output_scale = morr_output_scale.mul(self.sigma_out_scale_quant_gain)### gain factor from Tanh used in quantization
+        # else:
+        #     morr_output_scale = self.morr_output_scale
+        # # morr_output_scale = morr_output_scale * self.morr_gain
+        # scale = morr_output_scale[..., :-1, :]
+        # scale_pad = morr_output_scale[..., -1:, :]
 
-        # print("morr diff transmission:", end=", ")
-        # diff = x[..., :x.size(2)//2,:]-x[..., x.size(2)//2:,:]
-        # print_stat(diff)
-        if(self.grid_dim_x % 2 == 0):
-            #even blocks
-            scale = torch.cat([scale, -scale], dim=2) # [1, 1, q, 1]
-        else:
-            # odd blocks
-            if(self.grid_dim_x > 1):
-                scale = torch.cat([morr_output_scale, -scale], dim=2) # [1, 1, q, 1]
-            else:
-                scale = scale_pad # [1, 1, q, 1]
-        scale = scale.squeeze(-1).unsqueeze(0) # [1 ,1, 1, q]
-        # print("output scale Q:", end=", ")
-        # print_stat(scale[..., :scale.size(-1)//2])
-        """
+        # # print("morr diff transmission:", end=", ")
+        # # diff = x[..., :x.size(2)//2,:]-x[..., x.size(2)//2:,:]
+        # # print_stat(diff)
+        # if(self.grid_dim_x % 2 == 0):
+        #     #even blocks
+        #     scale = torch.cat([scale, -scale], dim=2) # [1, 1, q, 1]
+        # else:
+        #     # odd blocks
+        #     if(self.grid_dim_x > 1):
+        #         scale = torch.cat([morr_output_scale, -scale], dim=2) # [1, 1, q, 1]
+        #     else:
+        #         scale = scale_pad # [1, 1, q, 1]
+        # scale = scale.squeeze(-1).unsqueeze(0) # [1 ,1, 1, q]
+        # # print("output scale Q:", end=", ")
+        # # print_stat(scale[..., :scale.size(-1)//2])
+        # """
         x = morr_output_scale.matmul(x)  # [1, 1, 1, q] x [bs, p, q, k] = [bs, p, 1, k]
         x = x.flatten(1)  # [bs, p*k]
         return x

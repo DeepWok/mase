@@ -1,10 +1,10 @@
-"""
-Description:
-Author: Jiaqi Gu (jqgu@utexas.edu)
-Date: 2021-07-18 00:01:34
-LastEditors: Jiaqi Gu (jqgu@utexas.edu)
-LastEditTime: 2021-07-18 00:01:36
-"""
+# """
+# Description:
+# Author: Jiaqi Gu (jqgu@utexas.edu)
+# Date: 2021-07-18 00:01:34
+# LastEditors: Jiaqi Gu (jqgu@utexas.edu)
+# LastEditTime: 2021-07-18 00:01:36
+# """
 
 from .compute import (
     complex_mult,
@@ -43,14 +43,14 @@ __all__ = [
 def mrr_roundtrip_phase_to_tr_fused(
     rt_phi, a: float = 0.8, r: float = 0.9, intensity: bool = False
 ):
-    """
-    description:  round trip phase shift to field transmission
-    rt_phi {torch.Tensor or np.ndarray} abs of roundtrip phase shift (abs(phase lag)). range from abs([-pi, 0])=[0, pi]\\
-    a {scalar} attenuation coefficient\\
-    r {scalar} self-coupling coefficient\\
-    intensity {bool scalar} whether output intensity tranmission or field transmission\\
-    return t {torch.Tensor or np.ndarray} mrr through port field/intensity transmission
-    """
+    # """
+    # description:  round trip phase shift to field transmission
+    # rt_phi {torch.Tensor or np.ndarray} abs of roundtrip phase shift (abs(phase lag)). range from abs([-pi, 0])=[0, pi]\\
+    # a {scalar} attenuation coefficient\\
+    # r {scalar} self-coupling coefficient\\
+    # intensity {bool scalar} whether output intensity tranmission or field transmission\\
+    # return t {torch.Tensor or np.ndarray} mrr through port field/intensity transmission
+    # """
 
     # use slow but accurate mode from theoretical equation
     # create e^(-j phi) first
