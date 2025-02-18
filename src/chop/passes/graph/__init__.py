@@ -135,6 +135,7 @@ PASSES = {
     "conv_bn_fusion": conv_bn_fusion_transform_pass,
     "logicnets_fusion": logicnets_fusion_transform_pass,
     "onnx_annotate": onnx_annotate_transform_pass,
+    "in_mem_simulating": in_mem_simulating_transform_pass,
 }
 
 if check_dependencies("runtime_analysis_pass"):
