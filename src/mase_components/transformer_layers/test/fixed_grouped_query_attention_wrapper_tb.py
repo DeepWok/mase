@@ -89,13 +89,16 @@ class HardwareGQA(GroupedQueryAttentionInteger):
 
         out = self.o_projection(attn_output)
 
-        return out, {
-            "query": query,
-            "key": key.transpose(1, 2),  # Key is transposed in hardware
-            "value": value,
-            "heads_out": heads_out,
-            "attn_output": attn_output,
-        }
+        return (
+            out,
+            {
+                "query": query,
+                "key": key.transpose(1, 2),  # Key is transposed in hardware
+                "value": value,
+                "heads_out": heads_out,
+                "attn_output": attn_output,
+            },
+        )
 
 
 class FixedGroupedQueryAttentionTB(Testbench):

@@ -5,9 +5,7 @@ import torch.nn as nn
 from torch import Tensor
 import torch.nn.functional as F
 
-from chop.nn.quantizers import (
-    integer_quantizer,
-)
+from chop.nn.quantizers import integer_quantizer
 
 
 def _rms_norm(x: Tensor, eps, scale: Tensor | None):
