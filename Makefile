@@ -65,6 +65,19 @@ build-docker:
 		docker pull $(img); \
 	fi
 
+build-docker-python13:
+	docker build --build-arg VHLS_PATH=$(vhls) --build-arg VHLS_VERSION=$(vhls_version) -f Docker/Dockerfile-$(PLATFORM)-python13 --tag mase-ubuntu2204-docker-python13 Docker; \
+
+shell-python13:
+	docker run -it --shm-size 256m \
+        --hostname mase-ubuntu2204-docker-python13 \
+        -w /workspace \
+        -v /$(USER_PREFIX)/$(shell whoami)/.gitconfig:/root/.gitconfig \
+        -v /$(USER_PREFIX)/$(shell whoami)/.ssh:/root/.ssh \
+        -v /$(USER_PREFIX)/$(shell whoami)/.mase:/root/.mase:z \
+        -v $(shell pwd):/workspace:z \
+        $(DOCKER_RUN_EXTRA_ARGS) \
+        $(img) /bin/bash
 shell:
 	docker run -it --shm-size 256m \
         --hostname mase-ubuntu2204 \

@@ -297,6 +297,14 @@ INTERNAL_COMP = {
             ],
         }
     ],
+    "add_mxint_hardware": [
+        {
+            "name": "mxint_addition",
+            "dependence_files": [
+                "linear_layers/mxint_operators/rtl/mxint_addition.sv",
+            ],
+        },
+    ],
     "mul": [
         {
             "name": "fixed_elementwise_multiplier",

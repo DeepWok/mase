@@ -26,6 +26,13 @@ def parse_q_config(node, mase_op, q_config):
     if q_config.get("by") == "name":
         return q_config.get(node.name)["config"]
     elif q_config.get("by") == "type":
+        if mase_op == "user_defined_module":
+            if "add" in node.name:
+                return q_config.get("add")["config"]
+            elif "attention" in node.name:
+                return q_config.get("attention")["config"]
+            elif "gelu" in node.name or "act" in node.name:
+                return q_config.get("gelu")["config"]
         return q_config.get(mase_op)["config"]
 
 def update_common_metadata_pass(mg, quan_args):
@@ -41,9 +48,15 @@ def update_common_metadata_pass(mg, quan_args):
             if "mx_int_patch_embed" in node.name:
                 node.meta["mase"].parameters["common"]["mase_op"] = "mx_int_patch_embed"
                 mase_op = "mx_int_patch_embed"
-            elif "act" in node.name or "gelu" in node.name:
-                node.meta["mase"].parameters["common"]["mase_op"] = "gelu"
-                mase_op = "gelu"
+            # elif "act" in node.name or "gelu" in node.name:
+            #     node.meta["mase"].parameters["common"]["mase_op"] = "gelu"
+            #     mase_op = "gelu"
+            # elif "add" in node.name:
+            #     node.meta["mase"].parameters["common"]["mase_op"] = "add"
+            #     mase_op = "add"
+            # elif "attention" in node.name:
+            #     node.meta["mase"].parameters["common"]["mase_op"] = "attention"
+            #     mase_op = "attention"
         node_quan_config = parse_q_config(node, mase_op, quan_args)
         for arg, _ in node.meta["mase"].parameters["common"]["args"].items():
             if (
@@ -269,6 +282,6 @@ def delete_dim_of_batch_size(vp, node_name=None):
     [vp.pop(key) for key in pop_list]
 
 def updating_hardware_metadata_pass(mg, pass_args):
-    for node in mg.fx_graph.nodes: 
-        for func in pass_args["updating_funcs_list"]:
+    for func in pass_args["updating_funcs_list"]:
+        for node in mg.fx_graph.nodes: 
             node = func(node)

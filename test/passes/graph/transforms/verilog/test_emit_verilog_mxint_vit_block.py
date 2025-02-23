@@ -24,9 +24,9 @@ from utils import (
 )
 from chop.models.vision.vit.vit import Attention
 
-from quantize_modules import (
+from mxint_quant import (
     vit_module_level_quantize, 
-    MxIntAddition, 
+    MXIntAddition, 
     VIT_CUSTOM_OPS
 )
 def excepthook(exc_type, exc_value, exc_traceback):
@@ -44,11 +44,12 @@ class CustomModel(torch.nn.Module):
     def __init__(self, dim, num_heads) -> None:
         super().__init__()
 
+        # self.linear = nn.Linear(dim, dim)
         self.linear1 = nn.Linear(dim, 4*dim)
         self.act = torch.nn.GELU()
         self.linear2 = nn.Linear(4*dim, dim)
 
-        self.add = MxIntAddition({})
+        self.add = MXIntAddition({})
         self.norm1 = torch.nn.LayerNorm(dim)
 
         self.attention = Attention(dim, num_heads, qkv_bias=True)
@@ -66,125 +67,119 @@ class CustomModel(torch.nn.Module):
         attn = self.norm2(attn)
         result = self.add(attn, mlp)
         return result
-
+parallelism = 16
 quan_args = {
+    "by": "type",
     "layer_norm": {
         "config": {
         "name": "mxint_hardware",
-        "data_in_width": 4,
+        "data_in_width": 8,
         "data_in_exponent_width": 8,
-        "data_in_parallelism": [1, 48],
+        "data_in_parallelism": [1, parallelism],
 
-        "weight_width": 4,
+        "weight_width": 6,
         "weight_exponent_width": 8,
-        "weight_parallelism": [1, 48],
+        "weight_parallelism": [1, parallelism],
 
-        "bias_width": 4,
+        "bias_width": 6,
         "bias_exponent_width": 8,
-        "bias_parallelism": [1, 48],
+        "bias_parallelism": [1, parallelism],
 
-        "data_out_width": 4,
+        "data_out_width": 8,
         "data_out_exponent_width": 8,
-        "data_out_parallelism": [1, 48],
+        "data_out_parallelism": [1, parallelism],
         }
     },
     "gelu": {
         "config": {
         "name": "mxint_hardware",
-        "data_in_width": 4,
+        "data_in_width": 8,
         "data_in_exponent_width": 8,
-        "data_in_parallelism": [1, 48],
+        "data_in_parallelism": [1, parallelism],
 
-        "weight_width": 4,
+        "weight_width": 6,
         "weight_exponent_width": 8,
-        "weight_parallelism": [48, 48],
+        "weight_parallelism": [parallelism, parallelism],
 
-        "bias_width": 4,
+        "bias_width": 6,
         "bias_exponent_width": 8,
-        "bias_parallelism": [1, 48],
+        "bias_parallelism": [1, parallelism],
 
-        "data_out_width": 4,
+        "data_out_width": 8,
         "data_out_exponent_width": 8,
-        "data_out_parallelism": [1, 48],
+        "data_out_parallelism": [1, parallelism],
         },
     },
     "linear": {
         "config": {
         "name": "mxint_hardware",
-        "data_in_width": 4,
+        "data_in_width": 8,
         "data_in_exponent_width": 8,
-        "data_in_parallelism": [1, 48],
+        "data_in_parallelism": [1, parallelism],
 
-        "weight_width": 4,
+        "weight_width": 6,
         "weight_exponent_width": 8,
-        "weight_parallelism": [48, 48],
+        "weight_parallelism": [parallelism, parallelism],
 
-        "bias_width": 4,
+        "bias_width": 6,
         "bias_exponent_width": 8,
-        "bias_parallelism": [1, 48],
+        "bias_parallelism": [1, parallelism],
 
-        "data_out_width": 4,
+        "data_out_width": 8,
         "data_out_exponent_width": 8,
-        "data_out_parallelism": [1, 48],
+        "data_out_parallelism": [1, parallelism],
         },
     },
-    "user_defined_module": {
+    "attention": {
         "config": {
         "name": "mxint_hardware",
-        "data_in_width": 4,
+        "data_in_width": 8,
         "data_in_exponent_width": 8,
-        "data_in_parallelism": [1, 48],
+        "data_in_parallelism": [1, parallelism],
 
-        "weight_width": 4,
+        "weight_width": 6,
         "weight_exponent_width": 8,
-        "weight_parallelism": [48, 48],
+        "weight_parallelism": [parallelism, parallelism],
 
-        "bias_width": 4,
+        "bias_width": 6,
         "bias_exponent_width": 8,
-        "bias_parallelism": [1, 48],
+        "bias_parallelism": [1, parallelism],
 
-        "data_out_width": 4,
+        "data_out_width": 8,
         "data_out_exponent_width": 8,
-        "data_out_parallelism": [1, 48],
+        "data_out_parallelism": [1, parallelism],
         }
     },
     "fork2": {
         "config": {
         "name": "mxint_hardware",
-        "data_in_width": 4,
+        "data_in_width": 8,
         "data_in_exponent_width": 8,
-        "data_in_parallelism": [1, 48],
-        "data_out_width": 4,
+        "data_in_parallelism": [1, parallelism],
+        "data_out_width": 8,
         "data_out_exponent_width": 8,
-        "data_out_parallelism": [1, 48],
+        "data_out_parallelism": [1, parallelism],
         }
     },
-}
-attention_quant_config = {
-    "name": "mxint_hardware",
-    "data_in_width": 4,
-    "data_in_exponent_width": 8,
-    "data_in_parallelism": [1, 48],
-
-    "weight_width": 4,
-    "weight_exponent_width": 8,
-    "weight_parallelism": [48, 48],
-
-    "bias_width": 4,
-    "bias_exponent_width": 8,
-    "bias_parallelism": [1, 48],
-
-    "data_out_width": 4,
-    "data_out_exponent_width": 8,
-    "data_out_parallelism": [1, 48],
+    "add": {
+        "config": {
+        "name": "mxint_hardware",
+        "data_in_width": 8,
+        "data_in_exponent_width": 8,
+        "data_in_parallelism": [1, parallelism],
+        "data_out_width": 8,
+        "data_out_exponent_width": 8,
+        "data_out_parallelism": [1, parallelism],
+        }
+    },
 }
 
 @pytest.mark.dev
 def test_emit_verilog_linear():
-    dim = 192
-    num_heads = 3
+    dim = 64
+    num_heads = 2
     batch_size = 1
-    n = 196
+    n = 2
     model_config = {
         "dim": dim,
         "num_heads": num_heads,
@@ -210,14 +205,23 @@ def test_emit_verilog_linear():
     model_config.pop("dim")
     model_args = {"vit_self_attention_integer": model_config}
     update_hardware_precision_param(mg, quan_args, model_args)
+    from utils import updating_hardware_metadata_pass
+    updating_hardware_metadata_pass(mg, {"updating_funcs_list": [del_layernorm_args]})
     mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
     pass_args = {
-        "project_dir": Path("/scratch/cx922/mase/mxint_vit_top"),
+        "project_dir": Path("mxint_vit_block"),
     }
     mg, _ = passes.emit_verilog_top_transform_pass(mg, pass_args)
     mg, _ = passes.emit_bram_transform_pass(mg, pass_args)
     mg, _ = passes.emit_internal_rtl_transform_pass(mg, pass_args)
     mg, _ = passes.emit_vivado_project_transform_pass(mg, pass_args)
+
+
+def del_layernorm_args(node):
+    print(node.name)
+    if "layernorm" in node.name:
+        del node.meta["mase"].parameters["hardware"]["verilog_param"]["NORMALIZED_SHAPE"]
+        del node.meta["mase"].parameters["hardware"]["verilog_param"]["EPS"]
 
 
 def _simulate():

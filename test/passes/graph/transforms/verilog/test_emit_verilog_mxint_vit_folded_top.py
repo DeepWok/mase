@@ -41,7 +41,7 @@ from chop.nn.quantized.modules.attention import _ViTAttentionBase
 # --------------------------------------------------
 # verified test case linear(2,4)
 
-from quantize_modules import MxIntAddition, MxIntLinear, MxIntGELU, MxIntLayerNorm, ViTAttentionMxInt, vit_module_level_quantize
+from mxint_quant import MXIntAddition, vit_module_level_quantize, VIT_CUSTOM_OPS
 
 class MxIntBlock(torch.nn.Module):
     """
@@ -55,7 +55,7 @@ class MxIntBlock(torch.nn.Module):
         self.act = torch.nn.GELU()
         self.linear2 = nn.Linear(4*dim, dim)
 
-        self.add = MxIntAddition({})
+        self.add = MXIntAddition({})
         self.norm1 = torch.nn.LayerNorm(dim)
 
         self.attention = Attention(dim, num_heads, qkv_bias=True)
@@ -112,6 +112,7 @@ class MxIntFoldedTopBlocks(torch.nn.Module):
         return self.folded_blocks(x)
 
 quan_args = {
+    "by": "type",
     "layer_norm": {
         "config": {
         "name": "mxint_hardware",
@@ -221,71 +222,6 @@ attention_quant_config = {
     "data_out_width": 4,
     "data_out_exponent_width": 8,
     "data_out_parallelism": [1, 32],
-}
-
-from mase_components import get_module_dependencies
-VIT_CUSTOM_OPS = {
-    "modules": {
-        ViTAttentionMxInt: {
-            "args": {
-                "dim": "data_in",
-                "num_heads": "config",
-                "qkv_bias": "config",
-                "qk_norm": None,
-                "attn_drop": None,
-                "proj_drop": None,
-                "norm_layer": None,
-                "q_config": "config",
-            },
-            "toolchain": "INTERNAL_RTL",
-            "module": "mxint_vit_attention_wrap",
-            "dependence_files": get_module_dependencies(
-                "linear_layers/mxint_operators/mxint_vit_attention_wrap"
-            ),
-        },
-        MxIntLayerNorm: {
-            "args": {
-                "q_config": "config",
-            },
-            "toolchain": "INTERNAL_RTL",
-            "module": "mxint_layernorm",
-            "dependence_files": get_module_dependencies(
-                "linear_layers/mxint_operators/mxint_layernorm"
-            ),
-        },
-        MxIntGELU: {
-            "args": {
-                "q_config": "config",
-            },
-            "toolchain": "INTERNAL_RTL",
-            "module": "mxint_gelu",
-            "dependence_files": get_module_dependencies(
-                "linear_layers/mxint_operators/mxint_gelu"
-            ),
-        },
-        MxIntLinear: {
-            "args": {
-                "q_config": "config",
-            },
-            "toolchain": "INTERNAL_RTL",
-            "module": "mxint_linear",
-            "dependence_files": get_module_dependencies(
-                "linear_layers/mxint_operators/mxint_linear"
-            ),
-        },
-        MxIntAddition: {
-            "args": {
-                "input_0": "data_in",
-                "input_1": "data_in",
-                "q_config": "config",
-            },
-            "toolchain": "INTERNAL_RTL",
-            "module": "mxint_addition",
-            "dependence_files": get_module_dependencies(
-                "linear_layers/mxint_operators/mxint_addition"
-            ),
-        },
-    },
 }
 
 
