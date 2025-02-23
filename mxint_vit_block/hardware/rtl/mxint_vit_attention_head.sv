@@ -72,7 +72,6 @@ module mxint_vit_attention_head #(
         
         .DATA_OUT_0_PRECISION_0(IN_DATA_PRECISION_0),
         .DATA_OUT_0_PRECISION_1(IN_DATA_PRECISION_1),
-        .CIRCULAR_WEIGHT(1),
         .HAS_BIAS(0)
     ) query_key_linear (
         .clk(clk),

@@ -195,8 +195,8 @@ module mxint_linear #(
     );
   end else begin
     mxint_skid_buffer #(
-        .DATA_PRECISION_0(WEIGHT_PRECISION_0),
-        .DATA_PRECISION_1(WEIGHT_PRECISION_1),
+        .DATA_PRECISION_0(BIAS_PRECISION_0),
+        .DATA_PRECISION_1(BIAS_PRECISION_1),
         .IN_NUM(WEIGHT_PARALLELISM_DIM_0 * WEIGHT_PARALLELISM_DIM_1)
     ) weight_reg_inst (
         .clk(clk),
@@ -213,7 +213,7 @@ module mxint_linear #(
     mxint_skid_buffer #(
         .DATA_PRECISION_0(BIAS_PRECISION_0),
         .DATA_PRECISION_1(BIAS_PRECISION_1),
-        .IN_NUM(BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1)
+        .IN_NUM(DATA_OUT_0_PARALLELISM_DIM_0)
     ) bias_reg_inst (
         .clk(clk),
         .rst(rst),

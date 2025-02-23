@@ -102,19 +102,6 @@ module mxint_vit_attention_input_block_batched #(
   // * Declarations
   // * =================================================================
 
-  // Input FIFOs for QKV
-  logic [DATA_IN_0_PRECISION_0-1:0] query_mdata_in [DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0];
-  logic [DATA_IN_0_PRECISION_1-1:0] query_edata_in;
-  logic query_fifo_valid, query_fifo_ready;
-
-  logic [DATA_IN_0_PRECISION_0-1:0] key_mdata_in [DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0];
-  logic [DATA_IN_0_PRECISION_1-1:0] key_edata_in;
-  logic key_fifo_valid, key_fifo_ready;
-
-  logic [DATA_IN_0_PRECISION_0-1:0] value_mdata_in [DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0];
-  logic [DATA_IN_0_PRECISION_1-1:0] value_edata_in;
-  logic value_fifo_valid, value_fifo_ready;
-
   logic query_data_in_valid, query_data_in_ready;
   logic key_data_in_valid, key_data_in_ready;
   logic value_data_in_valid, value_data_in_ready;
@@ -126,66 +113,6 @@ module mxint_vit_attention_input_block_batched #(
 
   // * Instances
   // * =================================================================
-
-  // * Input FIFOs for QKV paths
-  // * =================================================================
-
-  // Query input FIFO
-  unpacked_mx_fifo #(
-      .MAN_WIDTH(DATA_IN_0_PRECISION_0),
-      .EXP_WIDTH(DATA_IN_0_PRECISION_1),
-      .IN_SIZE(DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1),
-      .DEPTH(4)  // Adjust depth as needed
-  ) query_input_fifo (
-      .clk(clk),
-      .rst(rst),
-      .mdata_in(mdata_in_0),
-      .edata_in(edata_in_0),
-      .data_in_valid(query_data_in_valid),
-      .data_in_ready(query_data_in_ready),
-      .mdata_out(query_mdata_in),
-      .edata_out(query_edata_in),
-      .data_out_valid(query_fifo_valid),
-      .data_out_ready(query_fifo_ready)
-  );
-
-  // Key input FIFO
-  unpacked_mx_fifo #(
-      .MAN_WIDTH(DATA_IN_0_PRECISION_0),
-      .EXP_WIDTH(DATA_IN_0_PRECISION_1),
-      .IN_SIZE(DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1),
-      .DEPTH(4)  // Adjust depth as needed
-  ) key_input_fifo (
-      .clk(clk),
-      .rst(rst),
-      .mdata_in(mdata_in_0),
-      .edata_in(edata_in_0),
-      .data_in_valid(key_data_in_valid),
-      .data_in_ready(key_data_in_ready),
-      .mdata_out(key_mdata_in),
-      .edata_out(key_edata_in),
-      .data_out_valid(key_fifo_valid),
-      .data_out_ready(key_fifo_ready)
-  );
-
-  // Value input FIFO
-  unpacked_mx_fifo #(
-      .MAN_WIDTH(DATA_IN_0_PRECISION_0),
-      .EXP_WIDTH(DATA_IN_0_PRECISION_1),
-      .IN_SIZE(DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1),
-      .DEPTH(4)  // Adjust depth as needed
-  ) value_input_fifo (
-      .clk(clk),
-      .rst(rst),
-      .mdata_in(mdata_in_0),
-      .edata_in(edata_in_0),
-      .data_in_valid(value_data_in_valid),
-      .data_in_ready(value_data_in_ready),
-      .mdata_out(value_mdata_in),
-      .edata_out(value_edata_in),
-      .data_out_valid(value_fifo_valid),
-      .data_out_ready(value_fifo_ready)
-  );
 
   // * Split the incoming data over the QKV projections
   split_n #(
@@ -231,10 +158,10 @@ module mxint_vit_attention_input_block_batched #(
       .rst,
 
       // input port for data_inivations
-      .mdata_in_0      (query_mdata_in),
-      .edata_in_0      (query_edata_in),
-      .data_in_0_valid(query_fifo_valid),
-      .data_in_0_ready(query_fifo_ready),
+      .mdata_in_0      (mdata_in_0),
+      .edata_in_0      (edata_in_0),
+      .data_in_0_valid(query_data_in_valid),
+      .data_in_0_ready(query_data_in_ready),
 
       // input port for weight
       .mweight      (mweight_query),
@@ -258,7 +185,7 @@ module mxint_vit_attention_input_block_batched #(
   unpacked_mx_fifo #(
       .MAN_WIDTH(DATA_OUT_0_PRECISION_0),
       .EXP_WIDTH(DATA_OUT_0_PRECISION_1),
-      .IN_SIZE(DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1),
+      .IN_SIZE(DATA_OUT_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1),
       .DEPTH(DATA_IN_0_DEPTH_DIM_1 * DATA_OUT_0_TENSOR_SIZE_DIM_0 / DATA_OUT_0_PARALLELISM_DIM_0)
   ) query_buffer_i (
       .clk(clk),
@@ -307,10 +234,10 @@ module mxint_vit_attention_input_block_batched #(
       .rst,
 
       // input port for data_inivations
-      .mdata_in_0      (key_mdata_in),
-      .edata_in_0      (key_edata_in),
-      .data_in_0_valid(key_fifo_valid),
-      .data_in_0_ready(key_fifo_ready),
+      .mdata_in_0      (mdata_in_0),
+      .edata_in_0      (edata_in_0),
+      .data_in_0_valid(key_data_in_valid),
+      .data_in_0_ready(key_data_in_ready),
 
       // input port for weight
       .mweight      (mweight_key),
@@ -363,10 +290,10 @@ module mxint_vit_attention_input_block_batched #(
       .rst,
 
       // input port for data_inivations
-      .mdata_in_0      (value_mdata_in),
-      .edata_in_0      (value_edata_in),
-      .data_in_0_valid(value_fifo_valid),
-      .data_in_0_ready(value_fifo_ready),
+      .mdata_in_0      (mdata_in_0),
+      .edata_in_0      (edata_in_0),
+      .data_in_0_valid(value_data_in_valid),
+      .data_in_0_ready(value_data_in_ready),
 
       // input port for weight
       .mweight      (mweight_value),

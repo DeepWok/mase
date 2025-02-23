@@ -2,13 +2,13 @@
 // =====================================
 //     Mase Hardware
 //     Parameter: attention_proj_weight
-//     23/02/2025 13:37:22
+//     23/02/2025 14:01:22
 // =====================================
 
 `timescale 1 ns / 1 ps
 module attention_proj_weight_rom #(
   parameter DWIDTH = 1544,
-  parameter MEM_SIZE = 16,
+  parameter MEM_SIZE = 144,
   parameter AWIDTH = $clog2(MEM_SIZE) + 1
 ) (
     input clk,
@@ -22,7 +22,7 @@ module attention_proj_weight_rom #(
   logic [DWIDTH-1:0] q0_t1;
 
   initial begin
-    $readmemb("sim_build/attention_proj_weight_rom.dat", ram);
+    $readmemb("mxint_vit_block/hardware/rtl/attention_proj_weight_rom.dat", ram);
   end
 
   assign q0 = q0_t1;
@@ -35,7 +35,7 @@ endmodule
 `timescale 1 ns / 1 ps
 module attention_proj_weight #(
   parameter DATA_WIDTH = 32'd1544,
-  parameter ADDR_RANGE = 32'd16,
+  parameter ADDR_RANGE = 32'd144,
   parameter ADDR_WIDTH = $clog2(ADDR_RANGE) + 1
 ) (
   input reset,

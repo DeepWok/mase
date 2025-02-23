@@ -85,14 +85,14 @@ module mxint_fork2 #(
 
     // Unflatten FIFO output (output 0)
     for (genvar i = 0; i < BLOCK_SIZE; i++) begin : unreshape_fifo
-        assign mdata_out_1[i] = fifo_data_out_flatten[i*DATA_OUT_0_PRECISION_0 +: DATA_OUT_0_PRECISION_0];
+        assign mdata_out_0[i] = fifo_data_out_flatten[i*DATA_OUT_0_PRECISION_0 +: DATA_OUT_0_PRECISION_0];
     end
-    assign edata_out_1 = fifo_data_out_flatten[DATA_OUT_0_PRECISION_0*BLOCK_SIZE +: DATA_OUT_0_PRECISION_1];
+    assign edata_out_0 = fifo_data_out_flatten[DATA_OUT_0_PRECISION_0*BLOCK_SIZE +: DATA_OUT_0_PRECISION_1];
 
     // Unflatten straight output (output 1)
     for (genvar i = 0; i < BLOCK_SIZE; i++) begin : unreshape_straight
-        assign mdata_out_0[i] = straight_data_out_flatten[i*DATA_OUT_1_PRECISION_0 +: DATA_OUT_1_PRECISION_0];
+        assign mdata_out_1[i] = straight_data_out_flatten[i*DATA_OUT_1_PRECISION_0 +: DATA_OUT_1_PRECISION_0];
     end
-    assign edata_out_0 = straight_data_out_flatten[DATA_OUT_1_PRECISION_0*BLOCK_SIZE +: DATA_OUT_1_PRECISION_1];
+    assign edata_out_1 = straight_data_out_flatten[DATA_OUT_1_PRECISION_0*BLOCK_SIZE +: DATA_OUT_1_PRECISION_1];
 
 endmodule

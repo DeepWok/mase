@@ -2,13 +2,13 @@
 // =====================================
 //     Mase Hardware
 //     Parameter: linear1_bias
-//     23/02/2025 13:37:22
+//     23/02/2025 14:01:21
 // =====================================
 
 `timescale 1 ns / 1 ps
 module linear1_bias_rom #(
   parameter DWIDTH = 104,
-  parameter MEM_SIZE = 16,
+  parameter MEM_SIZE = 48,
   parameter AWIDTH = $clog2(MEM_SIZE) + 1
 ) (
     input clk,
@@ -22,7 +22,7 @@ module linear1_bias_rom #(
   logic [DWIDTH-1:0] q0_t1;
 
   initial begin
-    $readmemb("sim_build/linear1_bias_rom.dat", ram);
+    $readmemb("mxint_vit_block/hardware/rtl/linear1_bias_rom.dat", ram);
   end
 
   assign q0 = q0_t1;
@@ -35,7 +35,7 @@ endmodule
 `timescale 1 ns / 1 ps
 module linear1_bias #(
   parameter DATA_WIDTH = 32'd104,
-  parameter ADDR_RANGE = 32'd16,
+  parameter ADDR_RANGE = 32'd48,
   parameter ADDR_WIDTH = $clog2(ADDR_RANGE) + 1
 ) (
   input reset,
