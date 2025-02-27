@@ -1,4 +1,5 @@
 import torch
+from transformers.models.bert.modeling_bert import BertSelfAttention, BertSdpaSelfAttention
 
 from chop.nn.mla.modules import mla_module_map
 from ...module_modify_helper import replace_by_name, instantiate_module
@@ -18,10 +19,8 @@ def mla_by_type(network, pass_args):
         for n, m in network.named_modules():
             n_m[n] = m
 
-        if type_name == "linear":
-            module = torch.nn.Linear
-        elif type_name == "conv2d":
-            module = torch.nn.Conv2d
+        if type_name == "self_attention":
+            module = (BertSelfAttention, BertSdpaSelfAttention)
         else:
             raise ValueError(f"{type_name} is not supported!")
         config = config["config"]
@@ -93,43 +92,6 @@ def mla_by_regex_name(network, pass_args):
 
 
 def mla_transform_pass(network, pass_args):
-    """
-    Apply quantization transformation to the given nn.Module.
-
-    :param network: The input network to be transformed.
-    :type network: torch.nn.Module
-
-    :param pass_args: Additional arguments for the transformation.
-    :type pass_args: dict, optional
-
-    Examples pass_args:
-
-    .. code-block:: python
-
-        pass_args = {
-            "by": "type", # quantize by type, name, or regex_name
-            "default": {"config": {"name": None}}, # default config, this would be used for any node that does not have a specific config
-            "linear": {
-                "config": {
-                    "name": "integer",  # quantization scheme name supported are ["integer", "fixed" (equivalent to integer), "lutnet" (dev mode), "logicnets" (dev mode), "binary", "binary_residual", "ternary", "minifloat_ieee", "minifloat_denorm", "log", "block_fp", "block_minifloat", "block_log"]
-                    # data
-                    "data_in_width": 8,
-                    "data_in_frac_width": 4,
-                    # weight
-                    "weight_width": 8,
-                    "weight_frac_width": 4,
-                    # bias
-                    "bias_width": 8,
-                    "bias_frac_width": 4,
-                }
-            },
-        }
-
-    :return: The transformed torch.nn.Module.
-    :rtype: tuple
-    :raises ValueError: If the quantize "by" argument is unsupported.
-
-    """
     by = pass_args.pop("by")
     match by:
         case "type":
