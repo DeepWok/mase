@@ -12,8 +12,7 @@ from pathlib import Path
 
 sys.path.append(Path(__file__).resolve().parents[5].as_posix())
 
-from chop.passes.module.transforms import quantize_module_transform_pass
-from chop.passes.module.transforms import mla_transform_pass
+from chop.passes.module.transforms import quantize_module_transform_pass, mla_transform_pass
 
 
 # --------------------------------------------------
@@ -29,8 +28,8 @@ def test_mla_transform_pass():
     # Sanity check and report
     # mg = verify_common_metadata_analysis_pass(mg)
     pass_args = {
-        "by": "name",
-        "fc1": {
+        "by": "type",
+        "bert_self_attention": {
             "config": {
                 "name": "latent",
             }

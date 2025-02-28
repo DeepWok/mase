@@ -14,7 +14,6 @@ sys.path.append(Path(__file__).resolve().parents[5].as_posix())
 
 from chop.passes.module.transforms import quantize_module_transform_pass
 
-
 # --------------------------------------------------
 #   Model specifications
 # --------------------------------------------------

@@ -4,7 +4,7 @@ from transformers.models.bert.modeling_bert import BertSelfAttention, BertSdpaSe
 from chop.nn.mla.modules import mla_module_map
 from ...module_modify_helper import replace_by_name, instantiate_module
 from ...state_dict_map import match_a_pattern, check_is_huggingface_model
-
+from .attention_transform_helper import instantiate_attention_module, replace_attention_by_name
 
 def get_config(config: dict, name: str):
     if name in config:
@@ -19,7 +19,7 @@ def mla_by_type(network, pass_args):
         for n, m in network.named_modules():
             n_m[n] = m
 
-        if type_name == "self_attention":
+        if type_name == "bert_self_attention":
             module = (BertSelfAttention, BertSdpaSelfAttention)
         else:
             raise ValueError(f"{type_name} is not supported!")
@@ -27,10 +27,10 @@ def mla_by_type(network, pass_args):
         postfix = config.pop("name")
         for n, m in n_m.items():
             if isinstance(m, module):
-                new_m = instantiate_module(
+                new_m = instantiate_attention_module(
                     m, postfix, mla_module_map, {"config": config}
                 )
-                network = replace_by_name(network, n, new_m)
+                network = replace_attention_by_name(network, n, new_m)
     return network
 
 
