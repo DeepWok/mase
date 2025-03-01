@@ -1,6 +1,10 @@
 import torch
-from transformers.models.bert.modeling_bert import BertSelfAttention, BertSdpaSelfAttention
-
+from transformers.models.bert.modeling_bert import(
+    BertSelfAttention, 
+    BertSdpaSelfAttention, 
+    BertSelfOutput, 
+    BertAttention
+)
 from chop.nn.mla.modules import mla_module_map
 from ...module_modify_helper import replace_by_name, instantiate_module
 from ...state_dict_map import match_a_pattern, check_is_huggingface_model
@@ -19,8 +23,8 @@ def mla_by_type(network, pass_args):
         for n, m in network.named_modules():
             n_m[n] = m
 
-        if type_name == "bert_self_attention":
-            module = (BertSelfAttention, BertSdpaSelfAttention)
+        if type_name == "bert_attention":
+            module = BertAttention
         else:
             raise ValueError(f"{type_name} is not supported!")
         config = config["config"]

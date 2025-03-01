@@ -2,7 +2,11 @@ import torch
 from typing import Optional
 import math
 
-from chop.nn.mla.modules.model import ModelArgs, MLA
+from chop.nn.mla.modules.model import (
+    ModelArgs, 
+    MLA,
+    RMSNorm
+)
 from ...module_modify_helper import (
     get_module_by_name, 
     set_module_by_name,
@@ -10,15 +14,18 @@ from ...module_modify_helper import (
 from transformers.models.bert.modeling_bert import (
     BertSelfAttention, 
     BertSdpaSelfAttention,
+    BertSelfOutput,
 )
 
 def instantiate_attention_module(module, postfix, module_map, additional_module_args):
+    sdpa_attn = module.self
+    self_output = module.output
 
     additional_module_args = additional_module_args["config"]
     attention_cls = module_map[f"attention_{postfix}"]
     
     attention_module = bert_sdpa_to_mla_init(
-        module,
+        sdpa_attn,
         config=additional_module_args,
     )
 
@@ -32,20 +39,9 @@ def bert_sdpa_to_mla_init(
     """
     Initialize and return an MLA module based on dimensions extracted
     from the BertSdpaSelfAttention and/or a custom config.
-
     This does NOT copy weights from the BERT attention layer; it merely
     sets up an MLA of matching size. All MLA parameters will be newly
     (randomly) initialized.
-
-    Args:
-        sdpa_attn: A BertSdpaSelfAttention object.
-        config: A dictionary containing any additional user parameters,
-                e.g. {"config": custom_config_for_MLA}. The exact structure
-                is up to you.
-
-    Returns:
-        An MLA module, freshly initialized, with shapes that align to
-        the BERT attention if desired.
     """
     # 1. Optionally, we can read from the `sdpa_attn` to discover BERT's hidden size, number of heads, etc.
     #    Typically:
@@ -69,7 +65,7 @@ def bert_sdpa_to_mla_init(
         q_lora_rank=user_config.get("q_lora_rank", 0),
         kv_lora_rank=user_config.get("kv_lora_rank", 512),
         qk_nope_head_dim=user_config.get("qk_nope_head_dim", 64),
-        qk_rope_head_dim=user_config.get("qk_rope_head_dim", 64),
+        qk_rope_head_dim=user_config.get("qk_rope_head_dim", 0),
         v_head_dim=user_config.get("v_head_dim", 64),
         # You can override or pass in any other fields from user_config ...
         # e.g., rope_factor, rope_theta, etc.
@@ -84,14 +80,19 @@ def bert_sdpa_to_mla_init(
 
 
 def replace_attention_by_name(network, name, module):
+    
     original = get_module_by_name(network, name)
-    new = transform_bert_sdpa_to_mla(original, module)
+    sdpa_attn = original.self
+    bert_output = original.output
+
+    new = transform_bert_sdpa_to_mla(sdpa_attn, bert_output, module)
     network = set_module_by_name(network, name, new)
     return network
 
 
 def transform_bert_sdpa_to_mla(
-    sdpa_attn: BertSdpaSelfAttention,  # a BertSdpaSelfAttention object
+    sdpa_attn: BertSdpaSelfAttention, # a BertSdpaSelfAttention object
+    bert_output: BertSelfOutput,
     mla_attn: MLA                     # an MLA object (already initialized)
 ):
     """
@@ -203,7 +204,7 @@ def transform_bert_sdpa_to_mla(
     # 3. Copy the final output projection (BERT's `dense`) into MLA's `wo`
     # ------------------------------------------------------------------
     # BERT uses self.out_proj or self.dense with shape (768, 768) as well.
-    out_proj = sdpa_attn.dense
+    out_proj = bert_output.dense
     with torch.no_grad():
         mla_attn.wo.weight.copy_(out_proj.weight.data)
         if mla_attn.wo.bias is not None and out_proj.bias is not None:

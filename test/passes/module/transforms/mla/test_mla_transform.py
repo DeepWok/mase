@@ -29,13 +29,13 @@ def test_mla_transform_pass():
     # mg = verify_common_metadata_analysis_pass(mg)
     pass_args = {
         "by": "type",
-        "bert_self_attention": {
+        "bert_attention": {
             "config": {
                 "name": "latent",
             }
         },
     }
-    mla_transform_pass(model, pass_args)
-
+    mla_network, _ = mla_transform_pass(model, pass_args)
+    print(mla_network)
 
 test_mla_transform_pass()
