@@ -11,6 +11,7 @@ from datasets import load_dataset
 from chop.tools import get_tokenized_dataset, get_trainer
 from chop import MaseGraph
 from pathlib import Path
+import chop.passes as passes
 
 sys.path.append(Path(__file__).resolve().parents[5].as_posix())
 
@@ -36,20 +37,22 @@ dataset, tokenizer = get_tokenized_dataset(
 )
 model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
 model.config.problem_type = "single_label_classification"
-trainer = get_trainer(
-    model=model,
-    tokenized_dataset=dataset,
-    tokenizer=tokenizer,
-    evaluate_metric="accuracy",
-    num_train_epochs=2,
-)
-trainer.train()
-eval_results = trainer.evaluate()
-print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")
-mg = MaseGraph(
-    model,
-)
-mg.export(f"{Path.home()}/mase_output/bert-uncased-2epoch")
+# trainer = get_trainer(
+#     model=model,
+#     tokenized_dataset=dataset,
+#     tokenizer=tokenizer,
+#     evaluate_metric="accuracy",
+#     num_train_epochs=2,
+# )
+# trainer.train()
+# eval_results = trainer.evaluate()
+# print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")
+# mg = MaseGraph(
+#     model,
+# )
+# mg, _ = passes.init_metadata_analysis_pass(mg)
+# mg, _ = passes.add_common_metadata_analysis_pass(mg)
+# mg.export(f"{Path.home()}/Projects/mase/mase_output/bert-uncased-2epoch")
 
 def test_mla_transform_pass():
     # Sanity check and report
@@ -74,13 +77,15 @@ trainer = get_trainer(
     tokenizer=tokenizer,
     evaluate_metric="accuracy",
     num_train_epochs=2,
+    # bf16=True,              # Enable bfloat16 for GPUs that support it
+    # bf16_full_eval=True,    # If you also want to evaluate in bf16
 )
 eval_results = trainer.evaluate()
 print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")
-mg = MaseGraph(
-    mla_net,
-)
-mg.export(f"{Path.home()}/mase_output/bert-mla")
+# mg = MaseGraph(
+#     mla_net,
+# )
+# mg.export(f"{Path.home()}/Projects/mase/mase_output/bert-mla")
 # for param in mg.model.bert.embeddings.parameters():
 #     param.requires_grad = False
 # trainer.train()

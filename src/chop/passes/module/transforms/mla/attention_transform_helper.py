@@ -17,6 +17,56 @@ from transformers.models.bert.modeling_bert import (
     BertSelfOutput,
 )
 
+
+class MLAWrapper(torch.nn.Module):
+    def __init__(self, mla):
+        super().__init__()
+        self.mla = mla
+        # Track or pre-compute any needed start_pos or freqs_cis here if required
+
+    def forward(
+        self,
+        hidden_states,
+        attention_mask=None,
+        head_mask=None,
+        encoder_hidden_states=None,
+        encoder_attention_mask=None,
+        past_key_value=None,
+        output_attentions=False,
+        **kwargs
+    ):
+        start_pos = 0
+        if hidden_states is not None:
+            hidden_states = hidden_states.to(dtype=torch.bfloat16)
+            bsz, seqlen, _ = hidden_states.shape
+        else:
+            seqlen = 0  # or handle the None case as you see fit
+        
+        if attention_mask is not None:
+            attention_mask = attention_mask.to(dtype=torch.bfloat16)
+        
+        rope_dim = getattr(self.mla, "qk_rope_head_dim", 64)
+        dummy_freq = torch.zeros(
+            seqlen, rope_dim // 2,
+            dtype=torch.float32,       # must be a supported type
+            device=hidden_states.device
+        )
+        dummy_ones = torch.ones_like(dummy_freq, dtype=torch.float32)
+        freqs_cis = torch.polar(dummy_ones, dummy_freq)  # This is now float32
+        # freqs_cis = freqs_cis.to(dtype=torch.bfloat16)
+        
+        # noted the output is bf16 format
+        output = self.mla(
+            x=hidden_states,
+            start_pos=start_pos,
+            freqs_cis=freqs_cis,
+            mask=attention_mask,
+        )
+
+        # Convert MLA output back to float32 for subsequent layers
+        output = output.to(dtype=torch.float32)
+        return output
+
 def instantiate_attention_module(module, postfix, module_map, additional_module_args):
     sdpa_attn = module.self
     self_output = module.output
@@ -43,20 +93,14 @@ def bert_sdpa_to_mla_init(
     sets up an MLA of matching size. All MLA parameters will be newly
     (randomly) initialized.
     """
-    # 1. Optionally, we can read from the `sdpa_attn` to discover BERT's hidden size, number of heads, etc.
-    #    Typically:
-    #      - sdpa_attn.num_attention_heads => number_of_heads
-    #      - sdpa_attn.query.in_features   => hidden_size
-    #    or you might read from `sdpa_attn.config.hidden_size`, etc.
-    hidden_size = sdpa_attn.query.in_features
-    n_heads = sdpa_attn.num_attention_heads
 
-    # 2. We can also read from the user’s config. For instance:
+    hidden_size = sdpa_attn.query.in_features # idden_size
+    n_heads = sdpa_attn.num_attention_heads # number_of_heads
+
+    # read from the user’s config.
     user_config = config.get("config", {})
 
     # 3. Create a ModelArgs object that MLA expects. 
-    #    Below is just an example that tries to match the hidden size and heads.
-    #    Adjust these fields or logic to your scenario.
     model_args = ModelArgs(
         dim=hidden_size,               # match BERT hidden size
         n_heads=n_heads,               # match BERT number of heads
@@ -86,7 +130,8 @@ def replace_attention_by_name(network, name, module):
     bert_output = original.output
 
     new = transform_bert_sdpa_to_mla(sdpa_attn, bert_output, module)
-    network = set_module_by_name(network, name, new)
+    mla_wapper = MLAWrapper(new)
+    network = set_module_by_name(network, name, mla_wapper)
     return network
 
 

@@ -440,7 +440,15 @@ class MLA(nn.Module):
             self.register_buffer("kv_cache", torch.zeros(args.max_batch_size, args.max_seq_len, self.kv_lora_rank), persistent=False)
             self.register_buffer("pe_cache", torch.zeros(args.max_batch_size, args.max_seq_len, self.qk_rope_head_dim), persistent=False)
 
-    def forward(self, x: torch.Tensor, start_pos: int, freqs_cis: torch.Tensor, mask: Optional[torch.Tensor]):
+        self.kv_cache = self.kv_cache.to(torch.bfloat16)
+        self.kv_cache = self.pe_cache.to(torch.bfloat16)
+
+    def forward(self, 
+                x: torch.Tensor, 
+                start_pos: int, 
+                freqs_cis: torch.Tensor, 
+                mask: Optional[torch.Tensor], 
+        ):
         """
         Forward pass for the Multi-Headed Attention Layer (MLA).
 
