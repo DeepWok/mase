@@ -8,7 +8,7 @@ from chop.nn.quantizers.SNN.LSQ import LSQInteger
 from chop.nn.quantized.modules.roberta.attention import RobertaSelfAttentionLSQInteger
 from chop.nn.snn.modules.linear import LinearUnfoldBias
 from chop.nn.snn.modules.roberta.attention import RobertaSelfAttentionZIPTF
-from chop.nn.mla.modules.model import MLA
+from chop.nn.attention.modules.mla import MLA
 
 from chop.nn.snn.modules.neuron.st_bifnode import ST_BIFNode
 import torch

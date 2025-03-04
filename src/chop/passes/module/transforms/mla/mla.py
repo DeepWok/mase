@@ -5,7 +5,10 @@ from transformers.models.bert.modeling_bert import(
     BertSelfOutput, 
     BertAttention
 )
-from chop.nn.mla.modules import mla_module_map
+from transformers.models.gpt2.modeling_gpt2 import (
+    GPT2SdpaAttention,
+)
+from chop.nn.attention.modules import attention_module_map
 from ...module_modify_helper import replace_by_name, instantiate_module
 from ...state_dict_map import match_a_pattern, check_is_huggingface_model
 from .attention_transform_helper import instantiate_attention_module, replace_attention_by_name
@@ -23,8 +26,10 @@ def mla_by_type(network, pass_args):
         for n, m in network.named_modules():
             n_m[n] = m
 
-        if type_name == "bert_attention":
+        if type_name == "bertspda":
             module = BertAttention
+        elif type_name == "gpt2spda":
+            module = GPT2SdpaAttention
         else:
             raise ValueError(f"{type_name} is not supported!")
         config = config["config"]
@@ -32,9 +37,9 @@ def mla_by_type(network, pass_args):
         for n, m in n_m.items():
             if isinstance(m, module):
                 new_m = instantiate_attention_module(
-                    m, postfix, mla_module_map, {"config": config}
+                    m, postfix, attention_module_map, {"config": config}
                 )
-                network = replace_attention_by_name(network, n, new_m)
+                network = replace_attention_by_name(network, n, new_m, postfix)
     return network
 
 
@@ -59,7 +64,7 @@ def mla_by_name(network, pass_args):
             )
 
             new_m = instantiate_module(
-                m, postfix, mla_module_map, additional_module_args
+                m, postfix, attention_module_map, additional_module_args
             )
             network = replace_by_name(network, n, new_m)
     return network
@@ -88,7 +93,7 @@ def mla_by_regex_name(network, pass_args):
         )
 
         new_m = instantiate_module(
-            m, postfix, mla_module_map, additional_module_args
+            m, postfix, attention_module_map, additional_module_args
         )
         network = replace_by_name(network, n, new_m)
 

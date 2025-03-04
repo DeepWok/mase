@@ -441,7 +441,7 @@ class MLA(nn.Module):
             self.register_buffer("pe_cache", torch.zeros(args.max_batch_size, args.max_seq_len, self.qk_rope_head_dim), persistent=False)
 
         self.kv_cache = self.kv_cache.to(torch.bfloat16)
-        self.kv_cache = self.pe_cache.to(torch.bfloat16)
+        self.pe_cache = self.pe_cache.to(torch.bfloat16)
 
     def forward(self, 
                 x: torch.Tensor, 
@@ -491,7 +491,8 @@ class MLA(nn.Module):
             scores = (torch.einsum("bshc,btc->bsht", q_nope, self.kv_cache[:bsz, :end_pos]) +
                       torch.einsum("bshr,btr->bsht", q_pe, self.pe_cache[:bsz, :end_pos])) * self.softmax_scale
         if mask is not None:
-            scores += mask.unsqueeze(1)
+            scores += mask.unsqueeze(2)
+            # scores += mask.unsqueeze(1)
         scores = scores.softmax(dim=-1, dtype=torch.float32).type_as(x)
         if attn_impl == "naive":
             x = torch.einsum("bsht,bthd->bshd", scores, self.v_cache[:bsz, :end_pos])

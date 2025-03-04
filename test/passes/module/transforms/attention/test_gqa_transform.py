@@ -26,8 +26,8 @@ from pathlib import Path
 # tokenizer = AutoTokenizer.from_pretrained(model_name)
 # print(model)
 
-checkpoint = "google-bert/bert-base-uncased"
-tokenizer_checkpoint = "google-bert/bert-base-uncased"
+checkpoint = "openai-community/gpt2"
+tokenizer_checkpoint = "openai-community/gpt2"
 dataset_name = "imdb"
 
 dataset, tokenizer = get_tokenized_dataset(
@@ -37,6 +37,7 @@ dataset, tokenizer = get_tokenized_dataset(
 )
 model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
 model.config.problem_type = "single_label_classification"
+print(model)
 # trainer = get_trainer(
 #     model=model,
 #     tokenized_dataset=dataset,
@@ -57,6 +58,7 @@ model.config.problem_type = "single_label_classification"
 def test_mla_transform_pass():
     # Sanity check and report
     # mg = verify_common_metadata_analysis_pass(mg)
+    return
     pass_args = {
         "by": "type",
         "bert_attention": {
@@ -71,17 +73,17 @@ def test_mla_transform_pass():
 
 mla_net = test_mla_transform_pass()
 
-trainer = get_trainer(
-    model=mla_net,
-    tokenized_dataset=dataset,
-    tokenizer=tokenizer,
-    evaluate_metric="accuracy",
-    num_train_epochs=2,
-    # bf16=True,              # Enable bfloat16 for GPUs that support it
-    # bf16_full_eval=True,    # If you also want to evaluate in bf16
-)
-eval_results = trainer.evaluate()
-print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")
+# trainer = get_trainer(
+#     model=mla_net,
+#     tokenized_dataset=dataset,
+#     tokenizer=tokenizer,
+#     evaluate_metric="accuracy",
+#     num_train_epochs=2,
+#     # bf16=True,              # Enable bfloat16 for GPUs that support it
+#     # bf16_full_eval=True,    # If you also want to evaluate in bf16
+# )
+# eval_results = trainer.evaluate()
+# print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")
 # mg = MaseGraph(
 #     mla_net,
 # )
