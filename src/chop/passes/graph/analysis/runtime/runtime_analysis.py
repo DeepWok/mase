@@ -428,7 +428,10 @@ class RuntimeAnalysis:
             torch.cuda.empty_cache()
 
             # TRT Inference
-            if isinstance(self.model, trt.IExecutionContext):
+            import tensorrt as trt
+
+            # if isinstance(self.model, trt.IExecutionContext):
+            if False:
                 if self.config["accelerator"] != "cuda":
                     raise Exception(
                         "TensorRT inference is only supported on CUDA devices."

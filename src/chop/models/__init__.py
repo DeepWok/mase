@@ -25,20 +25,20 @@ from .wideresnet.wideresnet import *
 
 
 def get_model_info(name: str) -> MaseModelInfo:
+    print("Name", name)
     return ModelFactory._model_info_dict[name]
 
 
 def get_model(
-    checkpoint: str | PathLike,
     pretrained: bool,
     **kwargs,
 ):
-    model_info = get_model_info(checkpoint)
+    name = kwargs.get("name")
     try:
-        getter = ModelFactory._checkpoint_getter_dict[checkpoint]
+        getter = ModelFactory._checkpoint_getter_dict[name]
     except KeyError:
         raise ValueError(
-            f"Model {checkpoint} not supported, please add it to the ModelFactory or pick from the supported models {ModelFactory._checkpoint_getter_dict.keys()}"
+            f"Model {name} not supported, please add it to the ModelFactory or pick from the supported models {ModelFactory._checkpoint_getter_dict.keys()}"
         )
     model = getter(pretrained=pretrained, **kwargs)
 

@@ -4,6 +4,14 @@ import torch
 from torch.autograd import Variable
 
 from chop.passes.utils import register_mase_pass
+import pytorch_quantization.calib as calib
+import pytorch_quantization.nn as qnn
+import tensorrt as trt
+
+# from cuda import cudart
+from pytorch_quantization import quant_modules
+from pytorch_quantization.tensor_quant import QuantDescriptor
+from .utils import FakeQuantizer, check_for_value_in_dict, get_calibrator_dataloader
 
 
 @register_mase_pass(
@@ -90,14 +98,6 @@ def tensorrt_calibrate_transform_pass(graph, pass_args=None):
 
     It's important to choose the right calibrator based on the model and dataset characteristics to ensure optimal performance and accuracy of the quantized model.
     """
-
-    import pytorch_quantization.calib as calib
-    import pytorch_quantization.nn as qnn
-    import tensorrt as trt
-    from cuda import cudart
-    from pytorch_quantization import quant_modules
-    from pytorch_quantization.tensor_quant import QuantDescriptor
-    from .utils import FakeQuantizer, check_for_value_in_dict, get_calibrator_dataloader
 
     calibrator = Calibrator(pass_args)
     graph = calibrator.calibrate_model(graph)

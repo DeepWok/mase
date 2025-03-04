@@ -4,7 +4,7 @@ Jet Substructure Models used in the LogicNets paper
 
 import torch.nn as nn
 
-from chop.models.utils import register_mase_model
+from chop.models.utils import register_mase_model, register_mase_checkpoint
 
 
 @register_mase_model(
