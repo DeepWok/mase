@@ -28,11 +28,19 @@ python3 -m pip install -e . -vvv
 cd ..
 ```
 
-## Additional Requirement for Saving `masegraph`
+## Additional Requirement
+
+Install torchvision using:
+```sh
+conda install torchvision
+```
 
 If `pydot` is not already installed, install it using:
 
 ```sh
-pip install pydot
+conda install pydot graphviz
 ```
 
+Make sure `dot` is accessible within PATH. Usually done with above installation,
+if not add it yourself, example shown in sample notebook. 
+It usually is within the conda envs/<your_venv_name>/bin directory
