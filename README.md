@@ -81,4 +81,4 @@ If you think MASE is helpful, please [donate](https://www.buymeacoffee.com/mase_
 
 <img src='./docs/imgs/bmc_qr.png' width='250'>
 
-<!--- . -->
+**Do not merge this**
