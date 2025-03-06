@@ -17,7 +17,13 @@ def get_verilog_parameters(graph):
         ):
             if value is None:
                 continue
-            if not isinstance(value, (int, float, complex, bool)):
+            if isinstance(value, list):
+                new_value = "'{"
+                for num in value:
+                    new_value += str(num) + ","
+                new_value += "}"
+                value = new_value
+            elif not isinstance(value, (int, float, complex, bool)):
                 value = '"' + value + '"'
             assert (
                 f"{node_name}_{key}" not in parameter_map.keys()

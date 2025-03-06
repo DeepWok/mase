@@ -64,7 +64,7 @@ def add_component_source(node):
     for arg, arg_info in args.items():
         if "data_in" in arg:
             continue
-        elif node.meta["mase"]["hardware"].get("module") in ["difflogic_logiclayer", "difflogic_groupsum"]:
+        elif node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_logic", "difflogic_groupsum"]:
             continue
         elif isinstance(arg_info, dict):
             node.meta["mase"]["hardware"]["interface"][arg] = {
@@ -78,12 +78,32 @@ def add_component_source(node):
 def add_verilog_param(node):
     if node.meta["mase"]["hardware"]["is_implicit"]:
         return
-
+    
     node.meta["mase"]["hardware"]["verilog_param"] = {}
-
     args = node.meta["mase"]["common"]["args"]
     results = node.meta["mase"]["common"]["results"]
     vp = node.meta["mase"]["hardware"]["verilog_param"]
+    
+    # DiffLogic: do not generate precision and tensor size automatically    
+    if node.meta["mase"]["hardware"].get("module") == "fixed_difflogic_logic":
+        for arg, arg_info in args.items():
+            match arg:
+                case "data_in_0":
+                    vp[_cap(f"{arg}_tensor_size_dim_0")] = arg_info["shape"][-1]
+                # case "weights":
+                #     vp[_cap(f"{arg}_tensor_size_dim_0")] = arg_info["shape"][0]
+                # case "indices":
+                #     vp[_cap(f"{arg}_tensor_size_dim_0")] = arg_info["shape"][-1]
+
+        for res, res_info in results.items():
+            match res:
+                case "data_out_0":
+                    vp[_cap(f"{res}_tensor_size_dim_0")] = res_info["shape"][-1]
+
+        return
+
+    print("DEBUG: ", node.meta["mase"]["hardware"].get("module"))
+
     for arg, arg_info in args.items():
         if isinstance(arg_info, dict):
             for i, precision in enumerate(arg_info["precision"]):
@@ -170,7 +190,7 @@ def add_extra_verilog_param(node, graph: MaseGraph):
 
     # difflogic nodes: load weights as parameters
     module_name = node.meta["mase"]["hardware"].get("module", None)
-    if module_name == "difflogic_logiclayer":
+    if module_name == "fixed_difflogic_logic":
         vp = node.meta["mase"]["hardware"]["verilog_param"]
         
         layer_ops = node.meta["mase"]["common"]["args"]["weights"]["value"].argmax(dim=-1)

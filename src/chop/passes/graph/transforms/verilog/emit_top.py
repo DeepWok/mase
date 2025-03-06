@@ -193,6 +193,10 @@ class VerilogSignalEmitter:
         for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
             if not isinstance(arg_info, dict):
                 continue
+            
+            # DiffLogic: weights are not connected to BRAM!
+            if node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_logic", "difflogic_groupsum"]:
+                continue
 
             # Skip off-chip parameters as they will be directly connected to the top level
             if (
@@ -398,6 +402,11 @@ class VerilogInternalComponentEmitter:
             for key, value in node.meta["mase"].parameters["common"]["args"].items():
                 if "inplace" in key or not isinstance(value, dict):
                     continue
+                
+                # DiffLogic: do not emit storage interface
+                if node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_logic", "difflogic_groupsum"] and ("data_in" not in key):
+                    continue
+                    
                 signals += f"""
     .{key}({node_name}_{key}),
     .{key}_valid({node_name}_{key}_valid),
@@ -427,6 +436,10 @@ class VerilogInternalComponentEmitter:
 );
 """
 
+        # DiffLogic: do not need to generate weights and biases
+        if node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_logic", "difflogic_groupsum"]:
+            return components
+            
         # Emit module parameter instances (e.g. weights and biases)
         for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
             if "data_in" in arg:
