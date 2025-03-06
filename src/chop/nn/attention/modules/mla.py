@@ -440,15 +440,7 @@ class MLA(nn.Module):
             self.register_buffer("kv_cache", torch.zeros(args.max_batch_size, args.max_seq_len, self.kv_lora_rank), persistent=False)
             self.register_buffer("pe_cache", torch.zeros(args.max_batch_size, args.max_seq_len, self.qk_rope_head_dim), persistent=False)
 
-        self.kv_cache = self.kv_cache.to(torch.bfloat16)
-        self.pe_cache = self.pe_cache.to(torch.bfloat16)
-
-    def forward(self, 
-                x: torch.Tensor, 
-                start_pos: int, 
-                freqs_cis: torch.Tensor, 
-                mask: Optional[torch.Tensor], 
-        ):
+    def forward(self, x: torch.Tensor, start_pos: int, freqs_cis: torch.Tensor, mask: Optional[torch.Tensor]):
         """
         Forward pass for the Multi-Headed Attention Layer (MLA).
 
@@ -491,8 +483,7 @@ class MLA(nn.Module):
             scores = (torch.einsum("bshc,btc->bsht", q_nope, self.kv_cache[:bsz, :end_pos]) +
                       torch.einsum("bshr,btr->bsht", q_pe, self.pe_cache[:bsz, :end_pos])) * self.softmax_scale
         if mask is not None:
-            scores += mask.unsqueeze(2)
-            # scores += mask.unsqueeze(1)
+            scores += mask.unsqueeze(1)
         scores = scores.softmax(dim=-1, dtype=torch.float32).type_as(x)
         if attn_impl == "naive":
             x = torch.einsum("bsht,bthd->bshd", scores, self.v_cache[:bsz, :end_pos])
@@ -501,4 +492,3 @@ class MLA(nn.Module):
             x = torch.einsum("bshc,hdc->bshd", x, wkv_b[:, -self.v_head_dim:])
         x = self.wo(x.flatten(2))
         return x
-
