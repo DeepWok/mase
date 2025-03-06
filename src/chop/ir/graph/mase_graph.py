@@ -169,6 +169,9 @@ def trace_torch_module(
         custom_leaf_modules = ()
         custom_leaf_functions = ()
         custom_leaf_layers = ()
+        # user defined custom layer:
+        custom_leaf_functions += tuple(custom_ops.get("functions", {}).keys())
+        custom_leaf_layers += tuple(custom_ops.get("modules", {}).keys())
         # quantized functions/layers
         custom_leaf_functions += tuple(quantized_func_map.values())
         custom_leaf_layers += tuple(quantized_module_map.values())
@@ -186,6 +189,7 @@ def trace_torch_module(
         )
 
         graph_module = fx.GraphModule(model, tracer.trace(model, cf_args))
+        graph_module.custom_ops = custom_ops
 
         if patched_nodes is not None:
             graph_module.patched_op_names = [
