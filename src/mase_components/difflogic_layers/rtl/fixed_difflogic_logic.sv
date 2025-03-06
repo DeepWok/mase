@@ -1,9 +1,9 @@
 module fixed_difflogic_logic #(
-    parameter DATA_IN_0_TENSOR_SIZE_DIM_0,
-    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0,
-    parameter [3:0] LAYER_OP_CODES [0:(DATA_OUT_0_TENSOR_SIZE_DIM_0-1)],
-    parameter [$clog2(DATA_IN_0_TENSOR_SIZE_DIM_0)-1:0] IND_A [0:(DATA_OUT_0_TENSOR_SIZE_DIM_0-1)],
-    parameter [$clog2(DATA_IN_0_TENSOR_SIZE_DIM_0)-1:0] IND_B [0:(DATA_OUT_0_TENSOR_SIZE_DIM_0-1)]
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 4,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = 4,
+    parameter [3:0] LAYER_OP_CODES [0:(DATA_OUT_0_TENSOR_SIZE_DIM_0-1)] = '{4'd0, 4'd1, 4'd6, 4'd7},
+    parameter [$clog2(DATA_IN_0_TENSOR_SIZE_DIM_0)-1:0] IND_A [0:(DATA_OUT_0_TENSOR_SIZE_DIM_0-1)] = '{2'b00, 2'b01, 2'b10, 2'b11},
+    parameter [$clog2(DATA_IN_0_TENSOR_SIZE_DIM_0)-1:0] IND_B [0:(DATA_OUT_0_TENSOR_SIZE_DIM_0-1)] = '{2'b11, 2'b10, 2'b01, 2'b00}
 )(
     input wire clk,
     input wire rst,
