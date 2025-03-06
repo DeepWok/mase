@@ -51,7 +51,7 @@ def replace_attention_by_name(network, name, module, postfix):
     network = set_module_by_name(network, name, wapper)
     return network
 
-def bert_sdpa_to_mla_init(
+def gpt2sdpa_to_mla_init(
     bert_attn: BertAttention,  # a BertSdpaSelfAttention object
     config: dict                       # e.g. {"config": some_config}, or any custom dictionary
 ) -> MLA:
@@ -117,7 +117,7 @@ def gpt2sdpa_to_mgqa_init(
     }
     return MGQALayers(**mgqa_kwargs)
 
-def transform_bert_sdpa_to_mla(
+def transform_gpt2sdpa_to_mla(
     bert_attn: BertAttention,
     mla_attn: MLA                     # an MLA object (already initialized)
 ):
@@ -386,11 +386,11 @@ class MGQAWrapper(torch.nn.Module):
     
 
 init_func_map = {
-    "mla": bert_sdpa_to_mla_init,
-    "mgqa": gpt2sdpa_to_mgqa_init
+    "mla": gpt2sdpa_to_mgqa_init,
+    "mgqa": transform_gpt2sdpa_to_mla
 }
 transform_func_map = {
-    "mla": transform_bert_sdpa_to_mla,
+    "mla": transform_gpt2sdpa_to_mla,
     "mgqa": transform_gpt2sdpa_to_mgqa,
 }
 wrapper_map = {
