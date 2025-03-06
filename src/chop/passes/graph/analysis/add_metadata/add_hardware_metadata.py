@@ -44,9 +44,7 @@ def add_component_source(node):
             ):
                 node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_RTL"
                 node.meta["mase"]["hardware"]["module"] = op_info["module"]
-                node.meta["mase"]["hardware"]["dependence_files"] = op_info[
-                    "dependence_files"
-                ]
+                node.meta["mase"]["hardware"]["dependence_files"] = op_info["dependence_files"]
     elif mase_op in INTERNAL_COMP.keys():
         node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_RTL"
         # take the first ip in the component list by default
@@ -63,11 +61,12 @@ def add_component_source(node):
 
     # Current only support on-chip parameters
     args = node.meta["mase"]["common"]["args"]
-    for arg, _ in args.items():
+    for arg, arg_info in args.items():
         if "data_in" in arg:
             continue
-        arg_info = args[arg]
-        if isinstance(arg_info, dict):
+        elif node.meta["mase"]["hardware"].get("module") in ["difflogic_logiclayer", "difflogic_groupsum"]:
+            continue
+        elif isinstance(arg_info, dict):
             node.meta["mase"]["hardware"]["interface"][arg] = {
                 "storage": "BRAM",
                 "transpose": False,
@@ -168,6 +167,26 @@ def add_extra_verilog_param(node, graph: MaseGraph):
             vp["O_PROJECTION_WEIGHT_PARALLELISM_DIM_1"] = vp[
                 "O_PROJECTION_WEIGHT_PARALLELISM_DIM_0"
             ]
+
+    # difflogic nodes: load weights as parameters
+    module_name = node.meta["mase"]["hardware"].get("module", None)
+    if module_name == "difflogic_logiclayer":
+        vp = node.meta["mase"]["hardware"]["verilog_param"]
+        
+        layer_ops = node.meta["mase"]["common"]["args"]["weights"]["value"].argmax(dim=-1)
+        layer_ops = list(layer_ops)
+        layer_ops = [t.item() for t in layer_ops]
+        vp["LAYER_OP_CODES"] = layer_ops
+        
+        ind_a = node.meta["mase"]["common"]["args"]["indices"]["value"]
+        ind_a = list(ind_a[0])
+        ind_a = [t.item() for t in ind_a]
+        vp["IND_A"] = ind_a
+
+        ind_b = node.meta["mase"]["common"]["args"]["indices"]["value"]
+        ind_b = list(ind_b[1])
+        ind_b = [t.item() for t in ind_b]
+        vp["IND_B"] = ind_b
 
 
 def add_hardware_metadata_analysis_pass(graph, pass_args={}):
