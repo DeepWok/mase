@@ -242,20 +242,14 @@ def transform_gpt2sdpa_to_mgqa(
     Load weights and related info from a single GPT2SdpaAttention into the first MGQA attention layer.
     Assumes MGQALayers was set up with depth=1 or has at least one 'a' (attention) block.
     """
-
-    # We'll assume the first layer of mgqa is an attention block (layer_type == 'a').
-    # mgqa.layers[0] is (norms, block, residual).
-    # block should be an MGQA instance for the attention block.
-    # If your mgqa has multiple layers, adjust indexing accordingly.
     
     # 1) Retrieve the MGQA attention module
     mgqa_norms, mgqa_block, mgqa_residual = mgqa.layers[0]
-    # mgqa_block is an MGQA object if layer_type == 'a'
-    mgqa_attn = mgqa_block  # for more readable naming
+    mgqa_attn = mgqa_block
 
     # 2) GPT2SdpaAttention: gather shapes & param references
     embed_dim = gpt2sdpa.embed_dim
-    c_attn_weight = gpt2sdpa.c_attn.weight       # shape [3*embed_dim, embed_dim]
+    c_attn_weight = gpt2sdpa.c_attn.weight       # shape [embed_dim, 3*embed_dim]
     c_attn_bias   = gpt2sdpa.c_attn.bias         # shape [3*embed_dim]
     c_proj_weight = gpt2sdpa.c_proj.weight       # shape [embed_dim, embed_dim]
     c_proj_bias   = gpt2sdpa.c_proj.bias         # shape [embed_dim]
@@ -265,14 +259,12 @@ def transform_gpt2sdpa_to_mgqa(
     #   self.to_q = nn.Linear(dim, q_dim, bias=False)
     #   self.to_k = nn.Linear(dim, k_dim, bias=False)
     #   self.to_v = nn.Linear(dim, v_dim, bias=False)
-    # Typically for single-head-group, q_dim = k_dim = v_dim = embed_dim
+    # assume q_dim = k_dim = v_dim = embed_dim
     # We assume mgqa_attn has bias=False on these. We'll ignore c_attn bias or set them to 0 if needed.
 
     with torch.no_grad():
-        # Slicing out Q/K/V
-        q_weight = c_attn_weight[:embed_dim, :]
-        k_weight = c_attn_weight[embed_dim:2*embed_dim, :]
-        v_weight = c_attn_weight[2*embed_dim:3*embed_dim, :]
+        # Slicing out Q/K/V, each shape [d, d]
+        q_weight, k_weight, v_weight = torch.split(c_attn_weight, embed_dim, dim=1)
 
         # Copy to MGQA (MGQA expects (out_features, in_features) as standard for nn.Linear)
         mgqa_attn.to_q.weight.copy_(q_weight)
@@ -374,30 +366,23 @@ class MGQAWrapper(torch.nn.Module):
         output_attentions: Optional[bool] = False,
     ) -> Tuple[Union[torch.Tensor, Tuple[torch.Tensor]], ...]:
         
-
+        attention_mask = (attention_mask[:, 0, 0, :] == 0).bool()
         # Call MGQA with the relevant tensors.
         # Pass cross-attention if encoder_hidden_states is given, otherwise self-attention.
         if encoder_hidden_states is not None:
-            out, inter = self.mgqa(
+            out = self.mgqa(
                 x=hidden_states,
                 context=encoder_hidden_states,
                 mask=attention_mask,
                 context_mask=encoder_attention_mask,
-                return_intermediates=True
             )
         else:
-            out, inter = self.mgqa(
+            out = self.mgqa(
                 x=hidden_states,
                 mask=attention_mask,
-                return_intermediates=True
             )
 
-        # Cache updated key/value if needed
-        present = inter.cached_kv if (use_cache and inter.cached_kv is not None) else None
-        # Return attention weights if asked
-        attn_probs = inter.post_softmax_attn if output_attentions else None
-        # Match GPT2 standard output signature: (attn_output, present, attn_probs)
-        return (out, present, attn_probs)
+        return (out, None, None)
     
 
 init_func_map = {

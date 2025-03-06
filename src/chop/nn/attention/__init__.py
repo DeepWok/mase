@@ -1,3 +1,3 @@
 from .modules import(
-    mla_module_map,
+    attention_module_map,
 )

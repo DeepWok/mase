@@ -21,10 +21,6 @@ from pathlib import Path
 # --------------------------------------------------
 #   Model specifications
 # --------------------------------------------------
-# model_name = "google-bert/bert-base-uncased"  # or "prajjwal1/bert-tiny"
-# model = AutoModel.from_pretrained(model_name)
-# tokenizer = AutoTokenizer.from_pretrained(model_name)
-# print(model)
 
 checkpoint = "openai-community/gpt2"
 tokenizer_checkpoint = "openai-community/gpt2"
@@ -35,9 +31,72 @@ dataset, tokenizer = get_tokenized_dataset(
     checkpoint=tokenizer_checkpoint,
     return_tokenizer=True,
 )
+tokenizer.pad_token = tokenizer.eos_token
+
 model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
 model.config.problem_type = "single_label_classification"
-print(model)
+model.config.pad_token_id = tokenizer.eos_token_id
+
+trainer = get_trainer(
+    model=model,
+    tokenized_dataset=dataset,
+    tokenizer=tokenizer,
+    evaluate_metric="accuracy",
+    num_train_epochs=1,
+)
+trainer.train()
+eval_results = trainer.evaluate()
+print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")
+# mg = MaseGraph(model)
+# mg, _ = passes.init_metadata_analysis_pass(mg)
+# mg, _ = passes.add_common_metadata_analysis_pass(mg)
+# mg.export(f"{Path.home()}/Projects/mase/mase_output/bert-uncased-2epoch")
+
+def test_mla_transform_pass():
+    # Sanity check and report
+    # mg = verify_common_metadata_analysis_pass(mg)
+    pass_args = {
+        "by": "type",
+        "gpt2spda": {
+            "config": {
+                "name": "mgqa",
+            }
+        },
+    }
+    network, _ = mla_transform_pass(model, pass_args)
+    return network
+
+network = test_mla_transform_pass()
+
+trainer = get_trainer(
+    model=network,
+    tokenized_dataset=dataset,
+    tokenizer=tokenizer,
+    evaluate_metric="accuracy",
+    num_train_epochs=1,
+)
+trainer.train()
+eval_results = trainer.evaluate()
+print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")
+# mg = MaseGraph(
+#     network,
+# )
+# for param in mg.model.bert.embeddings.parameters():
+#     param.requires_grad = False
+# trainer.train()
+# eval_results = trainer.evaluate()
+# print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")
+# mg.export(f"{Path.home()}/Projects/mase/mase_output/bert-mla")
+
+# # Explicit inference test with try-except to capture exact error
+# sample_text = "This is a test input to check inference correctness."
+# inputs = tokenizer(sample_text, return_tensors='pt', padding=True, truncation=True)
+# outputs = network(**inputs)
+# print(outputs)
+# print(network)
+
+
+
 # trainer = get_trainer(
 #     model=model,
 #     tokenized_dataset=dataset,
@@ -54,24 +113,6 @@ print(model)
 # mg, _ = passes.init_metadata_analysis_pass(mg)
 # mg, _ = passes.add_common_metadata_analysis_pass(mg)
 # mg.export(f"{Path.home()}/Projects/mase/mase_output/bert-uncased-2epoch")
-
-def test_mla_transform_pass():
-    # Sanity check and report
-    # mg = verify_common_metadata_analysis_pass(mg)
-    return
-    pass_args = {
-        "by": "type",
-        "bert_attention": {
-            "config": {
-                "name": "latent",
-            }
-        },
-    }
-    mla_network, _ = mla_transform_pass(model, pass_args)
-    print(mla_network)
-    return mla_network
-
-mla_net = test_mla_transform_pass()
 
 # trainer = get_trainer(
 #     model=mla_net,
