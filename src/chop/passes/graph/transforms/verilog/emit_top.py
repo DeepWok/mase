@@ -109,7 +109,15 @@ class VerilogParameterEmitter:
 
         # Write node parameters
         for key, value in parameter_map.items():
-            parameters += f"""    parameter {key} = {value},\n"""
+            # DiffLogic: need size for these params
+            if 'OP_CODES' in key:
+                total_ops = value.count(",") + 1
+                parameters += f"""    parameter [3:0] {key} [0:{total_ops}-1] = {value},\n"""
+            elif 'IND' in key:
+                total_indices = value.count(",") + 1
+                parameters += f"""    parameter [$clog2({total_indices})-1:0] {key} [0:{total_indices}-1] = {value},\n"""
+            else:
+                parameters += f"""    parameter {key} = {value},\n"""
 
         return _remove_last_comma(parameters)
 
@@ -169,9 +177,9 @@ class VerilogInterfaceEmitter:
             if "difflogic" in node.meta["mase"]["hardware"]["module"]:
                 node_name = vf(node.name)
                 node_result = "data_out_0"
-                interface += f"\n\tinput [($clog2(({_cap(node_name)}_DATA_IN_0_TENSOR_SIZE_DIM_0/{_cap(node_name)}_{_cap(node_result)}_TENSOR_SIZE_DIM_0))):0] data_out_0 [0:({_cap(node_name)}_{_cap(node_result)}_TENSOR_SIZE_DIM_0-1)],"
-                interface += f"\n\tinput  data_out_0_valid,"
-                interface += f"\n\toutput data_out_0_ready,"
+                interface += f"\n\toutput [($clog2(({_cap(node_name)}_DATA_IN_0_TENSOR_SIZE_DIM_0/{_cap(node_name)}_{_cap(node_result)}_TENSOR_SIZE_DIM_0))):0] data_out_0 [0:({_cap(node_name)}_{_cap(node_result)}_TENSOR_SIZE_DIM_0-1)],"
+                interface += f"\n\toutput  data_out_0_valid,"
+                interface += f"\n\tinput data_out_0_ready,"
                 continue
 
             node_name = vf(node.name)
@@ -265,7 +273,7 @@ logic                             {node_name}_{arg}_ready;"""
                 signals += f"\nlogic {node_name}_{result}_ready;"
                 continue
             elif node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_flatten"]:
-                signals += f"\nlogic [({_cap(node_name)}_{_cap(result)}_TENSOR_SIZE_DIM_0-1):0] data_out;"
+                signals += f"\nlogic [({_cap(node_name)}_{_cap(result)}_TENSOR_SIZE_DIM_0-1):0] {node_name}_{result};"
                 signals += f"\nlogic {node_name}_{result}_valid;"
                 signals += f"\nlogic {node_name}_{result}_ready;"
                 continue
