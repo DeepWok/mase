@@ -169,7 +169,7 @@ class VerilogInterfaceEmitter:
             if "difflogic" in node.meta["mase"]["hardware"]["module"]:
                 node_name = vf(node.name)
                 node_result = "data_out_0"
-                interface += f"\n\tinput [($clog2(({_cap(node_name)}_DATA_IN_0_TENSOR_SIZE_DIM_0/{_cap(node_name)}_{_cap(node_result)}_TENSOR_SIZE_DIM_0))):0] data_out_0 [0:({_cap(node_name)}_{_cap(node_result)}_TENSOR_SIZE_DIM_0-1)]"
+                interface += f"\n\tinput [($clog2(({_cap(node_name)}_DATA_IN_0_TENSOR_SIZE_DIM_0/{_cap(node_name)}_{_cap(node_result)}_TENSOR_SIZE_DIM_0))):0] data_out_0 [0:({_cap(node_name)}_{_cap(node_result)}_TENSOR_SIZE_DIM_0-1)],"
                 interface += f"\n\tinput  data_out_0_valid,"
                 interface += f"\n\toutput data_out_0_ready,"
                 continue
@@ -260,7 +260,7 @@ logic                             {node_name}_{arg}_ready;"""
                 signals += f"\nlogic {node_name}_{result}_ready;"
                 continue
             elif node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_groupsum"]:
-                signals += f"\nlogic [($clog2(({_cap(node_name)}_DATA_IN_0_TENSOR_SIZE_DIM_0/{_cap(node_name)}_{_cap(result)}_TENSOR_SIZE_DIM_0))):0] {node_name}_{result} [0:({_cap(node_name)}_{_cap(result)}_TENSOR_SIZE_DIM_0-1)]"
+                signals += f"\nlogic [($clog2(({_cap(node_name)}_DATA_IN_0_TENSOR_SIZE_DIM_0/{_cap(node_name)}_{_cap(result)}_TENSOR_SIZE_DIM_0))):0] {node_name}_{result} [0:({_cap(node_name)}_{_cap(result)}_TENSOR_SIZE_DIM_0-1)];"
                 signals += f"\nlogic {node_name}_{result}_valid;"
                 signals += f"\nlogic {node_name}_{result}_ready;"
                 continue
