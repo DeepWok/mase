@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module fixed_difflogic_logic_neuron #(
     parameter OP_CODE
 )(
@@ -26,14 +27,14 @@ generate
                 res = a & ~b;
             end
         end
-        (4'd3): begin: GEN_NOT_IMPLY_BY
-            always @* begin
-                res = ~a & b;
-            end
-        end
-        (4'd4): begin: GEN_A
+        (4'd3): begin: GEN_A
             always @* begin
                 res = a;
+            end
+        end
+        (4'd4): begin: GEN_NOT_IMPLY_BY
+            always @* begin
+                res = ~a & b;
             end
         end
         (4'd5): begin: GEN_B
@@ -61,24 +62,24 @@ generate
                 res = ~(a ^ b);
             end
         end
-        (4'd10): begin: GEN_NOT_A
-            always @* begin
-                res = ~a;
-            end
-        end
-        (4'd11): begin: GEN_NOT_B
+        (4'd10): begin: GEN_NOT_B
             always @* begin
                 res = ~b;
             end
         end
-        (4'd12): begin: GEN_IMPLY
-            always @* begin
-                res = ~a | b;
-            end
-        end
-        (4'd13): begin: GEN_IMPLY_BY
+        (4'd11): begin: GEN_IMPLY_BY
             always @* begin
                 res = a | ~b;
+            end
+        end
+        (4'd12): begin: GEN_NOT_A
+            always @* begin
+                res = ~a;
+            end
+        end
+        (4'd13): begin: GEN_IMPLY
+            always @* begin
+                res = ~a | b;
             end
         end
         (4'd14): begin: GEN_NOT_AND

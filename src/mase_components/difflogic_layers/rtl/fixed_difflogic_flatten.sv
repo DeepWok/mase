@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module fixed_difflogic_flatten #(
     parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 2,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 2,

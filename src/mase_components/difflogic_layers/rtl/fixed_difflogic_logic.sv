@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module fixed_difflogic_logic #(
     parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 4,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = 4,
