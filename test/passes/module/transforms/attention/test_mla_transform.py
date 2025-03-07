@@ -15,7 +15,7 @@ import chop.passes as passes
 
 sys.path.append(Path(__file__).resolve().parents[5].as_posix())
 
-from chop.passes.module.transforms import quantize_module_transform_pass, mla_transform_pass
+from chop.passes.module.transforms import quantize_module_transform_pass, attention_transform_pass
 from pathlib import Path
 
 # --------------------------------------------------
@@ -65,7 +65,7 @@ def test_mla_transform_pass():
             }
         },
     }
-    mla_network, _ = mla_transform_pass(model, pass_args)
+    mla_network, _ = attention_transform_pass(model, pass_args)
     print(mla_network)
     return mla_network
 

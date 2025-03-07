@@ -7,6 +7,7 @@ from transformers.models.bert.modeling_bert import(
 )
 from transformers.models.gpt2.modeling_gpt2 import (
     GPT2SdpaAttention,
+    GPT2Block,
 )
 from chop.nn.attention.modules import attention_module_map
 from ...module_modify_helper import replace_by_name, instantiate_module
@@ -29,7 +30,7 @@ def mla_by_type(network, pass_args):
         if type_name == "bertspda":
             module = BertAttention
         elif type_name == "gpt2spda":
-            module = GPT2SdpaAttention
+            module = GPT2Block
         else:
             raise ValueError(f"{type_name} is not supported!")
         config = config["config"]
@@ -100,7 +101,7 @@ def mla_by_regex_name(network, pass_args):
     return network
 
 
-def mla_transform_pass(network, pass_args):
+def attention_transform_pass(network, pass_args):
     by = pass_args.pop("by")
     match by:
         case "type":

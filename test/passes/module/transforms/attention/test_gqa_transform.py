@@ -3,7 +3,7 @@
 import logging
 import os
 import sys
-
+import dill
 import torch
 import torch.nn as nn
 from transformers import AutoModel, AutoTokenizer, AutoModelForSequenceClassification
@@ -15,7 +15,7 @@ import chop.passes as passes
 
 sys.path.append(Path(__file__).resolve().parents[5].as_posix())
 
-from chop.passes.module.transforms import quantize_module_transform_pass, mla_transform_pass
+from chop.passes.module.transforms import quantize_module_transform_pass, attention_transform_pass
 from pathlib import Path
 
 # --------------------------------------------------
@@ -33,48 +33,51 @@ dataset, tokenizer = get_tokenized_dataset(
 )
 tokenizer.pad_token = tokenizer.eos_token
 
-model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
-model.config.problem_type = "single_label_classification"
-model.config.pad_token_id = tokenizer.eos_token_id
+with open(f"{Path.home()}/Projects/mase/mase_output/bert-uncased-2epoch.pkl", "rb") as f:
+    model = dill.load(f)
 
-trainer = get_trainer(
-    model=model,
-    tokenized_dataset=dataset,
-    tokenizer=tokenizer,
-    evaluate_metric="accuracy",
-    num_train_epochs=1,
-)
-trainer.train()
-eval_results = trainer.evaluate()
-print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")
-# mg = MaseGraph(model)
-# mg, _ = passes.init_metadata_analysis_pass(mg)
-# mg, _ = passes.add_common_metadata_analysis_pass(mg)
-# mg.export(f"{Path.home()}/Projects/mase/mase_output/bert-uncased-2epoch")
+# model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
+# model.config.problem_type = "single_label_classification"
+# model.config.pad_token_id = tokenizer.eos_token_id
+# # print(model)
 
-def test_mla_transform_pass():
-    # Sanity check and report
-    # mg = verify_common_metadata_analysis_pass(mg)
+# trainer = get_trainer(
+#     model=model,
+#     tokenized_dataset=dataset,
+#     tokenizer=tokenizer,
+#     evaluate_metric="accuracy",
+#     num_train_epochs=2,
+# )
+# trainer.train()
+# eval_results = trainer.evaluate()
+# print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")
+# with open(f"{Path.home()}/Projects/mase/mase_output/bert-uncased-2epoch.pkl", "wb") as f:
+#     dill.dump(model, f)
+
+def test_mla_transform_pass(model):
     pass_args = {
         "by": "type",
         "gpt2spda": {
             "config": {
                 "name": "mgqa",
+                # "kv_heads": 2,
             }
         },
     }
-    network, _ = mla_transform_pass(model, pass_args)
-    return network
+    model, _ = attention_transform_pass(model, pass_args)
+    return model
 
-network = test_mla_transform_pass()
-
+model = test_mla_transform_pass(model)
+print(model)
 trainer = get_trainer(
-    model=network,
+    model=model,
     tokenized_dataset=dataset,
     tokenizer=tokenizer,
     evaluate_metric="accuracy",
-    num_train_epochs=1,
+    num_train_epochs=2,
 )
+eval_results = trainer.evaluate()
+print(f"Evaluation accuracy before fintuning: {eval_results['eval_accuracy']}")
 trainer.train()
 eval_results = trainer.evaluate()
 print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")

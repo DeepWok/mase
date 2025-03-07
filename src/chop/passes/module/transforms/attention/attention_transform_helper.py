@@ -23,6 +23,7 @@ from transformers.models.bert.modeling_bert import (
 )
 from transformers.models.gpt2.modeling_gpt2 import (
     GPT2SdpaAttention,
+    GPT2Block,
 )
 
 def instantiate_attention_module(module, postfix, module_map, additional_module_args):
@@ -93,29 +94,48 @@ def gpt2sdpa_to_mla_init(
     return mla_module
 
 def gpt2sdpa_to_mgqa_init(
-    gpt2_sdpa_attn: GPT2SdpaAttention,  
+    gpt2_block: GPT2Block,  
     config: dict                       
 ) -> MGQALayers:
+
+    layernorm1 = gpt2_block.ln_1
+    gpt2_sdpa_attn  = gpt2_block.attn   # GPT2SdpaAttention
+    layernorm2 = gpt2_block.ln_2
+    gpt2_mlp   = gpt2_block.mlp    # GPT2MLP
+
     # Basic info from gpt2_sdpa_attn
     hidden_size = gpt2_sdpa_attn.embed_dim
     num_heads = gpt2_sdpa_attn.num_heads
     attn_drop = gpt2_sdpa_attn.attn_dropout.p
+
+    ff_dropout_p = gpt2_mlp.dropout.p
+
+    kv_heads = config.get("kv_heads", num_heads)
+    kv_heads = num_heads // math.ceil(num_heads/ kv_heads)
     
-    # Set up parameters for MGQALayers, allowing config to overwrite defaults
     mgqa_kwargs = {
-        "dim": hidden_size,
-        "heads": num_heads,
-        "causal": True,
-        "depth": config.get("depth", 1),
-        "dropout": config.get("dropout", attn_drop),
-        "flash": config.get("flash", False),
-        "talking_heads": config.get("talking_heads", False),
-        "head_scale": config.get("head_scale", False),
-        "qk_norm": config.get("qk_norm", False),
+        "dim":      hidden_size,
+        "heads":    num_heads, # number of query
+        "kv_heads": kv_heads, # number of kv heads
+        "one_kv_head":  config.get("one_kv_head", False), # force kv_heads to 1
+        "causal":   True,
+        "depth":    config.get("depth", 1),
+        "dropout":  config.get("dropout", attn_drop),
+        "flash":    config.get("flash", False),
+        "talking_heads":config.get("talking_heads", False),
+        "head_scale":   config.get("head_scale", False),
+        "qk_norm":  config.get("qk_norm", False),
         "zero_init_output": config.get("zero_init_output", False),
-        # Add any other MGQALayers parameters as needed...
+        "shared_kv": config.get("shared_kv", False),
+        "ff_dropout": ff_dropout_p,
+        "pre_norm": True, 
+        "resi_dual": False,
     }
-    return MGQALayers(**mgqa_kwargs)
+    mgqa_layers = MGQALayers(**mgqa_kwargs)
+    # mgqa automatically add a layernorm at the end, while gpt2 have layernorm 
+    # at the end already
+    mgqa_layers.final_norm = torch.nn.Identity() 
+    return mgqa_layers
 
 def transform_gpt2sdpa_to_mla(
     bert_attn: BertAttention,
@@ -235,13 +255,17 @@ def transform_gpt2sdpa_to_mla(
     return mla_attn
 
 def transform_gpt2sdpa_to_mgqa(
-    gpt2sdpa: GPT2SdpaAttention,
+    gpt2_block: GPT2Block,
     mgqa: MGQALayers,
 ):
     """
     Load weights and related info from a single GPT2SdpaAttention into the first MGQA attention layer.
     Assumes MGQALayers was set up with depth=1 or has at least one 'a' (attention) block.
     """
+    layernorm1 = gpt2_block.ln_1
+    gpt2sdpa  = gpt2_block.attn   # GPT2SdpaAttention
+    layernorm2 = gpt2_block.ln_2
+    gpt2_mlp   = gpt2_block.mlp    # GPT2MLP
     
     # 1) Retrieve the MGQA attention module
     mgqa_norms, mgqa_block, mgqa_residual = mgqa.layers[0]
@@ -255,46 +279,40 @@ def transform_gpt2sdpa_to_mgqa(
     c_proj_bias   = gpt2sdpa.c_proj.bias         # shape [embed_dim]
 
     # 3) Split out the Q/K/V weights from c_attn
-    # MGQA internally uses:
-    #   self.to_q = nn.Linear(dim, q_dim, bias=False)
-    #   self.to_k = nn.Linear(dim, k_dim, bias=False)
-    #   self.to_v = nn.Linear(dim, v_dim, bias=False)
-    # assume q_dim = k_dim = v_dim = embed_dim
-    # We assume mgqa_attn has bias=False on these. We'll ignore c_attn bias or set them to 0 if needed.
 
     with torch.no_grad():
-        # Slicing out Q/K/V, each shape [d, d]
-        q_weight, k_weight, v_weight = torch.split(c_attn_weight, embed_dim, dim=1)
+        q_w, k_w, v_w = torch.split(c_attn_weight, embed_dim, dim=1)
+        mgqa_attn.to_q.weight.copy_(q_w) # query size remain identical, no change needed
 
-        # Copy to MGQA (MGQA expects (out_features, in_features) as standard for nn.Linear)
-        mgqa_attn.to_q.weight.copy_(q_weight)
-        mgqa_attn.to_k.weight.copy_(k_weight)
+        heads = mgqa_attn.heads
+        kv_heads = mgqa_attn.kv_heads
+        dim_head = embed_dim // heads
+
+        if kv_heads < heads:
+            k_r = k_w.reshape(embed_dim, heads, dim_head)
+            v_r = v_w.reshape(embed_dim, heads, dim_head)
+            g_size = heads // kv_heads
+            k_r = k_r.reshape(embed_dim, kv_heads, g_size, dim_head).mean(dim=2)
+            v_r = v_r.reshape(embed_dim, kv_heads, g_size, dim_head).mean(dim=2)
+            k_w = k_r.reshape(embed_dim, kv_heads * dim_head)
+            v_w = v_r.reshape(embed_dim, kv_heads * dim_head)
+        
+        if mgqa_attn.to_k is not None:
+            mgqa_attn.to_k.weight.copy_(k_w)
         if mgqa_attn.to_v is not None:
-            mgqa_attn.to_v.weight.copy_(v_weight)
+            mgqa_attn.to_v.weight.copy_(v_w)
 
         # If your MGQA block has biases on Q/K/V, you could copy them here.
         # By default, from the MGQA code shown, bias=False, so we skip copying.
 
         # 4) Map c_proj -> mgqa_attn.to_out
-        # mgqa_attn.to_out is nn.Linear(out_dim, dim, bias=False) => shape [out_dim, dim]
-        # Usually out_dim == embed_dim, dim == embed_dim => shape [embed_dim, embed_dim]
         mgqa_attn.to_out.weight.copy_(c_proj_weight)
+        if mgqa_attn.to_out.bias is not None:
+            mgqa_attn.to_out.bias.copy_(c_proj_bias)
 
-        # If your MGQA block uses bias in to_out, you could copy it here as well:
-        # if mgqa_attn.to_out.bias is not None:
-        #     mgqa_attn.to_out.bias.copy_(c_proj_bias)
-
-    # 5) Copy over dropout probability for the attention module
-    # mgqa_attn.attend has 'self.dropout' as the standard dropout param
-    mgqa_attn.attend.attn_dropout.p = gpt2sdpa.attn_dropout.p
-
-    # 6) Mark the MGQA attention as causal if needed
+    mgqa_attn.attend.attn_dropout.p = gpt2sdpa.attn_dropout.p # Copy over dropout probability
     mgqa_attn.attend.causal = True  # GPT-2 standard
 
-    # 7) Possibly copy any other relevant attributes (e.g., scale_attn_weights).
-    # That depends on your usage or if you want to keep them in sync.
-
-    # Done. mgqa now has its first layer's attention weights loaded from gpt2sdpa.
     return mgqa
 
 class MLAWrapper(torch.nn.Module):
@@ -386,8 +404,8 @@ class MGQAWrapper(torch.nn.Module):
     
 
 init_func_map = {
-    "mla": gpt2sdpa_to_mgqa_init,
-    "mgqa": transform_gpt2sdpa_to_mla
+    "mla": gpt2sdpa_to_mla_init,
+    "mgqa": gpt2sdpa_to_mgqa_init
 }
 transform_func_map = {
     "mla": transform_gpt2sdpa_to_mla,
