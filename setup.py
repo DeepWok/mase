@@ -95,6 +95,10 @@ requirements = [
     "sphinx-book-theme",
     "pydot",
     "attr-dot-dict",
+    "librosa",
+    "soundfile",
+    "jiwer",
+    "pyctcdecode",
 ]
 
 setup(

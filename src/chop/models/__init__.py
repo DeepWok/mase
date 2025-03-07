@@ -22,6 +22,7 @@ from .resnet.resnet import *
 from .toy import *
 from .vgg_cifar.vgg_cifar import *
 from .wideresnet.wideresnet import *
+from .wav2vec.modeling_wav2vec import *
 
 
 def get_model_info(name: str) -> MaseModelInfo:

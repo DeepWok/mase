@@ -1,0 +1,2 @@
+Add measurment metrics to 03, compression amount, inference time, all kinds that will be useful.
+    Consider if MASE is able to handle hardware implementation metric estimation or TVM visit is necessary
