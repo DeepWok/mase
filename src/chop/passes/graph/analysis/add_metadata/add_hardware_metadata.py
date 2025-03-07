@@ -64,7 +64,7 @@ def add_component_source(node):
     for arg, arg_info in args.items():
         if "data_in" in arg:
             continue
-        elif node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_logic", "difflogic_groupsum"]:
+        elif node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_logic", "fixed_difflogic_logic"]:
             continue
         elif isinstance(arg_info, dict):
             node.meta["mase"]["hardware"]["interface"][arg] = {
@@ -85,24 +85,27 @@ def add_verilog_param(node):
     vp = node.meta["mase"]["hardware"]["verilog_param"]
     
     # DiffLogic: do not generate precision and tensor size automatically    
-    if node.meta["mase"]["hardware"].get("module") == "fixed_difflogic_logic":
+    if node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_logic", "fixed_difflogic_groupsum"]:
         for arg, arg_info in args.items():
             match arg:
                 case "data_in_0":
                     vp[_cap(f"{arg}_tensor_size_dim_0")] = arg_info["shape"][-1]
-                # case "weights":
-                #     vp[_cap(f"{arg}_tensor_size_dim_0")] = arg_info["shape"][0]
-                # case "indices":
-                #     vp[_cap(f"{arg}_tensor_size_dim_0")] = arg_info["shape"][-1]
-
         for res, res_info in results.items():
             match res:
                 case "data_out_0":
                     vp[_cap(f"{res}_tensor_size_dim_0")] = res_info["shape"][-1]
-
         return
-
-    print("DEBUG: ", node.meta["mase"]["hardware"].get("module"))
+    elif node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_flatten"]:
+        for arg, arg_info in args.items():
+            match arg:
+                case "data_in_0":
+                    vp[_cap(f"{arg}_tensor_size_dim_0")] = arg_info["shape"][-1]
+                    vp[_cap(f"{arg}_tensor_size_dim_1")] = arg_info["shape"][-2]
+        for res, res_info in results.items():
+            match res:
+                case "data_out_0":
+                    vp[_cap(f"{res}_tensor_size_dim_0")] = res_info["shape"][-1]
+        return
 
     for arg, arg_info in args.items():
         if isinstance(arg_info, dict):
@@ -188,22 +191,22 @@ def add_extra_verilog_param(node, graph: MaseGraph):
                 "O_PROJECTION_WEIGHT_PARALLELISM_DIM_0"
             ]
 
-    # difflogic nodes: load weights as parameters
+    # DiffLogic nodes: load weights as parameters
     module_name = node.meta["mase"]["hardware"].get("module", None)
     if module_name == "fixed_difflogic_logic":
         vp = node.meta["mase"]["hardware"]["verilog_param"]
         
-        layer_ops = node.meta["mase"]["common"]["args"]["weights"]["value"].argmax(dim=-1)
+        layer_ops = node.meta["mase"]["hardware"]["difflogic_args"]["weights"]["value"].argmax(dim=-1)
         layer_ops = list(layer_ops)
         layer_ops = [t.item() for t in layer_ops]
         vp["LAYER_OP_CODES"] = layer_ops
         
-        ind_a = node.meta["mase"]["common"]["args"]["indices"]["value"]
+        ind_a = node.meta["mase"]["hardware"]["difflogic_args"]["indices"]["value"]
         ind_a = list(ind_a[0])
         ind_a = [t.item() for t in ind_a]
         vp["IND_A"] = ind_a
 
-        ind_b = node.meta["mase"]["common"]["args"]["indices"]["value"]
+        ind_b = node.meta["mase"]["hardware"]["difflogic_args"]["indices"]["value"]
         ind_b = list(ind_b[1])
         ind_b = [t.item() for t in ind_b]
         vp["IND_B"] = ind_b

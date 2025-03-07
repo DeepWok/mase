@@ -8,13 +8,13 @@ module fixed_difflogic_logic #(
     input wire clk,
     input wire rst,
 
-    input wire data_in_0_ready,
-    input wire data_in_0_valid,
     input wire [(DATA_IN_0_TENSOR_SIZE_DIM_0-1):0] data_in_0,
+    input  logic data_in_0_valid,
+    output logic data_in_0_ready,
 
-    output wire data_out_0_ready,
-    output wire data_out_0_valid,
-    output reg [(DATA_OUT_0_TENSOR_SIZE_DIM_0-1):0] data_out_0
+    output reg [(DATA_OUT_0_TENSOR_SIZE_DIM_0-1):0] data_out_0,
+    output logic data_out_0_valid,
+    input  logic data_out_0_ready
 );
 
 genvar i;
@@ -33,5 +33,8 @@ generate
     end
 
 endgenerate
+
+assign data_out_0_valid= data_in_0_valid;
+assign data_in_0_ready = data_out_0_ready;
 
 endmodule

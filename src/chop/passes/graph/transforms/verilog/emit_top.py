@@ -137,6 +137,14 @@ class VerilogInterfaceEmitter:
         # a system.
         i = 0
         for node in nodes_in:
+            # DiffLogic: input node is expecting binary array
+            if "difflogic" in node.meta["mase"]["hardware"]["module"]:
+                node_name = vf(node.name)
+                interface += f"\n\tinput [({node_name}_DATA_IN_0_TENSOR_SIZE_DIM_0-1):0] data_in_0 [0:({node_name}_DATA_IN_0_TENSOR_SIZE_DIM_0-1)],"
+                interface += f"\n\tinput  data_in_0_valid,"
+                interface += f"\n\toutput data_in_0_ready,"
+                continue
+            
             node_name = vf(node.name)
             for arg_idx, arg in enumerate(
                 node.meta["mase"].parameters["common"]["args"].keys()
@@ -157,6 +165,15 @@ class VerilogInterfaceEmitter:
 
         i = 0
         for node in nodes_out:
+            # DiffLogic: output node is expecting binary array
+            if "difflogic" in node.meta["mase"]["hardware"]["module"]:
+                node_name = vf(node.name)
+                node_result = "data_out_0"
+                interface += f"\n\tinput [($clog2(({_cap(node_name)}_DATA_IN_0_TENSOR_SIZE_DIM_0/{_cap(node_name)}_{_cap(node_result)}_TENSOR_SIZE_DIM_0))):0] data_out_0 [0:({_cap(node_name)}_{_cap(node_result)}_TENSOR_SIZE_DIM_0-1)]"
+                interface += f"\n\tinput  data_out_0_valid,"
+                interface += f"\n\toutput data_out_0_ready,"
+                continue
+
             node_name = vf(node.name)
             for result in node.meta["mase"].parameters["common"]["results"].keys():
                 if "data_out" in result:
@@ -194,8 +211,16 @@ class VerilogSignalEmitter:
             if not isinstance(arg_info, dict):
                 continue
             
-            # DiffLogic: weights are not connected to BRAM!
-            if node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_logic", "difflogic_groupsum"]:
+            # DiffLogic: signals depends on different things
+            if node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_logic", "fixed_difflogic_groupsum"]:
+                signals += f"\nlogic [({_cap(node_name)}_{_cap(arg)}_TENSOR_SIZE_DIM_0-1):0] {node_name}_{arg};"
+                signals += f"\nlogic {node_name}_{arg}_valid;"
+                signals += f"\nlogic {node_name}_{arg}_ready;"
+                continue
+            elif node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_flatten"]:
+                signals += f"\nlogic [({_cap(node_name)}_{_cap(arg)}_TENSOR_SIZE_DIM_0-1):0] {node_name}_{arg} [0:({_cap(node_name)}_{_cap(arg)}_TENSOR_SIZE_DIM_1-1)];"
+                signals += f"\nlogic {node_name}_{arg}_valid;"
+                signals += f"\nlogic {node_name}_{arg}_ready;"
                 continue
 
             # Skip off-chip parameters as they will be directly connected to the top level
@@ -226,6 +251,23 @@ logic                             {node_name}_{arg}_ready;"""
             node.meta["mase"].parameters["common"]["results"].items()
         ):
             if not isinstance(result_info, dict):
+                continue
+            
+            # DiffLogic: signals depends on different things
+            if node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_logic"]:
+                signals += f"\nlogic [({_cap(node_name)}_{_cap(result)}_TENSOR_SIZE_DIM_0-1):0] {node_name}_{result};"
+                signals += f"\nlogic {node_name}_{result}_valid;"
+                signals += f"\nlogic {node_name}_{result}_ready;"
+                continue
+            elif node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_groupsum"]:
+                signals += f"\nlogic [($clog2(({_cap(node_name)}_DATA_IN_0_TENSOR_SIZE_DIM_0/{_cap(node_name)}_{_cap(result)}_TENSOR_SIZE_DIM_0))):0] {node_name}_{result} [0:({_cap(node_name)}_{_cap(result)}_TENSOR_SIZE_DIM_0-1)]"
+                signals += f"\nlogic {node_name}_{result}_valid;"
+                signals += f"\nlogic {node_name}_{result}_ready;"
+                continue
+            elif node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_flatten"]:
+                signals += f"\nlogic [({_cap(node_name)}_{_cap(result)}_TENSOR_SIZE_DIM_0-1):0] data_out;"
+                signals += f"\nlogic {node_name}_{result}_valid;"
+                signals += f"\nlogic {node_name}_{result}_ready;"
                 continue
 
             # Skip off-chip parameters as they will be directly connected to the top level
@@ -404,8 +446,8 @@ class VerilogInternalComponentEmitter:
                     continue
                 
                 # DiffLogic: do not emit storage interface
-                if node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_logic", "difflogic_groupsum"] and ("data_in" not in key):
-                    continue
+                # if node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_logic", "fixed_difflogic_logic"] and ("data_in" not in key):
+                #     continue
                     
                 signals += f"""
     .{key}({node_name}_{key}),
@@ -437,8 +479,8 @@ class VerilogInternalComponentEmitter:
 """
 
         # DiffLogic: do not need to generate weights and biases
-        if node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_logic", "difflogic_groupsum"]:
-            return components
+        # if node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_logic", "fixed_difflogic_logic"]:
+        #     return components
             
         # Emit module parameter instances (e.g. weights and biases)
         for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():

@@ -21,6 +21,7 @@ def get_verilog_parameters(graph):
                 new_value = "'{"
                 for num in value:
                     new_value += str(num) + ","
+                new_value = new_value[0:-1] # pop last comma for verilog
                 new_value += "}"
                 value = new_value
             elif not isinstance(value, (int, float, complex, bool)):
