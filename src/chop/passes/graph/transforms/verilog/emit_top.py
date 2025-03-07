@@ -438,7 +438,7 @@ class VerilogInternalComponentEmitter:
                 continue
             key_value = parameter_map[f"{node_name}_{key}"]
             debug_info = f"// = {key_value}"
-            parameters += f"""    .{key}({node_name}_{key}), {debug_info}\n"""
+            parameters += f"""    .{key}({node_name}_{key}),\n""" # hack: debug info removed for now as debug info may contain commas
         parameters = _remove_last_comma(parameters)
 
         # Handle getitem nodes separately since an arbitrary argument index
