@@ -64,6 +64,14 @@ from .roberta import (
     RobertaSelfAttentionZIPTF,
 )
 
+
+from .sta import (
+    SpikeAttention,
+    SpikeLN,
+    SpikeLinear_ReLU,
+    StraightThrough,
+)
+
 spiking_basic_module_map = {
     "conv1d": Conv1d,
     "conv2d": Conv2d,
@@ -107,9 +115,17 @@ spiking_roberta_module_map = {
     "roberta_self_attention_zip_tf": RobertaSelfAttentionZIPTF,
 }
 
+
+spiking_sta_module_map = {
+    "attn_sta": SpikeAttention,
+    "layernorm_sta": SpikeLN,
+    "linear_sta": SpikeLinear_ReLU,
+}
+
 spiking_module_map = {
     **spiking_basic_module_map,
     **spiking_neuron_module_map,
     **spiking_varied_module_map,
     **spiking_roberta_module_map,
+    **spiking_sta_module_map,
 }

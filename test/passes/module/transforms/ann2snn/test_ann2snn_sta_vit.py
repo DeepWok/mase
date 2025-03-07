@@ -3,88 +3,65 @@
 import logging
 import os
 import sys
-
 from chop.passes.module.transforms.snn.ann2snn import ann2snn_module_transform_pass
 import torch
 import torch.nn as nn
-
 from pathlib import Path
-
 sys.path.append(Path(__file__).resolve().parents[5].as_posix())
 
-
+resolved_path = Path(__file__).resolve().parents[5].as_posix()
+print(resolved_path)
 from chop.passes.module.transforms import quantize_module_transform_pass
-
-
+from chop.passes.module.transforms.replacement import replace_module_transform_pass
 import torch
 from torch import nn
-from transformers import RobertaForSequenceClassification, AutoTokenizer
 import json
+from transformers import ViTImageProcessor, ViTForImageClassification
 
-pretrained = "XianYiyk/roberta-relu-pretrained-sst2"
-bert = RobertaForSequenceClassification.from_pretrained(pretrained, num_labels=2)
-tokenizer = AutoTokenizer.from_pretrained(pretrained, do_lower_case=True)
-for param in bert.parameters():
-    param.requires_grad = True  # QAT training
+
+vit_class = ViTForImageClassification.from_pretrained("google/vit-base-patch16-224", attn_implementation="sdpa", torch_dtype=torch.float16)
 
 # Define the output file
-output_file = "roberta_model_arch.txt"
+output_file = "vit_model_arch.txt"
 with open(output_file, "w") as f:
-    for n, m in bert.named_modules():
+    for n, m in vit_class.named_modules():
         f.write(f"{n}: {m}\n")
 
-# def test_ann2snn_module_transform_pass():
-quan_pass_args = {
-    "by": "regex_name",
-    "roberta\.encoder\.layer\.\d+\.attention\.self": {
+# tokenizer = AutoTokenizer.from_pretrained(pretrained, do_lower_case=True)
+# for param in bert.parameters():
+#     param.requires_grad = True  # QAT training
+
+
+convert_pass_args = {
+    "by": "type",
+    "gelu": {
+        "manual_instantiate": True,
         "config": {
-            "name": "lsqinteger",
-            "level": 32,
-        }
-    },
-    "roberta\.encoder\.layer\.\d+\.attention\.output": {
-        "config": {
-            "name": "lsqinteger",
-            "level": 32,
-        }
-    },
-    "roberta\.encoder\.layer\.\d+\.output": {
-        "config": {
-            "name": "lsqinteger",
-            "level": 32,
-        }
-    },
-    "roberta\.encoder\.layer\.\d+\.intermediate": {
-        "config": {
-            "name": "lsqinteger",
-            "level": 32,
-        }
-    },
-    "classifier": {
-        "config": {
-            "name": "lsqinteger",
-            "level": 32,
-        }
+            "name": "gelu_sta",
+        },
     },
 }
-mg, _ = quantize_module_transform_pass(bert, quan_pass_args)
-# f = open(f"qann_model_arch.txt", "w")
-# f.write(str(mg))
-# f.close()
+
+
+mg, _ = replace_module_transform_pass(vit_class, convert_pass_args)
+
+# output_file = "vit_model_arch_2.txt"
+# with open(output_file, "w") as f:
+#     for n, m in mg.named_modules():
+#         f.write(f"{n}: {m}\n")
+
 
 convert_pass_args = {
     "by": "regex_name",
     "roberta\.encoder\.layer\.\d+\.attention\.self": {
         "config": {
-            "name": "zip_tf",
+            "name": "sta",
             "level": 32,
             "neuron_type": "ST-BIF",
         },
     },
 }
 mg, _ = ann2snn_module_transform_pass(mg, convert_pass_args)
-
-print("End ann2snn_module_transform_pass 1 Transformation")
 
 convert_pass_args = {
     "by": "type",
@@ -130,14 +107,6 @@ convert_pass_args = {
     },
 }
 mg, _ = ann2snn_module_transform_pass(mg, convert_pass_args)
-
-
-# output_file = "roberta_model_arch_3.txt"
-# with open(output_file, "w") as f:
-#     for n, m in mg.named_modules():
-#         f.write(f"{n}: {n}\n")
-
-
 
 # f = open(f"spiking_model_arch.txt", "w")
 # f.write(str(mg))

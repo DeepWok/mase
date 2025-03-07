@@ -192,7 +192,6 @@ def instantiate_roberta_module(
     module, postfix, prefix, module_map, module_args, network_args
 ):
     roberta_cls = module_map[f"{prefix}_{postfix}"]
-
     roberta_module = roberta_cls(
         config=network_args,
         q_config=module_args,
@@ -247,5 +246,6 @@ def manual_instantiate_module(module, module_name, module_map, additional_module
     The additional_module_args MUST match the configuration argument of the new module
     Often use in ann2snn conversion. Converting activation module or quantizor module to neurons.
     """
+    print("module_name", module_name)
     new_module = module_map[module_name](**additional_module_args["config"])
     return new_module

@@ -37,6 +37,8 @@ def convert_by_type(network, pass_args):
             module = torch.nn.ReLU
         elif type_name == "lsqinteger":
             module = LSQInteger
+        elif type_name == "attention":
+            module = torch.nn.MultiheadAttention
         else:
             raise ValueError(f"{type_name} is not supported!")
 
@@ -107,6 +109,7 @@ def convert_by_regex_name(network, pass_args):
     is_manual_instantiate = pass_args.get("manual_instantiate", False)
 
     patterns = list(pass_args.keys())
+    print("patterns", patterns)
     n_m = {}
     for n, m in network.named_modules():
         n_m[n] = m
@@ -125,6 +128,7 @@ def convert_by_regex_name(network, pass_args):
             if is_huggingface_model
             else {"config": conversion_config}
         )
+            
 
         if is_manual_instantiate:
             new_m = manual_instantiate_module(
@@ -137,6 +141,70 @@ def convert_by_regex_name(network, pass_args):
         network = replace_by_name(network, n, new_m)
 
     return network
+
+# Test the function
+
+from chop.nn.snn.modules import SpikeLN, SpikeAttention, SpikeLinear_ReLU, StraightThrough
+
+def convert_sta(network, pass_args):
+    # convert_layers = [f'transformer.resblocks[{s}]' for s in pass_args.get("convert_layers", [])]
+    convert_layers = [f'roberta.encoder.layer[{s}]' for s in pass_args.get("convert_layers", [])]
+    for m_str in convert_layers:
+        # print("Refactoring module: ",m_str)
+        m = eval(f'network.{m_str}')
+        convert_sta_module(m, pass_args)
+    return network
+
+
+def convert_sta_module(module: torch.nn.Module, pass_args, prev_module=None):
+    for name, immediate_child_module in module.named_children():
+        if isinstance(immediate_child_module, torch.nn.LayerNorm):
+            setattr(module, name, SpikeLN(T=pass_args.get("T"), module = immediate_child_module))
+            prev_module = getattr(module, name)
+            for n,m in prev_module.named_modules():
+                if isinstance(m,SpikeLinear_ReLU) and not isinstance(m.relu,StraightThrough):
+                    m.bipolar_with_memory = pass_args.get("bipolar_with_memory")
+                    m.burst_T = pass_args.get("burst_T")
+            pass
+        elif name == 'attn':
+            # print("immediate_child_module",immediate_child_module)
+            setattr(module,name,SpikeAttention(T=pass_args.get("T"),module = immediate_child_module))
+            prev_module = getattr(module, name)
+            for n,m in prev_module.named_modules():
+                # print(f"n:{n} -> m:{m}")
+                if isinstance(m,SpikeLinear_ReLU) and not isinstance(m.relu,StraightThrough):
+                    m.bipolar_with_memory = pass_args.get("bipolar_with_memory")
+                    m.burst_T = pass_args.get("burst_T")
+            pass
+        elif isinstance(immediate_child_module, torch.nn.Linear):
+
+            # print("Linear")
+            setattr(module, name, SpikeLinear_ReLU(T=pass_args.get("T"), module = immediate_child_module))
+            prev_module = getattr(module, name)
+            pass
+        elif isinstance(immediate_child_module, (torch.nn.ReLU, torch.nn.ReLU6)):
+            print("<<<---------in relu conversion---------->>>")
+            print("immediate_child_module", immediate_child_module)
+            print("prev_module", prev_module)
+            raise
+            if prev_module is not None: # nn.Linear
+                prev_module.add_module('relu', immediate_child_module)
+                setattr(module, name, StraightThrough())
+                prev_module.bipolar_with_memory = pass_args.get("bipolar_with_memory")
+                prev_module.burst_T = pass_args.get("burst_T")
+            else:
+                continue
+            pass
+        
+        else:
+            print("<<<---------in Hierachical conversion---------->>>")
+            print("immediate_child_module",immediate_child_module)
+            print("name",name)
+            print("prev_module",prev_module)
+            prev_module = convert_sta_module(
+                immediate_child_module, pass_args=pass_args, prev_module=prev_module)
+
+    return prev_module
 
 
 def ann2snn_module_transform_pass(network, pass_args):
@@ -176,6 +244,8 @@ def ann2snn_module_transform_pass(network, pass_args):
             network = convert_by_name(network, pass_args)
         case "regex_name":
             network = convert_by_regex_name(network, pass_args)
+        case "sta":
+            network = convert_sta(network, pass_args)
         case _:
             raise ValueError(f'Unsupported conversion "by": {by}')
     return network, {}

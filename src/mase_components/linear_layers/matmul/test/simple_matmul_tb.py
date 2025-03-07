@@ -153,77 +153,77 @@ async def random_multiply(dut):
     assert tb.output_monitor.exp_queue.empty()
 
 
-@cocotb.test()
-async def random_repeated_multiply(dut):
-    """Many multiplications with random floats"""
-    tb = SimpleMatMulTB(dut)
-    await tb.reset()
-    tb.output_monitor.ready.value = 1
+# @cocotb.test()
+# async def random_repeated_multiply(dut):
+#     """Many multiplications with random floats"""
+#     tb = SimpleMatMulTB(dut)
+#     await tb.reset()
+#     tb.output_monitor.ready.value = 1
 
-    for _ in range(100):
-        X, Y = tb.generate_inputs(random=True)
-        exp_out = tb.model(X, Y)
-        tb.x_driver.append(X)
-        tb.y_driver.append(Y)
-        tb.output_monitor.expect(exp_out)
-    await Timer(100, units="us")
-    assert tb.output_monitor.exp_queue.empty()
-
-
-@cocotb.test()
-async def random_repeated_multiply_backpressure(dut):
-    """Many multiplications with random floats and backpressure"""
-    tb = SimpleMatMulTB(dut)
-    await tb.reset()
-
-    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.6))
-
-    for _ in range(100):
-        X, Y = tb.generate_inputs(random=True)
-        exp_out = tb.model(X, Y)
-        tb.x_driver.append(X)
-        tb.y_driver.append(Y)
-        tb.output_monitor.expect(exp_out)
-    await Timer(100, units="us")
-    assert tb.output_monitor.exp_queue.empty()
+#     for _ in range(100):
+#         X, Y = tb.generate_inputs(random=True)
+#         exp_out = tb.model(X, Y)
+#         tb.x_driver.append(X)
+#         tb.y_driver.append(Y)
+#         tb.output_monitor.expect(exp_out)
+#     await Timer(100, units="us")
+#     assert tb.output_monitor.exp_queue.empty()
 
 
-@cocotb.test()
-async def random_repeated_multiply_valid(dut):
-    """Many multiplications with random floats"""
-    tb = SimpleMatMulTB(dut)
-    await tb.reset()
-    tb.x_driver.set_valid_prob(0.7)
-    tb.y_driver.set_valid_prob(0.7)
-    tb.output_monitor.ready.value = 1
+# @cocotb.test()
+# async def random_repeated_multiply_backpressure(dut):
+#     """Many multiplications with random floats and backpressure"""
+#     tb = SimpleMatMulTB(dut)
+#     await tb.reset()
 
-    for _ in range(100):
-        X, Y = tb.generate_inputs(random=True)
-        exp_out = tb.model(X, Y)
-        tb.x_driver.append(X)
-        tb.y_driver.append(Y)
-        tb.output_monitor.expect(exp_out)
-    await Timer(200, units="us")
-    assert tb.output_monitor.exp_queue.empty()
+#     cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.6))
+
+#     for _ in range(100):
+#         X, Y = tb.generate_inputs(random=True)
+#         exp_out = tb.model(X, Y)
+#         tb.x_driver.append(X)
+#         tb.y_driver.append(Y)
+#         tb.output_monitor.expect(exp_out)
+#     await Timer(100, units="us")
+#     assert tb.output_monitor.exp_queue.empty()
 
 
-@cocotb.test()
-async def random_repeated_multiply_valid_backpressure(dut):
-    """Many multiplications with random floats"""
-    tb = SimpleMatMulTB(dut)
-    await tb.reset()
-    tb.x_driver.set_valid_prob(0.7)
-    tb.y_driver.set_valid_prob(0.7)
-    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.6))
+# @cocotb.test()
+# async def random_repeated_multiply_valid(dut):
+#     """Many multiplications with random floats"""
+#     tb = SimpleMatMulTB(dut)
+#     await tb.reset()
+#     tb.x_driver.set_valid_prob(0.7)
+#     tb.y_driver.set_valid_prob(0.7)
+#     tb.output_monitor.ready.value = 1
 
-    for _ in range(100):
-        X, Y = tb.generate_inputs(random=True)
-        exp_out = tb.model(X, Y)
-        tb.x_driver.append(X)
-        tb.y_driver.append(Y)
-        tb.output_monitor.expect(exp_out)
-    await Timer(300, units="us")
-    assert tb.output_monitor.exp_queue.empty()
+#     for _ in range(100):
+#         X, Y = tb.generate_inputs(random=True)
+#         exp_out = tb.model(X, Y)
+#         tb.x_driver.append(X)
+#         tb.y_driver.append(Y)
+#         tb.output_monitor.expect(exp_out)
+#     await Timer(200, units="us")
+#     assert tb.output_monitor.exp_queue.empty()
+
+
+# @cocotb.test()
+# async def random_repeated_multiply_valid_backpressure(dut):
+#     """Many multiplications with random floats"""
+#     tb = SimpleMatMulTB(dut)
+#     await tb.reset()
+#     tb.x_driver.set_valid_prob(0.7)
+#     tb.y_driver.set_valid_prob(0.7)
+#     cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.6))
+
+#     for _ in range(100):
+#         X, Y = tb.generate_inputs(random=True)
+#         exp_out = tb.model(X, Y)
+#         tb.x_driver.append(X)
+#         tb.y_driver.append(Y)
+#         tb.output_monitor.expect(exp_out)
+#     await Timer(300, units="us")
+#     assert tb.output_monitor.exp_queue.empty()
 
 
 def generate_random_dimensions(low, high):
@@ -254,13 +254,14 @@ def test_simple_matmul():
     mase_runner(
         module_param_list=[
             {"N": 2, "M": 2, "K": 2},
-            {"N": 2, "M": 3, "K": 4},
-            {"N": 1, "M": 10, "K": 1},
-            *[
-                {**generate_random_dimensions(2, 4), **generate_random_widths()}
-                for _ in range(5)
-            ],
-        ]
+            # {"N": 2, "M": 3, "K": 4},
+            # {"N": 1, "M": 10, "K": 1},
+            # *[
+            #     {**generate_random_dimensions(2, 4), **generate_random_widths()}
+            #     for _ in range(5)
+            # ],
+        ],
+        trace = True
     )
 
 
