@@ -264,8 +264,9 @@ def transform_gpt2sdpa_to_mgqa(
     """
     layernorm1 = gpt2_block.ln_1
     gpt2sdpa  = gpt2_block.attn   # GPT2SdpaAttention
-    layernorm2 = gpt2_block.ln_2
+    layernorm2 = gpt2_block.ln_2  
     gpt2_mlp   = gpt2_block.mlp    # GPT2MLP
+    
     
     # 1) Retrieve the MGQA attention module
     mgqa_norms, mgqa_block, mgqa_residual = mgqa.layers[0]
@@ -312,6 +313,27 @@ def transform_gpt2sdpa_to_mgqa(
 
     mgqa_attn.attend.attn_dropout.p = gpt2sdpa.attn_dropout.p # Copy over dropout probability
     mgqa_attn.attend.causal = True  # GPT-2 standard
+
+    
+    # -------------------------load layernorm ----------------------------
+    mgqa_ln1 = mgqa.layers[0][0][0]
+    mgqa_ln2 = mgqa.layers[1][0][0]
+    mgqa_ln1.weight.data.copy_(gpt2_block.ln_1.weight.data)
+    mgqa_ln1.bias.data.copy_(gpt2_block.ln_1.bias.data)
+    mgqa_ln2.weight.data.copy_(gpt2_block.ln_2.weight.data)
+    mgqa_ln2.bias.data.copy_(gpt2_block.ln_2.bias.data)
+
+    # -------------------------load mlp ----------------------------------
+    mgqa_ff = mgqa.layers[1][1]
+    # intermediate layer
+    first_linear = mgqa_ff.ff[0][0]
+    first_linear.weight.data.copy_(gpt2_mlp.c_fc.weight.data.t())
+    first_linear.bias.data.copy_(gpt2_mlp.c_fc.bias.data)
+    # projection layer
+    last_linear = mgqa_ff.ff[-1]     # Linear(inner_dim -> dim)
+    last_linear.weight.data.copy_(gpt2_mlp.c_proj.weight.data.t())
+    last_linear.bias.data.copy_(gpt2_mlp.c_proj.bias.data)
+
 
     return mgqa
 

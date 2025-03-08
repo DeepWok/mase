@@ -36,24 +36,6 @@ tokenizer.pad_token = tokenizer.eos_token
 with open(f"{Path.home()}/Projects/mase/mase_output/bert-uncased-2epoch.pkl", "rb") as f:
     model = dill.load(f)
 
-# model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
-# model.config.problem_type = "single_label_classification"
-# model.config.pad_token_id = tokenizer.eos_token_id
-# # print(model)
-
-# trainer = get_trainer(
-#     model=model,
-#     tokenized_dataset=dataset,
-#     tokenizer=tokenizer,
-#     evaluate_metric="accuracy",
-#     num_train_epochs=2,
-# )
-# trainer.train()
-# eval_results = trainer.evaluate()
-# print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")
-# with open(f"{Path.home()}/Projects/mase/mase_output/bert-uncased-2epoch.pkl", "wb") as f:
-#     dill.dump(model, f)
-
 def test_mla_transform_pass(model):
     pass_args = {
         "by": "type",
@@ -78,9 +60,11 @@ trainer = get_trainer(
 )
 eval_results = trainer.evaluate()
 print(f"Evaluation accuracy before fintuning: {eval_results['eval_accuracy']}")
-trainer.train()
-eval_results = trainer.evaluate()
-print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")
+# trainer.train()
+# eval_results = trainer.evaluate()
+# print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")
+
+
 # mg = MaseGraph(
 #     network,
 # )
@@ -99,6 +83,24 @@ print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")
 # print(network)
 
 
+
+# model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
+# model.config.problem_type = "single_label_classification"
+# model.config.pad_token_id = tokenizer.eos_token_id
+# # print(model)
+
+# trainer = get_trainer(
+#     model=model,
+#     tokenized_dataset=dataset,
+#     tokenizer=tokenizer,
+#     evaluate_metric="accuracy",
+#     num_train_epochs=2,
+# )
+# trainer.train()
+# eval_results = trainer.evaluate()
+# print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")
+# with open(f"{Path.home()}/Projects/mase/mase_output/bert-uncased-2epoch.pkl", "wb") as f:
+#     dill.dump(model, f)
 
 # trainer = get_trainer(
 #     model=model,
