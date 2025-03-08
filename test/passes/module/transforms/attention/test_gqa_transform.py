@@ -17,6 +17,39 @@ sys.path.append(Path(__file__).resolve().parents[5].as_posix())
 
 from chop.passes.module.transforms import quantize_module_transform_pass, attention_transform_pass
 from pathlib import Path
+import time
+
+def measure_inference_speed(model, tokenizer, sample_text, device='cuda', num_warmup=5, num_runs=20):
+    """
+    Measures average inference time (seconds) for `num_runs` forward passes on a given sample_text.
+    """
+    model.to(device)
+    model.eval()
+
+    # Prepare the inputs
+    inputs = tokenizer(sample_text, return_tensors='pt', padding=True, truncation=True)
+    for k, v in inputs.items():
+        inputs[k] = v.to(device)
+
+    # Warm-up passes
+    for _ in range(num_warmup):
+        with torch.no_grad():
+            _ = model(**inputs)
+
+    # Synchronize and start timing
+    torch.cuda.synchronize()
+    start_time = time.time()
+
+    # Actual timed runs
+    for _ in range(num_runs):
+        with torch.no_grad():
+            _ = model(**inputs)
+
+    # Sync and compute elapsed time
+    torch.cuda.synchronize()
+    end_time = time.time()
+
+    return (end_time - start_time) / num_runs
 
 # --------------------------------------------------
 #   Model specifications
@@ -33,8 +66,12 @@ dataset, tokenizer = get_tokenized_dataset(
 )
 tokenizer.pad_token = tokenizer.eos_token
 
+sample_text = "This is a test input to check inference correctness."
+
 with open(f"{Path.home()}/Projects/mase/mase_output/bert-uncased-2epoch.pkl", "rb") as f:
     model = dill.load(f)
+
+# measure_inference_speed(model, tokenizer, sample_text, device='cuda:0')
 
 def test_mla_transform_pass(model):
     pass_args = {
@@ -50,6 +87,7 @@ def test_mla_transform_pass(model):
     return model
 
 model = test_mla_transform_pass(model)
+# measure_inference_speed(model, tokenizer, sample_text, device='cuda:0')
 print(model)
 trainer = get_trainer(
     model=model,
@@ -60,6 +98,9 @@ trainer = get_trainer(
 )
 eval_results = trainer.evaluate()
 print(f"Evaluation accuracy before fintuning: {eval_results['eval_accuracy']}")
+
+
+
 # trainer.train()
 # eval_results = trainer.evaluate()
 # print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")
