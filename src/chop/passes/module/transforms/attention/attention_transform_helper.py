@@ -424,7 +424,7 @@ class MLAWrapper(torch.nn.Module):
         # (6) Convert output back to fp32 if needed
         output = output.to(dtype=torch.float32)
 
-        return (output, None, None)
+        return (output.detach(), None, None)
     
 class MGQAWrapper(torch.nn.Module):
 

@@ -86,8 +86,11 @@ trainer = get_trainer(
     tokenized_dataset=tokenized_dataset,
     tokenizer=tokenizer,
     evaluate_metric="accuracy",
-    num_train_epochs=2,
+    num_train_epochs=1,
 )
+
+
+trainer.train()
 
 eval_results = trainer.evaluate()
 print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")
