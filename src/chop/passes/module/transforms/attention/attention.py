@@ -30,7 +30,7 @@ def mla_by_type(network, pass_args):
         if type_name == "bertspda":
             module = BertAttention
         elif type_name == "gpt2spda":
-            module = GPT2Block
+            module = GPT2SdpaAttention
         else:
             raise ValueError(f"{type_name} is not supported!")
         config = config["config"]
