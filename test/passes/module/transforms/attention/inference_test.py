@@ -31,8 +31,6 @@ def measure_inference_speed(model, tokenizer, sample_text, device='cuda', num_wa
     for k, v in inputs.items():
         inputs[k] = v.to(device)
 
-    print("Inputs at call:", inputs)
-
     # Warm-up passes
     for _ in range(num_warmup):
         with torch.no_grad():
