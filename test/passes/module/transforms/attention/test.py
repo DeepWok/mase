@@ -13,8 +13,8 @@ from chop.passes.module.transforms.attention.attention_transform_helper import (
 
 
 def test_gpt2sdpa_to_mgqa_correctness():
-    embed_dim = 64
-    n_heads   = 1
+    embed_dim = 256
+    n_heads   = 4
 
     gpt2_config = GPT2Config(
         n_embd=embed_dim,
@@ -36,7 +36,7 @@ def test_gpt2sdpa_to_mgqa_correctness():
 
     # Create an MGQA module
     mgqa_cfg = {
-        "causal": False,
+        "causal": True,
     }
     mgqa = gpt2sdpa_to_mgqa_init(gpt2_sdpa, mgqa_cfg)
     mgqa.eval()  # turn off dropout

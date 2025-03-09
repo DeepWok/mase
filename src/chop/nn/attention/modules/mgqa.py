@@ -1020,15 +1020,15 @@ class MGQA(nn.Module):
         v_dim = value_dim_head * kv_heads
         out_dim = value_dim_head * heads
 
-        self.to_q = nn.Linear(dim, q_dim, bias = False)
-        self.to_k = nn.Linear(dim, k_dim, bias = False)
+        self.to_q = nn.Linear(dim, q_dim, bias = True)
+        self.to_k = nn.Linear(dim, k_dim, bias = True)
 
         # shared key / values, for further memory savings during inference
         assert not (shared_kv and value_dim_head != dim_head), 'key and value head dimensions must be equal for shared key / values'
-        self.to_v = nn.Linear(dim, v_dim, bias = False) if not shared_kv else None
+        self.to_v = nn.Linear(dim, v_dim, bias = True) if not shared_kv else None
 
         # relations projection from tp-MGQA
-        self.to_r = nn.Linear(dim, v_dim, bias = False) if tensor_product else None
+        self.to_r = nn.Linear(dim, v_dim, bias = True) if tensor_product else None
 
         # add GLU gating for aggregated values, from alphafold2
         self.to_v_gate = None
@@ -1085,7 +1085,7 @@ class MGQA(nn.Module):
 
         # MGQA on MGQA
         self.attn_on_attn = on_attn
-        self.to_out = nn.Sequential(nn.Linear(out_dim, dim * 2, bias = False), nn.GLU()) if on_attn else nn.Linear(out_dim, dim, bias = False)
+        self.to_out = nn.Sequential(nn.Linear(out_dim, dim * 2, bias = True), nn.GLU()) if on_attn else nn.Linear(out_dim, dim, bias = True)
 
         # whether to rotate positions into values, for absolute positions in addition to relative
         self.rotary_embed_values = rotary_embed_values

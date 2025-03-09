@@ -108,6 +108,7 @@ def gpt2sdpa_to_mgqa_init(
 
     mgqa_kwargs = {
         "dim":              hidden_size,
+        "dim_head":         hidden_size//num_heads,
         "heads":            num_heads,                         # number of query heads
         "kv_heads":         kv_heads,                          # group or unify the KV heads
         "causal":           config.get("causal", True),        # GPT-2 is typically causal
@@ -249,7 +250,10 @@ def transform_gpt2sdpa_to_mgqa(
     with torch.no_grad():
         q_w, k_w, v_w = torch.split(c_attn_weight, embed_dim, dim=1)
         q_w, k_w, v_w = q_w.transpose(0, 1), k_w.transpose(0, 1), v_w.transpose(0, 1)
+        q_b, k_b, v_b = torch.split(c_attn_bias, embed_dim, dim=0)
+
         mgqa.to_q.weight.copy_(q_w) # query size remain identical, no change needed
+        mgqa.to_q.bias.copy_(q_b)
 
         heads = mgqa.heads
         kv_heads = mgqa.kv_heads
@@ -267,16 +271,14 @@ def transform_gpt2sdpa_to_mgqa(
         
         if mgqa.to_k is not None:
             mgqa.to_k.weight.copy_(k_w)
+            mgqa.to_k.bias.copy_(k_b)
         if mgqa.to_v is not None:
             mgqa.to_v.weight.copy_(v_w)
-
-        # If your MGQA block has biases on Q/K/V, you could copy them here.
-        # By default, from the MGQA code shown, bias=False, so we skip copying.
+            mgqa.to_v.bias.copy_(v_b)
 
         # 4) Map c_proj -> mgqa.to_out
-        mgqa.to_out.weight.copy_(c_proj_weight)
-        if mgqa.to_out.bias is not None:
-            mgqa.to_out.bias.copy_(c_proj_bias)
+        mgqa.to_out.weight.copy_(c_proj_weight.transpose(0, 1))    
+        mgqa.to_out.bias.copy_(c_proj_bias)
 
     mgqa.attend.attn_dropout.p = gpt2sdpa.attn_dropout.p # Copy over dropout probability
     mgqa.attend.causal = True  # GPT-2 standard
