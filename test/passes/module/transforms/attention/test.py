@@ -11,8 +11,6 @@ from chop.passes.module.transforms.attention.attention_transform_helper import (
 #     GPT2SdpaAttention,
 # )
 
-# ============ your transformation code (imports omitted) ============
-
 
 def test_gpt2sdpa_to_mgqa_correctness():
     embed_dim = 64
