@@ -34,8 +34,8 @@ dataset, tokenizer = get_tokenized_dataset(
 )
 tokenizer.pad_token = tokenizer.eos_token
 
-sample_text = "This is a test input to check inference correctness."
 
+# model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
 with open(f"{Path.home()}/Projects/mase/mase_output/bert-uncased-2epoch.pkl", "rb") as f:
     model = dill.load(f)
 
@@ -61,16 +61,14 @@ trainer = get_trainer(
     tokenized_dataset=dataset,
     tokenizer=tokenizer,
     evaluate_metric="accuracy",
-    num_train_epochs=2,
+    num_train_epochs=5,
 )
 eval_results = trainer.evaluate()
 print(f"Evaluation accuracy before fintuning: {eval_results['eval_accuracy']}")
 
-
-
-# trainer.train()
-# eval_results = trainer.evaluate()
-# print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")
+trainer.train()
+eval_results = trainer.evaluate()
+print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")
 
 
 # mg = MaseGraph(

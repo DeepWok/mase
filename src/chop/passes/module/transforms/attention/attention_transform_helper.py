@@ -281,7 +281,6 @@ def transform_gpt2sdpa_to_mgqa(
         mgqa.to_out.bias.copy_(c_proj_bias)
 
     mgqa.attend.attn_dropout.p = gpt2sdpa.attn_dropout.p # Copy over dropout probability
-    mgqa.attend.causal = True  # GPT-2 standard
 
     return mgqa
 
