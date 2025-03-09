@@ -27,31 +27,28 @@ module mxint_register_slice #(
     output data_out_valid,
     input data_out_ready
 );
-  initial begin
-    assert (DATA_PRECISION_0 >= DATA_PRECISION_1)
-    else $fatal("DATA_PRECISION_0 must larger than PRECISION_1");
+  logic [DATA_PRECISION_0 * IN_NUM + DATA_PRECISION_1 - 1:0] data_in_flatten;
+  logic [DATA_PRECISION_0 * IN_NUM + DATA_PRECISION_1 - 1:0] data_out_flatten;
+  for (genvar i = 0; i < IN_NUM; i++) begin : reshape
+    assign data_in_flatten[(i+1)*DATA_PRECISION_0-1:i*DATA_PRECISION_0] = mdata_in[i];
   end
-  logic [DATA_PRECISION_0 - 1:0] packed_data_in [IN_NUM:0];
-  logic [DATA_PRECISION_0 - 1:0] packed_data_out[IN_NUM:0];
-  always_comb begin : data_pack
-    packed_data_in[IN_NUM-1:0] = mdata_in;
-    packed_data_in[IN_NUM] = $signed(edata_in);
-    mdata_out = packed_data_out[IN_NUM-1:0];
-    edata_out = packed_data_out[IN_NUM];
-  end
+  assign data_in_flatten[DATA_PRECISION_0*IN_NUM+DATA_PRECISION_1-1:DATA_PRECISION_0*IN_NUM] = edata_in;
 
-  unpacked_register_slice #(
-      .DATA_WIDTH(DATA_PRECISION_0),
-      .IN_SIZE(IN_NUM + 1)
-  ) register_slice (
+  register_slice #(
+      .DATA_WIDTH(DATA_PRECISION_0 * IN_NUM + DATA_PRECISION_1)
+  ) register_slice_i (
       .clk           (clk),
       .rst           (rst),
-      .data_in       (packed_data_in),
+      .data_in       (data_in_flatten),
       .data_in_valid (data_in_valid),
       .data_in_ready (data_in_ready),
-      .data_out      (packed_data_out),
+      .data_out      (data_out_flatten),
       .data_out_valid(data_out_valid),
       .data_out_ready(data_out_ready)
   );
+  for (genvar i = 0; i < IN_NUM; i++) begin : unreshape
+    assign mdata_out[i] = data_out_flatten[(i+1)*DATA_PRECISION_0-1:i*DATA_PRECISION_0];
+  end
+  assign edata_out = data_out_flatten[DATA_PRECISION_0*IN_NUM+DATA_PRECISION_1-1:DATA_PRECISION_0*IN_NUM];
 
 endmodule

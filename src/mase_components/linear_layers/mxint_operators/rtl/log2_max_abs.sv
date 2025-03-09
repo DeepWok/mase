@@ -13,12 +13,12 @@ module log2_max_abs #(
     input  logic                 clk,
     input  logic                 rst,
     /* verilator lint_on UNUSEDSIGNAL */
-    input  logic [ IN_WIDTH-1:0] data_in       [IN_SIZE-1:0],
-    input  logic                 data_in_valid,
-    output logic                 data_in_ready,
-    output logic [OUT_WIDTH-1:0] data_out,
-    output logic                 data_out_valid,
-    input  logic                 data_out_ready
+    input  logic [ IN_WIDTH-1:0] data_in_0       [IN_SIZE-1:0],
+    input  logic                 data_in_0_valid,
+    output logic                 data_in_0_ready,
+    output logic [OUT_WIDTH-1:0] data_out_0,
+    output logic                 data_out_0_valid,
+    input  logic                 data_out_0_ready
 );
   logic [IN_WIDTH - 1:0] or_result;
   logic [IN_WIDTH - 1:0] abs_data_in[IN_SIZE - 1:0];
@@ -26,28 +26,28 @@ module log2_max_abs #(
     abs #(
         .IN_WIDTH(IN_WIDTH)
     ) abs_i (
-        .data_in (data_in[i]),
+        .data_in (data_in_0[i]),
         .data_out(abs_data_in[i])
     );
   end
   or_tree #(
       .IN_SIZE (IN_SIZE),
-      .IN_WIDTH(IN_WIDTH),
-  ) max_bas_i (
+      .IN_WIDTH(IN_WIDTH)
+  ) or_tree_i (
       .clk,
       .rst,
       .data_in(abs_data_in),
-      .data_in_valid(data_in_valid),
-      .data_in_ready(data_in_ready),
+      .data_in_valid(data_in_0_valid),
+      .data_in_ready(data_in_0_ready),
       .data_out(or_result),
-      .data_out_valid(data_out_valid),
-      .data_out_ready(data_out_ready)
+      .data_out_valid(data_out_0_valid),
+      .data_out_ready(data_out_0_ready)
   );
   log2_value #(
-      .IN_WIDTH(IN_WIDTH),
+      .IN_WIDTH(IN_WIDTH)
   ) log2_i (
       .data_in (or_result),
-      .data_out(data_out)
+      .data_out(data_out_0)
   );
 
 endmodule
