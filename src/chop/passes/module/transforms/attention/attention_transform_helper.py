@@ -352,8 +352,19 @@ class MGQAWrapper(torch.nn.Module):
         use_cache: Optional[bool] = False,
         output_attentions: Optional[bool] = False,
     ) -> Tuple[Union[torch.Tensor, Tuple[torch.Tensor]], ...]:
+        print(">>> In custom forward, got attention_mask:", attention_mask)
         
-        attention_mask = (attention_mask[:, 0, 0, :] == 0).bool()
+        if attention_mask is None:
+            # Create a default "no positions are masked" mask if needed
+            batch_size, seq_len = hidden_states.shape[0], hidden_states.shape[1]
+            attention_mask = torch.ones((batch_size, 1, 1, seq_len), device=hidden_states.device)
+        else:
+            # If the mask is 2D [bs, seq_len], expand it to 4D [bs, 1, 1, seq_len]
+            if attention_mask.dim() == 2:
+                attention_mask = attention_mask[:, None, None, :]
+            # Then do your usual operation
+            attention_mask = (attention_mask == 0).bool()
+
         # Call MGQA with the relevant tensors.
         # Pass cross-attention if encoder_hidden_states is given, otherwise self-attention.
         if encoder_hidden_states is not None:
