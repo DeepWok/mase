@@ -46,52 +46,11 @@ def test_mla_transform_pass(model):
     return model
 
 
-# model = test_mla_transform_pass(model)
-
-if __name__ == "__main__":
+def test_single_attn():
     with open(f"{Path.home()}/Projects/mase/mase_output/bert-uncased-2epoch.pkl", "rb") as f:
         model = dill.load(f)
     model = model.to(device)
     model.eval()
-
-    batch_size = 2
-    seq_len = 8
-    input_ids = torch.randint(low=0, high=1000, size=(batch_size, seq_len), device=device)
-    attention_mask = torch.ones_like(input_ids, device=device)
-
-    with torch.no_grad():
-        orig_out = model(input_ids=input_ids, attention_mask=attention_mask)
-
-        if isinstance(orig_out, tuple):
-            orig_out_tensor = orig_out[0]
-        elif hasattr(orig_out, "last_hidden_state"):
-            orig_out_tensor = orig_out.last_hidden_state
-        else:
-            orig_out_tensor = orig_out
-    
-    model_transformed = test_mla_transform_pass(model)
-    model_transformed.to(device)
-    model_transformed.eval()
-
-    with torch.no_grad():
-        new_out = model_transformed(input_ids=input_ids, attention_mask=attention_mask)
-
-        if isinstance(new_out, tuple):
-            new_out_tensor = new_out[0]
-        elif hasattr(new_out, "last_hidden_state"):
-            new_out_tensor = new_out.last_hidden_state
-        else:
-            new_out_tensor = new_out
-
-    # 5) Compare results
-    diff = (orig_out_tensor - new_out_tensor).abs().max().item()
-    print("Original output shape:", orig_out_tensor.shape)
-    print("Transformed output shape:", new_out_tensor.shape)
-    print(f"Max difference: {diff:.6f}")
-    assert diff < 1e-4, "Outputs differ too much after transform pass!"
-    
-
-def test_single_attn():
     sdpa_attn = extract_gpt2sdpa(model, layer_index=0)  # pick a layer
     sdpa_attn.eval()
     for p in sdpa_attn.parameters():
@@ -121,6 +80,53 @@ def test_single_attn():
     print("MGQA output shape:", mgqa_out.shape)
     print(f"Max difference: {diff:.6f}")
     assert diff < 1e-4, "Outputs differ too much!"
+
+if __name__ == "__main__":
+    test_single_attn()
+
+    # with open(f"{Path.home()}/Projects/mase/mase_output/bert-uncased-2epoch.pkl", "rb") as f:
+    #     model = dill.load(f)
+    # model = model.to(device)
+    # model.eval()
+
+    # batch_size = 2
+    # seq_len = 8
+    # input_ids = torch.randint(low=0, high=1000, size=(batch_size, seq_len), device=device)
+    # attention_mask = torch.ones_like(input_ids, device=device)
+
+    # with torch.no_grad():
+    #     orig_out = model(input_ids=input_ids, attention_mask=attention_mask)
+
+    #     if isinstance(orig_out, tuple):
+    #         orig_out_tensor = orig_out[0]
+    #     elif hasattr(orig_out, "last_hidden_state"):
+    #         orig_out_tensor = orig_out.last_hidden_state
+    #     else:
+    #         orig_out_tensor = orig_out
+    
+    # model_transformed = test_mla_transform_pass(model)
+    # model_transformed.to(device)
+    # model_transformed.eval()
+
+    # with torch.no_grad():
+    #     new_out = model_transformed(input_ids=input_ids, attention_mask=attention_mask)
+
+    #     if isinstance(new_out, tuple):
+    #         new_out_tensor = new_out[0]
+    #     elif hasattr(new_out, "last_hidden_state"):
+    #         new_out_tensor = new_out.last_hidden_state
+    #     else:
+    #         new_out_tensor = new_out
+
+    # # 5) Compare results
+    # diff = (orig_out_tensor - new_out_tensor).abs().max().item()
+    # print("Original output shape:", orig_out_tensor.shape)
+    # print("Transformed output shape:", new_out_tensor.shape)
+    # print(f"Max difference: {diff:.6f}")
+    # assert diff < 1e-4, "Outputs differ too much after transform pass!"
+    
+
+
 
 # def test_gpt2sdpa_to_mgqa_correctness():
 #     embed_dim = 256
