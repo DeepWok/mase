@@ -1,0 +1,391 @@
+name: MASE Regression Test
+
+on:
+  push:
+    branches: [ "main*" ]
+  pull_request:
+    branches: [ "main*" ]
+  workflow_dispatch:
+    logLevel:
+          description: 'Log level'
+          required: true
+          default: 'warning'
+          type: choice
+          options:
+            - info
+            - warning
+            - debug
+  
+jobs:
+
+  software-test:
+    runs-on: ubuntu-latest
+    container:
+      image: deepwok/mase-docker-cpu:latest
+    steps:
+
+      # -----------
+      # Clone the MASE repo and its submodules.
+      # -----------
+
+      - name: Get MASE
+        uses: actions/checkout@v3
+        with:
+            submodules: "true"
+
+      - name: Set git safe
+        run: |
+          git config --global --add safe.directory $PWD
+
+      # -----------
+      # Software Format check 
+      # -----------
+
+      - name: Check missing breakpoint 
+        run: |
+            ! grep -rnw ./src/chop -e "breakpoint()" || exit 1
+            ! grep -rn ./src/chop -e "set_trace(" || exit 1
+
+      # Choose the git commit to diff against for the purposes of linting.
+      # Since this workflow is triggered on both pushes and pull requests, w
+      # have to determine if the pull request target branch is set (which it
+      # will only be on the PR triggered flow). If it's not, then compare
+      # against the last commit.
+
+      - name: choose-commit
+        if: ${{ always() }}
+        env:
+          # Base ref is the target branch, in text form (not hash)
+          PR_BASE: ${{ github.base_ref }}
+        run: |
+          # Run clang-format
+          if [ -z "$PR_BASE" ]; then
+            DIFF_COMMIT_NAME="HEAD^"
+          else
+            DIFF_COMMIT_NAME="$PR_BASE"
+          fi
+          echo "DIFF_COMMIT_NAME=$DIFF_COMMIT_NAME" >> $GITHUB_ENV
+
+      # Since we did a shallow fetch for this repo, we must fetch the commit
+      # upon which we be diff'ing. The last step set the ref name in the
+      # $DIFF_COMMIT_NAME environment variable. When running the fetch, resolve
+      # it to the commit hash and pass that hash along to subsequent steps.
+
+      - name: git fetch base commit
+        continue-on-error: true
+        run: |
+          if echo "$DIFF_COMMIT_NAME" | grep -q HEAD; then
+            DIFF_COMMIT_SHA=$( git rev-parse $DIFF_COMMIT_NAME )
+          else
+            git fetch --recurse-submodules=no origin $DIFF_COMMIT_NAME
+            DIFF_COMMIT_SHA=$( git rev-parse origin/$DIFF_COMMIT_NAME )
+          fi
+          echo "DIFF_COMMIT=$DIFF_COMMIT_SHA" >> $GITHUB_ENV
+      
+      # Run black to check Python formatting.
+
+      - name: python-format
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.py$' || echo -n)
+          if [[ ! -z $files ]]; then
+            for f in $files
+            do
+              if [[ -f $f ]]; then
+                python3 -m black $f
+              fi
+            done
+          fi
+          git diff --ignore-submodules > python-format.patch
+          if [ -s python-format.patch ]; then
+            echo "python-format found formatting problems in the following " \
+              "files. See diff in the python-format.patch artifact."
+            cat python-format.patch
+            git diff --ignore-submodules --name-only
+            git checkout .
+            exit 1
+          fi
+          echo "python-format found no formatting problems"
+          exit 0
+
+      # Run 'git clang-format', comparing against the target commit hash. If
+      # clang-format fixed anything, fail and output a patch.
+      - name: clang-format
+        if: ${{ always() }}
+        run: |
+          # Run clang-format
+          git clang-format $DIFF_COMMIT
+          git diff --ignore-submodules > clang-format.patch
+          if [ -s clang-format.patch ]; then
+            echo "Clang-format found formatting problems in the following " \
+              "files. See diff in the clang-format.patch artifact."
+            cat clang-format.patch
+            git diff --ignore-submodules --name-only
+            git checkout .
+            exit 1
+          fi
+          echo "Clang-format found no formatting problems"
+          exit 0
+      
+      # Upload the format patches to an artifact (zip'd) associated
+      # with the workflow run. Only run this on a failure.
+      - name: Upload format patches
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        if: ${{ failure() }}
+        with:
+          name: clang-format-patches
+          path: clang-*.patch
+
+      # Unfortunately, artifact uploads are always zips so display the diff as
+      # well to provide feedback at a glance.
+      - name: clang format patches display
+        if: ${{ failure() }}
+        continue-on-error: true
+        run: |
+          # Display patches
+          if [ ! -z clang-format.patch ]; then
+            echo "Clang-format patch"
+            echo "================"
+            cat clang-format.patch
+            echo "================"
+          fi         
+       
+      # Run clang-tidy against only the changes. The 'clang-tidy-diff' script
+      # does this if supplied with the diff.
+      - name: clang-tidy
+        if: ${{ always() }}
+        run: |
+          git diff -U0 $DIFF_COMMIT...HEAD | \
+            clang-tidy-diff -path build -p1 -fix -j$(nproc)
+          git clang-format -f $DIFF_COMMIT
+          git diff --ignore-submodules > clang-tidy.patch
+          if [ -s clang-tidy.patch ]; then
+            echo "Clang-tidy problems in the following files. " \
+              "See diff in the clang-tidy.patch artifact."
+            git diff --ignore-submodules --name-only
+            git checkout .
+            exit 1
+          fi
+          echo "Clang-tidy found no problems"
+          exit 0
+     
+      # Upload the tidy patches to an artifact (zip'd) associated
+      # with the workflow run. Only run this on a failure.
+      - name: Upload tidy patches
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        if: ${{ failure() }}
+        with:
+          name: clang-tidy-patches
+          path: clang-*.patch
+      
+      # Unfortunately, artifact uploads are always zips so display the diff as
+      # well to provide feedback at a glance.
+      - name: clang tidy patches display
+        if: ${{ failure() }}
+        continue-on-error: true
+        run: |
+          if [ ! -z clang-tidy.patch ]; then
+            echo "Clang-tidy patch"
+            echo "================"
+            cat clang-tidy.patch
+            echo "================"
+          fi
+
+      # -----------
+      # Mase regression test 
+      # -----------
+      
+      - name: Mase regression test 
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$PWD/src
+          make test-sw
+          if [ ! -f software_report.xml ]; then
+            echo "software_report.xml not found!"
+            ls
+            exit 1
+          fi
+
+      # -----------
+      # Upload software regression test artifacts 
+      # -----------
+
+      - name: Upload software test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: software_report 
+          path: software_report.xml
+          if-no-files-found: error 
+          overwrite: true 
+
+  hardware-test:
+    runs-on: ubuntu-latest
+    container:
+      image: deepwok/mase-docker-cpu:latest
+    steps:
+
+      # -----------
+      # Clone the MASE repo and its submodules.
+      # -----------
+
+      - name: Get MASE
+        uses: actions/checkout@v3
+        with:
+            submodules: "true"
+
+      - name: Set git safe
+        run: |
+          git config --global --add safe.directory $PWD
+
+      # Choose the git commit to diff against for the purposes of linting.
+      # Since this workflow is triggered on both pushes and pull requests, w
+      # have to determine if the pull request target branch is set (which it
+      # will only be on the PR triggered flow). If it's not, then compare
+      # against the last commit.
+
+      - name: choose-commit
+        if: ${{ always() }}
+        env:
+          # Base ref is the target branch, in text form (not hash)
+          PR_BASE: ${{ github.base_ref }}
+        run: |
+          # Run clang-format
+          if [ -z "$PR_BASE" ]; then
+            DIFF_COMMIT_NAME="HEAD^"
+          else
+            DIFF_COMMIT_NAME="$PR_BASE"
+          fi
+          echo "DIFF_COMMIT_NAME=$DIFF_COMMIT_NAME" >> $GITHUB_ENV
+
+      # Since we did a shallow fetch for this repo, we must fetch the commit
+      # upon which we be diff'ing. The last step set the ref name in the
+      # $DIFF_COMMIT_NAME environment variable. When running the fetch, resolve
+      # it to the commit hash and pass that hash along to subsequent steps.
+
+      - name: git fetch base commit
+        continue-on-error: true
+        run: |
+          if echo "$DIFF_COMMIT_NAME" | grep -q HEAD; then
+            DIFF_COMMIT_SHA=$( git rev-parse $DIFF_COMMIT_NAME )
+          else
+            git fetch --recurse-submodules=no origin $DIFF_COMMIT_NAME
+            DIFF_COMMIT_SHA=$( git rev-parse origin/$DIFF_COMMIT_NAME )
+          fi
+          echo "DIFF_COMMIT=$DIFF_COMMIT_SHA" >> $GITHUB_ENV
+      
+      # Run verible-verilog-format to check Verilog/SystemVerilog formatting.
+      - name: verilog-format
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.sv$' || echo -n)
+          if [[ ! -z $files ]]; then
+            for f in $files
+            do
+              if [[ -f $f ]]; then
+                echo $f
+                /srcPkgs/verible/bin/verible-verilog-format $f | diff - $f
+              fi
+            done
+          fi
+          files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.v$' || echo -n)
+          if [[ ! -z $files ]]; then
+            for f in $files
+            do
+              if [[ -f $f ]]; then
+                echo $f
+                /srcPkgs/verible/bin/verible-verilog-format $f | diff - $f
+              fi
+            done
+          fi
+
+      # -----------
+      # Hardware regression test 
+      # -----------
+      
+      - name: Hardware regression test 
+        run: |
+            pip3 --version 
+            python3 --version
+            echo "PYTHONPATH is ${PYTHONPATH}"
+            export PYTHONPATH=$PYTHONPATH:$PWD/src
+            just test-hw
+            # if [ ! -f hardware_report.xml ]; then
+            #   echo "hardware_report.xml not found!"
+            #   ls
+            #   exit 1
+            # fi
+
+      # -----------
+      # TODO: Upload hardware regression test artifacts 
+      # -----------
+      # - name: Upload hardware test report
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: hardware_report 
+      #     path: hardware_report.xml
+      #     if-no-files-found: error 
+      #     overwrite: true 
+
+  build-doc:
+    needs: [software-test, hardware-test]
+    runs-on: ubuntu-latest
+    container:
+      image: deepwok/mase-docker-cpu:latest
+    steps:
+
+      # -----------
+      # Clone the MASE repo and its submodules.
+      # -----------
+
+      - name: Get MASE
+        uses: actions/checkout@v3
+        with:
+            submodules: "true"
+
+      - name: Set git safe
+        run: |
+          git config --global --add safe.directory $PWD
+
+      # -----------
+      # Fetch regression test artifacts 
+      # -----------
+
+      - name: Download software test report 
+        uses: actions/download-artifact@v4
+        with:
+          name: software_report 
+
+      # - name: Download hardware test report
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: hardware_report 
+
+      # -----------
+      # Build doc pages when the software tests passes 
+      # -----------
+
+      - name: Build sphinx html
+        run: |
+          export PYTHONPATH="${PATH}:$(pwd):$(pwd)/src"
+          cd docs
+          make html 2>&1 | tee html.log
+          ! grep -rn html.log -e "Error" || exit 1
+          cd ../..
+
+      # -----------
+      # Only deployed on the main branch 
+      # -----------
+
+      - name: Run ghp-import
+        run: |
+          if [ "${{ secrets.MASE_DOCKER_CRED }}" != "" ]; then
+            ghp-import -n -p -f docs/build/html
+            echo "MASE Doc deployed."
+          else
+            echo "Skipped MASE Doc deployment."
+          fi
+
+
