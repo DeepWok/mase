@@ -3,9 +3,8 @@
 import logging
 import os
 import sys
-src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../src"))
-sys.path.insert(0, src_path)
-
+# src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../src"))
+# sys.path.insert(0, src_path)
 import dill
 import torch
 import torch.nn as nn
@@ -20,7 +19,7 @@ sys.path.append(Path(__file__).resolve().parents[5].as_posix())
 
 from chop.passes.module.transforms import quantize_module_transform_pass, attention_transform_pass
 # FC
-from chop.passes.module.transforms import fc_transform_pass
+from chop.passes.module.transforms.attention import fc_transform_pass
 
 # --------------------------------------------------
 #   Model specifications
@@ -41,29 +40,12 @@ tokenizer.pad_token = tokenizer.eos_token
 #     model = dill.load(f)
 model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
 model.config.problem_type = "single_label_classification"
-
-def test_mla_transform_pass(model):
-    pass_args = {
-        "by": "type",
-        "gpt2spda": {
-            "config": {
-                "name": "mgqa",
-            }
-        },
-    }
-    model, _ = attention_transform_pass(model, pass_args)
-    return model
+model.config.pad_token_id = tokenizer.eos_token_id
 
 def test_fc_transform_pass(model):
-    #替换第0层 attention。
-    
-    module_name = "bert.encoder.layer.0.attention"  # bert
-    #module_name = "transformer.h.0.attn" #gpt2
+    module_name = "transformer.h.0.attn"
     model = fc_transform_pass(model, module_name, config={})
     return model
-
-model = test_mla_transform_pass(model)
-print("Model after MLA Transform:", model)
 
 model = test_fc_transform_pass(model)
 print("Model after FC Transform:", model)
