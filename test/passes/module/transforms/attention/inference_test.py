@@ -31,6 +31,8 @@ def measure_inference_speed(model, tokenizer, sample_text, device='cuda', num_wa
     for k, v in inputs.items():
         inputs[k] = v.to(device)
 
+    print("Inputs at call:", inputs)
+
     # Warm-up passes
     for _ in range(num_warmup):
         with torch.no_grad():
@@ -68,7 +70,7 @@ tokenizer.pad_token = tokenizer.eos_token
 
 sample_text = "This is a test input to check inference correctness."
 
-with open(f"{Path.home()}/Projects/mase/mase_output/bert-uncased-2epoch.pkl", "rb") as f:
+with open(f"{Path.home()}/adls/mase/mase_output/bert-uncased-2epoch.pkl", "rb") as f:
     model = dill.load(f)
 
 measure_inference_speed(model, tokenizer, sample_text, device='cuda:0')
