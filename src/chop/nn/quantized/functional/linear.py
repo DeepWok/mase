@@ -15,7 +15,7 @@ from chop.nn.quantizers import (
     minifloat_ieee_quantizer,
     binary_quantizer,
     ternary_quantizer,
-    mxint_hardware,
+    mxint_quantizer,
 )
 
 
@@ -516,68 +516,56 @@ def linearLogicNets(
     raise NotImplementedError
 
 
-def linearMXIntHardware(
+def linearMXInt(
     x: Tensor,
     weight: Tensor,
     bias: Tensor = None,
     config: dict = None,
-    out_config: dict = None,
 ):
-    w_width, w_exponent_width = (
+    # establish quantizers
+    w_width, w_exponent_width, w_block_size = (
         config["weight_width"],
         config["weight_exponent_width"],
+        config["weight_block_size"],
     )
-    w_p1, w_p0 = (
-        config["weight_parallelism"][0],
-        config["weight_parallelism"][1],
-    )
-    x_width, x_exponent_width = (
+    x_width, x_exponent_width, x_block_size = (
         config["data_in_width"],
         config["data_in_exponent_width"],
+        config["data_in_block_size"],
     )
-    x_p1, x_p0 = (
-        config["data_in_parallelism"][0],
-        config["data_in_parallelism"][1],
+    x_skip_first_dim = config.get("data_in_skip_first_dim", True)
+
+    b_width, b_exponent_width, b_block_size = (
+        config["bias_width"],
+        config["bias_exponent_width"],
+        config["bias_block_size"],
     )
-    # check bias quantizer, if not, use weight quantizer
-    b_width, b_exponent_width = config["bias_width"], config["bias_exponent_width"]
-    b_p1, b_p0 = config["bias_parallelism"][0], config["bias_parallelism"][1]
-    base_quantizer = mxint_hardware
-    if out_config is not None:
-        out_width, out_exponent_width = (
-            config["data_out_width"],
-            config["data_out_exponent_width"],
-        )
-        out_p1, out_p0 = (
-            config["data_out_parallelism_dim_1"],
-            config["data_out_parallelism_dim_0"],
-        )
-        out_quantizer = partial(
-            base_quantizer,
-            q_config={"width": out_width, "exponent_width": out_exponent_width},
-            parallelism=[out_p1, out_p0],
-        )
+
+    # blocking/unblocking 4D kernel/feature map is not supported
     w_quantizer = partial(
-        base_quantizer,
-        q_config={"width": w_width, "exponent_width": w_exponent_width},
-        parallelism=[w_p1, w_p0],
+        mxint_quantizer,
+        width=w_width,
+        exponent_width=w_exponent_width,
+        block_size=w_block_size,
+        skip_first_dim=False,
     )
     x_quantizer = partial(
-        base_quantizer,
-        q_config={"width": x_width, "exponent_width": x_exponent_width},
-        parallelism=[x_p1, x_p0],
+        mxint_quantizer,
+        width=x_width,
+        exponent_width=x_exponent_width,
+        block_size=x_block_size,
+        skip_first_dim=x_skip_first_dim,
     )
     b_quantizer = partial(
-        base_quantizer,
-        q_config={"width": b_width, "exponent_width": b_exponent_width},
-        parallelism=[b_p1, b_p0],
+        mxint_quantizer,
+        width=b_width,
+        exponent_width=b_exponent_width,
+        block_size=b_block_size,
+        skip_first_dim=False,
     )
 
     x = x_quantizer(x)
     weight = w_quantizer(weight)
     bias = b_quantizer(bias) if bias is not None else None
 
-    out = F.linear(x, weight, bias)
-    if out_config is not None:
-        out = out_quantizer(out)
-    return out
+    return F.linear(x, weight, bias)

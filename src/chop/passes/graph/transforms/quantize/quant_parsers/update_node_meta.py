@@ -28,7 +28,7 @@ QUANT_ARITH_TO_SUFFIXES = {
     "block_fp": ("width", "exponent_width", "exponent_bias", "block_size"),
     "block_minifloat": ("width", "exponent_width", "exponent_bias_width", "block_size"),
     "block_log": ("width", "exponent_bias_width", "block_size"),
-    "mxint_hardware": ("width", "exponent_width"),
+    "mxint": ("width", "exponent_width"),
 }
 
 

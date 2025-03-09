@@ -251,21 +251,21 @@ QUANT_ARITH_ENTRIES = {
             "bias_block_size",
         ),
     },
-    "mxint_hardware": {
+    "mxint": {
         "weight_entries": (
             "weight_width",
             "weight_exponent_width",
-            "weight_parallelism",
+            "weight_block_size",
         ),
         "data_in_entries": (
             "data_in_width",
             "data_in_exponent_width",
-            "data_in_parallelism",
+            "data_in_block_size",
         ),
         "bias_entries": (
             "bias_width",
             "bias_exponent_width",
-            "bias_parallelism",
+            "bias_block_size",
         ),
     },
 }

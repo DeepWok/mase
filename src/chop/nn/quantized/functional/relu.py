@@ -14,6 +14,7 @@ from chop.nn.quantizers import (
     minifloat_ieee_quantizer,
     binary_quantizer,
     ternary_quantizer,
+    mxint_quantizer,
 )
 
 
@@ -195,6 +196,34 @@ def relu_block_log(x, inplace=False, config=None):
         )
         if x_more_than_2_dims:
             x_shape = [i for i in x.shape]
+            x = torch.flatten(x, start_dim=0, end_dim=-3)
+        x = x_quantizer(x)
+        x = torch.reshape(x, x_shape)
+        return F.relu(x, inplace=inplace)
+
+
+def relu_mxint(x, inplace=False, config=None):
+    bypass = config.get("bypass", False)
+    if bypass:
+        return F.relu(x, inplace=inplace)
+    else:
+        x_width, x_exponent_width, x_block_size = (
+            config["data_in_width"],
+            config["data_in_exponent_width"],
+            config["data_in_block_size"],
+        )
+
+        x_more_than_2_dims = x.ndim > 2
+        x_quantizer = partial(
+            mxint_quantizer,
+            width=x_width,
+            exponent_width=x_exponent_width,
+            block_size=x_block_size,
+            skip_first_dim=x_more_than_2_dims,
+        )
+
+        x_shape = [i for i in x.shape]
+        if x_more_than_2_dims:
             x = torch.flatten(x, start_dim=0, end_dim=-3)
         x = x_quantizer(x)
         x = torch.reshape(x, x_shape)
