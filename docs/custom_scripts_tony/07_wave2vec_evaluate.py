@@ -138,7 +138,7 @@ class CombinedWav2Vec2CTC(nn.Module):
 combined_model = CombinedWav2Vec2CTC(encoder=mg.model, ctc_head=ctc_head, decoder=decoder, beam_width=10)
 
 # -------------------------------
-# 4. Train the model
+# 4. Train & Evaluate the model
 # -------------------------------
 
 trainer = get_trainer(
@@ -149,13 +149,12 @@ trainer = get_trainer(
     num_train_epochs=1,
     data_collator=data_collator,
 )
-# trainer.train()
+trainer.train()
 
 # Evaluate accuracy
 eval_results = trainer.evaluate()
 print(f"Evaluation WER: {eval_results['eval_wer']}")
 print(f"Evaluation loss: {eval_results['eval_loss']}")
-print(f"Evaluation model preparation time: {eval_results['eval_model_preparation_time']}")
 print(f"Evaluation runtime: {eval_results['eval_runtime']}")
 print(f"Evaluation samples per second: {eval_results['eval_samples_per_second']}")
 print(f"Evaluation steps per second: {eval_results['eval_steps_per_second']}")
