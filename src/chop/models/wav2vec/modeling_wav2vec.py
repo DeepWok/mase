@@ -1,6 +1,7 @@
 import logging
 import torch
 import torch.nn as nn
+from typing import Optional
 from transformers import Wav2Vec2Model, Wav2Vec2Config
 from chop.models.utils import register_mase_model, register_mase_checkpoint
 
@@ -25,7 +26,14 @@ class Wav2VecModelWrapper(nn.Module):
         super().__init__()
         self.model = Wav2Vec2Model(config)
         
-    def forward(self, input_values, **kwargs):
+    def forward(
+            self, 
+            input_values, 
+            attention_mask: Optional[torch.Tensor] = None,
+            labels: Optional[torch.Tensor] = None,
+            **kwargs
+        ):
+        
         return self.model(input_values, **kwargs)
 
 def _get_wav2vec_model(model_size: str, pretrained: bool = False, **kwargs):

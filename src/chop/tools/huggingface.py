@@ -77,7 +77,17 @@ def get_tokenized_dataset(
     logger.info(f"Tokenizing dataset {dataset} with AutoTokenizer for {checkpoint}.")
 
     # Load and tokenize datasets
-    raw_datasets = load_dataset(dataset)
+    raw_datasets = load_dataset(dataset,
+        data_files={
+            "train": [
+                "train-clean-100/61/70968/61-70968-0000.flac",
+                "train-clean-100/61/70968/61-70968-0001.flac"
+            ],
+            "test": [
+                "test-clean/61/70968/61-70968-0020.flac"
+            ]
+        },
+    )
     tokenizer = AutoTokenizer.from_pretrained(checkpoint)
 
     def tokenize_function(example):
@@ -100,6 +110,7 @@ def get_trainer(
     tokenized_dataset: DatasetDict,
     tokenizer: PreTrainedTokenizer,
     evaluate_metric: str = "accuracy",
+    data_collator = None,
     output_dir: str = "mase-trainer",
     use_mps_device: bool = False,
     report_to: str = "none",
@@ -143,6 +154,21 @@ def get_trainer(
             return metric.compute(predictions=predictions, references=labels)
 
         metric_fn = compute_accuracy
+
+    elif evaluate_metric == "wer":
+        def compute_wer(eval_pred):
+            logits, labels = eval_pred
+            predictions = np.argmax(logits, axis=-1)
+
+            # Convert token IDs to words using tokenizer
+            pred_texts = tokenizer.batch_decode(predictions, skip_special_tokens=True)
+            label_texts = tokenizer.batch_decode(labels, skip_special_tokens=True)
+
+            # Compute Word Error Rate
+            return {"wer": metric.compute(predictions=pred_texts, references=label_texts)}
+
+        metric_fn = compute_wer
+
     else:
         raise NotImplementedError(f"Metric {metric} not implemented.")
 
@@ -152,14 +178,18 @@ def get_trainer(
         use_mps_device=use_mps_device,
         report_to=report_to,
         num_train_epochs=num_train_epochs,
+        # remove_unused_columns=False, 
     )
+
+    if data_collator is None:
+        data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
     trainer = Trainer(
         model,
         training_args,
         train_dataset=tokenized_dataset["train"],
         eval_dataset=tokenized_dataset["test"],
-        data_collator=DataCollatorWithPadding(tokenizer=tokenizer),
+        data_collator=data_collator,
         tokenizer=tokenizer,
         compute_metrics=metric_fn,
     )

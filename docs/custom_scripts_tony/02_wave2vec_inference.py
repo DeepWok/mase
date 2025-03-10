@@ -9,9 +9,6 @@ from datasets import load_dataset
 import string
 from pyctcdecode import build_ctcdecoder
 
-# def normalize_text(text):
-#     return text.lower().translate(str.maketrans("", "", string.punctuation)).strip()
-
 full_model = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-base-960h")
 processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-base-960h")
 encoder = full_model.wav2vec2
@@ -23,7 +20,6 @@ decoder = build_ctcdecoder(vocab)
 dataset = load_dataset("librispeech_asr", "clean", split="validation", streaming=True, trust_remote_code=True)
 sample_list = list(dataset.take(50))
 for sample in sample_list:
-    # sample["text"] = normalize_text(sample["text"])
     sample["text"] = sample["text"].lower()
 
 # Use the first sample for building dummy inputs
@@ -39,7 +35,7 @@ input_values = processor(
 
 dummy_inputs = {
     "input_values": input_values,
-    "attention_mask": torch.ones_like(input_values[:, :1], dtype=torch.long),
+    #"attention_mask": torch.ones_like(input_values[:, :1], dtype=torch.long),
 }
 
 mg = MaseGraph(
@@ -53,16 +49,6 @@ print("MASE graph created successfully.")
 # -------------------------------------------------------------------
 # 5. Define a helper function for full inference (encoder + CTC head)
 # -------------------------------------------------------------------
-# def full_inference(encoder, ctc_head, processor, input_values):
-#     with torch.no_grad():
-#         # Get encoder outputs from the extracted encoder
-#         encoder_outputs = encoder(input_values).last_hidden_state
-#         logits = ctc_head(encoder_outputs)
-#         predicted_ids = torch.argmax(logits, dim=-1)
-#         # transcription = processor.batch_decode(predicted_ids, skip_special_tokens=True)[0]
-#         transcription = processor.batch_decode(predicted_ids, skip_special_tokens=True)[0].lower()
-#     return transcription
-
 def full_inference_beam(encoder, ctc_head, processor, input_values, beam_width=10):
     """
     Run the encoder (tracked by MASE) and then apply the CTC head.
@@ -71,7 +57,13 @@ def full_inference_beam(encoder, ctc_head, processor, input_values, beam_width=1
     with torch.no_grad():
         # Run the encoder to get hidden states.
         encoder_outputs = encoder(input_values)
-        hidden_states = encoder_outputs.last_hidden_state  # shape: [batch, seq_len, hidden_dim]
+        
+        # MASE-traced models return dicts, extract the tensor
+        if isinstance(encoder_outputs, dict):
+            hidden_states = encoder_outputs["last_hidden_state"]
+        else:
+            hidden_states = encoder_outputs.last_hidden_state  # Original model case
+            
         # Apply the CTC head to obtain logits.
         logits = ctc_head(hidden_states)  # shape: [batch, seq_len, vocab_size]
         # Compute log probabilities for beam search.
@@ -114,4 +106,4 @@ def evaluate_model(encoder, ctc_head, processor, dataset):
     return avg_wer
 
 print("\nEvaluating the original model on the sample subset:")
-evaluate_model(encoder, ctc_head, processor, sample_list)
+evaluate_model(mg.model, ctc_head, processor, sample_list)

@@ -2,6 +2,7 @@ import logging
 
 import torch.fx as fx
 from torch import nn
+import torch
 
 from chop.passes.graph.analysis.utils import (
     is_tensor_constant,
@@ -135,6 +136,7 @@ def graph_iterator_for_mase_ops(graph):
             node.meta["mase"].parameters["common"]["mase_op"] = mase_op
 
         elif node.op == "call_function":
+
             # we might have things like mult_1, add_2, so we need to match the pattern
             matching, matched_name = match_and_filter(
                 node.target.__name__,
@@ -235,7 +237,7 @@ def graph_iterator_for_metadata(
             analyse_fn = analyse_common_parameters_function
         elif node.op == "call_method":
             self_obj, *args = load_arg(node.args, env)
-            print(self_obj)
+            # print(self_obj)
             kwargs = load_arg(node.kwargs, env)
             result = getattr(self_obj, node.target)(*args, **kwargs)
             analyse_fn = analyse_common_parameters_method

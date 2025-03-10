@@ -98,7 +98,7 @@ func_data = {
     # https://pytorch.org/docs/stable/generated/torch.sqrt.html
     "sqrt": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.div.html
-    "div": {"input": "data_in", "other": "data_in"},
+    "div": {"rounding_mode": "config", "input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.cat.html
     "cat": {"tensors": "data_in", "dim": "config"},
     # onnx_slice (custom implementation in onnx config)
@@ -302,6 +302,23 @@ func_data = {
     "adaptive_avg_pool2d": {"input": "data_in", "output_size": "config"},
     "adaptive_max_pool1d": {"input": "data_in", "output_size": "config"},
     "adaptive_max_pool2d": {"input": "data_in", "output_size": "config"},
+    "zeros": {      # Added for Wave2Vec
+        "size": "config",         
+        "dtype": "config",        
+        "layout": "config",       
+        "device": "config",       
+        "requires_grad": "config",
+        "out": "config"           
+    },
+    "setitem": {    # Added for Wave2Vec
+        "container": "data_in",  
+        "key": "config",    
+        "value": "data_in"       
+    },
+    "invert": {     # Added for Wave2Vec
+        "input": "data_in",
+        # "out": "config"     
+    },
 }
 
 module_data = {
@@ -415,7 +432,7 @@ method_data = {
         "keepdim": "config",
     },
     # https://pytorch.org/docs/stable/generated/torch.Tensor.round.html
-    "round": {},
+    # "round": {}, # Removed for Wave2Vec
     # https://pytorch.org/docs/stable/generated/torch.Tensor.floor.html
     "floor": {},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.clamp.html
@@ -458,6 +475,17 @@ method_data = {
     },
     # https://pytorch.org/docs/stable/generated/torch.Tensor.detach.html
     "detach": {"input": "data_in"},
+    "cumsum": {"dim": "config"}, # Added for Wave2Vec
+    "flip": {       # Added for Wave2Vec
+        "input": "data_in",  
+        "dims": "config"     
+    },
+    "repeat": {
+        "size_0": "config",
+        "size_1": "config",
+        "size_2": "config",
+        "size_3": "config",
+    }, # Added for Wave2Vec
 }
 
 # ----------------------------------------------------------
@@ -715,6 +743,7 @@ def analyse_common_parameters_function(meta, result, args, kwargs, add_value=Tru
 
     # deal with result
     meta = _annotate_result_metadata(meta, result, add_value)
+    # print("Function:", mase_op) for Debugging
     # deal with args and kwargs
     meta = _annotate_arg_metadata(meta, args, kwargs, func_data[mase_op], add_value)
 
@@ -769,6 +798,7 @@ def analyse_common_parameters_module(meta, result, args, kwargs, add_value=True)
 def analyse_common_parameters_method(meta, result, args, kwargs, add_value=True):
     mase_op = meta["common"]["mase_op"]
     meta = _annotate_result_metadata(meta, result, add_value)
+    # print("Method: ", mase_op) for debugging
     meta = _annotate_arg_metadata(meta, args, kwargs, method_data[mase_op], add_value)
     return meta
 

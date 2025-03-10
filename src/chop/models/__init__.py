@@ -23,6 +23,7 @@ from .toy import *
 from .vgg_cifar.vgg_cifar import *
 from .wideresnet.wideresnet import *
 from .wav2vec.modeling_wav2vec import *
+from .wav2vec.data_collator_ctc_with_padding import *
 
 
 def get_model_info(name: str) -> MaseModelInfo:
