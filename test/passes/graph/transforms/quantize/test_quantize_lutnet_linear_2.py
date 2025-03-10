@@ -10,9 +10,7 @@ import torch.nn as nn
 from pathlib import Path
 
 sys.path.append(Path(__file__).resolve().parents[5].as_posix())
-from chop.nn.quantized.modules.linear import (
-    LinearLogicNets,
-)
+from chop.nn.quantized.modules.linear import LinearLogicNets
 
 
 def generate_input_tensor(batch_size, input_features, min_val, max_val):

@@ -9,9 +9,7 @@ from cocotb.triggers import Timer
 from mase_cocotb.runner import mase_runner
 
 
-from mase_components.helper.generate_memory import (
-    generate_sv_lut,
-)
+from mase_components.helper.generate_memory import generate_sv_lut
 
 
 DATA_IN_0_PRECISION_1 = 8

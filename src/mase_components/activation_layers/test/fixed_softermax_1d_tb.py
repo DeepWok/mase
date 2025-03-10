@@ -19,9 +19,7 @@ from mase_cocotb.utils import fixed_preprocess_tensor, bit_driver
 
 from chop.nn.quantized.functional import fixed_softermax
 
-from chop.nn.quantizers import (
-    integer_quantizer,
-)
+from chop.nn.quantizers import integer_quantizer
 
 
 class SoftermaxTB(Testbench):

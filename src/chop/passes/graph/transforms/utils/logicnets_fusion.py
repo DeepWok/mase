@@ -12,12 +12,8 @@ from torch.fx.experimental.optimization import (
     matches_module_pattern,
     replace_node_module,
 )
-from chop.nn.quantized.modules.linear import (
-    LinearLogicNets,
-)
-from chop.nn.quantized.modules.conv2d import (
-    Conv2DLogicNets,
-)
+from chop.nn.quantized.modules.linear import LinearLogicNets
+from chop.nn.quantized.modules.conv2d import Conv2DLogicNets
 
 # Housekeeping -------------------------------------------------------------------------
 logger = logging.getLogger(__file__)
