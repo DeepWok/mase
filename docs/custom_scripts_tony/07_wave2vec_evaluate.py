@@ -115,7 +115,7 @@ class CombinedWav2Vec2CTC(nn.Module):
     def forward(self, input_values, attention_mask=None, labels=None):
         encoder_out = self.encoder(input_values, attention_mask=attention_mask)
         hidden_states = encoder_out["last_hidden_state"]
-        logits = self.ctc_head(hidden_states)
+        logits = self.ctc_head(hidden_states) # outputs tensor as expected
 
         output = {"logits": logits, "labels": labels}
 
@@ -129,9 +129,6 @@ class CombinedWav2Vec2CTC(nn.Module):
             output["loss"] = loss
         else:
             if self.decoder is not None:
-                print("Logits shape:", logits.shape)
-                print("Labels shape:", labels.shape)
-                
                 log_probs = logits.log_softmax(dim=-1)
                 log_probs_np = log_probs[0].cpu().detach().numpy()
                 transcription = self.decoder.decode(log_probs_np, beam_width=self.beam_width).lower()
@@ -152,8 +149,13 @@ trainer = get_trainer(
     num_train_epochs=1,
     data_collator=data_collator,
 )
-trainer.train()
+# trainer.train()
 
 # Evaluate accuracy
 eval_results = trainer.evaluate()
-print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")
+print(f"Evaluation WER: {eval_results['eval_wer']}")
+print(f"Evaluation loss: {eval_results['eval_loss']}")
+print(f"Evaluation model preparation time: {eval_results['eval_model_preparation_time']}")
+print(f"Evaluation runtime: {eval_results['eval_runtime']}")
+print(f"Evaluation samples per second: {eval_results['eval_samples_per_second']}")
+print(f"Evaluation steps per second: {eval_results['eval_steps_per_second']}")
