@@ -9,7 +9,7 @@ where:
 - Softplus is a smooth approximation to the ReLU function and can be used to constrain the output of a machine to always be positive.
 - For numerical stability, the implementation reverts to the linear function when `input * β > threshold`.
 
-### Parameters:
+## Parameters:
 
 - `beta` (int): The β value for the Softplus formulation. Default: 1.
 - `threshold` (int): Values above this revert to a linear function. Default: 20.
