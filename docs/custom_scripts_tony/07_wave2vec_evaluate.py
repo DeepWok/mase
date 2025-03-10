@@ -129,6 +129,9 @@ class CombinedWav2Vec2CTC(nn.Module):
             output["loss"] = loss
         else:
             if self.decoder is not None:
+                print("Logits shape:", logits.shape)
+                print("Labels shape:", labels.shape)
+                
                 log_probs = logits.log_softmax(dim=-1)
                 log_probs_np = log_probs[0].cpu().detach().numpy()
                 transcription = self.decoder.decode(log_probs_np, beam_width=self.beam_width).lower()

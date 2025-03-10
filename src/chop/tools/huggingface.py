@@ -156,16 +156,30 @@ def get_trainer(
         metric_fn = compute_accuracy
 
     elif evaluate_metric == "wer":
+        # def compute_wer(eval_pred):
+        #     logits, labels = eval_pred
+        #     predictions = np.argmax(logits, axis=-1)
+
+        #     # Convert token IDs to words using tokenizer
+        #     pred_texts = tokenizer.batch_decode(predictions, skip_special_tokens=True)
+        #     label_texts = tokenizer.batch_decode(labels, skip_special_tokens=True)
+
+        #     # Compute Word Error Rate
+        #     return {"wer": metric.compute(predictions=pred_texts, references=label_texts)}
+        
         def compute_wer(eval_pred):
             logits, labels = eval_pred
-            predictions = np.argmax(logits, axis=-1)
+            # Use argmax along the last dimension for each example
+            predictions = [np.argmax(logit, axis=-1) for logit in logits]
+            
+            # Decode each prediction individually
+            pred_texts = [tokenizer.decode(pred, skip_special_tokens=True) for pred in predictions]
+            # Decode each label individually, filtering out the padding (-100)
+            label_texts = [tokenizer.decode([token for token in label if token != -100], skip_special_tokens=True)
+                        for label in labels]
 
-            # Convert token IDs to words using tokenizer
-            pred_texts = tokenizer.batch_decode(predictions, skip_special_tokens=True)
-            label_texts = tokenizer.batch_decode(labels, skip_special_tokens=True)
-
-            # Compute Word Error Rate
             return {"wer": metric.compute(predictions=pred_texts, references=label_texts)}
+
 
         metric_fn = compute_wer
 

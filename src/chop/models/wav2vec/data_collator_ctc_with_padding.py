@@ -42,7 +42,7 @@ class DataCollatorCTCWithPadding:
             setattr(self, key, value)
 
     def __call__(self, features: List[Dict[str, Union[List[int], torch.Tensor]]]) -> Dict[str, torch.Tensor]:
-        print("features: ", features[0].keys())
+        # print("features: ", features[0].keys()) # For debugging
 
         # split inputs and labels since they have to be of different lengths and need
         # different padding methods
