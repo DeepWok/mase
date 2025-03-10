@@ -131,7 +131,7 @@ def instantiate_conv2d(module, postfix, module_map, additional_module_args):
     has_bias = not (module.bias is None)
     # TODO: some transformed modules have "config" as an argument then extract the additional_module_args from it. Some directly take the additional_module_args.
     # Need to handle this better
-    if "config" in inspect.signature(conv2d.__init__).parameters:
+    if "config" in inspect.signature(conv2d_cls.__init__).parameters:
         conv2d = conv2d_cls(
             in_channels=module.in_channels,
             out_channels=module.out_channels,
