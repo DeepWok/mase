@@ -46,7 +46,6 @@ def get_activation_hook(name, info, named_info, a_config: dict):
         x = args[0]
         mask = a_rank_fn(x, info, a_sparsity)
         module.activation_mask = mask
-        # it seems like the output of this can be a non-tuple thing??
         return x * mask
 
     return ("register_forward_pre_hook", sparsify_input)
@@ -80,12 +79,17 @@ def build_pruning_hooks(info, w_config, a_config):
     return named_hooks
 
 
+# --- Modified fetch_info() ---
 def fetch_info(node, module):
-    # deal with conv2d
+    """
+    Fetches metadata for the module from the FX node.
+    For Conv2d and Linear modules, if the node's software stats are not present,
+    it falls back to the module's metadata (which should contain the movement stats
+    updated during training).
+    """
     if isinstance(module, torch.nn.Conv2d):
         a_value = node.meta["mase"].parameters["common"]["args"]["data_in_0"]["value"]
         a_shape = node.meta["mase"].parameters["common"]["args"]["data_in_0"]["shape"]
-
         w_value = node.meta["mase"].parameters["common"]["args"]["weight"]["value"]
         w_shape = node.meta["mase"].parameters["common"]["args"]["weight"]["shape"]
 
@@ -97,22 +101,20 @@ def fetch_info(node, module):
             "activation_shape": a_shape,
         }
 
-        # Register weight/activation statistics for pruning methods that require the profile_statistics_analysis_pass
         if "args" in node.meta["mase"].parameters["software"]:
-            out["activation_stats"] = node.meta["mase"].parameters["software"]["args"][
-                "data_in_0"
-            ]["stat"]
-            out["weight_stats"] = node.meta["mase"].parameters["software"]["args"][
-                "weight"
-            ]["stat"]
-
+            out["activation_stats"] = node.meta["mase"].parameters["software"]["args"]["data_in_0"]["stat"]
+            out["weight_stats"] = node.meta["mase"].parameters["software"]["args"]["weight"]["stat"]
+        elif hasattr(module, "metadata"):
+            # Fall back: iterate over module parameters and use the first available metadata
+            for pname, p in module.named_parameters():
+                if pname in module.metadata:
+                    out["stats"] = module.metadata[pname]["stats"]
+                    break
         return out
 
-    # deal with linear
     if isinstance(module, torch.nn.Linear):
         a_value = node.meta["mase"].parameters["common"]["args"]["data_in_0"]["value"]
         a_shape = node.meta["mase"].parameters["common"]["args"]["data_in_0"]["shape"]
-
         w_value = node.meta["mase"].parameters["common"]["args"]["weight"]["value"]
         w_shape = node.meta["mase"].parameters["common"]["args"]["weight"]["shape"]
         out = {
@@ -123,18 +125,16 @@ def fetch_info(node, module):
             "activation_shape": a_shape,
         }
 
-        # Register weight/activation statistics for pruning methods that require the profile_statistics_analysis_pass
         if "args" in node.meta["mase"].parameters["software"]:
-            out["activation_stats"] = node.meta["mase"].parameters["software"]["args"][
-                "data_in_0"
-            ]["stat"]
-            out["weight_stats"] = node.meta["mase"].parameters["software"]["args"][
-                "weight"
-            ]["stat"]
-
+            out["activation_stats"] = node.meta["mase"].parameters["software"]["args"]["data_in_0"]["stat"]
+            out["weight_stats"] = node.meta["mase"].parameters["software"]["args"]["weight"]["stat"]
+        elif hasattr(module, "metadata"):
+            for pname, p in module.named_parameters():
+                if pname in module.metadata:
+                    out["stats"] = module.metadata[pname]["stats"]
+                    break
         return out
 
-    # otherwise we just return None, and this module would be ignore in build_pruning_hooks
     return None
 
 
@@ -143,31 +143,26 @@ def prune_graph_iterator(graph, config: dict):
     w_config = load_weight_prune_config(config["weight"], graph)
     a_config = load_activation_prune_config(config["activation"], graph)
 
-    # we need to loop twice, the first time is to fetch all necessary information
-    # first loop
+    # First loop: fetch info from each node
     info = {}
     for node in graph.fx_graph.nodes:
-        # pruning only deals with modules at the moment
         if node.op == "call_module":
             module = graph.modules[node.target]
             meta = fetch_info(node, module)
             info[node.target] = meta
 
-    # hook building
+    # Build hooks from the info dictionary
     hooks = build_pruning_hooks(info, w_config, a_config)
 
-    # prune in second loop by applying hooks to relevant modules
+    # Second loop: apply the hooks
     for node in graph.fx_graph.nodes:
-        # pruning only deals with modules at the moment
         if node.op == "call_module":
             name = node.target
             if name in hooks.keys():
                 logger.info(f"Pruning module: {node.name}")
                 node_hooks = hooks[name]
-                # check weight hook, if it exits, apply it
                 if node_hooks["w_hook"] is not None:
                     register_name, parameterization = node_hooks["w_hook"]
-                    # apply weigh pruning
                     torch.nn.utils.parametrize.register_parametrization(
                         graph.modules[node.target], register_name, parameterization
                     )
@@ -181,35 +176,11 @@ def prune_transform_pass(graph, pass_args: dict = {}):
     """
     Apply pruning transformation to the given graph.
     This is achieved by adding a register_parametrization hook to weights
-    and a register_pre_forward hook to activations
-
+    and a register_pre_forward hook to activations.
+    
     :param graph: The input graph to be pruned.
-    :type graph: MaseGraph
-
     :param pass_args: Optional arguments for the pruning transformation.
-    :type pass_args: dict
-
-    pass_args should take the following form:
-
-    .. code-block:: python
-
-        pass_config = {
-            "weight" : {
-                "scope": "local", # ["local, "global"] are available
-                "granularity": "element", # ["element"] are available
-                "method": "l1", # ["l1", "random"] are available
-                "sparsity": 0.5, # a float between 0.0 and 1.0
-            },
-            "activation" : {
-                "scope": "local", # ["local, "global"] are available
-                "granularity": "element", # ["element"] are available
-                "method": "l1", # ["l1", "random"] are available
-                "sparsity": 0.5, # a float between 0.0 and 1.0
-        }
-
     :return: The pruned graph and an empty dictionary.
-    :rtype: tuple
     """
     graph = prune_graph_iterator(graph, pass_args)
     return graph, {}
-
