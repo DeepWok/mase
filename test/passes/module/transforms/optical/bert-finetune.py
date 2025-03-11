@@ -26,8 +26,49 @@ def bert_onn_transform(model):
             }
         },
     }
-    model, _ = optical_module_transform_pass(model, pass_args)
+
+    name_args = {
+        "by": "name",
+        "bert.encoder.layer.0.attention.self.query": {
+            "config": {
+                "name": "morr",
+                "miniblock": 4,
+                "morr_init": True,
+                "trainable_morr_bias": False,
+                "trainable_morr_scale": False,
+            }
+        },
+        "bert.encoder.layer.0.attention.self.key": {
+            "config": {
+                "name": "morr",
+                "miniblock": 4,
+                "morr_init": True,
+                "trainable_morr_bias": False,
+                "trainable_morr_scale": False,
+            }
+        },
+        "bert.encoder.layer.0.attention.self.value": {
+            "config": {
+                "name": "morr",
+                "miniblock": 4,
+                "morr_init": True,
+                "trainable_morr_bias": False,
+                "trainable_morr_scale": False,
+            }
+        },
+    }
+    model, _ = optical_module_transform_pass(model, name_args)
     return model
+
+def test_bert_inference(model, text="This is a test."):
+    """
+    Passes a sample string through the model for quick debugging.
+    """
+    tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+    inputs = tokenizer(text, return_tensors="pt")
+    outputs = model(**inputs)
+
+    return outputs
 
 def main():
     model_name = "bert-base-uncased"
@@ -68,4 +109,13 @@ def main():
     trainer.train()
 
 if __name__ == "__main__":
-    main()
+    model_name = "bert-base-uncased"
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
+
+    test_bert_inference(model)
+
+    model = bert_onn_transform(model)
+
+    test_bert_inference(model)
+    # main()
