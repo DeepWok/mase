@@ -54,52 +54,19 @@ with open(output_file, "w") as f:
         f.write(f"{n}: {m}\n")
 
 convert_pass_args = {
-    "by": "type",
-    "attention": {
-        "config": {
-            "name": "sta",
-            "T": 32,
-            "bipolar_with_memory" : True, 
-            "burst_T": 2
-        },
-    },
-    "layernorm" : {
-        "config": {
-            "name": "sta",
-            "T": 32,
-            "bipolar_with_memory" : True, 
-            "burst_T": 2
-        },
-    },
-    "linear" : {
-        "config": {
-            "name": "sta",
-            "T": 32,
-        },
-    },
-
+    "by": "sta",
+    "batch_first": True,
+    "convert_layers": ['0','1','2','3','4','5','6','7','8','9','10','11'],
+    "bipolar_with_memory" : True, 
+    "T": 32,
+    "burst_T": 2
 }
 
-mg, _ = ann2snn_module_transform_pass(mg, convert_pass_args)
-
-convert_pass_args = {
-    "by": "regex_name",
-    
-    "roberta\.encoder\.layer\.\d+\.intermediate": {
-        "manual_instantiate": True,
-        "config": {
-            "name": "relu_sta",
-            "bipolar_with_memory" : True, 
-            "burst_T": 2
-        }
-    },
-
-}
 
 mg, _ = ann2snn_module_transform_pass(mg, convert_pass_args)
 
 
-output_file = "roberta_model_arch_3_test.txt"
+output_file = "roberta_model_arch_3.txt"
 with open(output_file, "w") as f:
     for n, m in mg.named_modules():
         f.write(f"{n}: {m}\n")

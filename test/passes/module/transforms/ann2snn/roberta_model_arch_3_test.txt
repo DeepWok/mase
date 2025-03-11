@@ -4,7 +4,31 @@
       (word_embeddings): Embedding(50265, 768, padding_idx=1)
       (position_embeddings): Embedding(514, 768, padding_idx=1)
       (token_type_embeddings): Embedding(1, 768)
-      (LayerNorm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+      (LayerNorm): SpikeLN(
+        (module): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+        (spike_sqrtinv): Distilled_SQRTINV(
+          (approximator): Sequential(
+            (0): SpikeLinear_ReLU(
+              (relu): ReLU()
+            )
+            (1): StraightThrough()
+            (2): SpikeLinear_ReLU(
+              (relu): StraightThrough()
+            )
+          )
+        )
+        (spike_x2x): X2X(
+          (approximator): Sequential(
+            (0): SpikeLinear_ReLU(
+              (relu): ReLU()
+            )
+            (1): StraightThrough()
+            (2): SpikeLinear_ReLU(
+              (relu): StraightThrough()
+            )
+          )
+        )
+      )
       (dropout): Dropout(p=0.1, inplace=False)
     )
     (encoder): RobertaEncoder(
@@ -97,9 +121,13 @@
     )
   )
   (classifier): RobertaClassificationHead(
-    (dense): Linear(in_features=768, out_features=768, bias=True)
+    (dense): SpikeLinear_ReLU(
+      (relu): StraightThrough()
+    )
     (dropout): Dropout(p=0.1, inplace=False)
-    (out_proj): Linear(in_features=768, out_features=2, bias=True)
+    (out_proj): SpikeLinear_ReLU(
+      (relu): StraightThrough()
+    )
   )
 )
 roberta: RobertaModel(
@@ -107,7 +135,31 @@ roberta: RobertaModel(
     (word_embeddings): Embedding(50265, 768, padding_idx=1)
     (position_embeddings): Embedding(514, 768, padding_idx=1)
     (token_type_embeddings): Embedding(1, 768)
-    (LayerNorm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+    (LayerNorm): SpikeLN(
+      (module): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+      (spike_sqrtinv): Distilled_SQRTINV(
+        (approximator): Sequential(
+          (0): SpikeLinear_ReLU(
+            (relu): ReLU()
+          )
+          (1): StraightThrough()
+          (2): SpikeLinear_ReLU(
+            (relu): StraightThrough()
+          )
+        )
+      )
+      (spike_x2x): X2X(
+        (approximator): Sequential(
+          (0): SpikeLinear_ReLU(
+            (relu): ReLU()
+          )
+          (1): StraightThrough()
+          (2): SpikeLinear_ReLU(
+            (relu): StraightThrough()
+          )
+        )
+      )
+    )
     (dropout): Dropout(p=0.1, inplace=False)
   )
   (encoder): RobertaEncoder(
@@ -203,13 +255,120 @@ roberta.embeddings: RobertaEmbeddings(
   (word_embeddings): Embedding(50265, 768, padding_idx=1)
   (position_embeddings): Embedding(514, 768, padding_idx=1)
   (token_type_embeddings): Embedding(1, 768)
-  (LayerNorm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+  (LayerNorm): SpikeLN(
+    (module): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+    (spike_sqrtinv): Distilled_SQRTINV(
+      (approximator): Sequential(
+        (0): SpikeLinear_ReLU(
+          (relu): ReLU()
+        )
+        (1): StraightThrough()
+        (2): SpikeLinear_ReLU(
+          (relu): StraightThrough()
+        )
+      )
+    )
+    (spike_x2x): X2X(
+      (approximator): Sequential(
+        (0): SpikeLinear_ReLU(
+          (relu): ReLU()
+        )
+        (1): StraightThrough()
+        (2): SpikeLinear_ReLU(
+          (relu): StraightThrough()
+        )
+      )
+    )
+  )
   (dropout): Dropout(p=0.1, inplace=False)
 )
 roberta.embeddings.word_embeddings: Embedding(50265, 768, padding_idx=1)
 roberta.embeddings.position_embeddings: Embedding(514, 768, padding_idx=1)
 roberta.embeddings.token_type_embeddings: Embedding(1, 768)
-roberta.embeddings.LayerNorm: LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+roberta.embeddings.LayerNorm: SpikeLN(
+  (module): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+  (spike_sqrtinv): Distilled_SQRTINV(
+    (approximator): Sequential(
+      (0): SpikeLinear_ReLU(
+        (relu): ReLU()
+      )
+      (1): StraightThrough()
+      (2): SpikeLinear_ReLU(
+        (relu): StraightThrough()
+      )
+    )
+  )
+  (spike_x2x): X2X(
+    (approximator): Sequential(
+      (0): SpikeLinear_ReLU(
+        (relu): ReLU()
+      )
+      (1): StraightThrough()
+      (2): SpikeLinear_ReLU(
+        (relu): StraightThrough()
+      )
+    )
+  )
+)
+roberta.embeddings.LayerNorm.module: LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+roberta.embeddings.LayerNorm.spike_sqrtinv: Distilled_SQRTINV(
+  (approximator): Sequential(
+    (0): SpikeLinear_ReLU(
+      (relu): ReLU()
+    )
+    (1): StraightThrough()
+    (2): SpikeLinear_ReLU(
+      (relu): StraightThrough()
+    )
+  )
+)
+roberta.embeddings.LayerNorm.spike_sqrtinv.approximator: Sequential(
+  (0): SpikeLinear_ReLU(
+    (relu): ReLU()
+  )
+  (1): StraightThrough()
+  (2): SpikeLinear_ReLU(
+    (relu): StraightThrough()
+  )
+)
+roberta.embeddings.LayerNorm.spike_sqrtinv.approximator.0: SpikeLinear_ReLU(
+  (relu): ReLU()
+)
+roberta.embeddings.LayerNorm.spike_sqrtinv.approximator.0.relu: ReLU()
+roberta.embeddings.LayerNorm.spike_sqrtinv.approximator.1: StraightThrough()
+roberta.embeddings.LayerNorm.spike_sqrtinv.approximator.2: SpikeLinear_ReLU(
+  (relu): StraightThrough()
+)
+roberta.embeddings.LayerNorm.spike_sqrtinv.approximator.2.relu: StraightThrough()
+roberta.embeddings.LayerNorm.spike_x2x: X2X(
+  (approximator): Sequential(
+    (0): SpikeLinear_ReLU(
+      (relu): ReLU()
+    )
+    (1): StraightThrough()
+    (2): SpikeLinear_ReLU(
+      (relu): StraightThrough()
+    )
+  )
+)
+roberta.embeddings.LayerNorm.spike_x2x.approximator: Sequential(
+  (0): SpikeLinear_ReLU(
+    (relu): ReLU()
+  )
+  (1): StraightThrough()
+  (2): SpikeLinear_ReLU(
+    (relu): StraightThrough()
+  )
+)
+roberta.embeddings.LayerNorm.spike_x2x.approximator.0: SpikeLinear_ReLU(
+  (relu): ReLU()
+)
+roberta.embeddings.LayerNorm.spike_x2x.approximator.0.relu: ReLU()
+roberta.embeddings.LayerNorm.spike_x2x.approximator.1: StraightThrough()
+roberta.embeddings.LayerNorm.spike_x2x.approximator.2: SpikeLinear_ReLU(
+  (relu): StraightThrough()
+)
+roberta.embeddings.LayerNorm.spike_x2x.approximator.2.relu: StraightThrough()
 roberta.embeddings.dropout: Dropout(p=0.1, inplace=False)
 roberta.encoder: RobertaEncoder(
   (layer): ModuleList(
@@ -5246,10 +5405,20 @@ roberta.encoder.layer.11.output.LayerNorm.spike_x2x.approximator.2: SpikeLinear_
 roberta.encoder.layer.11.output.LayerNorm.spike_x2x.approximator.2.relu: StraightThrough()
 roberta.encoder.layer.11.output.dropout: Dropout(p=0.1, inplace=False)
 classifier: RobertaClassificationHead(
-  (dense): Linear(in_features=768, out_features=768, bias=True)
+  (dense): SpikeLinear_ReLU(
+    (relu): StraightThrough()
+  )
   (dropout): Dropout(p=0.1, inplace=False)
-  (out_proj): Linear(in_features=768, out_features=2, bias=True)
+  (out_proj): SpikeLinear_ReLU(
+    (relu): StraightThrough()
+  )
 )
-classifier.dense: Linear(in_features=768, out_features=768, bias=True)
+classifier.dense: SpikeLinear_ReLU(
+  (relu): StraightThrough()
+)
+classifier.dense.relu: StraightThrough()
 classifier.dropout: Dropout(p=0.1, inplace=False)
-classifier.out_proj: Linear(in_features=768, out_features=2, bias=True)
+classifier.out_proj: SpikeLinear_ReLU(
+  (relu): StraightThrough()
+)
+classifier.out_proj.relu: StraightThrough()

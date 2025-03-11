@@ -69,7 +69,12 @@ from .sta import (
     SpikeAttention,
     SpikeLN,
     SpikeLinear_ReLU,
+    TransformRelu,
     StraightThrough,
+    Ref_SpikeAttention,
+    Ref_SpikeLN,
+    Ref_SpikeLinear_ReLU,
+    Ref_StraightThrough,
 )
 
 spiking_basic_module_map = {
@@ -120,6 +125,7 @@ spiking_sta_module_map = {
     "attn_sta": SpikeAttention,
     "layernorm_sta": SpikeLN,
     "linear_sta": SpikeLinear_ReLU,
+    "relu_sta": TransformRelu
 }
 
 spiking_module_map = {

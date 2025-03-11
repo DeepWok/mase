@@ -29,9 +29,10 @@ class StraightThrough(nn.Module):
 
 
 class SpikeLinear_ReLU(nn.Module):
-    def __init__(self, T: int, module:nn.Module):
+    def __init__(self, in_features: int, out_features: int, bias: bool = True, **kwargs):
         super(SpikeLinear_ReLU, self).__init__()
-        self.T = T
+        module = nn.Linear(in_features=in_features, out_features=out_features, bias=bias)
+        self.T = kwargs.get('T', 32)
         self.t = 0
         self.threshold = None
         self.mem_pot = 0
@@ -145,9 +146,10 @@ def ann_qk_product(x,q_proj_weight,k_proj_weight,q_proj_bias,k_proj_bias,num_hea
 
 class SpikeAttention(nn.Module):
 
-    def __init__(self, T: int, module: nn.MultiheadAttention):
+    def __init__(self, embed_dim: int, num_heads: int, batch_first: bool = True, **kwargs):
+        module = nn.MultiheadAttention(embed_dim=embed_dim, num_heads=num_heads, batch_first=batch_first)
         super(SpikeAttention, self).__init__()
-        self.T = T
+        self.T = kwargs.get('T', 32)
         self.product = SpikeProduct(T=T,module=module)
         self.spike_x2x = x2x_to_spike_module(X2X().to(next(module.parameters()).device),T)
         self.spike_x2x_pos = x2x_pos_to_spike_module(X2X_POS().to(next(module.parameters()).device),T)
@@ -161,6 +163,13 @@ class SpikeAttention(nn.Module):
         self.sum_output = 0
         self.t = 0
         self.output_encoder = True
+        self.bipolar_with_memory = kwargs.get('bipolar_with_memory', False)
+        self.burst_T = kwargs.get('burst_T', 2)
+        for n,m in self.named_modules():
+            # print(f"n:{n} -> m:{m}")
+            if isinstance(m,SpikeLinear_ReLU) and not isinstance(m.relu,StraightThrough):
+                m.bipolar_with_memory = self.bipolar_with_memory
+                m.burst_T = self.burst_T
 
     def forward(self, input: torch.Tensor, k: torch.Tensor, v: torch.Tensor, need_weights = False, attn_mask = None):
         bsz = input.shape[1]
@@ -224,6 +233,7 @@ class SpikeAttention(nn.Module):
         self.t = 0
         self.product.init_module()
 
+
 class SpikeProduct(nn.Module):
 
     def __init__(self, T: int, module: nn.MultiheadAttention):
@@ -280,17 +290,25 @@ class LinearLN(nn.Module):
 
 
 class SpikeLN(nn.Module):
-    def __init__(self, T: int, module: nn.LayerNorm):
+    def __init__(self, normalized_shape: int, eps: float, elementwise_affine: bool,  **kwargs):
         super(SpikeLN, self).__init__()
+        module = nn.LayerNorm(normalized_shape=normalized_shape, eps=eps, elementwise_affine=elementwise_affine)
         self.module = module
-        self.T = T
+        self.T = kwargs.get('T', 32)
         self.use_spike = False
         self.t = 0
         self.gamma = module.weight
         self.beta = module.bias
         self.spike_sqrtinv = sqrtinv_to_spike_module(sqrtinv,self.T)
-        self.spike_x2x = x2x_to_spike_module(X2X().to(next(module.parameters()).device),T,belong_to_ln=True)
+        self.spike_x2x = x2x_to_spike_module(X2X().to(next(module.parameters()).device), self.T, belong_to_ln=True)
         self.output_encoder = True
+        self.bipolar_with_memory = kwargs.get('bipolar_with_memory', False)
+        self.burst_T = kwargs.get('burst_T', 2)
+
+        for n,m in self.named_modules():
+            if isinstance(m,SpikeLinear_ReLU) and not isinstance(m.relu,StraightThrough):
+                m.bipolar_with_memory = self.bipolar_with_memory
+                m.burst_T = self.burst_T
 
     def forward(self, input: torch.Tensor):
         if self.use_spike: # snn
@@ -358,7 +376,6 @@ class SpikeLN(nn.Module):
         self.t = 0
 
 
-
 # ===============================================================================
 #                                  SPIKE MODEL 
 # ===============================================================================
@@ -419,7 +436,6 @@ class SpikeLN(nn.Module):
 #                 prev_module = self.spike_module_refactor(
 #                     immediate_child_module, T=T, prev_module=prev_module)
 #         return prev_module
-    
     def set_spike_state(self, use_spike: bool = True):
         self.use_spike = use_spike
         for m in self.model.modules():
@@ -451,6 +467,27 @@ class SpikeLN(nn.Module):
             out = self.model(input)
         return out
     
+def TransformRelu (module: nn.Module, **kwargs):
+    for name, immediate_child_module in reversed(list(module.named_children())):
+        if isinstance(immediate_child_module, nn.ReLU):
+            copy_relu = copy.deepcopy(immediate_child_module)
+            copy_name = name
+
+        if copy_relu is not None and isinstance(immediate_child_module,SpikeLinear_ReLU) and isinstance(immediate_child_module.relu,StraightThrough):
+            immediate_child_module.add_module('relu', copy_relu)
+            immediate_child_module.bipolar_with_memory = kwargs.get('bipolar_with_memory', False)
+            immediate_child_module.burst_T = kwargs.get('burst_T', 32)
+            setattr(module, copy_name, StraightThrough())
+    return module
+
+#             elif isinstance(immediate_child_module, (nn.ReLU, nn.ReLU6)):
+#                 if prev_module is not None: # nn.Linear
+#                     prev_module.add_module('relu', immediate_child_module)
+#                     setattr(module, name, StraightThrough())
+#                     prev_module.bipolar_with_memory = self.bipolar_with_memory
+#                     prev_module.burst_T = self.burst_T
+#                 else:
+
 # @torch.no_grad()
 # def get_maximum_activation(train_loader: Union[torch.utils.data.DataLoader,torch.Tensor],
 #                            model: SpikeModel,
@@ -487,6 +524,10 @@ class SpikeLN(nn.Module):
 #                     break
 #         for h in hook_list:
 #             h.remove()
+
+
+
+
 
 
 def clip_floor(tensor: torch.Tensor, T: int, Vth: Union[float, torch.Tensor], shift: float = 0.0):
@@ -755,13 +796,13 @@ def fit_softmax(X,dim=-1):
 def sqrtinv_to_spike_module(ann_module,T):
     snn_module = copy.deepcopy(ann_module)
     snn_module.approximator[0]
-    snn_module.approximator[0] = SpikeLinear_ReLU(T=T,module=ann_module.approximator[0])
+
+    snn_module.approximator[0] = SpikeLinear_ReLU(T=T,in_features = ann_module.approximator[0].in_features, out_features = ann_module.approximator[0].out_features, bias = not (ann_module.approximator[0].bias is None))
     snn_module.approximator[0].relu = nn.ReLU()
     snn_module.approximator[0].belong_to_ln = True
     snn_module.approximator[1] = StraightThrough()
-    snn_module.approximator[2] = SpikeLinear_ReLU(T=T,module=ann_module.approximator[2])
+    snn_module.approximator[2] = SpikeLinear_ReLU(T=T,in_features = ann_module.approximator[2].in_features, out_features = ann_module.approximator[2].out_features, bias = not (ann_module.approximator[2].bias is None))
     return snn_module
-
 
 
 
@@ -814,19 +855,20 @@ class X2X_POS(nn.Module):
 def x2x_to_spike_module(ann_module,T,belong_to_ln=False):
     snn_module = copy.deepcopy(ann_module)
     snn_module.approximator[0]
-    snn_module.approximator[0] = SpikeLinear_ReLU(T=T,module=ann_module.approximator[0])
+
+    snn_module.approximator[0] = SpikeLinear_ReLU(T=T,in_features = ann_module.approximator[0].in_features, out_features = ann_module.approximator[0].out_features, bias = not (ann_module.approximator[0].bias is None))
     snn_module.approximator[0].relu = nn.ReLU()
     snn_module.approximator[0].belong_to_x2x = True
     snn_module.approximator[0].belong_to_ln = belong_to_ln
     snn_module.approximator[1] = StraightThrough()
-    snn_module.approximator[2] = SpikeLinear_ReLU(T=T,module=ann_module.approximator[2])
+    snn_module.approximator[2] = SpikeLinear_ReLU(T=T,in_features = ann_module.approximator[2].in_features, out_features = ann_module.approximator[2].out_features, bias = not (ann_module.approximator[2].bias is None))
     return snn_module
 
 
 def x2x_pos_to_spike_module(ann_module,T):
     snn_module = copy.deepcopy(ann_module)
     snn_module.approximator[0]
-    snn_module.approximator[0] = SpikeLinear_ReLU(T=T,module=ann_module.approximator[0])
+    snn_module.approximator[0] = SpikeLinear_ReLU(T=T,in_features = ann_module.approximator[0].in_features, out_features = ann_module.approximator[0].out_features, bias = not (ann_module.approximator[0].bias is None))
     snn_module.approximator[0].relu = nn.ReLU()
     snn_module.approximator[0].belong_to_x2x_pos = True
     snn_module.approximator[1] = StraightThrough()

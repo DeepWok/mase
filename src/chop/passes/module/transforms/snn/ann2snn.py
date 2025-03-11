@@ -106,20 +106,18 @@ def convert_by_name(network, pass_args):
 
 def convert_by_regex_name(network, pass_args):
     is_huggingface_model = check_is_huggingface_model(network)
-    is_manual_instantiate = pass_args.get("manual_instantiate", False)
-
     patterns = list(pass_args.keys())
-    print("patterns", patterns)
     n_m = {}
     for n, m in network.named_modules():
         n_m[n] = m
-
     for n, m in n_m.items():
         matched_pattern = match_a_pattern(n, patterns)
+        
         if not matched_pattern:
             continue
-
+        
         conversion_config = pass_args[matched_pattern]["config"]
+        is_manual_instantiate = pass_args[matched_pattern].get("manual_instantiate", False)
         postfix = conversion_config["name"]
 
         # same across all convert methods
@@ -135,6 +133,7 @@ def convert_by_regex_name(network, pass_args):
                 m, postfix, spiking_module_map, additional_module_args
             )
         else:
+            print("instantiating")
             new_m = instantiate_module(
                 m, postfix, spiking_module_map, additional_module_args
             )
@@ -142,9 +141,8 @@ def convert_by_regex_name(network, pass_args):
 
     return network
 
-# Test the function
-
-from chop.nn.snn.modules import SpikeLN, SpikeAttention, SpikeLinear_ReLU, StraightThrough
+# The STA specific conversion is solely for reference, and is not used in the test.
+from chop.nn.snn.modules import Ref_SpikeLN, Ref_SpikeAttention, Ref_SpikeLinear_ReLU, Ref_StraightThrough
 
 def convert_sta(network, pass_args):
     # convert_layers = [f'transformer.resblocks[{s}]' for s in pass_args.get("convert_layers", [])]
@@ -159,37 +157,51 @@ def convert_sta(network, pass_args):
 def convert_sta_module(module: torch.nn.Module, pass_args, prev_module=None):
     for name, immediate_child_module in module.named_children():
         if isinstance(immediate_child_module, torch.nn.LayerNorm):
-            setattr(module, name, SpikeLN(T=pass_args.get("T"), module = immediate_child_module))
+            # print("<-----WithinLayerNorm----->")
+            # print("module",module)
+            # print("immediate_child_module",immediate_child_module)
+            # print("name",name)
+            setattr(module, name, Ref_SpikeLN(T=pass_args.get("T"), module = immediate_child_module))
             prev_module = getattr(module, name)
+            # print("prev_module",prev_module)
             for n,m in prev_module.named_modules():
-                if isinstance(m,SpikeLinear_ReLU) and not isinstance(m.relu,StraightThrough):
+                # print(f"n:{n} -> m:{m}")
+                if isinstance(m,Ref_SpikeLinear_ReLU) and not isinstance(m.relu,Ref_StraightThrough):
                     m.bipolar_with_memory = pass_args.get("bipolar_with_memory")
                     m.burst_T = pass_args.get("burst_T")
             pass
         elif name == 'attn':
             # print("immediate_child_module",immediate_child_module)
-            setattr(module,name,SpikeAttention(T=pass_args.get("T"),module = immediate_child_module))
+            # print("<-----WithinAttention----->")
+            # print("module", module)
+            # print("immediate_child_module", immediate_child_module)
+            # print("name", name)
+            setattr(module,name,Ref_SpikeAttention(T=pass_args.get("T"),module = immediate_child_module))
             prev_module = getattr(module, name)
+            # print("prev_module",prev_module)
             for n,m in prev_module.named_modules():
                 # print(f"n:{n} -> m:{m}")
-                if isinstance(m,SpikeLinear_ReLU) and not isinstance(m.relu,StraightThrough):
+                if isinstance(m,Ref_SpikeLinear_ReLU) and not isinstance(m.relu,Ref_StraightThrough):
                     m.bipolar_with_memory = pass_args.get("bipolar_with_memory")
                     m.burst_T = pass_args.get("burst_T")
             pass
         elif isinstance(immediate_child_module, torch.nn.Linear):
 
             # print("Linear")
-            setattr(module, name, SpikeLinear_ReLU(T=pass_args.get("T"), module = immediate_child_module))
+            setattr(module, name, Ref_SpikeLinear_ReLU(T=pass_args.get("T"), module = immediate_child_module))
             prev_module = getattr(module, name)
             pass
         elif isinstance(immediate_child_module, (torch.nn.ReLU, torch.nn.ReLU6)):
-            print("<<<---------in relu conversion---------->>>")
-            print("immediate_child_module", immediate_child_module)
-            print("prev_module", prev_module)
-            raise
             if prev_module is not None: # nn.Linear
+                print("module", module)
+                print("name",name)  
+                print("<-----WithinReLU----->")
+                print("immediate_child_module",immediate_child_module)
+                print("prev_module",prev_module)
                 prev_module.add_module('relu', immediate_child_module)
-                setattr(module, name, StraightThrough())
+                print("updated prev_module",prev_module)
+                setattr(module, name, Ref_StraightThrough())
+                print("module",module)
                 prev_module.bipolar_with_memory = pass_args.get("bipolar_with_memory")
                 prev_module.burst_T = pass_args.get("burst_T")
             else:
@@ -197,10 +209,6 @@ def convert_sta_module(module: torch.nn.Module, pass_args, prev_module=None):
             pass
         
         else:
-            print("<<<---------in Hierachical conversion---------->>>")
-            print("immediate_child_module",immediate_child_module)
-            print("name",name)
-            print("prev_module",prev_module)
             prev_module = convert_sta_module(
                 immediate_child_module, pass_args=pass_args, prev_module=prev_module)
 
@@ -244,6 +252,8 @@ def ann2snn_module_transform_pass(network, pass_args):
             network = convert_by_name(network, pass_args)
         case "regex_name":
             network = convert_by_regex_name(network, pass_args)
+
+        # TODO
         case "sta":
             network = convert_sta(network, pass_args)
         case _:

@@ -188,6 +188,17 @@ def instantiate_layernorm(module, postfix, module_map, additional_module_args):
     return layernorm
 
 
+def instantiate_attention(module, postfix, module_map, additional_module_args):
+    attn_cls = module_map[f"attn_{postfix}"]
+    attn = attn_cls(
+        embed_dim=module.embed_dim,
+        num_heads=module.num_heads,
+        batch_first=module.batch_first,
+        **additional_module_args,
+    )
+    return attn
+
+
 def instantiate_roberta_module(
     module, postfix, prefix, module_map, module_args, network_args
 ):
@@ -227,6 +238,8 @@ def instantiate_module(module, postfix, module_map, additional_module_args):
         module = instantiate_embedding(module, postfix, module_map, module_args)
     elif isinstance(module, torch.nn.LayerNorm):
         module = instantiate_layernorm(module, postfix, module_map, module_args)
+    elif isinstance(module, torch.nn.MultiheadAttention):
+        module = instantiate_attention(module, postfix, module_map, module_args)
     elif is_roberta:
         module = instantiate_roberta_module(
             module, postfix, roberta_layer_name, module_map, module_args, network_args
@@ -246,6 +259,5 @@ def manual_instantiate_module(module, module_name, module_map, additional_module
     The additional_module_args MUST match the configuration argument of the new module
     Often use in ann2snn conversion. Converting activation module or quantizor module to neurons.
     """
-    print("module_name", module_name)
-    new_module = module_map[module_name](**additional_module_args["config"])
+    new_module = module_map[module_name](module, **additional_module_args["config"])
     return new_module
