@@ -1,0 +1,60 @@
+{
+  "os":  "Linux-5.14.0-427.28.1.el9_4.x86_64-x86_64-with-glibc2.34",
+  "python":  "CPython 3.11.11",
+  "startedAt":  "2025-03-10T20:21:53.597208Z",
+  "program":  "/home/jw3621/Projects/bert-onn/test/passes/module/transforms/optical/bert-finetune.py",
+  "codePath":  "test/passes/module/transforms/optical/bert-finetune.py",
+  "git":  {
+    "remote":  "https://github.com/Johnny1882/mase.git",
+    "commit":  "758710333d8ca4b7444930df91d86c7642652426"
+  },
+  "email":  "jw3621@ic.ac.uk",
+  "root":  "/home/jw3621/Projects/bert-onn",
+  "host":  "ee-tarrasque",
+  "executable":  "/home/jw3621/anaconda3/envs/mase/bin/python",
+  "codePathLocal":  "test/passes/module/transforms/optical/bert-finetune.py",
+  "cpu_count":  16,
+  "cpu_count_logical":  32,
+  "gpu":  "NVIDIA GeForce RTX 3090",
+  "gpu_count":  4,
+  "disk":  {
+    "/":  {
+      "total":  "75125227520",
+      "used":  "61026897920"
+    }
+  },
+  "memory":  {
+    "total":  "269555560448"
+  },
+  "cpu":  {
+    "count":  16,
+    "countLogical":  32
+  },
+  "gpu_nvidia":  [
+    {
+      "name":  "NVIDIA GeForce RTX 3090",
+      "memoryTotal":  "25769803776",
+      "cudaCores":  10496,
+      "architecture":  "Ampere"
+    },
+    {
+      "name":  "NVIDIA GeForce RTX 3090",
+      "memoryTotal":  "25769803776",
+      "cudaCores":  10496,
+      "architecture":  "Ampere"
+    },
+    {
+      "name":  "NVIDIA GeForce RTX 3090",
+      "memoryTotal":  "25769803776",
+      "cudaCores":  10496,
+      "architecture":  "Ampere"
+    },
+    {
+      "name":  "NVIDIA GeForce RTX 3090",
+      "memoryTotal":  "25769803776",
+      "cudaCores":  10496,
+      "architecture":  "Ampere"
+    }
+  ],
+  "cudaVersion":  "12.7"
+}
