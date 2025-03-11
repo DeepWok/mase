@@ -1,3 +1,4 @@
+
 # Ranking criteria for pruning weights
 # NOTE: For now, we assume that all ranking functions take in two positional arguments
 # (a tensor along with a sparsity target) and return an appropriately computed mask. All
@@ -176,3 +177,4 @@ activation_criteria_map = {
         }
     },
 }
+

@@ -1,10 +1,11 @@
+
 import torch
 
 from chop.tools import get_logger
 
-from .load import load_activation_prune_config, load_weight_prune_config
-from .pruning_methods import weight_criteria_map, activation_criteria_map
-from .sparse_parameterization import FakeSparseWeight, FakeStructuredSparseWeight
+from chop.passes.graph.transforms.pruning.load import load_activation_prune_config, load_weight_prune_config
+from chop.passes.graph.transforms.pruning.pruning_methods import weight_criteria_map, activation_criteria_map
+from chop.passes.graph.transforms.pruning.sparse_parameterization import FakeSparseWeight, FakeStructuredSparseWeight
 
 logger = get_logger(__name__)
 logger.setLevel("INFO")
@@ -211,3 +212,4 @@ def prune_transform_pass(graph, pass_args: dict = {}):
     """
     graph = prune_graph_iterator(graph, pass_args)
     return graph, {}
+

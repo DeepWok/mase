@@ -1,3 +1,4 @@
+
 from functools import partial
 import logging
 
@@ -151,3 +152,4 @@ def _verify_sparsity(sparsity):
         raise ValueError("Sparsity must be a float. Got {}".format(type(sparsity)))
     if sparsity < 0 or sparsity > 1:
         raise ValueError("Sparsity must be between 0 and 1. Got {}".format(sparsity))
+
