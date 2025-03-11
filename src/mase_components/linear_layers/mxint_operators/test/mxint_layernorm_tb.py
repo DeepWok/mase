@@ -12,7 +12,7 @@ from pathlib import Path
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import MultiSignalStreamDriver, MultiSignalStreamMonitor
 from mase_cocotb.runner import mase_runner
-from mxint_quant import mxint_quant_block, mxint_hardware
+from a_cx_mxint_quant import mxint_quant_block, mxint_hardware
 from utils import pack_tensor_to_mx_listed_chunk
 
 class MxIntLayerNormTB(Testbench):
@@ -147,7 +147,7 @@ class MxIntLayerNormTB(Testbench):
         self.bias_driver.load_driver(bias_processed)
 
         # Generate expected output
-        from mxint_quant.layernorm import mxint_layer_norm
+        from a_cx_mxint_quant.layernorm import mxint_layer_norm
         qinput = minput * 2**(einput.reshape(-1)[0] - input_config["width"] - 1)
         int_config = {
             "qx_lossy": True,

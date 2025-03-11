@@ -14,7 +14,7 @@ from mase_cocotb.interfaces.streaming import (
 )
 
 from mase_cocotb.runner import mase_runner
-from mxint_quant import mxint_quant_block, mxint_hardware
+from a_cx_mxint_quant import mxint_quant_block, mxint_hardware
 from typing import Literal, Optional, Tuple, Union, Dict, List
 import torch
 import math

@@ -34,8 +34,8 @@ logger = get_logger(__name__)
 sys.excepthook = excepthook
 
 
-from mxint_quant.modules import MXIntPatchEmbed
-from mxint_quant import VIT_CUSTOM_OPS
+from a_cx_mxint_quant.modules import MXIntPatchEmbed
+from a_cx_mxint_quant import VIT_CUSTOM_OPS
 
 # --------------------------------------------------
 #   Model specifications
@@ -44,7 +44,7 @@ from mxint_quant import VIT_CUSTOM_OPS
 # verified test case linear(2,4)
 
 
-from mxint_quant import MXIntLinear, MXIntGELU
+from a_cx_mxint_quant import MXIntLinear, MXIntGELU
 
 class MXIntFoldedTop(torch.nn.Module):
     def __init__(self, q_config):

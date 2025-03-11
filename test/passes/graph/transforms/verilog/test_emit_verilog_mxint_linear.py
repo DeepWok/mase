@@ -88,7 +88,7 @@ quan_args = {
 
 
 
-from mxint_quant import vit_module_level_quantize, VIT_CUSTOM_OPS
+from a_cx_mxint_quant import vit_module_level_quantize, VIT_CUSTOM_OPS
 @pytest.mark.dev
 def test_emit_verilog_linear():
     in_features = 192

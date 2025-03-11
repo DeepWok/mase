@@ -1,0 +1,40 @@
+\begin{figure*}
+    \begin{subfigure}[b]{0.3\textwidth}
+    \begin{algorithmic}[1] \footnotesize
+    \Require $X$ \Comment{Input features}
+    \Require $H$ \Comment{Number of heads}
+    \Require $L$ \Comment{Number of hidden layers}
+    \State $\quant{X_n} \gets \apprx{LayerNorm(\quant{X})} $
+    \For{$i \in [0, H)$}
+    \State $\quant{Q_i} \gets \quant{W_{Q_i}} \apprx{\times} \quant{X_n}$
+    \State $\quant{K_i} \gets \quant{W_{K_i}} \apprx{\times} \quant{X_n}$ 
+    \State $\quant{V_i} \gets \quant{W_{V_i}} \apprx{\times} \quant{X_n}$ 
+    \State $\quant{A_i} \gets \frac{\quant{Q_i} \apprx{\times} \quant{K_i}^T}{\sqrt{d_k}} $
+    \State $\quant{\hat{A}_i} \gets \apprx{softmax(\quant{A_i})} $
+    \State $\quant{B_i} \gets \quant{\hat{A}_i} \apprx{\times} \quant{V_i}$
+    \EndFor
+    \State $\quant{B_c} \gets \apprx{concat(\quant{B_0}.. \quant{B_{H-1}})} $
+    \State $\quant{B_o} \gets \quant{W_0} \apprx{\times} \quant{B_c}$
+    \State $\quant{B_n} \gets \apprx{LayerNorm(\quant{B_o} + \quant{X_n})} $
+    \State $\quant{U} \gets \quant{W_U} \apprx{\times} \quant{B_n}$
+    \State $\quant{D} \gets \quant{W_D} (\apprx{GELU(\quant{U})})$
+    \State $\quant{O} \gets \quant{D} + \quant{B_n}$
+    \State \Return $\quant{O}$
+    \end{algorithmic}
+    \caption{An algorithm view of a block in the ViT model.
+    Values highlighted in \quant{\em blue} represent quantized values, and operations highlighted in \apprx{green} represent approximated operations.}
+    \label{fig:motivation}
+    \end{subfigure}
+    \hfill
+    % \begin{subfigure}[b]{0.01\textwidth}
+    % ~
+    % \end{subfigure}
+    \begin{subfigure}[b]{0.6\textwidth}
+    \caption{An architecture view of the proposed hardware accelerator.
+    The proposed architecture pipelines the model in a hierarchical dataflow, and tailors each operation for high area efficiency.}
+    \label{fig:motivation}
+    \end{subfigure}
+    \caption{An overview of the proposed accelerator architecture.}
+    \label{fig:motivation}
+    \end{figure*}
+    

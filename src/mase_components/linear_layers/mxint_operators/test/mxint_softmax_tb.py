@@ -58,8 +58,8 @@ class MXIntSoftmaxTB(Testbench):
         inputs = []
         exp_outputs = []
         torch.manual_seed(0)
-        from mxint_quant.softmax import MXIntSoftmax
-        from mxint_quant.quantizers import mxint_hardware 
+        from a_cx_mxint_quant.softmax import MXIntSoftmax
+        from a_cx_mxint_quant.quantizers import mxint_hardware 
         for _ in range(self.num):
             data = 49 * torch.rand(int(self.dut.DATA_IN_0_DIM)) - 24.5
             q_config = {

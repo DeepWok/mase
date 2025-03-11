@@ -1,0 +1,29 @@
+
+# Parameters for rea
+img_size: 224
+in_chans: 3
+patch_size: 16
+n: 196
+embed_dim: 192
+num_heads: 3 
+# General parameters
+config:
+  data_width: 4
+  data_exponent_width: 4
+  weight_width: 4
+  weight_exponent_width: 4
+  bias_width: 4
+  bias_exponent_width: 4
+
+parallelism: 1
+mlp_parallelism: 1
+# Parameters for vit folded top test
+folded_depth: 1  # number of times to fold/reuse the streaming blocks
+stream_depth: 12  # number of transformer blocks in streaming pipeline
+# Project directory
+# project_dir: "/scratch/cx922/mase/mxint_deit_tiny_f4_m3"
+
+# project_dir: "/home/cx922/optimized_final_result/deit_tiny"
+project_dir: "/home/cx922/fp8_result/deit_tiny"
+# project_dir: "/scratch/cx922/mase/deit_tiny_check"
+

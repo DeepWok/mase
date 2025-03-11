@@ -1,0 +1,32 @@
+# This Dockerfile configures a Docker environment that
+# contains all the required packages for the tool
+FROM ubuntu:22.04
+
+USER root
+
+# Install apt packages 
+ADD install-pkgs-python13.sh install-pkgs-python13.sh
+RUN bash install-pkgs-python13.sh
+
+CMD ["bash"]
+
+# Ensure pip is installed for python3.13 if it's missing dependencies
+RUN python3 -m ensurepip --upgrade && \
+    python3 -m pip install --upgrade pip
+
+# Install PyTorch and Torch-MLIR
+RUN pip3 install --upgrade pip
+RUN pip3 install --pre torch-mlir torchvision \
+                 -f https://github.com/llvm/torch-mlir-release/releases/expanded_assets/dev-wheels \
+                 --extra-index-url https://download.pytorch.org/whl/nightly/cpu
+
+# Install pip packages 
+ADD install-pips-python13.sh install-pips-python13.sh
+RUN bash install-pips-python13.sh
+
+# Add environment variables
+ARG VHLS_PATH
+ARG VHLS_VERSION
+ADD install-env.sh install-env.sh
+RUN bash install-env.sh $VHLS_PATH $VHLS_VERSION
+

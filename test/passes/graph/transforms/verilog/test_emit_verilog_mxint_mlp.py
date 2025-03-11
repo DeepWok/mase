@@ -23,7 +23,7 @@ from utils import (
     manually_update_hardware_parallelism_param,
 )
 sys.path.append(Path(__file__).resolve().parents[5].as_posix())
-from mxint_quant import (
+from a_cx_mxint_quant import (
     vit_module_level_quantize, 
     VIT_CUSTOM_OPS
 )

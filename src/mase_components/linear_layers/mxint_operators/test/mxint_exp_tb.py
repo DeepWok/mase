@@ -20,7 +20,7 @@ import torch
 import math
 from functools import partial
 import random
-from mxint_quant.softmax import MXIntHardwareExp
+from a_cx_mxint_quant.softmax import MXIntHardwareExp
 
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.DEBUG)
@@ -70,8 +70,8 @@ class MXIntExpTB(Testbench):
 
         for _ in range(self.num):
             data = 49 * torch.rand(q_config["block_size"]) - 24.5
-            from mxint_quant.quantizers import mxint_quant_block
-            from mxint_quant.softmax import MXIntHardwareExp
+            from a_cx_mxint_quant.quantizers import mxint_quant_block
+            from a_cx_mxint_quant.softmax import MXIntHardwareExp
             (qdata_in, mdata_in, edata_in) = mxint_quant_block(
                 data,
                 q_config["data_in_width"],

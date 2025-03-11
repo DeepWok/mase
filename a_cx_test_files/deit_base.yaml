@@ -1,0 +1,27 @@
+# Parameters for real top test
+img_size: 224
+in_chans: 3
+patch_size: 16
+n: 196
+embed_dim: 768
+num_heads: 12 
+
+# Parameters for vit folded top test
+config:
+  data_width: 6
+  data_exponent_width: 8
+  weight_width: 6
+  weight_exponent_width: 8
+  bias_width: 6
+  bias_exponent_width: 8
+
+parallelism: 16
+mlp_parallelism: 64
+
+folded_depth: 6  # number of times to fold/reuse the streaming blocks
+stream_depth: 2  # number of transformer blocks in streaming pipeline
+
+# Project directory
+# project_dir: "/home/cx922/v80_mxint_hardware/deit_base/"
+project_dir: "/home/cx922/optimized1_final_result/deit_base"
+# project_dir: "/home/cx922/fp8_result/deit_tiny"

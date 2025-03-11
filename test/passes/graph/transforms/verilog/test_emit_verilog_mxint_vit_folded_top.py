@@ -41,7 +41,7 @@ from chop.nn.quantized.modules.attention import _ViTAttentionBase
 # --------------------------------------------------
 # verified test case linear(2,4)
 
-from mxint_quant import MXIntAddition, vit_module_level_quantize, VIT_CUSTOM_OPS
+from a_cx_mxint_quant import MXIntAddition, vit_module_level_quantize, VIT_CUSTOM_OPS
 
 class MxIntBlock(torch.nn.Module):
     """

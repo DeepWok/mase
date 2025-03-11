@@ -50,7 +50,7 @@ class MxIntCastTB(Testbench):
     def generate_inputs(self, num):
         inputs = []
         exp_outputs = []
-        from mxint_quant import mxint_quant_block
+        from a_cx_mxint_quant import mxint_quant_block
         for _ in range(num):
             data = 20 * torch.rand(int(self.dut.BLOCK_SIZE))
             (data_in, mdata_in, edata_in) = mxint_quant_block(

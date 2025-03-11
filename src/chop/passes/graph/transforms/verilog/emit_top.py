@@ -1165,7 +1165,7 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
                 func = "Unknown"
             mult = 1
             sys.path.append(Path(__file__).resolve().parents[6].as_posix())
-            from mxint_quant import MXIntGELU
+            from a_cx_mxint_quant import MXIntGELU
             if func != "Unknown":
                 if isinstance(module, ViTAttentionInteger):
                     d_in_width = node.meta["mase"].parameters["hardware"][
