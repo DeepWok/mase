@@ -46,9 +46,9 @@ module optimized_right_shift #(
   end
 
   for (genvar i = 0; i < BLOCK_SIZE; i++) begin
-    for (genvar j = 0; j < SHIFT_DATA_WIDTH - 1; j++) begin
+    for (genvar j = 0; j < SHIFT_DATA_WIDTH; j++) begin
       always_comb begin
-        shift_data_list[i][j] = (shift_value[SHIFT_WIDTH-1]) ? $signed(data_in[i]) <<< j :
+        shift_data_list[i][j] = (shift_sign) ? $signed(data_in[i]) <<< j :
             $signed(data_in[i]) >>> j;
       end
     end

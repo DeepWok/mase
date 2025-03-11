@@ -67,6 +67,7 @@ class CustomModel(torch.nn.Module):
         attn = self.norm2(attn)
         result = self.add(attn, mlp)
         return result
+
 parallelism = 16
 quan_args = {
     "by": "type",
@@ -176,10 +177,10 @@ quan_args = {
 
 @pytest.mark.dev
 def test_emit_verilog_linear():
-    dim = 64
-    num_heads = 2
+    dim = 192
+    num_heads = 3
     batch_size = 1
-    n = 2
+    n = 196
     model_config = {
         "dim": dim,
         "num_heads": num_heads,

@@ -560,7 +560,7 @@ def emit_bram_handshake(node, rtl_dir):
                 rtl_dir, f"{node_name}_{param_verilog_name}_source.sv"
             )
             data_name = os.path.join(
-                f"sim_build/{node_name}_{param_verilog_name}_rom.dat"
+                rtl_dir, f"{node_name}_{param_verilog_name}_rom.dat"
             )
             if node.meta["mase"].parameters["common"]["quant_type"] == "mxint_hardware":
                 emit_mxint_parameters_in_mem_internal(

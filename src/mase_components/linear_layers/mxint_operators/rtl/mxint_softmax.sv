@@ -75,7 +75,7 @@ module mxint_softmax #(
   // Straight path signals
   logic [DATA_EXP_0_PRECISION_0-1:0] straight_exp_mdata_out[DATA_IN_0_PARALLELISM-1:0];
   logic [DATA_EXP_0_PRECISION_1-1:0] straight_exp_edata_out;
-  logic straight_exp_data_valid, straight_exp_data_ready;
+  logic straight_exp_data_out_valid, straight_exp_data_out_ready;
 
   // Accumulator signals
   logic [ACC_WIDTH-1:0] acc_mdata_out[BLOCK_SIZE-1:0];
