@@ -4,28 +4,31 @@ import logging
 import torch
 import torch.nn as nn
 
-
 logger = logging.getLogger(__name__)
 
-
-# Constants ----------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Pruneable MASE operators
 # NOTE: We don't do activation pruning for conv1d and linear layers.
-PRUNEABLE_OPS = {"conv1d": nn.Conv1d, "conv2d": nn.Conv2d, "linear": nn.Linear}
+# ------------------------------------------------------------------------------
+PRUNEABLE_OPS = {
+    "conv1d": nn.Conv1d,
+    "conv2d": nn.Conv2d,
+    "linear": nn.Linear
+}
 
-WEIGHT_PRUNE_METHODS = ["random", "l1-norm"]
-ACTIVATION_PRUNE_METHODS = ["random", "l1-norm"]
+# ------------------------------------------------------------------------------
+# Add "movement" to these lists so the pruning pass recognizes it.
+# ------------------------------------------------------------------------------
+WEIGHT_PRUNE_METHODS = ["random", "l1-norm", "movement"]
+ACTIVATION_PRUNE_METHODS = ["random", "l1-norm", "movement"]
 
-# A registry of available pruning strategies (i.e. algorithms)
-# PRUNE_METHODS = {
-#     # A basic one-shot pruner that prunes to a given sparsity level
-#     "level-pruner": LevelPruner,
-#     "channel-pruner": ChannelPruner,
-#     # Add more here...
-# }
-
-
-def load(config: dict):
+# ------------------------------------------------------------------------------
+# The main load functions that parse and validate pruning configs
+# ------------------------------------------------------------------------------
+def load(config: dict, graph):
+    """
+    Common loader for the config, which also verifies scope, granularity, and sparsity.
+    """
     sparsity = config.get("sparsity", 0.0)
     scope = config.get("scope", "local")
     granularity = config.get("granularity", "elementwise")
@@ -42,12 +45,12 @@ def load(config: dict):
                 scope, ["local", "global"]
             )
         )
+    # If the user provided a dictionary of layer-wise sparsities, validate them:
     if isinstance(sparsity, dict):
         # Make sure that the scope is local
-        if scope != "local":  # not local
+        if scope != "local":
             raise ValueError("Layer-wise budgets only possible with a local scope!")
-
-        # Verify that the keys are valid node names and that the values are valid
+        # Verify that the keys are valid node names in the FX graph
         names = [node.target for node in graph.fx_graph.nodes]
         for name in sparsity.keys():
             if name not in names:
@@ -55,14 +58,18 @@ def load(config: dict):
             _verify_sparsity(sparsity[name])
     else:
         _verify_sparsity(sparsity)
+
     return sparsity, scope, granularity
 
-
 def load_weight_prune_config(config: dict, graph):
-    sparsity, scope, granularity = load(config)
-
+    """
+    Loads and validates the weight pruning config.
+    Expects config to have 'method', 'sparsity', 'scope', and 'granularity'.
+    """
+    sparsity, scope, granularity = load(config, graph)
     method = config.get("method", "random")
-    # Validate the parameters
+
+    # Validate the method
     if method not in WEIGHT_PRUNE_METHODS:
         raise ValueError(
             "Unsupported pruning method {}. Please choose from {}".format(
@@ -77,12 +84,15 @@ def load_weight_prune_config(config: dict, graph):
         "sparsity": sparsity,
     }
 
-
 def load_activation_prune_config(config: dict, graph):
-    sparsity, scope, granularity = load(config)
-
+    """
+    Loads and validates the activation pruning config.
+    Expects config to have 'method', 'sparsity', 'scope', and 'granularity'.
+    """
+    sparsity, scope, granularity = load(config, graph)
     method = config.get("method", "random")
-    # Validate the parameters
+
+    # Validate the method
     if method not in ACTIVATION_PRUNE_METHODS:
         raise ValueError(
             "Unsupported pruning method {}. Please choose from {}".format(
@@ -97,15 +107,14 @@ def load_activation_prune_config(config: dict, graph):
         "sparsity": sparsity,
     }
 
-
-# Get a pre-trained vision model from Torchvision and return the layer-wise sparsity
-# distribution that a globally scoped pruner would compute for it.
-# NOTE: Here, we assume the dataset is ImageNet, as indicated by the number of classes
-# in the dataset info.  This will need fixing later to support any dataset the user
-# wants to use. Also, this code is really similar to the one in the level pruner, except
-# that here we do it for the full model. We should probably refactor this later.
+# ------------------------------------------------------------------------------
+# Example function for distributing global sparsity (not used by MASE by default)
+# ------------------------------------------------------------------------------
 def get_unfused_distribution(sparsity: float, criterion: callable, name: str):
-    # We import here to avoid a failing test via a circular import in the CI.
+    """
+    Example function that could compute a layer-wise sparsity distribution
+    for a given global sparsity target. Not used by default in MASE.
+    """
     from chop.models.vision import VISION_MODELS, get_vision_model
 
     if name is None or name not in VISION_MODELS:
@@ -113,48 +122,32 @@ def get_unfused_distribution(sparsity: float, criterion: callable, name: str):
 
     model = get_vision_model(name, "cls", {"num_classes": 1000}, pretrained=True)
     tensors = {}
-    sparsities = {}
 
-    for name, module in model.named_modules():
+    for mod_name, module in model.named_modules():
         if not isinstance(module, tuple(PRUNEABLE_OPS.values())):
             continue
-
-        # Collect all the weight tensors in the model
-        tensors[name] = {
+        # Collect weight tensors
+        tensors[mod_name] = {
             "tensor": module.weight.data.clone().flatten(),
             "shape": module.weight.shape,
         }
 
-    # Compute the layer-wise sparsities!
     concatenated = torch.cat([t["tensor"] for t in tensors.values()])
-    mask = (
-        # Currently, there's no criterion with custom kwargs, so we don't pass it in
-        criterion(concatenated, sparsity)
-        if sparsity > 0.0
-        else torch.ones_like(concatenated, dtype=torch.bool)
-    )
-    # Split the masks into chunks and compute the sparsity of each chunk
+    # If sparsity=0, we keep everything
+    mask = criterion(concatenated, sparsity) if sparsity > 0.0 else torch.ones_like(concatenated, dtype=torch.bool)
+
     sizes = [t["tensor"].numel() for t in tensors.values()]
     masks = torch.split(mask, sizes)
-    sparsities = [1 - m.count_nonzero() / m.numel() for m in masks]
-    sparsities = dict(zip(tensors.keys(), sparsities))
+    layer_sparsities = [1 - m.count_nonzero() / m.numel() for m in masks]
+    layer_sparsities = dict(zip(tensors.keys(), layer_sparsities))
 
-    return sparsities
+    return layer_sparsities
 
-
+# ------------------------------------------------------------------------------
+# Helper function to verify a numeric sparsity value
+# ------------------------------------------------------------------------------
 def _verify_sparsity(sparsity):
     if not isinstance(sparsity, float):
         raise ValueError("Sparsity must be a float. Got {}".format(type(sparsity)))
     if sparsity < 0 or sparsity > 1:
         raise ValueError("Sparsity must be between 0 and 1. Got {}".format(sparsity))
-
-
-# def _log_metadata(graph):
-#     logger.info(
-#         "\n"
-#         f"Sparsity    : {measure_sparsity(graph.model):>14.3f}\n"
-#         f"Params (TOT): {count_parameters(graph.model):>14,}\n"
-#         f"Params (NNZ): {count_parameters(graph.model, nonzero_only=True):>14,}\n"
-#         f"Buffers     : {count_buffers(graph.model):>14,}\n"
-#         f"Size        : {estimate_model_size(graph.model):>14.3f} MB"
-#     )
