@@ -239,12 +239,16 @@ def transform_gpt2sdpa_to_mgqa(
     mgqa: MGQA,
 ):
 
-    # 2) GPT2SdpaAttention: gather shapes & param references
+    # GPT2SdpaAttention: gather shapes & param references
     embed_dim = gpt2sdpa.embed_dim
     c_attn_weight = gpt2sdpa.c_attn.weight       # shape [embed_dim, 3*embed_dim]
     c_attn_bias   = gpt2sdpa.c_attn.bias         # shape [3*embed_dim]
     c_proj_weight = gpt2sdpa.c_proj.weight       # shape [embed_dim, embed_dim]
     c_proj_bias   = gpt2sdpa.c_proj.bias         # shape [embed_dim]
+    
+    # MGQA: gather shapes & param references
+    heads = mgqa.heads
+    kv_heads = mgqa.kv_heads
 
     # 3) Split out the Q/K/V weights from c_attn
     with torch.no_grad():
@@ -255,25 +259,33 @@ def transform_gpt2sdpa_to_mgqa(
         mgqa.to_q.weight.copy_(q_w) # query size remain identical, no change needed
         mgqa.to_q.bias.copy_(q_b)
 
-        heads = mgqa.heads
-        kv_heads = mgqa.kv_heads
         dim_head = embed_dim // heads
 
         # handle kv pair reduction
         if kv_heads < heads:
-            k_r = k_w.reshape(embed_dim, heads, dim_head)
-            v_r = v_w.reshape(embed_dim, heads, dim_head)
+            # weight
             g_size = heads // kv_heads
-            k_r = k_r.reshape(embed_dim, kv_heads, g_size, dim_head).mean(dim=2)
-            v_r = v_r.reshape(embed_dim, kv_heads, g_size, dim_head).mean(dim=2)
-            k_w = k_r.reshape(embed_dim, kv_heads * dim_head)
-            v_w = v_r.reshape(embed_dim, kv_heads * dim_head)
-        
+
+            k_w_r = k_w.reshape(embed_dim, heads, dim_head)
+            v_w_r = v_w.reshape(embed_dim, heads, dim_head)
+            k_w_r = k_w_r.reshape(embed_dim, kv_heads, g_size, dim_head).mean(dim=2)
+            v_w_r = v_w_r.reshape(embed_dim, kv_heads, g_size, dim_head).mean(dim=2)
+            k_w = k_w_r.reshape(embed_dim, kv_heads * dim_head)
+            v_w = v_w_r.reshape(embed_dim, kv_heads * dim_head)
+
+            # bias
+            k_b_r = k_b.reshape(heads, dim_head)                       # [heads, d_head]
+            v_b_r = v_b.reshape(heads, dim_head)                       # [heads, d_head]
+            k_b_r = k_b_r.reshape(kv_heads, g_size, dim_head).mean(dim=1)
+            v_b_r = v_b_r.reshape(kv_heads, g_size, dim_head).mean(dim=1)
+            k_b = k_b_r.reshape(kv_heads * dim_head)  # back to [kv_heads * d_head]
+            v_b = v_b_r.reshape(kv_heads * dim_head)
+
         if mgqa.to_k is not None:
-            mgqa.to_k.weight.copy_(k_w)
+            mgqa.to_k.weight.copy_(k_w.transpose(0, 1))
             mgqa.to_k.bias.copy_(k_b)
         if mgqa.to_v is not None:
-            mgqa.to_v.weight.copy_(v_w)
+            mgqa.to_v.weight.copy_(v_w.transpose(0, 1))
             mgqa.to_v.bias.copy_(v_b)
 
         # 4) Map c_proj -> mgqa.to_out
