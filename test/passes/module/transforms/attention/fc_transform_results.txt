@@ -1,0 +1,3 @@
+WikiText FC Evaluation Results:
+Eval Loss (Cross Entropy): 4.8904
+Perplexity: 133.0024
