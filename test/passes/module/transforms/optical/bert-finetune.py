@@ -1,9 +1,11 @@
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
-
+import torch
 import numpy as np
 import evaluate
 from datasets import load_dataset
+import dill
+from pathlib import Path
 from transformers import (
     AutoTokenizer,
     AutoModelForSequenceClassification,
@@ -14,7 +16,7 @@ from transformers import (
 from chop.passes.module.transforms.optical import optical_module_transform_pass
 
 def bert_onn_transform(model):
-    pass_args = {
+    type_args = {
         "by": "type",
         "linear": {
             "config": {
@@ -57,7 +59,22 @@ def bert_onn_transform(model):
             }
         },
     }
-    model, _ = optical_module_transform_pass(model, name_args)
+
+    pattern = r"^bert\.encoder\.layer\.\d+\.attention\.self\.(key|query|value)$"
+    regex_args = {
+        "by": "regex_name",
+        pattern: {
+            "config": {
+                "name": "morr",
+                "miniblock": 4,
+                "morr_init": True,
+                "trainable_morr_bias": False,
+                "trainable_morr_scale": False,
+            }
+        },
+    }
+
+    model, _ = optical_module_transform_pass(model, regex_args)
     return model
 
 def test_bert_inference(model, text="This is a test."):
@@ -70,14 +87,9 @@ def test_bert_inference(model, text="This is a test."):
 
     return outputs
 
-def main():
+def finetune_bert(model):
     model_name = "bert-base-uncased"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
-    print(model)
-
-    # Placeholder for modifications
-    model = bert_onn_transform(model)
 
     dataset = load_dataset("glue", "sst2")
     def preprocess(examples):
@@ -94,8 +106,11 @@ def main():
         output_dir="model_sst2",
         run_name="bert_sst2_experiment",
         evaluation_strategy="epoch",
-        num_train_epochs=3,
-        logging_steps=50
+        report_to=["none"],
+        num_train_epochs=2,
+        logging_steps=1000,
+        per_device_train_batch_size=2,  # set training batch size
+        per_device_eval_batch_size=2,    # set evaluation batch size
     )
 
     trainer = Trainer(
@@ -107,15 +122,19 @@ def main():
         compute_metrics=compute_metrics
     )
     trainer.train()
+    return model
 
 if __name__ == "__main__":
     model_name = "bert-base-uncased"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
 
-    test_bert_inference(model)
-
     model = bert_onn_transform(model)
+    print(model)
 
-    test_bert_inference(model)
+    model = finetune_bert(model)
+    with open(f"{Path.home()}/bert-onn-2epoch", "wb") as f:
+        dill.dump(model, f)
+    # print(1)
+    # test_bert_inference(model)
     # main()

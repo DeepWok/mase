@@ -443,6 +443,7 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
             self.weight.data.masked_fill_(~mask.view_as(self.weight.data), 0)
 
     def forward(self, x: Tensor) -> Tensor:
+        B, N, D = x.shape
         assert (
             x.size(-1) == self.in_features
         ), f"[E] Input dimension does not match the weight size {self.out_features, self.in_features}, but got input size ({tuple(x.size())}))"
@@ -474,5 +475,6 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
             x = x[..., : self.out_features]
         if self.bias is not None:
             x = x + self.bias.unsqueeze(0)
-
+            
+        x = x.view(B, N, self.out_features)
         return x

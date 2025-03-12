@@ -5,7 +5,7 @@ from chop.passes.module.module_modify_helper import instantiate_module
 from chop.passes.module.transforms.optical.module_transform_helper import (
     replace_by_name_optical,
 )
-
+from ...state_dict_map import match_a_pattern, check_is_huggingface_model
 
 def get_config(config: dict, name: str):
     if name in config:
@@ -29,6 +29,7 @@ def optical_transform_by_type(network, pass_args):
         config = config["config"]
         postfix = config.pop("name")
         for n, m in n_m.items():
+            print(f"processing {n}...")
             if isinstance(m, module):
                 new_m = instantiate_module(
                     m, postfix, optical_module_map, {"config": config}
@@ -55,6 +56,34 @@ def optical_transform_by_name(network, pass_args):
             network = replace_by_name_optical(network, n, new_m)
     return network
 
+def optical_transform_by_regex_name(network, pass_args):
+    is_huggingface_model = check_is_huggingface_model(network)
+
+    patterns = list(pass_args.keys())
+    n_m = {}
+    for n, m in network.named_modules():
+        n_m[n] = m
+
+    for n, m in n_m.items():
+        matched_pattern = match_a_pattern(n, patterns)
+        if not matched_pattern:
+            continue
+
+        optical_config = pass_args[matched_pattern]["config"]
+        postfix = optical_config["name"]
+
+        additional_module_args = (
+            {"config": optical_config, "network_config": network.config}
+            if is_huggingface_model
+            else {"config": optical_config}
+        )
+
+        new_m = instantiate_module(
+            m, postfix, optical_module_map, additional_module_args
+        )
+        network = replace_by_name_optical(network, n, new_m)
+
+    return network
 
 def optical_module_transform_pass(network, pass_args):
     """
@@ -76,6 +105,8 @@ def optical_module_transform_pass(network, pass_args):
             network = optical_transform_by_type(network, pass_args)
         case "name":
             network = optical_transform_by_name(network, pass_args)
+        case "regex_name":
+            network = optical_transform_by_regex_name(network, pass_args)
         case _:
             raise ValueError(f'Unsupported quantize "by": {by}')
     return network, {}
