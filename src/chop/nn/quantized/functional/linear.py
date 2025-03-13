@@ -44,7 +44,7 @@ def linearInteger(
             config["data_out_frac_width"],
         )
 
-    floor = config.get("floor", False)
+    floor = config.get("floor", True)
     base_quantizer = integer_floor_quantizer if floor else integer_quantizer
     w_quantizer = partial(base_quantizer, width=w_width, frac_width=w_frac_width)
     x_quantizer = partial(base_quantizer, width=x_width, frac_width=x_frac_width)
