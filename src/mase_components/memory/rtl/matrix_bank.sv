@@ -5,8 +5,65 @@ Features to implement:
   clear all counters and flags and transition to REQ_FETCH
 
 */
+package matrix_bank_pkg;
 
-import matrix_bank_pkg::*;
+  parameter AXI_ADDRESS_WIDTH = 32;
+  parameter MAX_DIMENSION = 1024;
+  parameter MAX_FEATURE_COUNT = 16;
+  
+
+  typedef struct packed {
+    logic [AXI_ADDRESS_WIDTH-1:0]   start_address;
+    logic [$clog2(MAX_DIMENSION):0] columns;
+    logic [$clog2(MAX_DIMENSION):0] rows;
+  } REQ_t;
+
+  typedef struct packed {logic partial;} RESP_t;
+
+  typedef struct packed {
+    // Check request payloads match NSB payloads
+    logic [$clog2(MAX_FEATURE_COUNT):0] columns;
+    logic [$clog2(MAX_FEATURE_COUNT):0] rows;
+  } ROW_CHANNEL_REQ_t;
+
+  typedef struct packed {
+    logic [MAX_FEATURE_COUNT-1:0][31:0] data;
+    logic [MAX_FEATURE_COUNT-1:0]       valid_mask;
+    logic                               done;
+  } ROW_CHANNEL_RESP_t;
+
+endpackage
+
+// package matrix_bank_pkg;
+
+parameter AXI_ADDRESS_WIDTH = 32;
+parameter MAX_DIMENSION = 1024;
+parameter MAX_FEATURE_COUNT = 32;
+
+typedef struct packed {
+  logic [AXI_ADDRESS_WIDTH-1:0] start_address;
+  logic [$clog2(MAX_DIMENSION):0] columns;
+  logic [$clog2(MAX_DIMENSION):0] rows;
+} REQ_t;
+
+typedef struct packed {logic partial;} RESP_t;
+
+typedef struct packed {
+  // Check request payloads match NSB payloads
+  logic [$clog2(
+MAX_FEATURE_COUNT
+):0] columns;
+  logic [$clog2(MAX_FEATURE_COUNT):0] rows;
+} ROW_CHANNEL_REQ_t;
+
+typedef struct packed {
+  logic [MAX_FEATURE_COUNT-1:0][31:0] data;
+  logic [MAX_FEATURE_COUNT-1:0] valid_mask;
+  logic done;
+} ROW_CHANNEL_RESP_t;
+
+// endpackage
+// import matrix_bank_pkg::*;
 
 module matrix_bank #(
     parameter PRECISION = 0, // 0 = FP32, 1 = FP16
@@ -221,8 +278,9 @@ module matrix_bank #(
     axi_rm_fetch_byte_count = matrix_bank_req_q.columns * 4;
 
     bytes_per_row = matrix_bank_req_q.columns * 4;
-    bytes_per_row_padded = {bytes_per_row[$clog2(MAX_DIMENSION*4)-1:6], 6'b0} +
-        (|bytes_per_row[5:0] ? 'd64 : '0);  // round up to nearest multiple of 64
+    bytes_per_row_padded = {
+      bytes_per_row[$clog2(MAX_DIMENSION*4)-1:6], 6'b0
+    } + (|bytes_per_row[5:0] ? 'd64 : '0);  // round up to nearest multiple of 64
     axi_rm_fetch_start_address = matrix_bank_req_q.start_address + rows_fetched * bytes_per_row_padded;
   end
 
@@ -316,9 +374,9 @@ module matrix_bank #(
   end
 
   // Round up in features to the nearest multiple of 16
-  assign required_pulses = {matrix_bank_req_q.columns[$clog2(
-      MAX_DIMENSION
-  )-1:4], 4'd0} + (|matrix_bank_req_q.columns[3:0] ? 'd16 : '0);
+  assign required_pulses = {
+    matrix_bank_req_q.columns[$clog2(MAX_DIMENSION)-1:4], 4'd0
+  } + (|matrix_bank_req_q.columns[3:0] ? 'd16 : '0);
 
   always_ff @(posedge core_clk or negedge resetn) begin
     if (!resetn) begin
