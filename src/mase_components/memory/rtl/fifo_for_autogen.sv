@@ -28,7 +28,7 @@ module fifo_for_autogen #(
   unpacked_fifo #(
       .DEPTH(DEPTH),
       .DATA_WIDTH(DATA_IN_0_PRECISION_0),
-      .IN_NUM(DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1)
+      .IN_NUM(DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1)
   ) ff_inst (
       .clk(clk),
       .rst(rst),
