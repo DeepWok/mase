@@ -1,0 +1,87 @@
+{
+  "model_sizes": {
+    "original": 474.7001953125,
+    "transformed": 476.953125,
+    "reduction_percent": -0.47460053940295377
+  },
+  "evaluation": {
+    "original": {
+      "model_name": "Original GPT-2",
+      "eval_loss": 4.251465320587158,
+      "perplexity": 70.20821455136971,
+      "eval_time": 14.323682069778442,
+      "raw_results": {
+        "eval_loss": 4.251465320587158,
+        "eval_model_preparation_time": 0.0016,
+        "eval_runtime": 14.3203,
+        "eval_samples_per_second": 201.881,
+        "eval_steps_per_second": 50.488
+      }
+    },
+    "transformed": {
+      "model_name": "FC-Transformed GPT-2",
+      "eval_loss": 4.308681011199951,
+      "perplexity": 74.34236749393283,
+      "eval_time": 13.153529644012451,
+      "raw_results": {
+        "eval_loss": 4.308681011199951,
+        "eval_model_preparation_time": 0.0015,
+        "eval_runtime": 13.1505,
+        "eval_samples_per_second": 219.839,
+        "eval_steps_per_second": 54.979
+      }
+    }
+  },
+  "training": {
+    "original": {
+      "model_name": "Original GPT-2",
+      "train_time": 866.1143951416016,
+      "final_eval_loss": 3.3259401321411133,
+      "final_perplexity": 27.825145663685994,
+      "train_results": [
+        2970,
+        26.27656989820076,
+        {
+          "train_runtime": 865.957,
+          "train_samples_per_second": 54.892,
+          "train_steps_per_second": 3.43,
+          "total_flos": 3667140787968000.0,
+          "train_loss": 26.27656989820076,
+          "epoch": 1.9989902389767755
+        }
+      ],
+      "eval_results": {
+        "eval_loss": 3.3259401321411133,
+        "eval_runtime": 11.6158,
+        "eval_samples_per_second": 211.866,
+        "eval_steps_per_second": 53.031,
+        "epoch": 1.9989902389767755
+      }
+    },
+    "transformed": {
+      "model_name": "FC-Transformed GPT-2",
+      "train_time": 865.2003953456879,
+      "final_eval_loss": 3.331605911254883,
+      "final_perplexity": 27.983244245719547,
+      "train_results": [
+        2970,
+        26.339247249513363,
+        {
+          "train_runtime": 865.0366,
+          "train_samples_per_second": 54.95,
+          "train_steps_per_second": 3.433,
+          "total_flos": 3692603824229376.0,
+          "train_loss": 26.339247249513363,
+          "epoch": 1.9989902389767755
+        }
+      ],
+      "eval_results": {
+        "eval_loss": 3.331605911254883,
+        "eval_runtime": 11.6788,
+        "eval_samples_per_second": 210.723,
+        "eval_steps_per_second": 52.745,
+        "epoch": 1.9989902389767755
+      }
+    }
+  }
+}
