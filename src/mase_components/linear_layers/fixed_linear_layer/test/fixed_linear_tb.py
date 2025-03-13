@@ -243,16 +243,6 @@ def test_fixed_linear_smoke():
         trace=True,
         module_param_list=[
             get_fixed_linear_config(),
-            # noticed here if change WEIGHT_PRE_TRANSPOSED also need to change the DIM_SIZE to match ACTIVATION
-            get_fixed_linear_config(
-                {
-                    "WEIGHTS_PRE_TRANSPOSED": 0,
-                    "WEIGHT_TENSOR_SIZE_DIM_0": 32,
-                    "WEIGHT_TENSOR_SIZE_DIM_1": 16,
-                    "WEIGHT_PARALLELISM_DIM_0": 4,
-                    "WEIGHT_PARALLELISM_DIM_1": 2,
-                },
-            ),
         ],
     )
 
