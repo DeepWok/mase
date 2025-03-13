@@ -39,11 +39,67 @@ def l1(tensor: torch.Tensor, info: dict, sparsity: float) -> torch.Tensor:
     mask = (tensor.abs() > threshold).to(torch.bool).to(tensor.device)
     return mask
 
-def global_weight_l1(tensor: torch.Tensor, info: dict, sparsity: float):
-    tensors = [v["weight_value"] for _, v in info.items() if v is not None]
-    flattened_tensors = [t.abs().flatten() for t in tensors]
-    threshold = torch.quantile(torch.cat(flattened_tensors, dim=0), sparsity)
-    mask = (tensor.abs() > threshold).to(torch.bool).to(tensor.device)
+def global_weight_l1(tensor: torch.Tensor, info: dict, sparsity: float, bins: int = 2048,
+                     _state={"did_fail": False}) -> torch.Tensor:
+    r"""
+    Attempt a "full flatten + quantile" global L1 pruning. If we hit a RuntimeError
+    (OOM or "tensor too large" on GPU/MPS), fall back to a histogram-based approach.
+
+    :param tensor:   The weight tensor of the current module to prune.
+    :param info:     The full dictionary (across all modules) of metadata.
+    :param sparsity: The desired global sparsity (fraction to prune).
+                     E.g. 0.2 means keep the top 80% of weights by magnitude.
+    :param bins:     Number of bins to use in fallback histogram approach (2048 by default).
+    :return:         A boolean mask (same shape as `tensor`) that is True for weights to keep
+                     and False for weights to prune.
+    """
+    if not _state["did_fail"]:
+        try:
+            arrays = []
+            for _, v in info.items():
+                if v is not None:
+                    arrays.append(v["weight_value"].abs().flatten())
+            big_flat = torch.cat(arrays, dim=0)
+            threshold = torch.quantile(big_flat, sparsity)
+            mask = (tensor.abs() > threshold).bool().to(tensor.device)
+            return mask
+
+        except RuntimeError as e:
+            print("[DEBUG] Global L1 full-quantile approach failed. Falling back to histogram.")
+            print("[DEBUG] Caught RuntimeError:", str(e))
+            _state["did_fail"] = True
+
+    global_max = 0.0
+    total_elements = 0
+    for _, v in info.items():
+        if v is not None:
+            w = v["weight_value"]
+            current_max = w.abs().max().item()
+            if current_max > global_max:
+                global_max = current_max
+            total_elements += w.numel()
+
+    if global_max == 0.0:
+        threshold = 0.0
+    else:
+        bin_edges = torch.linspace(0, global_max, steps=bins+1)  # on CPU now
+        global_hist = torch.zeros(bins)
+        for _, v in info.items():
+            if v is not None:
+                w_vals = v["weight_value"].abs().flatten().cpu()
+                h = torch.histc(w_vals, bins=bins, min=0, max=global_max)
+                global_hist += h
+
+        target_count = sparsity * total_elements
+        cumulative = torch.cumsum(global_hist, dim=0)
+        bin_idx_tensor = (cumulative >= target_count).nonzero(as_tuple=False)
+        if len(bin_idx_tensor) == 0:
+            threshold = global_max
+        else:
+            idx = bin_idx_tensor[0].item()
+            threshold = (bin_edges[idx] + bin_edges[idx + 1]) / 2
+
+    mask = (tensor.abs() > threshold).bool().to(tensor.device)
     return mask
 
 def global_activation_l1(tensor: torch.Tensor, info: dict, sparsity: float):
@@ -100,20 +156,79 @@ def movement(tensor: torch.Tensor, info: dict, sparsity: float) -> torch.Tensor:
     mask = (movement_scores.abs() > threshold).to(torch.bool).to(tensor.device)
     return mask
 
-def global_weight_movement(tensor: torch.Tensor, info: dict, sparsity: float):
+def global_weight_movement(tensor: torch.Tensor, info: dict, sparsity: float, node_name: str, bins: int = 2048,
+                           _state={"did_fail": False}) -> torch.Tensor:
     """
-    Global movement pruning ranking function.
+    Global movement pruning ranking function with fallback method for memory constrained applications.
     Aggregates movement scores from the info dictionary over all relevant weight tensors to compute a global threshold.
     """
-    movements = [v["stats"]["movement"] for _, v in info.items() if v is not None and "movement" in v.get("stats", {})]
-    if len(movements) == 0:
-        raise ValueError("No movement information found in info stats.")
-    flattened_movements = [m.abs().flatten() for m in movements]
-    threshold = torch.quantile(torch.cat(flattened_movements, dim=0), sparsity)
-    # For the current tensor, use its own movement scores:
-    current_movement = info["stats"]["movement"]
-    mask = (current_movement.abs() > threshold).to(torch.bool).to(tensor.device)
-    return mask
+
+    def _apply_movement_threshold(tensor: torch.Tensor, info: dict, threshold: float, node_name: str) -> torch.Tensor:
+        if node_name not in info:
+            raise ValueError(f"Node {node_name} not found in info dictionary.")
+        
+        current_node_meta = info[node_name]
+        if "weight_stats" not in current_node_meta or "movement" not in current_node_meta["weight_stats"]:
+            raise ValueError(
+                f"Current node '{node_name}' has no movement data, "
+                "but is being pruned with global movement."
+            )
+        
+        current_movement = current_node_meta["weight_stats"]["movement"]
+        mask = (current_movement.abs() > threshold).bool().to(tensor.device)
+        return mask
+
+    all_movements = []
+    for _, v in info.items():
+        if v is not None and "weight_stats" in v:
+            ws = v["weight_stats"]
+            if "movement" in ws:
+                all_movements.append(ws["movement"])
+
+    if not all_movements:
+        raise ValueError("No global movement data found: no 'weight_stats'/'movement' in info.")
+    
+    if not _state["did_fail"]:
+        try:
+            big_flat = torch.cat([m.abs().flatten().to(tensor.device) for m in all_movements], dim=0)
+            threshold = torch.quantile(big_flat, sparsity)
+
+            return _apply_movement_threshold(tensor, info, threshold, node_name)
+
+        except RuntimeError as e:
+            print("[DEBUG] Global movement flatten+quantile approach failed. Falling back to histogram.")
+            print("[DEBUG] Caught RuntimeError:", str(e))
+            _state["did_fail"] = True
+
+    global_max = 0.0
+    total_elements = 0
+    for m in all_movements:
+        mx = m.abs().max().item()
+        if mx > global_max:
+            global_max = mx
+        total_elements += m.numel()
+
+    if global_max == 0.0:
+        threshold = 0.0
+    else:
+        bin_edges = torch.linspace(0, global_max, steps=bins + 1)  # CPU by default
+        global_hist = torch.zeros(bins)
+
+        for m in all_movements:
+            m_cpu = m.abs().flatten().cpu()
+            h = torch.histc(m_cpu, bins=bins, min=0, max=global_max)
+            global_hist += h
+
+        target_count = sparsity * total_elements
+        cumulative = torch.cumsum(global_hist, dim=0)
+        idx_tensor = (cumulative >= target_count).nonzero(as_tuple=False)
+        if idx_tensor.numel() == 0:
+            threshold = global_max
+        else:
+            idx = idx_tensor[0].item()
+            threshold = (bin_edges[idx] + bin_edges[idx + 1]) / 2
+
+    return _apply_movement_threshold(tensor, info, threshold, node_name)
 
 def activation_movement(tensor: torch.Tensor, info: dict, sparsity: float) -> torch.Tensor:
     """

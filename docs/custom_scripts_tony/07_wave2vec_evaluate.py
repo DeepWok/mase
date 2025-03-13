@@ -19,7 +19,7 @@ from pyctcdecode import build_ctcdecoder
 
 checkpoint = "facebook/wav2vec2-base-960h"
 tokenizer_checkpoint = "facebook/wav2vec2-base-960h"
-dataset_name = "librispeech_asr"
+dataset_name = "nyalpatel/condensed_librispeech_asr" # "librispeech_asr"
 
 processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-base-960h")
 data_collator = DataCollatorCTCWithPadding(processor=processor, padding=True)
@@ -28,7 +28,8 @@ tokenizer = processor.tokenizer
 vocab = tokenizer.convert_ids_to_tokens(range(tokenizer.vocab_size))
 decoder = build_ctcdecoder(vocab)
 
-dataset = load_dataset(dataset_name, "clean", split="validation", streaming=True, trust_remote_code=True)
+# dataset = load_dataset(dataset_name, "clean", split="validation", streaming=True, trust_remote_code=True)
+dataset = load_dataset(dataset_name, split="test.clean")
 sample_list = list(dataset.take(50))
 
 def preprocess_function(example):

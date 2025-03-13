@@ -24,12 +24,23 @@ def get_activation_rank_fn(c):
 
 
 def get_weight_hook(name, info, named_info, w_config: dict):
-    # register parameterization
+    """
+    get_weight_hook is called for each node 'name' in the FX graph.
+    'name' is the node_name (e.g. "encoder.layers.0.attention.q_proj").
+    'info' is the entire dictionary of node -> metadata.
+    'named_info' is just this node's metadata.
+    """
     w_rank_fn = get_weight_rank_fn(w_config)
     value = named_info["value"]
     w_sparsity = named_info["weight_sparsity"]
     register_parameter_name = "weight"
-    parameterization = FakeSparseWeight(w_rank_fn(value, info, w_sparsity))
+
+    if w_config["scope"] == "global":
+        param_mask = w_rank_fn(value, info, w_sparsity, node_name=name)
+    else:
+        param_mask = w_rank_fn(value, named_info, w_sparsity)
+
+    parameterization = FakeSparseWeight(param_mask)
     return (register_parameter_name, parameterization)
 
 
@@ -63,6 +74,7 @@ def build_pruning_hooks(info, w_config, a_config):
             }
             if "weight_stats" in v.keys():
                 w_info["stats"] = v["weight_stats"]
+
             # for activations
             a_info = {
                 "module_type": v["module_type"],
@@ -70,14 +82,13 @@ def build_pruning_hooks(info, w_config, a_config):
                 "value": v["activation_value"],
                 "shape": v["activation_shape"],
             }
-            if "activation_stats" in v.keys():
+            if "activation_stats" in v:
                 a_info["stats"] = v["activation_stats"]
             named_hooks[k] = {
                 "w_hook": get_weight_hook(k, info, w_info, w_config),
                 "a_hook": get_activation_hook(k, info, a_info, a_config),
             }
     return named_hooks
-
 
 # --- Modified fetch_info() ---
 def fetch_info(node, module):
@@ -105,10 +116,9 @@ def fetch_info(node, module):
             out["activation_stats"] = node.meta["mase"].parameters["software"]["args"]["data_in_0"]["stat"]
             out["weight_stats"] = node.meta["mase"].parameters["software"]["args"]["weight"]["stat"]
         elif hasattr(module, "metadata"):
-            # Fall back: iterate over module parameters and use the first available metadata
             for pname, p in module.named_parameters():
                 if pname in module.metadata:
-                    out["stats"] = module.metadata[pname]["stats"]
+                    out["weight_stats"] = module.metadata[pname]["stats"]
                     break
         return out
 
@@ -131,7 +141,7 @@ def fetch_info(node, module):
         elif hasattr(module, "metadata"):
             for pname, p in module.named_parameters():
                 if pname in module.metadata:
-                    out["stats"] = module.metadata[pname]["stats"]
+                    out["weight_stats"] = module.metadata[pname]["stats"]
                     break
         return out
 

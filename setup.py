@@ -99,7 +99,7 @@ requirements = [
     "soundfile", # Added for Wave2Vec2 audio dataset loading
     "jiwer", # Added for Wave2Vec2's WER (Word Error Rate) evaluation
     "pyctcdecode", # Added for Wave2Vec2's CTC decoding
-]
+    ]
 
 setup(
     name="mase-tools",
