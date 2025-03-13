@@ -1,4 +1,3 @@
-`timescale 1ns/1ps
 module fixed_difflogic_groupsum #(
     parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 4,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = 2
@@ -27,12 +26,16 @@ module fixed_difflogic_groupsum #(
             assign group_data = data_in_0[((i * GROUP_SIZE) + (GROUP_SIZE-1)): (i * GROUP_SIZE)];
             
             always_comb begin
-                sum = 0;
-                for (int j = 0; j < GROUP_SIZE; j = j + 1) begin
-                    sum = sum + {{($clog2(GROUP_SIZE)-1){1'b0}}, group_data[j]};
-                end
-                data_out_0[i] = sum;
+                data_out_0[i] = $countones(group_data);
             end
+
+            // always_comb begin
+            //     sum = 0;
+            //     for (int j = 0; j < GROUP_SIZE; j = j + 1) begin
+            //         sum = sum + {{($clog2(GROUP_SIZE)-1){0'b0}}, group_data[j]};
+            //     end
+            //     data_out_0[i] = sum;
+            // end
             
             // fixed_adder_tree_comb FTA (
             //     .clk(clk),
