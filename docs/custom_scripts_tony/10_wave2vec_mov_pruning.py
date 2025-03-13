@@ -81,8 +81,6 @@ class MovementTrackingCallback(TrainerCallback):
 
         return control
 
-
-    
 # -------------------------------
 # 1. Define the model and dataset
 # -------------------------------
@@ -167,8 +165,6 @@ for module in mg.model.modules():
             module.metadata = {}
         module.metadata["weight"] = {"stats": {"movement": torch.zeros_like(module.weight)}}
 
-
-
 combined_model = CombinedWav2Vec2CTC(
     encoder=mg.model,
     ctc_head=ctc_head,
@@ -200,14 +196,14 @@ print("Warm-up training complete.")
 
 pruning_config = {
     "weight": {
-        "sparsity": 0.2,
-        "method": "movement",
-        "scope": "global",
+        "sparsity": 0.0,
+        "method": "l1-norm",
+        "scope": "local",
         "granularity": "elementwise",
     },
     "activation": {
-        "sparsity": 0.0,
-        "method": "random",
+        "sparsity": 0.2,
+        "method": "l1-norm",
         "scope": "local",
         "granularity": "elementwise",
     },

@@ -48,17 +48,20 @@ def get_activation_hook(name, info, named_info, a_config: dict):
     a_rank_fn = get_activation_rank_fn(a_config)
     a_sparsity = named_info["activation_sparsity"]
 
-    # register forward hook
     def sparsify_input(module, args):
         if len(args) > 1:
             raise ValueError(
-                f"{module.__class__.__name__} takes more than 1 argument at inference, the current sparsiy_input pre forward hook only allows one!"
+                f"{module.__class__.__name__} takes more than 1 argument at inference,"
+                " the current 'sparsify_input' pre-forward hook only allows one!"
             )
         x = args[0]
-        mask = a_rank_fn(x, info, a_sparsity)
+
+        if a_config["scope"] == "global": # Extra logic required for eventual movement pruning
+            mask = a_rank_fn(x, info, a_sparsity, node_name=name) 
+        else:
+            mask = a_rank_fn(x, named_info, a_sparsity) # Changed from info
         module.activation_mask = mask
         return x * mask
-
     return ("register_forward_pre_hook", sparsify_input)
 
 
@@ -82,7 +85,7 @@ def build_pruning_hooks(info, w_config, a_config):
                 "value": v["activation_value"],
                 "shape": v["activation_shape"],
             }
-            if "activation_stats" in v:
+            if "activation_stats" in v.keys():
                 a_info["stats"] = v["activation_stats"]
             named_hooks[k] = {
                 "w_hook": get_weight_hook(k, info, w_info, w_config),
@@ -90,7 +93,6 @@ def build_pruning_hooks(info, w_config, a_config):
             }
     return named_hooks
 
-# --- Modified fetch_info() ---
 def fetch_info(node, module):
     """
     Fetches metadata for the module from the FX node.
@@ -116,7 +118,7 @@ def fetch_info(node, module):
             out["activation_stats"] = node.meta["mase"].parameters["software"]["args"]["data_in_0"]["stat"]
             out["weight_stats"] = node.meta["mase"].parameters["software"]["args"]["weight"]["stat"]
         elif hasattr(module, "metadata"):
-            for pname, p in module.named_parameters():
+            for pname, _ in module.named_parameters():
                 if pname in module.metadata:
                     out["weight_stats"] = module.metadata[pname]["stats"]
                     break
@@ -139,7 +141,7 @@ def fetch_info(node, module):
             out["activation_stats"] = node.meta["mase"].parameters["software"]["args"]["data_in_0"]["stat"]
             out["weight_stats"] = node.meta["mase"].parameters["software"]["args"]["weight"]["stat"]
         elif hasattr(module, "metadata"):
-            for pname, p in module.named_parameters():
+            for pname, _ in module.named_parameters():
                 if pname in module.metadata:
                     out["weight_stats"] = module.metadata[pname]["stats"]
                     break

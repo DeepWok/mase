@@ -39,7 +39,7 @@ def l1(tensor: torch.Tensor, info: dict, sparsity: float) -> torch.Tensor:
     mask = (tensor.abs() > threshold).to(torch.bool).to(tensor.device)
     return mask
 
-def global_weight_l1(tensor: torch.Tensor, info: dict, sparsity: float, bins: int = 2048,
+def global_weight_l1(tensor: torch.Tensor, info: dict, sparsity: float, node_name: str, bins: int = 2048,
                      _state={"did_fail": False}) -> torch.Tensor:
     r"""
     Attempt a "full flatten + quantile" global L1 pruning. If we hit a RuntimeError
@@ -139,10 +139,6 @@ def neurons_random_fan_in(tensor: torch.Tensor, sparsity: float, layer_type: str
     mask.reshape(*tensor.shape)
     return mask
 
-# -------------------------------
-# New: Movement-based pruning functions
-# -------------------------------
-
 def movement(tensor: torch.Tensor, info: dict, sparsity: float) -> torch.Tensor:
     """
     Movement pruning ranking function for a given tensor.
@@ -230,6 +226,7 @@ def global_weight_movement(tensor: torch.Tensor, info: dict, sparsity: float, no
 
     return _apply_movement_threshold(tensor, info, threshold, node_name)
 
+# Not Implemented Yet, Needs Changing
 def activation_movement(tensor: torch.Tensor, info: dict, sparsity: float) -> torch.Tensor:
     """
     Movement-based pruning ranking function for activations.
@@ -242,6 +239,7 @@ def activation_movement(tensor: torch.Tensor, info: dict, sparsity: float) -> to
     mask = (movement_scores.abs() > threshold).to(torch.bool).to(tensor.device)
     return mask
 
+# Not Implemented Yet, Needs Changing
 def global_activation_movement(tensor: torch.Tensor, info: dict, sparsity: float):
     """
     Global movement-based pruning for activations.
@@ -254,10 +252,6 @@ def global_activation_movement(tensor: torch.Tensor, info: dict, sparsity: float
     current_movement = info["stats"]["movement"]
     mask = (current_movement.abs() > threshold).to(torch.bool).to(tensor.device)
     return mask
-
-# -------------------------------
-# Update mapping dictionaries to include movement-based methods
-# -------------------------------
 
 weight_criteria_map = {
     "local": {
@@ -281,14 +275,14 @@ activation_criteria_map = {
         "elementwise": {
             "random": random,
             "l1-norm": l1,
-            "movement": activation_movement,  # Added movement pruning for activations (local)
+            "movement": activation_movement,  # Yet to be implemented, activation movement pruning (local)
         }
     },
     "global": {
         "elementwise": {
             "random": random,
             "l1-norm": global_activation_l1,
-            "movement": global_activation_movement,  # Added movement pruning for activations (global)
+            "movement": global_activation_movement,  # Yet to be implemented, activation movement pruning (global)
         }
     },
 }
