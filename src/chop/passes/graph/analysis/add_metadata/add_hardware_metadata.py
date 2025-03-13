@@ -199,17 +199,19 @@ def add_extra_verilog_param(node, graph: MaseGraph):
         layer_ops = node.meta["mase"]["hardware"]["difflogic_args"]["weights"]["value"].argmax(dim=-1)
         layer_ops = list(layer_ops)
         layer_ops = [t.item() for t in layer_ops]
-        vp["LAYER_OP_CODES"] = layer_ops
+        vp[f"[3:0] LAYER_OP_CODES [0:{len(layer_ops)-1}]"] = layer_ops
         
+        in_size = node.meta["mase"]["common"]["args"]["data_in_0"]["shape"][-1]
         ind_a = node.meta["mase"]["hardware"]["difflogic_args"]["indices"]["value"]
         ind_a = list(ind_a[0])
         ind_a = [t.item() for t in ind_a]
-        vp["IND_A"] = ind_a
+        vp[f"[$clog2({in_size})-1:0] IND_A [0:{len(ind_a)-1}]"] = ind_a
 
+        in_size = node.meta["mase"]["common"]["args"]["data_in_0"]["shape"][-1]
         ind_b = node.meta["mase"]["hardware"]["difflogic_args"]["indices"]["value"]
         ind_b = list(ind_b[1])
         ind_b = [t.item() for t in ind_b]
-        vp["IND_B"] = ind_b
+        vp[f"[$clog2({in_size})-1:0] IND_B [0:{len(ind_b)-1}]"] = ind_b
 
 
 def add_hardware_metadata_analysis_pass(graph, pass_args={}):

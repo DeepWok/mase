@@ -12,7 +12,10 @@ import torch.nn as nn
 
 logger = logging.getLogger(__name__)
 
-from .util import get_verilog_parameters
+from .util import get_verilog_parameters, \
+                  add_node_name_to_keys_with_precision, \
+                  get_top_param_name_with_precision, \
+                  get_node_param_name_with_precision
 from pathlib import Path
 
 from chop.ir.common import MASE_IMPLICIT_FUNCS
@@ -109,15 +112,7 @@ class VerilogParameterEmitter:
 
         # Write node parameters
         for key, value in parameter_map.items():
-            # DiffLogic: need size for these params
-            if 'OP_CODES' in key:
-                total_ops = value.count(",") + 1
-                parameters += f"""    parameter [3:0] {key} [0:{total_ops}-1] = {value},\n"""
-            elif 'IND' in key:
-                total_indices = value.count(",") + 1
-                parameters += f"""    parameter [$clog2({total_indices})-1:0] {key} [0:{total_indices}-1] = {value},\n"""
-            else:
-                parameters += f"""    parameter {key} = {value},\n"""
+            parameters += f"""    parameter {key} = {value},\n"""
 
         return _remove_last_comma(parameters)
 
@@ -436,9 +431,19 @@ class VerilogInternalComponentEmitter:
         ):
             if value is None:
                 continue
-            key_value = parameter_map[f"{node_name}_{key}"]
+            if '[' in key:
+                dict_key = add_node_name_to_keys_with_precision(node_name, key)
+                top_param_key = get_top_param_name_with_precision(dict_key)
+                node_param_key = get_node_param_name_with_precision(node_name, dict_key)
+            else:
+                dict_key = f"{node_name}_{key}"
+                top_param_key = f"{node_name}_{key}"
+                node_param_key = key
+            
+            key_value = parameter_map[dict_key]
             debug_info = f"// = {key_value}"
-            parameters += f"""    .{key}({node_name}_{key}),\n""" # hack: debug info removed for now as debug info may contain commas
+            parameters += f"""    .{node_param_key}({top_param_key}),\n""" # hack: debug info removed for now as debug info may contain commas
+
         parameters = _remove_last_comma(parameters)
 
         # Handle getitem nodes separately since an arbitrary argument index
