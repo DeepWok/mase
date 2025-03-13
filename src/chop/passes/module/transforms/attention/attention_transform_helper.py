@@ -282,10 +282,10 @@ def transform_gpt2sdpa_to_mgqa(
             v_b = v_b_r.reshape(kv_heads * dim_head)
 
         if mgqa.to_k is not None:
-            mgqa.to_k.weight.copy_(k_w.transpose(0, 1))
+            mgqa.to_k.weight.copy_(k_w)
             mgqa.to_k.bias.copy_(k_b)
         if mgqa.to_v is not None:
-            mgqa.to_v.weight.copy_(v_w.transpose(0, 1))
+            mgqa.to_v.weight.copy_(v_w)
             mgqa.to_v.bias.copy_(v_b)
 
         # 4) Map c_proj -> mgqa.to_out
@@ -378,7 +378,6 @@ class MGQAWrapper(torch.nn.Module):
                 raise ValueError(f"Unexpected attention_mask shape: {attention_mask.shape}")
 
 
-        
 
         # Call MGQA with the relevant tensors.
         # Pass cross-attention if encoder_hidden_states is given, otherwise self-attention.
