@@ -12,8 +12,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 import time
-
-
+import tensorrt as trt
 from chop.passes.utils import register_mase_pass
 
 

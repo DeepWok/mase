@@ -245,12 +245,15 @@ SOFTWARE_PARAM_ANALYSIS_LAYERS = {
     },
     "placeholder": {
         "placeholder": analyze_software_meta_param_placeholder,
+        "default": analyze_software_meta_param_placeholder,
     },
     "get_attr": {
         "get_attr": analyze_software_meta_param_get_attr,
+        "default": analyze_software_meta_param_get_attr,
     },
     "output": {
         "output": analyze_software_meta_param_output,
+        "default": analyze_software_meta_param_output,
     },
     "patched_func": {
         "default": analyze_software_meta_param_patched_func_default,

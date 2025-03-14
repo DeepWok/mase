@@ -12,6 +12,8 @@ import torch.fx as fx
 from torch.fx.passes.graph_drawer import FxGraphDrawer
 import matplotlib.pyplot as plt
 
+import ultralytics
+
 from transformers import PreTrainedModel
 from transformers.utils.fx import symbolic_trace as hf_symbolic_trace
 from transformers.utils.fx import HFTracer

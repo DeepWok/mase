@@ -83,6 +83,9 @@ MASE_MODULE_RELATED_FUNCS = [
     "gelu",
     "softplus",
     "softsign",
+    "safe_cat",
+    "safe_detect",
+    "safe_c2f",
 ]
 
 MASE_MODULES = [

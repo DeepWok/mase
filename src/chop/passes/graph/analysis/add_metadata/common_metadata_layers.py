@@ -362,6 +362,7 @@ module_data = {
     "grouped_query_attention": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.nn.Flatten.html#flatten
     "flatten": {"input": "data_in", "start_dim": "config", "end_dim": "config"},
+    "upsample": {"input": "data_in", "size": "config", "scale_factor": "config"},
 }
 
 
@@ -462,6 +463,7 @@ method_data = {
     "ne": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.int.html#torch-tensor-int
     "int": {"memory_format": "config"},
+    "_assert": {"input": "data_in"},
 }
 
 # ----------------------------------------------------------
@@ -545,7 +547,6 @@ def _annotate_arg_metadata(
 
     # * Handle args
     for i, x in enumerate(args):
-
         # Input data tensor
         if isinstance(x, torch.Tensor) and ordered_func_data[i][1] == "data_in":
             arg_meta = {
