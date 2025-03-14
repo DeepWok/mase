@@ -115,6 +115,9 @@ def get_trainer(
     use_mps_device: bool = False,
     report_to: str = "none",
     num_train_epochs: int = 1,
+    gradient_accumulation_steps: int = 1,
+    per_device_train_batch_size: int = 8,
+    per_device_eval_batch_size: int = 8,
 ):
     """
     Returns a Trainer object for a given model and tokenized dataset.
@@ -183,6 +186,9 @@ def get_trainer(
         use_mps_device=use_mps_device,
         report_to=report_to,
         num_train_epochs=num_train_epochs,
+        gradient_accumulation_steps=gradient_accumulation_steps,
+        per_device_train_batch_size=per_device_train_batch_size,
+        per_device_eval_batch_size=per_device_eval_batch_size,
         # remove_unused_columns=False, 
     )
 

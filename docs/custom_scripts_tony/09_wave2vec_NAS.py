@@ -161,7 +161,6 @@ class CombinedWav2Vec2CTC(nn.Module):
 
         output = {"logits": logits, "labels": labels}
 
-        # if self.training:
         if labels is not None:
             log_probs = logits.log_softmax(dim=-1).transpose(0, 1)
             batch_size, time_steps, _ = logits.shape

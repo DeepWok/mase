@@ -128,6 +128,7 @@ tokenized_dataset = DatasetDict({
 })
 
 model = AutoModelForCTC.from_pretrained(checkpoint)
+model.config.gradient_checkpointing = True
 encoder = model.wav2vec2    # static, FX-friendly
 ctc_head = model.lm_head    # dynamic CTC head, separate this
 
@@ -183,6 +184,9 @@ trainer = get_trainer(
     evaluate_metric="wer",
     num_train_epochs=1,
     data_collator=data_collator,
+    gradient_accumulation_steps = 4,
+    per_device_train_batch_size = 2,
+    per_device_eval_batch_size = 2,
 )
 trainer.add_callback(MovementTrackingCallback())
 
