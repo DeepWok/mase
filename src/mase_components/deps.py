@@ -259,6 +259,12 @@ MASE_HW_DEPS = {
         "common",
         "memory",
     ],
+    "linear_layers/mxint_operators/mxint_matrix_cat": [
+        "linear_layers/mxint_operators",
+        "linear_layers/fixed_operators",
+        "common",
+        "memory",
+    ],
     "linear_layers/mxint_operators/mxint_dot_product": [
         "linear_layers/mxint_operators",
         "linear_layers/fixed_operators",

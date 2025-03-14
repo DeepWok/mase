@@ -104,10 +104,10 @@ module fixed_linear #(
   logic matmul_out_valid;
   logic matmul_out_ready;
 
-  logic [BIAS_PRECISION_0-1:0] bias_buffered [BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1 -1:0];
+  logic [BIAS_PRECISION_0-1:0] bias_buffered[BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1 -1:0];
   logic bias_buffered_valid, bias_buffered_ready;
 
-  logic [MMOUT_PRECISION_0-1:0] bias_casted [BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1 -1:0];
+  logic [MMOUT_PRECISION_0-1:0] bias_casted[BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1 -1:0];
   logic [MMOUT_PRECISION_0:0] add_bias_in [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0];
   logic [DATA_OUT_0_PRECISION_0 - 1:0] add_bias_in_casted [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0];
   logic add_bias_in_valid;
