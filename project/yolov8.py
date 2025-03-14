@@ -14,9 +14,6 @@ model = YOLO("yolov8n.yaml")  # Choose the appropriate model
 # Define a safe wrapper for torch.cat to avoid tracing its internals
 @fx.wrap
 def safe_cat(x, dim):
-    print("Number of vec ", len(x), "dim", dim)
-    for v in x:
-        print("Shape ", v.shape)
     return torch.cat(tuple(x), dim=dim)
 
 
@@ -181,8 +178,6 @@ param = next(mg.model.model.parameters())[1]
 
 dummy_input = torch.rand(1, 3, 640, 640, dtype=param.dtype).to(param.device)
 
-print(mg.fx_graph)
-
 mg, _ = passes.init_metadata_analysis_pass(mg)
 mg, _ = passes.add_common_metadata_analysis_pass(
     mg,
@@ -198,5 +193,42 @@ mg, _ = passes.add_common_metadata_analysis_pass(
     },
 )
 mg, _ = passes.add_software_metadata_analysis_pass(mg, None)
+
+# %% Quantization
+
+import chop.passes as passes
+
+quantization_config = {
+    "by": "type",
+    "default": {
+        "config": {
+            "name": None,
+        }
+    },
+    "linear": {
+        "config": {
+            "name": "integer",
+            # data
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            # weight
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            # bias
+            "bias_width": 8,
+            "bias_frac_width": 4,
+        }
+    },
+}
+
+orig_mg = mg
+mg, _ = passes.quantize_transform_pass(
+    orig_mg,
+    pass_args=quantization_config,
+)
+mg, _ = passes.summarize_quantization_analysis_pass(
+    mg,
+    pass_args={"save_dir": "quantize_summary", "original_graph": orig_mg},
+)
 
 # %%

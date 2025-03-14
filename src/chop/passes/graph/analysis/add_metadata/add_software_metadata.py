@@ -24,7 +24,6 @@ def add_software_metadata_analysis_pass(graph, pass_args=None):
     for node in graph.fx_graph.nodes:
         mase_op = get_mase_op(node)
         mase_type = get_mase_type(node)
-        print("Node", node, "type", mase_type, "op", mase_op)
 
         if mase_op in SOFTWARE_PARAM_ANALYSIS_LAYERS[mase_type]:
             SOFTWARE_PARAM_ANALYSIS_LAYERS[mase_type][mase_op](node.meta["mase"])
