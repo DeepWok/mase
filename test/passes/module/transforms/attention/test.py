@@ -58,12 +58,6 @@ def test_single_attn(model):
     hidden_states = torch.randn(batch_size, seq_len, embed_dim)
     hidden_states = hidden_states.to(device)
 
-    mgqa_cfg = {"causal": True}
-    mgqa_module = gpt2sdpa_to_mgqa_init(sdpa_attn, mgqa_cfg)
-    mgqa_module.eval()
-    mgqa_module = transform_gpt2sdpa_to_mgqa(sdpa_attn, mgqa_module)
-    mgqa_module = mgqa_module.to(device)
-
     with torch.no_grad():
         orig_out, _, _ = sdpa_attn(
             hidden_states=hidden_states,
@@ -71,6 +65,14 @@ def test_single_attn(model):
             use_cache=False,
             output_attentions=False
         )
+
+    mgqa_cfg = {"causal": True}
+    mgqa_module = gpt2sdpa_to_mgqa_init(sdpa_attn, mgqa_cfg)
+    mgqa_module.eval()
+    mgqa_module = transform_gpt2sdpa_to_mgqa(sdpa_attn, mgqa_module)
+    mgqa_module = mgqa_module.to(device)
+
+    with torch.no_grad():
         mgqa_out = mgqa_module(x=hidden_states)
     
     diff = (orig_out - mgqa_out).abs().max().item()
@@ -107,6 +109,7 @@ def test_attn_from_model(model):
     mgqa_module.eval()
     mgqa_module = mgqa_module.to(device)
 
+    # test by performing inference
     batch_size, seq_len, embed_dim = 2, 5, sdpa_attn.embed_dim
     hidden_states = torch.randn(batch_size, seq_len, embed_dim)
     hidden_states = hidden_states.to(device)
@@ -125,6 +128,36 @@ def test_attn_from_model(model):
     print("MGQA output shape:", mgqa_out.shape)
     print(f"Max difference: {diff:.6f}")
     assert diff < 1e-4, "Outputs differ too much!"
+
+    # further tesing
+    embed_dim = sdpa_attn.embed_dim
+    c_attn_weight = sdpa_attn.c_attn.weight
+    c_attn_bias   = sdpa_attn.c_attn.bias  
+
+    q_w, k_w, v_w = torch.split(c_attn_weight, embed_dim, dim=1)
+    q_w, k_w, v_w = q_w.transpose(0, 1), k_w.transpose(0, 1), v_w.transpose(0, 1)
+    q_b, k_b, v_b = torch.split(c_attn_bias, embed_dim, dim=0)
+    x, q_out, k_out, v_out = sdpa_attn.x, sdpa_attn.q, sdpa_attn.k, sdpa_attn.v
+
+    m_qw, m_qb = mgqa_module.to_q.weight, mgqa_module.to_q.bias
+    m_kw, m_kb = mgqa_module.to_k.weight, mgqa_module.to_k.bias
+    m_vw, m_vb = mgqa_module.to_v.weight, mgqa_module.to_v.bias
+
+    mx, mq_out, nk_out, nv_out = mgqa_module.x, mgqa_module.q, mgqa_module.k, mgqa_module.v
+
+    print("q_w:", torch.equal(q_w, m_qw))
+    print("k_w:", torch.equal(k_w, m_kw))
+    print("v_w:", torch.equal(v_w, m_vw))
+    print("q_out:", torch.allclose(q_out, mq_out))
+    print("k_out:", torch.allclose(k_out, nk_out))
+    print("v_out:", torch.allclose(v_out, nv_out))
+    print("x:", torch.allclose(x, mx))
+    print("q_b:", torch.equal(q_b, m_qb))
+    print("k_b:", torch.equal(k_b, m_kb))
+    print("v_b:", torch.equal(v_b, m_vb))
+
+
+
 
 def get_intermediates(model):
     model = model.to(device)
@@ -214,12 +247,12 @@ if __name__ == "__main__":
     with open(f"{Path.home()}/Projects/mase/mase_output/bert-uncased-2epoch.pkl", "rb") as f:
         model = dill.load(f)
     # test_single_attn(model)
-    # test_attn_from_model(model)
+    test_attn_from_model(model)
 
-    gpt2_inter = get_intermediates(model)
-    model = spda_transform_pass(model).to(device)
-    mgqa_inter = get_intermediates(model)
-    analysis(gpt2_inter, mgqa_inter)
+    # gpt2_inter = get_intermediates(model)
+    # model = spda_transform_pass(model).to(device)
+    # mgqa_inter = get_intermediates(model)
+    # analysis(gpt2_inter, mgqa_inter)
 
 
 
