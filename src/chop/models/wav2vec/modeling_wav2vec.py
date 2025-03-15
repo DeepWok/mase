@@ -1,6 +1,7 @@
 import logging
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from typing import Optional
 from transformers import Wav2Vec2Model, Wav2Vec2Config
 from chop.models.utils import register_mase_model, register_mase_checkpoint
@@ -67,4 +68,45 @@ def get_wav2vec_large_960h(pretrained: bool = False, **kwargs):
 
 @register_mase_checkpoint("wav2vec2-large-xlsr")
 def get_wav2vec_large_xlsr(pretrained: bool = False, **kwargs):
-    return _get_wav2vec_model("large-xlsr-53", pretrained, **kwargs) 
+    return _get_wav2vec_model("large-xlsr-53", pretrained, **kwargs)
+
+
+class CombinedWav2Vec2CTC(nn.Module):
+    def __init__(self, encoder, ctc_head, blank_id=0, beam_width=10, decoder=None):
+        """
+        Args:
+            encoder: The traced encoder (e.g., mg.model)
+            ctc_head: The CTC head (usually a linear layer)
+            blank_id: The token ID for the blank symbol (typically 0)
+            beam_width: Width for beam search decoding (if using a decoder)
+            decoder: (Optional) A beam search decoder (e.g., from pyctcdecode)
+        """
+        super().__init__()
+        self.encoder = encoder
+        self.ctc_head = ctc_head
+        self.blank_id = blank_id
+        self.beam_width = beam_width
+        self.decoder = decoder  # Only used during inference
+
+    def forward(self, input_values, attention_mask=None, labels=None):
+        encoder_out = self.encoder(input_values, attention_mask=attention_mask)
+        hidden_states = encoder_out["last_hidden_state"]
+        logits = self.ctc_head(hidden_states) # outputs tensor as expected
+
+        output = {"logits": logits, "labels": labels}
+
+        if labels is not None:
+            log_probs = logits.log_softmax(dim=-1).transpose(0, 1)
+            batch_size, time_steps, _ = logits.shape
+            input_lengths = torch.full((batch_size,), time_steps, dtype=torch.long, device=logits.device)
+            target_lengths = (labels != -100).sum(dim=1)
+
+            loss = F.ctc_loss(log_probs, labels, input_lengths, target_lengths, blank=self.blank_id, reduction="mean", zero_infinity=True)
+            output["loss"] = loss
+        else:
+            if self.decoder is not None:
+                log_probs = logits.log_softmax(dim=-1)
+                log_probs_np = log_probs[0].cpu().detach().numpy()
+                transcription = self.decoder.decode(log_probs_np, beam_width=self.beam_width).lower()
+                output["transcription"] = transcription
+        return output 

@@ -20,3 +20,5 @@ Implemented List:
     - also added fall back low memory method for global movement pruning
 
 - Added optional parameters to get_trainer() for gradient accumalation and mini batch sizes
+
+- Added librspeech_asr dataset to get_tokenized_dataset() function including preprocessing, tokenizer and processor

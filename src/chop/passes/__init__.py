@@ -16,6 +16,7 @@ from .graph.analysis import (
     verify_common_metadata_analysis_pass,
     run_cosim_analysis_pass,
     get_synthesis_results,
+    add_movement_metadata_analysis_pass,
 )
 from .graph.transforms import (
     prune_transform_pass,

@@ -15,6 +15,7 @@ from .analysis import (
     get_synthesis_results,
     calculate_avg_bits_mg_analysis_pass,
     add_pruning_metadata_analysis_pass,
+    add_movement_metadata_analysis_pass,
     add_natural_sparsity_metadata_analysis_pass,
     hook_inspection_analysis_pass,
     verify_common_metadata_analysis_pass,

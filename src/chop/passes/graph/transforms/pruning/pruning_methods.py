@@ -253,6 +253,7 @@ def global_activation_movement(tensor: torch.Tensor, info: dict, sparsity: float
     mask = (current_movement.abs() > threshold).to(torch.bool).to(tensor.device)
     return mask
 
+
 weight_criteria_map = {
     "local": {
         "elementwise": {

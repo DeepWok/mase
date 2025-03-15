@@ -1,4 +1,5 @@
 import torch
+from torch import nn
 from chop.passes.graph.analysis.utils import fetch_attr, load_arg
 
 
@@ -87,3 +88,24 @@ def add_pruning_metadata_analysis_pass(graph, pass_args: dict = {}):
         graph, pass_args["dummy_in"], pass_args["add_value"]
     )
     return graph, sparsity_info
+
+
+def add_movement_metadata_analysis_pass(graph, pass_args=None):
+    """
+    Adds movement metadata to all Conv2d and Linear layers with a weight attribute
+    in the given MaseGraph's model.
+    
+    Args:
+        mg: The MaseGraph instance.
+        pass_args: Optional dictionary for future expansion.
+        
+    Returns:
+        A tuple of the updated MaseGraph and an empty dictionary.
+    """
+    for module in graph.model.modules():
+        if isinstance(module, (nn.Conv2d, nn.Linear)) and hasattr(module, "weight"):
+            if not hasattr(module, "metadata"):
+                module.metadata = {}
+            module.metadata["weight"] = {"stats": {"movement": torch.zeros_like(module.weight)}}
+    
+    return graph, {}

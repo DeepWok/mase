@@ -30,6 +30,7 @@ from .pruning import (
     add_pruning_metadata_analysis_pass,
     add_natural_sparsity_metadata_analysis_pass,
     hook_inspection_analysis_pass,
+    add_movement_metadata_analysis_pass,
 )
 
 from .plot import plot_graph_analysis_pass
