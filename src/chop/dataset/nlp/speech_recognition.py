@@ -25,18 +25,40 @@ processor = Wav2Vec2Processor.from_pretrained(LIBRISPEECH_CONFIG["tokenizer_chec
 @add_dataset_info(
     name="nyalpatel/condensed_librispeech_asr",
     dataset_source="hf_datasets",
-    available_splits=("train.clean.100", "train.clean.360", "train.other.500", "validation.clean", "validation.other", "test.clean", "test.other"),
+    # Change this to use standard split names that are already in the enum
+    available_splits=("train", "validation", "test"),
     seq2seqLM=True,
     num_features=LIBRISPEECH_CONFIG["sample_rate"] * 16,
 )
+
 class CondensedLibrispeechASRDataset(Dataset):
-    def __init__(self, dataset_path: Path, split="train.clean.100", config=LIBRISPEECH_CONFIG):
+    def __init__(
+        self,
+        split="train",
+        tokenizer=None,
+        max_token_len=None,
+        num_workers=0,
+        load_from_cache_file=True,
+        auto_setup=True,
+        dataset_path=Path("./preprocessed_data"),
+        config=LIBRISPEECH_CONFIG
+    ):
         super().__init__()
         self.split = split
         self.dataset_path = dataset_path
         self.config = config
         self.X = None
         self.Y = None
+        
+        # Store the additional parameters that the framework passes
+        self.tokenizer = tokenizer
+        self.max_token_len = max_token_len
+        self.num_workers = num_workers
+        self.load_from_cache_file = load_from_cache_file
+        
+        # Automatically call setup if requested
+        if auto_setup:
+            self.setup()
 
     def __len__(self):
         return len(self.X)
@@ -45,9 +67,20 @@ class CondensedLibrispeechASRDataset(Dataset):
         return self.X[idx], self.Y[idx]
 
     def prepare_data(self) -> None:
-        _preprocess_librispeech_dataset(self.dataset_path, self.config, split=self.split)
+        # Map the standard split name to a Librispeech-specific split for dataset loading
+        librispeech_split = "train.clean.100"  # default
+        
+        if self.split == "train":
+            librispeech_split = "train.clean.100"  # or other training split as needed
+        elif self.split == "validation":
+            librispeech_split = "validation.clean"
+        elif self.split == "test":
+            librispeech_split = "test.clean"
+            
+        _preprocess_librispeech_dataset(self.dataset_path, self.config, split=librispeech_split)
 
     def setup(self) -> None:
+        # Map the standard split name to the corresponding file paths
         if self.split == "train":
             x_path, y_path = "X_train.pt", "Y_train.pt"
         elif self.split == "validation":
@@ -56,15 +89,15 @@ class CondensedLibrispeechASRDataset(Dataset):
             x_path, y_path = "X_test.pt", "Y_test.pt"
         else:
             raise ValueError(f"Split {self.split} is not supported.")
-
+            
         assert (self.dataset_path / x_path).exists(), "Dataset is missing, run prepare_data() first."
 
         self.X = torch.load(self.dataset_path / x_path)
         self.Y = torch.load(self.dataset_path / y_path)
 
+
 def _preprocess_librispeech_dataset(save_path: Path, config: dict = LIBRISPEECH_CONFIG, split="validation.clean"):
     dataset = load_dataset("nyalpatel/condensed_librispeech_asr", split=split)
-
 
     input_values, labels = [], []
 
@@ -73,13 +106,22 @@ def _preprocess_librispeech_dataset(save_path: Path, config: dict = LIBRISPEECH_
         sampling_rate = example["audio"]["sampling_rate"]
         text = example["text"]
 
+        # Convert waveform to tensor if it's not already
+        if isinstance(waveform, list):
+            waveform = torch.tensor(waveform, dtype=torch.float32)
+
         if sampling_rate != config["sample_rate"]:
             waveform = torchaudio.transforms.Resample(
                 orig_freq=sampling_rate, new_freq=config["sample_rate"]
-            )(torch.tensor(waveform))
+            )(waveform)
 
         if config["normalize_waveform"]:
-            waveform = (waveform - waveform.mean()) / waveform.std()
+            # Check if waveform has enough elements to calculate std
+            if waveform.numel() > 0 and waveform.std() > 0:
+                waveform = (waveform - waveform.mean()) / waveform.std()
+            else:
+                # Handle edge case with zero std
+                waveform = waveform - waveform.mean() if waveform.numel() > 0 else waveform
 
         with processor.as_target_processor():
             label = processor.tokenizer(text, return_tensors="pt").input_ids.squeeze(0)
@@ -90,8 +132,9 @@ def _preprocess_librispeech_dataset(save_path: Path, config: dict = LIBRISPEECH_
         else:
             pad = torch.zeros(max_length)
             pad[: waveform.shape[0]] = waveform
+            waveform = pad
 
-        input_values.append(pad)
+        input_values.append(waveform)
         labels.append(label)
 
     input_values = torch.stack(input_values)
@@ -104,6 +147,9 @@ def _preprocess_librispeech_dataset(save_path: Path, config: dict = LIBRISPEECH_
         X_temp, Y_temp, test_size=config["test_size"] / (config["test_size"] + config["validation_size"]), random_state=42
     )
 
+    # Create directory if it doesn't exist
+    save_path.mkdir(parents=True, exist_ok=True)
+    
     torch.save(X_train, save_path / "X_train.pt")
     torch.save(Y_train, save_path / "Y_train.pt")
     torch.save(X_val, save_path / "X_val.pt")
@@ -112,4 +158,3 @@ def _preprocess_librispeech_dataset(save_path: Path, config: dict = LIBRISPEECH_
     torch.save(Y_test, save_path / "Y_test.pt")
 
     print("✅ Condensed Librispeech dataset preprocessed and saved!")
-    
