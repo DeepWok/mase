@@ -20,7 +20,8 @@ PRUNEABLE_OPS = {
 # ------------------------------------------------------------------------------
 # Add "movement" to these lists so the pruning pass recognizes it.
 # ------------------------------------------------------------------------------
-WEIGHT_PRUNE_METHODS = ["random", "l1-norm", "movement"]
+# Add "hwpq" to the valid weight pruning methods
+WEIGHT_PRUNE_METHODS = ["random", "l1-norm", "movement", "hwpq"]
 ACTIVATION_PRUNE_METHODS = ["random", "l1-norm", "movement"]
 
 # ------------------------------------------------------------------------------
