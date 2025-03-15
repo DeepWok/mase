@@ -3,7 +3,8 @@ alias th := test-hw
 alias re := reformat
 
 test-sw:
-	bash scripts/test-machop.sh
+	# cmd line interface is no longer supported
+	# bash scripts/test-machop.sh
 	pytest --log-level=DEBUG --verbose \
 		-n 1 \
 		--cov=src/chop/ --cov-report=html \

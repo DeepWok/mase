@@ -171,56 +171,6 @@ def linearMinifloatIEEE(
     return F.linear(x, weight, bias)
 
 
-def linearMinifloatIEEE(
-    x: Tensor,
-    weight: Tensor,
-    bias: Tensor = None,
-    config: dict = None,
-):
-    w_width, w_exponent_width, w_exponent_bias = (
-        config["weight_width"],
-        config["weight_exponent_width"],
-        config["weight_exponent_bias"],
-    )
-    x_width, x_exponent_width, x_exponent_bias = (
-        config["data_in_width"],
-        config["data_in_exponent_width"],
-        config["data_in_exponent_bias"],
-    )
-    b_width, b_exponent_width, b_exponent_bias = (
-        config["bias_width"],
-        config["bias_exponent_width"],
-        config["bias_exponent_bias"],
-    )
-
-    w_quantizer = partial(
-        minifloat_ieee_quantizer,
-        width=w_width,
-        exponent_width=w_exponent_width,
-        exponent_bias=w_exponent_bias,
-    )
-
-    x_quantizer = partial(
-        minifloat_ieee_quantizer,
-        width=x_width,
-        exponent_width=x_exponent_width,
-        exponent_bias=x_exponent_bias,
-    )
-
-    b_quantizer = partial(
-        minifloat_ieee_quantizer,
-        width=b_width,
-        exponent_width=b_exponent_width,
-        exponent_bias=b_exponent_bias,
-    )
-
-    x = x_quantizer(x)
-    weight = w_quantizer(weight)
-    bias = b_quantizer(bias) if bias is not None else None
-
-    return F.linear(x, weight, bias)
-
-
 def linearLog(
     x: Tensor,
     weight: Tensor,

@@ -1,6 +1,16 @@
 from .attention_head import BertSelfAttentionHeadInteger
 from .attention import BertSelfAttentionInteger
 
+from .roberta import (
+    RobertaSelfAttentionLSQInteger,
+    RobertaIntermediateLSQInteger,
+    RobertaOutputLSQInteger,
+    RobertaClassificationHeadLSQInteger,
+    RobertaSelfOutputLSQInteger,
+)
+
+from .llama import LlamaAttentionLSQInteger
+
 # from .add import AddInteger
 from .conv1d import (
     Conv1dBlockFP,
@@ -151,7 +161,7 @@ from .gqa import (
     GroupedQueryAttentionInteger,
 )
 
-quantized_module_map = {
+quantized_basic_module_map = {
     "conv1d_block_minifloat": Conv1dBlockMinifloat,
     "conv1d_integer": Conv1dInteger,
     "conv1d_binary": Conv1dBinary,
@@ -269,7 +279,29 @@ quantized_module_map = {
     "softplus_ternary": SoftplusTernary,
     "batch_norm1d_fixed": BatchNorm1dInteger,
     "batch_norm1d_linear": BatchNorm1dInteger,
+}
+
+quantized_bert_module_map = {
     "bert_self_attention_head_integer": BertSelfAttentionHeadInteger,
     "bert_self_attention_integer": BertSelfAttentionInteger,
     "grouped_query_attention_integer": GroupedQueryAttentionInteger,
 }
+
+quantized_roberta_module_map = {
+    "roberta_self_attention_lsqinteger": RobertaSelfAttentionLSQInteger,
+    "roberta_intermediate_lsqinteger": RobertaIntermediateLSQInteger,
+    "roberta_output_lsqinteger": RobertaOutputLSQInteger,
+    "roberta_classification_head_lsqinteger": RobertaClassificationHeadLSQInteger,
+    "roberta_self_output_lsqinteger": RobertaSelfOutputLSQInteger,
+}
+
+quantized_llama_module_map = {
+    "llama_self_attention_lsqinteger": LlamaAttentionLSQInteger,
+}
+
+quantized_module_map = (
+    quantized_basic_module_map
+    | quantized_bert_module_map
+    | quantized_roberta_module_map
+    | quantized_llama_module_map
+)
