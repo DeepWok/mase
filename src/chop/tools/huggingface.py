@@ -9,8 +9,9 @@ from transformers import (
     Trainer,
     TrainingArguments,
     PreTrainedTokenizer,
+    Wav2Vec2Processor,
 )
-from datasets import load_dataset, DatasetDict
+from datasets import load_dataset, DatasetDict, Dataset
 import evaluate
 
 from chop.tools import get_logger
@@ -56,6 +57,7 @@ def get_tokenized_dataset(
     dataset: str,
     checkpoint: str,
     return_tokenizer: bool = False,
+    return_processor: bool = False,
 ):
     """
     Tokenizes a dataset using the AutoTokenizer from Huggingface.
@@ -73,21 +75,34 @@ def get_tokenized_dataset(
         Tokenized dataset.
     - tokenizer: PreTrainedTokenizer
         Tokenizer used for tokenization. Only returned if return_tokenizer is True.
+    - processor: PreTrainedProcessor
+        Returns processor, which is tokenizer combined with feature extractor, useful for Wav2Vec2 models.
     """
     logger.info(f"Tokenizing dataset {dataset} with AutoTokenizer for {checkpoint}.")
 
+    if "wav2vec2" in checkpoint:
+        if "librispeech_asr" in dataset:
+            raw_datasets = load_dataset(dataset, "clean", split="validation", streaming=True, trust_remote_code=True)
+            sample_list = list(raw_datasets.take(50))
+            small_dataset = Dataset.from_list(sample_list)
+        else:
+            print("Dataset not implemented yet for wav2vec type models")
+            return
+
+        processor = Wav2Vec2Processor.from_pretrained(checkpoint)
+        tokenizer = processor.tokenizer
+        tokenized_dataset = small_dataset.map(
+            lambda x: preprocess_librispeech_asr(x, processor),
+            remove_columns=["speaker_id", "file", "id", "chapter_id", "audio"]
+        )
+
+        if return_processor:
+            return tokenized_dataset, tokenizer, processor
+        else:
+            return tokenized_dataset, tokenizer
+         
     # Load and tokenize datasets
-    raw_datasets = load_dataset(dataset,
-        data_files={
-            "train": [
-                "train-clean-100/61/70968/61-70968-0000.flac",
-                "train-clean-100/61/70968/61-70968-0001.flac"
-            ],
-            "test": [
-                "test-clean/61/70968/61-70968-0020.flac"
-            ]
-        },
-    )
+    raw_datasets = load_dataset(dataset)
     tokenizer = AutoTokenizer.from_pretrained(checkpoint)
 
     def tokenize_function(example):
@@ -206,3 +221,22 @@ def get_trainer(
     )
 
     return trainer
+
+
+def preprocess_librispeech_asr(example, processor):
+    audio_array = example["audio"]["array"]
+    sampling_rate = example["audio"]["sampling_rate"]
+
+    inputs = processor(audio=audio_array, sampling_rate=int(sampling_rate), return_tensors="pt", padding=True)
+    attention_mask = torch.ones(inputs.input_values.shape, dtype=torch.long)
+
+    with processor.as_target_processor():
+        labels = processor.tokenizer(example["text"], return_tensors="pt").input_ids
+
+    return {
+        "input_values": inputs.input_values.squeeze(0),
+        "attention_mask": attention_mask.squeeze(0),
+        "labels": labels.squeeze(0)
+    }
+
+
