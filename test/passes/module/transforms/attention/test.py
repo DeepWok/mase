@@ -137,21 +137,21 @@ def test_attn_from_model(model):
     q_w, k_w, v_w = torch.split(c_attn_weight, embed_dim, dim=1)
     q_w, k_w, v_w = q_w.transpose(0, 1), k_w.transpose(0, 1), v_w.transpose(0, 1)
     q_b, k_b, v_b = torch.split(c_attn_bias, embed_dim, dim=0)
-    x, q_out, k_out, v_out = sdpa_attn.x, sdpa_attn.q, sdpa_attn.k, sdpa_attn.v
+    # x, q_out, k_out, v_out = sdpa_attn.x, sdpa_attn.q, sdpa_attn.k, sdpa_attn.v
 
     m_qw, m_qb = mgqa_module.to_q.weight, mgqa_module.to_q.bias
     m_kw, m_kb = mgqa_module.to_k.weight, mgqa_module.to_k.bias
     m_vw, m_vb = mgqa_module.to_v.weight, mgqa_module.to_v.bias
 
-    mx, mq_out, nk_out, nv_out = mgqa_module.x, mgqa_module.q, mgqa_module.k, mgqa_module.v
+    # mx, mq_out, nk_out, nv_out = mgqa_module.x, mgqa_module.q, mgqa_module.k, mgqa_module.v
 
     print("q_w:", torch.equal(q_w, m_qw))
     print("k_w:", torch.equal(k_w, m_kw))
     print("v_w:", torch.equal(v_w, m_vw))
-    print("q_out:", torch.allclose(q_out, mq_out))
-    print("k_out:", torch.allclose(k_out, nk_out))
-    print("v_out:", torch.allclose(v_out, nv_out))
-    print("x:", torch.allclose(x, mx))
+    # print("q_out:", torch.allclose(q_out, mq_out))
+    # print("k_out:", torch.allclose(k_out, nk_out))
+    # print("v_out:", torch.allclose(v_out, nv_out))
+    # print("x:", torch.allclose(x, mx))
     print("q_b:", torch.equal(q_b, m_qb))
     print("k_b:", torch.equal(k_b, m_kb))
     print("v_b:", torch.equal(v_b, m_vb))

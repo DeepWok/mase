@@ -263,23 +263,31 @@ def transform_gpt2sdpa_to_mgqa(
 
         # handle kv pair reduction
         if kv_heads < heads:
-            # weight
+            
             g_size = heads // kv_heads
+            
+            # -------- Weight --------
+            # [heads * dim_head, in_dim] -> [heads, dim_head, in_dim]
+            k_w_r = k_w.reshape(heads, dim_head, embed_dim)  # [heads, dim_head, embed_dim]
+            v_w_r = v_w.reshape(heads, dim_head, embed_dim)
 
-            k_w_r = k_w.reshape(embed_dim, heads, dim_head)
-            v_w_r = v_w.reshape(embed_dim, heads, dim_head)
-            k_w_r = k_w_r.reshape(embed_dim, kv_heads, g_size, dim_head).mean(dim=2)
-            v_w_r = v_w_r.reshape(embed_dim, kv_heads, g_size, dim_head).mean(dim=2)
-            k_w = k_w_r.reshape(embed_dim, kv_heads * dim_head)
-            v_w = v_w_r.reshape(embed_dim, kv_heads * dim_head)
+            # Group the heads => shape [kv_heads, g_size, dim_head, in_dim]
+            k_w_r = k_w_r.reshape(kv_heads, g_size, dim_head, embed_dim).mean(dim=1)
+            v_w_r = v_w_r.reshape(kv_heads, g_size, dim_head, embed_dim).mean(dim=1) # [kv_heads, dim_head, in_dim]
 
-            # bias
-            k_b_r = k_b.reshape(heads, dim_head)                       # [heads, d_head]
-            v_b_r = v_b.reshape(heads, dim_head)                       # [heads, d_head]
-            k_b_r = k_b_r.reshape(kv_heads, g_size, dim_head).mean(dim=1)
+            # Flatten the row dims => shape [kv_heads * dim_head, in_dim]
+            k_w = k_w_r.reshape(kv_heads * dim_head, embed_dim)
+            v_w = v_w_r.reshape(kv_heads * dim_head, embed_dim)
+
+            # -------- Biases --------
+            # original shape is [heads * dim_head].
+            k_b_r = k_b.reshape(heads, dim_head)                         # [heads, dim_head]
+            v_b_r = v_b.reshape(heads, dim_head)
+            k_b_r = k_b_r.reshape(kv_heads, g_size, dim_head).mean(dim=1)  # [kv_heads, dim_head]
             v_b_r = v_b_r.reshape(kv_heads, g_size, dim_head).mean(dim=1)
-            k_b = k_b_r.reshape(kv_heads * dim_head)  # back to [kv_heads * d_head]
+            k_b = k_b_r.reshape(kv_heads * dim_head)  # [out_dim]
             v_b = v_b_r.reshape(kv_heads * dim_head)
+
 
         if mgqa.to_k is not None:
             mgqa.to_k.weight.copy_(k_w)
