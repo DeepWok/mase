@@ -108,7 +108,7 @@ def finetune_bert(model):
         evaluation_strategy="epoch",
         report_to=["none"],
         num_train_epochs=2,
-        logging_steps=1000,
+        logging_steps=25000,
         per_device_train_batch_size=2,  # set training batch size
         per_device_eval_batch_size=2,    # set evaluation batch size
     )
