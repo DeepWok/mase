@@ -22,22 +22,22 @@ def mxint_quantize(x, width: int = 12, exponent_width: int = 6, exponent: int = 
     - `block_size`: a list of integers where each integer is the block size on that dimension. See function `block`.
 
     """
-    exponent_bias = 2 ** (exponent_width - 1)
 
-    exponent_max = 2**exponent_width - 1 - exponent_bias
-    exponent_min = -exponent_bias
+    exponent_bias = 2 ** (exponent_width - 1) - 1
 
     # exponent
     if exponent == None:
-        exponent = torch.ceil(torch.log2(x.abs().max())) - exponent_bias
-        exponent = torch.clamp(exponent, exponent_min, exponent_max)
+        exponent = torch.floor(torch.log2(x.abs().max())) + exponent_bias
+        exponent = torch.clamp(exponent, 0, 2**exponent_width - 1)
     # mantissa
-    int_min = -(2 ** (width - 1))
-    int_max = 2 ** (width - 1) - 1
-    mantissa = x / 2**exponent
-    mantissa = torch.clamp(mantissa.floor(), int_min, int_max)
-    msfp_x = (2**exponent) * mantissa
-    return msfp_x, mantissa, exponent
+    element_max = 2 ** (width - 1) - 1
+    shift = 2 ** (width - 2)
+
+    mantissa = shift * x / 2 ** (exponent - exponent_bias)
+    mantissa = torch.clamp(mantissa.floor(), -element_max, element_max)
+    mxint_x = mantissa * 2 ** (exponent - exponent_bias) / shift
+
+    return mxint_x, mantissa, exponent
 
 
 def block_mxint_quant(tensor, q_config, parallelism):
@@ -153,6 +153,8 @@ class MXIntLinear(_LinearBase):
                 q_config={"width": out_width, "exponent_width": out_exponent_width},
                 parallelism=[out_p1, out_p0],
             )
+        else:
+            self.out_quantizer = None
         self.w_quantizer = partial(
             base_quantizer,
             q_config={"width": w_width, "exponent_width": w_exponent_width},

@@ -60,9 +60,13 @@ class MXINTVectorMultTB(Testbench):
                 int(self.dut.OUT_MAN_WIDTH),
                 int(self.dut.OUT_EXP_WIDTH),
             )
-            breakpoint()
+
+            eexp_out = eexp_out.int().item()
+            mask = 2 ** (int(self.dut.OUT_EXP_WIDTH) - 1)
+            eexp_out = (eexp_out & ~mask) - (eexp_out & mask)
+
             inputs.append((mdata_in.int().tolist(), edata_in.int().tolist()))
-            exp_outputs.append((mexp_out.int().tolist(), eexp_out.int().tolist()))
+            exp_outputs.append(([int(mexp) for mexp in mexp_out.tolist()], eexp_out))
         return inputs, exp_outputs
 
     async def run_test(self):
@@ -85,7 +89,7 @@ class MXINTVectorMultTB(Testbench):
 
 @cocotb.test()
 async def test(dut):
-    tb = MXINTVectorMultTB(dut, num=1)
+    tb = MXINTVectorMultTB(dut, num=10)
     await tb.run_test()
 
 

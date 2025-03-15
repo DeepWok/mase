@@ -150,11 +150,11 @@ module mxint_linear #(
   localparam FDP_WIDTH = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 + $clog2(
       DATA_IN_0_PARALLELISM_DIM_0
   );
-  localparam FDP_EXP_WIDTH = (WEIGHT_PRECISION_1 > DATA_IN_0_PRECISION_1)? WEIGHT_PRECISION_1 + 1: DATA_IN_0_PRECISION_1 + 1;
-  localparam ACC_WIDTH = FDP_WIDTH + $clog2(IN_0_DEPTH_DIM_0) + 2 ** FDP_EXP_WIDTH;
-  localparam ACC_EXP_WIDTH = FDP_EXP_WIDTH;
+  localparam FDP_EXP_WIDTH_IN =(WEIGHT_PRECISION_1 > DATA_IN_0_PRECISION_1)? WEIGHT_PRECISION_1 + 1: DATA_IN_0_PRECISION_1 + 1;
+  localparam FDP_EXP_WIDTH_OUT = FDP_EXP_WIDTH_IN + $clog2($clog2(IN_0_DEPTH_DIM_0) + 1);
+  localparam ACC_WIDTH = FDP_WIDTH + $clog2(IN_0_DEPTH_DIM_0) + 2 ** FDP_EXP_WIDTH_IN;
   localparam LOSSLESS_OUT_WIDTH = ACC_WIDTH + HAS_BIAS;
-  localparam LOSSLESS_OUT_EXP_WIDTH = ACC_EXP_WIDTH;
+  localparam LOSSLESS_OUT_EXP_WIDTH = FDP_EXP_WIDTH_OUT;
   /* verilator lint_off UNUSEDSIGNAL */
   // Assume the parallelised hardware above have the same arrival time
   // which means that they always have the same state. So we can just
@@ -163,15 +163,15 @@ module mxint_linear #(
       fdp_data_ready, fdp_weight_ready;
   assign circular_weight_ready = fdp_weight_ready[0];
   assign circular_data_in_0_ready = fdp_data_ready[0];
-  logic [FDP_EXP_WIDTH-1:0] fdp_edata_out [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_1 - 1:0];
+  logic [FDP_EXP_WIDTH_IN-1:0] fdp_edata_out [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_1 - 1:0];
   logic [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_1 - 1:0] fdp_data_out_valid;
 
   logic [FDP_WIDTH-1:0] acc_mdata_in[DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_1 - 1:0];
-  logic [FDP_EXP_WIDTH-1:0] acc_edata_in;
+  logic [FDP_EXP_WIDTH_IN-1:0] acc_edata_in;
   logic acc_data_in_valid, acc_data_in_ready;
 
   logic [         ACC_WIDTH-1:0] acc_mdata_out   [DATA_IN_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0-1:0];
-  logic [FDP_EXP_WIDTH-1:0] acc_edata_out;
+  logic [FDP_EXP_WIDTH_OUT-1:0] acc_edata_out;
   logic acc_data_out_valid, acc_data_out_ready;
   logic [LOSSLESS_OUT_WIDTH-1:0] cast_mdata_out_0[DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0-1:0];
   logic [LOSSLESS_OUT_EXP_WIDTH-1:0] cast_edata_out_0;
@@ -220,7 +220,7 @@ module mxint_linear #(
 
   mxint_accumulator #(
       .DATA_IN_0_PRECISION_0(FDP_WIDTH),
-      .DATA_IN_0_PRECISION_1(FDP_EXP_WIDTH),
+      .DATA_IN_0_PRECISION_1(FDP_EXP_WIDTH_IN),
       .IN_DEPTH(IN_0_DEPTH_DIM_0),
       .BLOCK_SIZE(DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0)
   ) accumulator_inst (
@@ -239,8 +239,8 @@ module mxint_linear #(
 
   logic [BIAS_PRECISION_0-1:0] mbias_sext[DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0-1:0];
   logic [LOSSLESS_OUT_WIDTH-1:0] shifted_mbias[DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0-1:0];
-  logic [FDP_EXP_WIDTH - 1:0] exp_difference;
-  logic [FDP_EXP_WIDTH - 1:0] abs_shift_value;
+  logic [FDP_EXP_WIDTH_OUT - 1:0] exp_difference;
+  logic [FDP_EXP_WIDTH_OUT - 1:0] abs_shift_value;
   if (HAS_BIAS) begin : bias_cast
     for (genvar k = 0; k < DATA_OUT_0_PARALLELISM_DIM_1; k++)
       assign mbias_sext[(k+1)*DATA_OUT_0_PARALLELISM_DIM_0 - 1:k*DATA_OUT_0_PARALLELISM_DIM_0] = circular_mbias;
@@ -250,10 +250,11 @@ module mxint_linear #(
         .data_out_valid(cast_data_out_0_valid),
         .data_out_ready(cast_data_out_0_ready)
     );
+    // This is wrong and should be biased not signed ?
     assign exp_difference = $signed(circular_ebias) - $signed(acc_edata_out);
-    assign abs_shift_value = exp_difference[FDP_EXP_WIDTH - 1]? (~exp_difference + 1): exp_difference;
+    assign abs_shift_value = exp_difference[FDP_EXP_WIDTH_OUT - 1]? (~exp_difference + 1): exp_difference;
     for (genvar m = 0; m < DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1; m++) begin
-      assign shifted_mbias[m] = exp_difference[FDP_EXP_WIDTH-1] ? $signed(
+      assign shifted_mbias[m] = exp_difference[FDP_EXP_WIDTH_OUT-1] ? $signed(
           mbias_sext[m]
       ) >>> abs_shift_value : $signed(
           mbias_sext[m]

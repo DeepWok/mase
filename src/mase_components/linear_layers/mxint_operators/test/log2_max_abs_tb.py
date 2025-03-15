@@ -38,7 +38,6 @@ class VerificationCase(Testbench):
     def sw_compute(self):
         ref = []
         for i in range(self.samples):
-            breakpoint()
             ref.append(
                 math.ceil(math.log2(max([abs(data) for data in self.inputs.data[i]])))
             )
