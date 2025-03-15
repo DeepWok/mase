@@ -1,0 +1,15 @@
+task: quantile_int
+config_list:
+  - width
+  - frac_width
+
+config_choice:
+  act:
+    - [8]
+    - [0.95, 0.99, 1]
+  w:
+    - [8]
+    - [0.95, 0.99, 1]
+  b:
+    - [8]
+    - [0.95, 0.99, 1]

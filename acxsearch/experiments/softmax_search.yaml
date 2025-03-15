@@ -1,0 +1,15 @@
+task: softmax
+config_list:
+  - width
+  - frac_width
+  - exp_width
+  - exp_frac_width
+  - div_frac_width
+
+config_choice:
+  act:
+    - [8, 10]
+    - [5]
+    - [8, 12, 16]
+    - [4, 8]
+    - [7, 9]
