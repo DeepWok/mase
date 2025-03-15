@@ -85,7 +85,7 @@ class ONNXRuntime:
             train_sample,
             save_path,
             export_params=True,
-            opset_version=11,
+            opset_version=14,
             do_constant_folding=True,
             input_names=["input"],
         )
