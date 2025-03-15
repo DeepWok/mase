@@ -10,7 +10,7 @@ import chop.passes as passes # type: ignore
 from chop.passes.module import report_trainable_parameters_analysis_pass # type: ignore
 from chop.tools import get_trainer # type: ignore
 from datasets import concatenate_datasets, DatasetDict, load_dataset, Dataset
-from chop.models import DataCollatorCTCWithPadding
+from chop.models import DataCollatorCTCWithPadding, CombinedWav2Vec2CTC
 from pyctcdecode import build_ctcdecoder
 
 # -------------------------------
@@ -149,8 +149,13 @@ trainer = get_trainer(
     evaluate_metric="wer",
     num_train_epochs=1,
     data_collator=data_collator,
+    gradient_accumulation_steps=4,
+    per_device_train_batch_size=2,
+    per_device_eval_batch_size=2,
+    decoder=decoder,
+    beam_width=10,
 )
-trainer.train()
+# trainer.train()
 
 # Evaluate accuracy
 eval_results = trainer.evaluate()

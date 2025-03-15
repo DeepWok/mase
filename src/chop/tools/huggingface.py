@@ -133,6 +133,8 @@ def get_trainer(
     gradient_accumulation_steps: int = 1,
     per_device_train_batch_size: int = 8,
     per_device_eval_batch_size: int = 8,
+    decoder = None,
+    beam_width = 10,
 ):
     """
     Returns a Trainer object for a given model and tokenized dataset.
@@ -175,20 +177,31 @@ def get_trainer(
 
     elif evaluate_metric == "wer":
         def compute_wer(eval_pred):
-            logits = eval_pred.predictions[0]
-            labels = eval_pred.label_ids
-            predictions = np.argmax(logits, axis=-1)
+            raw_logits = eval_pred.predictions[0]  
+            labels = eval_pred.label_ids           
 
-            # Decode each prediction individually
-            pred_texts = [tokenizer.decode(pred.tolist(), skip_special_tokens=True) for pred in predictions]
+            pred_texts = []
+
+            for i in range(raw_logits.shape[0]):
+                sample_logits = torch.from_numpy(raw_logits[i])  
+                sample_log_probs = sample_logits.log_softmax(dim=-1).cpu().numpy()
+
+                if decoder is not None:
+                    transcription = decoder.decode(sample_log_probs, beam_width=beam_width)
+                else:
+                    greedy_ids = np.argmax(sample_log_probs, axis=-1)
+                    transcription = tokenizer.decode(greedy_ids, skip_special_tokens=True)
+
+                pred_texts.append(transcription.lower())
+
             # Decode each label individually, filtering out the padding (-100)
-            label_texts = [
-                tokenizer.decode([token for token in label if token != -100], skip_special_tokens=True)
-                for label in labels
-            ]
+            label_texts = []
+            for label_seq in labels:
+                label_filtered = [token for token in label_seq if token != -100]
+                label_text = tokenizer.decode(label_filtered, skip_special_tokens=True)
+                label_texts.append(label_text.lower())
 
             return {"wer": metric.compute(predictions=pred_texts, references=label_texts)}
-
 
         metric_fn = compute_wer
 

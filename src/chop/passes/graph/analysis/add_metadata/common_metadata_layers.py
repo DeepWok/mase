@@ -740,11 +740,7 @@ def analyse_common_parameters_placeholder(meta, result, args, kwargs, add_value=
 def analyse_common_parameters_function(meta, result, args, kwargs, add_value=True):
     # fetch mase info
     mase_op = meta["common"]["mase_op"]
-
-    # deal with result
     meta = _annotate_result_metadata(meta, result, add_value)
-    # print("Function:", mase_op) for Debugging
-    # deal with args and kwargs
     meta = _annotate_arg_metadata(meta, args, kwargs, func_data[mase_op], add_value)
 
     return meta
@@ -798,7 +794,6 @@ def analyse_common_parameters_module(meta, result, args, kwargs, add_value=True)
 def analyse_common_parameters_method(meta, result, args, kwargs, add_value=True):
     mase_op = meta["common"]["mase_op"]
     meta = _annotate_result_metadata(meta, result, add_value)
-    # print("Method: ", mase_op) for debugging
     meta = _annotate_arg_metadata(meta, args, kwargs, method_data[mase_op], add_value)
     return meta
 

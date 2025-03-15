@@ -237,7 +237,6 @@ def graph_iterator_for_metadata(
             analyse_fn = analyse_common_parameters_function
         elif node.op == "call_method":
             self_obj, *args = load_arg(node.args, env)
-            # print(self_obj)
             kwargs = load_arg(node.kwargs, env)
             result = getattr(self_obj, node.target)(*args, **kwargs)
             analyse_fn = analyse_common_parameters_method

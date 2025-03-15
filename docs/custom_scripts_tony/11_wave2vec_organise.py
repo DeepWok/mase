@@ -96,11 +96,13 @@ trainer = get_trainer(
     gradient_accumulation_steps = 4,
     per_device_train_batch_size = 2,
     per_device_eval_batch_size = 2,
+    decoder=decoder,
+    beam_width=10,
 )
 trainer.add_callback(MovementTrackingCallback())
 
 print("Starting warm-up training to accumulate movement data...")
-trainer.train()
+# trainer.train()
 print("Warm-up training complete.")
 
 # -------------------------------
