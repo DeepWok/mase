@@ -2,12 +2,24 @@ from torch import Tensor
 import torch.nn as nn
 import torch
 from typing import Any
+import pytorch_lightning as pl
 import numpy as np
 import torch.nn.functional as F
+from chop.models.utils import register_mase_model, register_mase_checkpoint
+
+from .rendering import render_vision
 
 
-# Model
-class NeRFVision(nn.Module, output_ch=4):
+# Model# Model
+@register_mase_model(
+    "nerfvision",
+    checkpoints=["nerfvision"],
+    model_source="nerfvision",
+    task_type="nerfvision",
+    physical_data_point_classification=True,
+    is_fx_traceable=True,
+)
+class NeRFVision(nn.Module):
     def __init__(
         self,
         D=8,
@@ -16,7 +28,7 @@ class NeRFVision(nn.Module, output_ch=4):
         input_ch_views=3,
         output_ch=4,
         skips=[4],
-        use_viewdirs=False,
+        use_viewdirs=True,
     ):
         """
         This is the Nerf model from the Nerf Paper
@@ -60,10 +72,16 @@ class NeRFVision(nn.Module, output_ch=4):
             self.output_linear = nn.Linear(W, output_ch)
 
     def forward(self, x):
-        input_pts, input_views = torch.split(
-            x, [self.input_ch, self.input_ch_views], dim=-1
+        return render_vision(
+            self,
+            x,
+            N_samples=4,
+            use_disp=False,
+            perturb=0,
+            noise_std=1,
         )
 
+    def apply_layers(self, input_pts, input_views):
         h = input_pts
         for i, l in enumerate(self.pts_linears):
             h = self.pts_linears[i](h)
@@ -72,9 +90,11 @@ class NeRFVision(nn.Module, output_ch=4):
                 h = torch.cat([input_pts, h], -1)
 
         if self.use_viewdirs:
+            # Add a new dimension and expand it
+            expanded_input_views = input_views.unsqueeze(1).expand(-1, h.shape[1], -1)  # -1 means it will retain the size of that dimension
             alpha = self.alpha_linear(h)
             feature = self.feature_linear(h)
-            h = torch.cat([feature, input_views], -1)
+            h = torch.cat([feature, expanded_input_views], -1)
 
             for i, l in enumerate(self.views_linears):
                 h = self.views_linears[i](h)
@@ -139,11 +159,257 @@ class NeRFVision(nn.Module, output_ch=4):
 
 # Getters ------------------------------------------------------------------------------
 def get_nerf(
-    info,
     pretrained=False,
     **kwargs: Any,
 ):
-    # image_size = info["image_size"]
-    num_classes = info.num_classes
-    # TODO: number of channels
-    return NeRFVision(output_ch=num_classes)
+    return NeRFVision()
+
+
+@register_mase_checkpoint("nerfvision")
+def get_nerfvision(
+    pretrained: bool = False,
+    **kwargs: Any,
+) -> NeRFVision:
+    model = get_nerf(
+        pretrained=pretrained,
+        **kwargs,
+    )
+    if pretrained:
+        weights = np.load('/teamspace/studios/this_studio/mase-team-coursework/mase/nerf_vision/lego_example/model_200000.npy', allow_pickle=True)
+        model.set_weights(weights)
+    else:
+        pretrained_weight_cls = None
+
+    return model
+
+
+from chop.tools.utils import deepsetattr
+import torch
+from chop.nn.quantized.modules.linear import (
+    LinearInteger,
+    LinearMinifloatDenorm,
+    LinearMinifloatIEEE,
+    LinearLog,
+    LinearBlockFP,
+    LinearBlockMinifloat,
+    LinearBlockLog,
+    LinearBinary,
+    LinearBinaryScaling,
+    LinearBinaryResidualSign,
+    LinearMXInt,
+)
+
+from optuna.trial import Trial
+from copy import deepcopy
+
+linear_layer_options = {
+    "unquantized": (torch.nn.Linear, {}),
+    "quantize_integer": (
+        LinearInteger,
+        {
+            "bitwidth": ([8, 16, 32], ["data_in_width", "weight_width", "bias_width"]),
+            "fracwidth": (
+                [2, 4, 8],
+                ["data_in_frac_width", "weight_frac_width", "bias_frac_width"],
+            ),
+        },
+    ),
+    "quantize_minidenorm": (
+        LinearMinifloatDenorm,
+        {
+            "bitwidth": ([8, 16, 32], ["data_in_width", "weight_width", "bias_width"]),
+            "expwidth": (
+                [2, 4, 7],
+                [
+                    "data_in_exponent_width",
+                    "weight_exponent_width",
+                    "bias_exponent_width",
+                ],
+            ),
+            "float-bias": (
+                None,
+                ["bias_exponent_bias", "data_in_exponent_bias", "weight_exponent_bias"],
+            ),
+        },
+    ),
+    "quantize_miniieee": (
+        LinearMinifloatIEEE,
+        {
+            "bitwidth": ([8, 16, 32], ["data_in_width", "weight_width", "bias_width"]),
+            "expwidth": (
+                [2, 4, 7],
+                [
+                    "data_in_exponent_width",
+                    "weight_exponent_width",
+                    "bias_exponent_width",
+                ],
+            ),
+            "float-bias": (
+                None,
+                ["bias_exponent_bias", "data_in_exponent_bias", "weight_exponent_bias"],
+            ),
+        },
+    ),
+    "quantize_log": (
+        LinearLog,
+        {
+            "expwidth": (
+                [2, 4, 8, 16, 32],
+                ["data_in_width", "weight_width", "bias_width"],
+            ),
+            "float-bias": (
+                None,
+                ["bias_exponent_bias", "data_in_exponent_bias", "weight_exponent_bias"],
+            ),
+        },
+    ),
+    "quantize_blockfp": (
+        LinearBlockFP,
+        {
+            "bitwidth": ([8, 16, 32], ["data_in_width", "weight_width", "bias_width"]),
+            "block_size": (
+                [4, 8, 16, 32],
+                ["data_in_block_size", "weight_block_size", "bias_block_size"],
+            ),
+            "expwidth": (
+                [2, 4, 7],
+                [
+                    "data_in_exponent_width",
+                    "weight_exponent_width",
+                    "bias_exponent_width",
+                ],
+            ),
+            "float-bias": (
+                [2, 4, 8],
+                ["bias_exponent_bias", "data_in_exponent_bias", "weight_exponent_bias"],
+            ),
+        },
+    ),
+    "quantize_blockminifloat": (
+        LinearBlockMinifloat,
+        {
+            "bitwidth": ([8, 16, 32], ["data_in_width", "weight_width", "bias_width"]),
+            "block_size": (
+                [4, 8, 16, 32],
+                ["data_in_block_size", "weight_block_size", "bias_block_size"],
+            ),
+            "expwidth": (
+                [2, 4, 7],
+                [
+                    "data_in_exponent_width",
+                    "weight_exponent_width",
+                    "bias_exponent_width",
+                ],
+            ),
+            "float-bias": (
+                [2, 4, 8],
+                [
+                    "bias_exponent_bias_width",
+                    "data_in_exponent_bias_width",
+                    "weight_exponent_bias_width",
+                ],
+            ),
+        },
+    ),
+    "quantize_blocklog": (
+        LinearBlockLog,
+        {
+            "block_size": (
+                [4, 8, 16, 32],
+                ["data_in_block_size", "weight_block_size", "bias_block_size"],
+            ),
+            "expwidth": (
+                [2, 4, 8, 16, 32],
+                ["data_in_width", "weight_width", "bias_width"],
+            ),
+            "float-bias": (
+                [2, 4, 8],
+                [
+                    "bias_exponent_bias_width",
+                    "data_in_exponent_bias_width",
+                    "weight_exponent_bias_width",
+                ],
+            ),
+        },
+    ),
+    "quantize_binary": (
+        LinearBinary,
+        {
+            "stochastic": (
+                [True, False],
+                ["data_in_stochastic", "bias_stochastic", "weight_stochastic"],
+            ),
+            "bipolar": (
+                True,
+                ["data_in_bipolar", "bias_bipolar", "weight_bipolar"],
+            ),
+        },
+    ),
+    "quantize_mxint": (
+        LinearMXInt,
+        {
+            "name": "mxint_hardware",
+            "name": "mxint",
+            "data_in_width": 12,
+            "data_in_exponent_width": 4,
+            "data_in_parallelism": [1, 2],
+            "weight_block_size": [1, 2],
+            "weight_width": 12,
+            "weight_exponent_width": 4,
+            "weight_parallelism": [2, 2],
+            "bias_block_size": [2, 2],
+            "bias_width": 12,
+            "bias_exponent_width": 4,
+            "bias_parallelism": [1, 2],
+            "data_in_block_size": [1, 2],
+        },
+    ),
+}
+
+
+def construct_model(trial: Trial, trial_model):
+    # Quantize layers according to optuna suggestions
+    for name, layer in trial_model.named_modules():
+        if isinstance(layer, torch.nn.Linear):
+            print(f"{name}_type", list(linear_layer_options.keys()))
+            new_layer_option = trial.suggest_categorical(
+                f"{name}_type",
+                list(linear_layer_options.keys()),
+            )
+
+            new_layer_class, kwarg_params = linear_layer_options[new_layer_option]
+            if new_layer_class is torch.nn.Linear:
+                continue
+
+            kwargs = {
+                "in_features": layer.in_features,
+                "out_features": layer.out_features,
+                "config": {},
+            }
+
+            print(layer.in_features)
+            print(layer.out_features, "break")
+
+            for param_name, (space, affected_configs) in deepcopy(kwarg_params).items():
+                match space:
+                    case list():
+                        print(f"{name}_{new_layer_option}_{param_name}", space)
+                        new_param = trial.suggest_categorical(
+                            f"{name}_{new_layer_option}_{param_name}", space
+                        )
+                        if param_name == "block_size":
+                            new_param = [new_param for _ in range(1)]
+                    case _:
+                        new_param = space
+                # apply the new_parameter to all relevant configurations
+                for a_config in affected_configs:
+                    kwargs["config"][a_config] = new_param
+
+            # Create the new layer (copy the weights)
+            new_layer = new_layer_class(**kwargs)
+            new_layer.weight.data = layer.weight.data
+
+            # Replace the layer in the model
+            deepsetattr(trial_model, name, new_layer)
+
+    return trial_model.to(device)

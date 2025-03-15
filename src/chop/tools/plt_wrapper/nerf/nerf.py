@@ -46,8 +46,8 @@ class NeRFModelWrapper(WrapperBase):
         loss = self.loss(results, rgbs)
 
         with torch.no_grad():
-            typ = "fine" if "rgb_fine" in results else "coarse"
-            psnr_ = psnr(results[f"rgb_{typ}"], rgbs)
+            # typ = "fine" if "rgb_fine" in results else "coarse"
+            psnr_ = psnr(results[f"rgb"], rgbs)
 
         # self.log('lr', get_learning_rate(self.optimizer))
         self.log("train/loss", loss)
@@ -61,21 +61,21 @@ class NeRFModelWrapper(WrapperBase):
         rgbs = rgbs.squeeze()  # (H*W, 3)
         results = self(rays)
         log = {"val_loss": self.loss(results, rgbs)}
-        typ = "fine" if "rgb_fine" in results else "coarse"
+        # typ = "fine" if "rgb_fine" in results else "coarse"
 
         if batch_idx == 0:
             W, H = self.hparams.img_wh
             img = (
-                results[f"rgb_{typ}"].view(H, W, 3).permute(2, 0, 1).cpu()
+                results[f"rgb"].view(H, W, 3).permute(2, 0, 1).cpu()
             )  # (3, H, W)
             img_gt = rgbs.view(H, W, 3).permute(2, 0, 1).cpu()  # (3, H, W)
-            depth = visualize_depth(results[f"depth_{typ}"].view(H, W))  # (3, H, W)
+            depth = visualize_depth(results[f"depth"].view(H, W))  # (3, H, W)
             stack = torch.stack([img_gt, img, depth])  # (3, 3, H, W)
             self.logger.experiment.add_images(
                 "val/GT_pred_depth", stack, self.global_step
             )
 
-        psnr_ = psnr(results[f"rgb_{typ}"], rgbs)
+        psnr_ = psnr(results[f"rgb"], rgbs)
         log["val_psnr"] = psnr_
 
         self.loss_val.update(log["val_loss"])

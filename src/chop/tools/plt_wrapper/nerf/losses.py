@@ -8,9 +8,9 @@ class ColorLoss(nn.Module):
         self.loss = nn.MSELoss(reduction="mean")
 
     def forward(self, inputs, targets):
-        loss = self.loss(inputs["rgb_coarse"], targets)
-        if "rgb_fine" in inputs:
-            loss += self.loss(inputs["rgb_fine"], targets)
+        loss = self.loss(inputs["rgb"], targets)
+        # if "rgb_fine" in inputs:
+        #     loss += self.loss(inputs["rgb_fine"], targets)
 
         return self.coef * loss
 

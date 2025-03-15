@@ -863,7 +863,7 @@ class ChopCLI:
             name=self.args.model,
             task=self.args.task,
             dataset_info=dataset_info,
-            checkpoint=checkpoint,
+            checkpoint=checkpoint or self.args.model,
             pretrained=self.args.is_pretrained,
             quant_config=quant_config,
         )

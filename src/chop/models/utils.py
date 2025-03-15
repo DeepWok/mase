@@ -21,6 +21,7 @@ class ModelSource(Enum):
     VISION_OTHERS = "vision_others"
     PHYSICAL = "physical"
     NERF = "nerf"
+    NERF_VISION = "nerfvision"
 
 
 class ModelTaskType(Enum):
@@ -36,6 +37,7 @@ class ModelTaskType(Enum):
     VISION = "vision"
     PHYSICAL = "physical"
     NERF = "nerf"
+    NERF_VISION = "nerfvision"
 
 
 @dataclass
@@ -99,6 +101,10 @@ class MaseModelInfo:
             # TODO:
             pass
 
+        if self.task_type == ModelTaskType.NERF_VISION:
+            # TODO:
+            pass
+
         # manual models
         assert self.is_quantized + self.is_lora + self.is_sparse <= 1
         if self.is_quantized or self.is_lora or self.is_sparse:
@@ -119,6 +125,10 @@ class MaseModelInfo:
     @property
     def is_nerf_model(self):
         return self.task_type == ModelTaskType.NERF
+    
+    @property
+    def is_nerf_vision_model(self):
+        return self.task_type == ModelTaskType.NERF_VISION
 
 
 class ModelFactory:
