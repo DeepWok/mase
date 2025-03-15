@@ -39,7 +39,7 @@ class CondensedLibrispeechASRDataset(Dataset):
         max_token_len=None,
         num_workers=0,
         load_from_cache_file=True,
-        auto_setup=True,
+        auto_setup=False,
         dataset_path=Path("./preprocessed_data"),
         config=LIBRISPEECH_CONFIG
     ):
