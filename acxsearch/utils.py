@@ -1,5 +1,5 @@
 import pytorch_lightning as pl
-from chop.plt_wrapper import get_model_wrapper
+from chop.tools.plt_wrapper import get_model_wrapper
 from pathlib import Path
 import torch
 from chop.passes.graph.analysis import (
@@ -12,12 +12,10 @@ from chop.passes.graph.transforms import (
 )
 import time
 from chop.tools.checkpoint_load import load_model
-from machop.chop.dataset import get_dataset_info, MaseDataModule
-from machop.chop.models import get_model, get_model_info
-from machop.chop.tools.get_input import get_dummy_input
-from machop.chop.ir.graph.mase_graph import MaseGraph
-from machop.chop.passes.graph.interface import save_mase_graph_interface_pass
-from machop.chop.tools.checkpoint_load import load_model
+from chop.dataset import get_dataset_info, MaseDataModule
+from chop.models import get_model, get_model_info
+from chop.tools.get_input import get_dummy_input
+from chop.ir.graph.mase_graph import MaseGraph
 from tqdm import tqdm
 import sys
 import toml
