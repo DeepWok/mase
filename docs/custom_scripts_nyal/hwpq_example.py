@@ -72,10 +72,10 @@ def main():
     # Configure HWPQ pruning
     hwpq_config = {
         "weight": {
-            "sparsity": 0.5,           # 50% sparsity
+            "sparsity": 0.1,           # 50% sparsity
             "method": "hwpq",          # Use our HWPQ method
             "scope": "local",          # Apply locally per layer
-            "structured_sparsity": True # Use 2:4 structured sparsity
+            "structured_sparsity": False # Use 2:4 structured sparsity
         },
         "activation": {
             "sparsity": 0.0,           # No activation pruning for HWPQ
