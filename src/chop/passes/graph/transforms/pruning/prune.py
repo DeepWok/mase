@@ -6,6 +6,7 @@ from chop.tools import get_logger
 from chop.passes.graph.transforms.pruning.load import load_activation_prune_config, load_weight_prune_config
 from chop.passes.graph.transforms.pruning.pruning_methods import weight_criteria_map, activation_criteria_map
 from chop.passes.graph.transforms.pruning.sparse_parameterization import FakeSparseWeight, FakeStructuredSparseWeight
+from chop.passes.graph.transforms.pruning.hwpq import HWPQParameterization
 
 logger = get_logger(__name__)
 logger.setLevel("INFO")
@@ -35,12 +36,21 @@ def get_weight_hook(name, info, named_info, w_config: dict):
     w_sparsity = named_info["weight_sparsity"]
     register_parameter_name = "weight"
 
+    # Add structured_sparsity flag if using HWPQ
+    if w_config["method"] == "hwpq":
+        named_info["structured_sparsity"] = w_config.get("structured_sparsity", True)
+
     if w_config["scope"] == "global":
         param_mask = w_rank_fn(value, info, w_sparsity, node_name=name)
     else:
         param_mask = w_rank_fn(value, named_info, w_sparsity)
 
-    parameterization = FakeSparseWeight(param_mask)
+    # Use special parameterization for HWPQ to handle both pruning and quantization
+    if w_config["method"] == "hwpq":
+        parameterization = HWPQParameterization(param_mask)
+    else:
+        parameterization = FakeSparseWeight(param_mask)
+    
     return (register_parameter_name, parameterization)
 
 
