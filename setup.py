@@ -100,6 +100,8 @@ requirements = [
     "jiwer", # Added for Wave2Vec2's WER (Word Error Rate) evaluation
     "pyctcdecode", # Added for Wave2Vec2's CTC decoding
     "torchaudio",    # Added for audio processing support
+    "tensorrt",    # Added for TensorRT support
+    "pycuda",    # Added for CUDA support
     ]
 
 setup(

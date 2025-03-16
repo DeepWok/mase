@@ -13,15 +13,15 @@ from datetime import datetime
 from pathlib import Path
 import time
 
-try:
-    import tensorrt as trt
-except ImportError:
-    raise ImportError("tensorrt is required for this functionality. Please install it from NVIDIA's repositories.")
+# try:
+#     import tensorrt as trt
+# except ImportError:
+#     raise ImportError("tensorrt is required for this functionality. Please install it from NVIDIA's repositories.")
 
-try:
-    from cuda import cudart
-except ImportError:
-    raise ImportError("pycuda's cudart is required for this functionality. Please install pycuda.")
+# try:
+#     from cuda import cudart
+# except ImportError:
+#     raise ImportError("pycuda's cudart is required for this functionality. Please install pycuda.")
 
 
 
@@ -72,6 +72,8 @@ def runtime_analysis_pass(model, pass_args=None):
 
     These metrics provide valuable insights into the model's efficiency, effectiveness, and operational cost, crucial for informed decision-making regarding model deployment in production environments.
     """
+    # import tensorrt as trt
+    # from cuda import cudart
 
     print(f"[DEBUG] tensorrt version: {trt.__version__}")
 
