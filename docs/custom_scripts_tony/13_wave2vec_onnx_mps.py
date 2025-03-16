@@ -179,10 +179,14 @@ runtime_analysis_config = {
     "task": "ctc",
     "decoder": decoder,
     "beam_width": 10,
+    "tokenizer": tokenizer,
 }
 
 mg.model = ONNXWrapper(mg.model)
+
 mg, onnx_meta = onnx_runtime_interface_pass(mg, pass_args=smoothquant_config)
+print("ONNX Pass")
 _, _ = runtime_analysis_pass(mg, pass_args=runtime_analysis_config)
+print("ONNX Pass Numero 2")
 _, _ = runtime_analysis_pass(onnx_meta['onnx_path'], pass_args=runtime_analysis_config)
 

@@ -392,6 +392,43 @@ class RuntimeAnalysis:
                     average="weighted",
                     task="multiclass",
                 )
+            case "ctc":
+                wer_metric = torchmetrics.text.WordErrorRate()
+
+                decoder = self.config.get("decoder", None)
+                beam_width = self.config.get("beam_width", 10)
+                tokenizer = self.config["tokenizer"]
+
+                def compute_wer_fn(eval_pred):
+                    logits = eval_pred.predictions[0]  # shape: [batch_size, time_steps, vocab_size]
+                    labels = eval_pred.label_ids       # shape: [batch_size, time_steps]
+
+                    pred_texts = []
+                    for i in range(logits.shape[0]):
+                        sample_logits = torch.from_numpy(logits[i])
+                        sample_log_probs = sample_logits.log_softmax(dim=-1).cpu().numpy()
+
+                        if decoder is not None:
+                            transcription = decoder.decode(sample_log_probs, beam_width=beam_width)
+                        else:
+                            raise Exception(
+                                """
+                                Decoder must be passed to the runtime analysis config for CTC task.
+                                Beam search decoder is recommended, beam_width is an additional parameter for this decoder type.""
+                                """
+                            )
+
+                        pred_texts.append(transcription.lower())
+
+                    label_texts = []
+                    for label_seq in labels:
+                        label_filtered = [token for token in label_seq if token != -100]
+                        label_text = tokenizer.decode(label_filtered, skip_special_tokens=True)
+                        label_texts.append(label_text.lower())
+
+                    return {"wer": wer_metric(pred_texts, label_texts)}
+                
+                ctc_wer_metric = compute_wer_fn
             case _:
                 raise Exception(
                     f"Unsupported task type {self.config['task']}. Please set a supported task type in the config file."

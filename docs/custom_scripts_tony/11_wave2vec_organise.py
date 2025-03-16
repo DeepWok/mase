@@ -102,7 +102,7 @@ trainer = get_trainer(
 trainer.add_callback(MovementTrackingCallback())
 
 print("Starting warm-up training to accumulate movement data...")
-# trainer.train()
+trainer.train()
 print("Warm-up training complete.")
 
 # -------------------------------
