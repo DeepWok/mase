@@ -55,6 +55,20 @@ def fine_tune(mg, ft_args):
 
     return current_loss
 
+def init_dataset(dataset_name, batch_size, model_name):
+    dataset_info = get_dataset_info(dataset_name)
+    data_module = MaseDataModule(
+        name=dataset_name,
+        batch_size=batch_size,
+        num_workers=56,
+        tokenizer=None,
+        max_token_len=512,
+        load_from_cache_file=True,
+        model_name=model_name,
+    )
+    data_module.prepare_data()
+    data_module.setup()
+    return data_module
 
 def initialize_graph(model_name, dataset_name, batch_size, load_name, load_type):
     task = "classification"
@@ -64,7 +78,7 @@ def initialize_graph(model_name, dataset_name, batch_size, load_name, load_type)
         name=model_name,
         task=task,
         dataset_info=dataset_info,
-        checkpoint=None,
+        checkpoint=model_name,
         pretrained=True,
     )
 

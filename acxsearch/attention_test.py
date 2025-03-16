@@ -1,29 +1,37 @@
-import sys
-import time
-from pathlib import Path
-import torch
-import argparse
-from datetime import datetime
+import os, sys, logging, traceback, pdb
 
-from chop.passes.graph.analysis import add_software_metadata_analysis_pass
-from chop.passes.graph.transforms.quantize import (
-    quantize_transform_pass,
+from chop.tools import get_logger
+from chop.tools.logger import set_logging_verbosity
+def excepthook(exc_type, exc_value, exc_traceback):
+    traceback.print_exception(exc_type, exc_value, exc_traceback)
+    print("\nEntering debugger...")
+    pdb.post_mortem(exc_traceback)
+sys.excepthook = excepthook
+
+logger = get_logger(__name__)
+set_logging_verbosity("info")
+
+exponent_width = 8
+
+logger = get_logger(__name__)
+set_logging_verbosity("info")
+
+
+from quant_aware_search import iterative_search
+
+
+
+
+checkpoint = "deit_tiny_patch16_224"
+quant_config = iterative_search(
+    checkpoint, 
+    "gelu",
+    {
+        "enable_internal_width": [True],
+        "hash_in_int_width": [2, 3, 4, 5, 6],
+        "hash_in_frac_width": [6,7,8,9,10,11,12,13,14,15,16],
+        "hash_out_int_width": [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
+        "hash_out_frac_width": [8,9,10,11,12,13,14,15,16],
+    }
 )
-from utils import acc_cal, loss_cal, initialize_graph
-import json
-
-
-ini_args = {
-"model_name": "deit_base_patch16_224",
-"dataset_name": "imagenet",
-"batch_size": 32,
-"load_name": None,
-"load_type": None,
-}
-device='cuda:0'
-mg, info = initialize_graph(**ini_args)
-# for n in mg.fx_graph.nodes:
-#     print(n.name)
-acc = acc_cal(mg.model, info['data_module'].test_dataloader())
-# a = 1
 
