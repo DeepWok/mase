@@ -45,25 +45,25 @@ module mxint_matrix_cat #(
     parameter DATA_IN_1_PARALLELISM_DIM_0 = 1,
     parameter DATA_IN_1_PARALLELISM_DIM_1 = 1,
 
-    parameter DATA_OUT_0_PRECISION_0       = 1,
-    parameter DATA_OUT_0_PRECISION_1       = 1,
-    parameter DATA_OUT_0_PARALLELISM_DIM_0 = 1,
-    parameter DATA_OUT_0_PARALLELISM_DIM_1 = 1,
-
-    parameter BLOCK_SIZE = PARALLELISM_0 * PARALLELISM_1,
+    parameter DATA_OUT_0_PRECISION_0 = 1,
+    parameter DATA_OUT_0_PRECISION_1 = 1,
 
     //---------------------------------------------------//
     //-------------     Hardware Aliases   --------------//
     //---------------------------------------------------//
 
+    localparam CONST_DIM = DATA_IN_0_PARALLELISM_DIM_0,
     /* verilator lint_off UNUSEDPARAM */
-    localparam DATA_OUT_0_TENSOR_SIZE_DIM_0 = DATA_IN_1_TENSOR_SIZE_DIM_0,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = CONST_DIM,
     /* verilator lint_on UNUSEDPARAM */
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1 + DATA_IN_1_TENSOR_SIZE_DIM_1,
 
-    localparam DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_1_TENSOR_SIZE_DIM_1 + DATA_IN_0_PARALLELISM_DIM_1, // Concatenation Dimension
+    localparam DATA_OUT_0_PARALLELISM_DIM_0 = CONST_DIM,
+    localparam DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1,
 
-    localparam STRIDE       = DATA_IN_1_PARALLELISM_DIM_1,
-    localparam OUT_LAST_DIM = DATA_OUT_0_TENSOR_SIZE_DIM_1,
+    localparam BLOCK_SIZE   = CONST_DIM * DATA_IN_0_PARALLELISM_DIM_1,
+    localparam CONCAT_DIM_0 = DATA_IN_0_TENSOR_SIZE_DIM_1 / DATA_IN_0_PARALLELISM_DIM_1,
+    localparam CONCAT_DIM_1 = DATA_IN_1_TENSOR_SIZE_DIM_1 / DATA_IN_1_PARALLELISM_DIM_1,
 
     localparam PARALLELISM_0 = DATA_IN_0_PARALLELISM_DIM_0,
     localparam PARALLELISM_1 = DATA_IN_0_PARALLELISM_DIM_1,
@@ -76,7 +76,7 @@ module mxint_matrix_cat #(
 
     localparam MWIDTH_OUT = DATA_OUT_0_PRECISION_0,
     localparam EWIDTH_OUT = DATA_OUT_0_PRECISION_1,
-    localparam FIFO_DEPTH                   = DATA_IN_0_TENSOR_SIZE_DIM_1 > DATA_IN_0_TENSOR_SIZE_DIM_1 ? DATA_IN_0_TENSOR_SIZE_DIM_1 : DATA_IN_0_TENSOR_SIZE_DIM_1
+    localparam FIFO_DEPTH = DATA_IN_0_TENSOR_SIZE_DIM_1 > DATA_IN_0_TENSOR_SIZE_DIM_1 ? DATA_IN_0_TENSOR_SIZE_DIM_1 : DATA_IN_0_TENSOR_SIZE_DIM_1
 ) (
     input wire clk,
     input wire rst,
@@ -97,8 +97,8 @@ module mxint_matrix_cat #(
     input  logic                   data_out_0_ready
 );
 
-  function void driveDataOut(logic [MWIDTH_IN_0-1:0] mdata[BLOCK_SIZE-1:0],
-                             logic [EWIDTH_IN_0-1:0] edata);
+  function void driveDataOut(logic [MWIDTH_OUT-1:0] mdata[BLOCK_SIZE-1:0],
+                             logic [EWIDTH_OUT-1:0] edata);
     for (int i = 0; i < BLOCK_SIZE; i++) begin
       assign mdata_out_0[i] = mdata[i];
     end
@@ -132,23 +132,23 @@ module mxint_matrix_cat #(
   logic                 [COUNTER_WIDTH-1:0] out_cntr_b;
   logic                 [COUNTER_WIDTH-1:0] out_cntr_r;
 
-  logic                 [  MWIDTH_IN_0-1:0] mdata_in_0_c    [BLOCK_SIZE-1:0];
-  logic                 [  EWIDTH_IN_0-1:0] edata_in_0_c;
+  logic                 [   MWIDTH_OUT-1:0] mdata_in_0_c    [BLOCK_SIZE-1:0];
+  logic                 [   EWIDTH_OUT-1:0] edata_in_0_c;
   logic                                     shift_in_0;
   logic                                     fifo_0_full;
 
-  logic                 [  MWIDTH_IN_1-1:0] mdata_in_1_c    [BLOCK_SIZE-1:0];
-  logic                 [  EWIDTH_IN_1-1:0] edata_in_1_c;
+  logic                 [   MWIDTH_OUT-1:0] mdata_in_1_c    [BLOCK_SIZE-1:0];
+  logic                 [   EWIDTH_OUT-1:0] edata_in_1_c;
   logic                                     shift_in_1;
   logic                                     fifo_1_full;
 
-  logic                 [  MWIDTH_IN_1-1:0] mdata_in_1_fifo [BLOCK_SIZE-1:0];
-  logic                 [  EWIDTH_IN_1-1:0] edata_in_1_fifo;
+  logic                 [   MWIDTH_OUT-1:0] mdata_in_1_fifo [BLOCK_SIZE-1:0];
+  logic                 [   EWIDTH_OUT-1:0] edata_in_1_fifo;
   logic                                     fifo_1_valid;
   logic                                     fifo_1_ready;
 
-  logic                 [  MWIDTH_IN_1-1:0] mdata_in_0_fifo [BLOCK_SIZE-1:0];
-  logic                 [  EWIDTH_IN_1-1:0] edata_in_0_fifo;
+  logic                 [   MWIDTH_OUT-1:0] mdata_in_0_fifo [BLOCK_SIZE-1:0];
+  logic                 [   EWIDTH_OUT-1:0] edata_in_0_fifo;
   logic                                     fifo_0_valid;
   logic                                     fifo_0_ready;
 
@@ -196,7 +196,7 @@ module mxint_matrix_cat #(
   end else begin : cast_in_1_gen
     mxint_cast #(
         .IN_MAN_WIDTH (MWIDTH_IN_1),
-        .IN_EXP_WIDTH (EWIDTH_OUT),
+        .IN_EXP_WIDTH (EWIDTH_IN_1),
         .OUT_MAN_WIDTH(MWIDTH_OUT),
         .OUT_EXP_WIDTH(EWIDTH_OUT),
         .BLOCK_SIZE   (BLOCK_SIZE)
@@ -217,8 +217,8 @@ module mxint_matrix_cat #(
   /* verilator lint_off PINMISSING */
   unpacked_mx_fifo #(
       .DEPTH    (FIFO_DEPTH),
-      .MAN_WIDTH(MWIDTH_IN_0),
-      .EXP_WIDTH(EWIDTH_IN_1),
+      .MAN_WIDTH(MWIDTH_OUT),
+      .EXP_WIDTH(EWIDTH_OUT),
       .IN_SIZE  (BLOCK_SIZE)
   ) fifo_0_I (
       .clk           (clk),
@@ -235,8 +235,8 @@ module mxint_matrix_cat #(
 
   unpacked_mx_fifo #(
       .DEPTH    (FIFO_DEPTH),
-      .MAN_WIDTH(MWIDTH_IN_0),
-      .EXP_WIDTH(EWIDTH_IN_1),
+      .MAN_WIDTH(MWIDTH_OUT),
+      .EXP_WIDTH(EWIDTH_OUT),
       .IN_SIZE  (BLOCK_SIZE)
   ) fifo_1_I (
       .clk           (clk),
@@ -255,24 +255,24 @@ module mxint_matrix_cat #(
   always_comb begin
     state_b = state_r;
     out_cntr_b = out_cntr_r;
-    fifo_0_ready    = fifo_0_valid && data_out_0_ready && (out_cntr_b < OUT_LAST_DIM) && (state_r == OUT_0);
-    fifo_1_ready    = fifo_1_valid && data_out_0_ready && (out_cntr_b < OUT_LAST_DIM) && (state_r == OUT_1);
+    fifo_0_ready    = fifo_0_valid && data_out_0_ready && (out_cntr_b < CONCAT_DIM_0) && (state_r == OUT_0);
+    fifo_1_ready    = fifo_1_valid && data_out_0_ready && (out_cntr_b < CONCAT_DIM_1) && (state_r == OUT_1);
 
     case (state_r)
       OUT_0: begin
         if (fifo_0_ready) begin
-          out_cntr_b = out_cntr_r + STRIDE;
+          out_cntr_b = out_cntr_r + 1;
           driveDataOut(mdata_in_0_fifo, edata_in_0_fifo);
-        end else if (out_cntr_b >= OUT_LAST_DIM) begin
+        end else if (out_cntr_b >= CONCAT_DIM_0) begin
           out_cntr_b = 0;
           state_b    = OUT_1;
         end
       end
       OUT_1: begin
         if (fifo_1_ready) begin
-          out_cntr_b = out_cntr_r + STRIDE;
+          out_cntr_b = out_cntr_r + 1;
           driveDataOut(mdata_in_1_fifo, edata_in_1_fifo);
-        end else if (out_cntr_b >= OUT_LAST_DIM) begin
+        end else if (out_cntr_b >= CONCAT_DIM_1) begin
           out_cntr_b = 0;
           state_b    = OUT_0;
         end
