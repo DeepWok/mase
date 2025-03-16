@@ -471,7 +471,6 @@ class MLA(nn.Module):
             kv = kv.view(bsz, seqlen, self.n_local_heads, self.qk_nope_head_dim + self.v_head_dim)
             k_nope, v = torch.split(kv, [self.qk_nope_head_dim, self.v_head_dim], dim=-1)
             k = torch.cat([k_nope, k_pe.expand(-1, -1, self.n_local_heads, -1)], dim=-1)
-
             self.k_cache[:bsz, start_pos:end_pos] = k
             self.v_cache[:bsz, start_pos:end_pos] = v
             scores = torch.einsum("bshd,bthd->bsht", q, self.k_cache[:bsz, :end_pos]) * self.softmax_scale
@@ -479,43 +478,17 @@ class MLA(nn.Module):
             wkv_b = self.wkv_b.weight if self.wkv_b.scale is None else weight_dequant(self.wkv_b.weight, self.wkv_b.scale, block_size) 
             wkv_b = wkv_b.view(self.n_local_heads, -1, self.kv_lora_rank)
             q_nope = torch.einsum("bshd,hdc->bshc", q_nope, wkv_b[:, :self.qk_nope_head_dim])
-            # Compute kv_norm(kv) WITH gradient tracking
-            updated_kv = self.kv_norm(kv)  
-            updated_pe = k_pe.squeeze(2)
- 
-            with torch.no_grad():
-                self.kv_cache[:bsz, start_pos:end_pos] = updated_kv
-                self.pe_cache[:bsz, start_pos:end_pos] = updated_pe
-                        
-
-            # Compute scores using DETACHED caches
-            kv_cache_slice = self.kv_cache[:bsz, :end_pos].clone()
-            # pe_cache_slice = self.pe_cache.detach()
-            pe_cache_slice = self.pe_cache[:bsz, :end_pos].clone()
-            
-            scores = (
-                torch.einsum("bshc,btc->bsht", q_nope, kv_cache_slice) +
-                torch.einsum("bshr,btr->bsht", q_pe, pe_cache_slice)
-            ) * self.softmax_scale
-
+            self.kv_cache[:bsz, start_pos:end_pos] = self.kv_norm(kv)
+            self.pe_cache[:bsz, start_pos:end_pos] = k_pe.squeeze(2)
+            scores = (torch.einsum("bshc,btc->bsht", q_nope, self.kv_cache[:bsz, :end_pos]) +
+                      torch.einsum("bshr,btr->bsht", q_pe, self.pe_cache[:bsz, :end_pos])) * self.softmax_scale
         if mask is not None:
-            # print(f"scores.shape: {scores.shape}, mask.shape: {mask.shape}")
-            # scores += mask
             scores += mask.unsqueeze(1)
         scores = scores.softmax(dim=-1, dtype=torch.float32).type_as(x)
-        
         if attn_impl == "naive":
             x = torch.einsum("bsht,bthd->bshd", scores, self.v_cache[:bsz, :end_pos])
         else:
-            # x = torch.einsum("bsht,btc->bshc", scores, self.kv_cache[:bsz, :end_pos])
             x = torch.einsum("bsht,btc->bshc", scores, self.kv_cache[:bsz, :end_pos])
             x = torch.einsum("bshc,hdc->bshd", x, wkv_b[:, -self.v_head_dim:])
-            
-
-        
         x = self.wo(x.flatten(2))
         return x
- 
- 
-    
-    

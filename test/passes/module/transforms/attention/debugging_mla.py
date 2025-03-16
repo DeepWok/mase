@@ -18,6 +18,9 @@ raw_dataset = load_dataset(dataset_name)
 tokenizer = AutoTokenizer.from_pretrained(checkpoint)
 tokenizer.pad_token = tokenizer.eos_token
 
+
+
+
 # 3) First, do a broader tokenize to e.g. 256 or 512 so we see the entire text
 def initial_tokenize_fn(examples):
     return tokenizer(
@@ -80,13 +83,22 @@ def test_mla_transform_pass(model):
 
 mla_net = test_mla_transform_pass(model)
 
+inputs = torch.tensor(tokenized_dataset["train"][0]["input_ids"]).unsqueeze(0)
+outputs_gpt2 = model(inputs)
+outputs_mla = mla_net(inputs)
+
+print("GPT-2 logits:", outputs_gpt2.logits)
+print("MLA logits:", outputs_mla.logits)
+
+
+
 # 8) Trainer
 trainer = get_trainer(
     model=mla_net,
     tokenized_dataset=tokenized_dataset,
     tokenizer=tokenizer,
     evaluate_metric="accuracy",
-    num_train_epochs=1,
+    num_train_epochs=2,
 )
 
 
