@@ -273,7 +273,9 @@ class MultiSignalStreamDriver(Driver):
 
 
 class MultiSignalStreamMonitor(Monitor):
-    def __init__(self, clk, data, valid, ready, check=True, signed=True):
+    def __init__(
+        self, clk, data, valid, ready, check=True, signed=True, off_by_one=False
+    ):
         super().__init__(clk)
         self.clk = clk
         self.data = data
@@ -281,6 +283,7 @@ class MultiSignalStreamMonitor(Monitor):
         self.ready = ready
         self.check = check
         self.signed = signed
+        self.off_by_one = off_by_one
 
     def _trigger(self):
         return self.valid.value == 1 and self.ready.value == 1
@@ -303,5 +306,9 @@ class MultiSignalStreamMonitor(Monitor):
     def _check(self, got, exp):
         if self.check:
             for g, e in zip(got, exp):
-                if not np.equal(g, e).all():
-                    raise TestFailure("\nGot \n%s, \nExpected \n%s" % (got, exp))
+                if self.off_by_one:
+                    if not np.isclose(g, e, atol=1).all():
+                        raise TestFailure("\nGot \n%s, \nExpected \n%s" % (got, exp))
+                else:
+                    if not np.equal(g, e).all():
+                        raise TestFailure("\nGot \n%s, \nExpected \n%s" % (got, exp))
