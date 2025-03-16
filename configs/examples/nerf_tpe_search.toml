@@ -16,13 +16,22 @@ name = "graph/quantize/mixed_precision_ptq"
 by = "name"
 
 [search.search_space.seed.default.config]
-name = ["integer"]
-data_in_width = [4]
-data_in_frac_width = [3, 4]
-weight_width = [2, 4]
-weight_frac_width = [3, 4]
-bias_width = [2, 4]
-bias_frac_width = [3, 4]
+name = ['mxint']
+
+data_in_width = [4, 8]
+data_in_frac_width = [3, 4, 5, 6, 7, 8, 9]
+data_in_exponent_width = [3, 4, 5, 6, 7, 8, 9]
+data_in_block_size = [3, 4, 5, 6, 7, 8, 9]
+
+weight_width = [2, 4, 8]
+weight_frac_width = [3, 4, 5, 6, 7, 8, 9]
+weight_exponent_width = [3, 4, 5, 6, 7, 8, 9]
+weight_block_size = [3, 4, 5, 6, 7, 8, 9]
+
+bias_width = [2, 4, 8]
+bias_frac_width = [3, 4, 5, 6, 7, 8, 9]
+bias_exponent_width = [3, 4, 5, 6, 7, 8, 9]
+bias_block_size = [3, 4, 5, 6, 7, 8, 9]
 
 [search.strategy]
 name = "optuna"
@@ -45,9 +54,9 @@ sampler = "tpe"
 sum_scaled_metrics = false # multi objective
 
 [search.strategy.metrics]
-# loss.scale = 0.0
-# loss.direction = "minimize"
-accuracy.scale = 1.0
-accuracy.direction = "maximize"
+loss.scale = 1.0
+loss.direction = "minimize"
+# accuracy.scale = 1.0
+# accuracy.direction = "maximize"
 average_bitwidth.scale = 0.2
 average_bitwidth.direction = "minimize"
