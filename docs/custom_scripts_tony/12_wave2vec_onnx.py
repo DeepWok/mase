@@ -74,7 +74,7 @@ data_module = MaseDataModule(
     num_workers=0,
 )
 data_module.prepare_data()
-data_module.setup()
+data_module.setwup()
 
 class ONNXWrapper(nn.Module):
     def __init__(self, encoder):
@@ -189,8 +189,12 @@ runtime_analysis_config = {
 mg.model = ONNXWrapper(mg.model)
 
 mg, onnx_meta = onnx_runtime_interface_pass(mg, pass_args=smoothquant_config)
+print(f"mg.model type: {type(mg.model)}")
 print("ONNX Pass")
-_, _ = runtime_analysis_pass(mg, pass_args=runtime_analysis_config)
-print("ONNX Pass Numero 2")
-_, _ = runtime_analysis_pass(onnx_meta['onnx_path'], pass_args=runtime_analysis_config)
+_, results = runtime_analysis_pass(mg, pass_args=runtime_analysis_config)
 
+print(f"Average WER", f"{results["Average WER"]:.5g}")
+print(f"Average Latency", f"{results["Average Latency"]:.5g} ms")
+print(f"Average RTF", f"{results["Average RTF"]:.5g}")
+print(f"Average GPU Power Usage", f"{results["Average GPU Power Usage"]:.5g} W")
+print(f"Inference Energy Consumption", f"{results["Inference Energy Consumption"]:.5g} mWh")

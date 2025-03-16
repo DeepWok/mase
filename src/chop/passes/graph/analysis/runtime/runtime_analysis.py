@@ -318,7 +318,7 @@ class RuntimeAnalysis:
         # Convert PyTorch tensor to numpy array for ONNX Runtime
         input_data_np = input_data.numpy()
 
-        # Start timing CPU operations
+        print(f"[DEBUG] ONNX Inference - Input Shape: {input_data_np.shape}")
         start_time = time.time()
 
         # Run inference using ONNX Runtime
@@ -327,6 +327,8 @@ class RuntimeAnalysis:
         # End timing CPU operations
         end_time = time.time()
 
+        print(f"[DEBUG] ONNX Inference - Output Shape: {output_data[0].shape}")
+        print(f"[DEBUG] ONNX Inference - Latency: {(end_time - start_time) * 1000:.3f} ms")
         # Calculate latency in milliseconds
         latency = (
             end_time - start_time
@@ -345,6 +347,8 @@ class RuntimeAnalysis:
     def infer_onnx_cuda(self, ort_inference_session, input_data):
         input_data_np = input_data.numpy()
 
+        print(f"[DEBUG] ONNX Inference - Input Shape: {input_data_np.shape}")
+
         # Create CUDA events for timing GPU operations
         start = torch.cuda.Event(enable_timing=True)
         end = torch.cuda.Event(enable_timing=True)
@@ -352,6 +356,9 @@ class RuntimeAnalysis:
         start.record()
         output_data = ort_inference_session.run(None, {"input": input_data_np})
         end.record()
+
+        print(f"[DEBUG] ONNX Inference - Output Shape: {output_data[0].shape}")
+        print(f"[DEBUG] ONNX Inference - Latency: {(end_time - start_time) * 1000:.3f} ms")
 
         # Synchronize to ensure all GPU operations are finished
         torch.cuda.synchronize()
@@ -368,6 +375,11 @@ class RuntimeAnalysis:
         return preds_tensor, latency
 
     def evaluate(self):
+
+        print(f"[DEBUG] Dataset Type: {dataset}")
+        print(f"[DEBUG] Batch Size: {self.config['batch_size']}")
+        print(f"[DEBUG] Dataloader Length: {len(dataloader)}")
+
         self.logger.info(f"Starting transformation analysis on {self.model_name}")
 
         num_GPU_warmup_batches = self.config["num_GPU_warmup_batches"]
@@ -434,6 +446,8 @@ class RuntimeAnalysis:
             ):
                 break
 
+            print(f"[DEBUG] Running Batch {j+1}/{self.config['num_batches']}")
+
             # Power monitoring (start)
             power_monitor = PowerMonitor(self.config)
             power_monitor.start()
@@ -441,6 +455,13 @@ class RuntimeAnalysis:
             # Clear GPU caches & sync
             torch.cuda.synchronize()
             torch.cuda.empty_cache()
+
+            if isinstance(self.model, ort.InferenceSession):
+                print(f"[DEBUG] Running ONNX inference on batch {j+1}")
+            elif isinstance(self.model, trt.IExecutionContext):
+                print(f"[DEBUG] Running TensorRT inference on batch {j+1}")
+            else:
+                print(f"[DEBUG] Running MaseGraph inference on batch {j+1}")
 
             # ---------------- (A) RUN INFERENCE (TRT, ONNX, or MaseGraph) ----------------
             if isinstance(self.model, trt.IExecutionContext):
@@ -490,6 +511,10 @@ class RuntimeAnalysis:
             )
             gpu_power_usages.append(avg_power)
 
+            print(f"[DEBUG] Batch {j+1} - Latency: {latency:.3f} ms")
+            print(f"[DEBUG] Batch {j+1} - GPU Power Usage: {avg_power:.3f} W")
+            print(f"[DEBUG] Batch {j+1} - RTF: {rtf:.3f}")
+
             # ---------- (B) METRICS DEPENDING ON TASK ----------
             if task == "cls":
                 # Classification logic
@@ -511,6 +536,12 @@ class RuntimeAnalysis:
                 f1_metric(preds_labels, ys)
 
             elif task == "ctc":
+                print(f"[DEBUG] Pred Texts: {pred_texts}")
+                print(f"[DEBUG] Label Texts: {label_texts}")
+
+                if not pred_texts or not label_texts:
+                    print("[ERROR] Empty prediction or label text! Check tokenizer or decoder.")
+
                 # Real-Time Factor (RTF) = Latency / (1 / sample_rate)
                 max_length = xs.shape[1]
                 audio_duration = max_length / self.config["sample_rate"]
@@ -613,6 +644,12 @@ class RuntimeAnalysis:
                 ["Average GPU Power Usage", f"{avg_gpu_power_usage:.5g} W"],
                 ["Inference Energy Consumption", f"{avg_gpu_energy_usage:.5g} mWh"],
             ]
+
+            print(f"[DEBUG] Average Latency: {avg_latency:.3f} ms")
+            print(f"[DEBUG] Average GPU Power Usage: {avg_gpu_power_usage:.3f} W")
+            print(f"[DEBUG] Average RTF: {avg_rtf:.3f}")
+            print(f"[DEBUG] Average WER: {avg_wer:.3f}")
+            print(f"[DEBUG] Inference Energy Consumption: {avg_gpu_energy_usage:.3f} mWh")
 
             results = {
                 "Average WER": avg_wer,
