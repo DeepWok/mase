@@ -13,15 +13,16 @@ from datetime import datetime
 from pathlib import Path
 import time
 
-# try:
-#     import tensorrt as trt
-# except ImportError:
-#     raise ImportError("tensorrt is required for this functionality. Please install it from NVIDIA's repositories.")
+try:
+    import tensorrt as trt
+    print("[DEBUG] TensorRT is available.")
+except ImportError:
+    raise ImportError("tensorrt is required for this functionality. Please install it from NVIDIA's repositories.")
 
-# try:
-#     from cuda import cudart
-# except ImportError:
-#     raise ImportError("pycuda's cudart is required for this functionality. Please install pycuda.")
+try:
+    from cuda import cudart
+except ImportError:
+    raise ImportError("pycuda's cudart is required for this functionality. Please install pycuda.")
 
 
 
@@ -238,8 +239,14 @@ class RuntimeAnalysis:
             end_time - start_time
         ) * 1000.0  # Convert from seconds to milliseconds
 
+        if isinstance(preds, dict) and "logits" in preds:
+            print("this one has logits cpu version")
+            predictions = preds["logits"].detach()
+        else:
+            predictions = preds.detach()
+
         # Return the predictions
-        return preds.detach(), latency
+        return predictions, latency
 
     def infer_mg_cuda(self, model, input_data):
         # send model and input data to GPU for inference
@@ -261,8 +268,14 @@ class RuntimeAnalysis:
         # Calculate latency between start and end events
         latency = start.elapsed_time(end)
 
+        if isinstance(preds, dict) and "logits" in preds:
+            print("this one has logits cuda version")
+            predictions = preds["logits"].detach().cpu()
+        else:
+            predictions = preds.detach().cpu()
+
         # return the prediction back to the CPU
-        return preds.detach().cpu(), latency
+        return predictions, latency
 
     def infer_trt_cuda(self, trt_context, input_data):
         bufferH = []
