@@ -378,7 +378,6 @@ class RuntimeAnalysis:
 
         print(f"[DEBUG] Dataset Type: {self.config['data_module'].name}")
         print(f"[DEBUG] Batch Size: {self.config['batch_size']}")
-        print(f"[DEBUG] Dataloader Length: {len(dataloader)}")
 
         self.logger.info(f"Starting transformation analysis on {self.model_name}")
 
