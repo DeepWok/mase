@@ -64,6 +64,8 @@ def runtime_analysis_pass(model, pass_args=None):
     import tensorrt as trt
     from cuda import cudart
 
+    print(f"[DEBUG] tensorrt version: {trt.__version__}")
+
     analysis = RuntimeAnalysis(model, pass_args)
     results = analysis.evaluate()
     analysis.store(results)
@@ -489,6 +491,7 @@ class RuntimeAnalysis:
                 if self.config["accelerator"] == "cpu":
                     preds, latency = self.infer_mg_cpu(self.model, xs)
                 elif self.config["accelerator"] == "cuda":
+                    print(f"[DEBUG] Running MaseGraph inference on batch {j+1}")
                     preds, latency = self.infer_mg_cuda(self.model, xs)
                 else:
                     raise Exception(
