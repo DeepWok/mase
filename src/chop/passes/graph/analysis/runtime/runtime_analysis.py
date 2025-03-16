@@ -160,7 +160,7 @@ class RuntimeAnalysis:
         """Creates and returns a save path for the model."""
         root = Path(__file__).resolve().parents[7]
         current_date = datetime.now().strftime("%Y-%m-%d")
-        model_dir = f'{self.config["model"]}_{self.config["task"]}_{self.config["dataset"]}_{current_date}'
+        model_dir = f'{self.config["model"]}_{self.config["task"]}_{self.config["data_module"].name}_{current_date}'
         save_dir = root / f"mase_output/tensorrt/quantization/{model_dir}/{method}"
         save_dir.mkdir(parents=True, exist_ok=True)
 

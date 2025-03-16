@@ -65,6 +65,8 @@ condensed_dataset = CondensedLibrispeechASRDataset(dataset_path=dataset_path, sp
 condensed_dataset.prepare_data()
 condensed_dataset.setup()
 
+dataset_name = "nyalpatel/condensed_librispeech_asr"
+
 data_module = MaseDataModule(
     name=dataset_name,
     batch_size=1,
