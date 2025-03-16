@@ -14,6 +14,7 @@ def _mxint_quantize(
     """
     - Convert IEEE FP32/64 to Microscaling Interger (MXINT), where an exponent is shared over all elements in a block.
     - https://arxiv.org/pdf/2310.10537.pdf
+    - https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf
 
     ---
     - forward: convert IEEE FP32/64 to MXINT
@@ -40,24 +41,22 @@ def _mxint_quantize(
 
     exponent_bias = 2 ** (exponent_width - 1) - 1
 
-    per_block_scale = torch.floor(torch.log2(per_block_max))
-    per_block_scale = my_clamp(per_block_scale, -exponent_bias, exponent_bias)
+    per_block_exponent = torch.floor(torch.log2(per_block_max)) + exponent_bias
+    per_block_exponent = my_clamp(per_block_exponent, 0, 2**exponent_width - 1)
 
-    # OCP MX INT Quantization
-    sign = torch.sign(blocked_x + 1e-9)
-    value = torch.abs(blocked_x) + 1e-9
-
-    scaled_value = value / (2**per_block_scale)
+    scaled_value = blocked_x / 2 ** (per_block_exponent - exponent_bias)
 
     element_max = 2 ** (width - 1) - 1
     shift = 2 ** (width - 2)
-    # To advoid introducing a negative bias
 
-    quantized_value = my_clamp(my_round(scaled_value * shift), 0, element_max)
+    # To advoid introducing a negative bias
+    quantized_value = my_clamp(
+        my_round(scaled_value * shift), -element_max, element_max
+    )
 
     element_value = quantized_value / shift
 
-    mxint_value = sign * element_value * (2**per_block_scale)
+    mxint_value = element_value * 2 ** (per_block_exponent - exponent_bias)
 
     mxint_x = unblock(
         mxint_value,
