@@ -172,18 +172,19 @@ smoothquant_config = {
 }
 
 runtime_analysis_config = {
-    "num_batches": 100,
+    "num_batches": 10,
     "num_GPU_warmup_batches": 5,
     "test": True,
     "data_module": data_module,   
     "model": checkpoint,          
-    "accelerator": "cpu", #cuda       
+    "accelerator": "cuda",        
     "task": "ctc",
     "decoder": decoder,
     "beam_width": 10,
     "tokenizer": tokenizer,
-    "batch_size": 2,
+    "ctc_head": ctc_head, 
     "sample_rate": 16000,
+    "batch_size": 2,
 }
 
 mg.model = ONNXWrapper(mg.model)

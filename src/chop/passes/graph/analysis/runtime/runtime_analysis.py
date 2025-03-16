@@ -73,10 +73,6 @@ def runtime_analysis_pass(model, pass_args=None):
 
     These metrics provide valuable insights into the model's efficiency, effectiveness, and operational cost, crucial for informed decision-making regarding model deployment in production environments.
     """
-    # import tensorrt as trt
-    # from cuda import cudart
-
-    print(f"[DEBUG] tensorrt version: {trt.__version__}")
 
     analysis = RuntimeAnalysis(model, pass_args)
     results = analysis.evaluate()
@@ -268,8 +264,6 @@ class RuntimeAnalysis:
         # Calculate latency between start and end events
         latency = start.elapsed_time(end)
 
-        print("preds keys: ", preds.keys())
-
         if isinstance(preds, dict) and "logits" in preds:
             print("this one has logits cuda version")
             predictions = preds["logits"].detach().cpu()
@@ -442,6 +436,7 @@ class RuntimeAnalysis:
             decoder = self.config.get("decoder", None)
             beam_width = self.config.get("beam_width", 10)
             tokenizer = self.config["tokenizer"]
+            ctc_head = self.config.get("ctc_head", None)
             padding_value = self.config.get("padding_value", -100)
 
             # We'll collect WER from each batch
@@ -567,12 +562,6 @@ class RuntimeAnalysis:
                 f1_metric(preds_labels, ys)
 
             elif task == "ctc":
-                print(f"[DEBUG] Pred Texts: {pred_texts}")
-                print(f"[DEBUG] Label Texts: {label_texts}")
-
-                if not pred_texts or not label_texts:
-                    print("[ERROR] Empty prediction or label text! Check tokenizer or decoder.")
-
                 # Real-Time Factor (RTF) = Latency / (1 / sample_rate)
                 max_length = xs.shape[1]
                 audio_duration = max_length / self.config["sample_rate"]
@@ -583,26 +572,30 @@ class RuntimeAnalysis:
                 # preds: [batch_size, time_steps, vocab_size] or [batch_size, *]
                 # ys: [batch_size, time_steps]
 
-                # Convert preds to numpy if needed
-                if torch.is_tensor(preds):
-                    # shape: (batch_size, time_steps, vocab_size)
-                    preds = preds.cpu().numpy()
+                # Apply CTC decoding to get predicted text
+                if ctc_head is None:
+                    raise Exception("CTC head must be provided in config for full model evaluation")
+                
+                predictions = ctc_head(preds["last_hidden_state"])
 
-                # We'll decode each batch => get WER
+                if torch.is_tensor(predictions):
+                    predictions = predictions.detach().cpu()
+                else:
+                    predictions = torch.tensor(predictions).cpu()
+
+                preds_np = predictions.cpu().numpy()
+
                 pred_texts = []
                 label_texts = []
 
-                for i in range(preds.shape[0]):
-                    sample_logits = torch.from_numpy(preds[i])
+                for i in range(preds_np.shape[0]):
+                    sample_logits = torch.from_numpy(preds_np[i])
                     sample_log_probs = sample_logits.log_softmax(dim=-1).cpu().numpy()
-
                     if decoder is not None:
                         transcription = decoder.decode(sample_log_probs, beam_width=beam_width)
                     else:
                         raise Exception(
-                            "Decoder must be provided for CTC runtime analysis. Pass 'decoder' in config."
-                        )
-
+                            "Decoder must be provided for CTC runtime analysis. Pass 'decoder' in config.")
                     pred_texts.append(transcription.lower())
 
                 for label_seq in ys:
