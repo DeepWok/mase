@@ -181,7 +181,72 @@ class BlenderDatasetBase(Dataset):
 
             sample = {"rays": rays, "rgbs": img, "c2w": c2w, "valid_mask": valid_mask}
 
+        inputs = pre_render_vision(
+            sample["rays"],
+            is_train=self.split == "train",
+        )
+
+        for k in inputs:
+            sample[k] = inputs[k]
+
         return sample
+
+def pre_render_vision(
+    rays,
+    N_samples=8,
+    use_disp=False,
+    perturb=0,
+    is_train=False,
+):
+    # Decompose the inputs
+    if is_train:
+        rays = rays.unsqueeze(0)
+    N_rays = rays.shape[0]
+    rays_o, rays_d = rays[:, 0:3], rays[:, 3:6]  # both (N_rays, 3)
+    near, far = rays[:, 6:7], rays[:, 7:8]  # both (N_rays, 1)
+
+    # Sample depth points
+    z_steps = torch.linspace(0, 1, N_samples)  # (N_samples)
+    if not use_disp:  # use linear sampling in depth space
+        z_vals = near * (1 - z_steps) + far * z_steps
+    else:  # use linear sampling in disparity space
+        z_vals = 1 / (1 / near * (1 - z_steps) + 1 / far * z_steps)
+
+    z_vals = z_vals.expand(N_rays, N_samples)
+
+    # Perturb sampling time along each ray.
+    if perturb > 0.:
+        # get intervals between samples
+        mids = .5 * (z_vals[..., 1:] + z_vals[..., :-1])
+        upper = torch.concat([mids, z_vals[..., -1:]], -1)
+        lower = torch.concat([z_vals[..., :1], mids], -1)
+        # stratified samples in those intervals
+        t_rand = torch.rand_like(z_vals.shape)
+        z_vals = lower + (upper - lower) * t_rand
+
+    viewdirs = rays_d
+    viewdirs = viewdirs / torch.norm(viewdirs, dim=-1, keepdim=True)
+    viewdirs = torch.reshape(viewdirs, [-1, 3]).to(torch.float32)
+
+    # Points in space to evaluate model at.
+    pts = rays_o[..., None, :] + rays_d[..., None, :] * \
+        z_vals[..., :, None]  # [N_rays, N_samples, 3]
+
+    inputs = {}
+
+    inputs["pts"] = pts
+    inputs["viewdirs"] = viewdirs
+    inputs["rays_o"] = rays_o
+    inputs["rays_d"] = rays_d
+    inputs["z_vals"] = z_vals
+    inputs["near"] = near
+    inputs["far"] = far
+
+    if is_train:
+        for k in inputs:
+            inputs[k] = inputs[k].squeeze(0)
+
+    return inputs
 
 
 DEFAULT_NERF_CONFIG = {

@@ -107,9 +107,11 @@ def get_dummy_input(
                     dummy_inputs = {"x": x}
             case _:
                 raise ValueError(f"Task {task} is not supported for {model_info.name}")
-    elif model_info.is_nerf_model:
-        # TODO:
-        pass
+    elif model_info.is_nerf_model or model_info.is_nerf_vision_model:
+        item = next(train_iter)
+        for key in item:
+            item[key] = item[key].to(device)
+        dummy_inputs = {"pts": item['pts'], 'viewdirs': item['viewdirs'], 'targets': item}
 
     elif model_info.is_nlp_model:
         match task:

@@ -1,0 +1,53 @@
+# basics
+model = "nerfvision"
+dataset = "nerf-lego"
+
+max_epochs = 5
+batch_size = 128
+learning_rate = 1e-2
+accelerator = "gpu"
+project = "nerf_lego_quantizations"
+seed = 42
+
+[search.search_space]
+name = "graph/quantize/mixed_precision_ptq"
+
+[search.search_space.setup]
+by = "name"
+
+[search.search_space.seed.default.config]
+name = ["integer"]
+data_in_width = [4]
+data_in_frac_width = [3, 4]
+weight_width = [2, 4]
+weight_frac_width = [3, 4]
+bias_width = [2, 4]
+bias_frac_width = [3, 4]
+
+[search.strategy]
+name = "optuna"
+eval_mode = true
+
+[search.strategy.sw_runner.basic_evaluation]
+data_loader = "val_dataloader"
+num_samples = 256
+
+[search.strategy.hw_runner.average_bitwidth]
+compare_to = 32  # compare to FP32
+
+[search.strategy.setup]
+n_jobs = 1
+n_trials = 10
+timeout = 20000
+sampler = "tpe"
+# sum_scaled_metrics = true # single objective
+# direction = "maximize"
+sum_scaled_metrics = false # multi objective
+
+[search.strategy.metrics]
+# loss.scale = 0.0
+# loss.direction = "minimize"
+accuracy.scale = 1.0
+accuracy.direction = "maximize"
+average_bitwidth.scale = 0.2
+average_bitwidth.direction = "minimize"

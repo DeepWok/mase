@@ -7,7 +7,7 @@ import numpy as np
 import torch.nn.functional as F
 from chop.models.utils import register_mase_model, register_mase_checkpoint
 
-from .rendering import render_vision
+from .rendering import post_render_vision, pre_render_vision
 
 
 # Model# Model
@@ -71,15 +71,9 @@ class NeRFVision(nn.Module):
         else:
             self.output_linear = nn.Linear(W, output_ch)
 
-    def forward(self, x):
-        return render_vision(
-            self,
-            x,
-            N_samples=4,
-            use_disp=False,
-            perturb=0,
-            noise_std=1,
-        )
+    def forward(self, pts, viewdirs):
+        raw = self.apply_layers(pts, viewdirs)
+        return raw
 
     def apply_layers(self, input_pts, input_views):
         h = input_pts

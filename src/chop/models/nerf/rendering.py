@@ -383,3 +383,138 @@ def render_vision(
     results["disp"] = disp_map
 
     return results
+
+def pre_render_vision(
+    rays,
+    N_samples=64,
+    use_disp=False,
+    perturb=0,
+):
+    # Decompose the inputs
+    N_rays = rays.shape[0]
+    rays_o, rays_d = rays[:, 0:3], rays[:, 3:6]  # both (N_rays, 3)
+    near, far = rays[:, 6:7], rays[:, 7:8]  # both (N_rays, 1)
+
+    # Sample depth points
+    z_steps = torch.linspace(0, 1, N_samples, device='cuda')  # (N_samples)
+    if not use_disp:  # use linear sampling in depth space
+        z_vals = near * (1 - z_steps) + far * z_steps
+    else:  # use linear sampling in disparity space
+        z_vals = 1 / (1 / near * (1 - z_steps) + 1 / far * z_steps)
+
+    z_vals = z_vals.expand(N_rays, N_samples)
+
+    # Perturb sampling time along each ray.
+    if perturb > 0.:
+        # get intervals between samples
+        mids = .5 * (z_vals[..., 1:] + z_vals[..., :-1])
+        upper = torch.concat([mids, z_vals[..., -1:]], -1)
+        lower = torch.concat([z_vals[..., :1], mids], -1)
+        # stratified samples in those intervals
+        t_rand = torch.rand_like(z_vals.shape)
+        z_vals = lower + (upper - lower) * t_rand
+
+    viewdirs = rays_d
+    viewdirs = viewdirs / torch.norm(viewdirs, dim=-1, keepdim=True)
+    viewdirs = torch.reshape(viewdirs, [-1, 3]).to(torch.float32)
+
+    # Points in space to evaluate model at.
+    pts = rays_o[..., None, :] + rays_d[..., None, :] * \
+        z_vals[..., :, None]  # [N_rays, N_samples, 3]
+
+    inputs = {}
+
+    inputs["pts"] = pts
+    inputs["viewdirs"] = viewdirs
+    inputs["rays_d"] = rays_d
+    inputs["z_vals"] = z_vals
+
+    return inputs
+
+def post_render_vision(
+    x,
+    raw,
+    noise_std=1,
+):
+    def raw2outputs(raw, z_vals, rays_d):
+        """Transforms model's predictions to semantically meaningful values.
+
+        Args:
+          raw: [num_rays, num_samples along ray, 4]. Prediction from model.
+          z_vals: [num_rays, num_samples along ray]. Integration time.
+          rays_d: [num_rays, 3]. Direction of each ray.
+
+        Returns:
+          rgb_map: [num_rays, 3]. Estimated RGB color of a ray.
+          disp_map: [num_rays]. Disparity map. Inverse of depth map.
+          acc_map: [num_rays]. Sum of weights along each ray.
+          weights: [num_rays, num_samples]. Weights assigned to each sampled color.
+          depth_map: [num_rays]. Estimated distance to object.
+        """
+        # Function for computing density from model prediction. This value is
+        # strictly between [0, 1].
+        def raw2alpha(raw, dists, act_fn=torch.nn.functional.relu): return 1.0 - \
+            torch.exp(-act_fn(raw) * dists)
+
+        # Compute 'distance' (in time) between each integration time along a ray.
+        dists = z_vals[..., 1:] - z_vals[..., :-1]
+
+        # The 'distance' from the last integration time is infinity.
+        dists = torch.concat(
+            [dists, torch.ones_like(rays_d[:, :1]).to('cuda') * 1e10], # ISSUE expand to [N_rays, 1]
+            dim=-1)  # [N_rays, N_samples]
+
+        # Multiply each distance by the norm of its corresponding direction ray
+        # to convert to real world distance (accounts for non-unit directions).
+        dists = dists * torch.norm(rays_d[..., None, :], dim=-1)
+
+        # Extract RGB of each sample position along each ray.
+        rgb = torch.sigmoid(raw[..., :3])  # [N_rays, N_samples, 3]
+
+        # Add noise to model's predictions for density. Can be used to 
+        # regularize network during training (prevents floater artifacts).
+        noise = 0.
+        if noise_std > 0.:
+            noise = torch.rand_like(raw[..., 3]) * noise_std
+
+        # Predict density of each sample along each ray. Higher values imply
+        # higher likelihood of being absorbed at this point.
+        alpha = raw2alpha(raw[..., 3] + noise, dists)  # [N_rays, N_samples]
+
+        # Compute weight for RGB of each sample along each ray.  A cumprod() is
+        # used to express the idea of the ray not having reflected up to this
+        # sample yet.
+        # [N_rays, N_samples]
+        weights = alpha * \
+            torch.cumprod(1.-alpha + 1e-10, dim=-1)
+
+        # Computed weighted color of each sample along each ray.
+        rgb_map = torch.sum(
+            weights[..., None] * rgb, dim=-2)  # [N_rays, 3]
+
+        # Estimated depth map is expected distance.
+        depth_map = torch.sum(weights * z_vals, dim=-1)
+
+        # Disparity map is inverse depth.
+        disp_map = 1./torch.maximum(torch.tensor([1e-10]).to(dists.device), depth_map /
+                                 torch.sum(weights, dim=-1))
+
+        # Sum of weights along each ray. This value is in [0, 1] up to numerical error.
+        acc_map = torch.sum(weights, dim=-1)
+
+        return rgb_map, disp_map, acc_map, weights, depth_map
+
+    rgb_map, disp_map, acc_map, weights, depth_map = raw2outputs(
+        raw, x['z_vals'], x['rays_d'])
+
+    results = {}
+
+    results["rgb"] = rgb_map
+    results["depth"] = depth_map
+    results["weights"] = weights
+    results["opacity"] = acc_map
+    results["z_vals"] = x['z_vals']
+    results["disp"] = disp_map
+
+    return results
+
