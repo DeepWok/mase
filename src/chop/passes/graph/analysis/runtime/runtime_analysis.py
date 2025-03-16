@@ -235,14 +235,18 @@ class RuntimeAnalysis:
             end_time - start_time
         ) * 1000.0  # Convert from seconds to milliseconds
 
-        if isinstance(preds, dict) and "logits" in preds:
-            print("this one has logits cpu version")
-            predictions = preds["logits"].detach()
-        else:
-            predictions = preds.detach()
+        if isinstance(preds, dict):
+            detached_dict = {}
+            for k, v in preds.items():
+                if torch.is_tensor(v):
+                    detached_dict[k] = v.detach()
+                else:
+                    detached_dict[k] = v
+            preds = detached_dict
+        elif torch.is_tensor(preds):
+            preds = preds.detach()
 
-        # Return the predictions
-        return predictions, latency
+        return preds, latency
 
     def infer_mg_cuda(self, model, input_data):
         # send model and input data to GPU for inference
@@ -264,14 +268,18 @@ class RuntimeAnalysis:
         # Calculate latency between start and end events
         latency = start.elapsed_time(end)
 
-        if isinstance(preds, dict) and "logits" in preds:
-            print("this one has logits cuda version")
-            predictions = preds["logits"].detach().cpu()
-        else:
-            predictions = preds.detach().cpu()
+        if isinstance(preds, dict):
+            detached_dict = {}
+            for k, v in preds.items():
+                if torch.is_tensor(v):
+                    detached_dict[k] = v.detach().cpu()
+                else:
+                    detached_dict[k] = v
+            preds = detached_dict
+        elif torch.is_tensor(preds):
+            preds = preds.detach().cpu()
 
-        # return the prediction back to the CPU
-        return predictions, latency
+        return preds, latency
 
     def infer_trt_cuda(self, trt_context, input_data):
         bufferH = []

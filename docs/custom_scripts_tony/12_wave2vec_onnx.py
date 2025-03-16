@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.fx as fx
+
 from pathlib import Path
 from chop.tools import get_tokenized_dataset # type: ignore
 from transformers import AutoModelForCTC, Wav2Vec2Processor, TrainerCallback
@@ -31,21 +32,16 @@ from chop.passes.graph import (
 
 checkpoint = "facebook/wav2vec2-base-960h"
 tokenizer_checkpoint = "facebook/wav2vec2-base-960h"
-dataset_name = "librispeech_asr"
+dataset_name = "nyalpatel/condensed_librispeech_asr"
 
 # Logic inside get_tockenized_dataset needs to be improved using nyal's changes
-dataset, tokenizer, processor = get_tokenized_dataset(
+tokenized_dataset, tokenizer, processor = get_tokenized_dataset(
     dataset=dataset_name,
-    checkpoint=tokenizer_checkpoint,
+    checkpoint=checkpoint,
+    tokenizer_checkpoint=tokenizer_checkpoint,
     return_tokenizer=True,
     return_processor=True,
 )
-
-# Logic needs to be improved for seperated train and test split
-tokenized_dataset = DatasetDict({
-    "train": dataset,
-    "test": dataset
-})
 
 data_collator = DataCollatorCTCWithPadding(processor=processor, padding=True)
 vocab = tokenizer.convert_ids_to_tokens(range(tokenizer.vocab_size))
@@ -65,11 +61,9 @@ condensed_dataset = CondensedLibrispeechASRDataset(dataset_path=dataset_path, sp
 condensed_dataset.prepare_data()
 condensed_dataset.setup()
 
-dataset_name = "nyalpatel/condensed_librispeech_asr"
-
 data_module = MaseDataModule(
     name=dataset_name,
-    batch_size=1,
+    batch_size=2,
     model_name=checkpoint,
     num_workers=0,
 )
@@ -79,7 +73,7 @@ data_module.setup()
 class ONNXWrapper(nn.Module):
     def __init__(self, encoder):
         super().__init__()
-        self.encoder = encoder 
+        self.encoder = encoder
 
     def forward(self, inputs):
         if isinstance(inputs, dict):
@@ -89,7 +83,7 @@ class ONNXWrapper(nn.Module):
             input_values = inputs
             attention_mask = torch.ones_like(inputs, dtype=torch.long)
         return self.encoder(input_values, attention_mask=attention_mask)
-    
+
     @property
     def graph(self):
         # Expose the underlying FX graph for later passes
@@ -125,7 +119,7 @@ mg, _ = passes.add_common_metadata_analysis_pass(
 
 combined_model = CombinedWav2Vec2CTC(
         encoder=mg.model,
-        ctc_head=ctc_head, 
+        ctc_head=ctc_head,
         decoder=decoder,
         beam_width=10
     )
@@ -139,22 +133,22 @@ trainer = get_trainer(
     tokenized_dataset=tokenized_dataset,
     tokenizer=tokenizer,
     evaluate_metric="wer",
-    num_train_epochs=1,
+    num_train_epochs=0.1,
     data_collator=data_collator,
     gradient_accumulation_steps = 4,
     per_device_train_batch_size = 2,
     per_device_eval_batch_size = 2,
 )
 
-# trainer.train()
-# eval_results = trainer.evaluate()
+trainer.train()
+eval_results = trainer.evaluate()
 
 print("No ONNX Pass")
-# print(f"Evaluation WER: {eval_results['eval_wer']}")
-# print(f"Evaluation loss: {eval_results['eval_loss']}")
-# print(f"Evaluation runtime: {eval_results['eval_runtime']}")
-# print(f"Evaluation samples per second: {eval_results['eval_samples_per_second']}")
-# print(f"Evaluation steps per second: {eval_results['eval_steps_per_second']}")
+print(f"Evaluation WER: {eval_results['eval_wer']}")
+print(f"Evaluation loss: {eval_results['eval_loss']}")
+print(f"Evaluation runtime: {eval_results['eval_runtime']}")
+print(f"Evaluation samples per second: {eval_results['eval_samples_per_second']}")
+print(f"Evaluation steps per second: {eval_results['eval_steps_per_second']}")
 
 # -------------------------------
 # 5. Add ONNX pass
@@ -166,23 +160,23 @@ smoothquant_config = {
     "model": checkpoint,               # Model identifier
     "task": "ctc",                     # Task name
     "dataset": dataset_name,           # Dataset name
-    "accelerator": "cpu",   # cuda          # Device for export
+    "accelerator": "cuda",             # Device for export
     "data_module": data_module,        # Data module for calibration
-    "batch_size": 1,                   # Batch size for calibration
+    "batch_size": 2,                   # Batch size for calibration
 }
 
 runtime_analysis_config = {
     "num_batches": 10,
     "num_GPU_warmup_batches": 5,
     "test": True,
-    "data_module": data_module,   
-    "model": checkpoint,          
-    "accelerator": "cuda",        
+    "data_module": data_module,
+    "model": checkpoint,
+    "accelerator": "cuda",
     "task": "ctc",
     "decoder": decoder,
     "beam_width": 10,
     "tokenizer": tokenizer,
-    "ctc_head": ctc_head, 
+    "ctc_head": ctc_head,
     "sample_rate": 16000,
     "batch_size": 2,
 }
@@ -190,7 +184,6 @@ runtime_analysis_config = {
 mg.model = ONNXWrapper(mg.model)
 
 mg, onnx_meta = onnx_runtime_interface_pass(mg, pass_args=smoothquant_config)
-print(f"mg.model type: {type(mg.model)}")
 print("ONNX Pass")
 _, results = runtime_analysis_pass(mg, pass_args=runtime_analysis_config)
 
