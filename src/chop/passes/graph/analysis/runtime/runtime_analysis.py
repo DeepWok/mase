@@ -376,7 +376,7 @@ class RuntimeAnalysis:
 
     def evaluate(self):
 
-        print(f"[DEBUG] Dataset Type: {dataset}")
+        print(f"[DEBUG] Dataset Type: {self.config["data_module"].name}")
         print(f"[DEBUG] Batch Size: {self.config['batch_size']}")
         print(f"[DEBUG] Dataloader Length: {len(dataloader)}")
 

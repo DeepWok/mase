@@ -74,7 +74,7 @@ data_module = MaseDataModule(
     num_workers=0,
 )
 data_module.prepare_data()
-data_module.setwup()
+data_module.setup()
 
 class ONNXWrapper(nn.Module):
     def __init__(self, encoder):
@@ -146,15 +146,15 @@ trainer = get_trainer(
     per_device_eval_batch_size = 2,
 )
 
-trainer.train()
-eval_results = trainer.evaluate()
+# trainer.train()
+# eval_results = trainer.evaluate()
 
 print("No ONNX Pass")
-print(f"Evaluation WER: {eval_results['eval_wer']}")
-print(f"Evaluation loss: {eval_results['eval_loss']}")
-print(f"Evaluation runtime: {eval_results['eval_runtime']}")
-print(f"Evaluation samples per second: {eval_results['eval_samples_per_second']}")
-print(f"Evaluation steps per second: {eval_results['eval_steps_per_second']}")
+# print(f"Evaluation WER: {eval_results['eval_wer']}")
+# print(f"Evaluation loss: {eval_results['eval_loss']}")
+# print(f"Evaluation runtime: {eval_results['eval_runtime']}")
+# print(f"Evaluation samples per second: {eval_results['eval_samples_per_second']}")
+# print(f"Evaluation steps per second: {eval_results['eval_steps_per_second']}")
 
 # -------------------------------
 # 5. Add ONNX pass
@@ -166,7 +166,7 @@ smoothquant_config = {
     "model": checkpoint,               # Model identifier
     "task": "ctc",                     # Task name
     "dataset": dataset_name,           # Dataset name
-    "accelerator": "cuda",             # Device for export
+    "accelerator": "cpu",   # cuda          # Device for export
     "data_module": data_module,        # Data module for calibration
     "batch_size": 1,                   # Batch size for calibration
 }
@@ -177,7 +177,7 @@ runtime_analysis_config = {
     "test": True,
     "data_module": data_module,   
     "model": checkpoint,          
-    "accelerator": "cuda",        
+    "accelerator": "cpu", #cuda       
     "task": "ctc",
     "decoder": decoder,
     "beam_width": 10,
@@ -193,8 +193,8 @@ print(f"mg.model type: {type(mg.model)}")
 print("ONNX Pass")
 _, results = runtime_analysis_pass(mg, pass_args=runtime_analysis_config)
 
-print(f"Average WER", f"{results["Average WER"]:.5g}")
-print(f"Average Latency", f"{results["Average Latency"]:.5g} ms")
-print(f"Average RTF", f"{results["Average RTF"]:.5g}")
-print(f"Average GPU Power Usage", f"{results["Average GPU Power Usage"]:.5g} W")
-print(f"Inference Energy Consumption", f"{results["Inference Energy Consumption"]:.5g} mWh")
+print(f"Average WER", f"{results['Average WER']:.5g}")
+print(f"Average Latency", f"{results['Average Latency']:.5g} ms")
+print(f"Average RTF", f"{results['Average RTF']:.5g}")
+print(f"Average GPU Power Usage", f"{results['Average GPU Power Usage']:.5g} W")
+print(f"Inference Energy Consumption", f"{results['Inference Energy Consumption']:.5g} mWh")
