@@ -14,13 +14,13 @@ from pathlib import Path
 import time
 
 try:
-    import tensorrt as trt
+    import tensorrt as trt # type: ignore
     print("[DEBUG] TensorRT is available.")
 except ImportError:
     raise ImportError("tensorrt is required for this functionality. Please install it from NVIDIA's repositories.")
 
 try:
-    from cuda import cudart
+    from cuda import cudart # type: ignore
 except ImportError:
     raise ImportError("pycuda's cudart is required for this functionality. Please install pycuda.")
 
@@ -267,6 +267,8 @@ class RuntimeAnalysis:
 
         # Calculate latency between start and end events
         latency = start.elapsed_time(end)
+
+        print("preds keys: ", preds.keys())
 
         if isinstance(preds, dict) and "logits" in preds:
             print("this one has logits cuda version")
