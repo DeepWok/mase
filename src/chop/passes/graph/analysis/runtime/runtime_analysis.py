@@ -371,75 +371,48 @@ class RuntimeAnalysis:
         self.logger.info(f"Starting transformation analysis on {self.model_name}")
 
         num_GPU_warmup_batches = self.config["num_GPU_warmup_batches"]
+        task = self.config["task"]
 
-        match self.config["task"]:
-            case "cls":
-                metric = torchmetrics.classification.MulticlassAccuracy(
-                    num_classes=self.num_of_classes
-                )
-                precision_metric = torchmetrics.Precision(
-                    num_classes=self.num_of_classes,
-                    average="weighted",
-                    task="multiclass",
-                )
-                recall_metric = torchmetrics.Recall(
-                    num_classes=self.num_of_classes,
-                    average="weighted",
-                    task="multiclass",
-                )
-                f1_metric = torchmetrics.F1Score(
-                    num_classes=self.num_of_classes,
-                    average="weighted",
-                    task="multiclass",
-                )
-            case "ctc":
-                wer_metric = torchmetrics.text.WordErrorRate()
+        # ---------- 1) SET UP METRICS BASED ON TASK ----------
+        if task == "cls":
+            metric = torchmetrics.classification.MulticlassAccuracy(
+                num_classes=self.num_of_classes
+            )
+            precision_metric = torchmetrics.Precision(
+                num_classes=self.num_of_classes,
+                average="weighted",
+                task="multiclass",
+            )
+            recall_metric = torchmetrics.Recall(
+                num_classes=self.num_of_classes,
+                average="weighted",
+                task="multiclass",
+            )
+            f1_metric = torchmetrics.F1Score(
+                num_classes=self.num_of_classes,
+                average="weighted",
+                task="multiclass",
+            )
 
-                decoder = self.config.get("decoder", None)
-                beam_width = self.config.get("beam_width", 10)
-                tokenizer = self.config["tokenizer"]
+            # Arrays to store classification metrics
+            accs, losses = [], []
 
-                def compute_wer_fn(eval_pred):
-                    logits = eval_pred.predictions[0]  # shape: [batch_size, time_steps, vocab_size]
-                    labels = eval_pred.label_ids       # shape: [batch_size, time_steps]
+        elif task == "ctc":
+            wer_metric = torchmetrics.text.WordErrorRate()
+            decoder = self.config.get("decoder", None)
+            beam_width = self.config.get("beam_width", 10)
+            tokenizer = self.config["tokenizer"]
+            padding_value = self.config.get("padding_value", -100)
 
-                    pred_texts = []
-                    for i in range(logits.shape[0]):
-                        sample_logits = torch.from_numpy(logits[i])
-                        sample_log_probs = sample_logits.log_softmax(dim=-1).cpu().numpy()
+            # We'll collect WER from each batch
+            batch_wers = []
 
-                        if decoder is not None:
-                            transcription = decoder.decode(sample_log_probs, beam_width=beam_width)
-                        else:
-                            raise Exception(
-                                """
-                                Decoder must be passed to the runtime analysis config for CTC task.
-                                Beam search decoder is recommended, beam_width is an additional parameter for this decoder type.""
-                                """
-                            )
-
-                        pred_texts.append(transcription.lower())
-
-                    label_texts = []
-                    for label_seq in labels:
-                        label_filtered = [token for token in label_seq if token != -100]
-                        label_text = tokenizer.decode(label_filtered, skip_special_tokens=True)
-                        label_texts.append(label_text.lower())
-
-                    return {"wer": wer_metric(pred_texts, label_texts)}
-                
-                ctc_wer_metric = compute_wer_fn
-            case _:
-                raise Exception(
-                    f"Unsupported task type {self.config['task']}. Please set a supported task type in the config file."
-                )
-
-        # Initialize lists to store metrics for each configuration
-        recorded_accs = []
-        latencies = []
-        gpu_power_usages = []
-        accs, losses = [], []
-
+        else:
+            raise Exception(
+                f"Unsupported task type {task}. Please set a supported task type in the config file."
+            )
+    
+        # ---------- 2) PREPARE DATA LOADER (TEST OR VALIDATION) ----------
         if "test" in self.config and self.config["test"]:
             dataloader = self.config["data_module"].test_dataloader()
             dataset = "Test"
@@ -447,33 +420,37 @@ class RuntimeAnalysis:
             dataloader = self.config["data_module"].val_dataloader()
             dataset = "Validation"
 
-        # Iterate over batches in the validation/train dataset
+        # ---------- 3) ARRAYS FOR LATENCIES & POWER FOR ALL TASKS ----------
+        latencies = []
+        gpu_power_usages = []
+        rtfs = [] 
+
+        # ---------- 4) MAIN EVALUATION LOOP ----------
         for j, (xs, ys) in enumerate(dataloader):
-            # Break the loop after processing the specified number of batches or to drop the last incomplete batch
+            # Stop if we've exceeded our number of evaluation batches, or if the batch is incomplete
             if (
                 j >= self.config["num_batches"]
                 or xs.shape[0] != self.config["batch_size"]
             ):
                 break
 
-            # Instantiate and start the power monitor
+            # Power monitoring (start)
             power_monitor = PowerMonitor(self.config)
             power_monitor.start()
 
-            # Synchronize to ensure all GPU operations are finished
+            # Clear GPU caches & sync
             torch.cuda.synchronize()
             torch.cuda.empty_cache()
 
-            # TRT Inference
+            # ---------------- (A) RUN INFERENCE (TRT, ONNX, or MaseGraph) ----------------
             if isinstance(self.model, trt.IExecutionContext):
+                # TensorRT
                 if self.config["accelerator"] != "cuda":
-                    raise Exception(
-                        "TensorRT inference is only supported on CUDA devices."
-                    )
+                    raise Exception("TensorRT inference is only supported on CUDA devices.")
                 preds, latency = self.infer_trt_cuda(self.model, xs)
 
-            # ONNX Inference
             elif isinstance(self.model, ort.InferenceSession):
+                # ONNX Runtime
                 if self.config["accelerator"] == "cpu":
                     preds, latency = self.infer_onnx_cpu(self.model, xs)
                 elif self.config["accelerator"] == "cuda":
@@ -483,8 +460,8 @@ class RuntimeAnalysis:
                         f"ONNX inference is not support by device {self.config['accelerator']}."
                     )
 
-            # MaseGraph Inference
             else:
+                # MaseGraph or raw PyTorch
                 if self.config["accelerator"] == "cpu":
                     preds, latency = self.infer_mg_cpu(self.model, xs)
                 elif self.config["accelerator"] == "cuda":
@@ -494,92 +471,164 @@ class RuntimeAnalysis:
                         f"MaseGraph inference is not support by device {self.config['accelerator']}."
                     )
 
-            # Stop the power monitor and calculate average power
+            # Power monitoring (stop)
             power_monitor.stop()
-            power_monitor.join()  # Ensure monitoring thread has finished
+            power_monitor.join()
 
-            # Skip the first number of iterations to allow the model to warm up
+            # Skip warmup batches
             if j < num_GPU_warmup_batches:
                 continue
 
+            # Record latency
             latencies.append(latency)
 
+            # Compute average power usage for this batch
             avg_power = (
                 sum(power_monitor.power_readings) / len(power_monitor.power_readings)
                 if power_monitor.power_readings
                 else 0
             )
-            # Store the calculated average power
             gpu_power_usages.append(avg_power)
 
-            # Calculate accuracy and loss for the batch
-            loss = torch.nn.functional.cross_entropy(preds, ys)
-            acc = metric(preds, ys)
-            accs.append(acc.item())
-            losses.append(loss.item())
+            # ---------- (B) METRICS DEPENDING ON TASK ----------
+            if task == "cls":
+                # Classification logic
+                # preds: [batch_size, num_classes]
+                # ys: [batch_size]
 
-            # Update torchmetrics metrics
-            preds_labels = torch.argmax(preds, dim=1)
-            precision_metric(preds_labels, ys)
-            recall_metric(preds_labels, ys)
-            f1_metric(preds_labels, ys)
+                # Cross-entropy (classification) loss
+                loss = torch.nn.functional.cross_entropy(preds, ys)
+                losses.append(loss.item())
 
-        # Compute final precision, recall, and F1 for this configuration
-        avg_precision = precision_metric.compute()
-        avg_recall = recall_metric.compute()
-        avg_f1 = f1_metric.compute()
+                # Accuracy (MulticlassAccuracy)
+                acc = metric(preds, ys)
+                accs.append(acc.item())
 
-        # Convert metrics to float if they are tensors
-        avg_precision = (
-            avg_precision.item() if torch.is_tensor(avg_precision) else avg_precision
-        )
-        avg_recall = avg_recall.item() if torch.is_tensor(avg_recall) else avg_recall
-        avg_f1 = avg_f1.item() if torch.is_tensor(avg_f1) else avg_f1
+                # Update precision, recall, F1
+                preds_labels = torch.argmax(preds, dim=1)
+                precision_metric(preds_labels, ys)
+                recall_metric(preds_labels, ys)
+                f1_metric(preds_labels, ys)
 
-        # Reset metrics for the next configuration
-        precision_metric.reset()
-        recall_metric.reset()
-        f1_metric.reset()
+            elif task == "ctc":
+                # Real-Time Factor (RTF) = Latency / (1 / sample_rate)
+                max_length = xs.shape[1]
+                audio_duration = max_length / self.config["sample_rate"]
+                rtf = (latency / 1000.0) / audio_duration
+                rtfs.append(rtf)
 
-        # Calculate and record average metrics for the current configuration
-        acc_avg = sum(accs) / len(accs)
-        loss_avg = sum(losses) / len(losses)
-        recorded_accs.append(acc_avg)
-        avg_latency = sum(latencies) / len(latencies)
-        avg_gpu_power_usage = sum(gpu_power_usages) / len(gpu_power_usages)
+                # WER CTC logic
+                # preds: [batch_size, time_steps, vocab_size] or [batch_size, *]
+                # ys: [batch_size, time_steps]
+
+                # Convert preds to numpy if needed
+                if torch.is_tensor(preds):
+                    # shape: (batch_size, time_steps, vocab_size)
+                    preds = preds.cpu().numpy()
+
+                # We'll decode each batch => get WER
+                pred_texts = []
+                label_texts = []
+
+                for i in range(preds.shape[0]):
+                    sample_logits = torch.from_numpy(preds[i])
+                    sample_log_probs = sample_logits.log_softmax(dim=-1).cpu().numpy()
+
+                    if decoder is not None:
+                        transcription = decoder.decode(sample_log_probs, beam_width=beam_width)
+                    else:
+                        raise Exception(
+                            "Decoder must be provided for CTC runtime analysis. Pass 'decoder' in config."
+                        )
+
+                    pred_texts.append(transcription.lower())
+
+                for label_seq in ys:
+                    label_filtered = [token for token in label_seq if token != padding_value]
+                    label_text = tokenizer.decode(label_filtered, skip_special_tokens=True)
+                    label_texts.append(label_text.lower())
+
+                # Now compute batch WER
+                batch_wer = wer_metric(pred_texts, label_texts)
+                batch_wers.append(batch_wer.item() if torch.is_tensor(batch_wer) else batch_wer)
+
+        # ---------- 5) AFTER LOOP, COMPUTE FINAL METRICS BASED ON TASK ----------
+        avg_latency = sum(latencies) / len(latencies) if latencies else 0
+        avg_gpu_power_usage = sum(gpu_power_usages) / len(gpu_power_usages) if gpu_power_usages else 0
         avg_gpu_energy_usage = (avg_gpu_power_usage * 1000) * (avg_latency / 3600000)
+        avg_rtf = sum(rtfs) / len(rtfs) if rtfs else 0
 
-        metrics = [
-            ["Average " + dataset + " Accuracy", f"{acc_avg:.5g}"],
-            ["Average Precision", f"{avg_precision:.5g}"],
-            ["Average Recall", f"{avg_recall:.5g}"],
-            ["Average F1 Score", f"{avg_f1:.5g}"],
-            ["Average Loss", f"{loss_avg:.5g}"],
-            ["Average Latency", f"{avg_latency:.5g} ms"],
-            ["Average GPU Power Usage", f"{avg_gpu_power_usage:.5g} W"],
-            ["Inference Energy Consumption", f"{avg_gpu_energy_usage:.5g} mWh"],
-        ]
+        if task == "cls":
+            # Classification final metrics
+            avg_acc = sum(accs) / len(accs) if accs else 0
+            avg_loss = sum(losses) / len(losses) if losses else 0
 
-        # Formatting the table with tabulate
+            avg_precision = precision_metric.compute()
+            avg_recall = recall_metric.compute()
+            avg_f1 = f1_metric.compute()
+
+            # Convert to float
+            avg_precision = avg_precision.item() if torch.is_tensor(avg_precision) else avg_precision
+            avg_recall = avg_recall.item() if torch.is_tensor(avg_recall) else avg_recall
+            avg_f1 = avg_f1.item() if torch.is_tensor(avg_f1) else avg_f1
+
+            # Reset metrics
+            precision_metric.reset()
+            recall_metric.reset()
+            f1_metric.reset()
+
+            metrics_table = [
+                ["Average " + dataset + " Accuracy", f"{avg_acc:.5g}"],
+                ["Average Precision", f"{avg_precision:.5g}"],
+                ["Average Recall", f"{avg_recall:.5g}"],
+                ["Average F1 Score", f"{avg_f1:.5g}"],
+                ["Average Loss", f"{avg_loss:.5g}"],
+                ["Average Latency", f"{avg_latency:.5g} ms"],
+                ["Average GPU Power Usage", f"{avg_gpu_power_usage:.5g} W"],
+                ["Inference Energy Consumption", f"{avg_gpu_energy_usage:.5g} mWh"],
+            ]
+
+            results = {
+                "Average Accuracy": avg_acc,
+                "Average Precision": avg_precision,
+                "Average Recall": avg_recall,
+                "Average F1 Score": avg_f1,
+                "Average Loss": avg_loss,
+                "Average Latency": avg_latency,
+                "Average GPU Power Usage": avg_gpu_power_usage,
+                "Inference Energy Consumption": avg_gpu_energy_usage,
+            }
+
+        elif task == "ctc":
+            # Real-Time Factor metric
+            avg_rtf = sum(latencies) / len(latencies) if latencies else 0
+
+            # CTC final metrics
+            avg_wer = sum(batch_wers) / len(batch_wers) if batch_wers else 0
+
+            metrics_table = [
+                ["Average " + dataset + " WER", f"{avg_wer:.5g}"],
+                ["Average Latency", f"{avg_latency:.5g} ms"],
+                ["Average RTF", f"{avg_rtf:.5g}"],
+                ["Average GPU Power Usage", f"{avg_gpu_power_usage:.5g} W"],
+                ["Inference Energy Consumption", f"{avg_gpu_energy_usage:.5g} mWh"],
+            ]
+
+            results = {
+                "Average WER": avg_wer,
+                "Average Latency": avg_latency,
+                "Average RTF": avg_rtf,
+                "Average GPU Power Usage": avg_gpu_power_usage,
+                "Inference Energy Consumption": avg_gpu_energy_usage,
+            }
+
+        # ---------- 6) LOG RESULTS ----------
         formatted_metrics = tabulate(
-            metrics,
+            metrics_table,
             headers=["Metric (Per Batch)", "Value"],
             tablefmt="pretty",
             floatfmt=".5g",
         )
-
-        # Print result summary
         self.logger.info(f"\nResults {self.model_name}:\n" + formatted_metrics)
 
-        # Store the results in a dictionary and return it
-        results = {
-            "Average Accuracy": acc_avg,
-            "Average Precision": avg_precision,
-            "Average Recall": avg_recall,
-            "Average F1 Score": avg_f1,
-            "Average Loss": loss_avg,
-            "Average Latency": avg_latency,
-            "Average GPU Power Usage": avg_gpu_power_usage,
-            "Inference Energy Consumption": avg_gpu_energy_usage,
-        }
         return results

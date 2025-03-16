@@ -2,16 +2,12 @@
 import dill
 from copy import deepcopy
 from pathlib import Path
-
 import torch
 import torch.nn as nn
 import pandas as pd
 import matplotlib.pyplot as plt
-import toml
-
 import optuna
 from optuna.samplers import TPESampler
-
 from transformers import AutoModelForCTC, Wav2Vec2Processor
 from chop import MaseGraph
 import chop.passes as passes # type: ignore
@@ -48,64 +44,77 @@ from chop.nn.quantized.modules.linear import (
 # -------------------------------
 # 1. Define the model and dataset
 # -------------------------------
-def load_mase_dataset(dataset_name):
-    dataset = load_dataset(dataset_name, split="test.clean")
-    sample_list = list(dataset.take(100))
-
-    def preprocess_function(example):
-        audio_array = example["audio"]["array"]
-        sampling_rate = example["audio"]["sampling_rate"]
-
-        inputs = processor(audio=audio_array, sampling_rate=int(sampling_rate), return_tensors="pt", padding=True)
-        attention_mask = torch.ones(inputs.input_values.shape, dtype=torch.long)
-
-        with processor.as_target_processor():
-            labels = processor.tokenizer(example["text"], return_tensors="pt").input_ids
-
-        return {
-            "input_values": inputs.input_values.squeeze(0),
-            "attention_mask": attention_mask.squeeze(0),
-            "labels": labels.squeeze(0)
-        }
-
-    small_dataset = Dataset.from_list(sample_list)
-    small_dataset = small_dataset.map(
-        preprocess_function,
-        remove_columns=["speaker_id", "file", "id", "chapter_id", "audio"]
-    )
-
-    # Convert to DatasetDict (as required by MASE)
-    tokenized_dataset = DatasetDict({
-        "train": small_dataset,
-        "test": small_dataset
-    })
-    return tokenized_dataset
-
 
 checkpoint = "facebook/wav2vec2-base-960h"
 tokenizer_checkpoint = "facebook/wav2vec2-base-960h"
 dataset_name = "nyalpatel/condensed_librispeech_asr"
-tokenized_dataset = load_mase_dataset(dataset_name)
 
-processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-base-960h")
+# Logic inside get_tockenized_dataset needs to be improved using nyal's changes
+dataset, tokenizer, processor = get_tokenized_dataset(
+    dataset=dataset_name,
+    checkpoint=tokenizer_checkpoint,
+    return_tokenizer=True,
+    return_processor=True,
+)
+
+# Logic needs to be improved for seperated train and test split
+tokenized_dataset = DatasetDict({
+    "train": dataset,
+    "test": dataset
+})
+
 data_collator = DataCollatorCTCWithPadding(processor=processor, padding=True)
-tokenizer = processor.tokenizer
-
 vocab = tokenizer.convert_ids_to_tokens(range(tokenizer.vocab_size))
 decoder = build_ctcdecoder(vocab)
 
 model = AutoModelForCTC.from_pretrained(checkpoint)
 model.config.gradient_checkpointing = True
-base_encoder = model.wav2vec2    
-ctc_head = model.lm_head     
-
+encoder = model.wav2vec2    # static, FX-friendly
+ctc_head = model.lm_head    # dynamic CTC head, separate this
 
 # -------------------------------
-# 2. Add MASE graph to initial model
+# 2. Import ONNX dataset & Wrapper
+# -------------------------------
+
+dataset_path = Path("./preprocessed_data")
+condensed_dataset = CondensedLibrispeechASRDataset(dataset_path=dataset_path, split="train") # Choose valid split
+condensed_dataset.prepare_data()
+condensed_dataset.setup()
+
+data_module = MaseDataModule(
+    name=dataset_name,
+    batch_size=1,
+    model_name=checkpoint,
+    num_workers=0,
+)
+data_module.prepare_data()
+data_module.setup()
+
+class ONNXWrapper(nn.Module):
+    def __init__(self, encoder):
+        super().__init__()
+        self.encoder = encoder 
+
+    def forward(self, inputs):
+        if isinstance(inputs, dict):
+            input_values = inputs["input_values"]
+            attention_mask = inputs["attention_mask"]
+        else:
+            input_values = inputs
+            attention_mask = torch.ones_like(inputs, dtype=torch.long)
+        return self.encoder(input_values, attention_mask=attention_mask)
+    
+    @property
+    def graph(self):
+        # Expose the underlying FX graph for later passes
+        return self.encoder.graph
+
+# -------------------------------
+# 3. Define the MASE graph & metadata
 # -------------------------------
 
 mg = MaseGraph(
-    base_encoder,
+    encoder,
     hf_input_names=[
         "input_values",
         "attention_mask",
@@ -127,6 +136,13 @@ mg, _ = passes.add_common_metadata_analysis_pass(
         "force_device_meta": False,
     }
 )
+
+combined_model = CombinedWav2Vec2CTC(
+        encoder=mg.model,
+        ctc_head=ctc_head, 
+        decoder=decoder,
+        beam_width=10
+    )
 
 # -------------------------------
 # 2. Define Search Space

@@ -180,6 +180,8 @@ runtime_analysis_config = {
     "decoder": decoder,
     "beam_width": 10,
     "tokenizer": tokenizer,
+    "batch_size": 2,
+    "sample_rate": 16000,
 }
 
 mg.model = ONNXWrapper(mg.model)
