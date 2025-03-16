@@ -76,6 +76,15 @@ module mxint_linear #(
     output logic data_out_0_valid,
     input logic data_out_0_ready
 );
+  initial begin
+    assert (DATA_IN_0_PARALLELISM_DIM_0 == WEIGHT_PARALLELISM_DIM_1);
+
+    assert (WEIGHT_PARALLELISM_DIM_1 == WEIGHT_PARALLELISM_DIM_0);
+
+    assert ((DATA_IN_0_TENSOR_SIZE_DIM_0 % DATA_IN_0_PARALLELISM_DIM_0) == 0);
+    assert ((DATA_IN_0_TENSOR_SIZE_DIM_1 % DATA_IN_0_PARALLELISM_DIM_1) == 0);
+  end
+
   logic [DATA_IN_0_PRECISION_0-1:0]circular_mdata_in_0[DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1-1:0];
   logic [DATA_IN_0_PRECISION_1-1:0] circular_edata_in_0;
   logic circular_data_in_0_valid, circular_data_in_0_ready;
