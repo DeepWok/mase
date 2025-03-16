@@ -1,5 +1,6 @@
 import torch
 from chop.nn.quantizers import integer_floor_quantizer
+from chop.nn.quantized.modules import relu
 from functools import partial
 import torch.nn.functional as F
 from torch import Tensor
@@ -7,20 +8,17 @@ from torch import Tensor
 
 def mxint_quantize(x, width: int = 12, exponent_width: int = 6, exponent: int = None):
     """
-    - Convert IEEE FP32/64 to Microsoft floating point (MSFP), where an exponent is shared over all elements in a block.
-    - `e_shared x [(-1)^s1 x mantissa1, (-1)^s2 x mantissa2, ...]`
-    - See https://proceedings.neurips.cc/paper/2020/file/747e32ab0fea7fbd2ad9ec03daa3f840-Paper.pdf
+    - Convert IEEE FP32/64 to Microscaling Interger (MXINT), where an exponent is shared over all elements in a block.
+    - https://arxiv.org/pdf/2310.10537.pdf
+    - https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf
 
     ---
-    - forward: convert IEEE FP32/64 to MSFP
+    - forward: convert IEEE FP32/64 to MXINT
     - backward: STE
 
     ---
     - `width`: The number of mantissa bits + 1 (the sign bit)
-    - `exponent_width`: the number of exponent bits, which is shared over a block
-    - `exponent_bias`: the exponent bias, if None, `2**(exponent_bits-1)-1` will be used
-    - `block_size`: a list of integers where each integer is the block size on that dimension. See function `block`.
-
+    - `exponent_width`: the number of exponent bits
     """
 
     exponent_bias = 2 ** (exponent_width - 1) - 1
@@ -186,3 +184,37 @@ class MXIntLinear(_LinearBase):
             if self.out_quantizer is None:
                 return out
             return self.out_quantizer(out)
+
+
+class MXIntRelu(relu._ReLUBase):
+    def __init__(self, inplace: bool = False, config=None, bypass=False):
+        assert config is not None, "config is None!"
+        super().__init__(inplace)
+
+        self.config = config
+        self.bypass = bypass
+
+        base_quantizer = block_mxint_quant
+
+        x_width, x_exponent_width = (
+            config["data_in_width"],
+            config["data_in_exponent_width"],
+        )
+
+        x_p1, x_p0 = (
+            config["data_in_parallelism_dim_1"],
+            config["data_in_parallelism_dim_0"],
+        )
+
+        self.x_quantizer = partial(
+            base_quantizer,
+            q_config={"width": x_width, "exponent_width": x_exponent_width},
+            parallelism=[x_p1, x_p0],
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        if self.bypass:
+            return F.relu(x)
+        else:
+            y = F.relu(x, self.inplace)
+            return self.x_quantizer(x)
