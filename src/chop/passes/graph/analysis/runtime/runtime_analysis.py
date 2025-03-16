@@ -84,6 +84,9 @@ class RuntimeAnalysis:
         self.logger = logging.getLogger(__name__)
         self.num_of_classes = self.config["data_module"].dataset_info.num_classes
 
+        print(f"[DEBUG] Dataset Size: {len(self.config['data_module'].dataset)}")
+        print(f"[DEBUG] Dataset Example: {self.config['data_module'].dataset[0]}")
+
         match model:
             case MaseGraph():
                 # Check if model is mase graph
@@ -426,6 +429,7 @@ class RuntimeAnalysis:
         # ---------- 2) PREPARE DATA LOADER (TEST OR VALIDATION) ----------
         if "test" in self.config and self.config["test"]:
             dataloader = self.config["data_module"].test_dataloader()
+            print(f"[DEBUG] DataLoader length: {len(dataloader)}")
             dataset = "Test"
         else:
             dataloader = self.config["data_module"].val_dataloader()
@@ -443,6 +447,7 @@ class RuntimeAnalysis:
                 j >= self.config["num_batches"]
                 or xs.shape[0] != self.config["batch_size"]
             ):
+                print(f"[DEBUG] Batch {j+1} - xs shape: {xs.shape}, Expected batch size: {self.config['batch_size']}")
                 break
 
             print(f"[DEBUG] Running Batch {j+1}/{self.config['num_batches']}")
