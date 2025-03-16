@@ -84,8 +84,7 @@ class RuntimeAnalysis:
         self.logger = logging.getLogger(__name__)
         self.num_of_classes = self.config["data_module"].dataset_info.num_classes
 
-        print(f"[DEBUG] Dataset Size: {len(self.config['data_module'].dataset)}")
-        print(f"[DEBUG] Dataset Example: {self.config['data_module'].dataset[0]}")
+        print(f"[DEBUG] Available Attributes in data_module: {dir(self.config['data_module'])}")
 
         match model:
             case MaseGraph():
