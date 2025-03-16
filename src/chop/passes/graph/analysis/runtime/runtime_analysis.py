@@ -13,6 +13,17 @@ from datetime import datetime
 from pathlib import Path
 import time
 
+try:
+    import tensorrt as trt
+except ImportError:
+    raise ImportError("tensorrt is required for this functionality. Please install it from NVIDIA's repositories.")
+
+try:
+    from cuda import cudart
+except ImportError:
+    raise ImportError("pycuda's cudart is required for this functionality. Please install pycuda.")
+
+
 
 from chop.passes.utils import register_mase_pass
 
@@ -61,8 +72,6 @@ def runtime_analysis_pass(model, pass_args=None):
 
     These metrics provide valuable insights into the model's efficiency, effectiveness, and operational cost, crucial for informed decision-making regarding model deployment in production environments.
     """
-    import tensorrt as trt
-    from cuda import cudart
 
     print(f"[DEBUG] tensorrt version: {trt.__version__}")
 
@@ -362,7 +371,6 @@ class RuntimeAnalysis:
         end.record()
 
         print(f"[DEBUG] ONNX Inference - Output Shape: {output_data[0].shape}")
-        print(f"[DEBUG] ONNX Inference - Latency: {(end_time - start_time) * 1000:.3f} ms")
 
         # Synchronize to ensure all GPU operations are finished
         torch.cuda.synchronize()
