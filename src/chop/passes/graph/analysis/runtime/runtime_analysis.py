@@ -406,10 +406,6 @@ class RuntimeAnalysis:
         return preds_tensor, latency
 
     def evaluate(self):
-
-        print(f"[DEBUG] Dataset Type: {self.config['data_module'].name}")
-        print(f"[DEBUG] Batch Size: {self.config['batch_size']}")
-
         self.logger.info(f"Starting transformation analysis on {self.model_name}")
 
         num_GPU_warmup_batches = self.config["num_GPU_warmup_batches"]
@@ -458,7 +454,6 @@ class RuntimeAnalysis:
         # ---------- 2) PREPARE DATA LOADER (TEST OR VALIDATION) ----------
         if "test" in self.config and self.config["test"]:
             dataloader = self.config["data_module"].test_dataloader()
-            print(f"[DEBUG] DataLoader length: {len(dataloader)}")
             dataset = "Test"
         else:
             dataloader = self.config["data_module"].val_dataloader()
@@ -472,14 +467,9 @@ class RuntimeAnalysis:
         # ---------- 4) MAIN EVALUATION LOOP ----------
         for j, (xs, ys) in enumerate(dataloader):
             # Stop if we've exceeded our number of evaluation batches, or if the batch is incomplete
-            if (
-                j >= self.config["num_batches"]
-                or xs.shape[0] != self.config["batch_size"]
-            ):
+            if j >= self.config["num_batches"] or xs.shape[0] != self.config["batch_size"]:
                 print(f"[DEBUG] Batch {j+1} - xs shape: {xs.shape}, Expected batch size: {self.config['batch_size']}")
                 break
-
-            print(f"[DEBUG] Running Batch {j+1}/{self.config['num_batches']}")
 
             # Power monitoring (start)
             power_monitor = PowerMonitor(self.config)
@@ -488,13 +478,6 @@ class RuntimeAnalysis:
             # Clear GPU caches & sync
             torch.cuda.synchronize()
             torch.cuda.empty_cache()
-
-            if isinstance(self.model, ort.InferenceSession):
-                print(f"[DEBUG] Running ONNX inference on batch {j+1}")
-            elif isinstance(self.model, trt.IExecutionContext):
-                print(f"[DEBUG] Running TensorRT inference on batch {j+1}")
-            else:
-                print(f"[DEBUG] Running MaseGraph inference on batch {j+1}")
 
             # ---------------- (A) RUN INFERENCE (TRT, ONNX, or MaseGraph) ----------------
             if isinstance(self.model, trt.IExecutionContext):
@@ -547,7 +530,6 @@ class RuntimeAnalysis:
 
             print(f"[DEBUG] Batch {j+1} - Latency: {latency:.3f} ms")
             print(f"[DEBUG] Batch {j+1} - GPU Power Usage: {avg_power:.3f} W")
-            print(f"[DEBUG] Batch {j+1} - RTF: {rtf:.3f}")
 
             # ---------- (B) METRICS DEPENDING ON TASK ----------
             if task == "cls":
@@ -619,7 +601,6 @@ class RuntimeAnalysis:
         avg_latency = sum(latencies) / len(latencies) if latencies else 0
         avg_gpu_power_usage = sum(gpu_power_usages) / len(gpu_power_usages) if gpu_power_usages else 0
         avg_gpu_energy_usage = (avg_gpu_power_usage * 1000) * (avg_latency / 3600000)
-        avg_rtf = sum(rtfs) / len(rtfs) if rtfs else 0
 
         if task == "cls":
             # Classification final metrics
@@ -664,7 +645,7 @@ class RuntimeAnalysis:
 
         elif task == "ctc":
             # Real-Time Factor metric
-            avg_rtf = sum(latencies) / len(latencies) if latencies else 0
+            avg_rtf = sum(rtfs) / len(rtfs) if rtfs else 0
 
             # CTC final metrics
             avg_wer = sum(batch_wers) / len(batch_wers) if batch_wers else 0
