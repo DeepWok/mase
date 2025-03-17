@@ -1,19 +1,13 @@
 import torch
 
 class HWPQ_PruningOnly:
-    def __init__(self, alpha=0.125, beta=0.125, la=4.0, structured_sparsity=False):
+    def __init__(self, structured_sparsity=False):
         """
-        Initialize pruning with parameters for EWMA
+        Initialize pruning
         
         Args:
-            alpha: EWMA parameter for estimating mean
-            beta: EWMA parameter for estimating deviation
-            la: Threshold multiplier for pruning decision
             structured_sparsity: Whether to use 2:4 structured sparsity
         """
-        self.alpha = alpha
-        self.beta = beta
-        self.la = la
         self.structured_sparsity = structured_sparsity
         
     def compute_contribution(self, weights):
@@ -60,7 +54,6 @@ class HWPQ_PruningOnly:
         print(f"\nPruning details:")
         print(f"  Input tensor shape: {weights.shape}")
         print(f"  Target sparsity: {sparsity_level:.2%}")
-        print(f"  Structured sparsity: {self.structured_sparsity}")
         
         # Process each row independently
         for i in range(weights.shape[0]):
@@ -80,46 +73,21 @@ class HWPQ_PruningOnly:
                 # Avoid pruning all weights
                 target_prune = max(0, n_weights - 1)
             
-            pruned_count = 0
-            if self.structured_sparsity and n_weights >= 4 and abs(sparsity_level - 0.5) < 0.01:
-                # Only use 2:4 structured sparsity when sparsity is close to 50%
-                for start_idx in range(0, n_weights, 4):
-                    end_idx = min(start_idx + 4, n_weights)
-                    chunk_size = end_idx - start_idx
-                    
-                    if chunk_size < 4:  # Handle incomplete chunks differently
-                        if chunk_size > 1:  # If at least 2 weights, prune proportionally
-                            prune_in_chunk = max(1, int(chunk_size * 0.5))  # Prune ~50%
-                            group_contrib = contributions[start_idx:end_idx]
-                            _, indices = torch.topk(group_contrib, prune_in_chunk, largest=False)
-                            indices = indices + start_idx
-                            row_mask[indices] = 0
-                            pruned_count += prune_in_chunk
-                    else:
-                        # Full chunk of 4 - prune 2
-                        group_contrib = contributions[start_idx:end_idx]
-                        _, indices = torch.topk(group_contrib, 2, largest=False)
-                        indices = indices + start_idx
-                        row_mask[indices] = 0
-                        pruned_count += 2
-            else:
-                # For unstructured pruning or non-50% sparsity
-                # Sort contributions to ensure we prune exactly the target number
-                sorted_indices = torch.argsort(contributions)
-                
-                # Prune the weights with lowest contributions up to target sparsity
-                prune_indices = sorted_indices[:target_prune]
-                row_mask[prune_indices] = 0
-                pruned_count = len(prune_indices)
+            # For unstructured pruning
+            # Sort contributions to ensure we prune exactly the target number
+            sorted_indices = torch.argsort(contributions)
+            
+            # Prune the weights with lowest contributions up to target sparsity
+            prune_indices = sorted_indices[:target_prune]
+            row_mask[prune_indices] = 0
             
             # Ensure we're not pruning everything
             if (row_mask == 0).all():
                 # Keep at least one weight (the one with highest contribution)
                 max_idx = torch.argmax(contributions)
                 row_mask[max_idx] = 1
-                pruned_count -= 1
             
-            # Apply pruning (just set to zero, no quantization)
+            # Apply pruning (just set to zero)
             result = torch.zeros_like(row_weights)
             result[row_mask] = row_weights[row_mask]
             
@@ -149,7 +117,7 @@ class HWPQ_PruningOnly:
 
 def hwpq_pruning_only(tensor: torch.Tensor, info: dict, sparsity: float) -> torch.Tensor:
     """
-    Pruning-only ranking function (removed quantization part).
+    Pruning-only ranking function.
     
     Args:
         tensor: Weight tensor to be pruned
@@ -159,8 +127,7 @@ def hwpq_pruning_only(tensor: torch.Tensor, info: dict, sparsity: float) -> torc
     Returns:
         Boolean mask indicating which weights to keep (True) or prune (False)
     """
-    structured_sparsity = info.get("structured_sparsity", True)
-    pruner = HWPQ_PruningOnly(structured_sparsity=structured_sparsity)
+    pruner = HWPQ_PruningOnly()
     
     # Apply pruning to get pruned weights and mask
     _, mask = pruner.prune_weights(tensor, sparsity)
@@ -170,7 +137,7 @@ def hwpq_pruning_only(tensor: torch.Tensor, info: dict, sparsity: float) -> torc
 # For use with pruned modules
 class PruningParameterization(torch.nn.Module):
     """
-    Parametrization for pruning only (no quantization).
+    Parametrization for pruning only.
     """
     def __init__(self, mask):
         super().__init__()
