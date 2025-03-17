@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, pytest
+import os, pytest, random, sys
 
 import torch
 import logging
@@ -43,6 +43,7 @@ class MXIntReluTB(Testbench):
             dut.data_out_0_valid,
             dut.data_out_0_ready,
             check=True,
+            signed=False,
         )
 
         # Model
@@ -130,12 +131,46 @@ async def cocotb_test(dut):
     await tb.run_test(us=100)
 
 
-def get_relu_config(kwargs={}):
+def get_relu_config(seed, kwargs={}):
+    MAX_IN_FEATURES = 16
+    MAX_BATCH_SIZE = 8
+    random.seed(seed)
+
+    BLOCK_SIZE = random.randint(2, 8)
+    PARALLELISM = random.randint(1, 8)
+    BATCH_SIZE = random.randint(1, MAX_BATCH_SIZE // PARALLELISM) * PARALLELISM
+    IN_FEATURES = random.randint(2, MAX_IN_FEATURES // BLOCK_SIZE) * BLOCK_SIZE
+
+    MAX_MANTISSA = 16
+    MAX_EXPONENT = 6
+
+    mantissa = random.randint(3, MAX_MANTISSA)
+    exp = random.randint(3, min(mantissa, MAX_EXPONENT))
+
+
+def get_relu_config(seed, kwargs={}):
+    MAX_IN_FEATURES = 16
+    MAX_BATCH_SIZE = 8
+    random.seed(seed)
+
+    BLOCK_SIZE = random.randint(2, 8)
+    PARALLELISM = random.randint(1, 8)
+    BATCH_SIZE = random.randint(1, MAX_BATCH_SIZE // PARALLELISM) * PARALLELISM
+    IN_FEATURES = random.randint(2, MAX_IN_FEATURES // BLOCK_SIZE) * BLOCK_SIZE
+
+    MAX_MANTISSA = 16
+    MAX_EXPONENT = 6
+
+    mantissa = random.randint(3, MAX_MANTISSA)
+    exp = random.randint(3, min(mantissa, MAX_EXPONENT))
+
     config = {
-        "DATA_IN_0_TENSOR_SIZE_DIM_0": 2,
-        "DATA_IN_0_TENSOR_SIZE_DIM_1": 2,
-        "DATA_IN_0_PARALLELISM_DIM_0": 2,
-        "DATA_IN_0_PARALLELISM_DIM_1": 1,
+        "DATA_IN_0_PRECISION_0": mantissa,
+        "DATA_IN_0_PRECISION_1": exp,
+        "DATA_IN_0_TENSOR_SIZE_DIM_0": IN_FEATURES,
+        "DATA_IN_0_TENSOR_SIZE_DIM_1": BATCH_SIZE,
+        "DATA_IN_0_PARALLELISM_DIM_0": BLOCK_SIZE,
+        "DATA_IN_0_PARALLELISM_DIM_1": PARALLELISM,
     }
 
     config.update(kwargs)
@@ -145,19 +180,31 @@ def get_relu_config(kwargs={}):
 @pytest.mark.dev
 def test_relu():
     """
-    More extensive tests to check realistic parameter sizes.
+    Fully randomized parameter testing.
     """
-    mase_runner(
-        trace=True,
-        module_param_list=[
-            get_relu_config(
-                {
-                    "DATA_IN_0_TENSOR_SIZE_DIM_0": 4,
-                    "DATA_IN_0_PARALLELISM_DIM_0": 2,
-                }
-            ),
-        ],
-    )
+    torch.manual_seed(10)
+    seed = os.getenv("COCOTB_SEED")
+
+    param_override = {}
+
+    if seed is not None:
+        seed = int(seed)
+        mase_runner(
+            trace=True,
+            module_param_list=[get_relu_config(seed, param_override)],
+        )
+    else:
+        num_configs = int(os.getenv("NUM_CONFIGS", default=1))
+        base_seed = random.randrange(sys.maxsize)
+        mase_runner(
+            trace=True,
+            module_param_list=[
+                get_relu_config(base_seed + i, param_override)
+                for i in range(num_configs)
+            ],
+            jobs=min(num_configs, os.cpu_count() // 2),
+        )
+        print(f"Test seeds: \n{[(i,base_seed+i) for i in range(num_configs)]}")
 
 
 if __name__ == "__main__":

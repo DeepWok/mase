@@ -10,15 +10,22 @@ Description : This module performs relu(x) on the input function
 `timescale 1ns / 1ps
 
 module mxint_relu #(
-    /* verilator lint_off UNUSEDPARAM */
-    parameter HAS_BIAS = 1,
 
     parameter DATA_IN_0_PRECISION_0 = 16,
     parameter DATA_IN_0_PRECISION_1 = 3,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 20,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 20,
-    parameter DATA_IN_0_PARALLELISM_DIM_0 = 4,  // must equal WEIGHT_PARALLELISM_DIM_1
+    parameter DATA_IN_0_PARALLELISM_DIM_0 = 4,
     parameter DATA_IN_0_PARALLELISM_DIM_1 = 4,
+
+    /* verilator lint_off UNUSEDPARAM */
+    parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0,
+    parameter DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = DATA_IN_0_TENSOR_SIZE_DIM_0,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1,
+    parameter DATA_OUT_0_PARALLELISM_DIM_0 = DATA_IN_0_PARALLELISM_DIM_0,
+    parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1,
+    /* verilator lint_on UNUSEDPARAM */
 
     localparam IN_0_DEPTH_DIM_0 = DATA_IN_0_TENSOR_SIZE_DIM_0 / DATA_IN_0_PARALLELISM_DIM_0,
     localparam IN_0_DEPTH_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1 / DATA_IN_0_PARALLELISM_DIM_1
@@ -37,6 +44,22 @@ module mxint_relu #(
     input logic data_out_0_ready
 
 );
+  // mega jank to have this work with the mase emission
+  initial begin
+    assert (DATA_IN_0_PRECISION_0 == DATA_OUT_0_PRECISION_0)
+    else $error("ReLU: DATA_IN_0_PRECISION_0 must be equal to DATA_OUT_0_PRECISION_0");
+    assert (DATA_IN_0_PRECISION_1 == DATA_OUT_0_PRECISION_1)
+    else $error("ReLU: DATA_IN_0_PRECISION_1 must be equal to DATA_OUT_0_PRECISION_1");
+    assert (DATA_IN_0_TENSOR_SIZE_DIM_0 == DATA_OUT_0_TENSOR_SIZE_DIM_0)
+    else $error("ReLU: DATA_IN_0_TENSOR_SIZE_DIM_0 must be equal to DATA_OUT_0_TENSOR_SIZE_DIM_0");
+    assert (DATA_IN_0_TENSOR_SIZE_DIM_1 == DATA_OUT_0_TENSOR_SIZE_DIM_1)
+    else $error("ReLU: DATA_IN_0_TENSOR_SIZE_DIM_1 must be equal to DATA_OUT_0_TENSOR_SIZE_DIM_1");
+    assert (DATA_IN_0_PARALLELISM_DIM_0 == DATA_OUT_0_PARALLELISM_DIM_0)
+    else $error("ReLU: DATA_IN_0_PARALLELISM_DIM_0 must be equal to DATA_OUT_0_PARALLELISM_DIM_0");
+    assert (DATA_IN_0_PARALLELISM_DIM_1 == DATA_OUT_0_PARALLELISM_DIM_1)
+    else $error("ReLU: DATA_IN_0_PARALLELISM_DIM_1 must be equal to DATA_OUT_0_PARALLELISM_DIM_0");
+  end
+
   logic [DATA_IN_0_PRECISION_0-1:0] mdata_out_0_i [DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0];
   logic [DATA_IN_0_PRECISION_1-1:0] edata_out_0_i;
   logic data_out_0_valid_i;
