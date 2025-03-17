@@ -49,7 +49,7 @@ def import_model_and_dataset():
     
     checkpoint = "facebook/wav2vec2-base-960h"
     tokenizer_checkpoint = "facebook/wav2vec2-base-960h"
-    dataset_name = "librispeech_asr"
+    dataset_name = "nyalpatel/condensed_librispeech_asr"
     
     # Get tokenized dataset, tokenizer, and processor
     tokenized_dataset, tokenizer, processor = get_tokenized_dataset(
@@ -251,7 +251,7 @@ def define_search_space():
     pruning_methods = [
         "none",
         "hwpq",
-        "magnitude",
+        "movement",
         "random",
     ]
     

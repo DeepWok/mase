@@ -1,60 +1,9 @@
 import torch
-import math
 
-class FP8Format:
-    """
-    Represents FP8 (E5M2) format - 5 bits exponent, 2 bits mantissa, 1 bit sign
-    """
-    def __init__(self):
-        self.exponent_bits = 5
-        self.mantissa_bits = 2
-        self.sign_bit = 1
-        
-    def quantize(self, tensor):
-        """
-        Quantize a tensor to FP8 (E5M2) format with safeguards
-        """
-        # Create a copy of the tensor to avoid modifying the original
-        fp8_tensor = tensor.clone()
-        
-        # Skip quantization for small tensors
-        if tensor.numel() < 10:
-            return tensor
-            
-        # Calculate the mean and std of the tensor for scale-aware quantization
-        tensor_mean = torch.mean(torch.abs(tensor))
-        if tensor_mean < 1e-5:
-            # If values are too small, preserve them without quantization
-            return tensor
-            
-        # Apply the quantization constraints of FP8
-        # Limit the range based on exponent bits
-        max_exp = 2**(2**(self.exponent_bits-1)-1)
-        min_exp = -max_exp
-        
-        # Clamp values to the representable range
-        fp8_tensor = torch.clamp(fp8_tensor, min_exp, max_exp)
-        
-        # Quantize the mantissa to 2 bits of precision
-        # This is a simplified implementation - real hardware would do this differently
-        scale = 2**(math.floor(math.log2(max_exp)) - self.mantissa_bits)
-        
-        # Only quantize values above a threshold to prevent small values from going to zero
-        threshold = scale * 0.5
-        mask = torch.abs(fp8_tensor) >= threshold
-        fp8_tensor[mask] = torch.round(fp8_tensor[mask] / scale) * scale
-        
-        # Verify we haven't zeroed out the entire tensor
-        if (fp8_tensor != 0).sum().item() == 0 and (tensor != 0).sum().item() > 0:
-            print("WARNING: FP8 quantization zeroed out all values! Falling back to original values.")
-            return tensor
-            
-        return fp8_tensor
-
-class HWPQ:
+class HWPQ_PruningOnly:
     def __init__(self, alpha=0.125, beta=0.125, la=4.0, structured_sparsity=False):
         """
-        Initialize HWPQ with parameters for EWMA
+        Initialize pruning with parameters for EWMA
         
         Args:
             alpha: EWMA parameter for estimating mean
@@ -66,7 +15,6 @@ class HWPQ:
         self.beta = beta
         self.la = la
         self.structured_sparsity = structured_sparsity
-        self.fp8 = FP8Format()
         
     def compute_contribution(self, weights):
         """
@@ -90,16 +38,16 @@ class HWPQ:
         contributions = x_squared / denominator
         return contributions, S
     
-    def prune_and_quantize_weights(self, weights, sparsity_level=0.5):
+    def prune_weights(self, weights, sparsity_level=0.5):
         """
-        Apply HWPQ to prune and quantize weights
+        Apply pruning to weights without quantization
         
         Args:
-            weights: The weight tensor to be pruned and quantized
+            weights: The weight tensor to be pruned
             sparsity_level: Target sparsity level (0.0 to 1.0)
             
         Returns:
-            Pruned and quantized tensor and mask
+            Pruned tensor and mask
         """
         # Make a copy of the weights to modify
         pruned_weights = weights.clone()
@@ -109,7 +57,7 @@ class HWPQ:
         total_weights = weights.numel()
         total_kept = 0
         
-        print(f"\nHWPQ pruning details:")
+        print(f"\nPruning details:")
         print(f"  Input tensor shape: {weights.shape}")
         print(f"  Target sparsity: {sparsity_level:.2%}")
         print(f"  Structured sparsity: {self.structured_sparsity}")
@@ -171,19 +119,17 @@ class HWPQ:
                 row_mask[max_idx] = 1
                 pruned_count -= 1
             
-            # Quantize the remaining weights to FP8
+            # Apply pruning (just set to zero, no quantization)
             result = torch.zeros_like(row_weights)
-            result[row_mask] = self.fp8.quantize(row_weights[row_mask])
+            result[row_mask] = row_weights[row_mask]
             
-            # Count non-zeros after quantization
-            nonzeros_after_quant = (result != 0).sum().item()
+            # Count non-zeros after pruning
             kept_weights = row_mask.sum().item()
             
             # Print row statistics
             if i < 3 or i == weights.shape[0] - 1:  # Print first 3 rows and last row
                 print(f"  Row {i}: kept {kept_weights}/{n_weights} weights " 
-                    f"({kept_weights/n_weights:.2%}), "
-                    f"non-zeros after quant: {nonzeros_after_quant}")
+                    f"({kept_weights/n_weights:.2%})")
             elif i == 3:
                 print("  ...")
             
@@ -201,9 +147,9 @@ class HWPQ:
         
         return pruned_weights, mask
 
-def hwpq_pruning(tensor: torch.Tensor, info: dict, sparsity: float) -> torch.Tensor:
+def hwpq_pruning_only(tensor: torch.Tensor, info: dict, sparsity: float) -> torch.Tensor:
     """
-    HWPQ pruning ranking function for MASE pruning framework.
+    Pruning-only ranking function (removed quantization part).
     
     Args:
         tensor: Weight tensor to be pruned
@@ -214,28 +160,27 @@ def hwpq_pruning(tensor: torch.Tensor, info: dict, sparsity: float) -> torch.Ten
         Boolean mask indicating which weights to keep (True) or prune (False)
     """
     structured_sparsity = info.get("structured_sparsity", True)
-    hwpq = HWPQ(structured_sparsity=structured_sparsity)
+    pruner = HWPQ_PruningOnly(structured_sparsity=structured_sparsity)
     
-    # Apply HWPQ to get pruned weights and mask
-    _, mask = hwpq.prune_and_quantize_weights(tensor, sparsity)
+    # Apply pruning to get pruned weights and mask
+    _, mask = pruner.prune_weights(tensor, sparsity)
     
     return mask
 
-# For use with quantized modules
-class HWPQParameterization(torch.nn.Module):
+# For use with pruned modules
+class PruningParameterization(torch.nn.Module):
     """
-    Parametrization for HWPQ. This applies both pruning and FP8 quantization.
+    Parametrization for pruning only (no quantization).
     """
     def __init__(self, mask):
         super().__init__()
         self.register_buffer("mask", mask)
-        self.fp8 = FP8Format()
         
     def forward(self, x):
         assert self.mask.shape == x.shape
+        # Simply apply the mask for pruning
         pruned = self.mask * x
-        quantized = self.fp8.quantize(pruned)
-        return quantized
+        return pruned
         
     def state_dict(self, *args, **kwargs):
         # Avoid double saving masks
