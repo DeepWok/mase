@@ -1,4 +1,4 @@
-from chop.passes.graph.transforms.pruning.hwpq import hwpq_pruning, HWPQParameterization
+from chop.passes.graph.transforms.pruning.hwpq_pruning import hwpq_pruning_only, PruningParameterization
 
 # Ranking criteria for pruning weights
 # NOTE: For now, we assume that all ranking functions take in two positional arguments
