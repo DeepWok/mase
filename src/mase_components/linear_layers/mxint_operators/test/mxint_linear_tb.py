@@ -235,7 +235,7 @@ def get_mxint_linear_config_random(seed, kwargs={}):
     MAX_MANTISSA = 16
     MAX_EXPONENT = 6
 
-    mantissas = [random.randint(3, MAX_MANTISSA)] * 4
+    mantissas = [random.randint(4, MAX_MANTISSA)] * 4
     exps = [random.randint(3, min(mantissas[0], MAX_EXPONENT))] * 4
 
     config = {

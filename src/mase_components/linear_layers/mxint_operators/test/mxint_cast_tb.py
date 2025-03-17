@@ -120,13 +120,13 @@ def get_mxint_cast_config_random(seed, kwargs={}):
 
     BLOCK_SIZE = random.randint(1, 16)
 
-    MAX_MANTISSA = 16
+    MAX_MANTISSA = 32
     MAX_EXPONENT = 6
 
-    in_man = random.randint(4, MAX_MANTISSA)
+    in_man = random.randint(3, MAX_MANTISSA)
     in_exp = random.randint(2, MAX_EXPONENT)
 
-    out_man = random.randint(4, MAX_MANTISSA)
+    out_man = random.randint(3, MAX_MANTISSA)
     out_exp = random.randint(2, MAX_EXPONENT)
 
     config = {
@@ -151,11 +151,11 @@ def test_mxint_cast_random():
 
     # use this to fix a particular parameter value
     param_override = {
-        # "IN_MAN_WIDTH": 10,
-        # "IN_EXP_WIDTH": 5,
-        # "OUT_MAN_WIDTH": 10,
-        # "OUT_EXP_WIDTH": 5,
-        # "BLOCK_SIZE": 4,
+        # "IN_MAN_WIDTH": 32,
+        # "IN_EXP_WIDTH": 6,
+        # "OUT_MAN_WIDTH": 6,
+        # "OUT_EXP_WIDTH": 3,
+        # "BLOCK_SIZE": 2,
     }
 
     if seed is not None:
