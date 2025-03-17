@@ -242,8 +242,7 @@ module mxint_linear #(
   mxint_accumulator #(
       .DATA_IN_0_PRECISION_0(FDP_WIDTH),
       .DATA_IN_0_PRECISION_1(FDP_EXP_WIDTH_IN),
-      .IN_DEPTH             (IN_0_DEPTH_DIM_0),
-      .HAS_BIAS             (HAS_BIAS),
+      .IN_DEPTH             (IN_0_DEPTH_DIM_0 + HAS_BIAS),
       .BLOCK_SIZE           (DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0)
   ) accumulator_inst (
       .clk             (clk),
