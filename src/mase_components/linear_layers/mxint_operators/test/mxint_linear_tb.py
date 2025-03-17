@@ -295,7 +295,7 @@ def test_mxint_linear_full_random():
 
     # use this to fix a particular parameter value
     param_override = {
-        "HAS_BIAS": 0,
+        "HAS_BIAS": 1,
     }
 
     if seed is not None:

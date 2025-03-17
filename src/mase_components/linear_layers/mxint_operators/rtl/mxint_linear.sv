@@ -160,9 +160,9 @@ module mxint_linear #(
       DATA_IN_0_PARALLELISM_DIM_0
   );
   localparam FDP_EXP_WIDTH_IN =(WEIGHT_PRECISION_1 > DATA_IN_0_PRECISION_1)? WEIGHT_PRECISION_1 + 1: DATA_IN_0_PRECISION_1 + 1;
-  localparam FDP_EXP_WIDTH_OUT = FDP_EXP_WIDTH_IN + $clog2($clog2(IN_0_DEPTH_DIM_0) + 1);
-  localparam ACC_WIDTH = FDP_WIDTH + $clog2(IN_0_DEPTH_DIM_0) + 2 ** FDP_EXP_WIDTH_IN;
-  localparam LOSSLESS_OUT_WIDTH = ACC_WIDTH + HAS_BIAS;
+  localparam FDP_EXP_WIDTH_OUT = FDP_EXP_WIDTH_IN + $clog2($clog2(IN_0_DEPTH_DIM_0 + HAS_BIAS) + 1);
+  localparam ACC_WIDTH = FDP_WIDTH + $clog2(IN_0_DEPTH_DIM_0 + HAS_BIAS) + 2 ** FDP_EXP_WIDTH_IN;
+  localparam LOSSLESS_OUT_WIDTH = ACC_WIDTH;
   localparam LOSSLESS_OUT_EXP_WIDTH = FDP_EXP_WIDTH_OUT;
   /* verilator lint_off UNUSEDSIGNAL */
   // Assume the parallelised hardware above have the same arrival time
@@ -189,7 +189,7 @@ module mxint_linear #(
   // and each one computes for IN_0_DEPTH iterations for each inputs.
   for (genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_1; i = i + 1) begin : out_dim_1
     for (genvar j = 0; j < WEIGHT_PARALLELISM_DIM_1; j = j + 1) begin : out_dim_0
-      // Assume the weight are transposed and partitioned 
+      // Assume the weight are transposed and partitioned
       logic [WEIGHT_PRECISION_0-1:0] current_mweight[WEIGHT_PARALLELISM_DIM_0-1:0];
       logic [WEIGHT_PRECISION_1-1:0] current_eweight;
       logic [DATA_IN_0_PRECISION_0-1:0] current_mdata[WEIGHT_PARALLELISM_DIM_0-1:0];
@@ -227,57 +227,70 @@ module mxint_linear #(
   assign acc_data_in_valid = fdp_data_out_valid[0];
   assign acc_edata_in = fdp_edata_out[0];
 
+  localparam FDP_EXP_BIAS = 2 ** (FDP_EXP_WIDTH_IN - 1) - 1;
+  localparam BIAS_EXP_BIAS = 2 ** (BIAS_PRECISION_1 - 1) - 1;
+
+  logic [$clog2(IN_0_DEPTH_DIM_0 + HAS_BIAS):0] accum_count;
+  logic acc_ready;
+  logic acc_valid;
+  logic add_bias;
+
+  logic [FDP_WIDTH-1:0] acc_mdata[DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_1 - 1:0];
+  logic [FDP_EXP_WIDTH_IN-1:0] acc_edata;
+  logic acc_data_valid, acc_data_ready;
+
   mxint_accumulator #(
       .DATA_IN_0_PRECISION_0(FDP_WIDTH),
       .DATA_IN_0_PRECISION_1(FDP_EXP_WIDTH_IN),
-      .IN_DEPTH(IN_0_DEPTH_DIM_0),
-      .BLOCK_SIZE(DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0)
+      .IN_DEPTH             (IN_0_DEPTH_DIM_0),
+      .HAS_BIAS             (HAS_BIAS),
+      .BLOCK_SIZE           (DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0)
   ) accumulator_inst (
-      .clk(clk),
-      .rst(rst),
-      .mdata_in_0(acc_mdata_in),
-      .edata_in_0(acc_edata_in),
-      .data_in_0_valid(acc_data_in_valid),
-      .data_in_0_ready(acc_data_in_ready),
-      .mdata_out_0(acc_mdata_out),
-      .edata_out_0(acc_edata_out),
+      .clk             (clk),
+      .rst             (rst),
+      .mdata_in_0      (acc_mdata),
+      .edata_in_0      (acc_edata),
+      .data_in_0_valid (acc_valid),
+      .data_in_0_ready (acc_ready),
+      .mdata_out_0     (acc_mdata_out),
+      .edata_out_0     (acc_edata_out),
       .data_out_0_valid(acc_data_out_valid),
-      .data_out_0_ready(acc_data_out_ready)
+      .data_out_0_ready(acc_data_out_ready),
+      .accum_count     (accum_count)
   );
 
-
-  logic [BIAS_PRECISION_0-1:0] mbias_sext[DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0-1:0];
-  logic [LOSSLESS_OUT_WIDTH-1:0] shifted_mbias[DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0-1:0];
-  logic [FDP_EXP_WIDTH_OUT - 1:0] exp_difference;
-  logic [FDP_EXP_WIDTH_OUT - 1:0] abs_shift_value;
   if (HAS_BIAS) begin : bias_cast
-    for (genvar k = 0; k < DATA_OUT_0_PARALLELISM_DIM_1; k++)
-      assign mbias_sext[(k+1)*DATA_OUT_0_PARALLELISM_DIM_0 - 1:k*DATA_OUT_0_PARALLELISM_DIM_0] = circular_mbias;
-    join2 #() acc_join_inst (
-        .data_in_ready ({circular_bias_ready, acc_data_out_ready}),
-        .data_in_valid ({circular_bias_valid, acc_data_out_valid}),
-        .data_out_valid(cast_data_out_0_valid),
-        .data_out_ready(cast_data_out_0_ready)
-    );
-    // This is wrong and should be biased not signed ?
-    assign exp_difference = $signed(circular_ebias) - $signed(acc_edata_out);
-    assign abs_shift_value = exp_difference[FDP_EXP_WIDTH_OUT - 1]? (~exp_difference + 1): exp_difference;
-    for (genvar m = 0; m < DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1; m++) begin
-      assign shifted_mbias[m] = exp_difference[FDP_EXP_WIDTH_OUT-1] ? $signed(
-          mbias_sext[m]
-      ) >>> abs_shift_value : $signed(
-          mbias_sext[m]
-      ) <<< abs_shift_value;
-      assign cast_mdata_out_0[m] = $signed(shifted_mbias[m]) + $signed(acc_mdata_out[m]);
+
+    assign add_bias = accum_count == IN_0_DEPTH_DIM_0;
+    assign circular_bias_ready = add_bias && acc_ready;
+    assign acc_data_in_ready = !add_bias && acc_ready;
+    assign acc_valid = add_bias ? circular_bias_valid : acc_data_in_valid;
+    assign acc_edata = add_bias ? circular_ebias - BIAS_EXP_BIAS + FDP_EXP_BIAS : acc_edata_in;
+
+    for (genvar j = 0; j < DATA_IN_0_PARALLELISM_DIM_1; j++) begin
+      for (genvar i = 0; i < BIAS_PARALLELISM_DIM_0; i++) begin
+        assign acc_mdata[j*DATA_IN_0_PARALLELISM_DIM_0+i] = add_bias ? {circular_mbias[i], {(FDP_WIDTH - BIAS_PRECISION_0){1'b0}}} : acc_mdata_in[j*DATA_IN_0_PARALLELISM_DIM_0+i];
+      end
     end
-    assign cast_edata_out_0 = acc_edata_out;
+
   end else begin
-    assign acc_data_out_ready = cast_data_out_0_ready;
-    assign cast_data_out_0_valid = acc_data_out_valid;
-    assign cast_mdata_out_0 = acc_mdata_out;
-    assign cast_edata_out_0 = acc_edata_out;
-    assign bias_ready = 1;
+    assign acc_mdata         = acc_mdata_in;
+    assign acc_edata         = acc_edata_in;
+    assign acc_data_in_ready = acc_ready;
+    assign acc_valid         = acc_data_in_valid;
   end
+
+  always_comb begin
+    for (int i = 0; i < DATA_OUT_0_PARALLELISM_DIM_1 * DATA_OUT_0_PARALLELISM_DIM_0; i++) begin
+      cast_mdata_out_0[i] = acc_mdata_out[i];
+    end
+  end
+
+  assign acc_data_out_ready    = cast_data_out_0_ready;
+  assign cast_data_out_0_valid = acc_data_out_valid;
+  assign cast_edata_out_0      = acc_edata_out;
+  assign bias_ready            = 1;
+
   mxint_cast #(
       .IN_MAN_WIDTH(LOSSLESS_OUT_WIDTH),
       .IN_EXP_WIDTH(LOSSLESS_OUT_EXP_WIDTH),

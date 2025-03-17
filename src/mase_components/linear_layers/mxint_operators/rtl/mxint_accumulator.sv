@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 /*
 Module      : mxint_accumulator
-Description : 
+Description :
   - The accumulator is designed to accumulate a block of MxInt values.
 */
 
@@ -10,10 +10,14 @@ module mxint_accumulator #(
     parameter DATA_IN_0_PRECISION_1 = 4,
     parameter BLOCK_SIZE = 4,
     parameter IN_DEPTH = 2,
+    parameter HAS_BIAS = 0,
     parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0 + 2 ** DATA_IN_0_PRECISION_1 + $clog2(
-        IN_DEPTH
+        IN_DEPTH + HAS_BIAS
     ),
-    parameter DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1 + $clog2($clog2(IN_DEPTH) + 1)
+    parameter DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1 + $clog2(
+        $clog2(IN_DEPTH + HAS_BIAS) + 1
+    ),
+    localparam COUNTER_WIDTH = $clog2(IN_DEPTH + HAS_BIAS)
 ) (
     input logic clk,
     input logic rst,
@@ -28,19 +32,19 @@ module mxint_accumulator #(
     output logic signed [DATA_OUT_0_PRECISION_0-1:0] mdata_out_0     [BLOCK_SIZE - 1:0],
     output logic        [DATA_OUT_0_PRECISION_1-1:0] edata_out_0,
     output logic                                     data_out_0_valid,
-    input  logic                                     data_out_0_ready
+    input  logic                                     data_out_0_ready,
+    output logic        [           COUNTER_WIDTH:0] accum_count
 );
 
-  localparam RIGHT_PADDING = DATA_OUT_0_PRECISION_0 - DATA_IN_0_PRECISION_0 - $clog2(IN_DEPTH);
-  localparam LEFT_PADDING = $clog2(IN_DEPTH);
-  localparam COUNTER_WIDTH = $clog2(IN_DEPTH);  // 1-bit wider so IN_DEPTH also fits.
+  localparam RIGHT_PADDING = 2 ** DATA_IN_0_PRECISION_1;
+  localparam LEFT_PADDING = $clog2(IN_DEPTH + HAS_BIAS);
 
   localparam EXP_IN_BIAS = 2 ** (DATA_IN_0_PRECISION_1 - 1) - 1;
   localparam EXP_OUT_BIAS = 2 ** (DATA_OUT_0_PRECISION_1 - 1) - 1;
 
   /* verilator lint_off WIDTH */
-  assign data_in_0_ready  = (accum_count != IN_DEPTH) || data_out_0_ready;
-  assign data_out_0_valid = (accum_count == IN_DEPTH);
+  assign data_in_0_ready  = (accum_count != IN_DEPTH + HAS_BIAS) || data_out_0_ready;
+  assign data_out_0_valid = (accum_count == IN_DEPTH + HAS_BIAS);
   /* verilator lint_on WIDTH */
 
   logic signed [DATA_OUT_0_PRECISION_0 - 1:0] padded_mdata_in_0  [BLOCK_SIZE - 1:0];
@@ -53,7 +57,6 @@ module mxint_accumulator #(
   logic        [ DATA_IN_0_PRECISION_1 - 1:0] max_exponent_d;
   logic        [ DATA_IN_0_PRECISION_1 - 1:0] max_exponent_q;
 
-  logic        [             COUNTER_WIDTH:0] accum_count;
   logic signed [DATA_OUT_0_PRECISION_1 - 1:0] shift;
   logic                                       no_reg_value;
 
