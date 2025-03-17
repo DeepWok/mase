@@ -566,14 +566,17 @@ class RuntimeAnalysis:
                 if ctc_head is None:
                     raise Exception("CTC head must be provided in config for full model evaluation")
                 
-                predictions = ctc_head(preds["last_hidden_state"])
+                ctc_head = ctc_head.cpu()
+                encoder_output = preds["last_hidden_state"].cpu()
+
+                predictions = ctc_head(encoder_output)
 
                 if torch.is_tensor(predictions):
                     predictions = predictions.detach().cpu()
                 else:
                     predictions = torch.tensor(predictions).cpu()
 
-                preds_np = predictions.cpu().numpy()
+                preds_np = predictions.numpy()
 
                 pred_texts = []
                 label_texts = []
