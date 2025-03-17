@@ -269,7 +269,7 @@ weight_criteria_map = {
             "random": random,
             "l1-norm": global_weight_l1,
             "movement": global_weight_movement, 
-            # We're not implementing global HWPQ for now
+            # We're not implementing global HWPQ or FlexRound for now
         }
     },
 }

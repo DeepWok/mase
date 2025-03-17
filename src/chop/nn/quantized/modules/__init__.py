@@ -1,7 +1,7 @@
+# In src/chop/nn/quantized/modules/__init__.py
+
 from .attention_head import BertSelfAttentionHeadInteger
 from .attention import BertSelfAttentionInteger
-
-# from .add import AddInteger
 from .conv1d import (
     Conv1dBlockFP,
     Conv1dBlockMinifloat,
@@ -65,14 +65,10 @@ from .batch_norm2d import (
     BatchNorm2dInteger,
     BatchNorm2dBinary,
 )
-from .layer_norm import (
-    LayerNormInteger,
-)
+from .layer_norm import LayerNormInteger
 from .group_norm import GroupNormInteger
 from .instance_norm2d import InstanceNorm2dInteger
-
 from .rms_norm import RMSNormInteger
-
 from .selu import (
     SELUBlockFP,
     SELUBlockMinifloat,
@@ -84,7 +80,6 @@ from .selu import (
     SELUBinary,
     SELUTernary,
 )
-
 from .silu import (
     SiLUBlockFP,
     SiLUBlockMinifloat,
@@ -96,7 +91,6 @@ from .silu import (
     SiLUBinary,
     SiLUTernary,
 )
-
 from .tanh import (
     TanhBlockFP,
     TanhBlockMinifloat,
@@ -108,7 +102,6 @@ from .tanh import (
     TanhBinary,
     TanhTernary,
 )
-
 from .gelu import (
     GELUBlockFP,
     GELUBlockMinifloat,
@@ -120,7 +113,6 @@ from .gelu import (
     GELUBinary,
     GELUTernary,
 )
-
 from .softsign import (
     SoftsignBlockFP,
     SoftsignBlockMinifloat,
@@ -132,7 +124,6 @@ from .softsign import (
     SoftsignBinary,
     SoftsignTernary,
 )
-
 from .softplus import (
     SoftplusBlockFP,
     SoftplusBlockMinifloat,
@@ -144,13 +135,11 @@ from .softplus import (
     SoftplusBinary,
     SoftplusTernary,
 )
-from .batch_norm1d import (
-    BatchNorm1dInteger,
-)
-from .gqa import (
-    GroupedQueryAttentionInteger,
-)
+from .batch_norm1d import BatchNorm1dInteger
+from .gqa import GroupedQueryAttentionInteger
 
+
+# The module map is defined here as usual.
 quantized_module_map = {
     "conv1d_block_minifloat": Conv1dBlockMinifloat,
     "conv1d_integer": Conv1dInteger,
@@ -187,89 +176,17 @@ quantized_module_map = {
     "linear_ternary": LinearTernary,
     "linear_lutnet": LinearLUT,
     "linear_logicnets": LinearLogicNets,
-    "adaptive_avg_pool2d_integer": AdaptiveAvgPool2dInteger,
-    "avg_pool2d_integer": AvgPool2dInteger,
-    "avg_pool2d_binary": AvgPool2dBinary,
-    "avg_pool2d_ternary": AvgPool2dTernary,
-    "relu_block_minifloat": ReLUBlockMinifloat,
-    "relu_integer": ReLUInteger,
-    "relu_fixed": ReLUInteger,
-    "relu_log": ReLULog,
-    "relu_block_log": ReLUBlockLog,
-    "relu_minifloat_ieee": ReLUMinifloatIEEE,
-    "relu_minifloat_denorm": ReLUMinifloatDenorm,
-    "relu_block_fp": ReLUBlockFP,
-    "relu_binary": ReLUBinary,
-    "relu_ternary": ReLUTernary,
-    "batch_norm2d_integer": BatchNorm2dInteger,
-    "batch_norm2d_binary": BatchNorm2dBinary,
-    "layer_norm_integer": LayerNormInteger,
-    "group_norm_integer": GroupNormInteger,
-    "instance_norm2d_integer": InstanceNorm2dInteger,
-    "rms_norm_integer": RMSNormInteger,
-    "selu_block_minifloat": SELUBlockMinifloat,
-    "selu_integer": SELUInteger,
-    "selu_fixed": SELUInteger,
-    "selu_log": SELULog,
-    "selu_block_log": SELUBlockLog,
-    "selu_minifloat_ieee": SELUMinifloatIEEE,
-    "selu_minifloat_denorm": SELUMinifloatDenorm,
-    "selu_block_fp": SELUBlockFP,
-    "selu_binary": SELUBinary,
-    "selu_ternary": SELUTernary,
-    "silu_block_minifloat": SiLUBlockMinifloat,
-    "silu_integer": SiLUInteger,
-    "silu_fixed": SiLUInteger,
-    "silu_log": SiLULog,
-    "silu_block_log": SiLUBlockLog,
-    "silu_minifloat_ieee": SiLUMinifloatIEEE,
-    "silu_minifloat_denorm": SiLUMinifloatDenorm,
-    "silu_block_fp": SiLUBlockFP,
-    "silu_binary": SiLUBinary,
-    "silu_ternary": SiLUTernary,
-    "tanh_block_minifloat": TanhBlockMinifloat,
-    "tanh_integer": TanhInteger,
-    "tanh_fixed": TanhInteger,
-    "tanh_log": TanhLog,
-    "tanh_block_log": TanhBlockLog,
-    "tanh_minifloat_ieee": TanhMinifloatIEEE,
-    "tanh_minifloat_denorm": TanhMinifloatDenorm,
-    "tanh_block_fp": TanhBlockFP,
-    "tanh_binary": TanhBinary,
-    "tanh_ternary": TanhTernary,
-    "gelu_block_minifloat": GELUBlockMinifloat,
-    "gelu_integer": GELUInteger,
-    "gelu_fixed": GELUInteger,
-    "gelu_log": GELULog,
-    "gelu_block_log": GELUBlockLog,
-    "gelu_minifloat_ieee": GELUMinifloatIEEE,
-    "gelu_minifloat_denorm": GELUMinifloatDenorm,
-    "gelu_block_fp": GELUBlockFP,
-    "gelu_binary": GELUBinary,
-    "gelu_ternary": GELUTernary,
-    "softsign_block_minifloat": SoftsignBlockMinifloat,
-    "softsign_integer": SoftsignInteger,
-    "softsign_fixed": SoftsignInteger,
-    "softsign_log": SoftsignLog,
-    "softsign_block_log": SoftsignBlockLog,
-    "softsign_minifloat_ieee": SoftsignMinifloatIEEE,
-    "softsign_minifloat_denorm": SoftsignMinifloatDenorm,
-    "softsign_block_fp": SoftsignBlockFP,
-    "softsign_binary": SoftsignBinary,
-    "softsign_ternary": SoftsignTernary,
-    "softplus_block_minifloat": SoftplusBlockMinifloat,
-    "softplus_integer": SoftplusInteger,
-    "softplus_fixed": SoftplusInteger,
-    "softplus_log": SoftplusLog,
-    "softplus_block_log": SoftplusBlockLog,
-    "softplus_minifloat_ieee": SoftplusMinifloatIEEE,
-    "softplus_minifloat_denorm": SoftplusMinifloatDenorm,
-    "softplus_block_fp": SoftplusBlockFP,
-    "softplus_binary": SoftplusBinary,
-    "softplus_ternary": SoftplusTernary,
-    "batch_norm1d_fixed": BatchNorm1dInteger,
-    "batch_norm1d_linear": BatchNorm1dInteger,
-    "bert_self_attention_head_integer": BertSelfAttentionHeadInteger,
-    "bert_self_attention_integer": BertSelfAttentionInteger,
-    "grouped_query_attention_integer": GroupedQueryAttentionInteger,
+    # The FlexRound entries will be added lazily.
 }
+
+def get_quantized_module_map():
+    """
+    Lazily load the FlexRound modules and return the complete module map.
+    """
+    # Import here (local import) to avoid circular dependencies.
+    from .flexround_modules import LinearFlexRound, Conv2dFlexRound, Conv1dFlexRound
+    # Insert the FlexRound keys into the existing map.
+    quantized_module_map["linear_flexround"] = LinearFlexRound
+    quantized_module_map["conv2d_flexround"] = Conv2dFlexRound
+    quantized_module_map["conv1d_flexround"] = Conv1dFlexRound
+    return quantized_module_map
