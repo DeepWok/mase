@@ -20,7 +20,7 @@ class MXIntHardwareExp(nn.Module):
         super().__init__()
         self.q_config = q_config
 
-    def hardware_range_reduction(self, qx, data_r_width, data_n_width) -> tuple[torch.Tensor, torch.Tensor]:
+    def hardware_range_reduction(self, qx, exp_width, exp_exponent_width) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Perform range reduction: x = r + n*ln(2)
         Returns (r, n) where r is remainder and n is integer power
@@ -28,30 +28,22 @@ class MXIntHardwareExp(nn.Module):
         coefficient_quant_block = partial(
             mxint_quant_block, 
             width=8,
-            exponent_width=4 
+            exponent_width=8 
             )
         self.log2_e, _, _ = coefficient_quant_block(torch.log2(torch.tensor(math.e)))
         new_mx = qx * self.log2_e
-        new_mx = integer_floor_quantizer(new_mx, data_n_width + data_r_width - 1, data_r_width - 1)
+        new_mx = integer_floor_quantizer(new_mx, exp_width + exp_exponent_width - 1, exp_width - 1)
         n = new_mx.floor()
         r = new_mx - n
         return r, n
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-
-        qx, mx, ex = mxint_hardware(x, 
-                           {
-                                 'width': self.q_config.get('data_in_width'),
-                                 'exponent_width': self.q_config.get('data_in_exponent_width')
-                           },
-                           parallelism=[1,1])
-
-        mr, n = self.hardware_range_reduction(qx, self.q_config.get('data_r_width'), self.q_config.get('data_out_exponent_width'))
+        mr, n = self.hardware_range_reduction(x, self.q_config.get('exp_width'), self.q_config.get('exp_exponent_width'))
         mexp = 2 ** mr 
-        mexp = integer_quantizer(mexp, self.q_config.get('data_out_width'), self.q_config.get('data_out_width') - 2)
-        mexp = mexp * 2 ** (self.q_config.get('data_out_width') - 2)
+        mexp = integer_quantizer(mexp, self.q_config.get('exp_width'), self.q_config.get('exp_width') - 2)
+        mexp = mexp * 2 ** (self.q_config.get('exp_width') - 2)
         eexp = n
-        qexp = mexp * 2 ** eexp / 2 ** (self.q_config.get('data_out_width') - 2)
+        qexp = mexp * 2 ** eexp / 2 ** (self.q_config.get('exp_width') - 2)
         
         return qexp, mexp, eexp
 
@@ -110,8 +102,57 @@ class MXIntSoftmax(nn.Module):
 
             return qout, mout, eout
 
-        qexp, mexp, eexp = exp(self, x)
-        qexp_sum, mexp_sum, eexp_sum = exp_sum(self, qexp, mexp, eexp)
-        qout, mout, eout = division(self, qexp, mexp, eexp, qexp_sum, mexp_sum, eexp_sum)
+        qx, _, _ = mxint_hardware(x, 
+                           {
+                                 'width': self.q_config.get('data_in_width'),
+                                 'exponent_width': self.q_config.get('data_in_exponent_width')
+                           },
+                           parallelism=[1,1])
         
+        if self.q_config.get("enable_mxint_softmax"):
+            if self.q_config.get("enable_mxint_exp"):
+                qexp, mexp, eexp = exp(self, qx)
+            else:
+                qexp, mexp, eexp = mxint_hardware(
+                    torch.exp(qx), 
+                    {
+                        "width": self.q_config.get('exp_width'),
+                        "exponent_width": self.q_config.get('exp_exponent_width')
+                    },
+                    parallelism=[1,1]
+                )
+            
+            if self.q_config.get("enable_mxint_exp_sum"):
+                qexp_sum, mexp_sum, eexp_sum = exp_sum(self, qexp, mexp, eexp)
+            else:
+                qexp_sum, mexp_sum, eexp_sum = mxint_hardware(
+                    torch.sum(qexp, dim=dim, keepdim=True), 
+                    {
+                        "width": self.q_config.get('exp_sum_width'),
+                        "exponent_width": self.q_config.get('exp_sum_exponent_width')
+                    },
+                    parallelism=[1,1]
+                )
+            if self.q_config.get("enable_mxint_division"):
+                qout, mout, eout = division(self, qexp, mexp, eexp, qexp_sum, mexp_sum, eexp_sum)
+            else:
+                qout, mout, eout = mxint_hardware(
+                    qexp / qexp_sum, 
+                    {
+                        "width": self.q_config.get('data_out_width'),
+                        "exponent_width": self.q_config.get('data_out_exponent_width')
+                    },
+                    parallelism=[1,1]
+                )
+        else:
+            qout = torch.softmax(qx, dim=dim)
+        
+        qout, _, _ = mxint_hardware(
+            qout,
+            q_config = {
+                "width": self.q_config["data_out_width"],
+                "exponent_width": self.q_config["data_out_exponent_width"],
+            },
+            parallelism = [1,1]
+        )
         return qout

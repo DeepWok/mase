@@ -1,0 +1,558 @@
+{
+    "gelu_hash_in_int_width": {
+        "search_log": [
+            [
+                2,
+                0.7853125
+            ],
+            [
+                3,
+                0.7909375
+            ],
+            [
+                4,
+                0.79125
+            ]
+        ],
+        "best_result": {
+            "best_acc": [
+                4,
+                0.79125
+            ],
+            "best_param": 4
+        }
+    },
+    "gelu_hash_in_frac_width": {
+        "search_log": [
+            [
+                3,
+                0.79125
+            ]
+        ],
+        "best_result": {
+            "best_acc": [
+                3,
+                0.79125
+            ],
+            "best_param": 3
+        }
+    },
+    "gelu_hash_out_int_width": {
+        "search_log": [
+            [
+                2,
+                0.77875
+            ],
+            [
+                3,
+                0.7928125
+            ]
+        ],
+        "best_result": {
+            "best_acc": [
+                3,
+                0.7928125
+            ],
+            "best_param": 3
+        }
+    },
+    "gelu_hash_out_frac_width": {
+        "search_log": [
+            [
+                3,
+                0.0
+            ],
+            [
+                4,
+                0.0
+            ],
+            [
+                5,
+                0.0040625
+            ],
+            [
+                6,
+                0.264375
+            ],
+            [
+                7,
+                0.671875
+            ],
+            [
+                8,
+                0.7609375
+            ],
+            [
+                9,
+                0.7825
+            ],
+            [
+                10,
+                0.78625
+            ],
+            [
+                11,
+                0.7871875
+            ],
+            [
+                12,
+                0.789375
+            ],
+            [
+                13,
+                0.791875
+            ]
+        ],
+        "best_result": {
+            "best_acc": [
+                13,
+                0.791875
+            ],
+            "best_param": 13
+        }
+    },
+    "gelu_final": {
+        "best_config": {
+            "by": "type",
+            "gelu": {
+                "config": {
+                    "data_in_width": 8,
+                    "data_in_exponent_width": 8,
+                    "data_in_parallelism": [
+                        1,
+                        32
+                    ],
+                    "data_out_width": 8,
+                    "data_out_exponent_width": 8,
+                    "data_out_parallelism": [
+                        1,
+                        32
+                    ],
+                    "enable_internal_width": true,
+                    "hash_in_int_width": 4,
+                    "hash_in_frac_width": 3,
+                    "hash_out_int_width": 3,
+                    "hash_out_frac_width": 13
+                }
+            }
+        },
+        "best_result": {
+            "best_acc": 0.72066
+        }
+    },
+    "layer_norm_enable_internal_width": {
+        "search_log": [
+            [
+                true,
+                0.7925
+            ]
+        ],
+        "best_result": {
+            "best_acc": [
+                true,
+                0.7925
+            ],
+            "best_param": true
+        }
+    },
+    "layer_norm_enable_mean_sqrt_noise": {
+        "search_log": [
+            [
+                false,
+                0.7925
+            ]
+        ],
+        "best_result": {
+            "best_acc": [
+                false,
+                0.7925
+            ],
+            "best_param": false
+        }
+    },
+    "layer_norm_enable_mxint_var": {
+        "search_log": [
+            [
+                false,
+                0.7928125
+            ]
+        ],
+        "best_result": {
+            "best_acc": [
+                false,
+                0.7928125
+            ],
+            "best_param": false
+        }
+    },
+    "layer_norm_norm_in_int_width": {
+        "search_log": [
+            [
+                1,
+                0.79375
+            ]
+        ],
+        "best_result": {
+            "best_acc": [
+                1,
+                0.79375
+            ],
+            "best_param": 1
+        }
+    },
+    "layer_norm_norm_in_frac_width": {
+        "search_log": [
+            [
+                5,
+                0.7771875
+            ],
+            [
+                6,
+                0.7871875
+            ],
+            [
+                7,
+                0.79375
+            ]
+        ],
+        "best_result": {
+            "best_acc": [
+                7,
+                0.79375
+            ],
+            "best_param": 7
+        }
+    },
+    "layer_norm_norm_out_int_width": {
+        "search_log": [
+            [
+                1,
+                0.0178125
+            ],
+            [
+                2,
+                0.4546875
+            ],
+            [
+                3,
+                0.6190625
+            ],
+            [
+                4,
+                0.734375
+            ],
+            [
+                5,
+                0.79375
+            ]
+        ],
+        "best_result": {
+            "best_acc": [
+                5,
+                0.79375
+            ],
+            "best_param": 5
+        }
+    },
+    "layer_norm_norm_out_frac_width": {
+        "search_log": [
+            [
+                5,
+                0.7903125
+            ],
+            [
+                6,
+                0.7928125
+            ]
+        ],
+        "best_result": {
+            "best_acc": [
+                6,
+                0.7928125
+            ],
+            "best_param": 6
+        }
+    },
+    "layer_norm_var_int_width": {
+        "search_log": [
+            [
+                1,
+                0.7928125
+            ]
+        ],
+        "best_result": {
+            "best_acc": [
+                1,
+                0.7928125
+            ],
+            "best_param": 1
+        }
+    },
+    "layer_norm_var_frac_width": {
+        "search_log": [
+            [
+                11,
+                0.7940625
+            ],
+            [
+                12,
+                0.788125
+            ],
+            [
+                13,
+                0.791875
+            ]
+        ],
+        "best_result": {
+            "best_acc": [
+                13,
+                0.791875
+            ],
+            "best_param": 13
+        }
+    },
+    "layer_norm_final": {
+        "best_config": {
+            "by": "type",
+            "layer_norm": {
+                "config": {
+                    "data_in_width": 8,
+                    "data_in_exponent_width": 8,
+                    "data_in_parallelism": [
+                        1,
+                        32
+                    ],
+                    "data_out_width": 8,
+                    "data_out_exponent_width": 8,
+                    "data_out_parallelism": [
+                        1,
+                        32
+                    ],
+                    "weight_width": 6,
+                    "weight_exponent_width": 8,
+                    "weight_parallelism": [
+                        1,
+                        32
+                    ],
+                    "bias_width": 6,
+                    "bias_exponent_width": 8,
+                    "bias_parallelism": [
+                        1,
+                        32
+                    ],
+                    "enable_internal_width": true,
+                    "norm_in_int_width": 1,
+                    "norm_in_frac_width": 7,
+                    "norm_out_int_width": 5,
+                    "norm_out_frac_width": 6,
+                    "enable_mean_sqrt_noise": true,
+                    "var_int_width": 1,
+                    "var_frac_width": 13,
+                    "enable_mxint_var": true,
+                    "isqrt_in_width": 5,
+                    "isqrt_in_exponent_width": 8,
+                    "isqrt_out_int_width": 2,
+                    "isqrt_out_frac_width": 6
+                }
+            }
+        },
+        "best_result": {
+            "best_acc": 0.71824
+        }
+    },
+    "layer_norm_isqrt_in_width": {
+        "search_log": [
+            [
+                1,
+                0.0
+            ],
+            [
+                2,
+                0.005625
+            ],
+            [
+                3,
+                0.73625
+            ],
+            [
+                4,
+                0.7809375
+            ],
+            [
+                5,
+                0.79125
+            ]
+        ],
+        "best_result": {
+            "best_acc": [
+                5,
+                0.79125
+            ],
+            "best_param": 5
+        }
+    },
+    "layer_norm_isqrt_out_int_width": {
+        "search_log": [
+            [
+                1,
+                0.745
+            ],
+            [
+                2,
+                0.79125
+            ]
+        ],
+        "best_result": {
+            "best_acc": [
+                2,
+                0.79125
+            ],
+            "best_param": 2
+        }
+    },
+    "layer_norm_isqrt_out_frac_width": {
+        "search_log": [
+            [
+                1,
+                0.0284375
+            ],
+            [
+                2,
+                0.764375
+            ],
+            [
+                3,
+                0.7809375
+            ],
+            [
+                4,
+                0.7865625
+            ],
+            [
+                5,
+                0.790625
+            ],
+            [
+                6,
+                0.791875
+            ]
+        ],
+        "best_result": {
+            "best_acc": [
+                6,
+                0.791875
+            ],
+            "best_param": 6
+        }
+    },
+    "attention_enable_mxint_softmax": {
+        "search_log": [
+            [
+                true,
+                0.7890625
+            ]
+        ],
+        "best_result": {
+            "best_acc": [
+                true,
+                0.7890625
+            ],
+            "best_param": true
+        }
+    },
+    "attention_final": {
+        "best_config": {
+            "by": "type",
+            "attention": {
+                "config": {
+                    "data_in_width": 8,
+                    "data_in_exponent_width": 8,
+                    "data_in_parallelism": [
+                        1,
+                        32
+                    ],
+                    "data_out_width": 8,
+                    "data_out_exponent_width": 8,
+                    "data_out_parallelism": [
+                        1,
+                        32
+                    ],
+                    "weight_width": 6,
+                    "weight_exponent_width": 8,
+                    "weight_parallelism": [
+                        1,
+                        32
+                    ],
+                    "bias_width": 6,
+                    "bias_exponent_width": 8,
+                    "bias_parallelism": [
+                        1,
+                        32
+                    ],
+                    "enable_internal_width": false,
+                    "enable_mxint_softmax": true,
+                    "enable_mxint_exp": true,
+                    "enable_mxint_exp_sum": false,
+                    "enable_mxint_division": false,
+                    "exp_width": 2,
+                    "exp_exponent_width": 8,
+                    "exp_sum_width": 8,
+                    "exp_sum_exponent_width": 8
+                }
+            }
+        },
+        "best_result": {
+            "best_acc": 0.71962
+        }
+    },
+    "attention_enable_mxint_exp": {
+        "search_log": [
+            [
+                true,
+                0.79375
+            ]
+        ],
+        "best_result": {
+            "best_acc": [
+                true,
+                0.79375
+            ],
+            "best_param": true
+        }
+    },
+    "attention_exp_width": {
+        "search_log": [
+            [
+                1,
+                0.015625
+            ],
+            [
+                2,
+                0.7890625
+            ],
+            [
+                3,
+                0.793125
+            ],
+            [
+                4,
+                0.7909375
+            ],
+            [
+                5,
+                0.7934375
+            ],
+            [
+                6,
+                0.7928125
+            ]
+        ],
+        "best_result": {
+            "best_acc": [
+                6,
+                0.7928125
+            ],
+            "best_param": 6
+        }
+    }
+}

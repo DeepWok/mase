@@ -85,7 +85,7 @@ def get_dataset(
         path = DATASET_CACHE_DIR
         dataset = get_nerf_dataset(name, path, split)
     elif name in VISION_DATASET_MAPPING:
-        path = DATASET_CACHE_DIR / name
+        path = DATASET_CACHE_DIR
         dataset = get_vision_dataset(name, path, split, model_name)
     elif name in NLP_DATASET_MAPPING:
         path = DATASET_CACHE_DIR / name

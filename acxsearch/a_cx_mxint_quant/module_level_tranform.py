@@ -20,7 +20,10 @@ def get_module_type(module):
     elif "LayerNorm" in class_name:
         return "layer_norm"
     elif "Attention" in class_name:
-        return "attention"
+        if "Head" not in class_name:
+            return "attention"
+        else:
+            return "attention_head"
     elif "GELU" in class_name:
         return "gelu"
     else:
@@ -58,17 +61,27 @@ def vit_module_level_quantize(model, q_config = {}):
             logger.debug(f"Replacing module: {module[0]}")
             dim = ori_module.head_dim * ori_module.num_heads
 
-            qkv_weight = ori_module.qkv.weight.reshape(3, dim, dim)
-            new_module.query.weight = nn.Parameter(qkv_weight[0])
-            new_module.key.weight = nn.Parameter(qkv_weight[1])
-            new_module.value.weight = nn.Parameter(qkv_weight[2])
+            if hasattr(ori_module, 'qkv') and ori_module.qkv is not None:
+                qkv_weight = ori_module.qkv.weight.reshape(3, dim, dim)
+                new_module.query.weight = nn.Parameter(qkv_weight[0])
+                new_module.key.weight = nn.Parameter(qkv_weight[1])
+                new_module.value.weight = nn.Parameter(qkv_weight[2])
+                has_bias = False if ori_module.qkv.bias == None else True
+                if has_bias:
+                    qkv_bias = ori_module.qkv.bias.reshape(3, 1, dim)
+                    new_module.query.bias = nn.Parameter(qkv_bias[0])
+                    new_module.key.bias = nn.Parameter(qkv_bias[1])
+                    new_module.value.bias = nn.Parameter(qkv_bias[2])
+            else:
+                new_module.query.weight = nn.Parameter(ori_module.query.weight)
+                new_module.key.weight = nn.Parameter(ori_module.key.weight)
+                new_module.value.weight = nn.Parameter(ori_module.value.weight)
+                has_bias = False if ori_module.query.bias == None else True
+                if has_bias:
+                    new_module.query.bias = nn.Parameter(ori_module.query.bias)
+                    new_module.key.bias = nn.Parameter(ori_module.key.bias)
+                    new_module.value.bias = nn.Parameter(ori_module.value.bias)
 
-            has_bias = False if ori_module.qkv.bias == None else True
-            if has_bias:
-                qkv_bias = ori_module.qkv.bias.reshape(3, 1, dim)
-                new_module.query.bias = nn.Parameter(qkv_bias[0])
-                new_module.key.bias = nn.Parameter(qkv_bias[1])
-                new_module.value.bias = nn.Parameter(qkv_bias[2])
 
             new_module.proj.weight = ori_module.proj.weight
             new_module.proj.bias = ori_module.proj.bias
