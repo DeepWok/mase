@@ -59,9 +59,13 @@ from .spiking_self_attention import (
     SpikingMatmul,
 )
 
-from .embedding import EmbeddingZIPTF
+from .embedding import EmbeddingZIPTF, RobertaEmbeddingsSA
 from .roberta import (
     RobertaSelfAttentionZIPTF,
+    RobertaSelfAttentionSA,
+    RobertaSelfOutputSA,
+    RobertaOutputSA,
+    RobertaIntermediateSA
 )
 
 spiking_basic_module_map = {
@@ -105,6 +109,11 @@ spiking_neuron_module_map = {
 
 spiking_roberta_module_map = {
     "roberta_self_attention_zip_tf": RobertaSelfAttentionZIPTF,
+    "roberta_self_attention_sa": RobertaSelfAttentionSA,
+    "roberta_embeddings_sa": RobertaEmbeddingsSA,
+    "roberta_self_output_sa": RobertaSelfOutputSA,
+    "roberta_output_sa": RobertaOutputSA,
+    "roberta_intermediate_sa": RobertaIntermediateSA
 }
 
 spiking_module_map = {
