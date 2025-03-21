@@ -12,8 +12,6 @@ class ColorLoss(nn.Module):
     def forward(self, inputs, targets):
         output = post_render_vision(targets, inputs)
         loss = self.loss(output["rgb"], targets['rgbs'])
-        # if "rgb_fine" in inputs:
-        #     loss += self.loss(inputs["rgb_fine"], targets)
 
         return self.coef * loss
 

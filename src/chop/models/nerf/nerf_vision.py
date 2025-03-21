@@ -1,3 +1,6 @@
+from torch._tensor import Tensor
+
+
 from torch import Tensor
 import torch.nn as nn
 import torch
@@ -72,7 +75,7 @@ class NeRFVision(nn.Module):
             self.output_linear = nn.Linear(W, output_ch)
 
     def forward(self, pts, viewdirs):
-        raw = self.apply_layers(pts, viewdirs)
+        raw: Tensor | Any = self.apply_layers(pts, viewdirs)
         return raw
 
     def apply_layers(self, input_pts, input_views):

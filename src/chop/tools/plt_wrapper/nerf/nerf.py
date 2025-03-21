@@ -4,7 +4,7 @@ from torchmetrics import MeanMetric
 
 
 from ..base import WrapperBase
-from .losses import loss_dict
+from .losses import loss_dict, post_render_vision
 from .metrics import psnr
 from .visualization import visualize_depth
 
@@ -36,14 +36,15 @@ class NeRFModelWrapper(WrapperBase):
 
         self.psnr_test = MeanMetric()
 
-    def forward(self, rays):
+    def forward(self, pts, viewdirs):
         """Do batched inference on rays using chunk."""
-        return self.model(rays)
+        return self.model(pts, viewdirs)
 
     def training_step(self, batch, batch_idx):
-        rays, rgbs = batch["rays"], batch["rgbs"]
-        results = self(rays)
-        loss = self.loss(results, rgbs)
+        pts, viewdirs, rgbs = batch["pts"], batch["viewdirs"], batch["rgbs"]
+        results = self(pts, viewdirs)
+        loss = self.loss(results, batch)
+        results = post_render_vision(batch, results)
 
         with torch.no_grad():
             # typ = "fine" if "rgb_fine" in results else "coarse"
@@ -56,11 +57,11 @@ class NeRFModelWrapper(WrapperBase):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        rays, rgbs = batch["rays"], batch["rgbs"]
-        rays = rays.squeeze()  # (H*W, 3)
-        rgbs = rgbs.squeeze()  # (H*W, 3)
-        results = self(rays)
-        log = {"val_loss": self.loss(results, rgbs)}
+        batch = {k: v.squeeze() for k,v in batch.items()}
+        pts, viewdirs, rgbs = batch["pts"], batch["viewdirs"], batch["rgbs"]
+        results = self(pts, viewdirs)
+        log = {"val_loss": self.loss(results, batch)}
+        results = post_render_vision(batch, raw=results)
         # typ = "fine" if "rgb_fine" in results else "coarse"
 
         if batch_idx == 0:
@@ -99,12 +100,12 @@ class NeRFModelWrapper(WrapperBase):
         self.log("val_loss_epoch", loss_epoch, prog_bar=True)
 
     def test_step(self, batch, batch_idx):
-        rays, rgbs = batch["rays"], batch["rgbs"]
-        rays = rays.squeeze()  # (H*W, 3)
-        rgbs = rgbs.squeeze()  # (H*W, 3)
-        results = self(rays)
-        loss = self.loss(results, rgbs)
+        batch = {k: v.squeeze() for k,v in batch.items()}
+        pts, viewdirs, rgbs = batch["pts"], batch["viewdirs"], batch["rgbs"]
+        results = self(pts, viewdirs)
+        loss = self.loss(results, batch)
         self.loss_test.update(loss)
+        results = post_render_vision(batch, raw=results)
 
         typ = "fine" if "rgb_fine" in results else "coarse"
         psnr_ = psnr(results[f"rgb_{typ}"], rgbs)
