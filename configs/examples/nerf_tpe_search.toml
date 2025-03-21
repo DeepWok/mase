@@ -15,23 +15,133 @@ name = "graph/quantize/mixed_precision_ptq"
 [search.search_space.setup]
 by = "name"
 
-[search.search_space.seed.default.config]
+[search.search_space.seed.mxint.config]
 name = ['mxint']
 
 data_in_width = [4, 8]
-data_in_frac_width = [3, 4, 5, 6, 7, 8, 9]
 data_in_exponent_width = [3, 4, 5, 6, 7, 8, 9]
 data_in_block_size = [3, 4, 5, 6, 7, 8, 9]
 
 weight_width = [2, 4, 8]
-weight_frac_width = [3, 4, 5, 6, 7, 8, 9]
 weight_exponent_width = [3, 4, 5, 6, 7, 8, 9]
 weight_block_size = [3, 4, 5, 6, 7, 8, 9]
 
 bias_width = [2, 4, 8]
-bias_frac_width = [3, 4, 5, 6, 7, 8, 9]
 bias_exponent_width = [3, 4, 5, 6, 7, 8, 9]
 bias_block_size = [3, 4, 5, 6, 7, 8, 9]
+
+
+[search.search_space.seed.integer.config]
+name = ["integer"]
+
+data_in_width = [4, 8]
+data_in_frac_width = [3, 4, 5, 6, 7, 8, 9]
+
+weight_width = [2, 4, 8]
+weight_frac_width = [3, 4, 5, 6, 7, 8, 9]
+
+bias_width = [2, 4, 8]
+bias_frac_width = [3, 4, 5, 6, 7, 8, 9]
+
+
+[search.search_space.seed.log.config]
+name = ["log"]
+
+data_in_width = [4, 8]
+data_in_exponent_bias = [3, 4, 5, 6, 7, 8, 9]
+
+weight_width = [2, 4, 8]
+weight_exponent_bias = [3, 4, 5, 6, 7, 8, 9]
+
+bias_width = [2, 4, 8]
+bias_exponent_bias = [3, 4, 5, 6, 7, 8, 9]
+
+
+[search.search_space.seed.minifloat_denorm.config]
+name = ["minifloat_denorm"]
+
+data_in_width = [4, 8]
+data_in_exponent_width = [3, 4, 5, 6, 7, 8, 9]
+data_in_exponent_bias = [3, 4, 5, 6, 7, 8, 9]
+
+weight_width = [2, 4, 8]
+weight_exponent_width = [3, 4, 5, 6, 7, 8, 9]
+weight_exponent_bias = [3, 4, 5, 6, 7, 8, 9]
+
+bias_width = [2, 4, 8]
+bias_exponent_width = [3, 4, 5, 6, 7, 8, 9]
+bias_exponent_bias = [3, 4, 5, 6, 7, 8, 9]
+
+
+[search.search_space.seed.minifloat_ieee.config]
+name = ["minifloat_ieee"]
+
+data_in_width = [4, 8]
+data_in_exponent_width = [3, 4, 5, 6, 7, 8, 9]
+data_in_exponent_bias = [3, 4, 5, 6, 7, 8, 9]
+
+weight_width = [2, 4, 8]
+weight_exponent_width = [3, 4, 5, 6, 7, 8, 9]
+weight_exponent_bias = [3, 4, 5, 6, 7, 8, 9]
+
+bias_width = [2, 4, 8]
+bias_exponent_width = [3, 4, 5, 6, 7, 8, 9]
+bias_exponent_bias = [3, 4, 5, 6, 7, 8, 9]
+
+
+[search.search_space.seed.block_minifloat.config]
+name = ["block_minifloat"]
+
+data_in_width = [4, 8]
+data_in_exponent_width = [3, 4, 5, 6, 7, 8, 9]
+data_in_exponent_bias_width = [3, 4, 5, 6, 7, 8, 9]
+data_in_block_size = [3, 4, 5, 6, 7, 8, 9]
+
+weight_width = [2, 4, 8]
+weight_exponent_width = [3, 4, 5, 6, 7, 8, 9]
+weight_exponent_bias_width = [3, 4, 5, 6, 7, 8, 9]
+weight_block_size = [3, 4, 5, 6, 7, 8, 9]
+
+bias_width = [2, 4, 8]
+bias_exponent_width = [3, 4, 5, 6, 7, 8, 9]
+bias_exponent_bias_width = [3, 4, 5, 6, 7, 8, 9]
+bias_block_size = [3, 4, 5, 6, 7, 8, 9]
+
+
+[search.search_space.seed.block_fp.config]
+name = ["block_fp"]
+
+data_in_width = [4, 8]
+data_in_exponent_width = [3, 4, 5, 6, 7, 8, 9]
+data_in_exponent_bias = [3, 4, 5, 6, 7, 8, 9]
+data_in_block_size = [3, 4, 5, 6, 7, 8, 9]
+
+weight_width = [2, 4, 8]
+weight_exponent_width = [3, 4, 5, 6, 7, 8, 9]
+weight_exponent_bias = [3, 4, 5, 6, 7, 8, 9]
+weight_block_size = [3, 4, 5, 6, 7, 8, 9]
+
+bias_width = [2, 4, 8]
+bias_exponent_width = [3, 4, 5, 6, 7, 8, 9]
+bias_exponent_bias = [3, 4, 5, 6, 7, 8, 9]
+bias_block_size = [3, 4, 5, 6, 7, 8, 9]
+
+
+[search.search_space.seed.binary.config]
+name = ["binary"]
+
+data_in_width = [4, 8]
+data_in_stochastic = [3, 4, 5, 6, 7, 8, 9]
+data_in_bipolar = [3, 4, 5, 6, 7, 8, 9]
+
+weight_width = [2, 4, 8]
+weight_stochastic = [3, 4, 5, 6, 7, 8, 9]
+weight_bipolar = [3, 4, 5, 6, 7, 8, 9]
+
+bias_width = [2, 4, 8]
+bias_stochastic = [3, 4, 5, 6, 7, 8, 9]
+bias_bipolar = [3, 4, 5, 6, 7, 8, 9]
+
 
 [search.strategy]
 name = "optuna"
