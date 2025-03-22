@@ -11,7 +11,7 @@ from .nlp import (
 def get_model_wrapper(model_info, task: str):
     if model_info.is_physical_model:
         return JetSubstructureModelWrapper
-    elif model_info.is_nerf_model:
+    elif model_info.is_nerf_model or model_info.is_nerf_vision_model:
         return NeRFModelWrapper
     elif model_info.is_vision_model:
         return VisionModelWrapper

@@ -1,5 +1,6 @@
 import logging
 from os import PathLike
+import json
 
 import toml
 import torch
@@ -68,44 +69,56 @@ def search(
 
     # search preparation
     accelerator = parse_accelerator(accelerator)
-    strategy_config, search_space_config = parse_search_config(search_config)
+    strategy_config, orig_search_space_config = parse_search_config(search_config)
     save_path.mkdir(parents=True, exist_ok=True)
 
-    # load model if the save_name is provided
-    if load_name is not None and load_type in ["pl", "mz", "pt"]:
-        model = load_model(load_name=load_name, load_type=load_type, model=model)
-        logger.info(f"Loaded model from {load_name}.")
-    model.to(accelerator)
-    # set up data module
-    data_module.prepare_data()
-    data_module.setup()
+    for quantization_name in orig_search_space_config["seed"]:
+        search_space_config = json.loads(json.dumps(orig_search_space_config))
+        search_space_config["seed"]["default"] = orig_search_space_config["seed"][
+            quantization_name
+        ]
 
-    # construct the search space
-    logger.info("Building search space...")
-    search_space_cls = get_search_space_cls(search_space_config["name"])
-    search_space = search_space_cls(
-        model=model,
-        model_info=model_info,
-        config=search_space_config,
-        dummy_input=get_dummy_input(model_info, data_module, task, device=accelerator),
-        accelerator=accelerator,
-        data_module=data_module,
-    )
-    search_space.build_search_space()
+        current_save_path = save_path / quantization_name
+        current_save_path.mkdir(parents=True, exist_ok=True)
 
-    # construct a search strategy
-    strategy_cls = get_search_strategy_cls(strategy_config["name"])
-    strategy = strategy_cls(
-        model_info=model_info,
-        task=task,
-        dataset_info=dataset_info,
-        data_module=data_module,
-        config=strategy_config,
-        accelerator=accelerator,
-        save_dir=save_path,
-        visualizer=visualizer,
-    )
+        # load model if the save_name is provided
+        if load_name is not None and load_type in ["pl", "mz", "pt"]:
+            model = load_model(load_name=load_name, load_type=load_type, model=model)
+            logger.info(f"Loaded model from {load_name}.")
+        model.to(accelerator)
+        # set up data module
+        data_module.prepare_data()
+        data_module.setup()
 
-    logger.info("Search started...")
-    # perform search and save the results
-    strategy.search(search_space)
+        # construct the search space
+        logger.info("Building search space...")
+        search_space_cls = get_search_space_cls(search_space_config["name"])
+        search_space = search_space_cls(
+            model=model,
+            model_info=model_info,
+            config=search_space_config,
+            dummy_input=get_dummy_input(
+                model_info, data_module, task, device=accelerator
+            ),
+            accelerator=accelerator,
+            data_module=data_module,
+        )
+        search_space.build_search_space()
+
+        # construct a search strategy
+        strategy_cls = get_search_strategy_cls(strategy_config["name"])
+        strategy = strategy_cls(
+            model_info=model_info,
+            task=task,
+            dataset_info=dataset_info,
+            data_module=data_module,
+            config=strategy_config,
+            accelerator=accelerator,
+            save_dir=current_save_path,
+            visualizer=visualizer,
+            quantization_name=quantization_name,
+        )
+
+        logger.info(f"Search started... ...{quantization_name}")
+        # perform search and save the results
+        strategy.search(search_space)
