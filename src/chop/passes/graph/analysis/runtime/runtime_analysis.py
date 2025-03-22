@@ -13,6 +13,18 @@ from datetime import datetime
 from pathlib import Path
 import time
 
+try:
+    import tensorrt as trt # type: ignore
+    print("[DEBUG] TensorRT is available.")
+except ImportError:
+    raise ImportError("tensorrt is required for this functionality. Please install it from NVIDIA's repositories.")
+
+try:
+    from cuda import cudart # type: ignore
+except ImportError:
+    raise ImportError("pycuda's cudart is required for this functionality. Please install pycuda.")
+
+
 
 from chop.passes.utils import register_mase_pass
 
@@ -61,8 +73,6 @@ def runtime_analysis_pass(model, pass_args=None):
 
     These metrics provide valuable insights into the model's efficiency, effectiveness, and operational cost, crucial for informed decision-making regarding model deployment in production environments.
     """
-    import tensorrt as trt
-    from cuda import cudart
 
     analysis = RuntimeAnalysis(model, pass_args)
     results = analysis.evaluate()
@@ -83,6 +93,8 @@ class RuntimeAnalysis:
 
         self.logger = logging.getLogger(__name__)
         self.num_of_classes = self.config["data_module"].dataset_info.num_classes
+
+        print(f"[DEBUG] Available Attributes in data_module: {dir(self.config['data_module'])}")
 
         match model:
             case MaseGraph():
@@ -223,8 +235,18 @@ class RuntimeAnalysis:
             end_time - start_time
         ) * 1000.0  # Convert from seconds to milliseconds
 
-        # Return the predictions
-        return preds.detach(), latency
+        if isinstance(preds, dict):
+            detached_dict = {}
+            for k, v in preds.items():
+                if torch.is_tensor(v):
+                    detached_dict[k] = v.detach()
+                else:
+                    detached_dict[k] = v
+            preds = detached_dict
+        elif torch.is_tensor(preds):
+            preds = preds.detach()
+
+        return preds, latency
 
     def infer_mg_cuda(self, model, input_data):
         # send model and input data to GPU for inference
@@ -246,8 +268,18 @@ class RuntimeAnalysis:
         # Calculate latency between start and end events
         latency = start.elapsed_time(end)
 
-        # return the prediction back to the CPU
-        return preds.detach().cpu(), latency
+        if isinstance(preds, dict):
+            detached_dict = {}
+            for k, v in preds.items():
+                if torch.is_tensor(v):
+                    detached_dict[k] = v.detach().cpu()
+                else:
+                    detached_dict[k] = v
+            preds = detached_dict
+        elif torch.is_tensor(preds):
+            preds = preds.detach().cpu()
+
+        return preds, latency
 
     def infer_trt_cuda(self, trt_context, input_data):
         bufferH = []
@@ -318,7 +350,7 @@ class RuntimeAnalysis:
         # Convert PyTorch tensor to numpy array for ONNX Runtime
         input_data_np = input_data.numpy()
 
-        # Start timing CPU operations
+        print(f"[DEBUG] ONNX Inference - Input Shape: {input_data_np.shape}")
         start_time = time.time()
 
         # Run inference using ONNX Runtime
@@ -327,6 +359,8 @@ class RuntimeAnalysis:
         # End timing CPU operations
         end_time = time.time()
 
+        print(f"[DEBUG] ONNX Inference - Output Shape: {output_data[0].shape}")
+        print(f"[DEBUG] ONNX Inference - Latency: {(end_time - start_time) * 1000:.3f} ms")
         # Calculate latency in milliseconds
         latency = (
             end_time - start_time
@@ -345,6 +379,8 @@ class RuntimeAnalysis:
     def infer_onnx_cuda(self, ort_inference_session, input_data):
         input_data_np = input_data.numpy()
 
+        print(f"[DEBUG] ONNX Inference - Input Shape: {input_data_np.shape}")
+
         # Create CUDA events for timing GPU operations
         start = torch.cuda.Event(enable_timing=True)
         end = torch.cuda.Event(enable_timing=True)
@@ -352,6 +388,8 @@ class RuntimeAnalysis:
         start.record()
         output_data = ort_inference_session.run(None, {"input": input_data_np})
         end.record()
+
+        print(f"[DEBUG] ONNX Inference - Output Shape: {output_data[0].shape}")
 
         # Synchronize to ensure all GPU operations are finished
         torch.cuda.synchronize()
@@ -402,6 +440,7 @@ class RuntimeAnalysis:
             decoder = self.config.get("decoder", None)
             beam_width = self.config.get("beam_width", 10)
             tokenizer = self.config["tokenizer"]
+            ctc_head = self.config.get("ctc_head", None)
             padding_value = self.config.get("padding_value", -100)
 
             # We'll collect WER from each batch
@@ -428,10 +467,8 @@ class RuntimeAnalysis:
         # ---------- 4) MAIN EVALUATION LOOP ----------
         for j, (xs, ys) in enumerate(dataloader):
             # Stop if we've exceeded our number of evaluation batches, or if the batch is incomplete
-            if (
-                j >= self.config["num_batches"]
-                or xs.shape[0] != self.config["batch_size"]
-            ):
+            if j >= self.config["num_batches"] or xs.shape[0] != self.config["batch_size"]:
+                print(f"[DEBUG] Batch {j+1} - xs shape: {xs.shape}, Expected batch size: {self.config['batch_size']}")
                 break
 
             # Power monitoring (start)
@@ -465,6 +502,7 @@ class RuntimeAnalysis:
                 if self.config["accelerator"] == "cpu":
                     preds, latency = self.infer_mg_cpu(self.model, xs)
                 elif self.config["accelerator"] == "cuda":
+                    print(f"[DEBUG] Running MaseGraph inference on batch {j+1}")
                     preds, latency = self.infer_mg_cuda(self.model, xs)
                 else:
                     raise Exception(
@@ -489,6 +527,9 @@ class RuntimeAnalysis:
                 else 0
             )
             gpu_power_usages.append(avg_power)
+
+            print(f"[DEBUG] Batch {j+1} - Latency: {latency:.3f} ms")
+            print(f"[DEBUG] Batch {j+1} - GPU Power Usage: {avg_power:.3f} W")
 
             # ---------- (B) METRICS DEPENDING ON TASK ----------
             if task == "cls":
@@ -521,26 +562,33 @@ class RuntimeAnalysis:
                 # preds: [batch_size, time_steps, vocab_size] or [batch_size, *]
                 # ys: [batch_size, time_steps]
 
-                # Convert preds to numpy if needed
-                if torch.is_tensor(preds):
-                    # shape: (batch_size, time_steps, vocab_size)
-                    preds = preds.cpu().numpy()
+                # Apply CTC decoding to get predicted text
+                if ctc_head is None:
+                    raise Exception("CTC head must be provided in config for full model evaluation")
+                
+                ctc_head = ctc_head.cpu()
+                encoder_output = preds["last_hidden_state"].cpu()
 
-                # We'll decode each batch => get WER
+                predictions = ctc_head(encoder_output)
+
+                if torch.is_tensor(predictions):
+                    predictions = predictions.detach().cpu()
+                else:
+                    predictions = torch.tensor(predictions).cpu()
+
+                preds_np = predictions.numpy()
+
                 pred_texts = []
                 label_texts = []
 
-                for i in range(preds.shape[0]):
-                    sample_logits = torch.from_numpy(preds[i])
+                for i in range(preds_np.shape[0]):
+                    sample_logits = torch.from_numpy(preds_np[i])
                     sample_log_probs = sample_logits.log_softmax(dim=-1).cpu().numpy()
-
                     if decoder is not None:
                         transcription = decoder.decode(sample_log_probs, beam_width=beam_width)
                     else:
                         raise Exception(
-                            "Decoder must be provided for CTC runtime analysis. Pass 'decoder' in config."
-                        )
-
+                            "Decoder must be provided for CTC runtime analysis. Pass 'decoder' in config.")
                     pred_texts.append(transcription.lower())
 
                 for label_seq in ys:
@@ -556,7 +604,6 @@ class RuntimeAnalysis:
         avg_latency = sum(latencies) / len(latencies) if latencies else 0
         avg_gpu_power_usage = sum(gpu_power_usages) / len(gpu_power_usages) if gpu_power_usages else 0
         avg_gpu_energy_usage = (avg_gpu_power_usage * 1000) * (avg_latency / 3600000)
-        avg_rtf = sum(rtfs) / len(rtfs) if rtfs else 0
 
         if task == "cls":
             # Classification final metrics
@@ -601,7 +648,7 @@ class RuntimeAnalysis:
 
         elif task == "ctc":
             # Real-Time Factor metric
-            avg_rtf = sum(latencies) / len(latencies) if latencies else 0
+            avg_rtf = sum(rtfs) / len(rtfs) if rtfs else 0
 
             # CTC final metrics
             avg_wer = sum(batch_wers) / len(batch_wers) if batch_wers else 0
@@ -613,6 +660,12 @@ class RuntimeAnalysis:
                 ["Average GPU Power Usage", f"{avg_gpu_power_usage:.5g} W"],
                 ["Inference Energy Consumption", f"{avg_gpu_energy_usage:.5g} mWh"],
             ]
+
+            print(f"[DEBUG] Average Latency: {avg_latency:.3f} ms")
+            print(f"[DEBUG] Average GPU Power Usage: {avg_gpu_power_usage:.3f} W")
+            print(f"[DEBUG] Average RTF: {avg_rtf:.3f}")
+            print(f"[DEBUG] Average WER: {avg_wer:.3f}")
+            print(f"[DEBUG] Inference Energy Consumption: {avg_gpu_energy_usage:.3f} mWh")
 
             results = {
                 "Average WER": avg_wer,
