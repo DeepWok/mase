@@ -48,7 +48,6 @@ class MLP(torch.nn.Module):
         return x
 
 
-@pytest.mark.dev
 def test_emit_verilog_linear():
     mlp = MLP()
     mg = chop.MaseGraph(model=mlp)
@@ -79,28 +78,6 @@ def test_emit_verilog_linear():
     with open(config_file, "r") as f:
         quan_args = toml.load(f)["passes"]["quantize"]
     mg, _ = passes.quantize_transform_pass(mg, quan_args)
-
-    # There is a bug in the current quantizzation pass, where the results metadata is not uppdated with the precision.
-    # Here we temporarily update the metadata here so we can test the hardware back end.
-    for node in mg.fx_graph.nodes:
-        for arg, _ in node.meta["mase"].parameters["common"]["args"].items():
-            if (
-                type(node.meta["mase"].parameters["common"]["args"][arg]) == dict
-                and "type" in node.meta["mase"].parameters["common"]["args"][arg].keys()
-            ):
-                node.meta["mase"].parameters["common"]["args"][arg]["type"] = "fixed"
-        for result, _ in node.meta["mase"].parameters["common"]["results"].items():
-            if (
-                type(node.meta["mase"].parameters["common"]["results"][result]) == dict
-                and "type"
-                in node.meta["mase"].parameters["common"]["results"][result].keys()
-            ):
-                node.meta["mase"].parameters["common"]["results"][result][
-                    "type"
-                ] = "fixed"
-                node.meta["mase"].parameters["common"]["results"][result][
-                    "precision"
-                ] = [8, 3]
 
     # Increase weight range
     mg.model.fc1.weight = torch.nn.Parameter(

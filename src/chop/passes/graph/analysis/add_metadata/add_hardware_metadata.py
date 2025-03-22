@@ -13,8 +13,8 @@ from chop.passes.graph.analysis.utils import (
 from chop.passes.graph.utils import get_mase_op, deepgetattr, get_module_by_name
 
 from torch import nn
-
-from .hardware_metadata_layers import INTERNAL_COMP
+from typing import get_args
+from .hardware_metadata_layers import INTERNAL_COMP, supported_hw_quantisations
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,27 @@ def _cap(name):
     return str(name).upper()
 
 
-def add_component_source(node):
+def get_node_type(node: fx.Node) -> supported_hw_quantisations:
+    types: set[str] = set()
+    for _arg, type_info in node.meta["mase"]["common"]["args"].items():
+        match type_info:
+            case dict():
+                types.add(type_info["type"])
+            case _:
+                pass
+    types = set(types)
+    # types = set([match type_info: case dict(): type_info['type'] case _: None for _arg, type_info in node.meta['mase']['common']['args'].items()])
+    assert (
+        len(types) == 1
+    ), f"More than one type in node {node.name}, {types}, {node.meta['mase']['common']['args']}"
+    node_type = types.pop()
+    assert node_type in get_args(
+        supported_hw_quantisations
+    ), f"({node.name}) Unsupported hardware quantisation type: {node_type}"
+    return node_type
+
+
+def add_component_source(node: fx.Node):
     if node.meta["mase"]["hardware"]["is_implicit"]:
         return
 
@@ -50,10 +70,13 @@ def add_component_source(node):
     elif mase_op in INTERNAL_COMP.keys():
         node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_RTL"
         # take the first ip in the component list by default
-        node.meta["mase"]["hardware"]["module"] = INTERNAL_COMP[mase_op][0]["name"]
-        node.meta["mase"]["hardware"]["dependence_files"] = INTERNAL_COMP[mase_op][0][
-            "dependence_files"
+        node_type = get_node_type(node)
+        node.meta["mase"]["hardware"]["module"] = INTERNAL_COMP[mase_op][node_type][
+            "name"
         ]
+        node.meta["mase"]["hardware"]["dependence_files"] = INTERNAL_COMP[mase_op][
+            node_type
+        ]["dependence_files"]
     else:
         node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_HLS"
         node.meta["mase"]["hardware"]["module"] = None
@@ -76,7 +99,7 @@ def add_component_source(node):
             node.meta["mase"]["hardware"]["interface"][arg] = {}
 
 
-def add_verilog_param(node):
+def add_verilog_param(node: fx.Node):
     if node.meta["mase"]["hardware"]["is_implicit"]:
         return
 
@@ -89,26 +112,39 @@ def add_verilog_param(node):
         if isinstance(arg_info, dict):
             for i, precision in enumerate(arg_info["precision"]):
                 vp[_cap(arg + f"_precision_{i}")] = arg_info["precision"][i]
-            for dim in range(0, len(arg_info["shape"])):
-                vp[_cap(arg + f"_tensor_size_dim_{dim}")] = (
-                    arg_info["shape"][len(arg_info["shape"]) - 1 - dim]
-                    if dim < len(arg_info["shape"])
-                    else 1
-                )
-                # Check if max parallelism is defined
-                if node.meta["mase"]["hardware"]["max_parallelism"] is not None:
-                    # Take the minimum between...
-                    vp[_cap(arg + f"_parallelism_dim_{dim}")] = min(
-                        # The defined max parallelism for this dimension
-                        node.meta["mase"]["hardware"]["max_parallelism"][::-1][dim],
-                        # The size of this dimension
-                        arg_info["shape"][::-1][dim],
+            match arg_info.get("type", None):
+                case "fixed":
+                    for dim in range(0, len(arg_info["shape"])):
+                        vp[_cap(arg + f"_tensor_size_dim_{dim}")] = (
+                            arg_info["shape"][len(arg_info["shape"]) - 1 - dim]
+                            if dim < len(arg_info["shape"])
+                            else 1
+                        )
+                        # Check if max parallelism is defined
+                        if node.meta["mase"]["hardware"]["max_parallelism"] is not None:
+                            # Take the minimum between...
+                            vp[_cap(arg + f"_parallelism_dim_{dim}")] = min(
+                                # The defined max parallelism for this dimension
+                                node.meta["mase"]["hardware"]["max_parallelism"][::-1][
+                                    dim
+                                ],
+                                # The size of this dimension
+                                arg_info["shape"][::-1][dim],
+                            )
+                        # Otherwise, assign to tensor size by default
+                        else:
+                            vp[_cap(arg + f"_parallelism_dim_{dim}")] = arg_info[
+                                "shape"
+                            ][::-1][dim]
+                case "mxint":
+                    for dim, dim_value in enumerate(reversed(arg_info["shape"])):
+                        vp[_cap(arg + f"_tensor_size_dim_{dim}")] = dim_value
+                        if parallel := arg_info.get(f"parallelism_{dim}", None):
+                            vp[_cap(arg + f"_parallelism_dim_{dim}")] = parallel
+                case t:
+                    raise NotImplementedError(
+                        f"Unsupported quantization type {t} for {node.name} {arg}"
                     )
-                # Otherwise, assign to tensor size by default
-                else:
-                    vp[_cap(arg + f"_parallelism_dim_{dim}")] = arg_info["shape"][::-1][
-                        dim
-                    ]
         elif type(arg_info) == bool:
             vp[_cap(arg)] = 1 if arg_info else 0
         else:
@@ -118,26 +154,45 @@ def add_verilog_param(node):
         if isinstance(result_info, dict):
             for i, precision in enumerate(result_info["precision"]):
                 vp[_cap(result + f"_precision_{i}")] = result_info["precision"][i]
-            for dim in range(0, len(result_info["shape"])):
-                vp[_cap(result + f"_tensor_size_dim_{dim}")] = (
-                    result_info["shape"][len(result_info["shape"]) - 1 - dim]
-                    if dim < len(result_info["shape"])
-                    else 1
-                )
-                # Check if max parallelism is defined
-                if node.meta["mase"]["hardware"]["max_parallelism"] is not None:
-                    # Take the minimum between...
-                    vp[_cap(result + f"_parallelism_dim_{dim}")] = min(
-                        # The defined max parallelism for this dimension
-                        node.meta["mase"]["hardware"]["max_parallelism"][::-1][dim],
-                        # The size of this dimension
-                        result_info["shape"][::-1][dim],
-                    )
-                # Otherwise, assign to tensor size by default
-                else:
-                    vp[_cap(result + f"_parallelism_dim_{dim}")] = result_info["shape"][
-                        ::-1
-                    ][dim]
+                match result_info.get("type", None):
+                    case "fixed":
+                        for dim in range(0, len(result_info["shape"])):
+                            vp[_cap(result + f"_tensor_size_dim_{dim}")] = (
+                                result_info["shape"][
+                                    len(result_info["shape"]) - 1 - dim
+                                ]
+                                if dim < len(result_info["shape"])
+                                else 1
+                            )
+                            # Check if max parallelism is defined
+                            if (
+                                node.meta["mase"]["hardware"]["max_parallelism"]
+                                is not None
+                            ):
+                                # Take the minimum between...
+                                vp[_cap(result + f"_parallelism_dim_{dim}")] = min(
+                                    # The defined max parallelism for this dimension
+                                    node.meta["mase"]["hardware"]["max_parallelism"][
+                                        ::-1
+                                    ][dim],
+                                    # The size of this dimension
+                                    result_info["shape"][::-1][dim],
+                                )
+                            # Otherwise, assign to tensor size by default
+                            else:
+                                vp[_cap(result + f"_parallelism_dim_{dim}")] = (
+                                    result_info["shape"][::-1][dim]
+                                )
+                    case "mxint":
+                        for dim, dim_value in enumerate(reversed(result_info["shape"])):
+                            vp[_cap(result + f"_tensor_size_dim_{dim}")] = dim_value
+                            if parallel := result_info.get(f"parallelism_{dim}", None):
+                                vp[_cap(result + f"_parallelism_dim_{dim}")] = parallel
+
+                    case t:
+                        raise NotImplementedError(
+                            f"Unsupported quantization type {t} for {node.name} {result}"
+                        )
         else:
             vp[_cap(result)] = result_info
 
@@ -170,7 +225,7 @@ def add_extra_verilog_param(node, graph: MaseGraph):
             ]
 
 
-def add_hardware_metadata_analysis_pass(graph, pass_args={}):
+def add_hardware_metadata_analysis_pass(graph: MaseGraph, pass_args={}):
     """add hardware metadata
 
     :param graph: a MaseGraph

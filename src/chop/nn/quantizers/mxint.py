@@ -1,7 +1,7 @@
 import torch
 from torch import Tensor
 
-from .utils import block, my_clamp, my_round, unblock
+from .utils import block, my_clamp, my_round, unblock, my_floor
 
 
 def _mxint_quantize(
@@ -10,6 +10,7 @@ def _mxint_quantize(
     exponent_width: int = 4,
     block_size: list[int] = [16],
     skip_first_dim: bool = True,
+    floor=True,
 ):
     """
     - Convert IEEE FP32/64 to Microscaling Interger (MXINT), where an exponent is shared over all elements in a block.
@@ -50,8 +51,9 @@ def _mxint_quantize(
     shift = 2 ** (width - 2)
 
     # To advoid introducing a negative bias
+    mantissas = scaled_value * shift
     quantized_value = my_clamp(
-        my_round(scaled_value * shift), -element_max, element_max
+        my_floor(mantissas) if floor else my_round(mantissas), -element_max, element_max
     )
 
     element_value = quantized_value / shift

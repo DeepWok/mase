@@ -1,3 +1,7 @@
+import os
+
+from chop.passes.graph.transforms.quantize.quantize import quantize_transform_pass
+import toml
 import torch
 import torch.nn as nn
 
@@ -51,6 +55,25 @@ def test_apply_random_partition():
     pass_args = {"dummy_in": {"x": x}}
 
     mg, _ = passes.add_common_metadata_analysis_pass(mg, pass_args=pass_args)
+
+    # Quantize to fixed-point for hardware pass
+    config_file = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        "..",
+        "..",
+        "..",
+        "..",
+        "..",
+        "configs",
+        "tests",
+        "quantize",
+        "fixed.toml",
+    )
+
+    # load toml config file
+    with open(config_file, "r") as f:
+        quan_args = toml.load(f)["passes"]["quantize"]
+    mg, _ = quantize_transform_pass(mg, quan_args)
 
     # add metadata for hardware in each mase node of graph
     mg, _ = passes.add_hardware_metadata_analysis_pass(mg, pass_args=pass_args)

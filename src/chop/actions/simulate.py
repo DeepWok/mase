@@ -60,6 +60,7 @@ def simulate(
                 "-Wno-fatal",
                 "-Wno-lint",
                 "-Wno-style",
+                "--assert",
                 "--trace-fst",
                 "--trace-structs",
                 "--trace-depth",
