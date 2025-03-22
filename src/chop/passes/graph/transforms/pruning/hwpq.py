@@ -135,7 +135,7 @@ def hwpq_pruning_only(tensor: torch.Tensor, info: dict, sparsity: float) -> torc
     return mask
 
 # For use with pruned modules
-class PruningParameterization(torch.nn.Module):
+class HWPQParameterization(torch.nn.Module):
     """
     Parametrization for pruning only.
     """
