@@ -172,7 +172,7 @@ def main():
     after_params, after_nonzero, _ = print_parameter_count(mg_quant.model, "Encoder AFTER QUANTIZATION")
     
 
-    calibrate_flexround(mg_quant.model, calibration_loader)
+    calibrate_flexround(mg_quant.model, calibration_loader) #need to make
 
     # After applying quantization:
     for n, p in mg_quant.model.named_parameters():
