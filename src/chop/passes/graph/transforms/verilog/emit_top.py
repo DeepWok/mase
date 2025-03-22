@@ -146,10 +146,10 @@ def module_interface_template(
     )
 
 
-def wiring_top_template(
+def wiring_template(
     type: str | None,
-    interface_signal: str,
-    internal_signal: str,
+    from_signal: str,
+    to_signal: str,
     direction: Literal["input", "output"],
     node_name: str,
 ):
@@ -157,36 +157,36 @@ def wiring_top_template(
         case "fixed":
             if direction == "input":
                 out = f"""
-assign {internal_signal} = {interface_signal};"""
+assign {to_signal} = {from_signal};"""
             else:
                 out = f"""
-assign {interface_signal} = {internal_signal};"""
+assign {from_signal} = {to_signal};"""
         case "mxint":
             if direction == "input":
                 out = f"""
-assign m_{internal_signal} = m_{interface_signal};
-assign e_{internal_signal} = e_{interface_signal};"""
+assign m_{to_signal} = m_{from_signal};
+assign e_{to_signal} = e_{from_signal};"""
             else:
                 out = f"""
-assign m_{interface_signal} = m_{internal_signal};
-assign e_{interface_signal} = e_{internal_signal};"""
+assign m_{from_signal} = m_{to_signal};
+assign e_{from_signal} = e_{to_signal};"""
         case None:
             raise ValueError(
-                f"Missing type information for {node_name} {interface_signal} {internal_signal}"
+                f"Missing type information for {node_name} {from_signal} {to_signal}"
             )
         case t:
             raise NotImplementedError(
-                f"Unsupported type format {t} for {node_name} {interface_signal} {internal_signal}"
+                f"Unsupported type format {t} for {node_name} {from_signal} {to_signal}"
             )
     if direction == "input":
         out += f"""
-assign {interface_signal}_ready = {internal_signal}_ready;
-assign {internal_signal}_valid    = {interface_signal}_valid;
+assign {from_signal}_ready = {to_signal}_ready;
+assign {to_signal}_valid    = {from_signal}_valid;
                 """
     else:
         out += f"""
-assign {internal_signal}_ready = {interface_signal}_ready;
-assign {interface_signal}_valid    = {internal_signal}_valid;
+assign {to_signal}_ready = {from_signal}_ready;
+assign {from_signal}_valid    = {to_signal}_valid;
                 """
     return out
 
@@ -735,10 +735,10 @@ class VerilogWireEmitter:
                 node.meta["mase"].parameters["common"]["args"].items()
             ):
                 if is_real_input_arg(node, arg_idx):
-                    wires += wiring_top_template(
+                    wires += wiring_template(
                         arg_info.get("type", None),
-                        interface_signal=f"data_in_{i}",
-                        internal_signal=f"{node_name}_{arg}",
+                        from_signal=f"data_in_{i}",
+                        to_signal=f"{node_name}_{arg}",
                         node_name=node_name,
                         direction="input",
                     )
@@ -750,10 +750,10 @@ class VerilogWireEmitter:
                 node.meta["mase"].parameters["common"]["results"].items()
             ):
                 if "data_out" in result:
-                    wires += wiring_top_template(
+                    wires += wiring_template(
                         result_info.get("type", None),
-                        interface_signal=f"data_out_{i}",
-                        internal_signal=f"{node_name}_{result}",
+                        from_signal=f"data_out_{i}",
+                        to_signal=f"{node_name}_{result}",
                         node_name=node_name,
                         direction="output",
                     )
@@ -799,14 +799,26 @@ assign {to_name}_data_in_0 = {from_name}_data_out_{select};
                 continue
 
             to_name = vf(node.name)
-
             for i, node_in in enumerate(node.all_input_nodes):
+                to_type = node.meta["mase"]["common"]["args"][f"data_in_{i}"].get(
+                    "type", None
+                )
+                from_type = (
+                    node_in.meta["mase"]
+                    .parameters["common"]["results"]["data_out_0"]
+                    .get("type", None)
+                )
+                assert (
+                    to_type == from_type
+                ), f"Incongruent types {to_type=} {from_type=}"
                 from_name = vf(node_in.name)
-                wires += f"""
-assign {from_name}_data_out_0_ready  = {to_name}_data_in_{i}_ready;
-assign {to_name}_data_in_{i}_valid    = {from_name}_data_out_0_valid;
-assign {to_name}_data_in_{i} = {from_name}_data_out_0;
-"""
+                wires += wiring_template(
+                    to_type,
+                    from_signal=f"{from_name}_data_out_0",
+                    to_signal=f"{to_name}_data_in_{i}",
+                    node_name=node.name,
+                    direction="input",
+                )
         return wires
 
     def emit(self):

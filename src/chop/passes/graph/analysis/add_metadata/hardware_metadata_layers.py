@@ -107,6 +107,23 @@ INTERNAL_COMP: Dict[str, Dict[supported_hw_quantisations, IpDescType]] = {
                 "activation_layers/rtl/fixed_relu.sv",
             ],
         },
+        "mxint": {
+            "name": "mxint_relu",
+            "dependence_files": [
+                "linear_layers/mxint_operators/rtl/mxint_relu.sv",
+                "linear_layers/mxint_operators/rtl/mxint_cast.sv",
+                "common/rtl/split2.sv",
+                "linear_layers/mxint_operators/rtl/log2_max_abs.sv",
+                "linear_layers/mxint_operators/rtl/or_tree.sv",
+                "linear_layers/mxint_operators/rtl/or_tree_layer.sv",
+                "common/rtl/register_slice.sv",
+                "linear_layers/mxint_operators/rtl/unpacked_mx_fifo.sv",
+                "memory/rtl/fifo.sv",
+                "memory/rtl/skid_buffer.sv",
+                "memory/rtl/simple_dual_port_ram.sv",
+                "common/rtl/join2.sv",
+            ],
+        },
     },
     "hardshrink": {
         "fixed": {

@@ -535,6 +535,12 @@ def linearMXInt(
     )
     x_skip_first_dim = config.get("data_in_skip_first_dim", True)
 
+    out_width, out_exponent_width, out_block_size = (
+        config.get("data_in_width", x_width),
+        config.get("data_in_exponent_width", x_exponent_width),
+        config.get("data_in_block_size", x_block_size),
+    )
+
     b_width, b_exponent_width, b_block_size = (
         config["bias_width"],
         config["bias_exponent_width"],
@@ -556,6 +562,13 @@ def linearMXInt(
         block_size=x_block_size,
         skip_first_dim=x_skip_first_dim,
     )
+    out_quantizer = partial(
+        mxint_quantizer,
+        width=out_width,
+        exponent_width=out_exponent_width,
+        block_size=out_block_size,
+        skip_first_dim=x_skip_first_dim,
+    )
     b_quantizer = partial(
         mxint_quantizer,
         width=b_width,
@@ -568,4 +581,4 @@ def linearMXInt(
     weight = w_quantizer(weight)
     bias = b_quantizer(bias) if bias is not None else None
 
-    return F.linear(x, weight, bias)
+    return out_quantizer(F.linear(x, weight, bias))

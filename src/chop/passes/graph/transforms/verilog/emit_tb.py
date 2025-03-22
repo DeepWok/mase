@@ -268,7 +268,7 @@ def _emit_cocotb_tb(graph):
                             raise NotImplementedError(
                                 f"Unsupported type format {t} for {node} {arg}"
                             )
-                    self.input_drivers[arg].log.setLevel(logging.DEBUG)
+                    self.input_drivers[arg].log.setLevel(logging.INFO)
 
             for node in graph.nodes_out:
                 for result, result_info in node.meta["mase"]["common"][
@@ -320,7 +320,7 @@ def _emit_cocotb_tb(graph):
                             raise NotImplementedError(
                                 f"Unsupported type format {t} for {node} {result}"
                             )
-                    self.output_monitors[result].log.setLevel(logging.DEBUG)
+                    self.output_monitors[result].log.setLevel(logging.INFO)
 
             self.model = graph.model
             self.input_precision = graph.meta["mase"]["common"]["args"]["data_in_0"][
