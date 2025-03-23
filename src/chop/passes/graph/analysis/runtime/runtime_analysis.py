@@ -547,6 +547,64 @@ class RuntimeAnalysis:
 
         # ---------- 4) MAIN EVALUATION LOOP ----------
         for j, batch in enumerate(dataloader):
+            # Print detailed information about the batch
+            print(f"\n{'='*50}")
+            print(f"BATCH {j}: Type = {type(batch)}")
+            
+            # Debug dictionary-like batches
+            if hasattr(batch, 'keys'):
+                print(f"KEYS in batch: {list(batch.keys())}")
+                for key in batch.keys():
+                    value = batch[key]
+                    if hasattr(value, 'shape'):
+                        print(f"  batch['{key}'] shape = {value.shape}, dtype = {value.dtype}")
+                    else:
+                        print(f"  batch['{key}'] = {type(value)}")
+            
+            # Debug list/tuple-like batches
+            elif isinstance(batch, (list, tuple)):
+                print(f"BATCH length: {len(batch)}")
+                for i, item in enumerate(batch):
+                    if hasattr(item, 'shape'):
+                        print(f"  batch[{i}] shape = {item.shape}, dtype = {item.dtype}")
+                    else:
+                        print(f"  batch[{i}] = {type(item)}")
+            
+            # Other batch types
+            else:
+                print(f"UNEXPECTED batch type: {type(batch)}")
+                print(f"batch attributes: {dir(batch)}")
+            
+            # Try to access common expected keys (with error handling)
+            try:
+                if isinstance(batch, dict):
+                    xs = batch.get("input_values", None)
+                    ys = batch.get("labels", None)
+                    attention_mask = batch.get("attention_mask", None)
+                elif isinstance(batch, (list, tuple)) and len(batch) >= 3:
+                    xs, ys, attention_mask = batch[0], batch[1], batch[2]
+                elif isinstance(batch, (list, tuple)) and len(batch) == 2:
+                    xs, ys = batch[0], batch[1]
+                    attention_mask = None
+                else:
+                    xs, ys, attention_mask = None, None, None
+                
+                print("\nExtracted data:")
+                print(f"  xs: {type(xs)}, shape = {xs.shape if hasattr(xs, 'shape') else None}")
+                print(f"  ys: {type(ys)}, shape = {ys.shape if hasattr(ys, 'shape') else None}")
+                print(f"  attention_mask: {type(attention_mask)}, shape = {attention_mask.shape if hasattr(attention_mask, 'shape') else None}")
+                
+            except Exception as e:
+                print(f"\nERROR extracting data: {type(e).__name__}: {str(e)}")
+                
+            print(f"{'='*50}")
+            
+            # Only look at first few batches
+            if j >= 2:
+                break
+
+        # ---------- 4) MAIN EVALUATION LOOP ----------
+        for j, batch in enumerate(dataloader):
             xs = batch["input_values"]
             ys = batch["labels"]
             attention_mask = batch["attention_mask"]

@@ -6,7 +6,6 @@ from chop import MaseGraph
 import chop.passes as passes
 from chop.tools import get_logger
 
-
 # Set up logger
 logger = get_logger(__name__)
 logger.setLevel("INFO")
