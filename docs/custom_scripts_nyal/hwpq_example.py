@@ -5,7 +5,7 @@ from transformers import AutoModelForCTC, Wav2Vec2Processor
 from chop import MaseGraph
 import chop.passes as passes
 from chop.tools import get_logger
-from chop.passes.module import report_trainable_parameters_analysis_pass
+
 
 # Set up logger
 logger = get_logger(__name__)
