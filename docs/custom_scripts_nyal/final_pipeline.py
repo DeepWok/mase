@@ -22,7 +22,7 @@ from chop.passes.graph import (
     onnx_runtime_interface_pass,
     quantize_transform_pass,
     prune_transform_pass,
-    bit_width_analysis_pass,
+    calculate_avg_bits_mg_analysis_pass,
 )
 from chop.dataset.nlp.speech_recognition import CondensedLibrispeechASRDataset
 from chop.dataset import MaseDataModule
@@ -219,7 +219,7 @@ def run_baseline_metrics(mg, data_module, checkpoint, dataset_name, decoder, tok
     _, baseline_results = runtime_analysis_pass(mg, pass_args=runtime_analysis_config)
     
     # Run bit width analysis for baseline
-    _, bitwidth_results = bit_width_analysis_pass(mg)
+    _, bitwidth_results = calculate_avg_bits_mg_analysis_pass(mg)
     baseline_results.update({"avg_bitwidth": bitwidth_results.get("average_bitwidth", 32)})
     
     logger.info("Baseline metrics complete")
@@ -592,7 +592,7 @@ def objective(trial, baseline_model_data):
     trial.set_user_attr("runtime_metrics", runtime_results)
     
     # Run bit width analysis
-    _, bitwidth_results = bit_width_analysis_pass(mg)
+    _, bitwidth_results = calculate_avg_bits_mg_analysis_pass(mg)
     avg_bitwidth = bitwidth_results.get("average_bitwidth", 32)
     trial.set_user_attr("avg_bitwidth", avg_bitwidth)
     
