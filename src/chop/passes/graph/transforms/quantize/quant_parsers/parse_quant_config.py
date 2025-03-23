@@ -23,6 +23,11 @@ QUANT_ARITH_ENTRIES = {
         "data_in_entries": ("data_in_width", "data_in_frac_width"),
         "bias_entries": ("bias_width", "bias_frac_width"),
     },
+    "flexround": {
+        "weight_entries": ("weight_width", "weight_frac_width"),
+        "data_in_entries": ("data_in_width", "data_in_frac_width"),
+        "bias_entries": ("bias_width", "bias_frac_width"),
+    },
     "fixed": {
         "weight_entries": ("weight_width", "weight_frac_width"),
         "data_in_entries": ("data_in_width", "data_in_frac_width"),

@@ -273,3 +273,15 @@ quantized_module_map = {
     "bert_self_attention_integer": BertSelfAttentionInteger,
     "grouped_query_attention_integer": GroupedQueryAttentionInteger,
 }
+
+def get_quantized_module_map():
+    """
+    Lazily load the FlexRound modules and return the complete module map.
+    """
+    # Import here (local import) to avoid circular dependencies.
+    from .flexround_modules import LinearFlexRound, Conv2dFlexRound, Conv1dFlexRound
+    # Insert the FlexRound keys into the existing map.
+    quantized_module_map["linear_flexround"] = LinearFlexRound
+    quantized_module_map["conv2d_flexround"] = Conv2dFlexRound
+    quantized_module_map["conv1d_flexround"] = Conv1dFlexRound
+    return quantized_module_map
