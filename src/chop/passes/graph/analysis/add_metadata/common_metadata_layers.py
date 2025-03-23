@@ -362,6 +362,7 @@ module_data = {
     "grouped_query_attention": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.nn.Flatten.html#flatten
     "flatten": {"input": "data_in", "start_dim": "config", "end_dim": "config"},
+    "identity": {"input": "data_in"},
 }
 
 

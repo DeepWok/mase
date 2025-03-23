@@ -123,8 +123,11 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "grouped_query_attention"
             elif isinstance(module, nn.Flatten):
                 mase_op = "flatten"
+            elif isinstance(module, nn.Identity):
+                mase_op = "identity"
             else:
                 mase_op = None
+                breakpoint()
                 for module_cls in graph.model.custom_ops["modules"].keys():
                     if isinstance(module, module_cls):
                         mase_op = "user_defined_module"
