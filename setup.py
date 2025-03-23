@@ -102,7 +102,7 @@ requirements = [
     "torchaudio",    # Added for audio processing support
     "tensorrt",    # Added TensorRT for ONNX runtime analysis 
     "pycuda",    # Added CUDA support for ONNX runtime analysis 
-    "pytorch_quantization",   # Added PyTorch quantization for ONNX runtime analysis 
+    # "pytorch_quantization",   # Added PyTorch quantization for ONNX runtime analysis 
     ]
 
 setup(
