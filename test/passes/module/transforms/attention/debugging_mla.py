@@ -1,73 +1,97 @@
 #!/usr/bin/env python3
 import torch
-from transformers import (
-    AutoModelForSequenceClassification,
-    AutoTokenizer,
-)
+import torch.nn as nn
+import numpy as np
+import evaluate
+import os
+from transformers import AutoModelForSequenceClassification, AutoTokenizer, TrainingArguments, Trainer
 from datasets import load_dataset
 from chop.tools import get_trainer
 from chop.passes.module.transforms import attention_transform_pass
 
-checkpoint = "openai-community/gpt2"
+#####################################
+# 1) CE & PPL evaluation helper
+#####################################
+def evaluate_ce_and_ppl(trainer, eval_dataset):
+    predictions, labels, _ = trainer.predict(eval_dataset)
+    logits_tensor = torch.tensor(predictions, dtype=torch.float32)
+    labels_tensor = torch.tensor(labels, dtype=torch.long)
+
+    loss_fn = nn.CrossEntropyLoss()
+    cross_entropy_val = loss_fn(logits_tensor, labels_tensor)
+    ppl_val = torch.exp(cross_entropy_val)
+
+    return cross_entropy_val.item(), ppl_val.item()
+
+#####################################
+# 2) Load dataset + tokenizer
+#####################################
 dataset_name = "imdb"
-
-# 1) Load raw dataset
 raw_dataset = load_dataset(dataset_name)
-
-# 2) Load tokenizer
+checkpoint = "openai-community/gpt2"
 tokenizer = AutoTokenizer.from_pretrained(checkpoint)
-tokenizer.pad_token = tokenizer.eos_token
+tokenizer.pad_token = tokenizer.eos_token  # For GPT-2
 
-
-
-
-# 3) First, do a broader tokenize to e.g. 256 or 512 so we see the entire text
-def initial_tokenize_fn(examples):
+def tokenize_fn(examples):
     return tokenizer(
-        examples["text"] if "text" in examples else examples["sentence"],
-        truncation=True,
-        padding=False,  # We'll do final padding after slicing
-        max_length=512, # just an upper bound
+        examples["text"], truncation=True, padding="max_length", max_length=512
     )
 
-tokenized_dataset = raw_dataset.map(initial_tokenize_fn, batched=True)
-
-# 4) Slice to last 12 tokens
-def keep_last_12_tokens(examples):
-    # We'll gather the last 12 tokens from "input_ids" and "attention_mask"
-    new_input_ids = []
-    new_attn_masks = []
-    for input_ids, attn_mask in zip(examples["input_ids"], examples["attention_mask"]):
-        # keep the last 12 if length > 12
-        input_ids = input_ids[-12:]
-        attn_mask = attn_mask[-12:]
-        new_input_ids.append(input_ids)
-        new_attn_masks.append(attn_mask)
-
-    examples["input_ids"] = new_input_ids
-    examples["attention_mask"] = new_attn_masks
-    return examples
-
-tokenized_dataset = tokenized_dataset.map(keep_last_12_tokens, batched=True)
-
-# 5) Now we do final padding to ensure shape [batch_size, 12]
-def pad_to_12(examples):
-    return tokenizer.pad(examples, padding="max_length", max_length=12)
-
-tokenized_dataset = tokenized_dataset.map(pad_to_12, batched=True)
-
-# 6) Remove unwanted columns, keep "label"
-tokenized_dataset = tokenized_dataset.remove_columns(
-    [col for col in tokenized_dataset["train"].column_names if col not in ("input_ids","attention_mask","label")]
-)
+tokenized_dataset = raw_dataset.map(tokenize_fn, batched=True)
+tokenized_dataset = tokenized_dataset.remove_columns(["text"])
 tokenized_dataset.set_format("torch")
 
-# 7) Load model
-model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
-model.config.problem_type = "single_label_classification"
-model.config.pad_token_id = tokenizer.eos_token_id
+#####################################
+# 3) Load or train GPT-2
+#####################################
+model_path = "./gpt2_finetuned_imdb"
+if os.path.exists(model_path):
+    model = AutoModelForSequenceClassification.from_pretrained(model_path)
+else:
+    model = AutoModelForSequenceClassification.from_pretrained(
+        checkpoint, num_labels=2
+    )
+    model.config.pad_token_id = tokenizer.eos_token_id
 
-def test_mla_transform_pass(model):
+    training_args = TrainingArguments(
+        output_dir=model_path,
+        evaluation_strategy="epoch",
+        save_strategy="epoch",
+        num_train_epochs=0.1,
+        per_device_train_batch_size=8,
+        per_device_eval_batch_size=8,
+        logging_steps=100,
+        load_best_model_at_end=True,
+        save_total_limit=1,
+    )
+    trainer = Trainer(
+        model=model,
+        args=training_args,
+        train_dataset=tokenized_dataset["train"],
+        eval_dataset=tokenized_dataset["test"],
+        tokenizer=tokenizer,
+    )
+    trainer.train()
+    model.save_pretrained(model_path)
+    tokenizer.save_pretrained(model_path)
+
+#####################################
+# 4) Evaluate GPT-2 CE & PPL
+#####################################
+trainer_original = Trainer(
+    model=model,
+    args=TrainingArguments(output_dir="./tmp_original", per_device_eval_batch_size=8),
+    train_dataset=tokenized_dataset["train"],
+    eval_dataset=tokenized_dataset["test"],
+    tokenizer=tokenizer,
+)
+ce_before, ppl_before = evaluate_ce_and_ppl(trainer_original, tokenized_dataset["test"])
+print(f"[BEFORE TRANSFORMATION] CE={ce_before:.4f}, PPL={ppl_before:.4f}")
+
+#####################################
+# 5) Transform to MLA
+#####################################
+def transform_to_mla(model):
     pass_args = {
         "by": "type",
         "gpt2spda": {
@@ -76,33 +100,30 @@ def test_mla_transform_pass(model):
             }
         },
     }
-    mla_network, _ = attention_transform_pass(model, pass_args)
-    print("[INFO] Transformed GPT2 model with MLA:")
-    print(mla_network)
-    return mla_network
+    mla_model, _ = attention_transform_pass(model, pass_args)
+    return mla_model
 
-mla_net = test_mla_transform_pass(model)
+mla_model = transform_to_mla(model)
 
-inputs = torch.tensor(tokenized_dataset["train"][0]["input_ids"]).unsqueeze(0)
-outputs_gpt2 = model(inputs)
-outputs_mla = mla_net(inputs)
-
-print("GPT-2 logits:", outputs_gpt2.logits)
-print("MLA logits:", outputs_mla.logits)
-
-
-
-# 8) Trainer
-trainer = get_trainer(
-    model=mla_net,
-    tokenized_dataset=tokenized_dataset,
+#####################################
+# 6) Evaluate MLA CE & PPL
+#####################################
+# Create a new trainer for the MLA model
+trainer_mla = Trainer(
+    model=mla_model,
+    args=TrainingArguments(output_dir="./tmp_mla", per_device_eval_batch_size=8),
+    train_dataset=tokenized_dataset["train"],
+    eval_dataset=tokenized_dataset["test"],
     tokenizer=tokenizer,
-    evaluate_metric="accuracy",
-    num_train_epochs=2,
+    num_train_epochs=5,
 )
 
+ce_after, ppl_after = evaluate_ce_and_ppl(trainer_mla, tokenized_dataset["test"])
+print(f"[AFTER TRANSFORMATION, NO FINE-TUNING] CE={ce_after:.4f}, PPL={ppl_after:.4f}")
 
-trainer.train()
-
-eval_results = trainer.evaluate()
-print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")
+#####################################
+# 7) (Optional) Fine-tune MLA Model
+#####################################
+trainer_mla.train()
+ce_ft, ppl_ft = evaluate_ce_and_ppl(trainer_mla, tokenized_dataset["test"])
+print(f"[AFTER MLA FINE-TUNING] CE={ce_ft:.4f}, PPL={ppl_ft:.4f}")
