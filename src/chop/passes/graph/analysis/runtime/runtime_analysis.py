@@ -215,16 +215,22 @@ class RuntimeAnalysis:
         io_info_str = "\n".join(io_info_lines)
         self.logger.info(f"\nTensorRT Engine Input/Output Information:\n{io_info_str}")
 
-    def infer_mg_cpu(self, model, input_data):
+    def infer_mg_cpu(self, model, input_values, attention_mask=None):
         # Ensure model and input data are on CPU
-        input_data = input_data.cpu()
+        input_values = input_values.cpu()
         model = model.cpu()
 
+        if attention_mask is not None:
+            attention_mask = attention_mask.cpu()
+            inputs = (input_values, attention_mask)
+        else:
+            inputs = (input_values,)
+            
         # Start timing CPU operations
         start_time = time.time()
 
         # INFERENCE!
-        preds = model(input_data)
+        preds = model(*inputs)
 
         # End timing CPU operations
         end_time = time.time()
@@ -247,10 +253,16 @@ class RuntimeAnalysis:
 
         return preds, latency
 
-    def infer_mg_cuda(self, model, input_data):
+    def infer_mg_cuda(self, model, input_values, attention_mask=None):
         # send model and input data to GPU for inference
-        input_data = input_data.cuda()
+        input_values = input_values.cuda()
         model = model.cuda()
+
+        if attention_mask is not None:
+            attention_mask = attention_mask.cuda()
+            inputs = (input_values, attention_mask)
+        else:
+            inputs = (input_values,)
 
         # Create CUDA events for timing GPU operations
         start = torch.cuda.Event(enable_timing=True)
@@ -258,7 +270,7 @@ class RuntimeAnalysis:
 
         # INFERENCE!
         start.record()
-        preds = model(input_data)
+        preds = model(*inputs)
         end.record()
 
         # Synchronize to ensure all GPU operations are finished
@@ -270,19 +282,25 @@ class RuntimeAnalysis:
         if isinstance(preds, dict):
             detached_dict = {}
             for k, v in preds.items():
-                if torch.is_tensor(v):
-                    detached_dict[k] = v.detach().cpu()
-                else:
-                    detached_dict[k] = v
+                detached_dict[k] = v.detach().cpu() if torch.is_tensor(v) else v
             preds = detached_dict
         elif torch.is_tensor(preds):
             preds = preds.detach().cpu()
 
         return preds, latency
 
-    def infer_trt_cuda(self, trt_context, input_data):
+    def infer_trt_cuda(self, trt_context, input_values, attention_mask=None):
+        input_values_np = input_values.cpu().numpy()  # ensure on CPU before converting
+        if attention_mask is not None:
+            attention_mask_np = attention_mask.cpu().numpy()
+            input_arrays = [input_values_np, attention_mask_np]
+        else:
+            input_arrays = [input_values_np]
+            
         bufferH = []
-        bufferH.append(np.ascontiguousarray(input_data))
+        for arr in input_arrays:
+            bufferH.append(np.ascontiguousarray(arr))
+
         for i in range(self.n_Input, self.num_io):
             bufferH.append(
                 np.empty(
@@ -321,18 +339,15 @@ class RuntimeAnalysis:
         latency = start.elapsed_time(end)
 
         # Copying data from device to host and collecting output tensors
-        output_data = [
-            bufferH[i]
-            for i in range(self.n_Input, self.num_io)
-            for _ in [
-                cudart.cudaMemcpy(
-                    bufferH[i].ctypes.data,
-                    bufferD[i],
-                    bufferH[i].nbytes,
-                    cudart.cudaMemcpyKind.cudaMemcpyDeviceToHost,
-                )
-            ]
-        ]
+        output_data = []
+        for i in range(self.n_Input, self.num_io):
+            cudart.cudaMemcpy(
+                bufferH[i].ctypes.data,
+                bufferD[i],
+                bufferH[i].nbytes,
+                cudart.cudaMemcpyKind.cudaMemcpyDeviceToHost,
+            )
+            output_data.append(bufferH[i])
 
         # Flatten output if it consists of only one item
         output_data = output_data[0] if len(output_data) == 1 else output_data
@@ -340,26 +355,29 @@ class RuntimeAnalysis:
         for b in bufferD:
             cudart.cudaFree(b)
 
+        if len(output_data) == 1:
+            output_data = output_data[0]
         # Convert the raw scores from numpy array to PyTorch tensor
         preds_tensor = torch.tensor(output_data, device="cpu", dtype=torch.float32)
 
         return preds_tensor, latency
 
-    def infer_onnx_cpu(self, ort_inference_session, input_data):
+    def infer_onnx_cpu(self, ort_inference_session, input_values, attention_mask=None):
         # Convert PyTorch tensor to numpy array for ONNX Runtime
-        input_data_np = input_data.numpy()
-
-        print(f"[DEBUG] ONNX Inference - Input Shape: {input_data_np.shape}")
-        start_time = time.time()
+        input_values_np = input_values.cpu().numpy()
+        if attention_mask is not None:
+            attention_mask_np = attention_mask.cpu().numpy()
+            inputs = {"input": {"input_values": input_values_np, "attention_mask": attention_mask_np}}
+        else:
+            inputs = {"input": {"input_values": input_values_np}}
 
         # Run inference using ONNX Runtime
-        output_data = ort_inference_session.run(None, {"input": input_data_np})
+        start_time = time.time()
+        output_data = ort_inference_session.run(None, inputs)
 
         # End timing CPU operations
         end_time = time.time()
 
-        print(f"[DEBUG] ONNX Inference - Output Shape: {output_data[0].shape}")
-        print(f"[DEBUG] ONNX Inference - Latency: {(end_time - start_time) * 1000:.3f} ms")
         # Calculate latency in milliseconds
         latency = (
             end_time - start_time
@@ -375,20 +393,22 @@ class RuntimeAnalysis:
 
         return preds_tensor, latency
 
-    def infer_onnx_cuda(self, ort_inference_session, input_data):
-        input_data_np = input_data.numpy()
+    def infer_onnx_cuda(self, ort_inference_session, input_values, attention_mask=None):
+        input_values_np = input_values.cpu().numpy()
 
-        print(f"[DEBUG] ONNX Inference - Input Shape: {input_data_np.shape}")
-
+        if attention_mask is not None:
+            attention_mask_np = attention_mask.cpu().numpy()
+            inputs = {"input": {"input_values": input_values_np, "attention_mask": attention_mask_np}}
+        else:
+            inputs = {"input": {"input_values": input_values_np}}
+        
         # Create CUDA events for timing GPU operations
         start = torch.cuda.Event(enable_timing=True)
         end = torch.cuda.Event(enable_timing=True)
 
         start.record()
-        output_data = ort_inference_session.run(None, {"input": input_data_np})
+        output_data = ort_inference_session.run(None, inputs)
         end.record()
-
-        print(f"[DEBUG] ONNX Inference - Output Shape: {output_data[0].shape}")
 
         # Synchronize to ensure all GPU operations are finished
         torch.cuda.synchronize()
