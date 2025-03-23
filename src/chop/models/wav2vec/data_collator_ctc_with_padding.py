@@ -67,8 +67,5 @@ class DataCollatorCTCWithPadding:
 
         pad_value = self.processor.feature_extractor.padding_value if hasattr(self.processor, "feature_extractor") else 0
         batch["attention_mask"] = (batch["input_values"] != pad_value).long()
-        
-        # if "attention_mask" not in batch or batch["attention_mask"] is None:
-        #     batch["attention_mask"] = torch.ones_like(batch["input_values"])
 
         return batch

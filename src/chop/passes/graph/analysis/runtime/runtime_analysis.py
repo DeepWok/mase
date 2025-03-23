@@ -29,37 +29,96 @@ from chop.passes.utils import register_mase_pass
 )
 def runtime_analysis_pass(model, pass_args=None):
     """
-    Evaluates the performance of a model by analyzing its inference speed, accuracy, and other relevant metrics.
+    Evaluates the performance of a model by analyzing its inference speed, accuracy, and other
+    relevant metrics (e.g., Word Error Rate for CTC tasks). This function is part of the model
+    optimization and evaluation pipeline, showcasing improvements in inference speed achieved
+    through quantization, graph-based optimizations, and potential conversion to TensorRT or ONNX
+    formats.
 
-    This function is part of the model optimization and evaluation pipeline, designed to showcase the improvements in inference speed achieved through quantization and conversion to TensorRT engines. It accepts models in various formats, including a `MaseGraph` object, a path to an ONNX model, or a path to a TensorRT engine, facilitating a flexible analysis process. The function outputs a comprehensive set of performance metrics that help in assessing the model's efficiency and effectiveness post-optimization.
+    It accepts models in various formats:
+      - A `MaseGraph` object (e.g., a graph-transformed PyTorch model),
+      - A `PosixPath` to an ONNX model (e.g., "model.onnx"),
+      - A `PosixPath` to a TensorRT engine (e.g., "model.trt").
 
-    :param model: The model to be analyzed. Can be a `MaseGraph`, a `PosixPath` to an ONNX model, or a `PosixPath` to a TensorRT engine.
+    Depending on the `task` specified (e.g., "ctc" for speech recognition, "cls" for classification),
+    the function computes different performance metrics:
+
+      - **CTC tasks** (e.g., speech recognition):
+        - Word Error Rate (WER)
+        - Real-Time Factor (RTF) — a measure of latency relative to audio duration
+
+      - **Classification tasks**:
+        - Accuracy, Precision, Recall, F1 Score
+        - Cross-Entropy Loss
+
+    In addition, the function tracks:
+      - **Latency** (ms)
+      - **GPU Power Usage** (Watts)
+      - **Inference Energy Consumption** (mWh)
+
+    The analysis is conducted by creating an instance of `RuntimeAnalysis` with the model and
+    optional arguments, evaluating the model's performance, and then storing the results. Users
+    can pass arguments such as `decoder`, `beam_width`, `ctc_head`, or `tokenizer` for CTC tasks
+    to ensure correct decoding (including attention_mask handling). For classification tasks,
+    metrics like Accuracy, Precision, Recall, and F1 are automatically computed.
+
+    :param model: 
+        The model to be analyzed. Can be a `MaseGraph` instance or a `PosixPath` to either
+        an ONNX model or a TensorRT engine.
     :type model: MaseGraph or PosixPath
-    :param pass_args: Optional arguments that may influence the analysis, such as specific metrics to be evaluated or configurations for the analysis tools.
+
+    :param pass_args: 
+        Optional dictionary of arguments that may influence the analysis:
+        - "task": Either "ctc" (speech recognition) or "cls" (classification).
+        - "decoder": Optional decoder object for beam or greedy decoding in CTC tasks.
+        - "beam_width": Beam size for CTC decoding.
+        - "ctc_head": CTC output head (torch.nn.Module) used after the encoder for speech tasks.
+        - "tokenizer": Tokenizer for decoding predictions to text.
+        - "batch_size": Batch size for evaluation.
+        - "num_batches": Number of batches to evaluate.
+        - "accelerator": Device for inference ("cpu" or "cuda").
+        - "data_module": Provides dataloaders for the dataset.
+        - Additional configuration parameters (e.g., power monitoring).
+
     :type pass_args: dict, optional
-    :return: A tuple containing the original model and a dictionary with the results of the analysis, including metrics such as accuracy, precision, recall, F1 score, loss, latency, GPU power usage, and inference energy consumption.
+
+    :return: 
+        A tuple containing:
+        1) The original model (unmodified),
+        2) A dictionary with the results of the analysis, including metrics such as:
+           - Average WER (for CTC tasks),
+           - Average Latency (ms),
+           - Average RTF (for CTC tasks),
+           - Average GPU Power Usage (W),
+           - Inference Energy Consumption (mWh),
+           - (If classification) Accuracy, Precision, Recall, F1 Score, and Loss.
+
     :rtype: tuple(MaseGraph or PosixPath, dict)
 
-    The analysis is conducted by creating an instance of `RuntimeAnalysis` with the model and optional arguments, evaluating the model's performance, and then storing the results. The metrics provided offer a holistic view of the model's operational characteristics, enabling a thorough comparison between the original unquantized model, the INT8 quantized model, and other variations that have undergone optimization processes.
+    **Example usage**::
 
-    Example of usage:
+        from pathlib import PosixPath
 
+        # Evaluate a TensorRT engine
         model_path = PosixPath('/path/to/model.trt')
-        _, results = runtime_analysis_pass(model_path, pass_args={})
+        _, results = runtime_analysis_pass(model_path, pass_args={
+            "task": "ctc",
+            "decoder": my_ctc_decoder,
+            "beam_width": 10,
+            "ctc_head": my_ctc_head,
+            "tokenizer": my_tokenizer,
+            "accelerator": "cuda",
+            "batch_size": 4,
+            ...
+        })
 
-    This example demonstrates initiating the runtime analysis pass on a model provided via a TensorRT engine path. The function returns a set of metrics illustrating the model's performance characteristics, such as inference speed and accuracy.
+        print(results)  # Dictionary of performance metrics
 
-    The performance metrics include:
-    - Average Test Accuracy
-    - Average Precision
-    - Average Recall
-    - Average F1 Score
-    - Average Loss
-    - Average Latency
-    - Average GPU Power Usage
-    - Inference Energy Consumption
-
-    These metrics provide valuable insights into the model's efficiency, effectiveness, and operational cost, crucial for informed decision-making regarding model deployment in production environments.
+    This function provides a holistic view of the model's operational characteristics, enabling a
+    thorough comparison between the original unquantized model, various quantized versions (INT8,
+    for example), and other optimizations. Metrics like WER (or Accuracy) and latency/power usage
+    provide valuable insights into the trade-offs between model size, speed, and accuracy, guiding
+    informed decisions about deployment in production environments.
     """
     try:
         import tensorrt as trt # type: ignore
@@ -92,8 +151,6 @@ class RuntimeAnalysis:
 
         self.logger = logging.getLogger(__name__)
         self.num_of_classes = self.config["data_module"].dataset_info.num_classes
-
-        # print(f"[DEBUG] Available Attributes in data_module: {dir(self.config['data_module'])}")
 
         match model:
             case MaseGraph():
@@ -489,7 +546,11 @@ class RuntimeAnalysis:
         rtfs = [] 
 
         # ---------- 4) MAIN EVALUATION LOOP ----------
-        for j, (xs, ys) in enumerate(dataloader):
+        for j, batch in enumerate(dataloader):
+            xs = batch["input_values"]
+            ys = batch["labels"]
+            attention_mask = batch["attention_mask"]
+
             # Stop if we've exceeded our number of evaluation batches, or if the batch is incomplete
             if j >= self.config["num_batches"] or xs.shape[0] != self.config["batch_size"]:
                 print(f"[DEBUG] Batch {j+1} - xs shape: {xs.shape}, Expected batch size: {self.config['batch_size']}")
@@ -504,7 +565,7 @@ class RuntimeAnalysis:
             torch.cuda.empty_cache()
 
             if requires_attention_mask:
-                attention_mask = torch.ones_like(xs, dtype=torch.long).to(self.config["accelerator"])
+                attention_mask = attention_mask.to(self.config["accelerator"])
                 model_input = (xs, attention_mask)
             else:
                 model_input = (xs,)
@@ -557,9 +618,6 @@ class RuntimeAnalysis:
                 else 0
             )
             gpu_power_usages.append(avg_power)
-
-            print(f"[DEBUG] Batch {j+1} - Latency: {latency:.3f} ms")
-            print(f"[DEBUG] Batch {j+1} - GPU Power Usage: {avg_power:.3f} W")
 
             # ---------- (B) METRICS DEPENDING ON TASK ----------
             if task == "cls":
@@ -690,12 +748,6 @@ class RuntimeAnalysis:
                 ["Average GPU Power Usage", f"{avg_gpu_power_usage:.5g} W"],
                 ["Inference Energy Consumption", f"{avg_gpu_energy_usage:.5g} mWh"],
             ]
-
-            print(f"[DEBUG] Average Latency: {avg_latency:.3f} ms")
-            print(f"[DEBUG] Average GPU Power Usage: {avg_gpu_power_usage:.3f} W")
-            print(f"[DEBUG] Average RTF: {avg_rtf:.3f}")
-            print(f"[DEBUG] Average WER: {avg_wer:.3f}")
-            print(f"[DEBUG] Inference Energy Consumption: {avg_gpu_energy_usage:.3f} mWh")
 
             results = {
                 "Average WER": avg_wer,

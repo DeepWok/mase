@@ -160,7 +160,8 @@ def get_tokenized_dataset(
                     sampling_rate = example["audio"]["sampling_rate"]
 
                     inputs = processor(audio=audio_array, sampling_rate=int(sampling_rate), return_tensors="pt", padding=True)
-                    attention_mask = torch.ones(inputs.input_values.shape, dtype=torch.long)
+                    attention_mask = inputs.get("attention_mask", torch.ones(inputs.input_values.shape, dtype=torch.long))
+
 
                     with processor.as_target_processor():
                         labels = processor.tokenizer(example["text"], return_tensors="pt").input_ids
@@ -359,7 +360,6 @@ def get_trainer(
         gradient_accumulation_steps=gradient_accumulation_steps,
         per_device_train_batch_size=per_device_train_batch_size,
         per_device_eval_batch_size=per_device_eval_batch_size,
-        # remove_unused_columns=False, 
     )
 
     if data_collator is None:
@@ -376,22 +376,3 @@ def get_trainer(
     )
 
     return trainer
-
-
-def preprocess_librispeech_asr(example, processor):
-    audio_array = example["audio"]["array"]
-    sampling_rate = example["audio"]["sampling_rate"]
-
-    inputs = processor(audio=audio_array, sampling_rate=int(sampling_rate), return_tensors="pt", padding=True)
-    attention_mask = torch.ones(inputs.input_values.shape, dtype=torch.long)
-
-    with processor.as_target_processor():
-        labels = processor.tokenizer(example["text"], return_tensors="pt").input_ids
-
-    return {
-        "input_values": inputs.input_values.squeeze(0),
-        "attention_mask": attention_mask.squeeze(0),
-        "labels": labels.squeeze(0)
-    }
-
-
