@@ -349,31 +349,57 @@ def main():
     # -------------------------------
     # 6. Print parameter count after pruning
     # -------------------------------
-    print("\nParameter count after pruning:")
+    print("\n" + "="*80)
+    print("PARAMETER COUNTS AFTER PRUNING")
+    print("="*80)
+    
+    # Get the full model's parameter count (encoder + CTC head)
+    full_model_params = sum(p.numel() for p in combined_model.parameters() if p.requires_grad)
+    encoder_params = sum(p.numel() for p in mg.model.parameters() if p.requires_grad)
+    ctc_head_params = sum(p.numel() for p in ctc_head.parameters() if p.requires_grad)
+    
+    print(f"\n1. FULL MODEL (Encoder + CTC Head):")
+    print(f"   Total parameters:         {full_model_params:,}")
+    print(f"   - Encoder parameters:     {encoder_params:,}")
+    print(f"   - CTC Head parameters:    {ctc_head_params:,}")
+    
+    # Optionally show the report from the analysis pass
     try:
         if hasattr(passes.module, "report_trainable_parameters_analysis_pass"):
             _, report_after = passes.module.report_trainable_parameters_analysis_pass(mg.model)
-            for key, value in report_after.items():
-                print(f"  {key}: {value}")
-        else:
-            raise AttributeError("report_trainable_parameters_analysis_pass not available")
+            if "Total Trainable Parameters" in report_after:
+                print(f"\n   Note: Analysis report shows: {report_after['Total Trainable Parameters']:,}")
     except (AttributeError, TypeError) as e:
-        print(f"Could not use detailed parameter report: {e}")
-        total_params = sum(p.numel() for p in mg.model.parameters() if p.requires_grad)
-        print(f"  Total trainable parameters: {total_params}")
+        pass
     
-    # Count remaining parameters (non-pruned)
+    # Count remaining parameters (non-pruned) for the encoder only
+    print(f"\n2. PRUNING DETAILS (Encoder only - this is what's being pruned):")
+    
     remaining_params = 0
+    prunable_params_total = 0
+    
     for module in mg.model.modules():
         if hasattr(module, 'parametrizations'):
             for param_name, param_list in module.parametrizations.items():
                 for param in param_list:
                     if hasattr(param, 'mask'):
+                        mask_size = param.mask.numel()
+                        prunable_params_total += mask_size
                         remaining_params += param.mask.sum().item()
     
-    total_params = sum(p.numel() for p in mg.model.parameters() if p.requires_grad)
-    print(f"  Non-pruned parameters: {remaining_params}")
-    print(f"  Actual sparsity: {1.0 - remaining_params / total_params:.4f}")
+    non_prunable_params = encoder_params - prunable_params_total
+    
+    print(f"   Total encoder parameters:     {encoder_params:,}")
+    print(f"   - Prunable parameters:        {prunable_params_total:,} ({prunable_params_total/encoder_params:.1%} of encoder)")
+    print(f"   - Non-prunable parameters:    {non_prunable_params:,} ({non_prunable_params/encoder_params:.1%} of encoder)")
+    print(f"   After pruning:")
+    print(f"   - Kept parameters:            {remaining_params:,} (of prunable)")
+    print(f"   - Pruned parameters:          {prunable_params_total - remaining_params:,} (of prunable)")
+    print(f"   - Total remaining params:     {remaining_params + non_prunable_params:,}")
+    print(f"   - Sparsity within prunable:   {1.0 - remaining_params / prunable_params_total:.2%}")
+    print(f"   - Overall encoder sparsity:   {1.0 - (remaining_params + non_prunable_params) / encoder_params:.2%}")
+    print(f"   - Target sparsity (config):   {pruning_config['weight']['sparsity']:.2%}")
+    print("="*80)
     
     # -------------------------------
     # 7. Optional fine-tuning and evaluation
