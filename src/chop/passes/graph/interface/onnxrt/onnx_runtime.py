@@ -1,4 +1,5 @@
 import logging
+import inspect
 import torch
 import os
 from datetime import datetime
@@ -80,14 +81,27 @@ class ONNXRuntime:
         train_sample = next(iter(dataloader))[0]
         train_sample = train_sample.to(self.config["accelerator"])
 
+        # Dynamically checks if attention_mask is needed first, then optional explicit override
+        requires_attention_mask = self.config.get(
+            "requires_attention_mask", 
+            "attention_mask" in inspect.signature(model.forward).parameters
+        )
+
+        if requires_attention_mask:
+            attention_mask = torch.ones_like(train_sample, dtype=torch.long).to(self.config["accelerator"])
+            onnx_inputs = (train_sample, attention_mask)
+            input_names = ["input_values", "attention_mask"]
+        else:
+            onnx_inputs = (train_sample,)
+            input_names = ["input_values"]
+        
         torch.onnx.export(
             model,
-            train_sample,
+            onnx_inputs,
             save_path,
             export_params=True,
+            input_names=input_names,
             opset_version=14,
-            do_constant_folding=True,
-            input_names=["input"],
         )
         self.logger.info(f"ONNX Conversion Complete. Stored ONNX model to {save_path}")
 

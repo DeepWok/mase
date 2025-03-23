@@ -13,16 +13,15 @@ from datetime import datetime
 from pathlib import Path
 import time
 
-try:
-    import tensorrt as trt # type: ignore
-    print("[DEBUG] TensorRT is available.")
-except ImportError:
-    raise ImportError("tensorrt is required for this functionality. Please install it from NVIDIA's repositories.")
+# try:
+#     import tensorrt as trt # type: ignore
+# except ImportError:
+#     raise ImportError("tensorrt is required for this functionality. Please install it from NVIDIA's repositories.")
 
-try:
-    from cuda import cudart # type: ignore
-except ImportError:
-    raise ImportError("pycuda's cudart is required for this functionality. Please install pycuda.")
+# try:
+#     from cuda import cudart # type: ignore
+# except ImportError:
+#     raise ImportError("pycuda's cudart is required for this functionality. Please install pycuda.")
 
 
 
@@ -94,7 +93,7 @@ class RuntimeAnalysis:
         self.logger = logging.getLogger(__name__)
         self.num_of_classes = self.config["data_module"].dataset_info.num_classes
 
-        print(f"[DEBUG] Available Attributes in data_module: {dir(self.config['data_module'])}")
+        # print(f"[DEBUG] Available Attributes in data_module: {dir(self.config['data_module'])}")
 
         match model:
             case MaseGraph():
