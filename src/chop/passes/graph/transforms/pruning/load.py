@@ -1,4 +1,3 @@
-
 from functools import partial
 import logging
 
@@ -21,7 +20,7 @@ PRUNEABLE_OPS = {
 # Add "movement" to these lists so the pruning pass recognizes it.
 # ------------------------------------------------------------------------------
 # Add "hwpq" to the valid weight pruning methods
-WEIGHT_PRUNE_METHODS = ["random", "l1-norm", "movement", "hwpq"]
+WEIGHT_PRUNE_METHODS = ["random", "l1-norm", "movement", "hwpq", "snip"]
 ACTIVATION_PRUNE_METHODS = ["random", "l1-norm", "movement"]
 
 # ------------------------------------------------------------------------------
