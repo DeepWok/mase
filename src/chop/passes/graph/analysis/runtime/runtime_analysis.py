@@ -13,15 +13,15 @@ from datetime import datetime
 from pathlib import Path
 import time
 
-# try:
-#     import tensorrt as trt # type: ignore
-# except ImportError:
-#     raise ImportError("tensorrt is required for this functionality. Please install it from NVIDIA's repositories.")
+try:
+    import tensorrt as trt # type: ignore
+except ImportError:
+    raise ImportError("tensorrt is required for this functionality. Please install it from NVIDIA's repositories.")
 
-# try:
-#     from cuda import cudart # type: ignore
-# except ImportError:
-#     raise ImportError("pycuda's cudart is required for this functionality. Please install pycuda.")
+try:
+    from cuda import cudart # type: ignore
+except ImportError:
+    raise ImportError("pycuda's cudart is required for this functionality. Please install pycuda.")
 
 
 
