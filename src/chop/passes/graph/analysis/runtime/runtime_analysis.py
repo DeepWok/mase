@@ -62,11 +62,13 @@ def runtime_analysis_pass(model, pass_args=None):
     """
     try:
         import tensorrt as trt # type: ignore
+        globals()['trt'] = trt
     except ImportError:
         raise ImportError("tensorrt is required for this functionality. Please install it from NVIDIA's repositories.")
 
     try:
         from cuda import cudart # type: ignore
+        globals()['cudart'] = cudart
     except ImportError:
         raise ImportError("pycuda's cudart is required for this functionality. Please install pycuda.")
 
