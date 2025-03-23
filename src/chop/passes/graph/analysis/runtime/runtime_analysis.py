@@ -4,6 +4,7 @@ from pathlib import PosixPath
 from chop.ir import MaseGraph
 from .utils import PowerMonitor, get_execution_provider
 import os
+import inspect
 from tabulate import tabulate
 import torchmetrics
 import numpy as np
@@ -409,6 +410,11 @@ class RuntimeAnalysis:
         num_GPU_warmup_batches = self.config["num_GPU_warmup_batches"]
         task = self.config["task"]
 
+        requires_attention_mask = self.config.get(
+            "requires_attention_mask",
+            "attention_mask" in inspect.signature(self.model.forward).parameters
+        )        
+
         # ---------- 1) SET UP METRICS BASED ON TASK ----------
         if task == "cls":
             metric = torchmetrics.classification.MulticlassAccuracy(
@@ -477,19 +483,25 @@ class RuntimeAnalysis:
             torch.cuda.synchronize()
             torch.cuda.empty_cache()
 
+            if requires_attention_mask:
+                attention_mask = torch.ones_like(xs, dtype=torch.long).to(self.config["accelerator"])
+                model_input = (xs, attention_mask)
+            else:
+                model_input = (xs,)
+
             # ---------------- (A) RUN INFERENCE (TRT, ONNX, or MaseGraph) ----------------
             if isinstance(self.model, trt.IExecutionContext):
                 # TensorRT
                 if self.config["accelerator"] != "cuda":
                     raise Exception("TensorRT inference is only supported on CUDA devices.")
-                preds, latency = self.infer_trt_cuda(self.model, xs)
+                preds, latency = self.infer_trt_cuda(self.model, *model_input)
 
             elif isinstance(self.model, ort.InferenceSession):
                 # ONNX Runtime
                 if self.config["accelerator"] == "cpu":
-                    preds, latency = self.infer_onnx_cpu(self.model, xs)
+                    preds, latency = self.infer_onnx_cpu(self.model, *model_input)
                 elif self.config["accelerator"] == "cuda":
-                    preds, latency = self.infer_onnx_cuda(self.model, xs)
+                    preds, latency = self.infer_onnx_cuda(self.model, *model_input)
                 else:
                     raise Exception(
                         f"ONNX inference is not support by device {self.config['accelerator']}."
@@ -498,10 +510,10 @@ class RuntimeAnalysis:
             else:
                 # MaseGraph or raw PyTorch
                 if self.config["accelerator"] == "cpu":
-                    preds, latency = self.infer_mg_cpu(self.model, xs)
+                    preds, latency = self.infer_mg_cpu(self.model, *model_input)
                 elif self.config["accelerator"] == "cuda":
                     print(f"[DEBUG] Running MaseGraph inference on batch {j+1}")
-                    preds, latency = self.infer_mg_cuda(self.model, xs)
+                    preds, latency = self.infer_mg_cuda(self.model, *model_input)
                 else:
                     raise Exception(
                         f"MaseGraph inference is not support by device {self.config['accelerator']}."
