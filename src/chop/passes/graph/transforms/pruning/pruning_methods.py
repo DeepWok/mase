@@ -254,6 +254,153 @@ def global_activation_movement(tensor: torch.Tensor, info: dict, sparsity: float
     mask = (current_movement.abs() > threshold).to(torch.bool).to(tensor.device)
     return mask
 
+def snip(tensor: torch.Tensor, info: dict, sparsity: float) -> torch.Tensor:
+    """
+    SNIP (Single-shot Network Pruning) pruning ranking function for a given tensor.
+    
+    SNIP evaluates the importance of weights by calculating the gradients of the loss
+    with respect to a binary mask applied to the weights. It uses the pre-computed
+    saliency scores stored in the info dict to determine which weights to prune.
+    
+    Reference: https://arxiv.org/abs/1810.02340
+    
+    Args:
+        tensor: The weight tensor to be pruned
+        info: Dictionary containing metadata including pre-computed SNIP saliency scores
+        sparsity: The fraction of weights to prune (between 0 and 1)
+        
+    Returns:
+        A boolean mask with the same shape as tensor, where True indicates weights to keep
+    """
+    # Check for SNIP saliency scores in different possible locations
+    snip_scores = None
+    
+    # First check in stats dictionary
+    if "stats" in info:
+        if "snip_scores" in info["stats"]:
+            snip_scores = info["stats"]["snip_scores"]
+        elif "snip_grad" in info["stats"]:
+            # Also look for alternative name used in the callback
+            snip_scores = torch.abs(info["stats"]["snip_grad"])
+            
+    # If not found, try in weight_stats
+    if snip_scores is None and "weight_stats" in info:
+        if "snip_scores" in info["weight_stats"]:
+            snip_scores = info["weight_stats"]["snip_scores"]
+        elif "snip_grad" in info["weight_stats"]:
+            snip_scores = torch.abs(info["weight_stats"]["snip_grad"])
+    
+    if snip_scores is None:
+        raise ValueError("SNIP saliency scores not found in info stats. Run SNIP preprocessing first.")
+    
+    # Calculate threshold based on sparsity
+    threshold = torch.quantile(snip_scores.flatten(), sparsity)
+    
+    # Create mask where True means keep the weight
+    mask = (snip_scores > threshold).to(torch.bool).to(tensor.device)
+    
+    return mask
+
+def global_weight_snip(tensor: torch.Tensor, info: dict, sparsity: float, node_name: str, bins: int = 2048,
+                       _state={"did_fail": False}) -> torch.Tensor:
+    """
+    Global SNIP pruning ranking function with fallback method for memory constrained applications.
+    
+    Aggregates SNIP saliency scores from the info dictionary over all relevant weight tensors 
+    to compute a global threshold.
+    
+    Args:
+        tensor: The weight tensor to be pruned
+        info: Dictionary containing metadata for all nodes including pre-computed SNIP saliency scores
+        sparsity: The fraction of weights to prune (between 0 and 1)
+        node_name: Name of the current node being processed
+        bins: Number of bins to use in fallback histogram approach (2048 by default)
+        
+    Returns:
+        A boolean mask with the same shape as tensor, where True indicates weights to keep
+    """
+    def _get_snip_scores(node_info):
+        """Helper to extract SNIP scores from different possible locations in the metadata"""
+        if "weight_stats" in node_info:
+            if "snip_scores" in node_info["weight_stats"]:
+                return node_info["weight_stats"]["snip_scores"]
+            elif "snip_grad" in node_info["weight_stats"]:
+                return torch.abs(node_info["weight_stats"]["snip_grad"])
+        if "stats" in node_info:
+            if "snip_scores" in node_info["stats"]:
+                return node_info["stats"]["snip_scores"]
+            elif "snip_grad" in node_info["stats"]:
+                return torch.abs(node_info["stats"]["snip_grad"])
+        return None
+    
+    def _apply_snip_threshold(tensor: torch.Tensor, info: dict, threshold: float, node_name: str) -> torch.Tensor:
+        if node_name not in info:
+            raise ValueError(f"Node {node_name} not found in info dictionary.")
+        
+        current_node_meta = info[node_name]
+        snip_scores = _get_snip_scores(current_node_meta)
+        
+        if snip_scores is None:
+            raise ValueError(
+                f"Current node '{node_name}' has no SNIP saliency data, "
+                "but is being pruned with global SNIP."
+            )
+        
+        mask = (snip_scores > threshold).bool().to(tensor.device)
+        return mask
+    
+    # Collect SNIP saliency scores from all nodes
+    all_scores = []
+    for node_name, v in info.items():
+        if v is not None:
+            snip_scores = _get_snip_scores(v)
+            if snip_scores is not None:
+                all_scores.append(snip_scores)
+
+    if not all_scores:
+        raise ValueError("No global SNIP data found. Run SNIP preprocessing first.")
+    
+    # Try the direct approach first (may fail with OOM for large models)
+    if not _state["did_fail"]:
+        try:
+            big_flat = torch.cat([s.flatten().to(tensor.device) for s in all_scores], dim=0)
+            threshold = torch.quantile(big_flat, sparsity)
+            return _apply_snip_threshold(tensor, info, threshold, node_name)
+        except RuntimeError as e:
+            print("[DEBUG] Global SNIP flatten+quantile approach failed. Falling back to histogram.")
+            print("[DEBUG] Caught RuntimeError:", str(e))
+            _state["did_fail"] = True
+    
+    # Fallback to histogram approach
+    global_max = 0.0
+    total_elements = 0
+    for s in all_scores:
+        mx = s.max().item()
+        if mx > global_max:
+            global_max = mx
+        total_elements += s.numel()
+
+    if global_max == 0.0:
+        threshold = 0.0
+    else:
+        bin_edges = torch.linspace(0, global_max, steps=bins + 1)  # CPU by default
+        global_hist = torch.zeros(bins)
+
+        for s in all_scores:
+            s_cpu = s.flatten().cpu()
+            h = torch.histc(s_cpu, bins=bins, min=0, max=global_max)
+            global_hist += h
+
+        target_count = sparsity * total_elements
+        cumulative = torch.cumsum(global_hist, dim=0)
+        idx_tensor = (cumulative >= target_count).nonzero(as_tuple=False)
+        if idx_tensor.numel() == 0:
+            threshold = global_max
+        else:
+            idx = idx_tensor[0].item()
+            threshold = (bin_edges[idx] + bin_edges[idx + 1]) / 2
+
+    return _apply_snip_threshold(tensor, info, threshold, node_name)
 
 weight_criteria_map = {
     "local": {
@@ -262,6 +409,7 @@ weight_criteria_map = {
             "l1-norm": l1,
             "movement": movement,
             "hwpq": hwpq_pruning_only,  # Add the HWPQ method here
+            "snip": snip,  # Add the SNIP method here
         }
     },
     "global": {
@@ -269,6 +417,7 @@ weight_criteria_map = {
             "random": random,
             "l1-norm": global_weight_l1,
             "movement": global_weight_movement, 
+            "snip": global_weight_snip,  # Add the global SNIP method here
             # We're not implementing global HWPQ for now
         }
     },
