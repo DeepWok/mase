@@ -36,60 +36,6 @@ In our implementation, SNIP pruning involves:
 
 ### Basic Usage
 
-To use SNIP pruning in your code:
-
-```python
-import torch
-from chop.ir.graph.mase_graph import MaseGraph
-from chop.passes.graph.transforms.pruning.snip_helper import SNIPTrackingCallback
-from chop.passes.graph.transforms.pruning.prune import prune_transform_pass
-
-# 1. Prepare your model and a batch of data
-model = your_model
-dummy_data = torch.randn(batch_size, *input_shape)
-
-# 2. Create a MaseGraph from your model
-mg = MaseGraph(model)
-mg, _ = passes.init_metadata_analysis_pass(mg)
-mg, _ = passes.add_common_metadata_analysis_pass(
-    mg,
-    pass_args={
-        "dummy_in": dummy_data,
-        "add_value": True,
-        "force_device_meta": False,
-    }
-)
-
-# 3. Compute SNIP saliency scores
-callback = SNIPTrackingCallback()
-callback(mg.model, dummy_data)
-
-# 4. Apply pruning with SNIP method
-pruning_config = {
-    "weight": {
-        "method": "snip",
-        "granularity": "elementwise",
-        "scope": "local",  # or "global" for global pruning
-        "sparsity": 0.5     # Prune 50% of weights
-    },
-    "activation": {
-        "method": "random",
-        "granularity": "elementwise", 
-        "scope": "local",
-        "sparsity": 0.0     # No activation pruning
-    }
-}
-
-mg, _ = prune_transform_pass(mg, pass_args=pruning_config)
-
-# 5. Train the pruned model from scratch
-# ...
-```
-
-### Using with HuggingFace Trainer
-
-For integration with HuggingFace's Trainer:
-
 ```python
 from transformers import Trainer, TrainingArguments
 from chop.passes.graph.transforms.pruning.snip_helper import SNIPCallback
@@ -148,7 +94,6 @@ trainer.train()
 ## Benefits of SNIP
 
 - **Efficiency**: Pruning at initialization avoids the computational cost of training before pruning.
-- **Performance**: SNIP typically maintains better performance compared to random pruning.
 - **One-shot**: No iterative pruning process is needed.
 - **Flexibility**: Can be used for both local (layer-wise) and global pruning.
 
@@ -160,4 +105,4 @@ trainer.train()
 
 ## See Also
 
-Check out the example in `examples/snip_example.py` for a complete demonstration of SNIP pruning on a speech recognition model. The example shows both the direct calculation approach and integration with the HuggingFace Trainer. 
+Check out the example in `examples/snip_example.py` for a complete demonstration of SNIP pruning on a speech recognition model.
