@@ -147,6 +147,7 @@ class MaseDataModule(pl.LightningDataModule):
         num_workers: int,
         max_token_len: int = None,
         tokenizer=None,
+        processor=None,
         load_from_cache_file: bool = True,
         model_name: str = None,
     ) -> None:
@@ -155,6 +156,7 @@ class MaseDataModule(pl.LightningDataModule):
         self.name = name
         self.batch_size = batch_size
         self.tokenizer = tokenizer
+        self.processor = processor
         self.max_token_len = max_token_len
         self.num_workers = num_workers
         self.load_from_cache_file = load_from_cache_file
@@ -280,7 +282,8 @@ class MaseDataModule(pl.LightningDataModule):
         data_collator = None
         if self.dataset_info.data_collator_cls is not None:
             data_collator = self.dataset_info.data_collator_cls(
-                tokenizer=self.tokenizer
+                tokenizer=self.tokenizer,
+                processor=self.processor
             )
         return DataLoader(
             self.train_dataset,
@@ -300,7 +303,8 @@ class MaseDataModule(pl.LightningDataModule):
         data_collator = None
         if self.dataset_info.data_collator_cls is not None:
             data_collator = self.dataset_info.data_collator_cls(
-                tokenizer=self.tokenizer
+                tokenizer=self.tokenizer,
+                processor=self.processor
             )
         return DataLoader(
             self.val_dataset,
@@ -320,7 +324,8 @@ class MaseDataModule(pl.LightningDataModule):
         data_collator = None
         if self.dataset_info.data_collator_cls is not None:
             data_collator = self.dataset_info.data_collator_cls(
-                tokenizer=self.tokenizer
+                tokenizer=self.tokenizer,
+                processor=self.processor
             )
         return DataLoader(
             self.test_dataset,
@@ -334,7 +339,7 @@ class MaseDataModule(pl.LightningDataModule):
         data_collator = None
         if self.dataset_info.data_collator_cls is not None:
             data_collator = self.dataset_info.data_collator_cls(
-                tokenizer=self.tokenizer
+                tokenizer=self.tokenizer,
             )
         if self.pred_dataset is None:
             raise RuntimeError("The pred dataset is not available.")

@@ -32,6 +32,7 @@ processor = Wav2Vec2Processor.from_pretrained(LIBRISPEECH_CONFIG["tokenizer_chec
     num_features=LIBRISPEECH_CONFIG["sample_rate"] * 16,
     data_collator_cls=DataCollatorCTCWithPadding,
 )
+
 class CondensedLibrispeechASRDataset(Dataset):
     def __init__(
         self,
