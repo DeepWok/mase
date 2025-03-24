@@ -7,6 +7,8 @@ from transformers import Wav2Vec2Processor
 from torch.utils.data import Dataset
 import torchaudio
 from ..utils import add_dataset_info
+from chop.models.wav2vec.data_collator_ctc_with_padding import DataCollatorCTCWithPadding
+
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +30,7 @@ processor = Wav2Vec2Processor.from_pretrained(LIBRISPEECH_CONFIG["tokenizer_chec
     available_splits=("train", "validation", "test"),
     seq2seqLM=True,
     num_features=LIBRISPEECH_CONFIG["sample_rate"] * 16,
+    data_collator_cls=DataCollatorCTCWithPadding,
 )
 class CondensedLibrispeechASRDataset(Dataset):
     def __init__(
