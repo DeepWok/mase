@@ -7,7 +7,7 @@ from transformers import Wav2Vec2Processor
 from torch.utils.data import Dataset
 import torchaudio
 from ..utils import add_dataset_info
-from chop.models.wav2vec.data_collator_ctc_with_padding import DataCollatorCTCWithPadding
+from chop.models import DataCollatorCTCWithPadding
 
 
 logger = logging.getLogger(__name__)
@@ -76,7 +76,8 @@ class CondensedLibrispeechASRDataset(Dataset):
     def __getitem__(self, idx):
         if self.X is None or self.Y is None:
             raise ValueError("Dataset is not setup. Please call prepare_data() and setup() first.")
-        return {"input_values": self.X[idx], "labels": self.Y[idx]}
+        return self.X[idx], self.Y[idx]
+
 
 
     def prepare_data(self) -> None:
