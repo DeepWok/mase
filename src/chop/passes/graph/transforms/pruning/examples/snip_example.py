@@ -32,83 +32,39 @@ import types
 import importlib
 from torch.utils.data import DataLoader
 
+import logging
+logging.getLogger("pyctcdecode").setLevel(logging.ERROR)
+from pyctcdecode import build_ctcdecoder
+
+from pathlib import Path
 from chop.ir.graph.mase_graph import MaseGraph
 from chop.passes.graph.transforms.pruning.prune import prune_transform_pass
 from chop.passes.graph.transforms.pruning.snip_helper import SNIPCallback
 import chop.passes as passes
 from chop.passes.module import report_trainable_parameters_analysis_pass
-
-# Check if transformers is available, otherwise give installation instructions
-try:
-    from transformers import AutoModelForCTC, Wav2Vec2Processor, TrainerCallback
-    from datasets import concatenate_datasets, DatasetDict, load_dataset, Dataset
-    from pyctcdecode import build_ctcdecoder
-    transformers_available = True
-except ImportError:
-    transformers_available = False
-    print("This example requires transformers, datasets, and pyctcdecode.")
-    print("Please install them with: pip install transformers datasets pyctcdecode")
-
-# Check if we have the necessary modules for training
-try:
-    from chop.tools import get_tokenized_dataset, get_trainer
-    from chop.models import DataCollatorCTCWithPadding
-    trainer_available = True
-except ImportError:
-    trainer_available = False
-    print("Some tools for training are not available. Basic pruning will work, but not training.")
+from chop.tools import get_tokenized_dataset
+from transformers import AutoModelForCTC, Wav2Vec2Processor, TrainerCallback
+from chop.dataset.audio.speech_recognition import CondensedLibrispeechASRDataset
+from chop.dataset import MaseDataModule
+from chop.models import DataCollatorCTCWithPadding, CombinedWav2Vec2CTC
+from datasets import concatenate_datasets, DatasetDict, load_dataset, Dataset
+from chop.tools import get_trainer
+from chop.passes.graph import (
+    summarize_quantization_analysis_pass,
+    add_common_metadata_analysis_pass,
+    init_metadata_analysis_pass,
+    runtime_analysis_pass,
+    onnx_runtime_interface_pass,
+    quantize_transform_pass,
+)
 
 # Print available pruning methods
 import chop.passes.graph.transforms.pruning.prune as prune_mod
 importlib.reload(prune_mod)
 print("Available pruning methods:", list(prune_mod.weight_criteria_map["local"]["elementwise"].keys()))
 
-# -------------------------------
-# Model and combined module definitions
-# -------------------------------
-class CombinedWav2Vec2CTC(nn.Module):
-    def __init__(self, encoder, ctc_head, blank_id=0, beam_width=10, decoder=None):
-        super().__init__()
-        self.encoder = encoder
-        self.ctc_head = ctc_head
-        self.blank_id = blank_id
-        self.beam_width = beam_width
-        self.decoder = decoder  # Only used during inference
-
-    def forward(self, input_values, attention_mask=None, labels=None):
-        encoder_out = self.encoder(input_values, attention_mask=attention_mask)
-        hidden_states = encoder_out["last_hidden_state"]
-        logits = self.ctc_head(hidden_states)
-        output = {"logits": logits, "labels": labels}
-
-        if labels is not None:
-            # Ensure labels has a batch dimension
-            if labels.dim() == 1:
-                labels = labels.unsqueeze(0)
-            
-            log_probs = logits.log_softmax(dim=-1).transpose(0, 1)
-            batch_size, time_steps, _ = logits.shape
-            input_lengths = torch.full((batch_size,), time_steps, dtype=torch.long, device=logits.device)
-            target_lengths = (labels != -100).sum(dim=1)
-            loss = F.ctc_loss(
-                log_probs, labels, input_lengths, target_lengths,
-                blank=self.blank_id, reduction="mean", zero_infinity=True
-            )
-            output["loss"] = loss
-        else:
-            if self.decoder is not None:
-                log_probs = logits.log_softmax(dim=-1)
-                log_probs_np = log_probs[0].cpu().detach().numpy()
-                transcription = self.decoder.decode(log_probs_np, beam_width=self.beam_width).lower()
-                output["transcription"] = transcription
-        return output
-
 
 def main():
-    if not transformers_available:
-        print("Required libraries not available. Exiting.")
-        return
-    
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
     # -------------------------------
@@ -119,39 +75,81 @@ def main():
     tokenizer_checkpoint = "facebook/wav2vec2-base-960h"
     dataset_name = "nyalpatel/condensed_librispeech_asr"
     
-    # Load processor
-    processor = Wav2Vec2Processor.from_pretrained(tokenizer_checkpoint)
+    # Logic inside get_tockenized_dataset needs to be improved using nyal's changes
+    try:
+        tokenized_dataset, tokenizer, processor = get_tokenized_dataset(
+            dataset=dataset_name,
+            checkpoint=checkpoint,
+            tokenizer_checkpoint=tokenizer_checkpoint,
+            return_tokenizer=True,
+            return_processor=True,
+        )
+        print("Using get_tokenized_dataset for dataset preparation")
+    except Exception as e:
+        print(f"Error using get_tokenized_dataset: {e}")
+        print("Falling back to manual dataset loading")
+        
+        # Load processor
+        processor = Wav2Vec2Processor.from_pretrained(tokenizer_checkpoint)
+        tokenizer = processor.tokenizer
+        
+        # Fall back to direct Hugging Face datasets loading
+        dataset = load_dataset(dataset_name, split="validation.clean", trust_remote_code=True)
+        sample_list = list(dataset.take(50))
+        
+        def preprocess_function(example):
+            audio_array = example["audio"]["array"]
+            sampling_rate = example["audio"]["sampling_rate"]
+            inputs = processor(audio=audio_array, sampling_rate=int(sampling_rate), return_tensors="pt", padding=True)
+            attention_mask = torch.ones(inputs.input_values.shape, dtype=torch.long)
+            with processor.as_target_processor():
+                labels = processor.tokenizer(example["text"], return_tensors="pt").input_ids
+            return {
+                "input_values": inputs.input_values.squeeze(0),
+                "attention_mask": attention_mask.squeeze(0),
+                "labels": labels.squeeze(0)
+            }
+        
+        small_dataset = Dataset.from_list(sample_list)
+        small_dataset = small_dataset.map(
+            preprocess_function,
+            remove_columns=["speaker_id", "file", "id", "chapter_id", "audio"]
+        )
+        
+        tokenized_dataset = DatasetDict({
+            "train": small_dataset,
+            "test": small_dataset
+        })
+    
     data_collator = DataCollatorCTCWithPadding(processor=processor, padding=True)
-    tokenizer = processor.tokenizer
     vocab = tokenizer.convert_ids_to_tokens(range(tokenizer.vocab_size))
     decoder = build_ctcdecoder(vocab)
     
-    # Load a small subset of data
-    dataset = load_dataset(dataset_name, split="validation.clean", trust_remote_code=True)
-    sample_list = list(dataset.take(50))
-    
-    def preprocess_function(example):
-        audio_array = example["audio"]["array"]
-        sampling_rate = example["audio"]["sampling_rate"]
-        inputs = processor(audio=audio_array, sampling_rate=int(sampling_rate), return_tensors="pt", padding=True)
-        attention_mask = torch.ones(inputs.input_values.shape, dtype=torch.long)
-        with processor.as_target_processor():
-            labels = processor.tokenizer(example["text"], return_tensors="pt").input_ids
-        return {
-            "input_values": inputs.input_values.squeeze(0),
-            "attention_mask": attention_mask.squeeze(0),
-            "labels": labels.squeeze(0)
-        }
-    
-    small_dataset = Dataset.from_list(sample_list)
-    small_dataset = small_dataset.map(
-        preprocess_function,
-        remove_columns=["speaker_id", "file", "id", "chapter_id", "audio"]
-    )
-    tokenized_dataset = DatasetDict({
-        "train": small_dataset,
-        "test": small_dataset
-    })
+    # -------------------------------
+    # 2. Import dataset
+    # -------------------------------
+    try:
+        # Try the structured dataset approach
+        print("Loading dataset using CondensedLibrispeechASRDataset...")
+        dataset_path = Path("./preprocessed_data")
+        condensed_dataset = CondensedLibrispeechASRDataset(path=dataset_path, split="train")
+        condensed_dataset.prepare_data()
+        condensed_dataset.setup()
+        batch_size = 4
+        
+        data_module = MaseDataModule(
+            name=dataset_name,
+            batch_size=batch_size,
+            model_name=checkpoint,
+            num_workers=0,
+        )
+        data_module.prepare_data()
+        data_module.setup()
+        
+        print("Successfully loaded dataset with MaseDataModule")
+    except Exception as e:
+        print(f"Error setting up MaseDataModule: {e}")
+        print("Using previously loaded tokenized_dataset")
     
     # Load model
     model = AutoModelForCTC.from_pretrained(checkpoint)
@@ -160,7 +158,7 @@ def main():
     ctc_head = model.lm_head    # dynamic CTC head, separate this
     
     # -------------------------------
-    # 2. Define the MASE graph & metadata
+    # 3. Define the MASE graph & metadata
     # -------------------------------
     print("Creating MASE graph and computing metadata...")
     mg = MaseGraph(
@@ -193,7 +191,7 @@ def main():
     )
     
     # -------------------------------
-    # 3. Print parameter count before pruning
+    # 4. Print parameter count before pruning
     # -------------------------------
     print("\nParameter count before pruning:")
     try:
@@ -209,11 +207,11 @@ def main():
         print(f"  Total trainable parameters: {total_params}")
     
     # -------------------------------
-    # 4. Apply SNIP callback for pruning preparation
+    # 5. Apply SNIP callback for pruning preparation
     # -------------------------------
     print("\nPreparing for SNIP pruning...")
     
-    if trainer_available:
+    try:
         # Use the trainer approach with SNIPCallback
         trainer = get_trainer(
             model=combined_model,
@@ -251,9 +249,9 @@ def main():
         print("Running warm-up training step to accumulate SNIP gradient data...")
         trainer.train()
         print("Warm-up training complete.")
-    else:
-        # Use direct monkey-patching without trainer
-        print("Training tools not available, using direct SNIP computation...")
+    except Exception as e:
+        print(f"Error using Trainer approach: {e}")
+        print("Falling back to direct SNIP computation...")
         
         # Monkey-patch the model modules directly
         original_forwards = {}
@@ -318,7 +316,7 @@ def main():
                 module.forward = original_forwards[name]
     
     # -------------------------------
-    # 5. Apply pruning pass using SNIP method
+    # 6. Apply pruning pass using SNIP method
     # -------------------------------
     print("\nApplying SNIP pruning...")
     for name, module in mg.model.named_modules():
@@ -347,7 +345,7 @@ def main():
     mg, _ = passes.prune_transform_pass(mg, pass_args=pruning_config)
     
     # -------------------------------
-    # 6. Print parameter count after pruning
+    # 7. Print parameter count after pruning
     # -------------------------------
     print("\n" + "="*80)
     print("PARAMETER COUNTS AFTER PRUNING")
@@ -402,12 +400,10 @@ def main():
     print("="*80)
     
     # -------------------------------
-    # 7. Optional fine-tuning and evaluation
+    # 8. Optional fine-tuning and evaluation
     # -------------------------------
-    if trainer_available:
+    if hasattr(trainer, "evaluate"):
         print("\nStarting fine-tuning of the pruned model...")
-        trainer.train()
-        
         eval_results = trainer.evaluate()
         print("\nEvaluation Results:")
         print(f"  WER: {eval_results.get('eval_wer', 'N/A')}")
