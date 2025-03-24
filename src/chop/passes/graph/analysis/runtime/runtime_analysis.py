@@ -545,36 +545,10 @@ class RuntimeAnalysis:
         gpu_power_usages = []
         rtfs = [] 
 
-        # Add these debug statements in your code where the batch is being processed
-        def inspect_batch(batch):
-            print(f"Batch type: {type(batch)}")
-            
-            if isinstance(batch, dict):
-                print("This is a dictionary batch with keys:", batch.keys())
-                # Print shapes of each element
-                for key, value in batch.items():
-                    if hasattr(value, 'shape'):
-                        print(f"  {key} shape: {value.shape}")
-                    else:
-                        print(f"  {key} type: {type(value)}")
-            
-            elif isinstance(batch, (list, tuple)):
-                print(f"This is a {'list' if isinstance(batch, list) else 'tuple'} batch with {len(batch)} elements")
-                # Print shapes of each element
-                for i, item in enumerate(batch):
-                    if hasattr(item, 'shape'):
-                        print(f"  batch[{i}] shape: {item.shape}")
-                    else:
-                        print(f"  batch[{i}] type: {type(item)}")
-            
-            else:
-                print("Unknown batch format:", type(batch))
+    
 
         # ---------- 4) MAIN EVALUATION LOOP ----------
         for j, batch in enumerate(dataloader):
-            
-            inspect_batch(batch)
-
             if isinstance(batch, dict):
                 # Dict format
                 xs = batch["input_values"]
