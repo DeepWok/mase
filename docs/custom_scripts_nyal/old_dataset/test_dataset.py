@@ -33,12 +33,17 @@ tokenizer = processor.tokenizer
 vocab = tokenizer.convert_ids_to_tokens(range(tokenizer.vocab_size))
 decoder = build_ctcdecoder(vocab)
 
-# Use the CondensedLibrispeechASRDataset class to preprocess and load the dataset
-from chop.dataset.nlp.speech_recognition import CondensedLibrispeechASRDataset
+# Use the CondensedLibrispeechASRDataset class from the new audio module
+from chop.dataset.audio.speech_recognition import CondensedLibrispeechASRDataset
 
 dataset_path = Path("./preprocessed_data")
-# NOTE: Choose a valid split. Here we use "train.clean.100" for pre-processing.
-condensed_dataset = CondensedLibrispeechASRDataset(dataset_path=dataset_path, split="train")
+# NOTE: The constructor needs both path and dataset_path
+# path is the base path for the dataset, dataset_path is used for the processed files
+condensed_dataset = CondensedLibrispeechASRDataset(
+    path=dataset_path,  # Provide the required path parameter
+    dataset_path=dataset_path,  # Keep the existing dataset_path parameter
+    split="train"
+)
 condensed_dataset.prepare_data()
 condensed_dataset.setup()
 

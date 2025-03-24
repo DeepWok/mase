@@ -17,6 +17,11 @@ from .nerf import (
     get_nerf_dataset,
     get_nerf_dataset_cls,
 )
+from .audio import (
+    AUDIO_DATASET_MAPPING,
+    get_audio_dataset,
+    get_audio_dataset_cls,
+)
 
 DATASET_CACHE_DIR = MACHOP_CACHE_DIR / "dataset"
 
@@ -41,6 +46,8 @@ def get_dataset_info(name: str):
         return get_physical_dataset_cls(name).info
     elif name in NERF_DATASET_MAPPING:
         return get_nerf_dataset_cls(name).info
+    elif name in AUDIO_DATASET_MAPPING:
+        return get_audio_dataset_cls(name).info
     else:
         raise ValueError(f"Dataset {name} is not supported")
 
@@ -87,6 +94,18 @@ def get_dataset(
     elif name in VISION_DATASET_MAPPING:
         path = DATASET_CACHE_DIR / name
         dataset = get_vision_dataset(name, path, split, model_name)
+    elif name in AUDIO_DATASET_MAPPING:
+        path = DATASET_CACHE_DIR / name
+        dataset = get_audio_dataset(
+            name, 
+            path, 
+            split,
+            tokenizer=tokenizer,
+            max_token_len=max_token_len,
+            num_workers=num_workers,
+            load_from_cache_file=load_from_cache_file,
+            auto_setup=auto_setup,
+        )
     elif name in NLP_DATASET_MAPPING:
         path = DATASET_CACHE_DIR / name
         dataset = get_nlp_dataset(
@@ -109,6 +128,7 @@ AVAILABLE_DATASETS = (
     + list(TOY_DATASET_MAPPING.keys())
     + list(PHYSICAL_DATASET_MAPPING.keys())
     + list(NERF_DATASET_MAPPING.keys())
+    + list(AUDIO_DATASET_MAPPING.keys())
 )
 
 
