@@ -1,16 +1,21 @@
 import torch
+import torch.nn as nn
 from typing import Optional
 import math
 from typing import Optional, Tuple, Union
 
+
 from chop.nn.attention.modules.mla import (
     ModelArgs, 
     MLA,
-    RMSNorm
+    RMSNorm,
 )
 from chop.nn.attention.modules.mgqa import (
     MGQALayers,
     MGQA
+)
+from chop.nn.attention.modules.residual_fc import (
+    ResidualFC,
 )
 from ...module_modify_helper import (
     get_module_by_name, 
@@ -27,9 +32,8 @@ from transformers.models.gpt2.modeling_gpt2 import (
     GPT2Block,
 )
 
+
 def instantiate_attention_module(module, postfix, module_map, additional_module_args):
-    # sdpa_attn = module.self
-    # self_output = module.output
     additional_module_args = additional_module_args["config"]
     init_func = init_func_map[postfix]
     
@@ -41,14 +45,15 @@ def instantiate_attention_module(module, postfix, module_map, additional_module_
     return attention_module
 
 def replace_attention_by_name(network, name, module, postfix):
-    
     original = get_module_by_name(network, name)
-
     transform_func = transform_func_map[postfix]
     wrapper_class = wrapper_map[postfix]
 
     new = transform_func(original, module)
-    wapper = wrapper_class(new)
+    if wrapper_class != None:
+        wapper = wrapper_class(new)
+    else:
+        wapper = new
 
     network = set_module_by_name(network, name, wapper)
     return network
@@ -116,6 +121,18 @@ def gpt2sdpa_to_mgqa_init(
     }
     mgqa_layers = MGQA(**mgqa_kwargs)
     return mgqa_layers
+
+def gpt2sdpa_to_fc_init(
+    attn_module: GPT2SdpaAttention, 
+    config: dict
+) -> ResidualFC:
+    
+    alpha = config.get("alpha", 0.6)
+    hidden_size = attn_module.embed_dim
+    fc_layer = nn.Linear(hidden_size, hidden_size)
+    residual_fc = ResidualFC(fc_layer, attn_module.c_proj, alpha)
+
+    return residual_fc
 
 def transform_gpt2sdpa_to_mla(
     bert_attn: BertAttention,
@@ -304,6 +321,19 @@ def transform_gpt2sdpa_to_mgqa(
 
     return mgqa
 
+def transform_gpt2sdpa_to_fc(
+    gpt2sdpa: GPT2SdpaAttention,
+    residual_fc: ResidualFC,
+)-> GPT2SdpaAttention:
+    
+    with torch.no_grad():
+        residual_fc.new_fc.weight.copy_(gpt2sdpa.c_proj.weight.t())
+        if gpt2sdpa.c_proj.bias is not None:
+            residual_fc.new_fc.bias.copy_(gpt2sdpa.c_proj.bias)
+    
+    gpt2sdpa.c_proj = residual_fc
+    return gpt2sdpa
+
 class MLAWrapper(torch.nn.Module):
 
     def __init__(self, mla):
@@ -407,13 +437,16 @@ class MGQAWrapper(torch.nn.Module):
 
 init_func_map = {
     "mla": gpt2sdpa_to_mla_init,
-    "mgqa": gpt2sdpa_to_mgqa_init
+    "mgqa": gpt2sdpa_to_mgqa_init,
+    "res_fc": gpt2sdpa_to_fc_init,
 }
 transform_func_map = {
     "mla": transform_gpt2sdpa_to_mla,
     "mgqa": transform_gpt2sdpa_to_mgqa,
+    "res_fc": transform_gpt2sdpa_to_fc
 }
 wrapper_map = {
     "mla": MLAWrapper,
     "mgqa": MGQAWrapper,
+    "res_fc": None, # do not require a wrapper
 }

@@ -27,9 +27,7 @@ def mla_by_type(network, pass_args):
         for n, m in network.named_modules():
             n_m[n] = m
 
-        if type_name == "bertspda":
-            module = BertAttention
-        elif type_name == "gpt2spda":
+        if type_name == "gpt2spda":
             module = GPT2SdpaAttention
         else:
             raise ValueError(f"{type_name} is not supported!")
@@ -113,3 +111,4 @@ def attention_transform_pass(network, pass_args):
         case _:
             raise ValueError(f'Unsupported quantize "by": {by}')
     return network, {}
+
