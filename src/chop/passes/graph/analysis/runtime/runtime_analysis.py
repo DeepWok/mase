@@ -545,13 +545,23 @@ class RuntimeAnalysis:
         gpu_power_usages = []
         rtfs = [] 
 
-        
-
         # ---------- 4) MAIN EVALUATION LOOP ----------
         for j, batch in enumerate(dataloader):
-            xs = batch["input_values"]
-            ys = batch["labels"]
-            attention_mask = batch["attention_mask"]
+            
+            if isinstance(batch, dict):
+                # Dict format
+                xs = batch["input_values"]
+                ys = batch["labels"]
+                attention_mask = batch.get("attention_mask", None)
+            elif isinstance(batch, list) or isinstance(batch, tuple):
+                # List/tuple format (most common alternative)
+                # Typically, the order would be [input_values, labels, attention_mask]
+                xs = batch[0]
+                ys = batch[1]
+                attention_mask = batch[2] if len(batch) > 2 else None
+            else:
+                self.logger.error(f"Unsupported batch format: {type(batch)}")
+                raise TypeError(f"Expected batch to be dict or list/tuple, got {type(batch)}")
 
             # Stop if we've exceeded our number of evaluation batches, or if the batch is incomplete
             if j >= self.config["num_batches"] or xs.shape[0] != self.config["batch_size"]:
