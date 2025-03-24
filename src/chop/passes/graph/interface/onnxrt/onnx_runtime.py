@@ -78,7 +78,8 @@ class ONNXRuntime:
         model = model.to(self.config["accelerator"])
 
         dataloader = self.config["data_module"].train_dataloader()
-        train_sample = next(iter(dataloader))[0]
+        batch = next(iter(dataloader))
+        train_sample = batch["input_values"]
         train_sample = train_sample.to(self.config["accelerator"])
 
         # Dynamically checks if attention_mask is needed first, then optional explicit override
