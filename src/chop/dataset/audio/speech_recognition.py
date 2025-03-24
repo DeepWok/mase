@@ -68,12 +68,13 @@ class CondensedLibrispeechASRDataset(Dataset):
             )
         return len(self.X)
 
+  
+
     def __getitem__(self, idx):
         if self.X is None or self.Y is None:
-            raise ValueError(
-                "Dataset is not setup. Please call `dataset.prepare_data()` + `dataset.setup()` or pass `auto_setup=True` before using the dataset."
-            )
-        return self.X[idx], self.Y[idx]
+            raise ValueError("Dataset is not setup. Please call prepare_data() and setup() first.")
+        return {"input_values": self.X[idx], "labels": self.Y[idx]}
+
 
     def prepare_data(self) -> None:
         # Map the standard split name to a Librispeech-specific split for dataset loading
