@@ -24,11 +24,9 @@ Lee, N., Ajanthan, T., & Torr, P. H. (2018). SNIP: Single-shot network pruning b
 
 In our implementation, SNIP pruning involves:
 
-1. **SNIPTrackingCallback**: A callback that uses monkey-patching to calculate SNIP saliency scores for network weights. It adds temporary mask parameters to weights, performs a forward-backward pass, and captures gradients.
+1. **SNIPCallback**: A class that implements the HuggingFace TrainerCallback interface, allowing SNIP sensitivity computation to be integrated with the training workflow.
 
-2. **SNIPCallback**: A class that implements the HuggingFace TrainerCallback interface, allowing SNIP sensitivity computation to be integrated with the training workflow.
-
-3. **Pruning Functions**: 
+2. **Pruning Functions**: 
    - `snip`: Performs local pruning within each layer based on sensitivity scores
    - `global_weight_snip`: Performs global pruning across all layers, with memory-efficient fallback for large models
 
