@@ -1,0 +1,155 @@
+WikiText FC Evaluation Results:
+Eval Loss (Cross Entropy): 4.8904
+Perplexity: 133.0024
+=====================================
+(mase) (jupyter) python test_fc_transform.py --train --epochs 2
+Filtering empty examples - train: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████| 36718/36718 [00:01<00:00, 24536.08 examples/s]
+Filtering empty examples - validation: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████| 3760/3760 [00:00<00:00, 7401.00 examples/s]
+Filtering empty examples - test: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████| 4358/4358 [00:00<00:00, 24274.06 examples/s]
+
+==================================================
+Model Size Comparison:
+==================================================
+Original Model Size: 474.70 MB
+Transformed Model Size: 476.95 MB
+Size Reduction: -2.25 MB (-0.47%)
+==================================================
+WARNING:accelerate.utils.other:Detected kernel version 4.18.0, which is below the recommended minimum of 5.5.0; this can cause the process to hang. It is recommended to upgrade the kernel to the minimum version or higher.
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 723/723 [00:13<00:00, 55.37it/s]
+
+==================================================
+Original GPT-2 Evaluation Results:
+==================================================
+Eval Loss (Cross Entropy): 4.2515
+Perplexity: 70.2082
+Evaluation Time: 14.32 seconds
+==================================================
+WARNING:accelerate.utils.other:Detected kernel version 4.18.0, which is below the recommended minimum of 5.5.0; this can cause the process to hang. It is recommended to upgrade the kernel to the minimum version or higher.
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 723/723 [00:13<00:00, 55.01it/s]
+
+==================================================
+FC-Transformed GPT-2 Evaluation Results:
+==================================================
+Eval Loss (Cross Entropy): 4.3087
+Perplexity: 74.3424
+Evaluation Time: 13.15 seconds
+==================================================
+/rds/general/user/zz3521/home/mase/test/passes/module/transforms/attention/transformers/src/transformers/training_args.py:1575: FutureWarning: `evaluation_strategy` is deprecated and will be removed in version 4.46 of 🤗 Transformers. Use `eval_strategy` instead
+  warnings.warn(
+WARNING:accelerate.utils.other:Detected kernel version 4.18.0, which is below the recommended minimum of 5.5.0; this can cause the process to hang. It is recommended to upgrade the kernel to the minimum version or higher.
+{'loss': 34.1614, 'grad_norm': 47.87474060058594, 'learning_rate': 1e-05, 'epoch': 0.07}                                                                                                  
+{'loss': 29.8804, 'grad_norm': 81.57888793945312, 'learning_rate': 2e-05, 'epoch': 0.13}                                                                                                  
+{'loss': 28.6205, 'grad_norm': 51.06632614135742, 'learning_rate': 3e-05, 'epoch': 0.2}                                                                                                   
+{'loss': 27.805, 'grad_norm': 68.53123474121094, 'learning_rate': 4e-05, 'epoch': 0.27}                                                                                                   
+{'loss': 27.765, 'grad_norm': 74.39144897460938, 'learning_rate': 5e-05, 'epoch': 0.34}                                                                                                   
+{'eval_loss': 3.4353299140930176, 'eval_runtime': 11.5926, 'eval_samples_per_second': 212.291, 'eval_steps_per_second': 53.137, 'epoch': 0.34}                                            
+{'loss': 27.1787, 'grad_norm': 39.15185546875, 'learning_rate': 4.979805630554499e-05, 'epoch': 0.4}                                                                                      
+{'loss': 27.2555, 'grad_norm': 63.7978401184082, 'learning_rate': 4.9195487722638364e-05, 'epoch': 0.47}                                                                                  
+{'loss': 27.0822, 'grad_norm': 34.73820495605469, 'learning_rate': 4.820202904534371e-05, 'epoch': 0.54}                                                                                  
+{'loss': 26.8089, 'grad_norm': 63.389556884765625, 'learning_rate': 4.6833730090907514e-05, 'epoch': 0.61}                                                                                
+{'loss': 26.5146, 'grad_norm': 37.76192855834961, 'learning_rate': 4.5112696407008006e-05, 'epoch': 0.67}                                                                                 
+{'eval_loss': 3.3754682540893555, 'eval_runtime': 11.6449, 'eval_samples_per_second': 211.337, 'eval_steps_per_second': 52.899, 'epoch': 0.67}                                            
+{'loss': 27.0697, 'grad_norm': 38.33976364135742, 'learning_rate': 4.3066732145677835e-05, 'epoch': 0.74}                                                                                 
+{'loss': 26.35, 'grad_norm': 43.84611129760742, 'learning_rate': 4.072889087344949e-05, 'epoch': 0.81}                                                                                    
+{'loss': 26.3843, 'grad_norm': 27.396381378173828, 'learning_rate': 3.813694157460801e-05, 'epoch': 0.88}                                                                                 
+{'loss': 26.017, 'grad_norm': 39.816200256347656, 'learning_rate': 3.5332758474533255e-05, 'epoch': 0.94}                                                                                 
+{'loss': 26.1033, 'grad_norm': 33.871429443359375, 'learning_rate': 3.236164454083781e-05, 'epoch': 1.01}                                                                                 
+{'eval_loss': 3.345980167388916, 'eval_runtime': 11.6501, 'eval_samples_per_second': 211.242, 'eval_steps_per_second': 52.875, 'epoch': 1.01}                                             
+{'loss': 24.8084, 'grad_norm': 38.64925765991211, 'learning_rate': 2.9271599591475057e-05, 'epoch': 1.08}                                                                                 
+{'loss': 24.9135, 'grad_norm': 49.34885025024414, 'learning_rate': 2.611254483389351e-05, 'epoch': 1.14}                                                                                  
+{'loss': 25.057, 'grad_norm': 27.928115844726562, 'learning_rate': 2.2935516363191693e-05, 'epoch': 1.21}                                                                                 
+{'loss': 24.8909, 'grad_norm': 40.053226470947266, 'learning_rate': 1.9791840648710596e-05, 'epoch': 1.28}                                                                                
+{'loss': 25.0011, 'grad_norm': 41.88653564453125, 'learning_rate': 1.6732305329486292e-05, 'epoch': 1.35}                                                                                 
+{'eval_loss': 3.3320188522338867, 'eval_runtime': 11.6457, 'eval_samples_per_second': 211.323, 'eval_steps_per_second': 52.895, 'epoch': 1.35}                                            
+{'loss': 25.0029, 'grad_norm': 35.13820266723633, 'learning_rate': 1.3806338714773143e-05, 'epoch': 1.41}                                                                                 
+{'loss': 24.8958, 'grad_norm': 53.322166442871094, 'learning_rate': 1.1061211245213338e-05, 'epoch': 1.48}                                                                                
+{'loss': 24.7679, 'grad_norm': 37.83186340332031, 'learning_rate': 8.5412718154431e-06, 'epoch': 1.55}                                                                                    
+{'loss': 25.103, 'grad_norm': 43.929683685302734, 'learning_rate': 6.28723129572247e-06, 'epoch': 1.62}                                                                                   
+{'loss': 24.9616, 'grad_norm': 28.634550094604492, 'learning_rate': 4.335504827651765e-06, 'epoch': 1.68}                                                                                 
+{'eval_loss': 3.327350378036499, 'eval_runtime': 11.6406, 'eval_samples_per_second': 211.415, 'eval_steps_per_second': 52.918, 'epoch': 1.68}                                             
+{'loss': 24.4164, 'grad_norm': 38.98434829711914, 'learning_rate': 2.717623519513199e-06, 'epoch': 1.75}                                                                                  
+{'loss': 24.7126, 'grad_norm': 31.71883201599121, 'learning_rate': 1.45972504559119e-06, 'epoch': 1.82}                                                                                   
+{'loss': 24.6436, 'grad_norm': 33.00764846801758, 'learning_rate': 5.821313790915883e-07, 'epoch': 1.88}                                                                                  
+{'loss': 24.8387, 'grad_norm': 25.130908966064453, 'learning_rate': 9.90204805938505e-08, 'epoch': 1.95}                                                                                  
+{'train_runtime': 865.957, 'train_samples_per_second': 54.892, 'train_steps_per_second': 3.43, 'train_loss': 26.27656989820076, 'epoch': 2.0}                                             
+100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2970/2970 [14:25<00:00,  3.43it/s]
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 616/616 [00:11<00:00, 53.07it/s]
+
+==================================================
+Original GPT-2 Training Results:
+==================================================
+Training Time: 866.11 seconds
+Final Eval Loss: 3.3259
+Final Perplexity: 27.8251
+==================================================
+/rds/general/user/zz3521/home/mase/test/passes/module/transforms/attention/transformers/src/transformers/training_args.py:1575: FutureWarning: `evaluation_strategy` is deprecated and will be removed in version 4.46 of 🤗 Transformers. Use `eval_strategy` instead
+  warnings.warn(
+WARNING:accelerate.utils.other:Detected kernel version 4.18.0, which is below the recommended minimum of 5.5.0; this can cause the process to hang. It is recommended to upgrade the kernel to the minimum version or higher.
+{'loss': 34.6675, 'grad_norm': 44.13752746582031, 'learning_rate': 1e-05, 'epoch': 0.07}                                                                                                  
+{'loss': 30.1898, 'grad_norm': 79.23636627197266, 'learning_rate': 2e-05, 'epoch': 0.13}                                                                                                  
+{'loss': 28.7312, 'grad_norm': 47.14794158935547, 'learning_rate': 3e-05, 'epoch': 0.2}                                                                                                   
+{'loss': 27.9138, 'grad_norm': 63.60219955444336, 'learning_rate': 4e-05, 'epoch': 0.27}                                                                                                  
+{'loss': 27.8302, 'grad_norm': 70.85648345947266, 'learning_rate': 5e-05, 'epoch': 0.34}                                                                                                  
+{'eval_loss': 3.4385392665863037, 'eval_runtime': 11.7064, 'eval_samples_per_second': 210.227, 'eval_steps_per_second': 52.621, 'epoch': 0.34}                                            
+{'loss': 27.2534, 'grad_norm': 37.270469665527344, 'learning_rate': 4.979805630554499e-05, 'epoch': 0.4}                                                                                  
+{'loss': 27.3049, 'grad_norm': 57.40347671508789, 'learning_rate': 4.9195487722638364e-05, 'epoch': 0.47}                                                                                 
+{'loss': 27.1025, 'grad_norm': 33.37627029418945, 'learning_rate': 4.820202904534371e-05, 'epoch': 0.54}                                                                                  
+{'loss': 26.8404, 'grad_norm': 63.14392852783203, 'learning_rate': 4.6833730090907514e-05, 'epoch': 0.61}                                                                                 
+{'loss': 26.5349, 'grad_norm': 35.41493225097656, 'learning_rate': 4.5112696407008006e-05, 'epoch': 0.67}                                                                                 
+{'eval_loss': 3.381530284881592, 'eval_runtime': 11.6991, 'eval_samples_per_second': 210.358, 'eval_steps_per_second': 52.654, 'epoch': 0.67}                                             
+{'loss': 27.103, 'grad_norm': 37.52200698852539, 'learning_rate': 4.3066732145677835e-05, 'epoch': 0.74}                                                                                  
+{'loss': 26.3742, 'grad_norm': 43.32789993286133, 'learning_rate': 4.072889087344949e-05, 'epoch': 0.81}                                                                                  
+{'loss': 26.4097, 'grad_norm': 27.287519454956055, 'learning_rate': 3.813694157460801e-05, 'epoch': 0.88}                                                                                 
+{'loss': 26.0268, 'grad_norm': 38.5484504699707, 'learning_rate': 3.5332758474533255e-05, 'epoch': 0.94}                                                                                  
+{'loss': 26.1751, 'grad_norm': 31.458120346069336, 'learning_rate': 3.236164454083781e-05, 'epoch': 1.01}                                                                                 
+{'eval_loss': 3.3528966903686523, 'eval_runtime': 11.6891, 'eval_samples_per_second': 210.538, 'eval_steps_per_second': 52.699, 'epoch': 1.01}                                            
+{'loss': 24.8447, 'grad_norm': 38.476654052734375, 'learning_rate': 2.9271599591475057e-05, 'epoch': 1.08}                                                                                
+{'loss': 24.9438, 'grad_norm': 47.85141372680664, 'learning_rate': 2.611254483389351e-05, 'epoch': 1.14}                                                                                  
+{'loss': 25.0851, 'grad_norm': 27.42833709716797, 'learning_rate': 2.2935516363191693e-05, 'epoch': 1.21}                                                                                 
+{'loss': 24.905, 'grad_norm': 40.50739669799805, 'learning_rate': 1.9791840648710596e-05, 'epoch': 1.28}                                                                                  
+{'loss': 25.0198, 'grad_norm': 41.16585922241211, 'learning_rate': 1.6732305329486292e-05, 'epoch': 1.35}                                                                                 
+{'eval_loss': 3.3372859954833984, 'eval_runtime': 11.6888, 'eval_samples_per_second': 210.543, 'eval_steps_per_second': 52.7, 'epoch': 1.35}                                              
+{'loss': 25.0321, 'grad_norm': 34.78833770751953, 'learning_rate': 1.3806338714773143e-05, 'epoch': 1.41}                                                                                 
+{'loss': 24.9238, 'grad_norm': 51.36418533325195, 'learning_rate': 1.1061211245213338e-05, 'epoch': 1.48}                                                                                 
+{'loss': 24.7821, 'grad_norm': 35.918113708496094, 'learning_rate': 8.5412718154431e-06, 'epoch': 1.55}                                                                                   
+{'loss': 25.1282, 'grad_norm': 42.94792938232422, 'learning_rate': 6.28723129572247e-06, 'epoch': 1.62}                                                                                   
+{'loss': 24.9933, 'grad_norm': 28.764244079589844, 'learning_rate': 4.335504827651765e-06, 'epoch': 1.68}                                                                                 
+{'eval_loss': 3.3326876163482666, 'eval_runtime': 11.7121, 'eval_samples_per_second': 210.125, 'eval_steps_per_second': 52.595, 'epoch': 1.68}                                            
+{'loss': 24.4475, 'grad_norm': 35.08485412597656, 'learning_rate': 2.717623519513199e-06, 'epoch': 1.75}                                                                                  
+{'loss': 24.7425, 'grad_norm': 31.494840621948242, 'learning_rate': 1.45972504559119e-06, 'epoch': 1.82}                                                                                  
+{'loss': 24.6874, 'grad_norm': 32.96541976928711, 'learning_rate': 5.821313790915883e-07, 'epoch': 1.88}                                                                                  
+{'loss': 24.8719, 'grad_norm': 25.27057647705078, 'learning_rate': 9.90204805938505e-08, 'epoch': 1.95}                                                                                   
+{'train_runtime': 865.0366, 'train_samples_per_second': 54.95, 'train_steps_per_second': 3.433, 'train_loss': 26.339247249513363, 'epoch': 2.0}                                           
+100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2970/2970 [14:25<00:00,  3.43it/s]
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 616/616 [00:11<00:00, 52.79it/s]
+
+==================================================
+FC-Transformed GPT-2 Training Results:
+==================================================
+Training Time: 865.20 seconds
+Final Eval Loss: 3.3316
+Final Perplexity: 27.9832
+==================================================
+
+==================================================
+Model Comparison Summary:
+==================================================
+Original Model Perplexity: 70.2082
+FC-Transformed Model Perplexity: 74.3424
+Perplexity Impact: 5.89%
+
+Original Model Eval Time: 14.32 seconds
+FC-Transformed Model Eval Time: 13.15 seconds
+Speed Improvement: 8.17%
+
+Size Reduction: -0.47%
+==================================================
+
+Training Results:
+Original Model Training Time: 866.11 seconds
+FC-Transformed Model Training Time: 865.20 seconds
+Training Speed Improvement: 0.11%
+
+Original Model Final Perplexity: 27.8251
+FC-Transformed Model Final Perplexity: 27.9832
+==================================================
