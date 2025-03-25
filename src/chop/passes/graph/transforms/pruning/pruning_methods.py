@@ -83,7 +83,7 @@ def global_weight_l1(tensor: torch.Tensor, info: dict, sparsity: float, node_nam
     if global_max == 0.0:
         threshold = 0.0
     else:
-        bin_edges = torch.linspace(0, global_max, steps=bins+1)  # on CPU now
+        bin_edges = torch.linspace(0, global_max, steps=bins+1)
         global_hist = torch.zeros(bins)
         for _, v in info.items():
             if v is not None:

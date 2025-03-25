@@ -53,6 +53,7 @@ class CondensedLibrispeechASRDataset(Dataset):
         self.config = config
         self.X = None
         self.Y = None
+        self.raw = None 
         
         # Store the additional parameters that the framework passes
         self.tokenizer = tokenizer
@@ -81,8 +82,7 @@ class CondensedLibrispeechASRDataset(Dataset):
     def __getitem__(self, idx):
         if self.X is None or self.Y is None:
             raise ValueError("Dataset is not setup. Call prepare_data() and setup() first.")
-        return {"input_values": self.X[idx], "labels": self.Y[idx]}
-
+        return {"input_values": self.X[idx], "labels": self.Y[idx], "raw_labels": self.raw[idx]}
 
 
     def prepare_data(self) -> None:
@@ -103,11 +103,11 @@ class CondensedLibrispeechASRDataset(Dataset):
     def setup(self) -> None:
         # Map the standard split name to the corresponding file paths
         if self.split == "train":
-            x_path, y_path = "X_train.pt", "Y_train.pt"
+            x_path, y_path, raw_path = "X_train.pt", "Y_train.pt", "raw_train.pt"
         elif self.split == "validation":
-            x_path, y_path = "X_val.pt", "Y_val.pt"
-        elif self.split == "test" or self.split == "pred":
-            x_path, y_path = "X_test.pt", "Y_test.pt"
+            x_path, y_path, raw_path = "X_val.pt", "Y_val.pt", "raw_val.pt"
+        elif self.split in ("test", "pred"):
+            x_path, y_path, raw_path = "X_test.pt", "Y_test.pt", "raw_test.pt"
         else:
             raise ValueError(f"Split {self.split} is not supported.")
             
@@ -115,11 +115,12 @@ class CondensedLibrispeechASRDataset(Dataset):
 
         self.X = torch.load(self.dataset_path / x_path)
         self.Y = torch.load(self.dataset_path / y_path)
+        self.raw = torch.load(self.dataset_path / raw_path)
 
 
 def _preprocess_librispeech_dataset(save_path: Path, config: dict = LIBRISPEECH_CONFIG, split="validation.clean"):
     dataset = load_dataset("nyalpatel/condensed_librispeech_asr", split=split)
-    input_values, labels = [], []
+    input_values, labels, raw_labels = [], [], []
 
     for example in dataset:
         waveform = example["audio"]["array"]
@@ -145,14 +146,15 @@ def _preprocess_librispeech_dataset(save_path: Path, config: dict = LIBRISPEECH_
 
         input_values.append(waveform)
         labels.append(label)
+        raw_labels.append(text)
 
-    X_train, X_temp, Y_train, Y_temp = train_test_split(
-        input_values, labels, 
+    X_train, X_temp, Y_train, Y_temp, raw_train, raw_temp = train_test_split(
+        input_values, labels, raw_labels,
         test_size=config["test_size"] + config["validation_size"], 
         random_state=42
     )
-    X_val, X_test, Y_val, Y_test = train_test_split(
-        X_temp, Y_temp, 
+    X_val, X_test, Y_val, Y_test, raw_val, raw_test = train_test_split(
+        X_temp, Y_temp, raw_temp,
         test_size=config["test_size"] / (config["test_size"] + config["validation_size"]), 
         random_state=42
     )
@@ -160,9 +162,12 @@ def _preprocess_librispeech_dataset(save_path: Path, config: dict = LIBRISPEECH_
     save_path.mkdir(parents=True, exist_ok=True)
     torch.save(X_train, save_path / "X_train.pt")
     torch.save(Y_train, save_path / "Y_train.pt")
+    torch.save(raw_train, save_path / "raw_train.pt")
     torch.save(X_val, save_path / "X_val.pt")
     torch.save(Y_val, save_path / "Y_val.pt")
+    torch.save(raw_val, save_path / "raw_val.pt")
     torch.save(X_test, save_path / "X_test.pt")
     torch.save(Y_test, save_path / "Y_test.pt")
+    torch.save(raw_test, save_path / "raw_test.pt")
 
     logger.info("✅ Condensed Librispeech dataset preprocessed and saved!")

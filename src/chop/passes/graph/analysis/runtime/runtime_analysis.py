@@ -650,6 +650,13 @@ class RuntimeAnalysis:
                 xs = batch["input_values"]
                 ys = batch["labels"]
                 attention_mask = batch.get("attention_mask", None)
+                raw_labels = batch.get("raw_labels", None)
+                if raw_labels is not None:
+                    if hasattr(raw_labels, "shape"):
+                        print(f"[DEBUG] Extracted raw_labels with shape: {raw_labels.shape}")
+                    else:
+                        print(f"[DEBUG] Extracted raw_labels, length: {len(raw_labels)}")
+
                 print(f"[DEBUG] Extracted input_values with shape: {xs.shape}")
                 print(f"[DEBUG] Extracted labels with shape: {ys.shape}")
                 if attention_mask is not None:
@@ -658,19 +665,29 @@ class RuntimeAnalysis:
                 print(f"[DEBUG] Batch is a {type(batch).__name__} with length: {len(batch)}")
                 xs = batch[0]
                 ys = batch[1]
-                attention_mask = batch[2] if len(batch) > 2 else None
+                attention_mask = None
+                raw_labels = None
+
+                if len(batch) > 2:
+                    attention_mask = batch[2]
+                if len(batch) > 3:
+                    raw_labels = batch[3]
+
                 print(f"[DEBUG] Extracted inputs with shape: {xs.shape}")
                 print(f"[DEBUG] Extracted labels with shape: {ys.shape}")
                 if attention_mask is not None:
                     print(f"[DEBUG] Extracted attention_mask with shape: {attention_mask.shape}")
+                if raw_labels is not None:
+                    if hasattr(raw_labels, "shape"):
+                        print(f"[DEBUG] Extracted raw_labels with shape: {raw_labels.shape}")
+                    else:
+                        print(f"[DEBUG] Extracted raw_labels, length: {len(raw_labels)}")
             else:
                 error_msg = f"Unsupported batch format: {type(batch)}"
                 self.logger.error(error_msg)
                 print(f"[DEBUG] {error_msg}")
                 raise TypeError(f"Expected batch to be dict or list/tuple, got {type(batch)}")
-            
-            # Continue with your processing...
-            
+                        
             # Stop if we've exceeded our number of evaluation batches, or if the batch is incomplete
             if j >= self.config["num_batches"] or xs.shape[0] != self.config["batch_size"]:
                 print(f"[DEBUG] Batch {j+1} - xs shape: {xs.shape}, Expected batch size: {self.config['batch_size']}")
@@ -893,18 +910,43 @@ class RuntimeAnalysis:
                             raise Exception(error_msg)
                         pred_texts.append(transcription.lower())
 
-                    print("[DEBUG] Decoding ground truth labels")
-                    for label_seq in ys:
-                        print(f"[DEBUG] Label sequence shape: {label_seq.shape}, min: {label_seq.min()}, max: {label_seq.max()}")
-                        label_filtered = [token for token in label_seq if token != padding_value]
-                        print(f"[DEBUG] Filtered {len(label_seq) - len(label_filtered)} padding tokens")
-                        try:
-                            label_text = tokenizer.decode(label_filtered, skip_special_tokens=True)
-                            print(f"[DEBUG] Decoded label: '{label_text}'")
-                        except Exception as e:
-                            print(f"[DEBUG] Error decoding label: {e}")
-                            label_text = ""
-                        label_texts.append(label_text.lower())
+                    # print("[DEBUG] Decoding ground truth labels")
+                    # for label_seq in ys:
+                    #     print(f"[DEBUG] Label sequence shape: {label_seq.shape}, min: {label_seq.min()}, max: {label_seq.max()}")
+                    #     label_filtered = [token for token in label_seq if token != padding_value]
+                    #     print(f"[DEBUG] Filtered {len(label_seq) - len(label_filtered)} padding tokens")
+                    #     try:
+                    #         label_text = tokenizer.decode(label_filtered, skip_special_tokens=True)
+                    #         print(f"[DEBUG] Decoded label: '{label_text}'")
+                    #     except Exception as e:
+                    #         print(f"[DEBUG] Error decoding label: {e}")
+                    #         label_text = ""
+                    #     label_texts.append(label_text.lower())
+
+                    # ---- Use raw_labels if present, else fallback to label IDs ----
+                    raw_labels_in_batch = batch.get("raw_labels", None)
+                    if raw_labels_in_batch is not None:
+                        # raw_labels is a list of strings
+                        print("[DEBUG] Using raw_labels from the batch for references")
+                        for i, raw_label_text in enumerate(raw_labels_in_batch):
+                            # Make sure it's string, handle any edge cases
+                            ref_text = raw_label_text.lower() if isinstance(raw_label_text, str) else ""
+                            label_texts.append(ref_text)
+                            print(f"[DEBUG] Reference (raw) for sample {i+1}: '{ref_text}'")
+                    else:
+                        # Fallback: decode label IDs as before
+                        print("[DEBUG] raw_labels not found in batch, falling back to label IDs decoding.")
+                        for label_seq in ys:
+                            print(f"[DEBUG] Label sequence shape: {label_seq.shape}, min: {label_seq.min()}, max: {label_seq.max()}")
+                            label_filtered = [token for token in label_seq if token != padding_value]
+                            print(f"[DEBUG] Filtered {len(label_seq) - len(label_filtered)} padding tokens")
+                            try:
+                                label_text = tokenizer.decode(label_filtered, skip_special_tokens=True)
+                                print(f"[DEBUG] Decoded label (fallback): '{label_text}'")
+                            except Exception as e:
+                                print(f"[DEBUG] Error decoding label: {e}")
+                                label_text = ""
+                            label_texts.append(label_text.lower())
 
                     # Now compute batch WER
                     print(f"[DEBUG] Computing WER for batch {j+1}")
