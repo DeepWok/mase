@@ -26,6 +26,62 @@ class Wav2VecModelWrapper(nn.Module):
     def __init__(self, config, **kwargs):
         super().__init__()
         self.model = Wav2Vec2Model(config)
+        # Expose weights to top level to make them accessible for CHOP
+        self._expose_weights()
+        
+    def _expose_weights(self):
+        """Expose nested model weights to make them visible to CHOP's metadata extraction."""
+        # Process layers in feature encoder (convolutional layers)
+        if hasattr(self.model, 'feature_extractor'):
+            for name, module in self.model.feature_extractor.named_modules():
+                if hasattr(module, 'weight') and isinstance(module.weight, torch.Tensor):
+                    # Create flattened name by replacing dots with underscores
+                    flat_name = f"weight_feature_extractor_{name.replace('.', '_')}"
+                    setattr(self, flat_name, module.weight)
+                    
+                    if hasattr(module, 'bias') and module.bias is not None:
+                        flat_bias_name = f"bias_feature_extractor_{name.replace('.', '_')}"
+                        setattr(self, flat_bias_name, module.bias)
+        
+        # Process transformer layers
+        if hasattr(self.model, 'encoder'):
+            # Extract weights from transformer layers
+            for layer_idx, layer in enumerate(self.model.encoder.layers):
+                # Handle attention weights
+                if hasattr(layer, 'attention'):
+                    attn = layer.attention
+                    if hasattr(attn, 'q_proj') and hasattr(attn.q_proj, 'weight'):
+                        setattr(self, f"weight_layer_{layer_idx}_q_proj", attn.q_proj.weight)
+                        if hasattr(attn.q_proj, 'bias') and attn.q_proj.bias is not None:
+                            setattr(self, f"bias_layer_{layer_idx}_q_proj", attn.q_proj.bias)
+                    
+                    if hasattr(attn, 'k_proj') and hasattr(attn.k_proj, 'weight'):
+                        setattr(self, f"weight_layer_{layer_idx}_k_proj", attn.k_proj.weight)
+                        if hasattr(attn.k_proj, 'bias') and attn.k_proj.bias is not None:
+                            setattr(self, f"bias_layer_{layer_idx}_k_proj", attn.k_proj.bias)
+                    
+                    if hasattr(attn, 'v_proj') and hasattr(attn.v_proj, 'weight'):
+                        setattr(self, f"weight_layer_{layer_idx}_v_proj", attn.v_proj.weight)
+                        if hasattr(attn.v_proj, 'bias') and attn.v_proj.bias is not None:
+                            setattr(self, f"bias_layer_{layer_idx}_v_proj", attn.v_proj.bias)
+                    
+                    if hasattr(attn, 'out_proj') and hasattr(attn.out_proj, 'weight'):
+                        setattr(self, f"weight_layer_{layer_idx}_out_proj", attn.out_proj.weight)
+                        if hasattr(attn.out_proj, 'bias') and attn.out_proj.bias is not None:
+                            setattr(self, f"bias_layer_{layer_idx}_out_proj", attn.out_proj.bias)
+                
+                # Handle feed-forward weights
+                if hasattr(layer, 'feed_forward'):
+                    ff = layer.feed_forward
+                    if hasattr(ff, 'intermediate_dense') and hasattr(ff.intermediate_dense, 'weight'):
+                        setattr(self, f"weight_layer_{layer_idx}_ff_intermediate", ff.intermediate_dense.weight)
+                        if hasattr(ff.intermediate_dense, 'bias') and ff.intermediate_dense.bias is not None:
+                            setattr(self, f"bias_layer_{layer_idx}_ff_intermediate", ff.intermediate_dense.bias)
+                    
+                    if hasattr(ff, 'output_dense') and hasattr(ff.output_dense, 'weight'):
+                        setattr(self, f"weight_layer_{layer_idx}_ff_output", ff.output_dense.weight)
+                        if hasattr(ff.output_dense, 'bias') and ff.output_dense.bias is not None:
+                            setattr(self, f"bias_layer_{layer_idx}_ff_output", ff.output_dense.bias)
         
     def forward(
             self, 
@@ -34,9 +90,7 @@ class Wav2VecModelWrapper(nn.Module):
             labels: Optional[torch.Tensor] = None,
             **kwargs
         ):
-        
         return self.model(input_values, **kwargs)
-
 def _get_wav2vec_model(model_size: str, pretrained: bool = False, **kwargs):
     """Helper function to get Wav2Vec models"""
     if pretrained:
