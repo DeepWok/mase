@@ -9,20 +9,14 @@ from ultralytics.nn.autobackend import check_class_names
 from ultralytics.utils import (
     DATASETS_DIR,
     LOGGER,
-    NUM_THREADS,
-    ROOT,
     SETTINGS_FILE,
-    TQDM,
     clean_url,
     colorstr,
     emojis,
-    is_dir_writeable,
     yaml_load,
-    yaml_save,
 )
 from ultralytics.utils.checks import check_file, check_font, is_ascii
-from ultralytics.utils.downloads import download, safe_download, unzip_file
-from ultralytics.utils.ops import segments2boxes
+from ultralytics.utils.downloads import safe_download
 
 
 def check_det_dataset(yaml_path, dataset_path, autodownload=True):
