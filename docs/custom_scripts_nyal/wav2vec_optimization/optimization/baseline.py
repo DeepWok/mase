@@ -48,11 +48,9 @@ def run_baseline_metrics(mg, data_module, checkpoint, dataset_name, decoder, tok
             "dummy_in": dummy_in,
             "add_value": True,
             "force_device_meta": False,
+            "add_weight": True
         }
     )
-
-
-    
 
     _, baseline_results = runtime_analysis_pass(mg, pass_args=runtime_analysis_config)
 
