@@ -41,7 +41,7 @@ def import_model_and_dataset():
     
     # Setup data module
     dataset_path = Path("./preprocessed_data")
-    condensed_dataset = CondensedLibrispeechASRDataset(dataset_path=dataset_path, split="train")
+    condensed_dataset = CondensedLibrispeechASRDataset(path=dataset_path, split="train")
     condensed_dataset.prepare_data()
     condensed_dataset.setup()
     
