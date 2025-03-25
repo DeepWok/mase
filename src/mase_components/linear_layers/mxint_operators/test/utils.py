@@ -175,12 +175,10 @@ class MXIntLinear(_LinearBase):
         else:
             x, mx, ex = self.x_quantizer(x)
             w, mw, ew = self.w_quantizer(self.weight)
-            print((mx @ mw.transpose(0, 1)).int())
             if self.bias is not None:
                 bias, mb, eb = self.b_quantizer(self.bias)
             else:
                 bias = None
-            breakpoint()
             out = F.linear(x, w, bias)
             # print(f"mout = {F.linear(mx, mw, mb*2**(ex+ew - eb).floor())}")
             if self.out_quantizer is None:
