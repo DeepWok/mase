@@ -99,7 +99,7 @@ def tensorrt_calibrate_transform_pass(graph, pass_args=None):
     It's important to choose the right calibrator based on the model and dataset characteristics to ensure optimal performance and accuracy of the quantized model.
     """
 
-    calibrator = Calibrator(pass_args)
+    calibrator = Calibrator(config=pass_args)
     graph = calibrator.calibrate_model(graph)
     graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
     return graph, {}
@@ -180,8 +180,15 @@ class Calibrator:
                 self.config.get("num_calibration_batches", 200),
             )
 
-            for i, (xTrain, _) in enumerate(calibrator_dataloader):
-                graph.model(Variable(xTrain).cuda())
+            if self.config.get("dataset_input_field", None) is not None:
+                print("USING DATASET INPUT FIELD")
+                for i, sample in enumerate(calibrator_dataloader):
+                    graph.model(
+                        Variable(sample[self.config["dataset_input_field"]]).cuda()
+                    )
+            else:
+                for i, (xTrain, _) in enumerate(calibrator_dataloader):
+                    graph.model(Variable(xTrain).cuda())
 
             # Turn off calibration tool
             for _, module in graph.model.named_modules():

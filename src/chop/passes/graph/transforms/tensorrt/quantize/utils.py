@@ -457,6 +457,7 @@ def get_calibrator_dataloader(original_dataloader, num_batches=200):
         subset_dataset,
         batch_size=batch_size,
         shuffle=False,  # Typically calibration data isn't shuffled, adjust as needed.
+        collate_fn=original_dataloader.collate_fn,
         num_workers=original_dataloader.num_workers,
         pin_memory=original_dataloader.pin_memory,
     )
