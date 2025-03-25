@@ -63,7 +63,11 @@ class DataCollatorCTCWithPadding:
         batch["labels"] = labels
 
         # Create an attention mask based on the input padding value
-        pad_value = self.processor.feature_extractor.padding_value if hasattr(self.processor, "feature_extractor") else 0
+        # pad_value = self.processor.feature_extractor.padding_value if hasattr(self.processor, "feature_extractor") else 0
+        pad_value = getattr(self.processor.feature_extractor, "padding_value", 0)
         batch["attention_mask"] = (batch["input_values"] != pad_value).long()
+
+        if isinstance(features[0], dict) and "raw_labels" in features[0]:
+            batch["raw_labels"] = [f["raw_labels"] for f in features]
 
         return batch
