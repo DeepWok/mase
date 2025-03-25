@@ -288,7 +288,6 @@ module mxint_linear #(
   assign acc_data_out_ready    = cast_data_out_0_ready;
   assign cast_data_out_0_valid = acc_data_out_valid;
   assign cast_edata_out_0      = acc_edata_out;
-  assign bias_ready            = 1;
 
   mxint_cast #(
       .IN_MAN_WIDTH(LOSSLESS_OUT_WIDTH),

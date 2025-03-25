@@ -20,17 +20,17 @@ module mxint_accumulator #(
     input logic rst,
 
     // Input Data
-    input  logic signed [DATA_IN_0_PRECISION_0-1:0] mdata_in_0     [BLOCK_SIZE - 1:0],
-    input  logic        [DATA_IN_0_PRECISION_1-1:0] edata_in_0,
-    input  logic                                    data_in_0_valid,
-    output logic                                    data_in_0_ready,
+    input  logic [DATA_IN_0_PRECISION_0-1:0] mdata_in_0     [BLOCK_SIZE - 1:0],
+    input  logic [DATA_IN_0_PRECISION_1-1:0] edata_in_0,
+    input  logic                             data_in_0_valid,
+    output logic                             data_in_0_ready,
 
     // Output Data
-    output logic signed [DATA_OUT_0_PRECISION_0-1:0] mdata_out_0     [BLOCK_SIZE - 1:0],
-    output logic        [DATA_OUT_0_PRECISION_1-1:0] edata_out_0,
-    output logic                                     data_out_0_valid,
-    input  logic                                     data_out_0_ready,
-    output logic        [           COUNTER_WIDTH:0] accum_count
+    output logic [DATA_OUT_0_PRECISION_0-1:0] mdata_out_0     [BLOCK_SIZE - 1:0],
+    output logic [DATA_OUT_0_PRECISION_1-1:0] edata_out_0,
+    output logic                              data_out_0_valid,
+    input  logic                              data_out_0_ready,
+    output logic [           COUNTER_WIDTH:0] accum_count
 );
 
   localparam RIGHT_PADDING = 2 ** DATA_IN_0_PRECISION_1;
@@ -98,7 +98,7 @@ module mxint_accumulator #(
         shifted_mdata_out_0[i] = mdata_out_0[i];
       end else begin
         shifted_mdata_in_0[i]  = padded_mdata_in_0[i];
-        shifted_mdata_out_0[i] = mdata_out_0[i] >>> -shift;
+        shifted_mdata_out_0[i] = $signed(mdata_out_0[i]) >>> -shift;
       end
 
     end

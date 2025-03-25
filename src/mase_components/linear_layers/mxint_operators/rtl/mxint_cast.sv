@@ -17,16 +17,16 @@ module mxint_cast #(
     input logic rst,
 
     // Input Data
-    input  logic signed [IN_MAN_WIDTH-1:0] mdata_in     [BLOCK_SIZE-1:0],
-    input  logic        [IN_EXP_WIDTH-1:0] edata_in,
-    input  logic                           data_in_valid,
-    output logic                           data_in_ready,
+    input  logic [IN_MAN_WIDTH-1:0] mdata_in     [BLOCK_SIZE-1:0],
+    input  logic [IN_EXP_WIDTH-1:0] edata_in,
+    input  logic                    data_in_valid,
+    output logic                    data_in_ready,
 
     // Output Data
-    output logic signed [OUT_MAN_WIDTH-1:0] mdata_out     [BLOCK_SIZE-1:0],
-    output logic        [OUT_EXP_WIDTH-1:0] edata_out,
-    output logic                            data_out_valid,
-    input  logic                            data_out_ready
+    output logic [OUT_MAN_WIDTH-1:0] mdata_out     [BLOCK_SIZE-1:0],
+    output logic [OUT_EXP_WIDTH-1:0] edata_out,
+    output logic                     data_out_valid,
+    input  logic                     data_out_ready
 );
 
   // =============================
@@ -50,6 +50,7 @@ module mxint_cast #(
 
   logic data_for_max_valid, data_for_max_ready, data_for_out_valid, data_for_out_ready;
   logic signed [IN_MAN_WIDTH-1:0] mbuffer_data_for_out[BLOCK_SIZE-1:0];
+  logic [IN_MAN_WIDTH-1:0] fifo_out[BLOCK_SIZE-1:0];
   logic [IN_EXP_WIDTH-1:0] ebuffer_data_for_out;
   logic buffer_data_for_out_valid, buffer_data_for_out_ready;
 
@@ -103,7 +104,9 @@ module mxint_cast #(
   if (FIFO_DEPTH == 0) begin
 
     always_comb begin
-      mbuffer_data_for_out = mdata_in;
+      for (int i = 0; i < BLOCK_SIZE; i++) begin
+        mbuffer_data_for_out[i] = $signed(mdata_in[i]);
+      end
       ebuffer_data_for_out = edata_in;
       buffer_data_for_out_valid = data_for_out_valid;
       data_for_out_ready = buffer_data_for_out_ready;
@@ -123,11 +126,17 @@ module mxint_cast #(
         .edata_in(edata_in),
         .data_in_valid(data_for_out_valid),
         .data_in_ready(data_for_out_ready),
-        .mdata_out(mbuffer_data_for_out),
+        .mdata_out(fifo_out),
         .edata_out(ebuffer_data_for_out),
         .data_out_valid(buffer_data_for_out_valid),
         .data_out_ready(buffer_data_for_out_ready)
     );
+
+    always_comb begin
+      for (int i = 0; i < BLOCK_SIZE; i++) begin
+        mbuffer_data_for_out[i] = $signed(fifo_out[i]);
+      end
+    end
 
   end
 
