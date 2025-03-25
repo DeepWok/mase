@@ -24,7 +24,7 @@ from chop.passes.graph import (
     prune_transform_pass,
     calculate_avg_bits_mg_analysis_pass,
 )
-from chop.dataset.nlp.speech_recognition import CondensedLibrispeechASRDataset
+from chop.dataset.audio.speech_recognition import CondensedLibrispeechASRDataset
 from chop.dataset import MaseDataModule
 from chop.nn.quantized.modules.linear import (
     LinearInteger,

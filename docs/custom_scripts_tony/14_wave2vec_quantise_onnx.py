@@ -18,7 +18,7 @@ from chop.passes.graph.transforms.pruning import MovementTrackingCallback
 from chop.tools import get_trainer # type: ignore
 from datasets import concatenate_datasets, DatasetDict, load_dataset, Dataset
 from chop.models import DataCollatorCTCWithPadding, CombinedWav2Vec2CTC
-from chop.dataset.nlp.speech_recognition import CondensedLibrispeechASRDataset
+from chop.dataset.audio.speech_recognition import CondensedLibrispeechASRDataset
 from chop.dataset import MaseDataModule
 from chop.passes.graph import (
     summarize_quantization_analysis_pass,
@@ -108,7 +108,7 @@ smoothquant_config = {
     "model": checkpoint,
     "task": "ctc",
     "dataset": dataset_name,
-    "accelerator": "cuda",  
+    "accelerator": "cuda",
     "data_module": data_module,
     "batch_size": batch_size,
 }
@@ -148,10 +148,12 @@ runtime_analysis_config = {
     "task": "ctc",
     "decoder": decoder,
     "beam_width": 10,
+    "ctc_head": ctc_head,
     "tokenizer": tokenizer,
     "batch_size": batch_size,
     "sample_rate": 16000,
 }
+
 
 mg_onnx, onnx_meta = onnx_runtime_interface_pass(mg, pass_args=smoothquant_config)
 

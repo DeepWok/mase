@@ -15,7 +15,7 @@ from chop.tools import get_trainer # type: ignore
 from datasets import concatenate_datasets, DatasetDict, load_dataset, Dataset
 from chop.models import DataCollatorCTCWithPadding, CombinedWav2Vec2CTC
 from pyctcdecode import build_ctcdecoder
-from chop.dataset.nlp.speech_recognition import CondensedLibrispeechASRDataset
+from chop.dataset.audio.speech_recognition import CondensedLibrispeechASRDataset
 from chop.dataset import MaseDataModule
 from chop.passes.graph import (
     summarize_quantization_analysis_pass,
