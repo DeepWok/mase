@@ -144,13 +144,29 @@ class CocoMase(YOLODataset):
         coco = check_det_dataset(
             yaml_path=coco_yaml_path, dataset_path=root, autodownload=download
         )
-        super().__init__(data=coco, img_path=img_path, imgsz=640, task=task_name)
+        super().__init__(
+            data=coco, img_path=img_path, imgsz=640, task=task_name, augment=False
+        )
 
     def prepare_data(self) -> None:
         pass
 
     def setup(self) -> None:
         pass
+
+    def __getitem__(self, index: int):
+        """
+        Args:
+            index (int): Index
+
+        Returns:
+            tuple: (image, target) where target is index of the target class.
+        """
+        item_dict = super().__getitem__(index)
+        img = item_dict["img"]
+        item_dict["img"] = img.float() / 255
+
+        return item_dict
 
 
 class CocoDetectionMase(CocoMase):
@@ -175,7 +191,7 @@ class CocoDetectionMase(CocoMase):
     #     cls = item_dict["cls"]
     #     bboxes = item_dict["bboxes"]
 
-    #     return img, (cls, bboxes)
+    #     return img, cls, bboxes
 
 
 class CocoSegmentationMase(CocoMase):
