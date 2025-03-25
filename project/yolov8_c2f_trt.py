@@ -111,7 +111,7 @@ model_info = MaseModelInfo(
 input_generator = InputGenerator(
     data_module=data_module,
     model_info=model_info,
-    task="cls",
+    task="detection",
     which_dataloader="train",
 )
 

@@ -8,7 +8,12 @@ from .mnist import get_mnist_dataset, MNISTMase
 from .cifar import get_cifar_dataset, Cifar10Mase, Cifar100Mase
 from .imagenet import get_imagenet_dataset, ImageNetMase
 from .transforms import get_vision_dataset_transform
-from .coco import get_coco_detection_dataset, CocoMase
+from .coco import (
+    get_coco_detection_dataset,
+    get_coco_segmentation_dataset,
+    CocoDetectionMase,
+    CocoSegmentationMase,
+)
 
 
 def get_vision_dataset(name: str, path: os.PathLike, split: str, model_name: str):
@@ -52,11 +57,11 @@ def get_vision_dataset(name: str, path: os.PathLike, split: str, model_name: str
         case "coco-detection":
             # Change coco-detection to coco
             path = Path(str(path).replace("coco-detection", "coco"))
-            dataset = get_coco_detection_dataset("detect", path, train)
+            dataset = get_coco_detection_dataset(path, train)
         case "coco-segmentation":
             # Change coco-segmentation to coco
             path = Path(str(path).replace("coco-segmentation", "coco"))
-            dataset = get_coco_detection_dataset("segment", path, train)
+            dataset = get_coco_segmentation_dataset(path, train)
 
     return dataset
 
@@ -69,8 +74,8 @@ VISION_DATASET_MAPPING = {
     "imagenet": ImageNetMase,
     # A subset of ImageNet w/ 100 train and 20 val images per class (1000 classes)
     "imagenet_subset": ImageNetMase,
-    "coco-detection": CocoMase,
-    "coco-segmentation": CocoMase,
+    "coco-detection": CocoDetectionMase,
+    "coco-segmentation": CocoSegmentationMase,
 }
 
 

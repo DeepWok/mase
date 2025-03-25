@@ -151,25 +151,91 @@ class CocoMase(YOLODataset):
         )
         super().__init__(data=coco, img_path=img_path, imgsz=640, task=task_name)
 
-    def prepare_data(self) -> None:
-        pass
 
-    def setup(self) -> None:
-        pass
+class CocoDetectionMase(CocoMase):
+    def __init__(
+        self,
+        root: os.PathLike,
+        img_path: os.PathLike,
+        download: bool = True,
+    ) -> None:
+        super().__init__(root, img_path=img_path, task="detect", download=download)
+
+    def __getitem__(self, index: int):
+        """
+        Args:
+            index (int): Index
+
+        Returns:
+            tuple: (image, target) where target is index of the target class.
+        """
+        item_dict = self.__getitem__(index)
+        img = item_dict["img"]
+        cls = item_dict["cls"]
+        bboxes = item_dict["bboxes"]
+
+        return img, cls, bboxes
+
+
+class CocoSegmentationMase(CocoMase):
+    def __init__(
+        self,
+        root: os.PathLike,
+        img_path: os.PathLike,
+        download: bool = True,
+    ) -> None:
+        super().__init__(root, img_path=img_path, task="segment", download=download)
+
+    def __getitem__(self, index: int):
+        """
+        Args:
+            index (int): Index
+
+        Returns:
+            tuple: (image, target) where target is index of the target class.
+        """
+        item_dict = self.__getitem__(index)
+        img = item_dict["img"]
+        mask = item_dict["masks"]
+
+        return img, mask
 
 
 def get_coco_detection_dataset(
-    task_name: str,
     path: os.PathLike,
     train: bool,
 ):
     if train:
         img_path = os.path.join(path, "images", "train2017")
+        return CocoDetectionMase(
+            root=path,
+            img_path=img_path,
+            download=True,
+        )
     else:
         img_path = os.path.join(path, "images", "val2017")
-    return CocoMase(
-        root=path,
-        img_path=img_path,
-        task_name=task_name,
-        download=True,
-    )
+        return CocoDetectionMase(
+            root=path,
+            img_path=img_path,
+            download=True,
+        )
+
+
+def get_coco_segmentation_dataset(
+    path: os.PathLike,
+    train: bool,
+):
+    if train:
+        img_path = os.path.join(path, "images", "train2017")
+        return CocoSegmentationMase(
+            root=path,
+            img_path=img_path,
+            download=True,
+        )
+    else:
+        img_path = os.path.join(path, "images", "val2017")
+        return CocoSegmentationMase(
+            root=path,
+            img_path=img_path,
+            download=True,
+        )
