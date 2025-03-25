@@ -135,8 +135,8 @@ quantization_config = {
 
 
 runtime_analysis_config = {
-    "num_batches": 15,
-    "num_GPU_warmup_batches": 2,
+    "num_batches": 20,
+    "num_GPU_warmup_batches": 5,
     "test": True,
     "data_module": data_module,
     "model": checkpoint,
