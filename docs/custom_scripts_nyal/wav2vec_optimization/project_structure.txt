@@ -1,0 +1,33 @@
+## Project Structure
+
+```
+wav2vec2_optimization/
+├── config.py                   # Global configuration and search space definition
+├── data_utils.py               # Model importing and dataset setup
+├── model_utils.py              # MASE graph setup and model construction
+├── optimization/
+│   ├── __init__.py             # Makes the directory a package
+│   ├── baseline.py             # Baseline metrics evaluation
+│   ├── pruning.py              # Pruning implementation
+│   ├── smoothquant.py          # SmoothQuant implementation
+│   ├── quantization.py         # Quantization implementation
+│   └── metrics.py              # Performance metrics calculation
+├── search/
+│   ├── __init__.py             # Makes the directory a package
+│   ├── objective.py            # Objective functions for optimization
+│   └── study.py                # Optimization study implementation
+├── visualization/
+│   ├── __init__.py             # Makes the directory a package
+│   ├── results.py              # Results processing
+│   └── plots.py                # Visualization creation
+├── main.py                     # Main script to run the optimization
+└── requirements.txt            # Dependencies
+```
+
+This structure organizes the code into logical modules:
+- Configuration and data loading
+- Model setup and utilities
+- Optimization techniques (pruning, smoothquant, quantization)
+- Search implementation (objective functions, study configuration)
+- Visualization and results processing
+- Main entry point
