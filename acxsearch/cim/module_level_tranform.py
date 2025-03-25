@@ -3,7 +3,7 @@ import chop as chop
 from chop.tools import get_logger
 from chop.tools.logger import set_logging_verbosity
 
-from .layer_utils import LinearNoise, Conv2dNoise
+from .layer_utils import LinearNoise, Conv2dNoise, QuantBatchNorm2d
 import torch
 
 
@@ -25,6 +25,8 @@ def get_module_type(module):
         return "gelu"
     elif "Conv2d" in class_name:
         return "conv2d"
+    elif "BatchNorm2d" in class_name:
+        return "batch_norm"
     else:
         return None
 def parse_q_config(module, q_config):
@@ -73,4 +75,29 @@ def vit_module_level_quantize(model, q_config = {}):
             logger.debug(f"Replacing module: {module[0]}")
 
             deepsetattr(model, module[0], new_module)
+        elif get_module_type(module) == "batch_norm":
+            ori_module = module[1]
+            # new_module = nn.BatchNorm2d(
+            #     ori_module.num_features,
+            #     ori_module.eps,
+            #     ori_module.momentum,
+            #     ori_module.affine,
+            #     ori_module.track_running_stats,
+            # )
+            new_module = QuantBatchNorm2d(
+                ori_module.num_features,
+                ori_module.eps,
+                ori_module.momentum,
+                ori_module.affine,
+                ori_module.track_running_stats,
+                q_config=config,
+            )
+            new_module.weight = ori_module.weight
+            new_module.bias = ori_module.bias
+            new_module.running_mean = ori_module.running_mean
+            new_module.running_var = ori_module.running_var
+            new_module.num_batches_tracked = ori_module.num_batches_tracked
+            deepsetattr(model, module[0], new_module)
+            logger.debug(f"Replacing module: {module[0]}")
+
     return model

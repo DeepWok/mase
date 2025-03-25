@@ -26,11 +26,24 @@ batch_size = 128
 model = timm.create_model(checkpoint, pretrained=True, num_classes=10)
 datamodule = init_dataset("cifar10", batch_size, checkpoint)
 from cim.module_level_tranform import vit_module_level_quantize
-model.load_state_dict(torch.load("/home/cx922/mase/acxsearch/checkpoint/ckpt.pth"))
-acc = acc_cal(model, datamodule)
-print(acc)
-breakpoint()
-qmodel = vit_module_level_quantize(model, {
+import timm
+import torch.backends.cudnn as cudnn
+net = timm.create_model("resnet18", pretrained=True, num_classes=10)
+net = net.to("cuda")
+net = torch.nn.DataParallel(net)
+cudnn.benchmark = True
+
+# Load checkpoint.
+print('==> Loading checkpoint..')
+assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
+checkpoint = torch.load('./checkpoint/ckpt.pth')
+net.load_state_dict(checkpoint['net'])
+# best_acc = checkpoint['acc']
+# start_epoch = checkpoint['epoch']
+# acc = acc_cal(net, datamodule.test_dataloader())
+# print(acc)
+# breakpoint()
+qmodel = vit_module_level_quantize(net, {
     "by": "type",
     "conv2d": {
         "config": {
@@ -38,7 +51,7 @@ qmodel = vit_module_level_quantize(model, {
             "weight_range": 1.0,
             "bias_range": 1.0,
             "range_decay": 0.0,
-            "noise_magnitude": 0.01,
+            "noise_magnitude": 0.2,
         }
     },
     "linear": {
@@ -47,10 +60,20 @@ qmodel = vit_module_level_quantize(model, {
             "weight_range": 1.0,
             "bias_range": 1.0,
             "range_decay": 0.0,
-            "noise_magnitude": 0.01,
+            "noise_magnitude": 0.2,
+        }
+    },
+    "batch_norm": {
+        "config": {
+            "num_bits": 8,
+            "max_value": 6.0,
+            "decay": 1e-3,
         }
     }
 })
+
+acc = acc_cal(qmodel, datamodule.test_dataloader())
+print(acc)
 # model(next(iter(datamodule.train_dataloader()))[0])
 # fine_tune(model, {
 #     "model_info": get_model_info(checkpoint),

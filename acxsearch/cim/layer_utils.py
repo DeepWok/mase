@@ -22,6 +22,38 @@ class ActivationQuant(nn.Module):
             act = F.relu(x)
         return act
 
+class QuantBatchNorm2d(nn.BatchNorm2d):
+    def __init__(self, num_features, eps=1e-5, momentum=0.1, affine=True, track_running_stats=True, q_config={}):
+        super(QuantBatchNorm2d, self).__init__(num_features, eps, momentum, affine, track_running_stats)
+        self.q_config = q_config
+        self.activation_quant = ActivationQuant(num_bits=q_config.get("num_bits"), max_value=q_config.get("max_value"))
+
+    def forward(self, x):
+        if self.momentum is None:
+            exponential_average_factor = 0.0
+        else:
+            exponential_average_factor = self.momentum
+        if self.training:
+            bn_training = True
+        else:
+            bn_training = (self.running_mean is None) and (self.running_var is None)
+        x = F.batch_norm(
+            x,
+            # If buffers are not to be tracked, ensure that they won't be updated
+            self.running_mean
+            if not self.training or self.track_running_stats
+            else None,
+            self.running_var if not self.training or self.track_running_stats else None,
+            self.weight,
+            self.bias,
+            bn_training,
+            exponential_average_factor,
+            self.eps,
+        )
+        x = self.activation_quant(x)
+        return x
+        
+
 class Conv2dNoise(nn.Conv2d):
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=0,
                  q_config={}):
