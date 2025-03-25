@@ -53,25 +53,34 @@ def get_achieved_sparsity(model):
     return 1.0 - (non_zero_params / total_params)
 
 
-def train_model_with_movement_tracking(model, dataloader, num_epochs=1, learning_rate=5e-5):
+def train_model_with_movement_tracking(encoder, ctc_head, decoder, dataloader, num_epochs=1, learning_rate=5e-5):
     """Train the model while tracking weight movement."""
     print("\n== Training model with movement tracking ==")
     
+    # Create a combined model with encoder, CTC head, and decoder
+    combined_model = CombinedWav2Vec2CTC(
+        encoder=encoder,
+        ctc_head=ctc_head,
+        blank_id=0,           # Default blank ID
+        beam_width=10,        # Default beam width
+        decoder=decoder,      # Pass the decoder for inference
+    )
+    
     # Initialize optimizer
-    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.AdamW(combined_model.parameters(), lr=learning_rate)
     
     # Initialize movement tracking using the existing callback
     movement_tracker = MovementTrackingCallback()
     # Call on_train_begin manually since we're not using a Trainer
-    movement_tracker.on_train_begin(None, None, None, model=model)
+    movement_tracker.on_train_begin(None, None, None, model=combined_model)
     
     # Move model to device
-    device = next(model.parameters()).device
+    device = next(combined_model.parameters()).device
     
     # Train for specified epochs
     for epoch in range(num_epochs):
         print(f"\nEpoch {epoch+1}/{num_epochs}")
-        model.train()
+        combined_model.train()
         
         # Track progress
         running_loss = 0.0
@@ -85,7 +94,7 @@ def train_model_with_movement_tracking(model, dataloader, num_epochs=1, learning
                     batch[k] = v.to(device)
             
             # Forward pass
-            outputs = model(**batch)
+            outputs = combined_model(**batch)
             loss = outputs.loss if hasattr(outputs, "loss") else outputs["loss"]
             
             # Backward pass
@@ -94,7 +103,7 @@ def train_model_with_movement_tracking(model, dataloader, num_epochs=1, learning
             optimizer.step()
             
             # Update movement tracking
-            movement_tracker.on_step_end(None, None, None, model=model)
+            movement_tracker.on_step_end(None, None, None, model=combined_model)
             
             # Log progress
             running_loss += loss.item()
@@ -112,7 +121,8 @@ def train_model_with_movement_tracking(model, dataloader, num_epochs=1, learning
         print(f"Epoch {epoch+1} completed. Average loss: {epoch_loss:.4f}")
     
     print("Training with movement tracking completed.")
-    return model
+    # Return the encoder part for pruning
+    return combined_model.encoder
 
 
 def main():
@@ -212,15 +222,14 @@ def main():
         collate_fn=DataCollatorCTCWithPadding(processor=processor, padding=True)
     )
     
-    # Train model with movement tracking
-    movement_trained_model = train_model_with_movement_tracking(
-        model=copy.deepcopy(model),
+    # Train model with movement tracking using the combined model approach
+    movement_encoder = train_model_with_movement_tracking(
+        encoder=copy.deepcopy(encoder),
+        ctc_head=copy.deepcopy(ctc_head),
+        decoder=decoder,
         dataloader=train_dataloader,
         num_epochs=1  # Just one epoch for demonstration
     )
-    
-    # Extract encoder for pruning
-    movement_encoder = movement_trained_model.wav2vec2
     
     # -------------------------------
     # 2. Run analysis for each method and sparsity
