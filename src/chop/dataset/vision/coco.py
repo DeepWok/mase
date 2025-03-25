@@ -151,6 +151,12 @@ class CocoMase(YOLODataset):
         )
         super().__init__(data=coco, img_path=img_path, imgsz=640, task=task_name)
 
+    def prepare_data(self) -> None:
+        pass
+
+    def setup(self) -> None:
+        pass
+
 
 class CocoDetectionMase(CocoMase):
     def __init__(
@@ -159,7 +165,7 @@ class CocoDetectionMase(CocoMase):
         img_path: os.PathLike,
         download: bool = True,
     ) -> None:
-        super().__init__(root, img_path=img_path, task="detect", download=download)
+        super().__init__(root, img_path=img_path, task_name="detect", download=download)
 
     def __getitem__(self, index: int):
         """
@@ -169,7 +175,7 @@ class CocoDetectionMase(CocoMase):
         Returns:
             tuple: (image, target) where target is index of the target class.
         """
-        item_dict = self.__getitem__(index)
+        item_dict = super().__getitem__(index)
         img = item_dict["img"]
         cls = item_dict["cls"]
         bboxes = item_dict["bboxes"]
@@ -184,7 +190,9 @@ class CocoSegmentationMase(CocoMase):
         img_path: os.PathLike,
         download: bool = True,
     ) -> None:
-        super().__init__(root, img_path=img_path, task="segment", download=download)
+        super().__init__(
+            root, img_path=img_path, task_name="segment", download=download
+        )
 
     def __getitem__(self, index: int):
         """
@@ -194,7 +202,7 @@ class CocoSegmentationMase(CocoMase):
         Returns:
             tuple: (image, target) where target is index of the target class.
         """
-        item_dict = self.__getitem__(index)
+        item_dict = super().__getitem__(index)
         img = item_dict["img"]
         mask = item_dict["masks"]
 

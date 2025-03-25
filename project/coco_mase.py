@@ -1,7 +1,7 @@
 # %%
 from chop.dataset import MaseDataModule, get_dataset_info
 
-dataset_name = "coco-detection"
+dataset_name = "coco-segmentation"
 # dataset_name = "coco-segmentation"
 model_name = "yolov8"
 batch_size = 5
@@ -15,5 +15,9 @@ data_module = MaseDataModule(
 data_module.prepare_data()
 data_module.setup()
 
+
+# %%
+dl = data_module.train_dataloader()
+dl.dataset[0]
 
 # %%
