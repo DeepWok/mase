@@ -18,7 +18,7 @@ def apply_pruning(model, pruning_method, sparsity, structured_sparsity=False):
     # Make a copy of the model
     pruned_model = deepcopy(model)
 
-    pruned_model.pruned_model.cpu()
+    pruned_model = pruned_model.cpu()
     
     # Create pruning config
     pruning_config = {
