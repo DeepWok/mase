@@ -113,3 +113,59 @@ smoothquant_config = {
     "data_module": data_module,
     "batch_size": batch_size,
 }
+
+
+quantization_config = {
+    "by": "type",
+    "default": {
+        "config": {
+            "name": None,
+        }
+    },
+    "linear": {
+        "config": {
+            "name": "integer",
+            # data
+            "data_in_width": 16,
+            "data_in_frac_width": 8,
+            # weight
+            "weight_width": 16,
+            "weight_frac_width": 8,
+            # bias
+            "bias_width": 16,
+            "bias_frac_width": 8,
+        }
+    },
+}
+
+
+runtime_analysis_config = {
+    "num_batches": 15,
+    "num_GPU_warmup_batches": 2,
+    "test": True,
+    "data_module": data_module,
+    "model": checkpoint,
+    "accelerator": "cuda",
+    "task": "ctc",
+    "decoder": decoder,
+    "beam_width": 10,
+    "tokenizer": tokenizer,
+    "batch_size": batch_size,
+    "sample_rate": 16000,
+    "ctc_head": ctc_head
+}
+
+mg_onnx, onnx_meta = onnx_runtime_interface_pass(mg, pass_args=smoothquant_config)
+
+# mg_onnx, _ = passes.quantize_transform_pass(
+#     mg_onnx,
+#     pass_args=quantization_config,
+# )
+
+_, results_onnx = runtime_analysis_pass(mg_onnx, pass_args=runtime_analysis_config)
+
+print(f"Average WER", f"{results_onnx['Average WER']:.5g}")
+print(f"Average Latency", f"{results_onnx['Average Latency']:.5g} ms")
+print(f"Average RTF", f"{results_onnx['Average RTF']:.5g}")
+print(f"Average GPU Power Usage", f"{results_onnx['Average GPU Power Usage']:.5g} W")
+print(f"Inference Energy Consumption", f"{results_onnx['Inference Energy Consumption']:.5g} mWh")
