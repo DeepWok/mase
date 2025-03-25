@@ -36,11 +36,11 @@ def run_baseline_metrics(mg, data_module, checkpoint, dataset_name, decoder, tok
     }
     
 
+    _, baseline_results = runtime_analysis_pass(mg, pass_args=runtime_analysis_config)
+
     mg, _ = passes.init_metadata_analysis_pass(mg)
 
     mg, _ = passes.add_common_metadata_analysis_pass(mg)
-
-    _, baseline_results = runtime_analysis_pass(mg, pass_args=runtime_analysis_config)
     
     # Run bit width analysis for baseline
     _, bitwidth_results = calculate_avg_bits_mg_analysis_pass(mg)
