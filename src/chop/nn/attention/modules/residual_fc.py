@@ -11,4 +11,4 @@ class ResidualFC(nn.Module):
         new_out = self.new_fc(hidden_states)
         orig_out = self.original_fc(hidden_states)
         output = self.alpha * new_out + (1 - self.alpha) * orig_out
-        return output
+        return output 
