@@ -391,6 +391,7 @@ class RuntimeAnalysis:
                     average="weighted",
                     task="multiclass",
                 )
+            # TODO: Add support for detection and segmentation tasks
             case _:
                 raise Exception(
                     f"Unsupported task type {self.config['task']}. Please set a supported task type in the config file."
