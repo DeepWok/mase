@@ -45,34 +45,36 @@ def search_gelu():
             "config": {
                 **default_quant_config,
                 "enable_internal_width": True,
-                "hash_in_int_width": 16,
+                "hash_in_int_width": 3,
                 "hash_in_frac_width": 16,
                 "hash_out_int_width": 16,
                 "hash_out_frac_width": 16,
             }
         },
     }
-    collected_results = {
-        "hash_in_int_width": 4,
-        "hash_in_frac_width": 3,
-        "hash_out_int_width": 3,
-        "hash_out_frac_width": 13,
-    }
-    _ = iterative_search(
+    # collected_results = {
+    #     "hash_in_int_width": 4,
+    #     "hash_in_frac_width": 3,
+    #     "hash_out_int_width": 3,
+    #     "hash_out_frac_width": 13,
+    # }
+    acc_list = iterative_search(
         checkpoint, 
         "gelu",
         {
-        "hash_in_int_width": [2, 3, 4, 5, 6],
-        "hash_in_frac_width": [3,4,5,6,7],
-        "hash_out_int_width": [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
-        "hash_out_frac_width": [3,4,5,6,7,8,9,10,11,12,13,14,15,16],
+        # "hash_in_int_width": [2],
+        "hash_in_frac_width": [1,2,3,4,5,6, 7, 8],
+        # "hash_out_int_width": [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
+        # "hash_out_frac_width": [3,4,5,6,7,8,9,10,11,12,13,14,15,16],
         },
         quant_config, 
     )
+    return acc_list
 
 def search_layer_norm():
     collected_results = {
         "enable_internal_width": True,
+        "data_in_width": 16,
         "norm_in_int_width": 1,
         "norm_in_frac_width": 7,
         "norm_out_int_width": 5,
@@ -96,7 +98,7 @@ def search_layer_norm():
             }
         },
     }
-    _ = iterative_search(
+    acc_list = iterative_search(
         checkpoint, 
         "layer_norm",
         {
@@ -106,11 +108,12 @@ def search_layer_norm():
             # "var_int_width": [1,2,3,4,5,6,7,8],
             # "var_frac_width": [11,12,13,14,15,16],
             "isqrt_in_width": [1,2,3,4,5,6,7,8],
-            "isqrt_out_int_width": [1,2,3,4,5,6,7,8],
-            "isqrt_out_frac_width": [1,2,3,4,5,6,7,8],
+            # "isqrt_out_int_width": [1,2,3,4,5,6,7,8],
+            # "isqrt_out_frac_width": [1,2,3,4,5,6,7,8],
         },
         quant_config, 
     )
+    return acc_list
 
 def search_softmax():
     collected_results = {
@@ -136,7 +139,7 @@ def search_softmax():
             }
         },
     }
-    _ = iterative_search(
+    acc_list = iterative_search(
         checkpoint, 
         "attention",
         {
@@ -150,9 +153,19 @@ def search_softmax():
         },
         quant_config, 
     )
-
+    return acc_list
+    
+import pickle
+import json
+def save_acc_list(acc_list, file_name):
+    with open(file_name, "w") as f:
+        json.dump(acc_list, f, indent=4)
+    with open(file_name + ".pkl", "wb") as f:
+        pickle.dump(acc_list, f)
 
 if __name__ == "__main__":
-    # search_gelu()
-    # search_layer_norm()
-    search_softmax()
+    acc_list = search_gelu()
+    save_acc_list(acc_list, "deit_tiny_gelu_search_results_int_3")
+    # acc_list = search_layer_norm()
+    # save_acc_list(acc_list, "deit_tiny_layer_norm_search_results")
+    # search_softmax()

@@ -42,12 +42,11 @@ def iterative_search(checkpoint, target_op, search_args, quant_config):
         for value in search_range:
             quant_config[target_op]["config"].update({arg: value})
             logger.debug(f"quant_config: {quant_config}")
-
             acc = quant_evaluation(model, quant_config, datamodule, max_iteration=100)
-            acc_list.append((value, acc))
-            if (acc > quant_acc - 0.001) and (acc < quant_acc + 0.001):
-                logger.info(f"acc: {acc}, quant_acc: {quant_acc}, {arg}: {value}")
-                break
+            acc_list.append((value, quant_acc - acc))
+            # if (acc > quant_acc - 0.001) and (acc < quant_acc + 0.001):
+            #     logger.info(f"acc: {acc}, quant_acc: {quant_acc}, {arg}: {value}")
+            #     break
 
         best_acc = max(acc_list)
         best_param = search_range[acc_list.index(best_acc)]
@@ -61,18 +60,18 @@ def iterative_search(checkpoint, target_op, search_args, quant_config):
                 "best_param": best_param,
             }
         }
-        with open(result_file, "w") as f:
-            json.dump(result_dict, f, indent=4)
+        # with open(result_file, "w") as f:
+        #     json.dump(result_dict, f, indent=4)
 
-    final_acc = acc_cal(model, datamodule.test_dataloader())
-    result_dict[f"{target_op}_final"] = {
-        "best_config": quant_config,
-        "best_result": {
-            "best_acc": final_acc,
-        }
-    }
-    with open(result_file, "w") as f:
-        json.dump(result_dict, f, indent=4)
-    logger.info(f"quant_config: {quant_config}")
-    logger.info(f"original_acc: {DEIT_TINY_IMAGENET_ACC}, final_acc: {final_acc}")
-    return quant_config
+    # final_acc = acc_cal(model, datamodule.test_dataloader())
+    # result_dict[f"{target_op}_final"] = {
+    #     "best_config": quant_config,
+    #     "best_result": {
+    #         "best_acc": final_acc,
+    #     }
+    # }
+    # with open(result_file, "w") as f:
+    #     json.dump(result_dict, f, indent=4)
+    # logger.info(f"quant_config: {quant_config}")
+    # logger.info(f"original_acc: {DEIT_TINY_IMAGENET_ACC}, final_acc: {final_acc}")
+    return acc_list
