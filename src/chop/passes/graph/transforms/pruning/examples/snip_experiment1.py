@@ -21,7 +21,7 @@ from pathlib import Path
 from chop.ir.graph.mase_graph import MaseGraph
 from chop.passes.graph.transforms.pruning.prune import prune_transform_pass
 from chop.passes.graph.transforms.pruning.snip_helper import SNIPCallback
-from chop.passes.graph.transforms.pruning.prune_movment_helper import MovementTrackingCallback
+from chop.passes.graph.transforms.pruning.prune_movment_helper import MovementTrackingCallback as OriginalMovementTrackingCallback
 import chop.passes as passes
 from chop.passes.module import report_trainable_parameters_analysis_pass
 from chop.tools import get_tokenized_dataset, get_trainer
@@ -53,6 +53,48 @@ def get_achieved_sparsity(model):
     return 1.0 - (non_zero_params / total_params)
 
 
+# Create a fixed version of the MovementTrackingCallback that properly initializes metadata
+class FixedMovementTrackingCallback(OriginalMovementTrackingCallback):
+    def on_train_begin(self, args, state, control, **kwargs):
+        self.prev_params = {}
+        self.movement_stats = {}
+        model = kwargs["model"]
+        for name, module in model.encoder.named_modules():
+            if isinstance(module, (nn.Conv2d, nn.Linear)) and hasattr(module, "weight"):
+                self.prev_params[name] = module.weight.detach().clone()
+                self.movement_stats[name] = torch.zeros_like(module.weight)
+                
+                # Fix: Initialize metadata attribute first if it doesn't exist
+                if not hasattr(module, "metadata"):
+                    module.metadata = {}
+                if "weight" not in module.metadata:
+                    module.metadata["weight"] = {}
+                if "stats" not in module.metadata["weight"]:
+                    module.metadata["weight"]["stats"] = {}
+                    
+                module.metadata["weight"]["stats"]["movement"] = self.movement_stats[name]
+        return control
+
+    def on_step_end(self, args, state, control, **kwargs):
+        model = kwargs["model"]
+        for name, module in model.encoder.named_modules():
+            if isinstance(module, (nn.Conv2d, nn.Linear)) and hasattr(module, "weight"):
+                movement = (module.weight.detach() - self.prev_params[name]).abs()
+                self.movement_stats[name] += movement
+                self.prev_params[name].copy_(module.weight.detach())
+                
+                # Fix: Ensure metadata exists before accessing
+                if not hasattr(module, "metadata"):
+                    module.metadata = {}
+                if "weight" not in module.metadata:
+                    module.metadata["weight"] = {}
+                if "stats" not in module.metadata["weight"]:
+                    module.metadata["weight"]["stats"] = {}
+                    
+                module.metadata["weight"]["stats"]["movement"] = self.movement_stats[name]
+        return control
+
+
 def train_model_with_movement_tracking(encoder, ctc_head, decoder, dataloader, num_epochs=1, learning_rate=5e-5):
     """Train the model while tracking weight movement."""
     print("\n== Training model with movement tracking ==")
@@ -69,8 +111,8 @@ def train_model_with_movement_tracking(encoder, ctc_head, decoder, dataloader, n
     # Initialize optimizer
     optimizer = torch.optim.AdamW(combined_model.parameters(), lr=learning_rate)
     
-    # Initialize movement tracking using the existing callback
-    movement_tracker = MovementTrackingCallback()
+    # Initialize movement tracking using the fixed callback
+    movement_tracker = FixedMovementTrackingCallback()
     # Call on_train_begin manually since we're not using a Trainer
     movement_tracker.on_train_begin(None, None, None, model=combined_model)
     
