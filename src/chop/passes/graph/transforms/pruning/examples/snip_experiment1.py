@@ -21,6 +21,7 @@ from pathlib import Path
 from chop.ir.graph.mase_graph import MaseGraph
 from chop.passes.graph.transforms.pruning.prune import prune_transform_pass
 from chop.passes.graph.transforms.pruning.snip_helper import SNIPCallback
+from chop.passes.graph.transforms.pruning.prune_movment_helper import MovementTrackingCallback
 import chop.passes as passes
 from chop.passes.module import report_trainable_parameters_analysis_pass
 from chop.tools import get_tokenized_dataset, get_trainer
@@ -50,6 +51,68 @@ def get_achieved_sparsity(model):
     total_params = sum(p.numel() for p in model.parameters())
     non_zero_params = sum((p != 0).sum().item() for p in model.parameters())
     return 1.0 - (non_zero_params / total_params)
+
+
+def train_model_with_movement_tracking(model, dataloader, num_epochs=1, learning_rate=5e-5):
+    """Train the model while tracking weight movement."""
+    print("\n== Training model with movement tracking ==")
+    
+    # Initialize optimizer
+    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
+    
+    # Initialize movement tracking using the existing callback
+    movement_tracker = MovementTrackingCallback()
+    # Call on_train_begin manually since we're not using a Trainer
+    movement_tracker.on_train_begin(None, None, None, model=model)
+    
+    # Move model to device
+    device = next(model.parameters()).device
+    
+    # Train for specified epochs
+    for epoch in range(num_epochs):
+        print(f"\nEpoch {epoch+1}/{num_epochs}")
+        model.train()
+        
+        # Track progress
+        running_loss = 0.0
+        num_batches = 0
+        
+        # Train on batches
+        for batch_idx, batch in enumerate(dataloader):
+            # Move batch to device
+            for k, v in batch.items():
+                if isinstance(v, torch.Tensor):
+                    batch[k] = v.to(device)
+            
+            # Forward pass
+            outputs = model(**batch)
+            loss = outputs.loss if hasattr(outputs, "loss") else outputs["loss"]
+            
+            # Backward pass
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            
+            # Update movement tracking
+            movement_tracker.on_step_end(None, None, None, model=model)
+            
+            # Log progress
+            running_loss += loss.item()
+            num_batches += 1
+            
+            if batch_idx % 10 == 0:
+                print(f"  Batch {batch_idx}: Loss = {loss.item():.4f}")
+                
+            # Stop early for quick demonstration
+            if batch_idx >= 49:  # Process 50 batches for quick testing
+                break
+                
+        # Epoch summary
+        epoch_loss = running_loss / num_batches
+        print(f"Epoch {epoch+1} completed. Average loss: {epoch_loss:.4f}")
+    
+    print("Training with movement tracking completed.")
+    return model
 
 
 def main():
@@ -94,7 +157,7 @@ def main():
     data_module.setup()
     
     # Define methods and sparsity levels to test
-    pruning_methods = ["random", "l1-norm", "snip", "movement", "hwpq"]  # Use a subset for faster testing
+    pruning_methods = ["random", "l1-norm", "snip", "movement"]  # Added movement back
     sparsity_levels = [0.3, 0.5, 0.7, 0.9]      # Use fewer levels for faster testing
     
     # Create runtime analysis config
@@ -136,6 +199,28 @@ def main():
     output_dir = "/content/pruning_results"
     os.makedirs(output_dir, exist_ok=True)
     print(f"Saving results to: {output_dir}")
+    
+    # -------------------------------
+    # 1.5 Train model to get movement data
+    # -------------------------------
+    print("\n== Preparing model for movement pruning ==")
+    # Create a dataloader for training
+    train_dataloader = DataLoader(
+        tokenized_dataset["train"],
+        batch_size=batch_size,
+        shuffle=True,
+        collate_fn=DataCollatorCTCWithPadding(processor=processor, padding=True)
+    )
+    
+    # Train model with movement tracking
+    movement_trained_model = train_model_with_movement_tracking(
+        model=copy.deepcopy(model),
+        dataloader=train_dataloader,
+        num_epochs=1  # Just one epoch for demonstration
+    )
+    
+    # Extract encoder for pruning
+    movement_encoder = movement_trained_model.wav2vec2
     
     # -------------------------------
     # 2. Run analysis for each method and sparsity
@@ -186,11 +271,20 @@ def main():
                 
             print(f"\nSparsity level: {sparsity:.1f}")
             
-            # Create a fresh MASE graph for each configuration
-            mg = MaseGraph(
-                copy.deepcopy(encoder),
-                hf_input_names=["input_values", "attention_mask"],
-            )
+            # Create a fresh MASE graph with appropriate model
+            if method == "movement":
+                # Use the model with movement data
+                mg = MaseGraph(
+                    copy.deepcopy(movement_encoder),
+                    hf_input_names=["input_values", "attention_mask"],
+                )
+                print("Using model with movement data")
+            else:
+                # Use the original model
+                mg = MaseGraph(
+                    copy.deepcopy(encoder),
+                    hf_input_names=["input_values", "attention_mask"],
+                )
             
             # Initialize metadata
             mg, _ = passes.init_metadata_analysis_pass(mg)
