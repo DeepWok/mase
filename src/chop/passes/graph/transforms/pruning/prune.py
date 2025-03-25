@@ -1,5 +1,5 @@
-
 import torch
+import types
 
 from chop.tools import get_logger
 
@@ -160,6 +160,230 @@ def fetch_info(node, module):
     return None
 
 
+def check_snip_scores(graph, info):
+    """Check if SNIP scores are present in model metadata.
+    
+    Args:
+        graph: The MASE graph
+        info: The module info dictionary
+        
+    Returns:
+        bool: True if SNIP scores are present, False otherwise
+    """
+    has_snip_scores = False
+    
+    for node_target, node_info in info.items():
+        if node_info is None:
+            continue
+            
+        # Check if SNIP scores exist in module metadata
+        if "weight_stats" in node_info and "snip_scores" in node_info["weight_stats"]:
+            has_snip_scores = True
+            break
+            
+    return has_snip_scores
+
+
+def prepare_snip_scores(graph, dummy_input=None):
+    """Compute SNIP scores for the graph.
+    
+    This method computes SNIP scores for all prunable layers in the graph.
+    
+    Args:
+        graph: The MASE graph
+        dummy_input: Optional dictionary of dummy inputs
+        
+    Returns:
+        The graph with SNIP scores computed
+    """
+    try:
+        from chop.passes.graph.transforms.pruning.snip_helper import SNIPCallback
+        logger.info("Computing SNIP scores...")
+        
+        # Use available dummy input
+        if dummy_input is None:
+            # Try approach 1: Check for common_dummy_in attribute
+            if hasattr(graph, "common_dummy_in"):
+                dummy_input = graph.common_dummy_in
+                logger.info("Using common_dummy_in from graph")
+            
+            # Try approach 2: Look for input_values in graph's dummy input
+            elif hasattr(graph, "dummy_in") and "input_values" in graph.dummy_in:
+                dummy_input = graph.dummy_in
+                logger.info("Using dummy_in from graph")
+            
+            # Try approach 3: Extract from placeholder nodes
+            else:
+                logger.info("Attempting to extract dummy input from placeholder nodes")
+                dummy_input = {}
+                for node in graph.fx_graph.nodes:
+                    if node.op == "placeholder" and hasattr(node, "meta") and "mase" in node.meta:
+                        param_name = node.name
+                        if "common" in node.meta["mase"].parameters and "args" in node.meta["mase"].parameters["common"]:
+                            if param_name in node.meta["mase"].parameters["common"]["args"]:
+                                if "value" in node.meta["mase"].parameters["common"]["args"][param_name]:
+                                    dummy_input[param_name] = node.meta["mase"].parameters["common"]["args"][param_name]["value"]
+                                    logger.info(f"Found placeholder value for {param_name}")
+                
+                # If still empty, try one more approach with arg names
+                if not dummy_input:
+                    for node in graph.fx_graph.nodes:
+                        if node.op == "placeholder" and hasattr(node, "meta") and "mase" in node.meta:
+                            for arg_name, arg_info in node.meta["mase"].parameters["common"]["args"].items():
+                                if "value" in arg_info:
+                                    dummy_input[arg_name] = arg_info["value"]
+                                    logger.info(f"Found value for {arg_name}")
+
+        # Create simple input if all else fails                                    
+        if not dummy_input:
+            # Create a minimal dummy input as a last resort for most common cases
+            logger.info("Creating minimal dummy input (last resort)")
+            input_nodes = [n for n in graph.fx_graph.nodes if n.op == "placeholder"]
+            if len(input_nodes) > 0:
+                # Typical scenarios for common models
+                if any(n.name == "input_values" for n in input_nodes):
+                    dummy_input = {
+                        "input_values": torch.zeros((1, 16000), dtype=torch.float32),
+                    }
+                    if any(n.name == "attention_mask" for n in input_nodes):
+                        dummy_input["attention_mask"] = torch.ones((1, 16000), dtype=torch.long)
+                elif any(n.name == "input_ids" for n in input_nodes):
+                    dummy_input = {
+                        "input_ids": torch.zeros((1, 32), dtype=torch.long),
+                    }
+                    if any(n.name == "attention_mask" for n in input_nodes):
+                        dummy_input["attention_mask"] = torch.ones((1, 32), dtype=torch.long)
+                elif any(n.name == "x" for n in input_nodes):
+                    dummy_input = {
+                        "x": torch.zeros((1, 3, 224, 224), dtype=torch.float32),
+                    }
+        
+        if dummy_input is None or not dummy_input:
+            raise ValueError("No dummy input available for SNIP score computation")
+        
+        logger.info(f"Using dummy input with keys: {list(dummy_input.keys())}")
+        
+        # Apply SNIP computation directly to the model
+        device = next(graph.model.parameters()).device
+        
+        # Save original forwards
+        original_forwards = {}
+        
+        # Step 1: Save original forwards and add masks
+        for name, module in graph.model.named_modules():
+            if isinstance(module, (torch.nn.Conv2d, torch.nn.Linear)) and hasattr(module, "weight"):
+                original_forwards[name] = module.forward
+                
+                # Create weight_mask parameter
+                if not hasattr(module, "weight_mask"):
+                    module.weight_mask = torch.nn.Parameter(torch.ones_like(module.weight))
+                
+                # Override forward method
+                if isinstance(module, torch.nn.Conv2d):
+                    def new_forward(self, x):
+                        return torch.nn.functional.conv2d(
+                            x,
+                            self.weight.detach() * self.weight_mask,
+                            self.bias,
+                            self.stride,
+                            self.padding,
+                            self.dilation,
+                            self.groups,
+                        )
+                    module.forward = types.MethodType(new_forward, module)
+                elif isinstance(module, torch.nn.Linear):
+                    def new_forward(self, x):
+                        return torch.nn.functional.linear(x, self.weight.detach() * self.weight_mask, self.bias)
+                    module.forward = types.MethodType(new_forward, module)
+        
+        # Step 2: Forward-backward pass
+        graph.model.zero_grad()
+        
+        # Move inputs to device
+        inputs_on_device = {}
+        for k, v in dummy_input.items():
+            if isinstance(v, torch.Tensor):
+                inputs_on_device[k] = v.to(device)
+            else:
+                inputs_on_device[k] = v
+        
+        # Run forward pass
+        try:
+            logger.info(f"Running forward pass with inputs: {list(inputs_on_device.keys())}")
+            output = graph.model(**inputs_on_device)
+        except Exception as e:
+            logger.error(f"Forward pass failed: {str(e)}")
+            # Try again with each input separately if there was an error
+            for k, v in inputs_on_device.items():
+                logger.info(f"Trying single input: {k}")
+                try:
+                    output = graph.model(**{k: v})
+                    logger.info(f"Success with just {k}")
+                    inputs_on_device = {k: v}
+                    break
+                except Exception as ee:
+                    logger.info(f"Failed with just {k}: {str(ee)}")
+            
+            # If we still don't have output, raise the original error
+            if 'output' not in locals():
+                raise e
+        
+        # Use a simple loss function: mean of all outputs
+        if isinstance(output, dict):
+            # If output is a dictionary, find a suitable tensor
+            if "last_hidden_state" in output:
+                loss = output["last_hidden_state"].abs().mean()
+                logger.info("Using last_hidden_state for loss")
+            elif "logits" in output:
+                loss = output["logits"].abs().mean()
+                logger.info("Using logits for loss")
+            else:
+                # Fall back to first tensor
+                for k, v in output.items():
+                    if isinstance(v, torch.Tensor):
+                        loss = v.abs().mean()
+                        logger.info(f"Using {k} for loss")
+                        break
+        else:
+            # If output is a tensor
+            loss = output.abs().mean()
+            logger.info("Using direct output tensor for loss")
+            
+        # Compute gradients
+        loss.backward()
+        
+        # Step 3: Store gradients as SNIP scores
+        for name, module in graph.model.named_modules():
+            if isinstance(module, (torch.nn.Conv2d, torch.nn.Linear)) and hasattr(module, "weight_mask"):
+                grad = module.weight_mask.grad
+                if grad is not None:
+                    if not hasattr(module, "metadata"):
+                        module.metadata = {}
+                    if "weight" not in module.metadata:
+                        module.metadata["weight"] = {}
+                    if "stats" not in module.metadata["weight"]:
+                        module.metadata["weight"]["stats"] = {}
+                    
+                    # Store absolute gradient as SNIP score
+                    module.metadata["weight"]["stats"]["snip_scores"] = grad.abs().detach().clone()
+                    logger.info(f"Module {name}: SNIP score norm = {grad.abs().norm().item()}")
+        
+        # Step 4: Restore original forwards
+        for name, module in graph.model.named_modules():
+            if name in original_forwards:
+                module.forward = original_forwards[name]
+        
+        logger.info("SNIP scores computed successfully")
+    except ImportError:
+        logger.error("Failed to import SNIPCallback - SNIP preprocessing not available")
+    except Exception as e:
+        logger.error(f"Error computing SNIP scores: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+    
+    return graph
+
+
 def prune_graph_iterator(graph, config: dict):
     # Setup all pruning-related parameters (incl. basic validation)
     w_config = load_weight_prune_config(config["weight"], graph)
@@ -172,6 +396,23 @@ def prune_graph_iterator(graph, config: dict):
             module = graph.modules[node.target]
             meta = fetch_info(node, module)
             info[node.target] = meta
+    
+    # Check if SNIP method is being used
+    if w_config["method"] == "snip" and not check_snip_scores(graph, info):
+        logger.info("SNIP method selected but no SNIP scores found. Computing SNIP scores...")
+        # Create a dummy input if possible based on common metadata
+        dummy_in = None
+        if hasattr(graph, "common_dummy_in"):
+            dummy_in = graph.common_dummy_in
+        graph = prepare_snip_scores(graph, dummy_in)
+        
+        # Refresh info with new SNIP scores
+        info = {}
+        for node in graph.fx_graph.nodes:
+            if node.op == "call_module":
+                module = graph.modules[node.target]
+                meta = fetch_info(node, module)
+                info[node.target] = meta
 
     # Build hooks from the info dictionary
     hooks = build_pruning_hooks(info, w_config, a_config)
@@ -204,5 +445,13 @@ def prune_transform_pass(graph, pass_args: dict = {}):
     :param pass_args: Optional arguments for the pruning transformation.
     :return: The pruned graph and an empty dictionary.
     """
+    # Check for method-specific preprocessing requirements
+    if "weight" in pass_args and "method" in pass_args["weight"]:
+        method = pass_args["weight"]["method"]
+        
+        # Save dummy input for later use
+        if hasattr(graph, "common_dummy_in"):
+            dummy_in = graph.common_dummy_in
+        
     graph = prune_graph_iterator(graph, pass_args)
     return graph, {}

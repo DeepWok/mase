@@ -106,9 +106,86 @@ class SNIPCallback(TrainerCallback):
                 "\n3. Pass train_dataloader in kwargs"
             )
         
-        # Use the internal implementation to compute SNIP scores
-        snip_impl = _SNIPTrackingImplementation()
-        snip_impl.apply_to_model(model, inputs)
+        # Apply SNIP computation directly
+        original_forwards = {}
+        
+        # Step 1: Save original forwards and add masks
+        for name, module in model.named_modules():
+            if isinstance(module, (nn.Conv2d, nn.Linear)) and hasattr(module, "weight"):
+                original_forwards[name] = module.forward
+                
+                # Create weight_mask parameter if not present
+                if not hasattr(module, "weight_mask"):
+                    module.weight_mask = nn.Parameter(torch.ones_like(module.weight))
+                
+                # Override forward method
+                if isinstance(module, nn.Conv2d):
+                    def new_forward(self, x):
+                        return F.conv2d(
+                            x,
+                            self.weight.detach() * self.weight_mask,
+                            self.bias,
+                            self.stride,
+                            self.padding,
+                            self.dilation,
+                            self.groups,
+                        )
+                    module.forward = types.MethodType(new_forward, module)
+                elif isinstance(module, nn.Linear):
+                    def new_forward(self, x):
+                        return F.linear(x, self.weight.detach() * self.weight_mask, self.bias)
+                    module.forward = types.MethodType(new_forward, module)
+        
+        # Step 2: Forward-backward pass
+        model.zero_grad()
+        
+        try:
+            # Try to use the model's forward method directly
+            output = model(**inputs)
+        except Exception as e:
+            # Fallback for combined models - try to access the encoder
+            if hasattr(model, "encoder"):
+                output = model.encoder(**inputs)
+            else:
+                raise e
+                
+        # Find a suitable tensor to compute gradients from
+        if isinstance(output, dict):
+            if "last_hidden_state" in output:
+                loss = output["last_hidden_state"].abs().mean()
+            elif "logits" in output:
+                loss = output["logits"].abs().mean()
+            else:
+                # Fall back to first tensor
+                for k, v in output.items():
+                    if isinstance(v, torch.Tensor):
+                        loss = v.abs().mean()
+                        break
+        else:
+            loss = output.mean()
+        
+        loss.backward()
+        
+        # Step 3: Store gradients as SNIP scores
+        for name, module in model.named_modules():
+            if isinstance(module, (nn.Conv2d, nn.Linear)) and hasattr(module, "weight_mask"):
+                grad = module.weight_mask.grad
+                if grad is not None:
+                    if not hasattr(module, "metadata"):
+                        module.metadata = {}
+                    if "weight" not in module.metadata:
+                        module.metadata["weight"] = {}
+                    if "stats" not in module.metadata["weight"]:
+                        module.metadata["weight"]["stats"] = {}
+                    
+                    # Store absolute gradient as SNIP score
+                    module.metadata["weight"]["stats"]["snip_scores"] = grad.abs().detach().clone()
+                    print(f"Module {name}: SNIP score norm = {grad.abs().norm().item()}")
+        
+        # Step 4: Restore original forwards
+        for name, module in model.named_modules():
+            if name in original_forwards:
+                module.forward = original_forwards[name]
         
         # Mark SNIP as computed so we don't recompute
         self.snip_computed = True
