@@ -7,6 +7,8 @@ from chop.passes.graph import (
     runtime_analysis_pass,
     calculate_avg_bits_mg_analysis_pass,
 )
+import chop.passes as passes
+
 from config import BATCH_SIZE
 
 # Set up logging
@@ -33,6 +35,11 @@ def run_baseline_metrics(mg, data_module, checkpoint, dataset_name, decoder, tok
         "ctc_head": ctc_head,
     }
     
+
+    mg, _ = passes.init_metadata_analysis_pass(mg)
+
+    mg, _ = passes.add_common_metadata_analysis_pass(mg)
+
     _, baseline_results = runtime_analysis_pass(mg, pass_args=runtime_analysis_config)
     
     # Run bit width analysis for baseline

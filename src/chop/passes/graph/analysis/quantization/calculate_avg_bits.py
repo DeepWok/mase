@@ -1,4 +1,7 @@
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def calculate_avg_bits_mg_analysis_pass(graph, pass_args: dict = None):
@@ -33,18 +36,23 @@ def calculate_avg_bits_mg_analysis_pass(graph, pass_args: dict = None):
 
         if mase_type in ["module", "module_related_func"]:
             if mase_op in ["linear", "conv2d", "conv1d"]:
-                data_in_0_meta = mase_meta["common"]["args"]["data_in_0"]
-                w_meta = mase_meta["common"]["args"]["weight"]
-                # maybe add bias
-                d_size = np.prod(data_in_0_meta["shape"])
-                w_size = np.prod(w_meta["shape"])
-                data_in_cost += sum(data_in_0_meta["precision"]) * d_size
-                data_in_size += d_size
-                weights_size += w_size
-                weights_cost += sum(w_meta["precision"]) * w_size
+                try:
+                    data_in_0_meta = mase_meta["common"]["args"]["data_in_0"]
+                    w_meta = mase_meta["common"]["args"]["weight"]
+                    # maybe add bias
+                    d_size = np.prod(data_in_0_meta["shape"])
+                    w_size = np.prod(w_meta["shape"])
+                    data_in_cost += sum(data_in_0_meta["precision"]) * d_size
+                    data_in_size += d_size
+                    weights_size += w_size
+                    weights_cost += sum(w_meta["precision"]) * w_size
+                except KeyError as e:
+                    # Log warning but continue processing
+                    logger.warning(f"Missing metadata key {e} for node {node.name}")
+                    continue
 
     # on average how many bits do we pay per value?
-    data_avg_bit = data_in_cost / data_in_size
-    w_avg_bit = weights_cost / weights_size
+    data_avg_bit = data_in_cost / max(data_in_size, 1)
+    w_avg_bit = weights_cost / max(weights_size, 1)
 
     return graph, {"data_avg_bit": data_avg_bit, "w_avg_bit": w_avg_bit}
