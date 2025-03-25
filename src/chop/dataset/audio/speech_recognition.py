@@ -82,6 +82,7 @@ class CondensedLibrispeechASRDataset(Dataset):
     def __getitem__(self, idx):
         if self.X is None or self.Y is None:
             raise ValueError("Dataset is not setup. Call prepare_data() and setup() first.")
+        print(f"[DEBUG] __getitem__ index {idx} returning raw_labels: {self.raw[idx]}")
         return {"input_values": self.X[idx], "labels": self.Y[idx], "raw_labels": self.raw[idx]}
 
 
@@ -117,10 +118,13 @@ class CondensedLibrispeechASRDataset(Dataset):
         self.Y = torch.load(self.dataset_path / y_path)
         self.raw = torch.load(self.dataset_path / raw_path)
 
+        print(f"[DEBUG] Loaded {len(self.raw)} raw labels from {self.dataset_path / raw_path}")
+
 
 def _preprocess_librispeech_dataset(save_path: Path, config: dict = LIBRISPEECH_CONFIG, split="validation.clean"):
     dataset = load_dataset("nyalpatel/condensed_librispeech_asr", split=split)
     input_values, labels, raw_labels = [], [], []
+    done = False
 
     for example in dataset:
         waveform = example["audio"]["array"]
@@ -147,6 +151,9 @@ def _preprocess_librispeech_dataset(save_path: Path, config: dict = LIBRISPEECH_
         input_values.append(waveform)
         labels.append(label)
         raw_labels.append(text)
+
+        while done == False:  # Print the first few samples for debugging
+            print(f"[DEBUG] Preprocess sample: raw label = '{text}'")
 
     X_train, X_temp, Y_train, Y_temp, raw_train, raw_temp = train_test_split(
         input_values, labels, raw_labels,

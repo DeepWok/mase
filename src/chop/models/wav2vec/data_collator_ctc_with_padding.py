@@ -29,10 +29,17 @@ class DataCollatorCTCWithPadding:
             setattr(self, key, value)
 
     def __call__(self, features: List[Union[Dict[str, Any], tuple]]) -> Dict[str, torch.Tensor]:
+        print(f"[DEBUG] DataCollator received batch of {len(features)} samples")
         # Check the type of the first element to decide how to extract values.
         if isinstance(features[0], dict):
             input_features = [{"input_values": feature["input_values"]} for feature in features]
             label_features = [{"input_ids": feature["labels"]} for feature in features]
+
+            if "raw_labels" in features[0]:
+                print("[DEBUG] raw_labels key found in features[0]")
+            else:
+                print("[DEBUG] raw_labels key NOT found in features[0]")
+                
         elif isinstance(features[0], (list, tuple)):
             # Assumes the first element is input_values and second is labels.
             input_features = [{"input_values": feature[0]} for feature in features]
@@ -63,11 +70,11 @@ class DataCollatorCTCWithPadding:
         batch["labels"] = labels
 
         # Create an attention mask based on the input padding value
-        # pad_value = self.processor.feature_extractor.padding_value if hasattr(self.processor, "feature_extractor") else 0
         pad_value = getattr(self.processor.feature_extractor, "padding_value", 0)
         batch["attention_mask"] = (batch["input_values"] != pad_value).long()
 
         if isinstance(features[0], dict) and "raw_labels" in features[0]:
+            print("[DEBUG] raw_labels recieved in data collator :)")
             batch["raw_labels"] = [f["raw_labels"] for f in features]
 
         return batch
