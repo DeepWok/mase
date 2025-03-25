@@ -59,44 +59,52 @@ def replace_attention_by_name(network, name, module, postfix):
     return network
 
 def gpt2sdpa_to_mla_init(
-    bert_attn: BertAttention,  # a BertSdpaSelfAttention object
-    config: dict                       # e.g. {"config": some_config}, or any custom dictionary
+    gpt2_block: GPT2Block,  
+    config: dict 
 ) -> MLA:
     """
-    Initialize and return an MLA module based on dimensions extracted
-    from the BertSdpaSelfAttention and/or a custom config.
-    This does NOT copy weights from the BERT attention layer; it merely
-    sets up an MLA of matching size. All MLA parameters will be newly
-    (randomly) initialized.
+    Initialize and return an MLA module based on dimensions
+    extracted from a GPT2SdpaAttention (within GPT2Block).
+    
+    Args:
+        gpt2_block (GPT2Block): A GPT-2 block containing GPT2SdpaAttention as `.attn`.
+        config (dict): A user config dict, which can contain nested "config" entries 
+                       for MLA's ModelArgs.
+                       e.g. {"config": {"max_batch_size": 8, "q_lora_rank": 0, ...}}
+    Returns:
+        MLA: A newly constructed MLA module with random initialization.
     """
-    sdpa_attn = bert_attn.self
 
-    hidden_size = sdpa_attn.query.in_features # idden_size
-    n_heads = sdpa_attn.num_attention_heads # number_of_heads
+    # GPT2Block -> GPT2SdpaAttention
+    gpt2_sdpa_attn: GPT2SdpaAttention = gpt2_block.attn
 
-    # read from the user’s config.
+    # gather GPT-2 attention hyperparams
+    hidden_size = gpt2_sdpa_attn.embed_dim    # e.g., 768
+    n_heads     = gpt2_sdpa_attn.num_heads    # e.g., 12
+
+    # optional user config
     user_config = config.get("config", {})
 
-    # 3. Create a ModelArgs object that MLA expects. 
+    # Create ModelArgs for MLA
     model_args = ModelArgs(
-        dim=hidden_size,               # match BERT hidden size
-        n_heads=n_heads,               # match BERT number of heads
-        max_batch_size=user_config.get("max_batch_size", 8),
-        max_seq_len=user_config.get("max_seq_len", 4096),
+        dim=hidden_size,       # 768
+        n_heads=n_heads,       # 12
         q_lora_rank=user_config.get("q_lora_rank", 0),
         kv_lora_rank=user_config.get("kv_lora_rank", 512),
+        # The key fix: ensure (qk_nope_head_dim + qk_rope_head_dim) == 64
         qk_nope_head_dim=user_config.get("qk_nope_head_dim", 64),
         qk_rope_head_dim=user_config.get("qk_rope_head_dim", 0),
         v_head_dim=user_config.get("v_head_dim", 64),
-        # You can override or pass in any other fields from user_config ...
+        max_batch_size=user_config.get("max_batch_size", 8),
+        max_seq_len=user_config.get("max_seq_len", 4096),
+        # Add other fields or overrides from user_config as needed
         # e.g., rope_factor, rope_theta, etc.
     )
 
-    # 4. Now create an MLA module with those arguments. 
-    #    By default, it will have randomly initialized parameters.
+    # Construct MLA with those arguments
     mla_module = MLA(model_args)
 
-    # 5. Return the newly constructed MLA
+    # Return the newly constructed module (randomly initialized)
     return mla_module
 
 def gpt2sdpa_to_mgqa_init(
@@ -135,119 +143,144 @@ def gpt2sdpa_to_fc_init(
     return residual_fc
 
 def transform_gpt2sdpa_to_mla(
-    bert_attn: BertAttention,
-    mla_attn: MLA                     # an MLA object (already initialized)
+    gpt2_block: GPT2Block,
+    mla_attn: "MLA",  # your MLA class instance
 ):
     """
-    Approximate transformation of BertSdpaSelfAttention parameters into MLA parameters.
-
-    Assumptions / Hints:
-      - MLA should be configured so that:
-          n_heads * qk_head_dim == hidden_size
-          n_heads * (qk_nope_head_dim + v_head_dim) == 2 * hidden_size
-        or an equivalent factorization that represents Q, K, V dimensions.
-      - If q_lora_rank=0, then `mla_attn.wq` is a single linear layer matching BERT's query shape.
-      - If kv_lora_rank > 0, we do an SVD-based rank-k factorization for the combined K+V.
-
-    Returns:
-        mla_attn (MLA): The same MLA object but with its weights overwritten.
+    Transforms (copies/factorizes) weights from a GPT2SdpaAttention
+    into the given MLA instance, assuming world_size=1.
+    
+    Debug prints are included to show shapes at each step.
     """
-    sdpa_attn = bert_attn.self
-    bert_output = bert_attn.output
-    # ------------------------------------------------------------------
-    # 0. Sanity checks (world_size assumed = 1, matching dims, etc.)
-    # ------------------------------------------------------------------
-    bert_hidden_size = sdpa_attn.query.in_features  # Typically 768
-    assert mla_attn.dim == bert_hidden_size, (
-        f"Inconsistent 'dim' in MLA ({mla_attn.dim}) vs. BERT hidden_size ({bert_hidden_size})."
-    )
 
-    # 1. Copy the Q projection directly if q_lora_rank = 0
-    # BERT's query is a torch.nn.Linear: shape (out=hidden_size, in=hidden_size)
-    # MLA's wq is ColumnParallelLinear: shape (out=n_heads*qk_head_dim, in=dim).
-    # If those shapes match 1:1 (and world_size=1), we can do a direct copy.
+    # -------------------------------------------------
+    # 1. Get the GPT-2 SDPA attention submodule
+    # -------------------------------------------------
+    gpt2_sdpa_attn: GPT2SdpaAttention = gpt2_block.attn
+    
+    embed_dim = gpt2_sdpa_attn.embed_dim  # e.g., 768
+    print(f"[DEBUG] GPT2SdpaAttention embed_dim: {embed_dim}")
 
+    # c_attn: [in_dim=768, out_dim=3*768=2304]
+    c_attn_weight = gpt2_sdpa_attn.c_attn.weight  
+    c_attn_bias   = gpt2_sdpa_attn.c_attn.bias    
+
+    print(f"[DEBUG] c_attn_weight shape: {c_attn_weight.shape}")
+    if c_attn_bias is not None:
+        print(f"[DEBUG] c_attn_bias shape: {c_attn_bias.shape}")
+    else:
+        print("[DEBUG] c_attn_bias is None.")
+
+    # -------------------------------------------------
+    # 2. Split 'c_attn' => Q/K/V chunks along dim=1
+    # -------------------------------------------------
+    q_weight, k_weight, v_weight = torch.split(c_attn_weight, embed_dim, dim=1)
+    print(f"[DEBUG] q_weight shape: {q_weight.shape}")
+    print(f"[DEBUG] k_weight shape: {k_weight.shape}")
+    print(f"[DEBUG] v_weight shape: {v_weight.shape}")
+
+    if c_attn_bias is not None:
+        q_bias, k_bias, v_bias = torch.split(c_attn_bias, embed_dim, dim=0)
+        print(f"[DEBUG] q_bias shape: {q_bias.shape}")
+        print(f"[DEBUG] k_bias shape: {k_bias.shape}")
+        print(f"[DEBUG] v_bias shape: {v_bias.shape}")
+    else:
+        q_bias = k_bias = v_bias = None
+
+    # -------------------------------------------------
+    # (A) Copy Q => MLA wq if q_lora_rank=0
+    # -------------------------------------------------
     if mla_attn.q_lora_rank == 0:
         with torch.no_grad():
-            # Copy weights
-            mla_attn.wq.weight.copy_(sdpa_attn.query.weight.data)
-            # If you enabled bias in MLA, copy the bias (BERT does have a Q bias by default)
-            if mla_attn.wq.bias is not None and sdpa_attn.query.bias is not None:
-                mla_attn.wq.bias.copy_(sdpa_attn.query.bias.data)
+            # Debug shapes
+            print(f"[DEBUG] mla_attn.wq.weight shape: {mla_attn.wq.weight.shape}")
+            print(f"[DEBUG] q_weight.T shape: {q_weight.T.shape}")
+
+            # Check dimension
+            assert mla_attn.wq.weight.shape == (embed_dim, embed_dim), (
+                f"Expected MLA wq.weight to be [{embed_dim}, {embed_dim}] but got "
+                f"{mla_attn.wq.weight.shape}. Ensure world_size=1 or adapt slicing."
+            )
+
+            mla_attn.wq.weight.copy_(q_weight.T)
+
+            if (mla_attn.wq.bias is not None) and (q_bias is not None):
+                print("[DEBUG] Copying Q bias...")
+                print(f"[DEBUG] mla_attn.wq.bias shape: {mla_attn.wq.bias.shape}")
+                mla_attn.wq.bias.copy_(q_bias)
     else:
-        # If q_lora_rank > 0, you'd do a similar factorization approach, or
-        # split the Q weight into pieces. Not shown here.
-        raise NotImplementedError(
-            "This example only handles the q_lora_rank=0 case for the Q projection."
-        )
+        raise NotImplementedError("q_lora_rank > 0 not implemented for Q transform.")
 
-    # ------------------------------------------------------------------
-    # 2. Factorize K + V together into wkv_a + kv_norm + wkv_b
-    # ------------------------------------------------------------------
-    # BERT's key and value are also standard nn.Linear layers with shape (768,768).
-    # We'll combine them (concatenate along output-dim) -> shape = (768+768=1536, 768).
-    # Then we do a rank-R factorization via SVD or any low-rank approximation.
-    k_weight = sdpa_attn.key.weight.data
-    v_weight = sdpa_attn.value.weight.data
-    # shape => (1536, 768)
+    # -------------------------------------------------
+    # (B) Factorize K + V => SVD
+    # -------------------------------------------------
+    # k_weight & v_weight => each [768, 768] => cat => [1536, 768]
     kv_weight = torch.cat([k_weight, v_weight], dim=0)
+    print(f"[DEBUG] kv_weight shape: {kv_weight.shape}")
 
-    # Optional: also combine biases or handle them separately. For simplicity:
-    k_bias = sdpa_attn.key.bias.data if sdpa_attn.key.bias is not None else None
-    v_bias = sdpa_attn.value.bias.data if sdpa_attn.value.bias is not None else None
-    # We'll ignore these biases in the factorization. 
-    # If you must keep them, consider augmenting kv_weight or do some workaround.
-
-    # SVD factorization
-    #    kv_weight ~ U * S * Vh,  and we take rank = mla_attn.kv_lora_rank
-    #    Then M_approx = U[:, :r] * S[:r,:r] * Vh[:r, :]
-    #    We store one factor in wkv_a.weight, the other in wkv_b.weight.
     rank = mla_attn.kv_lora_rank
     U, S, Vh = torch.linalg.svd(kv_weight, full_matrices=False)
-    U_approx = U[:, :rank]                  # shape (1536, rank)
-    S_approx = S[:rank]                     # shape (rank,)
-    Vh_approx = Vh[:rank, :]                # shape (rank, 768)
+    U_approx = U[:, :rank]  
+    S_approx = S[:rank]     
+    Vh_approx = Vh[:rank, :]
 
-    # Factor = (1536, rank) x (rank, 768)
-    # We'll call them A and B for clarity
-    A = U_approx @ torch.diag(S_approx)     # shape (1536, rank)
-    B = Vh_approx                           # shape (rank, 768)
+    print(f"[DEBUG] U shape: {U.shape}, S shape: {S.shape}, Vh shape: {Vh.shape}")
+    print(f"[DEBUG] Using rank = {rank}")
+    print(f"[DEBUG] U_approx shape: {U_approx.shape}")
+    print(f"[DEBUG] S_approx shape: {S_approx.shape}")
+    print(f"[DEBUG] Vh_approx shape: {Vh_approx.shape}")
 
-    # MLA expects:
-    #   wkv_a: Linear(dim -> kv_lora_rank + qk_rope_head_dim)
-    #          so wkv_a.weight has shape ( (kv_lora_rank + qk_rope_head_dim), dim ).
-    #          Typically (64, 768) if rank=64 & qk_rope_head_dim=0
-    #
-    #   wkv_b: ColumnParallelLinear(kv_lora_rank -> n_heads*(qk_nope_head_dim + v_head_dim))
-    #          so wkv_b.weight has shape (n_heads*(...), kv_lora_rank),
-    #          e.g. (1536, 64) in our example.
-    #
-    # Because PyTorch’s F.linear uses (out_features, in_features) as the shape of .weight,
-    # we assign:
-    #   wkv_b.weight = A   with shape = (1536, 64)
-    #   wkv_a.weight = B^T with shape = (64, 768)
+    # Reconstruct => A * B
+    A = U_approx @ torch.diag(S_approx)  # => [1536, rank]
+    B = Vh_approx                        # => [rank, 768]
+
+    print(f"[DEBUG] A shape: {A.shape}, B shape: {B.shape}")
+
+    # Copy => wkv_b.weight, wkv_a.weight
+    with torch.no_grad():
+        print(f"[DEBUG] mla_attn.wkv_b.weight shape: {mla_attn.wkv_b.weight.shape}")
+        print(f"[DEBUG] mla_attn.wkv_a.weight shape: {mla_attn.wkv_a.weight.shape}")
+
+        assert mla_attn.wkv_b.weight.shape == (A.shape[0], A.shape[1]), (
+            f"Expected wkv_b.weight to be {A.shape}, got {mla_attn.wkv_b.weight.shape}."
+        )
+        mla_attn.wkv_b.weight.copy_(A)
+
+        assert mla_attn.wkv_a.weight.shape == (B.shape[0], B.shape[1]), (
+            f"Expected wkv_a.weight to be {B.shape}, got {mla_attn.wkv_a.weight.shape}."
+        )
+        mla_attn.wkv_a.weight.copy_(B)
+
+    # Optionally set kv_norm to identity
+    if hasattr(mla_attn, "kv_norm") and mla_attn.kv_norm is not None:
+        if mla_attn.kv_norm.weight.shape[0] == rank:
+            print("[DEBUG] Setting kv_norm.weight to 1.0 (identity).")
+            with torch.no_grad():
+                mla_attn.kv_norm.weight.fill_(1.0)
+
+    # -------------------------------------------------
+    # (C) Copy c_proj => MLA.wo
+    # -------------------------------------------------
+    c_proj_weight = gpt2_sdpa_attn.c_proj.weight  # [768, 768]
+    c_proj_bias   = gpt2_sdpa_attn.c_proj.bias    # [768]
+
+    print(f"[DEBUG] c_proj_weight shape: {c_proj_weight.shape}")
+    if c_proj_bias is not None:
+        print(f"[DEBUG] c_proj_bias shape: {c_proj_bias.shape}")
 
     with torch.no_grad():
-        # Make sure shapes match your MLA config before copying!
-        mla_attn.wkv_b.weight.copy_(A)            # shape (1536, 64)
-        mla_attn.wkv_a.weight.copy_(B)            # shape (64, 768)
-        # If you wish to approximate biases, you could do so here. This example omits it.
+        print(f"[DEBUG] mla_attn.wo.weight shape: {mla_attn.wo.weight.shape}")
+        assert mla_attn.wo.weight.shape == (embed_dim, embed_dim), (
+            f"Expected MLA wo.weight to be [{embed_dim}, {embed_dim}] but got {mla_attn.wo.weight.shape}."
+        )
+        mla_attn.wo.weight.copy_(c_proj_weight.T)
 
-    # 2a. Optionally, set kv_norm to identity if you just want minimal interference.
-    #     kv_norm is RMSNorm(kv_lora_rank).
-    if isinstance(mla_attn.kv_norm, RMSNorm) and mla_attn.kv_norm.weight.shape[0] == rank:
-        with torch.no_grad():
-            mla_attn.kv_norm.weight.fill_(1.0)  # Essentially no scaling in RMSNorm
+        if mla_attn.wo.bias is not None and c_proj_bias is not None:
+            print("[DEBUG] Copying c_proj bias...")
+            print(f"[DEBUG] mla_attn.wo.bias shape: {mla_attn.wo.bias.shape}")
+            mla_attn.wo.bias.copy_(c_proj_bias)
 
-    # ------------------------------------------------------------------
-    # 3. Copy the final output projection (BERT's `dense`) into MLA's `wo`
-    # ------------------------------------------------------------------
-    # BERT uses self.out_proj or self.dense with shape (768, 768) as well.
-    out_proj = bert_output.dense
-    with torch.no_grad():
-        mla_attn.wo.weight.copy_(out_proj.weight.data)
-        if mla_attn.wo.bias is not None and out_proj.bias is not None:
-            mla_attn.wo.bias.copy_(out_proj.bias.data)
+    print("[DEBUG] transform_gpt2sdpa_to_mla completed successfully.")
 
     return mla_attn
 
@@ -335,55 +368,82 @@ def transform_gpt2sdpa_to_fc(
     return gpt2sdpa
 
 class MLAWrapper(torch.nn.Module):
-
     def __init__(self, mla):
         super().__init__()
         self.mla = mla
-        # Track or pre-compute any needed start_pos or freqs_cis here if required
 
     def forward(
         self,
-        hidden_states,
-        attention_mask=None,
-        head_mask=None,
-        encoder_hidden_states=None,
-        encoder_attention_mask=None,
-        past_key_value=None,
-        output_attentions=False,
+        hidden_states: Optional[torch.FloatTensor],
+        attention_mask: Optional[torch.FloatTensor] = None,
+        head_mask: Optional[torch.FloatTensor] = None,
+        encoder_hidden_states: Optional[torch.Tensor] = None,
+        encoder_attention_mask: Optional[torch.FloatTensor] = None,
+        past_key_value: Optional[Tuple[torch.Tensor]] = None,
+        output_attentions: bool = False,
         **kwargs
-    ):
-        start_pos = 0
+    ) -> Tuple[torch.Tensor, None, None]:
+
+        # (1) Convert inputs to the dtype MLA uses
         if hidden_states is not None:
-            hidden_states = hidden_states.to(dtype=torch.bfloat16)
+            hidden_states = hidden_states.to(torch.bfloat16)
             bsz, seqlen, _ = hidden_states.shape
         else:
-            seqlen = 0  # or handle the None case as you see fit
+            bsz, seqlen = 0, 0
+        desired_seqlen = 12
+    
+        # 1) Slice the hidden_states down from 458 -> 12 tokens
+        if seqlen != desired_seqlen:
+            hidden_states = hidden_states[:, -desired_seqlen:, :]  # keep last 12
+            # now hidden_states is [8, 12, 768]
+            bsz, seqlen, hidden_dim = hidden_states.shape
         
+        # 2) Adjust the attention mask to match
         if attention_mask is not None:
-            attention_mask = attention_mask.to(dtype=torch.bfloat16)
-            attention_mask = attention_mask.squeeze(1)
+            # If it's [8, 1, 458, 458], squeeze => [8, 458, 458]
+            if attention_mask.dim() == 4 and attention_mask.shape[1] == 1:
+                attention_mask = attention_mask.squeeze(1)  # => [8, 458, 458]
+            
+            # If mask is still 458×458, slice the last 12×12 region
+            if attention_mask.shape[-1] != seqlen:  # 12
+                attention_mask = attention_mask[:, -seqlen:, -seqlen:]
+                # => [8, 12, 12]
+            
+            # Optionally cast to bf16 if your model uses bf16
+            attention_mask = attention_mask.to(torch.bfloat16)
 
-        rope_dim = getattr(self.mla, "qk_rope_head_dim", 64)
-        dummy_freq = torch.zeros(
-            seqlen, rope_dim // 2,
-            dtype=torch.float32,       # must be a supported type
-            device=hidden_states.device
-        )
-        dummy_ones = torch.ones_like(dummy_freq, dtype=torch.float32)
-        freqs_cis = torch.polar(dummy_ones, dummy_freq)  # This is now float32
-        # freqs_cis = freqs_cis.to(dtype=torch.bfloat16)
-        
-        # noted the output is bf16 format
+        # (3) Ensure MLA’s caches are in bf16
+        for attr_name in ["kv_cache", "pe_cache", "k_cache", "v_cache"]:
+            if hasattr(self.mla, attr_name) and getattr(self.mla, attr_name) is not None:
+                setattr(self.mla, attr_name, getattr(self.mla, attr_name).to(torch.bfloat16))
+
+        # (4) Always create a valid freqs_cis, even if rope_dim=0
+        rope_dim = getattr(self.mla, "qk_rope_head_dim", 0)
+        if rope_dim > 0:
+            # Normal case if rope_dim>0
+            dummy_freq = torch.zeros((seqlen, rope_dim // 2), dtype=torch.float32, device=hidden_states.device)
+            dummy_ones = torch.ones_like(dummy_freq, dtype=torch.float32)
+            freqs_cis_fp32 = torch.polar(dummy_ones, dummy_freq)  # shape: [seqlen, rope_dim//2], complex float32
+            freqs_cis = freqs_cis_fp32.to(torch.bfloat16)
+        else:
+            # Rope dim is 0, but MLA code still calls apply_rotary_emb.
+            # Pass an EMPTY complex tensor instead of None to avoid the crash.
+            # shape => [seqlen, 0] so .view() won't fail
+            freqs_cis = torch.zeros((seqlen, 0), dtype=torch.complex32, device=hidden_states.device)
+
+        # (5) Run MLA
+        start_pos = 0
         output = self.mla(
             x=hidden_states,
             start_pos=start_pos,
-            freqs_cis=freqs_cis,
+            freqs_cis=freqs_cis,  # never None
             mask=attention_mask,
         )
 
-        # Convert MLA output back to float32 for subsequent layers
+        # (6) Convert output back to fp32 if needed
         output = output.to(dtype=torch.float32)
-        return (output, )
+
+        return (output.detach(), None, None)
     
 class MGQAWrapper(torch.nn.Module):
 
