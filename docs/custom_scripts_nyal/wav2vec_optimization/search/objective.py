@@ -131,6 +131,35 @@ def objective(trial, baseline_model_data):
                 "bias_frac_width": trial.suggest_categorical("bias_frac_width", 
                                                            search_space["quantization"]["bit_width_configs"]["bias_frac_width"]),
             }
+        elif quant_method_name in ["minifloat_denorm", "minifloat_ieee"]:
+            bit_config = {
+                "weight_width": trial.suggest_categorical("weight_width", 
+                                                         search_space["quantization"]["bit_width_configs"]["weight_width"]),
+                "weight_exponent_width": trial.suggest_categorical("weight_exponent_width", 
+                                                                 search_space["quantization"]["minifloat_configs"]["weight_exponent_width"]),
+                "weight_exponent_bias": trial.suggest_categorical("weight_exponent_bias", 
+                                                                search_space["quantization"]["minifloat_configs"]["weight_exponent_bias"]),
+                "data_in_width": trial.suggest_categorical("data_in_width", 
+                                                         search_space["quantization"]["bit_width_configs"]["data_in_width"]),
+                "data_in_exponent_width": trial.suggest_categorical("data_in_exponent_width", 
+                                                                  search_space["quantization"]["minifloat_configs"]["data_in_exponent_width"]),
+                "data_in_exponent_bias": trial.suggest_categorical("data_in_exponent_bias", 
+                                                                 search_space["quantization"]["minifloat_configs"]["data_in_exponent_bias"]),
+                "bias_width": trial.suggest_categorical("bias_width", 
+                                                      search_space["quantization"]["bit_width_configs"]["bias_width"]),
+                "bias_exponent_width": trial.suggest_categorical("bias_exponent_width", 
+                                                               search_space["quantization"]["minifloat_configs"]["bias_exponent_width"]),
+                "bias_exponent_bias": trial.suggest_categorical("bias_exponent_bias", 
+                                                              search_space["quantization"]["minifloat_configs"]["bias_exponent_bias"]),
+            }
+        else:
+            # For other methods, just use basic width configuration
+            bit_config = {
+                "weight_width": trial.suggest_categorical("weight_width", 
+                                                         search_space["quantization"]["bit_width_configs"]["weight_width"]),
+                "data_in_width": trial.suggest_categorical("data_in_width", 
+                                                         search_space["quantization"]["bit_width_configs"]["data_in_width"]),
+            }
     
     # Apply quantization to the smoothed model
     quantized_model = apply_quantization(smoothed_mg.model, quant_method_name, quant_class, bit_config)
@@ -266,7 +295,6 @@ def objective(trial, baseline_model_data):
     
     # Invert for Optuna (which maximizes)
     composite_metric = -composite_score
-    
     trial.set_user_attr("composite_score", composite_score)
     trial.set_user_attr("composite_metric", composite_metric)
     
@@ -274,399 +302,3 @@ def objective(trial, baseline_model_data):
     
     return composite_metric
 
-
-def enhanced_objective(trial, baseline_model_data):
-    """
-    Enhanced objective function that trains and evaluates after each phase:
-    1) Pruning phase + train + evaluate
-    2) SmoothQuant phase + train + evaluate
-    3) Quantization phase + train + evaluate
-    
-    This allows tracking performance changes at each stage.
-    """
-    # Unpack baseline data
-    search_space = baseline_model_data["search_space"]
-    mg = baseline_model_data["mg"]
-    ctc_head = baseline_model_data["ctc_head"]
-    decoder = baseline_model_data["decoder"]
-    tokenized_dataset = baseline_model_data["tokenized_dataset"]
-    tokenizer = baseline_model_data["tokenizer"]
-    data_collator = baseline_model_data["data_collator"]
-    data_module = baseline_model_data["data_module"]
-    checkpoint = baseline_model_data["checkpoint"]
-    dataset_name = baseline_model_data["dataset_name"]
-    baseline_metrics = baseline_model_data["baseline_metrics"]
-    
-    logger.info(f"Starting enhanced trial {trial.number}")
-    
-    # -----------------------------
-    # Phase 1: Pruning
-    # -----------------------------
-    pruning_method = trial.suggest_categorical("pruning_method", 
-                                               search_space["pruning"]["methods"])
-    
-    sparsity = trial.suggest_categorical("pruning_sparsity", 
-                                         search_space["pruning"]["sparsity_levels"])
-    
-    structured = False
-    if pruning_method == "hwpq":
-        structured = trial.suggest_categorical("structured_sparsity", 
-                                               search_space["pruning"]["structured_options"])
-    
-    # Apply pruning to the model
-    pruned_model = apply_pruning(mg.model, pruning_method, sparsity, structured)
-    
-    # Create pruned combined model
-    pruned_combined = CombinedWav2Vec2CTC(
-        encoder=pruned_model,
-        ctc_head=ctc_head,
-        decoder=decoder,
-        beam_width=10
-    )
-    
-    # Calculate pruning metrics
-    pruning_metrics = calculate_pruning_metrics(pruned_model)
-    for k, v in pruning_metrics.items():
-        trial.set_user_attr(f"pruning_{k}", v)
-    
-    # Train the pruned model
-    logger.info("Training pruned model...")
-    pruned_trainer = get_trainer(
-        model=pruned_combined,
-        tokenized_dataset=tokenized_dataset,
-        tokenizer=tokenizer,
-        evaluate_metric="wer",
-        data_collator=data_collator,
-        num_train_epochs=1,
-        gradient_accumulation_steps=4,
-        per_device_train_batch_size=2,
-        per_device_eval_batch_size=2,
-    )
-    pruned_trainer.train()
-    
-    # Evaluate pruned model
-    pruned_eval = pruned_trainer.evaluate()
-    pruned_wer = pruned_eval.get("eval_wer", None)
-    pruned_loss = pruned_eval.get("eval_loss", None)
-    trial.set_user_attr("pruned_eval_wer", pruned_wer)
-    trial.set_user_attr("pruned_eval_loss", pruned_loss)
-    
-    # Create MG for runtime analysis of pruned model
-    pruned_mg = MaseGraph(
-        pruned_trainer.model.encoder,
-        hf_input_names=["input_values", "attention_mask"],
-    )
-    
-    # Initialize metadata
-    pruned_mg, _ = passes.init_metadata_analysis_pass(pruned_mg)
-    
-    # Create dummy input
-    dummy_in = {
-        "input_values": torch.zeros((1, 16000), dtype=torch.float32),
-        "attention_mask": torch.ones((1, 16000), dtype=torch.long),
-    }
-    
-    # Add common metadata
-    pruned_mg, _ = passes.add_common_metadata_analysis_pass(
-        pruned_mg,
-        pass_args={
-            "dummy_in": dummy_in,
-            "add_value": True,
-            "force_device_meta": False,
-        }
-    )
-    
-    # Run runtime analysis for pruned model
-    runtime_analysis_config = {
-        "num_batches": 50,  # Reduced for faster trials
-        "num_GPU_warmup_batches": 5,
-        "test": True,
-        "data_module": data_module,
-        "model": checkpoint,
-        "accelerator": "cuda",
-        "task": "ctc",
-        "decoder": decoder,
-        "beam_width": 10,
-        "tokenizer": tokenizer,
-        "batch_size": BATCH_SIZE,
-        "sample_rate": 16000,
-        "ctc_head": ctc_head,
-    }
-    
-    _, pruned_runtime = runtime_analysis_pass(pruned_mg, pass_args=runtime_analysis_config)
-    relevant_keys = [
-        "Average WER", "Average Latency", "Average RTF", 
-        "Average GPU Power Usage", "Inference Energy Consumption"
-    ]
-    
-    for k in relevant_keys:
-        val = pruned_runtime.get(k, float("inf"))
-        trial.set_user_attr(f"pruned_{k.lower().replace(' ', '_')}", val)
-    
-    # -----------------------------
-    # Phase 2: SmoothQuant
-    # -----------------------------
-    
-    # Select alpha for SmoothQuant
-    alpha = trial.suggest_categorical("smoothquant_alpha", 
-                                     search_space["smoothquant"]["alpha_values"])
-    
-    # Apply SmoothQuant
-    smoothed_mg, _ = apply_smoothquant(pruned_mg, alpha, data_module, checkpoint, dataset_name)
-    
-    # Create smoothed combined model
-    smoothed_combined = CombinedWav2Vec2CTC(
-        encoder=smoothed_mg.model,
-        ctc_head=ctc_head,
-        decoder=decoder,
-        beam_width=10
-    )
-    
-    # Train the smoothed model
-    logger.info("Training smoothed model...")
-    smoothed_trainer = get_trainer(
-        model=smoothed_combined,
-        tokenized_dataset=tokenized_dataset,
-        tokenizer=tokenizer,
-        evaluate_metric="wer",
-        data_collator=data_collator,
-        num_train_epochs=1,
-        gradient_accumulation_steps=4,
-        per_device_train_batch_size=2,
-        per_device_eval_batch_size=2,
-    )
-    smoothed_trainer.train()
-    
-    # Evaluate smoothed model
-    smoothed_eval = smoothed_trainer.evaluate()
-    smoothed_wer = smoothed_eval.get("eval_wer", None)
-    smoothed_loss = smoothed_eval.get("eval_loss", None)
-    trial.set_user_attr("smoothed_eval_wer", smoothed_wer)
-    trial.set_user_attr("smoothed_eval_loss", smoothed_loss)
-    
-    # Create new MG for runtime analysis of smoothed model
-    smoothed_analysis_mg = MaseGraph(
-        smoothed_trainer.model.encoder,
-        hf_input_names=["input_values", "attention_mask"],
-    )
-    
-    # Initialize metadata
-    smoothed_analysis_mg, _ = passes.init_metadata_analysis_pass(smoothed_analysis_mg)
-    
-    # Add common metadata
-    smoothed_analysis_mg, _ = passes.add_common_metadata_analysis_pass(
-        smoothed_analysis_mg,
-        pass_args={
-            "dummy_in": dummy_in,
-            "add_value": True,
-            "force_device_meta": False,
-        }
-    )
-    
-    # Run runtime analysis for smoothed model
-    _, smoothed_runtime = runtime_analysis_pass(smoothed_analysis_mg, pass_args=runtime_analysis_config)
-    
-    for k in relevant_keys:
-        val = smoothed_runtime.get(k, float("inf"))
-        trial.set_user_attr(f"smoothed_{k.lower().replace(' ', '_')}", val)
-    
-    # -----------------------------
-    # Phase 3: Quantization
-    # -----------------------------
-    
-    # Select quantization method
-    quant_methods = search_space["quantization"]["methods"]
-    quant_method_idx = trial.suggest_categorical("quantization_method_idx", 
-                                                list(range(len(quant_methods))))
-    quant_method_name, quant_class = quant_methods[quant_method_idx]
-    
-    # Prepare bit width config based on quantization method
-    bit_config = None
-    if quant_method_name != "full_precision":
-        # Create a configuration based on method type
-        if quant_method_name == "integer":
-            bit_config = {
-                "weight_width": trial.suggest_categorical("weight_width", 
-                                                         search_space["quantization"]["bit_width_configs"]["weight_width"]),
-                "weight_frac_width": trial.suggest_categorical("weight_frac_width", 
-                                                             search_space["quantization"]["bit_width_configs"]["weight_frac_width"]),
-                "data_in_width": trial.suggest_categorical("data_in_width", 
-                                                         search_space["quantization"]["bit_width_configs"]["data_in_width"]),
-                "data_in_frac_width": trial.suggest_categorical("data_in_frac_width", 
-                                                              search_space["quantization"]["bit_width_configs"]["data_in_frac_width"]),
-                "bias_width": trial.suggest_categorical("bias_width", 
-                                                      search_space["quantization"]["bit_width_configs"]["bias_width"]),
-                "bias_frac_width": trial.suggest_categorical("bias_frac_width", 
-                                                           search_space["quantization"]["bit_width_configs"]["bias_frac_width"]),
-            }
-        elif quant_method_name in ["minifloat_denorm", "minifloat_ieee"]:
-            bit_config = {
-                "weight_width": trial.suggest_categorical("weight_width", 
-                                                         search_space["quantization"]["bit_width_configs"]["weight_width"]),
-                "weight_exponent_width": trial.suggest_categorical("weight_exponent_width", 
-                                                                 search_space["quantization"]["minifloat_configs"]["weight_exponent_width"]),
-                "weight_exponent_bias": trial.suggest_categorical("weight_exponent_bias", 
-                                                                search_space["quantization"]["minifloat_configs"]["weight_exponent_bias"]),
-                "data_in_width": trial.suggest_categorical("data_in_width", 
-                                                         search_space["quantization"]["bit_width_configs"]["data_in_width"]),
-                "data_in_exponent_width": trial.suggest_categorical("data_in_exponent_width", 
-                                                                  search_space["quantization"]["minifloat_configs"]["data_in_exponent_width"]),
-                "data_in_exponent_bias": trial.suggest_categorical("data_in_exponent_bias", 
-                                                                 search_space["quantization"]["minifloat_configs"]["data_in_exponent_bias"]),
-                "bias_width": trial.suggest_categorical("bias_width", 
-                                                      search_space["quantization"]["bit_width_configs"]["bias_width"]),
-                "bias_exponent_width": trial.suggest_categorical("bias_exponent_width", 
-                                                               search_space["quantization"]["minifloat_configs"]["bias_exponent_width"]),
-                "bias_exponent_bias": trial.suggest_categorical("bias_exponent_bias", 
-                                                              search_space["quantization"]["minifloat_configs"]["bias_exponent_bias"]),
-            }
-        else:
-            # For other methods, just use basic width configuration
-            bit_config = {
-                "weight_width": trial.suggest_categorical("weight_width", 
-                                                         search_space["quantization"]["bit_width_configs"]["weight_width"]),
-                "data_in_width": trial.suggest_categorical("data_in_width", 
-                                                         search_space["quantization"]["bit_width_configs"]["data_in_width"]),
-            }
-    
-    # Apply quantization to the smoothed model
-    quantized_model = apply_quantization(smoothed_analysis_mg.model, quant_method_name, quant_class, bit_config)
-    
-    # Create final optimized model combining all phases
-    optimized_model = CombinedWav2Vec2CTC(
-        encoder=quantized_model,
-        ctc_head=ctc_head,
-        decoder=decoder,
-        beam_width=10
-    )
-    
-    # Store configuration info in trial
-    trial.set_user_attr("quantization_method", quant_method_name)
-    
-    # Train the fully optimized model
-    logger.info("Training fully optimized model...")
-    final_trainer = get_trainer(
-        model=optimized_model,
-        tokenized_dataset=tokenized_dataset,
-        tokenizer=tokenizer,
-        evaluate_metric="wer",
-        data_collator=data_collator,
-        num_train_epochs=1,
-        gradient_accumulation_steps=4,
-        per_device_train_batch_size=2,
-        per_device_eval_batch_size=2,
-    )
-    final_trainer.train()
-    
-    # Evaluate optimized model
-    final_eval = final_trainer.evaluate()
-    final_wer = final_eval.get("eval_wer", None)
-    final_loss = final_eval.get("eval_loss", None)
-    trial.set_user_attr("final_eval_wer", final_wer)
-    trial.set_user_attr("final_eval_loss", final_loss)
-    
-    # Create new MG for runtime analysis
-    final_mg = MaseGraph(
-        final_trainer.model.encoder,
-        hf_input_names=["input_values", "attention_mask"],
-    )
-    
-    # Initialize metadata
-    final_mg, _ = passes.init_metadata_analysis_pass(final_mg)
-    
-    # Add common metadata
-    final_mg, _ = passes.add_common_metadata_analysis_pass(
-        final_mg,
-        pass_args={
-            "dummy_in": dummy_in,
-            "add_value": True,
-            "force_device_meta": False,
-        }
-    )
-    
-    # Run runtime analysis
-    _, final_runtime = runtime_analysis_pass(final_mg, pass_args=runtime_analysis_config)
-    
-    for k in relevant_keys:
-        val = final_runtime.get(k, float("inf"))
-        trial.set_user_attr(f"final_{k.lower().replace(' ', '_')}", val)
-    
-    # Run bit width analysis
-    _, bitwidth_results = calculate_avg_bits_mg_analysis_pass(final_mg)
-    avg_bitwidth = bitwidth_results.get("average_bitwidth", 32)
-    trial.set_user_attr("avg_bitwidth", avg_bitwidth)
-    
-    # Calculate percentage changes from baseline
-    pct_changes = {}
-    for k in relevant_keys:
-        final_val = final_runtime.get(k, None)
-        base_val = baseline_metrics.get(k, None)
-        if final_val is not None and base_val is not None and base_val != 0:
-            pct_change = (final_val - base_val) / base_val * 100.0
-            pct_changes[k] = pct_change
-            trial.set_user_attr(f"pct_change_{k.lower().replace(' ', '_')}", pct_change)
-    
-    # Calculate bit width reduction
-    base_bitwidth = baseline_metrics.get("avg_bitwidth", 32)
-    bitwidth_reduction = (base_bitwidth - avg_bitwidth) / base_bitwidth
-    trial.set_user_attr("bitwidth_reduction", bitwidth_reduction)
-    
-    # Calculate composite score
-    wer_change = pct_changes.get("Average WER", 0.0)
-    latency_change = pct_changes.get("Average Latency", 0.0)
-    energy_change = pct_changes.get("Inference Energy Consumption", 0.0)
-    
-    # Weight the different metrics
-    wer_weight = 0.4      # Accuracy is important
-    latency_weight = 0.2
-    energy_weight = 0.1
-    bitwidth_weight = 0.2
-    sparsity_weight = 0.1
-    
-    # Combine into composite score (negative is better as it means reduction)
-    composite_score = (
-        wer_weight * wer_change +
-        latency_weight * latency_change +
-        energy_weight * energy_change -
-        bitwidth_weight * (bitwidth_reduction * 100) -  # Convert to percentage
-        sparsity_weight * (pruning_metrics["overall_sparsity"] * 100)  # Convert to percentage
-    )
-    
-    # Invert for Optuna (which maximizes)
-    composite_metric = -composite_score
-    
-    trial.set_user_attr("composite_score", composite_score)
-    trial.set_user_attr("composite_metric", composite_metric)
-    
-    logger.info(f"Enhanced trial complete with composite score: {composite_score}")
-    
-    return composite_metric
-        elif quant_method_name in ["minifloat_denorm", "minifloat_ieee"]:
-            bit_config = {
-                "weight_width": trial.suggest_categorical("weight_width", 
-                                                         search_space["quantization"]["bit_width_configs"]["weight_width"]),
-                "weight_exponent_width": trial.suggest_categorical("weight_exponent_width", 
-                                                                 search_space["quantization"]["minifloat_configs"]["weight_exponent_width"]),
-                "weight_exponent_bias": trial.suggest_categorical("weight_exponent_bias", 
-                                                                search_space["quantization"]["minifloat_configs"]["weight_exponent_bias"]),
-                "data_in_width": trial.suggest_categorical("data_in_width", 
-                                                         search_space["quantization"]["bit_width_configs"]["data_in_width"]),
-                "data_in_exponent_width": trial.suggest_categorical("data_in_exponent_width", 
-                                                                  search_space["quantization"]["minifloat_configs"]["data_in_exponent_width"]),
-                "data_in_exponent_bias": trial.suggest_categorical("data_in_exponent_bias", 
-                                                                 search_space["quantization"]["minifloat_configs"]["data_in_exponent_bias"]),
-                "bias_width": trial.suggest_categorical("bias_width", 
-                                                      search_space["quantization"]["bit_width_configs"]["bias_width"]),
-                "bias_exponent_width": trial.suggest_categorical("bias_exponent_width", 
-                                                               search_space["quantization"]["minifloat_configs"]["bias_exponent_width"]),
-                "bias_exponent_bias": trial.suggest_categorical("bias_exponent_bias", 
-                                                              search_space["quantization"]["minifloat_configs"]["bias_exponent_bias"]),
-            }
-        else:
-            # For other methods, just use basic width configuration
-            bit_config = {
-                "weight_width": trial.suggest_categorical("weight_width", 
-                                                         search_space["quantization"]["bit_width_configs"]["weight_width"]),
-                "data_in_width": trial.suggest_categorical("data_in_width", 
-                                                         search_space["quantization"]["bit_width_configs"]["data_in_width"]),
-            }

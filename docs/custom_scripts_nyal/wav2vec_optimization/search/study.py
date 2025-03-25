@@ -16,13 +16,13 @@ from chop.models import CombinedWav2Vec2CTC
 from optimization.pruning import apply_pruning
 from optimization.smoothquant import apply_smoothquant
 from optimization.quantization import apply_quantization
-from search.objective import objective, enhanced_objective
-from config import NUM_TRIALS, ENHANCED_OBJECTIVE
+from search.objective import objective
+from config import NUM_TRIALS
 
 # Set up logging
 logger = logging.getLogger(__name__)
 
-def run_optimization_study(baseline_model_data, n_trials=NUM_TRIALS, enhanced=ENHANCED_OBJECTIVE):
+def run_optimization_study(baseline_model_data, n_trials=NUM_TRIALS):
     """Run the Optuna optimization study"""
     logger.info(f"Starting optimization study with {n_trials} trials...")
     
@@ -34,11 +34,8 @@ def run_optimization_study(baseline_model_data, n_trials=NUM_TRIALS, enhanced=EN
         sampler=sampler
     )
     
-    # Run optimization with either standard or enhanced objective
-    objective_fn = enhanced_objective if enhanced else objective
-    
     study.optimize(
-        lambda trial: objective_fn(trial, baseline_model_data),
+        lambda trial: objective(trial, baseline_model_data),
         n_trials=n_trials,
         timeout=60 * 60 * 12  # 12 hour timeout
     )
@@ -57,20 +54,14 @@ def run_optimization_study(baseline_model_data, n_trials=NUM_TRIALS, enhanced=EN
     
     logger.info(f"  Average Bit Width: {best_trial.user_attrs.get('avg_bitwidth', 'N/A')}")
     
-    if enhanced:
-        logger.info("\nPerformance by phase:")
-        logger.info(f"  Pruning WER: {best_trial.user_attrs.get('pruned_average_wer', 'N/A')}")
-        logger.info(f"  SmoothQuant WER: {best_trial.user_attrs.get('smoothed_average_wer', 'N/A')}")
-        logger.info(f"  Final WER: {best_trial.user_attrs.get('final_average_wer', 'N/A')}")
-    else:
-        logger.info(f"  WER: {best_trial.user_attrs.get('runtime_average_wer', 'N/A')}")
+    logger.info(f"  WER: {best_trial.user_attrs.get('runtime_average_wer', 'N/A')}")
     
     # Save best trial model
-    save_best_model(best_trial, baseline_model_data, enhanced)
+    save_best_model(best_trial, baseline_model_data)
     
     return study
 
-def save_best_model(best_trial, baseline_model_data, enhanced=ENHANCED_OBJECTIVE):
+def save_best_model(best_trial, baseline_model_data):
     """Save the best model from the study"""
     logger.info("Saving best model...")
     
@@ -183,13 +174,6 @@ def save_best_model(best_trial, baseline_model_data, enhanced=ENHANCED_OBJECTIVE
         "bit_config": bit_config,
         "composite_score": best_trial.user_attrs.get("composite_score"),
     }
-    
-    if enhanced:
-        config.update({
-            "pruned_wer": best_trial.user_attrs.get("pruned_average_wer"),
-            "smoothed_wer": best_trial.user_attrs.get("smoothed_average_wer"),
-            "final_wer": best_trial.user_attrs.get("final_average_wer"),
-        })
     
     with open("best_model_config.json", "w") as f:
         json.dump(config, f, indent=2)

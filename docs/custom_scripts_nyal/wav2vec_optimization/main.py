@@ -6,7 +6,7 @@ import logging
 import torch
 import argparse
 
-from config import define_search_space, NUM_TRIALS, ENHANCED_OBJECTIVE
+from config import define_search_space, NUM_TRIALS
 from data_utils import import_model_and_dataset
 from model_utils import setup_mase_graph, create_combined_model
 from optimization.baseline import run_baseline_metrics
@@ -66,16 +66,15 @@ def main(args):
     }
     
     # 6. Run optimization study
-    logger.info(f"Starting optimization study with {'enhanced' if args.enhanced else 'standard'} objective")
+    logger.info("Starting optimization study")
     study = run_optimization_study(
         baseline_model_data, 
-        n_trials=args.n_trials,
-        enhanced=args.enhanced
+        n_trials=args.n_trials
     )
     
     # 7. Process results and create visualizations
-    results_df = process_study_results(study, enhanced=args.enhanced)
-    create_visualizations(study, results_df, baseline_metrics, enhanced=args.enhanced)
+    results_df = process_study_results(study)
+    create_visualizations(study, results_df, baseline_metrics)
     
     # 8. Print summary
     logger.info("Optimization pipeline complete")
@@ -89,18 +88,8 @@ def main(args):
         "pruning_sparsity": study.best_trial.params.get("pruning_sparsity", None),
         "structured_sparsity": study.best_trial.params.get("structured_sparsity", None),
         "smoothquant_alpha": study.best_trial.params.get("smoothquant_alpha", None),
+        "runtime_average_wer": study.best_trial.user_attrs.get("runtime_average_wer", None),
     }
-    
-    if args.enhanced:
-        best_config.update({
-            "pruned_wer": study.best_trial.user_attrs.get("pruned_average_wer", None),
-            "smoothed_wer": study.best_trial.user_attrs.get("smoothed_average_wer", None),
-            "final_wer": study.best_trial.user_attrs.get("final_average_wer", None),
-        })
-    else:
-        best_config.update({
-            "runtime_average_wer": study.best_trial.user_attrs.get("runtime_average_wer", None),
-        })
     
     logger.info("Best configuration:")
     for k, v in best_config.items():
@@ -112,8 +101,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Wav2Vec2 Optimization Pipeline")
     parser.add_argument("--n_trials", type=int, default=NUM_TRIALS, 
                         help=f"Number of optimization trials (default: {NUM_TRIALS})")
-    parser.add_argument("--enhanced", action="store_true", default=ENHANCED_OBJECTIVE,
-                        help=f"Use enhanced objective with phase-by-phase evaluation (default: {ENHANCED_OBJECTIVE})")
     parser.add_argument("--seed", type=int, default=42,
                         help="Random seed for reproducibility (default: 42)")
     
