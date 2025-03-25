@@ -1,11 +1,12 @@
 from chop.passes.graph.analysis.add_metadata.add_hardware_metadata import *
 from collections import OrderedDict
 
+
 def difflogic_hardware_metadata_optimize_pass(graph, args={}):
-    
+
     def _is_logiclayer(node):
         return node.meta["mase"]["common"]["mase_op"] == "user_defined_module"
-    
+
     for node in graph.nodes:
         if _is_logiclayer(node):
             pre_common_args_md = node.meta["mase"]["common"]["args"]
@@ -27,9 +28,13 @@ def difflogic_hardware_force_fixed_flatten_pass(graph, args={}):
             # add_component source
             node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_RTL"
             node.meta["mase"]["hardware"]["module"] = "fixed_difflogic_flatten"
-            node.meta["mase"]["hardware"]["dependence_files"] = ["difflogic_layers/rtl/fixed_difflogic_flatten.sv"]
+            node.meta["mase"]["hardware"]["dependence_files"] = [
+                "difflogic_layers/rtl/fixed_difflogic_flatten.sv"
+            ]
             # else
             add_verilog_param(node)
             add_extra_verilog_param(node, graph)
-            graph.meta["mase"]["hardware"]["verilog_sources"] += node.meta["mase"]["hardware"]["dependence_files"]
+            graph.meta["mase"]["hardware"]["verilog_sources"] += node.meta["mase"][
+                "hardware"
+            ]["dependence_files"]
     return (graph, None)

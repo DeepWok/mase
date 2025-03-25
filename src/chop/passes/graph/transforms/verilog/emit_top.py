@@ -12,10 +12,12 @@ import torch.nn as nn
 
 logger = logging.getLogger(__name__)
 
-from .util import get_verilog_parameters, \
-                  add_node_name_to_keys_with_precision, \
-                  get_top_param_name_with_precision, \
-                  get_node_param_name_with_precision
+from .util import (
+    get_verilog_parameters,
+    add_node_name_to_keys_with_precision,
+    get_top_param_name_with_precision,
+    get_node_param_name_with_precision,
+)
 from pathlib import Path
 
 from chop.ir.common import MASE_IMPLICIT_FUNCS
@@ -147,7 +149,7 @@ class VerilogInterfaceEmitter:
                 interface += f"\n\tinput  data_in_0_valid,"
                 interface += f"\n\toutput data_in_0_ready,"
                 continue
-            
+
             node_name = vf(node.name)
             for arg_idx, arg in enumerate(
                 node.meta["mase"].parameters["common"]["args"].keys()
@@ -213,14 +215,19 @@ class VerilogSignalEmitter:
         for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
             if not isinstance(arg_info, dict):
                 continue
-            
+
             # DiffLogic: signals depends on different things
-            if node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_logic", "fixed_difflogic_groupsum"]:
+            if node.meta["mase"]["hardware"].get("module") in [
+                "fixed_difflogic_logic",
+                "fixed_difflogic_groupsum",
+            ]:
                 signals += f"\nlogic [({_cap(node_name)}_{_cap(arg)}_TENSOR_SIZE_DIM_0-1):0] {node_name}_{arg};"
                 signals += f"\nlogic {node_name}_{arg}_valid;"
                 signals += f"\nlogic {node_name}_{arg}_ready;"
                 continue
-            elif node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_flatten"]:
+            elif node.meta["mase"]["hardware"].get("module") in [
+                "fixed_difflogic_flatten"
+            ]:
                 signals += f"\nlogic [({_cap(node_name)}_{_cap(arg)}_TENSOR_SIZE_DIM_0-1):0] {node_name}_{arg} [0:({_cap(node_name)}_{_cap(arg)}_TENSOR_SIZE_DIM_1-1)];"
                 signals += f"\nlogic {node_name}_{arg}_valid;"
                 signals += f"\nlogic {node_name}_{arg}_ready;"
@@ -255,19 +262,23 @@ logic                             {node_name}_{arg}_ready;"""
         ):
             if not isinstance(result_info, dict):
                 continue
-            
+
             # DiffLogic: signals depends on different things
             if node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_logic"]:
                 signals += f"\nlogic [({_cap(node_name)}_{_cap(result)}_TENSOR_SIZE_DIM_0-1):0] {node_name}_{result};"
                 signals += f"\nlogic {node_name}_{result}_valid;"
                 signals += f"\nlogic {node_name}_{result}_ready;"
                 continue
-            elif node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_groupsum"]:
+            elif node.meta["mase"]["hardware"].get("module") in [
+                "fixed_difflogic_groupsum"
+            ]:
                 signals += f"\nlogic [($clog2(({_cap(node_name)}_DATA_IN_0_TENSOR_SIZE_DIM_0/{_cap(node_name)}_{_cap(result)}_TENSOR_SIZE_DIM_0))):0] {node_name}_{result} [0:({_cap(node_name)}_{_cap(result)}_TENSOR_SIZE_DIM_0-1)];"
                 signals += f"\nlogic {node_name}_{result}_valid;"
                 signals += f"\nlogic {node_name}_{result}_ready;"
                 continue
-            elif node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_flatten"]:
+            elif node.meta["mase"]["hardware"].get("module") in [
+                "fixed_difflogic_flatten"
+            ]:
                 signals += f"\nlogic [({_cap(node_name)}_{_cap(result)}_TENSOR_SIZE_DIM_0-1):0] {node_name}_{result};"
                 signals += f"\nlogic {node_name}_{result}_valid;"
                 signals += f"\nlogic {node_name}_{result}_ready;"
@@ -431,7 +442,7 @@ class VerilogInternalComponentEmitter:
         ):
             if value is None:
                 continue
-            if '[' in key:
+            if "[" in key:
                 dict_key = add_node_name_to_keys_with_precision(node_name, key)
                 top_param_key = get_top_param_name_with_precision(dict_key)
                 node_param_key = get_node_param_name_with_precision(node_name, dict_key)
@@ -439,10 +450,10 @@ class VerilogInternalComponentEmitter:
                 dict_key = f"{node_name}_{key}"
                 top_param_key = f"{node_name}_{key}"
                 node_param_key = key
-            
+
             key_value = parameter_map[dict_key]
             debug_info = f"// = {key_value}"
-            parameters += f"""    .{node_param_key}({top_param_key}),\n""" # hack: debug info removed for now as debug info may contain commas
+            parameters += f"""    .{node_param_key}({top_param_key}),\n"""  # hack: debug info removed for now as debug info may contain commas
 
         parameters = _remove_last_comma(parameters)
 
@@ -457,11 +468,11 @@ class VerilogInternalComponentEmitter:
             for key, value in node.meta["mase"].parameters["common"]["args"].items():
                 if "inplace" in key or not isinstance(value, dict):
                     continue
-                
+
                 # DiffLogic: do not emit storage interface
                 # if node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_logic", "fixed_difflogic_logic"] and ("data_in" not in key):
                 #     continue
-                    
+
                 signals += f"""
     .{key}({node_name}_{key}),
     .{key}_valid({node_name}_{key}_valid),
@@ -494,7 +505,7 @@ class VerilogInternalComponentEmitter:
         # DiffLogic: do not need to generate weights and biases
         # if node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_logic", "fixed_difflogic_logic"]:
         #     return components
-            
+
         # Emit module parameter instances (e.g. weights and biases)
         for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
             if "data_in" in arg:

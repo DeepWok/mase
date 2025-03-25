@@ -15,7 +15,7 @@ from torchvision.datasets.vision import VisionDataset
 
 class MNISTRemoveBorderTransform:
     def __call__(self, image: torch.Tensor) -> torch.Tensor:
-        horizontal_black_lines = (image == 0.).all(dim=2)
+        horizontal_black_lines = (image == 0.0).all(dim=2)
         top_black = 0
         while horizontal_black_lines[0, top_black] and top_black < 14:
             top_black += 1
@@ -34,9 +34,9 @@ class MNISTRemoveBorderTransform:
             else:
                 bottom_black -= 1
         assert top_black + bottom_black == 8, (top_black, bottom_black)
-        image = image[:, top_black:28 - bottom_black]
+        image = image[:, top_black : 28 - bottom_black]
 
-        vertical_black_lines = (image == 0.).all(dim=1)
+        vertical_black_lines = (image == 0.0).all(dim=1)
         left_black = 0
         while vertical_black_lines[0, left_black] and left_black < 14:
             left_black += 1
@@ -55,7 +55,7 @@ class MNISTRemoveBorderTransform:
             else:
                 right_black -= 1
         assert left_black + right_black == 8, (left_black, right_black)
-        image = image[:, :, left_black:28 - right_black]
+        image = image[:, :, left_black : 28 - right_black]
 
         return image
 
@@ -79,20 +79,30 @@ class MNIST(VisionDataset):
 
     mirrors = [
         # 'http://yann.lecun.com/exdb/mnist/',
-        'https://ossci-datasets.s3.amazonaws.com/mnist/',
+        "https://ossci-datasets.s3.amazonaws.com/mnist/",
     ]
 
     resources = [
         ("train-images-idx3-ubyte.gz", "f68b3c2dcbeaaa9fbdd348bbdeb94873"),
         ("train-labels-idx1-ubyte.gz", "d53e105ee54ea40749a09fcbcd1e9432"),
         ("t10k-images-idx3-ubyte.gz", "9fb629c4189551a2d022fa330f9573f3"),
-        ("t10k-labels-idx1-ubyte.gz", "ec29112dd5afa0611ce80d1b7f02629c")
+        ("t10k-labels-idx1-ubyte.gz", "ec29112dd5afa0611ce80d1b7f02629c"),
     ]
 
-    training_file = 'training.pt'
-    test_file = 'test.pt'
-    classes = ['0 - zero', '1 - one', '2 - two', '3 - three', '4 - four',
-               '5 - five', '6 - six', '7 - seven', '8 - eight', '9 - nine']
+    training_file = "training.pt"
+    test_file = "test.pt"
+    classes = [
+        "0 - zero",
+        "1 - one",
+        "2 - two",
+        "3 - three",
+        "4 - four",
+        "5 - five",
+        "6 - six",
+        "7 - seven",
+        "8 - eight",
+        "9 - nine",
+    ]
 
     @property
     def train_labels(self):
@@ -115,16 +125,17 @@ class MNIST(VisionDataset):
         return self.data
 
     def __init__(
-            self,
-            root: str,
-            train: bool = True,
-            transform: Optional[Callable] = None,
-            target_transform: Optional[Callable] = None,
-            download: bool = False,
-            remove_border=False
+        self,
+        root: str,
+        train: bool = True,
+        transform: Optional[Callable] = None,
+        target_transform: Optional[Callable] = None,
+        download: bool = False,
+        remove_border=False,
     ) -> None:
-        super(MNIST, self).__init__(root, transform=transform,
-                                    target_transform=target_transform)
+        super(MNIST, self).__init__(
+            root, transform=transform, target_transform=target_transform
+        )
         self.train = train  # training set or test set
 
         if self._check_legacy_exist():
@@ -135,8 +146,9 @@ class MNIST(VisionDataset):
             self.download()
 
         if not self._check_exists():
-            raise RuntimeError('Dataset not found.' +
-                               ' You can use download=True to download it')
+            raise RuntimeError(
+                "Dataset not found." + " You can use download=True to download it"
+            )
 
         self.data, self.targets = self._load_data()
 
@@ -144,10 +156,12 @@ class MNIST(VisionDataset):
             if transform is None:
                 transform = torchvision.transforms.ToTensor()
 
-            self.transform = torchvision.transforms.Compose([
-                transform,
-                MNISTRemoveBorderTransform(),
-            ])
+            self.transform = torchvision.transforms.Compose(
+                [
+                    transform,
+                    MNISTRemoveBorderTransform(),
+                ]
+            )
         else:
             if transform is None:
                 self.transform = torchvision.transforms.ToTensor()
@@ -158,7 +172,8 @@ class MNIST(VisionDataset):
             return False
 
         return all(
-            check_integrity(os.path.join(self.processed_folder, file)) for file in (self.training_file, self.test_file)
+            check_integrity(os.path.join(self.processed_folder, file))
+            for file in (self.training_file, self.test_file)
         )
 
     def _load_legacy_data(self):
@@ -188,7 +203,7 @@ class MNIST(VisionDataset):
 
         # doing this so that it is consistent with all other datasets
         # to return a PIL Image
-        img = Image.fromarray(img.numpy(), mode='L')
+        img = Image.fromarray(img.numpy(), mode="L")
 
         if self.transform is not None:
             img = self.transform(img)
@@ -203,11 +218,11 @@ class MNIST(VisionDataset):
 
     @property
     def raw_folder(self) -> str:
-        return os.path.join(self.root, self.__class__.__name__, 'raw')
+        return os.path.join(self.root, self.__class__.__name__, "raw")
 
     @property
     def processed_folder(self) -> str:
-        return os.path.join(self.root, self.__class__.__name__, 'processed')
+        return os.path.join(self.root, self.__class__.__name__, "processed")
 
     @property
     def class_to_idx(self) -> Dict[str, int]:
@@ -215,7 +230,11 @@ class MNIST(VisionDataset):
 
     def _check_exists(self) -> bool:
         return all(
-            check_integrity(os.path.join(self.raw_folder, os.path.splitext(os.path.basename(url))[0]))
+            check_integrity(
+                os.path.join(
+                    self.raw_folder, os.path.splitext(os.path.basename(url))[0]
+                )
+            )
             for url, _ in self.resources
         )
 
@@ -234,14 +253,10 @@ class MNIST(VisionDataset):
                 try:
                     print("Downloading {}".format(url))
                     download_and_extract_archive(
-                        url, download_root=self.raw_folder,
-                        filename=filename,
-                        md5=md5
+                        url, download_root=self.raw_folder, filename=filename, md5=md5
                     )
                 except URLError as error:
-                    print(
-                        "Failed to download (trying next):\n{}".format(error)
-                    )
+                    print("Failed to download (trying next):\n{}".format(error))
                     continue
                 finally:
                     print()
@@ -254,22 +269,22 @@ class MNIST(VisionDataset):
 
 
 def get_int(b: bytes) -> int:
-    return int(codecs.encode(b, 'hex'), 16)
+    return int(codecs.encode(b, "hex"), 16)
 
 
 SN3_PASCALVINCENT_TYPEMAP = {
     8: (torch.uint8, np.uint8, np.uint8),
     9: (torch.int8, np.int8, np.int8),
-    11: (torch.int16, np.dtype('>i2'), 'i2'),
-    12: (torch.int32, np.dtype('>i4'), 'i4'),
-    13: (torch.float32, np.dtype('>f4'), 'f4'),
-    14: (torch.float64, np.dtype('>f8'), 'f8')
+    11: (torch.int16, np.dtype(">i2"), "i2"),
+    12: (torch.int32, np.dtype(">i4"), "i4"),
+    13: (torch.float32, np.dtype(">f4"), "f4"),
+    14: (torch.float64, np.dtype(">f8"), "f8"),
 }
 
 
 def read_sn3_pascalvincent_tensor(path: str, strict: bool = True) -> torch.Tensor:
     """Read a SN3 file in "Pascal Vincent" format (Lush file 'libidx/idx-io.lsh').
-       Argument may be a filename, compressed filename, or file object.
+    Argument may be a filename, compressed filename, or file object.
     """
     # read
     with open(path, "rb") as f:
@@ -281,7 +296,7 @@ def read_sn3_pascalvincent_tensor(path: str, strict: bool = True) -> torch.Tenso
     assert 1 <= nd <= 3
     assert 8 <= ty <= 14
     m = SN3_PASCALVINCENT_TYPEMAP[ty]
-    s = [get_int(data[4 * (i + 1): 4 * (i + 2)]) for i in range(nd)]
+    s = [get_int(data[4 * (i + 1) : 4 * (i + 2)]) for i in range(nd)]
     parsed = np.frombuffer(data, dtype=m[1], offset=(4 * (nd + 1)))
     assert parsed.shape[0] == np.prod(s) or not strict
     return torch.from_numpy(parsed.astype(m[2], copy=True)).view(*s)
@@ -289,19 +304,19 @@ def read_sn3_pascalvincent_tensor(path: str, strict: bool = True) -> torch.Tenso
 
 def read_label_file(path: str) -> torch.Tensor:
     x = read_sn3_pascalvincent_tensor(path, strict=False)
-    assert (x.dtype == torch.uint8)
-    assert (x.ndimension() == 1)
+    assert x.dtype == torch.uint8
+    assert x.ndimension() == 1
     return x.long()
 
 
 def read_image_file(path: str) -> torch.Tensor:
     x = read_sn3_pascalvincent_tensor(path, strict=False)
-    assert (x.dtype == torch.uint8)
-    assert (x.ndimension() == 3)
+    assert x.dtype == torch.uint8
+    assert x.ndimension() == 3
     return x
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import time
 
@@ -311,31 +326,31 @@ if __name__ == '__main__':
     #     torchvision.transforms.ToTensor(),
     #     MNISTRemoveBorderTransform(),
     # ]))
-    ds = MNIST('data-mnist', download=True, remove_border=True)
+    ds = MNIST("data-mnist", download=True, remove_border=True)
     loader = iter(torch.utils.data.DataLoader(ds, batch_size=1, shuffle=False))
 
     fig, ax = plt.subplots(nrows=sqrt_of_n_imgs, ncols=sqrt_of_n_imgs)
     ax = ax.flatten()
-    for idx in range(sqrt_of_n_imgs ** 2):
+    for idx in range(sqrt_of_n_imgs**2):
         image, _ = next(loader)
         ax[idx].imshow(image.squeeze(1).squeeze(0).numpy())
 
     plt.show()
 
-    print('Speed test...')
+    print("Speed test...")
 
-    ds = MNIST('data-mnist', download=True)
+    ds = MNIST("data-mnist", download=True)
     loader = iter(torch.utils.data.DataLoader(ds, batch_size=100, shuffle=False))
     t_s = time.time()
     for _ in loader:
         pass
     t_e = time.time()
-    print('regular', t_e - t_s)
+    print("regular", t_e - t_s)
 
-    ds = MNIST('data-mnist', download=True, remove_border=True)
+    ds = MNIST("data-mnist", download=True, remove_border=True)
     loader = iter(torch.utils.data.DataLoader(ds, batch_size=100, shuffle=False))
     t_s = time.time()
     for _ in loader:
         pass
     t_e = time.time()
-    print('remove_border', t_e - t_s)
+    print("remove_border", t_e - t_s)

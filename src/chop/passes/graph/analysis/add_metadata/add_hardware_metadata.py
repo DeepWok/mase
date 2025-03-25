@@ -44,7 +44,9 @@ def add_component_source(node):
             ):
                 node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_RTL"
                 node.meta["mase"]["hardware"]["module"] = op_info["module"]
-                node.meta["mase"]["hardware"]["dependence_files"] = op_info["dependence_files"]
+                node.meta["mase"]["hardware"]["dependence_files"] = op_info[
+                    "dependence_files"
+                ]
     elif mase_op in INTERNAL_COMP.keys():
         node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_RTL"
         # take the first ip in the component list by default
@@ -64,7 +66,10 @@ def add_component_source(node):
     for arg, arg_info in args.items():
         if "data_in" in arg:
             continue
-        elif node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_logic", "fixed_difflogic_logic"]:
+        elif node.meta["mase"]["hardware"].get("module") in [
+            "fixed_difflogic_logic",
+            "fixed_difflogic_logic",
+        ]:
             continue
         elif isinstance(arg_info, dict):
             node.meta["mase"]["hardware"]["interface"][arg] = {
@@ -78,14 +83,17 @@ def add_component_source(node):
 def add_verilog_param(node):
     if node.meta["mase"]["hardware"]["is_implicit"]:
         return
-    
+
     node.meta["mase"]["hardware"]["verilog_param"] = {}
     args = node.meta["mase"]["common"]["args"]
     results = node.meta["mase"]["common"]["results"]
     vp = node.meta["mase"]["hardware"]["verilog_param"]
-    
-    # DiffLogic: do not generate precision and tensor size automatically    
-    if node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_logic", "fixed_difflogic_groupsum"]:
+
+    # DiffLogic: do not generate precision and tensor size automatically
+    if node.meta["mase"]["hardware"].get("module") in [
+        "fixed_difflogic_logic",
+        "fixed_difflogic_groupsum",
+    ]:
         for arg, arg_info in args.items():
             match arg:
                 case "data_in_0":
@@ -195,12 +203,14 @@ def add_extra_verilog_param(node, graph: MaseGraph):
     module_name = node.meta["mase"]["hardware"].get("module", None)
     if module_name == "fixed_difflogic_logic":
         vp = node.meta["mase"]["hardware"]["verilog_param"]
-        
-        layer_ops = node.meta["mase"]["hardware"]["difflogic_args"]["weights"]["value"].argmax(dim=-1)
+
+        layer_ops = node.meta["mase"]["hardware"]["difflogic_args"]["weights"][
+            "value"
+        ].argmax(dim=-1)
         layer_ops = list(layer_ops)
         layer_ops = [t.item() for t in layer_ops]
         vp[f"[3:0] LAYER_OP_CODES [0:{len(layer_ops)-1}]"] = layer_ops
-        
+
         in_size = node.meta["mase"]["common"]["args"]["data_in_0"]["shape"][-1]
         ind_a = node.meta["mase"]["hardware"]["difflogic_args"]["indices"]["value"]
         ind_a = list(ind_a[0])
