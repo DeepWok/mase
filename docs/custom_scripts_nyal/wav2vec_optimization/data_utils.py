@@ -32,18 +32,12 @@ def import_model_and_dataset():
     
     # Load model
     model = AutoModelForCTC.from_pretrained(CHECKPOINT)
-    model.config.gradient_checkpointing = True
     encoder = model.wav2vec2  # static, FX-friendly
     ctc_head = model.lm_head    # dynamic CTC head, separate this
     
     # Setup data collator
     data_collator = DataCollatorCTCWithPadding(processor=processor, padding=True)
     
-    # Setup data module
-    dataset_path = Path("./preprocessed_data")
-    condensed_dataset = CondensedLibrispeechASRDataset(path=dataset_path, split="train")
-    condensed_dataset.prepare_data()
-    condensed_dataset.setup()
     
     data_module = MaseDataModule(
         name=DATASET_NAME,
