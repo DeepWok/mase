@@ -17,6 +17,8 @@ def apply_pruning(model, pruning_method, sparsity, structured_sparsity=False):
     
     # Make a copy of the model
     pruned_model = deepcopy(model)
+
+    pruned_model.pruned_model.cpu()
     
     # Create pruning config
     pruning_config = {
@@ -60,7 +62,7 @@ def apply_pruning(model, pruning_method, sparsity, structured_sparsity=False):
     
     # Apply pruning transform pass
     temp_mg, _ = passes.prune_transform_pass(temp_mg, pass_args=pruning_config)
-    
+
     return temp_mg.model
 
 def calculate_pruning_metrics(model):

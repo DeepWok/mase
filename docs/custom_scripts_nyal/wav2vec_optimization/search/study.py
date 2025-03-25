@@ -1,7 +1,7 @@
 """
 Optimization study implementation.
 """
-
+import torch
 import logging
 import optuna
 import dill

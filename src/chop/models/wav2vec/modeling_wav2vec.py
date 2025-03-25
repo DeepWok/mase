@@ -91,6 +91,8 @@ class Wav2VecModelWrapper(nn.Module):
             **kwargs
         ):
         return self.model(input_values, **kwargs)
+    
+    
 def _get_wav2vec_model(model_size: str, pretrained: bool = False, **kwargs):
     """Helper function to get Wav2Vec models"""
     if pretrained:
