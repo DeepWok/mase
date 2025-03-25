@@ -159,17 +159,17 @@ def get_tokenized_dataset(
                     audio_array = example["audio"]["array"]
                     sampling_rate = example["audio"]["sampling_rate"]
 
-                    inputs = processor(audio=audio_array, sampling_rate=int(sampling_rate), return_tensors="pt", padding=True)
-                    attention_mask = inputs.get("attention_mask", torch.ones(inputs.input_values.shape, dtype=torch.long))
-
+                    inputs = processor.feature_extractor(
+                        audio_array, 
+                        sampling_rate=sampling_rate
+                    )
 
                     with processor.as_target_processor():
-                        labels = processor.tokenizer(example["text"], return_tensors="pt").input_ids
+                        labels = processor.tokenizer(example["text"]).input_ids
 
                     return {
-                        "input_values": inputs.input_values.squeeze(0),
-                        "attention_mask": attention_mask.squeeze(0),
-                        "labels": labels.squeeze(0)
+                        "input_values": inputs["input_values"][0],
+                        "labels": labels
                     }
                 
                 # Map the preprocessing function

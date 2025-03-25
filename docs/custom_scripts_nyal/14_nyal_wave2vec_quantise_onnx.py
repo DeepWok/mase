@@ -46,7 +46,6 @@ tokenized_dataset, tokenizer, processor = get_tokenized_dataset(
     return_processor=True,
 )
 
-data_collator = DataCollatorCTCWithPadding(processor=processor, padding=True)
 vocab = tokenizer.convert_ids_to_tokens(range(tokenizer.vocab_size))
 decoder = build_ctcdecoder(vocab)
 
@@ -59,10 +58,6 @@ ctc_head = model.lm_head    # dynamic CTC head, separate this
 # 2. Import dataset
 # -------------------------------
 
-dataset_path = Path("./preprocessed_data")
-condensed_dataset = CondensedLibrispeechASRDataset(path=dataset_path, split="train") # Choose valid split
-condensed_dataset.prepare_data()
-condensed_dataset.setup()
 batch_size = 2
 
 data_module = MaseDataModule(
@@ -157,10 +152,10 @@ runtime_analysis_config = {
 
 mg_onnx, onnx_meta = onnx_runtime_interface_pass(mg, pass_args=smoothquant_config)
 
-# mg_onnx, _ = passes.quantize_transform_pass(
-#     mg_onnx,
-#     pass_args=quantization_config,
-# )
+mg_onnx, _ = passes.quantize_transform_pass(
+    mg_onnx,
+    pass_args=quantization_config,
+)
 
 _, results_onnx = runtime_analysis_pass(mg_onnx, pass_args=runtime_analysis_config)
 

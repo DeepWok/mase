@@ -17,8 +17,8 @@ LIBRISPEECH_CONFIG = {
     "normalize_waveform": True,
     "tokenizer_checkpoint": "facebook/wav2vec2-base-960h",
     "train_size": 0.8,
-    "validation_size": 0.1,
-    "test_size": 0.1,
+    "validation_size": 1,
+    "test_size": 1,
     "max_audio_length": 16 * 16000,
 }
 
@@ -72,12 +72,16 @@ class CondensedLibrispeechASRDataset(Dataset):
             )
         return len(self.X)
 
-  
 
+    # def __getitem__(self, idx):
+    #     if self.X is None or self.Y is None:
+    #         raise ValueError("Dataset is not setup. Please call prepare_data() and setup() first.")
+    #     return self.X[idx], self.Y[idx]
+    
     def __getitem__(self, idx):
         if self.X is None or self.Y is None:
-            raise ValueError("Dataset is not setup. Please call prepare_data() and setup() first.")
-        return self.X[idx], self.Y[idx]
+            raise ValueError("Dataset is not setup. Call prepare_data() and setup() first.")
+        return {"input_values": self.X[idx], "labels": self.Y[idx]}
 
 
 
@@ -115,7 +119,6 @@ class CondensedLibrispeechASRDataset(Dataset):
 
 def _preprocess_librispeech_dataset(save_path: Path, config: dict = LIBRISPEECH_CONFIG, split="validation.clean"):
     dataset = load_dataset("nyalpatel/condensed_librispeech_asr", split=split)
-
     input_values, labels = [], []
 
     for example in dataset:
@@ -123,7 +126,6 @@ def _preprocess_librispeech_dataset(save_path: Path, config: dict = LIBRISPEECH_
         sampling_rate = example["audio"]["sampling_rate"]
         text = example["text"]
 
-        # Convert waveform to tensor if it's not already
         if isinstance(waveform, list):
             waveform = torch.tensor(waveform, dtype=torch.float32)
 
@@ -133,40 +135,29 @@ def _preprocess_librispeech_dataset(save_path: Path, config: dict = LIBRISPEECH_
             )(waveform)
 
         if config["normalize_waveform"]:
-            # Check if waveform has enough elements to calculate std
             if waveform.numel() > 0 and waveform.std() > 0:
                 waveform = (waveform - waveform.mean()) / waveform.std()
-            else:
-                # Handle edge case with zero std
-                waveform = waveform - waveform.mean() if waveform.numel() > 0 else waveform
+            elif waveform.numel() > 0:
+                waveform = waveform - waveform.mean()
 
         with processor.as_target_processor():
             label = processor.tokenizer(text, return_tensors="pt").input_ids.squeeze(0)
 
-        max_length = config["max_audio_length"]
-        if waveform.shape[0] > max_length:
-            waveform = waveform[:max_length]
-        else:
-            pad = torch.zeros(max_length)
-            pad[: waveform.shape[0]] = waveform
-            waveform = pad
-
         input_values.append(waveform)
         labels.append(label)
 
-    input_values = torch.stack(input_values)
-    labels = torch.nn.utils.rnn.pad_sequence(labels, batch_first=True, padding_value=-100)
-
     X_train, X_temp, Y_train, Y_temp = train_test_split(
-        input_values, labels, test_size=config["test_size"] + config["validation_size"], random_state=42
+        input_values, labels, 
+        test_size=config["test_size"] + config["validation_size"], 
+        random_state=42
     )
     X_val, X_test, Y_val, Y_test = train_test_split(
-        X_temp, Y_temp, test_size=config["test_size"] / (config["test_size"] + config["validation_size"]), random_state=42
+        X_temp, Y_temp, 
+        test_size=config["test_size"] / (config["test_size"] + config["validation_size"]), 
+        random_state=42
     )
 
-    # Create directory if it doesn't exist
     save_path.mkdir(parents=True, exist_ok=True)
-    
     torch.save(X_train, save_path / "X_train.pt")
     torch.save(Y_train, save_path / "Y_train.pt")
     torch.save(X_val, save_path / "X_val.pt")

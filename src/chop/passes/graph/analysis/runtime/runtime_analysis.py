@@ -13,6 +13,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 import time
+import jiwer
 
 from chop.passes.utils import register_mase_pass
 
@@ -586,7 +587,7 @@ class RuntimeAnalysis:
 
         elif task == "ctc":
             print("[DEBUG] Creating CTC metrics")
-            wer_metric = torchmetrics.text.WordErrorRate()
+            wer_metric = jiwer.wer
             decoder = self.config.get("decoder", None)
             print(f"[DEBUG] Decoder provided: {decoder is not None}")
             
