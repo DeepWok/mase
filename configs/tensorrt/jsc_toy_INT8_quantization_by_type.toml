@@ -2,8 +2,8 @@
 model="jsc-toy"
 dataset="jsc"
 
-# load_name = "../mase_output/jsc-toy_cls_jsc-pre-trained/best.ckpt"
-# load_type="pl"
+load_name = "../mase_output/jsc-toy_cls_jsc-pre-trained/best.ckpt"
+load_type="pl"
 
 max_epochs=10
 batch_size=64

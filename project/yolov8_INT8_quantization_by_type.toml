@@ -1,12 +1,12 @@
 # basics
-model = "vgg7_cifar"
-dataset = "cifar10"
+model = "yolov8"
+dataset = "coco-detection"
 
 max_epochs = 10
-batch_size = 64
+batch_size = 10
 learning_rate = 1e-3
 accelerator = "gpu"
-task="cls"
+task="detection"
 
 [transform]
 style = "graph"

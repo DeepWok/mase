@@ -128,6 +128,7 @@ def check_det_dataset(yaml_path, dataset_path, autodownload=True):
     image_classification=False,
     num_classes=80,
     image_size=(3, 640, 640),
+    data_collator_cls=lambda *args, **kwargs: YOLODataset.collate_fn,
 )
 class CocoMase(YOLODataset):
     def __init__(
@@ -161,20 +162,20 @@ class CocoDetectionMase(CocoMase):
     ) -> None:
         super().__init__(root, img_path=img_path, task_name="detect", download=download)
 
-    def __getitem__(self, index: int):
-        """
-        Args:
-            index (int): Index
+    # def __getitem__(self, index: int):
+    #     """
+    #     Args:
+    #         index (int): Index
 
-        Returns:
-            tuple: (image, target) where target is index of the target class.
-        """
-        item_dict = super().__getitem__(index)
-        img = item_dict["img"]
-        cls = item_dict["cls"]
-        bboxes = item_dict["bboxes"]
+    #     Returns:
+    #         tuple: (image, target) where target is index of the target class.
+    #     """
+    #     item_dict = super().__getitem__(index)
+    #     img = item_dict["img"]
+    #     cls = item_dict["cls"]
+    #     bboxes = item_dict["bboxes"]
 
-        return img, cls, bboxes
+    #     return img, (cls, bboxes)
 
 
 class CocoSegmentationMase(CocoMase):
@@ -188,19 +189,19 @@ class CocoSegmentationMase(CocoMase):
             root, img_path=img_path, task_name="segment", download=download
         )
 
-    def __getitem__(self, index: int):
-        """
-        Args:
-            index (int): Index
+    # def __getitem__(self, index: int):
+    #     """
+    #     Args:
+    #         index (int): Index
 
-        Returns:
-            tuple: (image, target) where target is index of the target class.
-        """
-        item_dict = super().__getitem__(index)
-        img = item_dict["img"]
-        mask = item_dict["masks"]
+    #     Returns:
+    #         tuple: (image, target) where target is index of the target class.
+    #     """
+    #     item_dict = super().__getitem__(index)
+    #     img = item_dict["img"]
+    #     mask = item_dict["masks"]
 
-        return img, mask
+    #     return img, mask
 
 
 def get_coco_detection_dataset(

@@ -53,9 +53,8 @@ set_logging_verbosity("info")
 
 from yolov8_c2f_tracing import mg
 
-
-# %%
-TOML_PATH = "yolov8_INT8_quantization_by_type.toml"
+HERE = os.path.dirname(os.path.abspath(__file__))
+TOML_PATH = f"{HERE}/yolov8_INT8_quantization_by_type.toml"
 # Reading TOML file and converting it into a Python dictionary
 with open(TOML_PATH, "r") as toml_file:
     pass_args = toml.load(toml_file)
@@ -65,7 +64,6 @@ tensorrt_config = pass_args.get("passes", {}).get("tensorrt", {})
 # Extract the 'passes.runtime_analysis' section and its children
 runtime_analysis_config = pass_args.get("passes", {}).get("runtime_analysis", {})
 
-# %%
 model_name = pass_args["model"]
 dataset_name = pass_args["dataset"]
 max_epochs = pass_args["max_epochs"]
@@ -82,7 +80,6 @@ data_module = MaseDataModule(
 data_module.prepare_data()
 data_module.setup()
 
-# %%
 # Add the data_module and other necessary information to the configs
 configs = [tensorrt_config, runtime_analysis_config]
 for config in configs:
@@ -98,7 +95,6 @@ for config in configs:
         os.environ["CUDA_MODULE_LOADING"] = "LAZY"
 
 
-# %% Set model Info
 from chop.models.utils import MaseModelInfo, ModelSource, ModelTaskType
 
 model_info = MaseModelInfo(
@@ -107,7 +103,6 @@ model_info = MaseModelInfo(
     task_type=ModelTaskType.VISION,
     image_classification=True,
 )
-# %%
 input_generator = InputGenerator(
     data_module=data_module,
     model_info=model_info,
@@ -115,14 +110,12 @@ input_generator = InputGenerator(
     which_dataloader="train",
 )
 
-
-# %%
 new_mg, _ = tensorrt_fake_quantize_transform_pass(graph=mg, pass_args=tensorrt_config)
 summarize_quantization_analysis_pass(
     new_mg, {"save_dir": "trt_fake_quantize_summary", "original_graph": mg}
 )
-
-# %% CALIBRATION
+# %%
+tensorrt_config["dataset_input_field"] = "img"
 mg, _ = tensorrt_calibrate_transform_pass(mg, pass_args=tensorrt_config)
 
 # %%
