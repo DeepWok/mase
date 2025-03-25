@@ -1,29 +1,5 @@
 import os
 import sys
-
-# Add the src directory to the Python path so that the chop module can be found
-src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../../../../"))
-if src_dir not in sys.path:
-    sys.path.insert(0, src_dir)
-
-# Check for required packages and install them if needed
-required_packages = ['dill', 'toml', 'torch', 'torchvision', 'transformers', 'datasets', 'pyctcdecode', 'matplotlib', 'numpy']
-missing_packages = []
-
-for package in required_packages:
-    try:
-        __import__(package)
-    except ImportError:
-        missing_packages.append(package)
-
-if missing_packages:
-    print(f"Missing required packages: {', '.join(missing_packages)}")
-    print("Please install the missing packages with:")
-    print(f"pip install {' '.join(missing_packages)}")
-    print("\nAlternatively, you can run this script with PYTHONPATH set to include the src directory:")
-    print(f"PYTHONPATH={src_dir} python {__file__}")
-    sys.exit(1)
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -182,7 +158,7 @@ def main():
     
     # Run runtime analysis on baseline
     print("Running runtime analysis on baseline model...")
-    _, baseline_results = passes.runtime_analysis_pass(mg_baseline, pass_args=runtime_analysis_config)
+    _, baseline_results = runtime_analysis_pass(mg_baseline, pass_args=runtime_analysis_config)
     
     baseline_wer = baseline_results.get("Average WER", 0.0)
     baseline_latency = baseline_results.get("Average Latency", 0.0)
@@ -246,7 +222,7 @@ def main():
             
             # Run runtime analysis (this includes WER evaluation)
             print("Running runtime analysis...")
-            _, runtime_results = passes.runtime_analysis_pass(mg, pass_args=runtime_analysis_config)
+            _, runtime_results = runtime_analysis_pass(mg, pass_args=runtime_analysis_config)
             
             # Extract metrics from runtime analysis
             wer = runtime_results.get("Average WER", 0.0)
