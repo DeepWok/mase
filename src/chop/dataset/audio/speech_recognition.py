@@ -16,9 +16,9 @@ LIBRISPEECH_CONFIG = {
     "sample_rate": 16000,
     "normalize_waveform": True,
     "tokenizer_checkpoint": "facebook/wav2vec2-base-960h",
-    "train_size": 800,
-    "validation_size": 50,
-    "test_size": 50,
+    "train_size": 0.6,
+    "validation_size": 0.2,
+    "test_size": 0.2,
     "max_audio_length": 16 * 16000,
 }
 
