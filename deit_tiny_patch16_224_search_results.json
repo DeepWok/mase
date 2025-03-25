@@ -465,44 +465,15 @@
             "by": "type",
             "attention": {
                 "config": {
-                    "data_in_width": 8,
-                    "data_in_exponent_width": 8,
-                    "data_in_parallelism": [
-                        1,
-                        32
-                    ],
-                    "data_out_width": 8,
-                    "data_out_exponent_width": 8,
-                    "data_out_parallelism": [
-                        1,
-                        32
-                    ],
-                    "weight_width": 6,
-                    "weight_exponent_width": 8,
-                    "weight_parallelism": [
-                        1,
-                        32
-                    ],
-                    "bias_width": 6,
-                    "bias_exponent_width": 8,
-                    "bias_parallelism": [
-                        1,
-                        32
-                    ],
-                    "enable_internal_width": false,
-                    "enable_mxint_softmax": true,
-                    "enable_mxint_exp": true,
-                    "enable_mxint_exp_sum": false,
-                    "enable_mxint_division": false,
-                    "exp_width": 2,
-                    "exp_exponent_width": 8,
-                    "exp_sum_width": 8,
-                    "exp_sum_exponent_width": 8
+                    "int": true,
+                    "in_width": 16,
+                    "in_range_momentum": 0.999,
+                    "out_width": 16
                 }
             }
         },
         "best_result": {
-            "best_acc": 0.71962
+            "best_acc": 0.68366
         }
     },
     "attention_enable_mxint_exp": {
@@ -553,6 +524,21 @@
                 0.7928125
             ],
             "best_param": 6
+        }
+    },
+    "attention_in_width": {
+        "search_log": [
+            [
+                16,
+                0.751875
+            ]
+        ],
+        "best_result": {
+            "best_acc": [
+                16,
+                0.751875
+            ],
+            "best_param": 16
         }
     }
 }

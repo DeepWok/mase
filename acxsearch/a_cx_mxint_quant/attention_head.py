@@ -87,7 +87,8 @@ class MXIntMatMul(nn.Module):
         )
         return out
 
-from .softmax import MXIntSoftmax
+from .softmax import MXIntSoftmax, IntSoftmax
+
 class MXIntViTAttentionHead(_ViTSelfAttentionHeadBase):
     def __init__(
         self, dim, num_heads, attn_drop=0.0, q_config: dict = None, floor=False
@@ -101,6 +102,18 @@ class MXIntViTAttentionHead(_ViTSelfAttentionHeadBase):
         self.act = MXIntSoftmax(q_config=q_config)
         self.mult_data = torch.tensor(1 / math.sqrt(dim))
 
+class IntViTAttentionHead(_ViTSelfAttentionHeadBase):
+    def __init__(
+        self, dim, num_heads, attn_drop=0.0, q_config: dict = None, floor=False
+    ) -> None:
+        super().__init__(dim, num_heads, attn_drop)
+        self.dropout = nn.Dropout(attn_drop)
+
+
+        self.matmul1 = torch.matmul
+        self.matmul2 = torch.matmul
+        self.act = IntSoftmax(q_config=q_config)
+        self.mult_data = torch.tensor(1 / math.sqrt(dim))
 # class ViTSelfAttentionHeadInteger(_ViTSelfAttentionHeadBase):
 #     def __init__(
 #         self, dim, num_heads, attn_drop=0.0, q_config: dict = None, floor=False

@@ -1,0 +1,59 @@
+{
+    "gelu_hash_in_frac_width": {
+        "search_log": [
+            [
+                1,
+                0.79125
+            ]
+        ],
+        "best_result": {
+            "best_acc": [
+                1,
+                0.79125
+            ],
+            "best_param": 1
+        }
+    },
+    "gelu_final": {
+        "best_config": {
+            "by": "type",
+            "gelu": {
+                "config": {
+                    "quant_type": "mxint",
+                    "data_in_width": 8,
+                    "data_in_exponent_width": 8,
+                    "data_in_parallelism": [
+                        1,
+                        32
+                    ],
+                    "data_out_width": 8,
+                    "data_out_exponent_width": 8,
+                    "data_out_parallelism": [
+                        1,
+                        32
+                    ],
+                    "weight_width": 6,
+                    "weight_exponent_width": 8,
+                    "weight_parallelism": [
+                        1,
+                        32
+                    ],
+                    "bias_width": 6,
+                    "bias_exponent_width": 8,
+                    "bias_parallelism": [
+                        1,
+                        32
+                    ],
+                    "enable_internal_width": true,
+                    "hash_in_int_width": 5,
+                    "hash_in_frac_width": 1,
+                    "hash_out_int_width": 16,
+                    "hash_out_frac_width": 16
+                }
+            }
+        },
+        "best_result": {
+            "best_acc": 0.72078
+        }
+    }
+}

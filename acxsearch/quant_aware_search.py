@@ -2,6 +2,7 @@
 from a_cx_mxint_quant.module_level_tranform import vit_module_level_quantize
 from utils import acc_cal
 
+import os
 import timm
 import json
 from utils import init_dataset
@@ -11,12 +12,12 @@ from chop.tools.logger import set_logging_verbosity
 from a_cx_mxint_quant import DEIT_TINY_IMAGENET_ACC, DEIT_TINY_IMAGENET_ACC_100ITER
 
 logger = get_logger(__name__)
-set_logging_verbosity("info")
 
 def quant_evaluation(model, quant_config, datamodule, max_iteration=100):
     # Set to evaluation mode if needed
     vit_module_level_quantize(model, quant_config)
-    acc = acc_cal(model, datamodule.test_dataloader(), max_iteration=max_iteration)
+    # acc = acc_cal(model, datamodule.test_dataloader(), max_iteration=max_iteration)
+    acc = acc_cal(model, datamodule.test_dataloader())
     return acc
 
 def iterative_search(checkpoint, target_op, search_args, quant_config):
@@ -26,8 +27,8 @@ def iterative_search(checkpoint, target_op, search_args, quant_config):
     # loop through search_args
     quant_acc = DEIT_TINY_IMAGENET_ACC_100ITER
     # Check if search results file already exists
-    import os
-    result_file = f"{checkpoint}_search_results.json"
+    quant_type = quant_config[target_op]["config"]["quant_type"]
+    result_file = f"{checkpoint}_{quant_type}_search_results.json"
     result_dict = {}
     if os.path.exists(result_file):
         with open(result_file, "r") as f:
@@ -45,11 +46,11 @@ def iterative_search(checkpoint, target_op, search_args, quant_config):
 
             acc = quant_evaluation(model, quant_config, datamodule, max_iteration=100)
             acc_list.append((value, acc))
-            if (acc > quant_acc - 0.001) and (acc < quant_acc + 0.001):
-                logger.info(f"acc: {acc}, quant_acc: {quant_acc}, {arg}: {value}")
-                break
+            # if (acc > quant_acc - 0.001) and (acc < quant_acc + 0.001):
+            #     logger.info(f"acc: {acc}, quant_acc: {quant_acc}, {arg}: {value}")
+                # break
 
-        best_acc = max(acc_list)
+        best_acc = max(acc_list, key=lambda x: x[1])
         best_param = search_range[acc_list.index(best_acc)]
         quant_config[target_op]["config"].update({arg: best_param})
         logger.info(f"{arg}: {best_param}, acc: {best_acc}")
@@ -61,8 +62,8 @@ def iterative_search(checkpoint, target_op, search_args, quant_config):
                 "best_param": best_param,
             }
         }
-        with open(result_file, "w") as f:
-            json.dump(result_dict, f, indent=4)
+        # with open(result_file, "w") as f:
+        #     json.dump(result_dict, f, indent=4)
 
     final_acc = acc_cal(model, datamodule.test_dataloader())
     result_dict[f"{target_op}_final"] = {
@@ -71,8 +72,8 @@ def iterative_search(checkpoint, target_op, search_args, quant_config):
             "best_acc": final_acc,
         }
     }
-    with open(result_file, "w") as f:
-        json.dump(result_dict, f, indent=4)
+    # with open(result_file, "w") as f:
+    #     json.dump(result_dict, f, indent=4)
     logger.info(f"quant_config: {quant_config}")
     logger.info(f"original_acc: {DEIT_TINY_IMAGENET_ACC}, final_acc: {final_acc}")
-    return quant_config
+    return acc_list

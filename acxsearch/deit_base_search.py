@@ -13,7 +13,8 @@ logger = get_logger(__name__)
 
 from quant_aware_search import iterative_search
 from pathlib import Path
-checkpoint = "deit_tiny_patch16_224"
+checkpoint = "deit_base_patch16_224"
+save_dir = "deit_base_saved_results"
 
 imagenet_dir = Path("/data/datasets/imagenet_pytorch/")
 
@@ -150,18 +151,18 @@ default_int_quant_config = {
 def search_int(search_op):
     layer_norm_collected_results = {
         # lossless
-        "in_width": 8,
+        "in_width": 10,
         "in_range_momentum": 0.995,
     }
     softmax_collected_results = {
-        "in_width": 10,
-        "in_range_momentum": 0.995,
-        "out_width": 10,
+        # "in_width": 10,
+        # "in_range_momentum": 0.995,
+        # "out_width": 10,
     }
     gelu_collected_results = {
-        "in_width": 10,
-        "in_range_momentum": 0.995,
-        "out_width": 10,
+        # "in_width": 10,
+        # "in_range_momentum": 0.995,
+        # "out_width": 10,
     }
     collected_results = {
     }
@@ -178,9 +179,9 @@ def search_int(search_op):
         checkpoint, 
         search_op,
         {
-            "in_width": [8],
-            # "in_range_momentum": [0.995],
-            # "out_width": [8,9,10,11,12],
+            "in_width": [8,9,10,11,12],
+            "in_range_momentum": [0.95, 0.99, 0.995],
+            "out_width": [8,9,10,11,12],
         },
         quant_config, 
     )
@@ -195,7 +196,7 @@ def search_top():
     #     target_op = {"hash_in_frac_width": [1,2,3,4,5,6,7,8]}
     #     acc_list = search_gelu(fixed_op, target_op)
     #     acc_list_all.append(acc_list)
-    # save_accuracy_list(acc_list_all, directory="vit_tiny_saved_results", base_filename="gelu_mxint_search")
+    # save_accuracy_list(acc_list_all, directory=save_dir, base_filename="gelu_mxint_search")
 
     # acc_list_all = []
     # for int_width in [1,2,3]:
@@ -203,7 +204,7 @@ def search_top():
     #     target_op = {"var_frac_width": [8,9,10,11,12,13,14,15]}
     #     acc_list = search_layer_norm(fixed_op, target_op)
     #     acc_list_all.append(acc_list)
-    # save_accuracy_list(acc_list_all, directory="vit_tiny_saved_results", base_filename="layer_norm_var_search")
+    # save_accuracy_list(acc_list_all, directory=save_dir, base_filename="layer_norm_var_search")
 
     # acc_list_all = []
     
@@ -212,7 +213,7 @@ def search_top():
     #     target_op = {"isqrt_in_width": [1,2,3,4,5,6,7,8]}
     #     acc_list = search_layer_norm(fixed_op, target_op)
     #     acc_list_all.append(acc_list)
-    # save_accuracy_list(acc_list_all, directory="vit_tiny_saved_results", base_filename="layer_norm_isqrt_search")
+    # save_accuracy_list(acc_list_all, directory=save_dir, base_filename="layer_norm_isqrt_search")
 
     acc_list_all = []
     for int_width in [8]:
@@ -220,7 +221,7 @@ def search_top():
         target_op = {"exp_width": [1,2,3,4,5,6,7,8]}
         acc_list = search_softmax(fixed_op, target_op)
         acc_list_all.append(acc_list)
-    save_accuracy_list(acc_list_all, directory="vit_tiny_saved_results", base_filename="attention_exp_search")
+    save_accuracy_list(acc_list_all, directory=save_dir, base_filename="attention_exp_search")
 
 if __name__ == "__main__":
     set_logging_verbosity("info")  

@@ -17,7 +17,11 @@ from chop.nn.quantized.functional import matmul_integer
 from typing import Optional, Tuple, Union
 
 from .linear import MXIntLinear
-from .attention_head import MXIntViTAttentionHead
+from .attention_head import MXIntViTAttentionHead, IntViTAttentionHead
+from chop.tools import get_logger
+from chop.tools.logger import set_logging_verbosity
+
+logger = get_logger(__name__)
 
 class _ViTAttentionBase(nn.Module):
     def __init__(
@@ -83,3 +87,55 @@ class MXIntAttention(_ViTAttentionBase):
             attn_drop=attn_drop,
             q_config=q_config
         )
+
+class IntAttention(_ViTAttentionBase):
+    def __init__(
+        self,
+        dim: int,
+        num_heads: int = 8,
+        qkv_bias: bool = False,
+        qk_norm: bool = False,
+        attn_drop: float = 0.0,
+        proj_drop: float = 0.0,
+        q_config: dict = None,
+    ) -> None:
+        super().__init__(dim, num_heads, qkv_bias, qk_norm, attn_drop, proj_drop)
+        self.q_config = q_config
+        
+        # Replace attention with MXIntViTAttentionHead
+        self.self_attention = IntViTAttentionHead(
+            dim=self.head_dim,
+            num_heads=num_heads,
+            attn_drop=attn_drop,
+            q_config=q_config
+        )
+
+class QuantAttention(_ViTAttentionBase):
+    def __init__(
+        self,
+        dim: int,
+        num_heads: int = 8,
+        qkv_bias: bool = False,
+        qk_norm: bool = False,
+        attn_drop: float = 0.0,
+        proj_drop: float = 0.0,
+        q_config: dict = None,
+    ) -> None:
+        super().__init__(dim, num_heads, qkv_bias, qk_norm, attn_drop, proj_drop)
+        self.q_config = q_config
+        
+        if q_config.get('quant_type') == 'mxint':
+            logger.debug("Using MXIntViTAttentionHead")
+            self.self_attention = MXIntViTAttentionHead(
+                dim=self.head_dim,
+                num_heads=num_heads,
+                attn_drop=attn_drop,
+                q_config=q_config
+            )
+        elif q_config.get('quant_type') == 'int':
+            logger.debug("Using IntViTAttentionHead")
+            self.self_attention = IntViTAttentionHead(
+                dim=self.head_dim,
+                num_heads=num_heads,
+                attn_drop=attn_drop,
+                q_config=q_config)

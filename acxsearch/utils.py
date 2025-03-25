@@ -11,6 +11,9 @@ from chop.passes.graph.transforms import (
     quantize_transform_pass,
 )
 import time
+import pickle
+import json
+import os
 from chop.tools.checkpoint_load import load_model
 from chop.dataset import get_dataset_info, MaseDataModule
 from chop.models import get_model, get_model_info
@@ -186,3 +189,160 @@ def parse_config_choice(config_choice: dict):
         depth = len(value)
         new_list = dynamic_loops(value, depth)
         config_choice[key] = new_list
+
+
+def save_accuracy_list(acc_list_all, directory='saved_results', base_filename='acc_list_all'):
+    """
+    Save the accuracy list to both pickle and JSON formats.
+    
+    Args:
+        acc_list_all: List of accuracy results to save
+        directory: Directory to save the files in (default: 'saved_results')
+        base_filename: Base name for the saved files (default: 'acc_list_all')
+    
+    Returns:
+        tuple: Paths to the saved pickle and JSON files
+    """
+    # Create a directory for saved results if it doesn't exist
+    os.makedirs(directory, exist_ok=True)
+    
+    # Define file paths
+    pickle_path = os.path.join(directory, f"{base_filename}.pkl")
+    json_path = os.path.join(directory, f"{base_filename}.json")
+    
+    # Save using pickle (binary format)
+    with open(pickle_path, 'wb') as f:
+        pickle.dump(acc_list_all, f)
+    
+    # Save using JSON (human-readable format)
+    # Convert the data to a format that can be serialized to JSON
+    json_compatible_data = []
+    for acc_list in acc_list_all:
+        json_compatible_data.append([(int(x), float(y)) for x, y in acc_list])
+    
+    with open(json_path, 'w') as f:
+        json.dump(json_compatible_data, f, indent=4)
+    
+    print(f"Saved accuracy lists to {pickle_path} and {json_path}")
+    return pickle_path, json_path
+
+
+def plot_accuracy_vs_bitwidth(acc_list, 
+                            break_points=None,  # [(y_min1, y_max1, x_min1, x_max1), (y_min2, y_max2, x_min2, x_max2)]
+                            highlight_region=None,  # (y_lower, y_upper)
+                            title="Accuracy vs Bit Width",
+                            marker_style='bo-',
+                            figsize=(10, 6),
+                            labels=None,
+                            x_range=None):  # Added x_range parameter
+    """
+    Plot accuracy vs bit width with two charts: one showing the full range and 
+    another highlighting a specific region.
+    
+    Args:
+        acc_list: List of tuples [(bit_width, accuracy), ...] or list of such lists
+        break_points: List of tuples [(y_min1, y_max1, x_min1, x_max1), (y_min2, y_max2, x_min2, x_max2)]
+        highlight_region: Tuple of (y_lower, y_upper) to mark with dashed lines
+        title: Plot title
+        marker_style: Style of plot markers
+        figsize: Figure size
+        labels: List of labels for each accuracy list
+        x_range: Tuple of (x_min, x_max) to set the x-axis range
+    """
+    import matplotlib.pyplot as plt
+    
+    # Check if acc_list is a list of lists
+    if acc_list and isinstance(acc_list[0], list):
+        # Multiple accuracy lists
+        all_data = []
+        for sublist in acc_list:
+            if sublist:  # Check if sublist is not empty
+                bit_widths, accuracies = zip(*sublist)
+                all_data.append((bit_widths, accuracies))
+    else:
+        # Single accuracy list
+        bit_widths, accuracies = zip(*acc_list)
+        all_data = [(bit_widths, accuracies)]
+    
+    # Create figure with white background
+    plt.style.use('default')
+    f = plt.figure(figsize=figsize)
+    
+    # Create two subplots with height ratio 2:1
+    gs = f.add_gridspec(3, 1)
+    ax1 = f.add_subplot(gs[0:2, 0])  # First 2/3 of the height
+    ax2 = f.add_subplot(gs[2, 0])    # Last 1/3 of the height
+    
+    # Plot data on both axes
+    for i, (bit_widths, accuracies) in enumerate(all_data):
+        # Use different colors for multiple lists
+        if len(all_data) > 1:
+            current_style = marker_style.replace('b', f'C{i}')
+        else:
+            current_style = marker_style
+            
+        # Use label if provided
+        label = labels[i] if labels and i < len(labels) else f"Series {i+1}"
+        
+        # Plot on the first axis (full view)
+        ax1.plot(bit_widths, accuracies, current_style, linewidth=1, markersize=4, label=label)
+        
+        # Plot on the second axis (zoomed/highlighted view)
+        ax2.plot(bit_widths, accuracies, current_style, linewidth=1, markersize=4, label=label)
+    
+    # Customize legend appearance
+    plt.rcParams['legend.fontsize'] = 10
+    plt.rcParams['legend.frameon'] = True
+    plt.rcParams['legend.edgecolor'] = 'gray'
+    plt.rcParams['legend.fancybox'] = True
+    plt.rcParams['legend.shadow'] = True
+    plt.rcParams['legend.framealpha'] = 0.8
+    
+    # Set x-axis range if specified
+    if x_range:
+        ax1.set_xlim(x_range)
+        ax2.set_xlim(x_range)
+    
+    # Set axis limits for both charts
+    if break_points and len(break_points) > 0:
+        y_min1, y_max1, x_min1, x_max1 = break_points[0]
+        ax1.set_ylim(y_min1, y_max1)
+        ax1.set_xlim(x_min1, x_max1)
+    
+    if break_points and len(break_points) > 1:
+        y_min2, y_max2, x_min2, x_max2 = break_points[1]
+        ax2.set_ylim(y_min2, y_max2)
+        ax2.set_xlim(x_min2, x_max2)
+    
+    # Add dashed lines for highlight region if specified
+    if highlight_region:
+        y_lower, y_upper = highlight_region
+        ax1.axhline(y=y_lower, color='r', linestyle='--', alpha=0.5)
+        ax1.axhline(y=y_upper, color='r', linestyle='--', alpha=0.5)
+        ax2.axhline(y=y_lower, color='r', linestyle='--', alpha=0.5)
+        ax2.axhline(y=y_upper, color='r', linestyle='--', alpha=0.5)
+    
+    # Customize grid and labels
+    for ax in [ax1, ax2]:
+        ax.grid(True, linestyle=':', alpha=0.4)
+    
+    # Set x-ticks
+    if all_data:
+        all_bit_widths = sorted(set([bw for bws, _ in all_data for bw in bws]))
+        ax1.set_xticks(all_bit_widths)
+        ax2.set_xticks(all_bit_widths)
+    
+    # Set labels
+    ax1.set_title("Full Range View", fontsize=8)
+    ax2.set_title("Highlighted Region", fontsize=8)
+    ax2.set_xlabel('Bit Width', fontsize=10)
+    f.text(0.00, 0.5, 'Accuracy', va='center', rotation='vertical', fontsize=10)
+    plt.suptitle(title, fontsize=14, y=0.98)
+    
+    # Add legend if we have multiple data series
+    if len(all_data) > 1:
+        ax1.legend(loc='upper right')
+    
+    plt.tight_layout()
+    plt.subplots_adjust(top=0.9)
+    return f

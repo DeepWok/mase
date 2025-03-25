@@ -3,15 +3,12 @@ import chop as chop
 from chop.tools import get_logger
 from chop.tools.logger import set_logging_verbosity
 
-from .attention import MXIntAttention
+from .attention import QuantAttention
+from .layer_norm import QuantLayerNorm
+from .gelu import QuantGELU
 from .linear import MXIntLinear
-from .layer_norm import MXIntLayerNorm
-from .gelu import MXIntGELU
 import torch
-
-
 logger = get_logger(__name__)
-set_logging_verbosity("debug")
 
 def get_module_type(module):
     class_name = module[1].__class__.__name__
@@ -52,7 +49,7 @@ def vit_module_level_quantize(model, q_config = {}):
             continue
         if get_module_type(module) == "attention":
             ori_module = module[1]
-            new_module = MXIntAttention(
+            new_module = QuantAttention(
                 ori_module.head_dim * ori_module.num_heads,
                 ori_module.num_heads,
                 qkv_bias=True,
@@ -90,15 +87,15 @@ def vit_module_level_quantize(model, q_config = {}):
             ori_module = module[1]
             if ori_module.bias is not None:
                 bias = True
-            new_module = MXIntLayerNorm(
+            new_module = QuantLayerNorm(
                 ori_module.normalized_shape,
                 eps=ori_module.eps,
                 elementwise_affine=ori_module.elementwise_affine,
                 bias=bias,
                 q_config=config,
             )
-            new_module.weight = ori_module.weight
-            new_module.bias = ori_module.bias
+            new_module.module.weight = ori_module.weight
+            new_module.module.bias = ori_module.bias
             logger.debug(f"Replacing module: {module[0]}")
 
             deepsetattr(model, module[0], new_module)
@@ -119,7 +116,7 @@ def vit_module_level_quantize(model, q_config = {}):
             deepsetattr(model, module[0], new_module)
         elif get_module_type(module) == "gelu":
             ori_module = module[1]
-            new_module = MXIntGELU(
+            new_module = QuantGELU(
                 q_config=config,
             )
             logger.debug(f"Replacing module: {module[0]}")

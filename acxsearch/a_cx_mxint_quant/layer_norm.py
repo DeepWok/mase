@@ -5,6 +5,8 @@ from .quantizers import mxint_quant_block, mxint_hardware
 from chop.nn.quantizers import integer_floor_quantizer, integer_quantizer
 from torch import Tensor
 from math import ceil, log2
+from chop.tools import get_logger
+logger = get_logger(__name__)
 
 def mxint_layer_norm(
     x: torch.Tensor,
@@ -161,6 +163,81 @@ def layer_norm_hardware(
                                 },
                                 q_config.get("data_out_parallelism"))
     return qout
+def int_layer_norm(x, normalized_shape, weight=None, bias=None, eps=1e-5, s=1, z=0, r=0, bit_width=8):
+    """
+    Integer-only LayerNorm implementation as described in the paper.
+    
+    Args:
+        x: Input tensor (X_Q in the paper, already quantized)
+        normalized_shape: Shape to normalize over
+        weight: gamma parameter (γ in the paper)
+        bias: beta parameter (β in the paper)
+        eps: small constant for numerical stability
+        s: scale factor
+        z: zero point
+        r: PTR (power-of-two representation)
+        bit_width: bit width for quantization (b in the paper)
+    
+    Returns:
+        Quantized output tensor (O_Q in the paper)
+    """
+    # Handle normalized_shape
+    if isinstance(normalized_shape, int):
+        normalized_shape = (normalized_shape,)
+    
+    # Get dimensions to normalize over
+    dim = tuple(range(-len(normalized_shape), 0))
+    
+    # Phase 1: Shift the quantized activation X_Q with PTR r (Equation 8)
+    # X̂_Q = (X_Q - z) << r
+    x_hat_q = (x - z) * 2**r
+    
+    # Calculate C (batch size over normalization dimensions)
+    C = 1
+    for i in dim:
+        C *= x.shape[i]
+    
+    # Phase 2: Calculate mean and mean of squares (Equation 9)
+    # μx ≈ (1/C)∑(X̂_Q·s) → (s/C)T1
+    T1 = torch.sum(x_hat_q, dim=dim, keepdim=True)
+    mu_x = (s / C) * T1
+    
+    # μx2 ≈ (1/C)∑(X̂_Q·s)² → (s²/C)T2
+    T2 = torch.sum(x_hat_q**2, dim=dim, keepdim=True)
+    mu_x2 = (s**2 / C) * T2
+    
+    # Calculate variance (Equation 10)
+    # σx² = μx2 - μx² ≈ (s²/C²)(CT2 - T1²)
+    sigma_x_squared = (s**2 / C**2) * (C * T2 - T1**2)
+    
+    # Calculate sqrt(σx² + ε) ≈ (s/C)√(CT2 - T1²)
+    sqrt_var_eps = (s / C) * torch.sqrt(C * T2 - T1**2 + C**2 * eps / s**2)
+    
+    # Integer-only inference (Equation 11)
+    # Define A and B terms
+    if weight is not None:
+        s_gamma = s * weight
+    else:
+        s_gamma = s
+        
+    A = s_gamma / torch.sqrt(sigma_x_squared + eps)
+    
+    if bias is not None:
+        B = bias * torch.sqrt(sigma_x_squared + eps) - weight * mu_x
+    else:
+        B = -mu_x
+    
+    # Calculate M values for bit-width adjustments (Equation 12)
+    M1 = bit_width - 1 - torch.floor(torch.log2(torch.abs(A)))
+    M2 = torch.floor(torch.abs(A) * 2**M1)
+    
+    # Apply sign and scaling to A
+    A_scaled = torch.sign(A) * (M2 / 2**M1)
+    
+    # Final quantized output (Equation 12)
+    O_Q = torch.floor(A_scaled * x_hat_q + B + z)
+    
+    return O_Q
 
 class MXIntLayerNorm(nn.LayerNorm):
     def __init__(
@@ -183,3 +260,52 @@ class MXIntLayerNorm(nn.LayerNorm):
             self.eps,
             q_config=self.q_config,
         )
+from .int_quant.quant_modules import IntLayerNormImpl, QuantAct
+
+class IntLayerNorm(nn.LayerNorm):
+    def __init__(self, normalized_shape, eps: float = 0.00001, elementwise_affine: bool = False, bias: bool = False, q_config=None,
+    ) -> None:
+        super().__init__(normalized_shape, eps, elementwise_affine, bias)
+        self.q_config = q_config
+        self.quant_act = QuantAct(
+            activation_bit=self.q_config.get('in_width'), 
+            act_range_momentum=self.q_config.get('in_range_momentum')
+            )
+        self.impl = IntLayerNormImpl(normalized_shape, eps, elementwise_affine)
+
+    def forward(self, x: Tensor) -> Tensor:
+        self.impl.weight=self.weight
+        self.impl.bias=self.bias
+        qx, scaling_factor = self.quant_act(x)
+        qout, out_scaling_factor = self.impl(qx, scaling_factor)
+        return qout
+
+
+class QuantLayerNorm(nn.LayerNorm):
+    def __init__(self, normalized_shape, eps: float = 0.00001, elementwise_affine: bool = False, bias: bool = False, q_config=None,
+    ) -> None:
+        super().__init__(normalized_shape, eps, elementwise_affine, bias)
+        self.q_config = q_config
+        if q_config.get('quant_type') == 'mxint':
+            logger.debug("Using MXIntLayerNorm")
+            self.module = MXIntLayerNorm(
+                normalized_shape,
+                eps,
+                elementwise_affine,
+                bias,
+                q_config=q_config
+            )
+        elif q_config.get('quant_type') == 'int':
+            logger.debug("Using IntLayerNorm")
+            self.module = IntLayerNorm(
+                normalized_shape,
+                eps,
+                elementwise_affine,
+                bias,
+                q_config=q_config)
+        else:
+            self.module = nn.LayerNorm(normalized_shape, eps, elementwise_affine, bias)
+
+    def forward(self, x: Tensor) -> Tensor:
+        return self.module(x)
+
