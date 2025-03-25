@@ -60,7 +60,6 @@ def objective(trial, baseline_model_data):
     
     # Apply pruning to the model
     pruned_model = apply_pruning(mg.model, pruning_method, sparsity, structured)
-    
     # Calculate pruning metrics
     pruning_metrics = calculate_pruning_metrics(pruned_model)
     for k, v in pruning_metrics.items():
@@ -204,6 +203,8 @@ def objective(trial, baseline_model_data):
         trainer.model.encoder,
         hf_input_names=["input_values", "attention_mask"],
     )
+
+    final_mg = final_mg.cpu()
     
     # Initialize metadata
     final_mg, _ = passes.init_metadata_analysis_pass(final_mg)
