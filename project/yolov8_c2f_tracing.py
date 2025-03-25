@@ -6,9 +6,11 @@ import torch.fx as fx
 import torch.nn as nn
 import torch
 import ultralytics
+from chop.passes.graph.transforms import metadata_value_type_cast_transform_pass
+
 
 # Load a pretrained YOLO model
-model = YOLO("yolov8n.yaml")  # Choose the appropriate model
+model = YOLO("yolov8n-cls.yaml", task="classify")
 
 
 # Define a safe wrapper for torch.cat to avoid tracing its internals
@@ -52,60 +54,15 @@ def safe_detect(
     )
 
 
-# FX-safe wrapper for Detect
-class FXSafeDetect(nn.Module):
-    def __init__(self, orig_module):
-        super().__init__()
-        self.orig_module = orig_module
-        # Instantiate all the original module's parameters
-        attrs = vars(orig_module)
-        for name, value in attrs.items():
-            safe_settatr(self, name, value)
-
-    def forward(self, *args):
-        return (safe_detect(self.orig_module, *args),)
-
-
-# Define a safe wrapper for C2f module calls
-@fx.wrap
-def safe_c2f(
-    module,
-    x,
-):
-    return module(x)
-
-
-# FX-safe wrapper for C2f
-class FXSafeC2f(nn.Module):
-    def __init__(self, orig_module):
-        super().__init__()
-
-        # Instantiate all the original module's parameters
-        attrs = vars(orig_module)
-        for name, value in attrs.items():
-            safe_settatr(self, name, value)
-
-        self.orig_module = orig_module
-
-    def forward(self, x, **kwargs):
-        return safe_c2f(self.orig_module, x)
-
-
 # Replace problematic modules in the model with FX-safe versions
 for name, module in model.model.model.named_children():
     if isinstance(module, ultralytics.nn.modules.conv.Concat):
         print(f"Replacing module {name} with FXSafeConcat")
         setattr(model.model.model, name, FXSafeConcat(module))
-    elif isinstance(module, ultralytics.nn.modules.head.Detect):
-        print(f"Replacing module {name} with FXSafeDetect")
-        setattr(model.model.model, name, FXSafeDetect(module))
-    elif isinstance(module, ultralytics.nn.modules.block.C2f):
-        print(f"Replacing module {name} with FXSafeC2f")
-        setattr(model.model.model, name, FXSafeC2f(module))
 
 
 cf_args = {
-    "x": torch.randn(1, 3, 640, 640),
+    # "x": torch.randn(1, 3, 640, 640),
     # "profile": False,
     # "visualize": False,
     # "augment": False,
@@ -117,18 +74,17 @@ cf_args = {
 mg = MaseGraph(model.model, cf_args=cf_args)
 # Set custom_ops
 CUSTOM_OPS = {
-    "modules": {FXSafeC2f: "", FXSafeConcat: "", FXSafeDetect: ""},
-    # "functions": {safe_cat: "", safe_detect: "", safe_c2f: ""},
+    "modules": {
+        FXSafeConcat: "",
+    },
+    # "functions": {safe_cat: "", safe_detect: "", },
 }
 setattr(mg.model, "custom_ops", CUSTOM_OPS)
 
-print("MaseGraph successfully created:")
-print(mg)
 
 mg.model.patched_op_names = [
     "safe_cat",
     "safe_detect",
-    "safe_c2f",
     "safe_settatr",
     "safe_list_create",
     "safe_append",
@@ -140,16 +96,7 @@ mg.model.patched_op_names = [
 import chop.passes as passes
 from chop.passes.graph.analysis.add_metadata.common_metadata_layers import func_data
 
-# Add metadata for the custom functions
-func_data["safe_c2f"] = {
-    "module": "c2f",
-    "input": "data_in",
-    "c1": "config",
-    "c2": "config",
-    "shortcut": False,
-    "g": "config",
-    "e": "config",
-}
+
 func_data["safe_detect"] = {"module": "detect", "input": "data_in"}
 func_data["safe_cat"] = {"module": "concat", "input": "data_in", "dim": "config"}
 func_data["safe_settatr"] = {
@@ -183,7 +130,7 @@ mg, _ = passes.add_common_metadata_analysis_pass(
     mg,
     {
         "dummy_in": {
-            "x_1": dummy_input,
+            "x": dummy_input,
             "profile_1": False,
             "visualize_1": False,
             "augment_1": False,
@@ -193,42 +140,5 @@ mg, _ = passes.add_common_metadata_analysis_pass(
     },
 )
 mg, _ = passes.add_software_metadata_analysis_pass(mg, None)
-
-# %% Quantization
-
-import chop.passes as passes
-
-quantization_config = {
-    "by": "type",
-    "default": {
-        "config": {
-            "name": None,
-        }
-    },
-    "linear": {
-        "config": {
-            "name": "integer",
-            # data
-            "data_in_width": 8,
-            "data_in_frac_width": 4,
-            # weight
-            "weight_width": 8,
-            "weight_frac_width": 4,
-            # bias
-            "bias_width": 8,
-            "bias_frac_width": 4,
-        }
-    },
-}
-
-orig_mg = mg
-mg, _ = passes.quantize_transform_pass(
-    orig_mg,
-    pass_args=quantization_config,
-)
-mg, _ = passes.summarize_quantization_analysis_pass(
-    mg,
-    pass_args={"save_dir": "quantize_summary", "original_graph": orig_mg},
-)
 
 # %%
