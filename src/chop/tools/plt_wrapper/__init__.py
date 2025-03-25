@@ -6,6 +6,7 @@ from .nlp import (
     NLPLanguageModelingModelWrapper,
     NLPTranslationModelWrapper,
 )
+from .vision.ultralytics_detection import UltralyticsDetectionWrapper
 
 
 def get_model_wrapper(model_info, task: str):
@@ -14,7 +15,11 @@ def get_model_wrapper(model_info, task: str):
     elif model_info.is_nerf_model:
         return NeRFModelWrapper
     elif model_info.is_vision_model:
-        return VisionModelWrapper
+        match task:
+            case "detection":
+                return UltralyticsDetectionWrapper
+            case _:
+                return VisionModelWrapper
     elif model_info.is_nlp_model:
         match task:
             case "classification" | "cls":
