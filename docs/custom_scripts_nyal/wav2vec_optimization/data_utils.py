@@ -67,4 +67,6 @@ def import_model_and_dataset():
         "vocab": vocab,
         "decoder": decoder,
         "data_module": data_module,
+        "checkpoint": CHECKPOINT,
+        "dataset_name": DATASET_NAME,
     }
