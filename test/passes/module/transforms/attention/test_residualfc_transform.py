@@ -46,7 +46,7 @@ def test_fc_transform_pass(model):
         "gpt2spda": {
             "config": {
                 "name": "res_fc",
-                "alpha": 0.5,
+                "alpha": 1.0,
             }
         },
     }
