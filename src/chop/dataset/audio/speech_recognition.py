@@ -154,6 +154,7 @@ def _preprocess_librispeech_dataset(save_path: Path, config: dict = LIBRISPEECH_
 
         while done == False:  # Print the first few samples for debugging
             print(f"[DEBUG] Preprocess sample: raw label = '{text}'")
+            done = True
 
     X_train, X_temp, Y_train, Y_temp, raw_train, raw_temp = train_test_split(
         input_values, labels, raw_labels,
