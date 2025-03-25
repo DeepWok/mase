@@ -168,3 +168,6 @@ prof/
 mase-trainer/
 test-trainer/
 configs/tensorrt/vgg7_INT8_quantization_by_type.toml
+
+# Datasets
+datasets/

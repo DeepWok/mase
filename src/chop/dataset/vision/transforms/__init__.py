@@ -21,5 +21,7 @@ def get_vision_dataset_transform(name: str, train: bool, model_name: str):
             return get_cifar100_transform(train, model_name)
         case "imagenet" | "imagenet_subset":
             return get_imagenet_transform(train, model_name)
+        case "coco-detection" | "coco-segmentation":
+            return None  # TODO: Implement coco transforms
         case _:
             raise ValueError(f"Unknown dataset {name}")
