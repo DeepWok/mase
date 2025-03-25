@@ -94,8 +94,8 @@ def main():
     data_module.setup()
     
     # Define methods and sparsity levels to test
-    pruning_methods = ["random", "l1-norm", "snip"]  # Use a subset for faster testing
-    sparsity_levels = [0.0, 0.3, 0.5, 0.7, 0.9]      # Use fewer levels for faster testing
+    pruning_methods = ["random", "l1-norm", "snip", "movement", "hwpq"]  # Use a subset for faster testing
+    sparsity_levels = [0.3, 0.5, 0.7, 0.9]      # Use fewer levels for faster testing
     
     # Create runtime analysis config
     runtime_analysis_config = {
@@ -128,6 +128,14 @@ def main():
     
     # Create a timestamp for saving results
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # Print current working directory
+    print(f"Current working directory: {os.getcwd()}")
+
+    # Create output directory
+    output_dir = "/content/pruning_results"
+    os.makedirs(output_dir, exist_ok=True)
+    print(f"Saving results to: {output_dir}")
     
     # -------------------------------
     # 2. Run analysis for each method and sparsity
@@ -246,7 +254,7 @@ def main():
             results["energy"].append(energy)
             
             # Save intermediate results to prevent data loss
-            np.save(f"pruning_comparison_results_{timestamp}.npy", results)
+            np.save(f"{output_dir}/pruning_comparison_results_{timestamp}.npy", results)
     
     # Add baseline to results for plotting
     for method in pruning_methods:
@@ -285,7 +293,7 @@ def main():
     plt.ylabel('Word Error Rate (WER)')
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"pruning_wer_comparison_{timestamp}.png")
+    plt.savefig(f"{output_dir}/pruning_wer_comparison_{timestamp}.png")
     plt.close()
     
     # Plot Inference Time vs Sparsity
@@ -299,7 +307,7 @@ def main():
     plt.ylabel('Inference Time (ms/sample)')
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"pruning_inference_time_comparison_{timestamp}.png")
+    plt.savefig(f"{output_dir}/pruning_inference_time_comparison_{timestamp}.png")
     plt.close()
     
     # Plot RTF vs Sparsity
@@ -313,13 +321,13 @@ def main():
     plt.ylabel('Real-Time Factor (RTF)')
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"pruning_rtf_comparison_{timestamp}.png")
+    plt.savefig(f"{output_dir}/pruning_rtf_comparison_{timestamp}.png")
     plt.close()
     
     # Print summary
     print("\nAnalysis complete!")
-    print(f"Results saved as pruning_comparison_results_{timestamp}.npy")
-    print(f"Plots saved as pruning_wer_comparison_{timestamp}.png, pruning_inference_time_comparison_{timestamp}.png, and pruning_rtf_comparison_{timestamp}.png")
+    print(f"Results saved as {output_dir}/pruning_comparison_results_{timestamp}.npy")
+    print(f"Plots saved as {output_dir}/pruning_wer_comparison_{timestamp}.png, {output_dir}/pruning_inference_time_comparison_{timestamp}.png, and {output_dir}/pruning_rtf_comparison_{timestamp}.png")
 
 
 if __name__ == "__main__":
