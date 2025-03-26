@@ -97,6 +97,7 @@ def process_study_results(study, enhanced=ENHANCED_OBJECTIVE):
     
     # Create DataFrame
     df = pd.DataFrame(results)
+    print(df)
     
     # Save results to CSV
     csv_name = "optuna_study_results.csv"

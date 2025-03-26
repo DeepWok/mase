@@ -1,7 +1,7 @@
 """
 Objective functions for optimization.
 """
-
+import math
 import torch
 import logging
 from chop import MaseGraph
@@ -257,7 +257,7 @@ def objective(trial, baseline_model_data):
     
     # Configure runtime analysis
     runtime_analysis_config = {
-        "num_batches": 24,
+        "num_batches": math.ceil(96 / BATCH_SIZE),
         "num_GPU_warmup_batches": 2,
         "test": True,
         "data_module": data_module,
