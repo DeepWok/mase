@@ -1,7 +1,7 @@
 """
 Objective functions for optimization.
 """
-import math
+
 import torch
 import logging
 from chop import MaseGraph
@@ -22,13 +22,18 @@ from config import EPOCHS
 # Set up logging
 logger = logging.getLogger(__name__)
 
+
 def objective(trial, baseline_model_data):
     """
     Objective function for optimization that:
     1) Creates optimized model (quantized + pruned)
     2) Trains the optimized model
     3) Performs runtime analysis
-    4) Calculates composite score based on metrics
+    4) Calculates composite score based on normalized metrics:
+       - WER: capped at 1.0
+       - Latency & Energy: normalized percentage change from baseline
+       - Bit width: normalized between 0-1 (with max of 32)
+       - Sparsity: already normalized between 0-1
     """
     # Unpack baseline data
     search_space = baseline_model_data["search_space"]
@@ -45,8 +50,6 @@ def objective(trial, baseline_model_data):
     
     logger.info(f"Starting trial {trial.number}")
     
-    # In the objective function, replace the current pruning section with:
-
     # -----------------------------
     # Phase 1: Pruning
     # -----------------------------
@@ -220,7 +223,7 @@ def objective(trial, baseline_model_data):
         tokenizer=tokenizer,
         evaluate_metric="wer",
         data_collator=data_collator,
-        num_train_epochs= EPOCHS,  # Reduced for faster trials
+        num_train_epochs=EPOCHS,  # Reduced for faster trials
         gradient_accumulation_steps=4,
         per_device_train_batch_size=2,
         per_device_eval_batch_size=2,
@@ -257,7 +260,7 @@ def objective(trial, baseline_model_data):
     
     # Configure runtime analysis
     runtime_analysis_config = {
-        "num_batches": math.ceil(96 / BATCH_SIZE),
+        "num_batches": 24,
         "num_GPU_warmup_batches": 2,
         "test": True,
         "data_module": data_module,
@@ -275,12 +278,22 @@ def objective(trial, baseline_model_data):
     # Run runtime analysis
     _, runtime_results = runtime_analysis_pass(final_mg, pass_args=runtime_analysis_config)
     trial.set_user_attr("runtime_metrics", runtime_results)
-    
+
     # Run bit width analysis
     _, bitwidth_results = calculate_avg_bits_mg_analysis_pass(final_mg)
-    avg_bitwidth = bitwidth_results.get("data_avg_bit", 32)  # fix this to be averadge of both
+    data_avg_bit = bitwidth_results.get("data_avg_bit", 32)
+    weight_avg_bit = bitwidth_results.get("w_avg_bit", 32)
+
+    # Calculate the combined average bit width
+    # We can either use a simple average or a weighted one depending on importance
+    # Simple average:
+    avg_bitwidth = (data_avg_bit + weight_avg_bit) / 2.0
+
+    # Store both individual metrics and the combined average
+    trial.set_user_attr("data_avg_bitwidth", data_avg_bit)
+    trial.set_user_attr("weight_avg_bitwidth", weight_avg_bit)
     trial.set_user_attr("avg_bitwidth", avg_bitwidth)
-    
+        
     # Store individual runtime metrics
     relevant_keys = [
         "Average WER",
@@ -309,33 +322,65 @@ def objective(trial, baseline_model_data):
     bitwidth_reduction = (base_bitwidth - avg_bitwidth) / base_bitwidth
     trial.set_user_attr("bitwidth_reduction", bitwidth_reduction)
     
-    # Calculate composite score
-    wer_change = pct_changes.get("Average WER", 0.0)
-    latency_change = pct_changes.get("Average Latency", 0.0)
-    energy_change = pct_changes.get("Inference Energy Consumption", 0.0)
+    # ----------------------------------------
+    # NEW NORMALIZED METRICS CALCULATION
+    # ----------------------------------------
     
-    # Weight the different metrics
-    wer_weight = 0.4      # Accuracy is important
-    latency_weight = 0.2
+    # 1. Cap WER at 1.0 (100%)
+    wer_value = runtime_results.get("Average WER", 100.0) / 100.0  # Convert from percentage to 0-1 scale
+    normalized_wer = min(wer_value, 1.0)
+    trial.set_user_attr("normalized_wer", normalized_wer)
+    
+    # 2. Normalize latency between 0-1 based on percentage change
+    latency_pct_change = pct_changes.get("Average Latency", 0.0)
+    # Convert to 0-1 scale where 0 is best (large reduction), 1 is worst (large increase)
+    # Assuming a maximum reasonable increase of 100% and maximum reduction of -100%
+    normalized_latency = (latency_pct_change + 100) / 200
+    normalized_latency = max(0.0, min(normalized_latency, 1.0))  # Clamp between 0-1
+    trial.set_user_attr("normalized_latency", normalized_latency)
+    
+    # 3. Normalize energy between 0-1 based on percentage change
+    energy_pct_change = pct_changes.get("Inference Energy Consumption", 0.0)
+    # Convert to 0-1 scale where 0 is best (large reduction), 1 is worst (large increase)
+    normalized_energy = (energy_pct_change + 100) / 200
+    normalized_energy = max(0.0, min(normalized_energy, 1.0))  # Clamp between 0-1
+    trial.set_user_attr("normalized_energy", normalized_energy)
+    
+    # 4. Normalize bit width between 0-1 with max of 32
+    normalized_bitwidth = avg_bitwidth / 32.0
+    normalized_bitwidth = max(0.0, min(normalized_bitwidth, 1.0))  # Clamp between 0-1
+    trial.set_user_attr("normalized_bitwidth", normalized_bitwidth)
+    
+    # 5. Sparsity is already normalized between 0-1
+    # Note: For sparsity, higher is better (more sparsity = smaller model)
+    sparsity = pruning_metrics["overall_sparsity"]
+    
+    # Define weights for each metric
+    wer_weight = 0.3     
+    latency_weight = 0.1
     energy_weight = 0.1
     bitwidth_weight = 0.2
-    sparsity_weight = 0.1
+    sparsity_weight = 0.3
     
-    # Combine into composite score (negative is better as it means reduction)
+    # Combine into new composite score
+    # For WER, latency, energy, and bitwidth, lower is better (0 is best)
+    # For sparsity, higher is better (1 is best)
     composite_score = (
-        wer_weight * wer_change +
-        latency_weight * latency_change +
-        energy_weight * energy_change -
-        bitwidth_weight * (bitwidth_reduction * 100) -  # Convert to percentage
-        sparsity_weight * (pruning_metrics["overall_sparsity"] * 100)  # Convert to percentage
+        wer_weight * normalized_wer +
+        latency_weight * normalized_latency +
+        energy_weight * normalized_energy +
+        bitwidth_weight * normalized_bitwidth -
+        sparsity_weight * sparsity  # Subtract because higher sparsity is better
     )
     
     # Invert for Optuna (which maximizes)
     composite_metric = -composite_score
-    trial.set_user_attr("composite_score", composite_score)
-    trial.set_user_attr("composite_metric", composite_metric)
+    trial.set_user_attr("new_composite_score", composite_score)
+    trial.set_user_attr("new_composite_metric", composite_metric)
     
-    logger.info(f"Trial complete with composite score: {composite_score}")
+    logger.info(f"Trial complete with new composite score: {composite_score}")
+    logger.info(f"Normalized metrics: WER={normalized_wer:.4f}, Latency={normalized_latency:.4f}, "
+                f"Energy={normalized_energy:.4f}, Bitwidth={normalized_bitwidth:.4f}, Sparsity={sparsity:.4f}")
     
     return composite_metric
 

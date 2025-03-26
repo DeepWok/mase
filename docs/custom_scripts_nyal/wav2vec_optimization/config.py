@@ -25,6 +25,7 @@ ENHANCED_OBJECTIVE = False  # Whether to use phase-by-phase training and evaluat
 CHECKPOINT = "facebook/wav2vec2-base-960h"
 TOKENIZER_CHECKPOINT = "facebook/wav2vec2-base-960h"
 DATASET_NAME = "nyalpatel/condensed_librispeech_asr"
+CREATE_VISUALISATONS = False
 
 
 def define_search_space():

@@ -20,7 +20,18 @@ def process_study_results(study, enhanced=ENHANCED_OBJECTIVE):
             "trial_number": t.number,
             "composite_metric": t.value,
             "composite_score": t.user_attrs.get("composite_score", None),
+            # Add the new composite score metrics
+            "new_composite_metric": t.user_attrs.get("new_composite_metric", None),
+            "new_composite_score": t.user_attrs.get("new_composite_score", None),
         }
+        
+        # Add the normalized metrics
+        row.update({
+            "normalized_wer": t.user_attrs.get("normalized_wer", None),
+            "normalized_latency": t.user_attrs.get("normalized_latency", None),
+            "normalized_energy": t.user_attrs.get("normalized_energy", None),
+            "normalized_bitwidth": t.user_attrs.get("normalized_bitwidth", None),
+        })
         
         # Trial parameters
         row.update({
@@ -33,7 +44,7 @@ def process_study_results(study, enhanced=ENHANCED_OBJECTIVE):
         row.update({
             "pruning_sparsity": t.params.get("pruning_sparsity", None),
             "structured_sparsity": t.params.get("structured_sparsity", None),
-            "overall_sparsity": t.user_attrs.get("pruning_overall_sparsity", None),
+            "overall_sparsity": t.user_attrs.get("overall_sparsity", None),  # Fixed to match objective function
         })
         
         # Performance metrics for final model
@@ -97,7 +108,6 @@ def process_study_results(study, enhanced=ENHANCED_OBJECTIVE):
     
     # Create DataFrame
     df = pd.DataFrame(results)
-    print(df)
     
     # Save results to CSV
     csv_name = "optuna_study_results.csv"
