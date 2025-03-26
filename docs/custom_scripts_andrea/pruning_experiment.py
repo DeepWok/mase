@@ -13,6 +13,7 @@ from chop.tools import get_tokenized_dataset
 from transformers import AutoModelForCTC, Wav2Vec2Processor, TrainerCallback
 from chop import MaseGraph
 import chop.passes as passes
+from chop.passes import add_movement_metadata_analysis_pass
 from chop.passes.module import report_trainable_parameters_analysis_pass
 from chop.passes.graph.transforms.pruning import MovementTrackingCallback
 from chop.tools import get_trainer
@@ -55,9 +56,9 @@ tokenized_dataset, tokenizer, processor = get_tokenized_dataset(
     return_processor=True,
 )
 
-# Take a smaller subset of the dataset for faster training
-train_subset = tokenized_dataset["train"].select(range(200))  # Use only 200 samples
-test_subset = tokenized_dataset["test"].select(range(100))     # Use only 100 samples
+# Take a larger subset of the dataset for training
+train_subset = tokenized_dataset["train"].select(range(500))  # Use 500 samples
+test_subset = tokenized_dataset["test"].select(range(100))     # Use 100 samples
 tokenized_dataset = DatasetDict({
     "train": train_subset,
     "test": test_subset
@@ -70,7 +71,7 @@ decoder = build_ctcdecoder(vocab)
 # 2. Import dataset
 # -------------------------------
 
-batch_size = 4  # Increased batch size since we have less data
+batch_size = 8  # Increased batch size since we have more data
 data_module = MaseDataModule(
     name=dataset_name,
     batch_size=batch_size,
@@ -79,17 +80,6 @@ data_module = MaseDataModule(
     processor=processor
 )
 data_module.setup()
-
-# -------------------------------
-# 3. Helper function to compute sparsity
-# -------------------------------
-def compute_actual_sparsity(model: nn.Module) -> float:
-    total_params = 0
-    total_zeros = 0
-    for param in model.parameters():
-        total_params += param.numel()
-        total_zeros += (param == 0).sum().item()
-    return total_zeros / total_params if total_params > 0 else 0.0
 
 def setup_model_and_graph():
     """Set up the model and MASE graph."""
@@ -121,10 +111,68 @@ def setup_model_and_graph():
 
     return mg, ctc_head
 
+def count_nonzero_parameters(model):
+    """Count the actual non-zero parameters in the model"""
+    total_params = 0
+    nonzero_params = 0
+    
+    for name, module in model.named_modules():
+        if isinstance(module, (nn.Conv2d, nn.Linear)):
+            if hasattr(module, 'parametrizations') and hasattr(module.parametrizations, 'weight'):
+                # Get the actual weight after parametrization
+                weight = module.parametrizations.weight[0](module.weight)
+            else:
+                weight = module.weight
+            
+            # Count total parameters
+            total_params += weight.numel()
+            
+            # Count non-zero parameters
+            nonzero_params += (weight != 0).sum().item()
+                
+    return total_params, nonzero_params
+
+def print_parameter_count(model, description):
+    """Helper function to count and print parameters"""
+    total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    
+    # Also count non-zero parameters
+    total, nonzero = count_nonzero_parameters(model)
+    sparsity = 1.0 - (nonzero / total) if total > 0 else 0
+    
+    print(f"\n===== {description} =====")
+    print(f"Total trainable parameters: {total_params:,}")
+    print(f"Total weight parameters: {total:,}")
+    print(f"Non-zero weight parameters: {nonzero:,}")
+    print(f"Actual sparsity: {sparsity:.2%}")
+    
+    return total_params, nonzero, sparsity
+
+def compute_actual_sparsity(model: nn.Module) -> float:
+    """Compute the actual sparsity of the model after pruning parametrization."""
+    total_params = 0
+    total_zeros = 0
+    
+    for name, module in model.named_modules():
+        if isinstance(module, (nn.Conv2d, nn.Linear)):
+            if hasattr(module, 'parametrizations') and hasattr(module.parametrizations, 'weight'):
+                # Get the actual weight after parametrization
+                weight = module.parametrizations.weight[0](module.weight)
+            else:
+                weight = module.weight
+            
+            # Count total parameters
+            total_params += weight.numel()
+            
+            # Count zero parameters
+            total_zeros += (weight == 0).sum().item()
+    
+    return total_zeros / total_params if total_params > 0 else 0.0
+
 def run_pruning_experiment(
     pruning_methods: List[str] = ["random", "l1-norm", "movement", "snip", "hwpq"],
-    sparsity_levels: List[float] = [0.1, 0.3, 0.5, 0.7, 0.9],
-    num_train_epochs: int = 2,  # Changed to 2 fine tuning epochs
+    sparsity_levels: List[float] = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+    num_train_epochs: int = 2,
     save_results: bool = True
 ) -> Dict:
     """Run the pruning comparison experiment."""
@@ -186,7 +234,7 @@ def run_pruning_experiment(
                 per_device_eval_batch_size=batch_size,
             )
 
-            # Special case for movement pruning
+            # Add appropriate callbacks based on pruning method
             if method == "movement":
                 # Initialize metadata for movement tracking
                 for module in mg.model.modules():
@@ -216,7 +264,6 @@ def run_pruning_experiment(
                     per_device_eval_batch_size=batch_size,
                 )
             elif method == "snip":
-                print("Preparing SNIP pruning with representative batch...")
                 first_batch = next(iter(trainer.get_train_dataloader()))
                 trainer.add_callback(SNIPCallback(representative_batch=first_batch))
 
@@ -242,6 +289,7 @@ def run_pruning_experiment(
 
             # Get parameter statistics before training
             _, _ = report_trainable_parameters_analysis_pass(mg.model)
+            # Calculate total parameters manually since the analysis pass only prints
             total_params = sum(p.numel() for p in mg.model.parameters())
             trainable_params = sum(p.numel() for p in mg.model.parameters() if p.requires_grad)
             param_stats = {
@@ -249,34 +297,37 @@ def run_pruning_experiment(
                 "trainable_params": trainable_params
             }
             print(f"Parameter statistics after pruning:")
-            print(f"Total parameters: {param_stats['total_params']}")
-            print(f"Trainable parameters: {param_stats['trainable_params']}")
-            
-            # Compute and report actual sparsity achieved in mg.model
-            actual_sparsity = compute_actual_sparsity(mg.model)
-            print(f"Actual sparsity achieved: {actual_sparsity:.4f}")
+            print(f"Total parameters: {total_params}")
+            print(f"Trainable parameters: {trainable_params}")
 
-            # <<-- Evaluate pruned model BEFORE fine tuning -->> 
-            print("Evaluating pruned model BEFORE fine tuning...")
-            initial_eval_results = trainer.evaluate()
-            print(f"Initial WER: {initial_eval_results['eval_wer']:.4f}")
-            
-            # Train and evaluate (fine tuning)
-            print("Starting training (fine tuning)...")
+            # Evaluate before fine-tuning
+            print("Evaluating model immediately after pruning...")
+            pre_finetune_results = trainer.evaluate()
+            pre_finetune_wer = pre_finetune_results["eval_wer"]
+            print(f"Pre-fine-tuning WER: {pre_finetune_wer:.4f}")
+
+            # Train and evaluate
+            print(f"Starting fine-tuning with {method} pruning at {sparsity} sparsity...")
             trainer.train()
 
-            # Get evaluation metrics after fine tuning
-            print("Evaluating model AFTER fine tuning...")
+            # Get evaluation metrics after fine-tuning
             eval_results = trainer.evaluate()
             
             # Run runtime analysis
             print("Running runtime analysis...")
             _, runtime_results = runtime_analysis_pass(mg, pass_args=runtime_analysis_config)
 
-            # Combine results with both initial and final WERs and actual sparsity achieved
+            # Calculate actual sparsity
+            actual_sparsity = compute_actual_sparsity(mg.model)
+            print(f"Target sparsity: {sparsity:.2%}")
+            print(f"Actual sparsity: {actual_sparsity:.2%}")
+            print(f"Difference: {(actual_sparsity - sparsity):.2%}")
+
+            # Combine results
             method_results[sparsity] = {
-                "initial_wer": initial_eval_results["eval_wer"],
                 "wer": eval_results["eval_wer"],
+                "pre_finetune_wer": pre_finetune_wer,
+                "wer_improvement": pre_finetune_wer - eval_results["eval_wer"],
                 "loss": eval_results["eval_loss"],
                 "runtime": eval_results["eval_runtime"],
                 "samples_per_second": eval_results["eval_samples_per_second"],
@@ -287,16 +338,18 @@ def run_pruning_experiment(
                 "average_gpu_power": runtime_results["Average GPU Power Usage"],
                 "inference_energy": runtime_results["Inference Energy Consumption"],
                 "parameter_stats": param_stats,
-                "actual_sparsity": actual_sparsity
+                "actual_sparsity": actual_sparsity,
+                "sparsity_difference": actual_sparsity - sparsity
             }
 
             print(f"\nResults for {method} at {sparsity:.2f} sparsity:")
-            print(f"Initial WER (pre–fine tuning): {initial_eval_results['eval_wer']:.4f}")
-            print(f"Final WER (post–fine tuning): {eval_results['eval_wer']:.4f}")
-            print(f"Actual sparsity achieved: {actual_sparsity:.4f}")
+            print(f"Pre-fine-tuning WER: {pre_finetune_wer:.4f}")
+            print(f"Post-fine-tuning WER: {eval_results['eval_wer']:.4f}")
+            print(f"WER improvement: {(pre_finetune_wer - eval_results['eval_wer']):.4f}")
             print(f"Average Latency: {runtime_results['Average Latency']:.2f} ms")
             print(f"Average RTF: {runtime_results['Average RTF']:.4f}")
             print(f"GPU Power Usage: {runtime_results['Average GPU Power Usage']:.2f} W")
+            print(f"Actual sparsity: {actual_sparsity:.2%}")
 
         results[method] = method_results
         print(f"\nCompleted testing {method.upper()} pruning method")
@@ -326,50 +379,58 @@ def plot_results(results: Dict, save_dir: str = "plots"):
     fig, axes = plt.subplots(2, 2, figsize=(15, 12))
     fig.suptitle('Pruning Methods Comparison', fontsize=16)
     
-    # Plot WER vs Sparsity (showing final WER; you could similarly plot initial WER if desired)
+    # Plot WER vs Sparsity (pre and post fine-tuning)
     ax = axes[0, 0]
     for method in methods:
-        wer_values = [results[method][s]["wer"] for s in sparsity_levels]
-        ax.plot(sparsity_levels, wer_values, marker='o', label=method)
+        # Plot pre-fine-tuning WER
+        pre_wer_values = [results[method][sparsity]["pre_finetune_wer"] for sparsity in sparsity_levels]
+        ax.plot(sparsity_levels, pre_wer_values, marker='o', linestyle='--', label=f'{method} (pre)')
+        
+        # Plot post-fine-tuning WER
+        post_wer_values = [results[method][sparsity]["wer"] for sparsity in sparsity_levels]
+        ax.plot(sparsity_levels, post_wer_values, marker='o', label=f'{method} (post)')
     ax.set_xlabel('Sparsity')
     ax.set_ylabel('Word Error Rate (WER)')
-    ax.set_title('WER vs Sparsity')
+    ax.set_title('WER vs Sparsity (Pre/Post Fine-tuning)')
     ax.grid(True)
     ax.legend()
     
-    # Plot Latency vs Sparsity
+    # Plot Actual vs Target Sparsity
     ax = axes[0, 1]
     for method in methods:
-        latency_values = [results[method][s]["average_latency"] for s in sparsity_levels]
-        ax.plot(sparsity_levels, latency_values, marker='o', label=method)
-    ax.set_xlabel('Sparsity')
-    ax.set_ylabel('Average Latency (ms)')
-    ax.set_title('Latency vs Sparsity')
+        actual_sparsity = [results[method][sparsity]["actual_sparsity"] for sparsity in sparsity_levels]
+        ax.plot(sparsity_levels, actual_sparsity, marker='o', label=method)
+    # Add diagonal line for reference
+    ax.plot([0, 1], [0, 1], 'k--', label='Perfect Match')
+    ax.set_xlabel('Target Sparsity')
+    ax.set_ylabel('Actual Sparsity')
+    ax.set_title('Actual vs Target Sparsity')
     ax.grid(True)
     ax.legend()
     
-    # Plot RTF vs Sparsity
+    # Plot WER Improvement
     ax = axes[1, 0]
     for method in methods:
-        rtf_values = [results[method][s]["average_rtf"] for s in sparsity_levels]
-        ax.plot(sparsity_levels, rtf_values, marker='o', label=method)
+        improvement = [results[method][sparsity]["wer_improvement"] for sparsity in sparsity_levels]
+        ax.plot(sparsity_levels, improvement, marker='o', label=method)
     ax.set_xlabel('Sparsity')
-    ax.set_ylabel('Real-Time Factor (RTF)')
-    ax.set_title('RTF vs Sparsity')
+    ax.set_ylabel('WER Improvement')
+    ax.set_title('WER Improvement vs Sparsity')
     ax.grid(True)
     ax.legend()
     
-    # Plot GPU Power vs Sparsity
+    # Plot Sparsity Difference
     ax = axes[1, 1]
     for method in methods:
-        power_values = [results[method][s]["average_gpu_power"] for s in sparsity_levels]
-        ax.plot(sparsity_levels, power_values, marker='o', label=method)
-    ax.set_xlabel('Sparsity')
-    ax.set_ylabel('GPU Power Usage (W)')
-    ax.set_title('GPU Power vs Sparsity')
+        diff = [results[method][sparsity]["sparsity_difference"] for sparsity in sparsity_levels]
+        ax.plot(sparsity_levels, diff, marker='o', label=method)
+    ax.set_xlabel('Target Sparsity')
+    ax.set_ylabel('Sparsity Difference (Actual - Target)')
+    ax.set_title('Sparsity Difference vs Target Sparsity')
     ax.grid(True)
     ax.legend()
     
+    # Adjust layout and save
     plt.tight_layout()
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     plt.savefig(os.path.join(save_dir, f'pruning_comparison_{timestamp}.png'))
@@ -378,7 +439,7 @@ def plot_results(results: Dict, save_dir: str = "plots"):
     # Create a separate plot for parameter counts
     plt.figure(figsize=(10, 6))
     for method in methods:
-        param_values = [results[method][s]["parameter_stats"]["trainable_params"] for s in sparsity_levels]
+        param_values = [results[method][sparsity]["parameter_stats"]["trainable_params"] for sparsity in sparsity_levels]
         plt.plot(sparsity_levels, param_values, marker='o', label=method)
     plt.xlabel('Sparsity')
     plt.ylabel('Trainable Parameters')
@@ -391,28 +452,29 @@ def plot_results(results: Dict, save_dir: str = "plots"):
 
 def main():
     """Main function to run the pruning comparison experiment."""
+    # Define pruning methods and sparsity levels to test
     pruning_methods = ["random", "l1-norm", "movement", "snip", "hwpq"]
-    sparsity_levels = [0.1, 0.3, 0.5, 0.7, 0.9]
+    sparsity_levels = [0.1, 0.3, 0.5, 0.7, 0.9]  # Updated sparsity levels
     
-    # Use 2 fine tuning epochs now
+    # Run experiment with 1 fine-tuning epoch
     results = run_pruning_experiment(
         pruning_methods=pruning_methods,
         sparsity_levels=sparsity_levels,
-        num_train_epochs=2,
+        num_train_epochs=1,  # Changed to 1 epoch
         save_results=True
     )
     
+    # Create plots
     plot_results(results)
     
+    # Print summary
     logger.info("\nExperiment Summary:")
     for method in pruning_methods:
         logger.info(f"\n{method} pruning results:")
-        for s in sparsity_levels:
-            method_results = results[method][s]
-            logger.info(f"Sparsity {s}:")
-            logger.info(f"  Initial WER (pre–fine tuning): {method_results['initial_wer']:.4f}")
-            logger.info(f"  Final WER (post–fine tuning): {method_results['wer']:.4f}")
-            logger.info(f"  Actual Sparsity Achieved: {method_results['actual_sparsity']:.4f}")
+        for sparsity in sparsity_levels:
+            method_results = results[method][sparsity]
+            logger.info(f"Sparsity {sparsity}:")
+            logger.info(f"  WER: {method_results['wer']:.4f}")
             logger.info(f"  Average Latency: {method_results['average_latency']:.2f} ms")
             logger.info(f"  Average RTF: {method_results['average_rtf']:.4f}")
             logger.info(f"  GPU Power Usage: {method_results['average_gpu_power']:.2f} W")
@@ -421,4 +483,4 @@ def main():
             logger.info(f"  Trainable Parameters: {method_results['parameter_stats']['trainable_params']:,}")
 
 if __name__ == "__main__":
-    main()
+    main() 
