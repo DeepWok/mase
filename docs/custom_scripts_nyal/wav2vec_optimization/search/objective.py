@@ -197,6 +197,8 @@ def objective(trial, baseline_model_data):
     loss = eval_results.get("eval_loss", None)
     trial.set_user_attr("eval_wer_pt", wer)
     trial.set_user_attr("eval_loss_pt", loss)
+
+    trainer.model = trainer.model.cpu()
     
     # Create new MG for runtime analysis
     final_mg = MaseGraph(
@@ -204,8 +206,6 @@ def objective(trial, baseline_model_data):
         hf_input_names=["input_values", "attention_mask"],
     )
 
-    final_mg = final_mg.cpu()
-    
     # Initialize metadata
     final_mg, _ = passes.init_metadata_analysis_pass(final_mg)
     
