@@ -13,6 +13,7 @@ from chop.passes.graph.transforms.pruning.prune_movment_helper import MovementTr
 from chop.tools import get_trainer
 from chop.models import DataCollatorCTCWithPadding, CombinedWav2Vec2CTC
 
+
 # Set up logging
 logger = logging.getLogger(__name__)
 
