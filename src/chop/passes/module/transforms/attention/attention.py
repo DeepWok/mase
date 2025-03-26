@@ -13,14 +13,12 @@ from chop.nn.attention.modules import attention_module_map
 from ...module_modify_helper import replace_by_name, instantiate_module
 from ...state_dict_map import match_a_pattern, check_is_huggingface_model
 from .attention_transform_helper import (
-    instantiate_attention_module,   
+    instantiate_attention_module,
     replace_attention_by_name,
     transform_llama_to_mla,
- )
-from transformers.models.llama.modeling_llama import (
-    LlamaAttention,
-    LlamaDecoderLayer
 )
+from transformers.models.llama.modeling_llama import LlamaAttention, LlamaDecoderLayer
+
 
 def get_config(config: dict, name: str):
     if name in config:
@@ -34,7 +32,7 @@ def attention_by_type(network, pass_args):
         n_m = {}
         for n, m in network.named_modules():
             n_m[n] = m
-        
+
         if type_name == "gpt2spda":
             module = GPT2SdpaAttention
         elif type_name == "gpt2block":
@@ -51,6 +49,7 @@ def attention_by_type(network, pass_args):
                 )
                 network = replace_attention_by_name(network, n, new_m, transform_name)
     return network
+
 
 def attention_by_name(network, pass_args):
     is_huggingface_model = check_is_huggingface_model(network)
@@ -108,6 +107,7 @@ def attention_by_regex_name(network, pass_args):
 
     return network
 
+
 def attention_by_model(network, pass_args):
     for model_name, config in pass_args.items():
         if model_name == "llama":
@@ -115,6 +115,7 @@ def attention_by_model(network, pass_args):
         else:
             raise ValueError(f"Model {model_name} is not supported!")
     return new_network
+
 
 def attention_transform_pass(network, pass_args):
     by = pass_args.pop("by")
@@ -131,5 +132,3 @@ def attention_transform_pass(network, pass_args):
         case _:
             raise ValueError(f'Unsupported quantize "by": {by}')
     return network, stats
-
-

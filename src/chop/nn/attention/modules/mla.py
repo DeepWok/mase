@@ -425,6 +425,7 @@ class MLA(nn.Module):
     """
     Multi-Headed Attention Layer (MLA).
     """
+
     def __init__(self, args: ModelArgs):
         super().__init__()
         self.dim = args.dim
@@ -461,23 +462,49 @@ class MLA(nn.Module):
         dtype = Linear.dtype  # Use the default dtype from Linear
 
         if attn_impl == "naive":
-            self.register_buffer("k_cache", 
-                torch.zeros(args.max_batch_size, args.max_seq_len, self.n_local_heads, self.qk_head_dim, 
-                           dtype=dtype), 
-                persistent=False)
-            self.register_buffer("v_cache", 
-                torch.zeros(args.max_batch_size, args.max_seq_len, self.n_local_heads, self.v_head_dim, 
-                           dtype=dtype), 
-                persistent=False)
+            self.register_buffer(
+                "k_cache",
+                torch.zeros(
+                    args.max_batch_size,
+                    args.max_seq_len,
+                    self.n_local_heads,
+                    self.qk_head_dim,
+                    dtype=dtype,
+                ),
+                persistent=False,
+            )
+            self.register_buffer(
+                "v_cache",
+                torch.zeros(
+                    args.max_batch_size,
+                    args.max_seq_len,
+                    self.n_local_heads,
+                    self.v_head_dim,
+                    dtype=dtype,
+                ),
+                persistent=False,
+            )
         else:
-            self.register_buffer("kv_cache", 
-                torch.zeros(args.max_batch_size, args.max_seq_len, self.kv_lora_rank, 
-                           dtype=dtype), 
-                persistent=False)
-            self.register_buffer("pe_cache", 
-                torch.zeros(args.max_batch_size, args.max_seq_len, self.qk_rope_head_dim, 
-                           dtype=dtype), 
-                persistent=False)
+            self.register_buffer(
+                "kv_cache",
+                torch.zeros(
+                    args.max_batch_size,
+                    args.max_seq_len,
+                    self.kv_lora_rank,
+                    dtype=dtype,
+                ),
+                persistent=False,
+            )
+            self.register_buffer(
+                "pe_cache",
+                torch.zeros(
+                    args.max_batch_size,
+                    args.max_seq_len,
+                    self.qk_rope_head_dim,
+                    dtype=dtype,
+                ),
+                persistent=False,
+            )
 
     def forward(
         self,
@@ -491,10 +518,10 @@ class MLA(nn.Module):
         """
         bsz, seqlen, _ = x.size()
         end_pos = start_pos + seqlen
-        
+
         # Make sure input tensors are all the same dtype
         dtype = x.dtype
-        
+
         if self.q_lora_rank == 0:
             q = self.wq(x)
         else:
@@ -507,7 +534,7 @@ class MLA(nn.Module):
         kv = self.wkv_a(x)
         kv, k_pe = torch.split(kv, [self.kv_lora_rank, self.qk_rope_head_dim], dim=-1)
         k_pe = apply_rotary_emb(k_pe.unsqueeze(2), freqs_cis)
-        
+
         if attn_impl == "naive":
             q = torch.cat([q_nope, q_pe], dim=-1)
             kv = self.wkv_b(self.kv_norm(kv))
@@ -522,7 +549,7 @@ class MLA(nn.Module):
             # Ensure cache has same dtype
             self.k_cache = self.k_cache.to(dtype)
             self.v_cache = self.v_cache.to(dtype)
-            
+
             self.k_cache[:bsz, start_pos:end_pos] = k
             self.v_cache[:bsz, start_pos:end_pos] = v
             scores = (
@@ -536,28 +563,30 @@ class MLA(nn.Module):
                 else weight_dequant(self.wkv_b.weight, self.wkv_b.scale, block_size)
             )
             wkv_b = wkv_b.view(self.n_local_heads, -1, self.kv_lora_rank)
-            q_nope = torch.einsum("bshd,hdc->bshc", q_nope, wkv_b[:, :self.qk_nope_head_dim])
-            
+            q_nope = torch.einsum(
+                "bshd,hdc->bshc", q_nope, wkv_b[:, : self.qk_nope_head_dim]
+            )
+
             # Compute kv_norm(kv) WITH gradient tracking
-            updated_kv = self.kv_norm(kv)  
+            updated_kv = self.kv_norm(kv)
             updated_pe = k_pe.squeeze(2)
- 
+
             # Ensure caches are the right dtype
             self.kv_cache = self.kv_cache.to(dtype)
             self.pe_cache = self.pe_cache.to(dtype)
-            
+
             with torch.no_grad():
                 self.kv_cache[:bsz, start_pos:end_pos] = updated_kv
                 self.pe_cache[:bsz, start_pos:end_pos] = updated_pe
-                        
+
             # Compute scores using caches with explicit dtype casting
             kv_cache_slice = self.kv_cache[:bsz, :end_pos]
             pe_cache_slice = self.pe_cache[:bsz, :end_pos]
-            
+
             # Ensure all inputs to einsum have the same dtype
             scores = (
-                torch.einsum("bshc,btc->bsht", q_nope, kv_cache_slice) +
-                torch.einsum("bshr,btr->bsht", q_pe, pe_cache_slice)
+                torch.einsum("bshc,btc->bsht", q_nope, kv_cache_slice)
+                + torch.einsum("bshr,btr->bsht", q_pe, pe_cache_slice)
             ) * self.softmax_scale
 
         if mask is not None:
@@ -565,15 +594,15 @@ class MLA(nn.Module):
             if mask.dtype != scores.dtype:
                 mask = mask.to(scores.dtype)
             scores += mask.unsqueeze(1)
-            
+
         scores = scores.softmax(dim=-1, dtype=torch.float32).type_as(x)
-        
+
         if attn_impl == "naive":
             x = torch.einsum("bsht,bthd->bshd", scores, self.v_cache[:bsz, :end_pos])
         else:
             # Use same dtype for all einsum operations
             x = torch.einsum("bsht,btc->bshc", scores, kv_cache_slice)
-            x = torch.einsum("bshc,hdc->bshd", x, wkv_b[:, -self.v_head_dim:])
-            
+            x = torch.einsum("bshc,hdc->bshd", x, wkv_b[:, -self.v_head_dim :])
+
         x = self.wo(x.flatten(2))
         return x

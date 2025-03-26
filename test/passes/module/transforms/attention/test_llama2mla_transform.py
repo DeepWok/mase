@@ -20,25 +20,23 @@ from pathlib import Path
 sys.path.append(Path(__file__).resolve().parents[5].as_posix())
 
 
-
 model_path = "meta-llama/Llama-3.2-1B"
 model = LlamaForCausalLM.from_pretrained(
-        model_path,
-        device_map='auto',
-        attn_implementation="sdpa",
-        partial_rotary_factor=8  # Using custom parameter
-    )
+    model_path,
+    device_map="auto",
+    attn_implementation="sdpa",
+    partial_rotary_factor=8,  # Using custom parameter
+)
 
 
 def test_llama_transform_pass(model):
     pass_args = {
         "by": "model",
-        "llama": {
-            "config": {}
-        },
+        "llama": {"config": {}},
     }
     mla_network, _ = attention_transform_pass(model, pass_args)
     return mla_network
+
 
 model = test_llama_transform_pass(model)
 print(model)

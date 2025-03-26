@@ -25,6 +25,7 @@ from pathlib import Path
 checkpoint = "openai-community/gpt2"
 model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
 
+
 def test_mla_transform_pass():
     pass_args = {
         "by": "type",

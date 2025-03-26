@@ -21,6 +21,7 @@ sys.path.append(Path(__file__).resolve().parents[5].as_posix())
 checkpoint = "openai-community/gpt2"
 model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
 
+
 def test_fc_transform_pass(model):
     pass_args = {
         "by": "type",
@@ -33,6 +34,7 @@ def test_fc_transform_pass(model):
     # model = fc_transform_pass(model, "transformer.h.11.attn", pass_args)
     model = attention_transform_pass(model, pass_args)
     return model
+
 
 model = test_fc_transform_pass(model)
 print(model)

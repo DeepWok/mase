@@ -3,21 +3,17 @@ from typing import Optional
 import math
 from typing import Optional, Tuple, Union
 
-from chop.nn.attention.modules.mla import (
-    ModelArgs, 
-    MLA,
-    RMSNorm
-)
+from chop.nn.attention.modules.mla import ModelArgs, MLA, RMSNorm
 from chop.nn.attention.modules.mgqa import (
     MGQALayers,
 )
 from ...module_modify_helper import (
-    get_module_by_name, 
+    get_module_by_name,
     set_module_by_name,
 )
 from transformers.models.bert.modeling_bert import (
     BertAttention,
-    BertSelfAttention, 
+    BertSelfAttention,
     BertSdpaSelfAttention,
     BertSelfOutput,
 )
@@ -26,12 +22,13 @@ from transformers.models.gpt2.modeling_gpt2 import (
     GPT2Block,
 )
 
+
 def instantiate_attention_module(module, postfix, module_map, additional_module_args):
     # sdpa_attn = module.self
     # self_output = module.output
     additional_module_args = additional_module_args["config"]
     init_func = init_func_map[postfix]
-    
+
     attention_module = init_func(
         module,
         config=additional_module_args,
@@ -39,8 +36,9 @@ def instantiate_attention_module(module, postfix, module_map, additional_module_
 
     return attention_module
 
+
 def replace_attention_by_name(network, name, module, postfix):
-    
+
     original = get_module_by_name(network, name)
 
     transform_func = transform_func_map[postfix]
@@ -52,17 +50,15 @@ def replace_attention_by_name(network, name, module, postfix):
     network = set_module_by_name(network, name, wapper)
     return network
 
-def gpt2sdpa_to_mla_init(
-    gpt2_block: GPT2Block,  
-    config: dict 
-) -> MLA:
+
+def gpt2sdpa_to_mla_init(gpt2_block: GPT2Block, config: dict) -> MLA:
     """
     Initialize and return an MLA module based on dimensions
     extracted from a GPT2SdpaAttention (within GPT2Block).
-    
+
     Args:
         gpt2_block (GPT2Block): A GPT-2 block containing GPT2SdpaAttention as `.attn`.
-        config (dict): A user config dict, which can contain nested "config" entries 
+        config (dict): A user config dict, which can contain nested "config" entries
                        for MLA's ModelArgs.
                        e.g. {"config": {"max_batch_size": 8, "q_lora_rank": 0, ...}}
     Returns:
@@ -73,17 +69,16 @@ def gpt2sdpa_to_mla_init(
     gpt2_sdpa_attn: GPT2SdpaAttention = gpt2_block.attn
 
     # gather GPT-2 attention hyperparams
-    hidden_size = gpt2_sdpa_attn.embed_dim    # e.g., 768
-    n_heads     = gpt2_sdpa_attn.num_heads    # e.g., 12
- 
+    hidden_size = gpt2_sdpa_attn.embed_dim  # e.g., 768
+    n_heads = gpt2_sdpa_attn.num_heads  # e.g., 12
 
     # optional user config
     user_config = config.get("config", {})
 
     # Create ModelArgs for MLA
     model_args = ModelArgs(
-        dim=hidden_size,       # 768
-        n_heads=n_heads,       # 12
+        dim=hidden_size,  # 768
+        n_heads=n_heads,  # 12
         q_lora_rank=user_config.get("q_lora_rank", 0),
         kv_lora_rank=user_config.get("kv_lora_rank", 512),
         # The key fix: ensure (qk_nope_head_dim + qk_rope_head_dim) == 64
@@ -102,15 +97,13 @@ def gpt2sdpa_to_mla_init(
     # Return the newly constructed module (randomly initialized)
     return mla_module
 
-def gpt2sdpa_to_mgqa_init(
-    gpt2_block: GPT2Block,  
-    config: dict                       
-) -> MGQALayers:
+
+def gpt2sdpa_to_mgqa_init(gpt2_block: GPT2Block, config: dict) -> MGQALayers:
 
     layernorm1 = gpt2_block.ln_1
-    gpt2_sdpa_attn  = gpt2_block.attn   # GPT2SdpaAttention
+    gpt2_sdpa_attn = gpt2_block.attn  # GPT2SdpaAttention
     layernorm2 = gpt2_block.ln_2
-    gpt2_mlp   = gpt2_block.mlp    # GPT2MLP
+    gpt2_mlp = gpt2_block.mlp  # GPT2MLP
 
     # Basic info from gpt2_sdpa_attn
     hidden_size = gpt2_sdpa_attn.embed_dim
@@ -120,31 +113,32 @@ def gpt2sdpa_to_mgqa_init(
     ff_dropout_p = gpt2_mlp.dropout.p
 
     kv_heads = config.get("kv_heads", num_heads)
-    kv_heads = num_heads // math.ceil(num_heads/ kv_heads)
-    
+    kv_heads = num_heads // math.ceil(num_heads / kv_heads)
+
     mgqa_kwargs = {
-        "dim":      hidden_size,
-        "heads":    num_heads, # number of query
-        "kv_heads": kv_heads, # number of kv heads
-        "one_kv_head":  config.get("one_kv_head", False), # force kv_heads to 1
-        "causal":   True,
-        "depth":    config.get("depth", 1),
-        "dropout":  config.get("dropout", attn_drop),
-        "flash":    config.get("flash", False),
-        "talking_heads":config.get("talking_heads", False),
-        "head_scale":   config.get("head_scale", False),
-        "qk_norm":  config.get("qk_norm", False),
+        "dim": hidden_size,
+        "heads": num_heads,  # number of query
+        "kv_heads": kv_heads,  # number of kv heads
+        "one_kv_head": config.get("one_kv_head", False),  # force kv_heads to 1
+        "causal": True,
+        "depth": config.get("depth", 1),
+        "dropout": config.get("dropout", attn_drop),
+        "flash": config.get("flash", False),
+        "talking_heads": config.get("talking_heads", False),
+        "head_scale": config.get("head_scale", False),
+        "qk_norm": config.get("qk_norm", False),
         "zero_init_output": config.get("zero_init_output", False),
         "shared_kv": config.get("shared_kv", False),
         "ff_dropout": ff_dropout_p,
-        "pre_norm": True, 
+        "pre_norm": True,
         "resi_dual": False,
     }
     mgqa_layers = MGQALayers(**mgqa_kwargs)
-    # mgqa automatically add a layernorm at the end, while gpt2 have layernorm 
+    # mgqa automatically add a layernorm at the end, while gpt2 have layernorm
     # at the end already
-    mgqa_layers.final_norm = torch.nn.Identity() 
+    mgqa_layers.final_norm = torch.nn.Identity()
     return mgqa_layers
+
 
 # def transform_gpt2sdpa_to_mla(
 #     gpt2_block: GPT2Block,
@@ -153,7 +147,7 @@ def gpt2sdpa_to_mgqa_init(
 #     """
 #     Transforms (copies/factorizes) weights from a GPT2SdpaAttention
 #     into the given MLA instance, assuming world_size=1.
-    
+
 #     Debug prints are included to show shapes at each step.
 #     """
 
@@ -161,13 +155,13 @@ def gpt2sdpa_to_mgqa_init(
 #     # 1. Get the GPT-2 SDPA attention submodule
 #     # -------------------------------------------------
 #     gpt2_sdpa_attn: GPT2SdpaAttention = gpt2_block.attn
-    
+
 #     embed_dim = gpt2_sdpa_attn.embed_dim  # e.g., 768
 #     print(f"[DEBUG] GPT2SdpaAttention embed_dim: {embed_dim}")
 
 #     # c_attn: [in_dim=768, out_dim=3*768=2304]
-#     c_attn_weight = gpt2_sdpa_attn.c_attn.weight  
-#     c_attn_bias   = gpt2_sdpa_attn.c_attn.bias    
+#     c_attn_weight = gpt2_sdpa_attn.c_attn.weight
+#     c_attn_bias   = gpt2_sdpa_attn.c_attn.bias
 
 #     print(f"[DEBUG] c_attn_weight shape: {c_attn_weight.shape}")
 #     if c_attn_bias is not None:
@@ -224,8 +218,8 @@ def gpt2sdpa_to_mgqa_init(
 
 #     rank = mla_attn.kv_lora_rank
 #     U, S, Vh = torch.linalg.svd(kv_weight, full_matrices=False)
-#     U_approx = U[:, :rank]  
-#     S_approx = S[:rank]     
+#     U_approx = U[:, :rank]
+#     S_approx = S[:rank]
 #     Vh_approx = Vh[:rank, :]
 
 #     print(f"[DEBUG] U shape: {U.shape}, S shape: {S.shape}, Vh shape: {Vh.shape}")
@@ -370,6 +364,7 @@ def gpt2sdpa_to_mgqa_init(
 
 #     return mla_attn
 
+
 def transform_gpt2sdpa_to_mla(
     gpt2_block: GPT2Block,
     mla_attn: "MLA",
@@ -379,7 +374,11 @@ def transform_gpt2sdpa_to_mla(
 
     target_dtype = mla_attn.wq.weight.dtype
     c_attn_weight = gpt2_sdpa_attn.c_attn.weight.to(target_dtype)
-    c_attn_bias = gpt2_sdpa_attn.c_attn.bias.to(target_dtype) if gpt2_sdpa_attn.c_attn.bias is not None else None
+    c_attn_bias = (
+        gpt2_sdpa_attn.c_attn.bias.to(target_dtype)
+        if gpt2_sdpa_attn.c_attn.bias is not None
+        else None
+    )
 
     q_weight, k_weight, v_weight = torch.split(c_attn_weight, embed_dim, dim=1)
     if c_attn_bias is not None:
@@ -439,9 +438,12 @@ def transform_gpt2sdpa_to_mla(
             # If kv_norm.weight is multi-dimensional, you might want to fill each dimension
             mla_attn.kv_norm.weight.data.copy_(kv_norm_fill_value)
 
-
     c_proj_weight = gpt2_sdpa_attn.c_proj.weight.to(target_dtype)
-    c_proj_bias = gpt2_sdpa_attn.c_proj.bias.to(target_dtype) if gpt2_sdpa_attn.c_proj.bias is not None else None
+    c_proj_bias = (
+        gpt2_sdpa_attn.c_proj.bias.to(target_dtype)
+        if gpt2_sdpa_attn.c_proj.bias is not None
+        else None
+    )
 
     with torch.no_grad():
         mla_attn.wo.weight.copy_(c_proj_weight)
@@ -460,26 +462,28 @@ def transform_gpt2sdpa_to_mgqa(
     Assumes MGQALayers was set up with depth=1 or has at least one 'a' (attention) block.
     """
     layernorm1 = gpt2_block.ln_1
-    gpt2sdpa  = gpt2_block.attn   # GPT2SdpaAttention
+    gpt2sdpa = gpt2_block.attn  # GPT2SdpaAttention
     layernorm2 = gpt2_block.ln_2
-    gpt2_mlp   = gpt2_block.mlp    # GPT2MLP
-    
+    gpt2_mlp = gpt2_block.mlp  # GPT2MLP
+
     # 1) Retrieve the MGQA attention module
     mgqa_norms, mgqa_block, mgqa_residual = mgqa.layers[0]
     mgqa_attn = mgqa_block
 
     # 2) GPT2SdpaAttention: gather shapes & param references
     embed_dim = gpt2sdpa.embed_dim
-    c_attn_weight = gpt2sdpa.c_attn.weight       # shape [embed_dim, 3*embed_dim]
-    c_attn_bias   = gpt2sdpa.c_attn.bias         # shape [3*embed_dim]
-    c_proj_weight = gpt2sdpa.c_proj.weight       # shape [embed_dim, embed_dim]
-    c_proj_bias   = gpt2sdpa.c_proj.bias         # shape [embed_dim]
+    c_attn_weight = gpt2sdpa.c_attn.weight  # shape [embed_dim, 3*embed_dim]
+    c_attn_bias = gpt2sdpa.c_attn.bias  # shape [3*embed_dim]
+    c_proj_weight = gpt2sdpa.c_proj.weight  # shape [embed_dim, embed_dim]
+    c_proj_bias = gpt2sdpa.c_proj.bias  # shape [embed_dim]
 
     # 3) Split out the Q/K/V weights from c_attn
 
     with torch.no_grad():
         q_w, k_w, v_w = torch.split(c_attn_weight, embed_dim, dim=1)
-        mgqa_attn.to_q.weight.copy_(q_w) # query size remain identical, no change needed
+        mgqa_attn.to_q.weight.copy_(
+            q_w
+        )  # query size remain identical, no change needed
 
         heads = mgqa_attn.heads
         kv_heads = mgqa_attn.kv_heads
@@ -493,7 +497,7 @@ def transform_gpt2sdpa_to_mgqa(
             v_r = v_r.reshape(embed_dim, kv_heads, g_size, dim_head).mean(dim=2)
             k_w = k_r.reshape(embed_dim, kv_heads * dim_head)
             v_w = v_r.reshape(embed_dim, kv_heads * dim_head)
-        
+
         if mgqa_attn.to_k is not None:
             mgqa_attn.to_k.weight.copy_(k_w)
         if mgqa_attn.to_v is not None:
@@ -507,10 +511,13 @@ def transform_gpt2sdpa_to_mgqa(
         if mgqa_attn.to_out.bias is not None:
             mgqa_attn.to_out.bias.copy_(c_proj_bias)
 
-    mgqa_attn.attend.attn_dropout.p = gpt2sdpa.attn_dropout.p # Copy over dropout probability
+    mgqa_attn.attend.attn_dropout.p = (
+        gpt2sdpa.attn_dropout.p
+    )  # Copy over dropout probability
     mgqa_attn.attend.causal = True  # GPT-2 standard
 
     return mgqa
+
 
 class MLAWrapper(torch.nn.Module):
     def __init__(self, mla):
@@ -526,7 +533,7 @@ class MLAWrapper(torch.nn.Module):
         encoder_attention_mask: Optional[torch.FloatTensor] = None,
         past_key_value: Optional[Tuple[torch.Tensor]] = None,
         output_attentions: bool = False,
-        **kwargs
+        **kwargs,
     ) -> Tuple[torch.Tensor, None, None]:
 
         # (1) Convert inputs to the dtype MLA uses
@@ -536,45 +543,58 @@ class MLAWrapper(torch.nn.Module):
         else:
             bsz, seqlen = 0, 0
         desired_seqlen = 512
-    
+
         # 1) Slice the hidden_states down from 458 -> 12 tokens
         if seqlen != desired_seqlen:
             hidden_states = hidden_states[:, -desired_seqlen:, :]  # keep last 12
             # now hidden_states is [8, 12, 768]
             bsz, seqlen, hidden_dim = hidden_states.shape
-        
+
         # 2) Adjust the attention mask to match
         if attention_mask is not None:
             # If it's [8, 1, 458, 458], squeeze => [8, 458, 458]
             if attention_mask.dim() == 4 and attention_mask.shape[1] == 1:
                 attention_mask = attention_mask.squeeze(1)  # => [8, 458, 458]
-            
+
             # If mask is still 458×458, slice the last 12×12 region
             if attention_mask.shape[-1] != seqlen:  # 12
                 attention_mask = attention_mask[:, -seqlen:, -seqlen:]
                 # => [8, 12, 12]
-            
+
             # Optionally cast to bf16 if your model uses bf16
             attention_mask = attention_mask.to(torch.bfloat16)
 
         # (3) Ensure MLA’s caches are in bf16
         for attr_name in ["kv_cache", "pe_cache", "k_cache", "v_cache"]:
-            if hasattr(self.mla, attr_name) and getattr(self.mla, attr_name) is not None:
-                setattr(self.mla, attr_name, getattr(self.mla, attr_name).to(torch.bfloat16))
+            if (
+                hasattr(self.mla, attr_name)
+                and getattr(self.mla, attr_name) is not None
+            ):
+                setattr(
+                    self.mla, attr_name, getattr(self.mla, attr_name).to(torch.bfloat16)
+                )
 
         # (4) Always create a valid freqs_cis, even if rope_dim=0
         rope_dim = getattr(self.mla, "qk_rope_head_dim", 0)
         if rope_dim > 0:
             # Normal case if rope_dim>0
-            dummy_freq = torch.zeros((seqlen, rope_dim // 2), dtype=torch.float32, device=hidden_states.device)
+            dummy_freq = torch.zeros(
+                (seqlen, rope_dim // 2),
+                dtype=torch.float32,
+                device=hidden_states.device,
+            )
             dummy_ones = torch.ones_like(dummy_freq, dtype=torch.float32)
-            freqs_cis_fp32 = torch.polar(dummy_ones, dummy_freq)  # shape: [seqlen, rope_dim//2], complex float32
+            freqs_cis_fp32 = torch.polar(
+                dummy_ones, dummy_freq
+            )  # shape: [seqlen, rope_dim//2], complex float32
             freqs_cis = freqs_cis_fp32.to(torch.bfloat16)
         else:
             # Rope dim is 0, but MLA code still calls apply_rotary_emb.
             # Pass an EMPTY complex tensor instead of None to avoid the crash.
             # shape => [seqlen, 0] so .view() won't fail
-            freqs_cis = torch.zeros((seqlen, 0), dtype=torch.complex32, device=hidden_states.device)
+            freqs_cis = torch.zeros(
+                (seqlen, 0), dtype=torch.complex32, device=hidden_states.device
+            )
 
         # (5) Run MLA
         start_pos = 0
@@ -589,7 +609,8 @@ class MLAWrapper(torch.nn.Module):
         output = output.to(dtype=torch.float32)
 
         return (output, None, None)
-    
+
+
 class MGQAWrapper(torch.nn.Module):
 
     def __init__(self, mgqa):
@@ -607,7 +628,7 @@ class MGQAWrapper(torch.nn.Module):
         use_cache: Optional[bool] = False,
         output_attentions: Optional[bool] = False,
     ) -> Tuple[Union[torch.Tensor, Tuple[torch.Tensor]], ...]:
-        
+
         attention_mask = (attention_mask[:, 0, 0, :] == 0).bool()
         # Call MGQA with the relevant tensors.
         # Pass cross-attention if encoder_hidden_states is given, otherwise self-attention.
@@ -625,12 +646,9 @@ class MGQAWrapper(torch.nn.Module):
             )
 
         return (out, None, None)
-    
 
-init_func_map = {
-    "mla": gpt2sdpa_to_mla_init,
-    "mgqa": gpt2sdpa_to_mgqa_init
-}
+
+init_func_map = {"mla": gpt2sdpa_to_mla_init, "mgqa": gpt2sdpa_to_mgqa_init}
 transform_func_map = {
     "mla": transform_gpt2sdpa_to_mla,
     "mgqa": transform_gpt2sdpa_to_mgqa,

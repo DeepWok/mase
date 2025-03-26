@@ -27,6 +27,7 @@ checkpoint = "openai-community/gpt2"
 tokenizer_checkpoint = "openai-community/gpt2"
 model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
 
+
 def test_mla_transform_pass(model):
     pass_args = {
         "by": "type",

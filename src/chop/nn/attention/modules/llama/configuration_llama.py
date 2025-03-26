@@ -163,7 +163,7 @@ class LlamaConfig(PretrainedConfig):
         rope_theta=10000.0,
         rope_scaling=None,
         rope_repeat=False,
-        partial_rotary_factor = 2,
+        partial_rotary_factor=2,
         absorb=False,
         attention_bias=False,
         attention_dropout=0.0,
@@ -198,7 +198,11 @@ class LlamaConfig(PretrainedConfig):
         self.attention_dropout = attention_dropout
         self.kv_dropout = kv_dropout
         self.mlp_bias = mlp_bias
-        self.head_dim = head_dim if head_dim is not None else self.hidden_size // self.num_attention_heads
+        self.head_dim = (
+            head_dim
+            if head_dim is not None
+            else self.hidden_size // self.num_attention_heads
+        )
         # Validate the correctness of rotary position embeddings parameters
         # BC: if there is a 'type' field, copy it it to 'rope_type'.
         if self.rope_scaling is not None and "type" in self.rope_scaling:
