@@ -34,9 +34,7 @@ def define_search_space():
         ("full_precision", nn.Linear),  # Baseline for comparison
         ("integer", LinearInteger),     # INT quantization
         ("minifloat_denorm", LinearMinifloatDenorm),  # Minifloat with denormalized numbers
-        ("minifloat_ieee", LinearMinifloatIEEE),      # IEEE-style minifloat
-        ("log", LinearLog),             # Logarithmic quantization
-        ("block_fp", LinearBlockFP),    # Block floating point
+        ("minifloat_ieee", LinearMinifloatIEEE),      # IEEE-style minifloat         # Logarithmic quantization
     ]
     
     # Bit width configurations for precision
@@ -60,7 +58,7 @@ def define_search_space():
     }
     
     # Search space for pruning
-    pruning_methods = ["hwpq", "movement", "random", "l1-norm"]
+    pruning_methods = ["hwpq", "random", "l1-norm"]
     pruning_sparsity_levels = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9]
     structured_sparsity_options = [True, False]  # True for structured pruning patterns
     
