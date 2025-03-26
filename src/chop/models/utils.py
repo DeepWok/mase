@@ -52,6 +52,7 @@ class MaseModelInfo:
 
     # Vision models
     image_classification: bool = False
+    image_detection: bool = False
 
     # Physical models
     physical_data_point_classification: bool = False
@@ -87,7 +88,7 @@ class MaseModelInfo:
 
         # Vision models
         if self.task_type == ModelTaskType.VISION:
-            assert self.image_classification, "Must be an image classification model"
+            assert self.image_classification or self.image_detection, "Must be an image model"
 
         # Classification models
         if self.task_type == ModelTaskType.PHYSICAL:
@@ -136,6 +137,7 @@ def register_mase_model(
     model_source: ModelSource,
     task_type: ModelTaskType,
     image_classification: bool = False,
+    image_detection: bool = False,
     physical_data_point_classification: bool = False,
     sequence_classification: bool = False,
     seq2seqLM: bool = False,
@@ -154,6 +156,7 @@ def register_mase_model(
             model_source=model_source,
             task_type=task_type,
             image_classification=image_classification,
+            image_detection=image_detection,
             physical_data_point_classification=physical_data_point_classification,
             sequence_classification=sequence_classification,
             seq2seqLM=seq2seqLM,
