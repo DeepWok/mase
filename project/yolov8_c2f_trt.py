@@ -119,3 +119,7 @@ tensorrt_config["dataset_input_field"] = "img"
 mg, _ = tensorrt_calibrate_transform_pass(mg, pass_args=tensorrt_config)
 
 # %%
+mg, _ = tensorrt_fine_tune_transform_pass(mg, pass_args=tensorrt_config)
+
+# %%
+mg, meta = tensorrt_engine_interface_pass(mg, pass_args=tensorrt_config)

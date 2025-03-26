@@ -10,7 +10,7 @@ from chop.passes.graph.transforms import metadata_value_type_cast_transform_pass
 
 
 # Load a pretrained YOLO model
-model = YOLO("yolov8n-cls.yaml", task="classify")  # Choose the appropriate model
+model = YOLO("yolov8m.yaml", task="detect")  # Choose the appropriate model
 
 
 # Define a safe wrapper for torch.cat to avoid tracing its internals
