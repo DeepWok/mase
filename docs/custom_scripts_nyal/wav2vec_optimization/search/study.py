@@ -85,8 +85,27 @@ def save_best_model(best_trial, baseline_model_data):
     quant_method_name, quant_class = quant_methods[quant_method_idx]
     
     # 1. Apply pruning
+
+    processor = baseline_model_data["processor"]
+
+    # 1. Apply pruning
     logger.info(f"Applying pruning: {pruning_method}, sparsity: {pruning_sparsity}")
-    pruned_model = apply_pruning(mg_model, pruning_method, pruning_sparsity, structured_sparsity)
+
+    if pruning_method in ["movement", "snip"]:
+        # These methods need training data for initialization
+        pruned_model = apply_pruning(
+            mg_model, 
+            pruning_method, 
+            pruning_sparsity, 
+            structured_sparsity,
+            tokenized_dataset=baseline_model_data["tokenized_dataset"],
+            tokenizer=baseline_model_data["tokenizer"],
+            processor=processor,
+            decoder=decoder,
+            ctc_head=ctc_head
+        )
+    else:
+        pruned_model = apply_pruning(mg_model, pruning_method, pruning_sparsity, structured_sparsity)
     
     # 2. Create MG for SmoothQuant
     pruned_mg = MaseGraph(
@@ -140,7 +159,7 @@ def save_best_model(best_trial, baseline_model_data):
                 "bias_width": best_trial.params.get("bias_width"),
                 "bias_exponent_width": best_trial.params.get("bias_exponent_width"),
                 "bias_exponent_bias": best_trial.params.get("bias_exponent_bias"),
-                
+
             }
         else:
             bit_config = {

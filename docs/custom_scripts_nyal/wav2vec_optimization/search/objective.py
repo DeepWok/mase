@@ -45,24 +45,45 @@ def objective(trial, baseline_model_data):
     
     logger.info(f"Starting trial {trial.number}")
     
+    # In the objective function, replace the current pruning section with:
+
     # -----------------------------
     # Phase 1: Pruning
     # -----------------------------
     pruning_method = trial.suggest_categorical("pruning_method", 
-                                               search_space["pruning"]["methods"])
-    
+                                            search_space["pruning"]["methods"])
+
     sparsity = trial.suggest_categorical("pruning_sparsity", 
-                                         search_space["pruning"]["sparsity_levels"])
-    
+                                        search_space["pruning"]["sparsity_levels"])
+
     structured = False
     if pruning_method == "hwpq":
         structured = trial.suggest_categorical("structured_sparsity", 
-                                               search_space["pruning"]["structured_options"])
-    
+                                            search_space["pruning"]["structured_options"])
+
+    # Extract processor from baseline_model_data
+    processor = baseline_model_data["processor"]
+
     # Apply pruning to the model
-    pruned_model = apply_pruning(mg.model, pruning_method, sparsity, structured)
+    if pruning_method in ["movement", "snip"]:
+        # These methods need training data for initialization
+        pruned_model = apply_pruning(
+            mg.model, 
+            pruning_method, 
+            sparsity, 
+            structured,
+            tokenized_dataset=tokenized_dataset,
+            tokenizer=tokenizer,
+            processor=processor,
+            decoder=decoder,
+            ctc_head=ctc_head
+        )
+    else:
+        pruned_model = apply_pruning(mg.model, pruning_method, sparsity, structured)
+
     # Calculate pruning metrics
     pruning_metrics = calculate_pruning_metrics(pruned_model)
+    
     for k, v in pruning_metrics.items():
         trial.set_user_attr(k, v)
     
