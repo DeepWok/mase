@@ -56,6 +56,8 @@ async def test(dut):
 
     tb.load_drivers(in_tensors)
     tb.load_monitors(exp_out)
+    
+    print(exp_out)
 
     await tb.wait_end(timeout={wait_time}, timeout_unit="{wait_unit}")
 """
@@ -134,13 +136,20 @@ def _emit_cocotb_tb(graph):
                 # DiffLogic: do not need precision, fully unrolled so 1 batch only
                 if "difflogic" in graph.nodes_in[0].meta["mase"]["hardware"]["module"]:
                     block = arg_batches[0].round().int().tolist()
-                    out = []
-                    for row in block:
+                    if isinstance(block[0], list):
+                        out = []
+                        for row in block:
+                            num = ""
+                            for i in range(len(row) - 1, -1, -1):
+                                num += str(row[i])
+                            num = int(num, 2)
+                            out.append(num)
+                    else:
                         num = ""
-                        for i in range(len(row) - 1, -1, -1):
-                            num += str(row[i])
+                        for i in range(len(block) - 1, -1, -1):
+                            num += str(block[i])
                         num = int(num, 2)
-                        out.append(num)
+                        out = [num]
                     self.input_drivers[arg].append(out)
                     continue
 

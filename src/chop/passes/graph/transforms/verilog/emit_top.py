@@ -145,7 +145,7 @@ class VerilogInterfaceEmitter:
             # DiffLogic: input node is expecting binary array
             if "difflogic" in node.meta["mase"]["hardware"]["module"]:
                 node_name = vf(node.name)
-                interface += f"\n\tinput [({node_name}_DATA_IN_0_TENSOR_SIZE_DIM_0-1):0] data_in_0 [0:({node_name}_DATA_IN_0_TENSOR_SIZE_DIM_0-1)],"
+                interface += f"\n\tinput [({node_name}_DATA_IN_0_TENSOR_SIZE_DIM_0-1):0] data_in_0 [0:({node_name}_DATA_IN_0_TENSOR_SIZE_DIM_1-1)],"
                 interface += f"\n\tinput  data_in_0_valid,"
                 interface += f"\n\toutput data_in_0_ready,"
                 continue
