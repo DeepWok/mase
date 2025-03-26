@@ -3,6 +3,7 @@ from ultralytics.nn.tasks import DetectionModel
 from ultralytics import YOLO
 import ultralytics.nn.modules as unnmod
 from ultralytics.utils.ops import non_max_suppression
+from ultralytics.utils.tal import make_anchors, dist2bbox, dist2rbox
 import torch
 import types
 
@@ -44,3 +45,15 @@ def get_yolo_detection_model(checkpoint):
         umodel = YOLO(checkpoint)
         model.load_state_dict(umodel.model.state_dict())
     return model
+
+def postprocess_detection_outputs(x):
+    dfl = unnmod.DFL(16)
+    shape = x[0].shape
+    strides = [8, 16, 32]
+    x_cat = torch.cat([xi.view(shape[0], 16 * 4 + 80, -1) for xi in x], 2)
+    anchors, strides = (x.transpose(0, 1) for x in make_anchors(x, strides, 0.5))
+    box = x_cat[:, : 16 * 4]
+    cls = x_cat[:, 16 * 4 :]
+    dbox = dist2bbox(dfl(box), anchors.unsqueeze(0), xywh=True, dim=1)
+    bboxes_preds = torch.cat((dbox, cls.sigmoid()), 1)
+    return bboxes_preds, non_max_suppression(bboxes_preds)
