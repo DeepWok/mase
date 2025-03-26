@@ -110,16 +110,24 @@ def apply_pruning(model, pruning_method, sparsity, structured_sparsity=False,
                 per_device_eval_batch_size=2,
             )
             
+            # Make sure everything is on the same device
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            combined_model = combined_model.to(device)
+            
             # Add movement tracking callback
             trainer.add_callback(MovementTrackingCallback())
             
             # Do warm-up training to collect movement data
             logger.info("Starting warm-up training for movement pruning...")
-            trainer.train()
-            logger.info("Warm-up training complete.")
+            try:
+                trainer.train()
+                logger.info("Warm-up training complete.")
+            except Exception as e:
+                logger.warning(f"Movement tracking encountered an error: {e}")
+                logger.warning("Continuing with standard pruning instead")
             
-            # Get the updated model with movement tracking data
-            temp_mg.model = combined_model.encoder
+            # Get the updated model with movement tracking data and move it back to CPU
+            temp_mg.model = combined_model.encoder.cpu()
             
         # For the SNIP section:
         elif pruning_method == "snip":
