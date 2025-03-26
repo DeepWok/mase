@@ -327,7 +327,7 @@ def objective(trial, baseline_model_data):
     # ----------------------------------------
     
     # 1. Cap WER at 1.0 (100%)
-    wer_value = runtime_results.get("Average WER", 100.0) / 100.0  # Convert from percentage to 0-1 scale
+    wer_value = runtime_results.get("Average WER", 1)
     normalized_wer = min(wer_value, 1.0)
     trial.set_user_attr("normalized_wer", normalized_wer)
     
