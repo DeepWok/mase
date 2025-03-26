@@ -14,6 +14,8 @@ from pathlib import Path
 import time
 import tensorrt as trt
 from chop.passes.utils import register_mase_pass
+from chop.models.yolo.yolov8 import postprocess_detection_outputs
+from ultralytics.utils import ops
 
 
 @register_mase_pass(
@@ -223,7 +225,12 @@ class RuntimeAnalysis:
         ) * 1000.0  # Convert from seconds to milliseconds
 
         # Return the predictions
-        return preds.detach(), latency
+        if isinstance(preds, torch.Tensor):
+            return preds.detach(), latency
+        elif isinstance(preds, list):
+            return [p.detach() for p in preds]
+        else:
+            raise NotImplementedError(f'Unsupported prediction type: {type(preds)}')
 
     def infer_mg_cuda(self, model, input_data):
         # send model and input data to GPU for inference
@@ -246,7 +253,12 @@ class RuntimeAnalysis:
         latency = start.elapsed_time(end)
 
         # return the prediction back to the CPU
-        return preds.detach().cpu(), latency
+        if isinstance(preds, torch.Tensor):
+            return preds.detach().cpu(), latency
+        elif isinstance(preds, list):
+            return [p.detach().cpu() for p in preds], latency
+        else:
+            raise NotImplementedError(f'Unsupported prediction type: {type(preds)}')
 
     def infer_trt_cuda(self, trt_context, input_data):
         bufferH = []
@@ -392,6 +404,8 @@ class RuntimeAnalysis:
                     task="multiclass",
                 )
             # TODO: Add support for detection and segmentation tasks
+            case "detection":
+                map = torchmetrics.detection.MeanAveragePrecision()
             case _:
                 raise Exception(
                     f"Unsupported task type {self.config['task']}. Please set a supported task type in the config file."
@@ -411,8 +425,16 @@ class RuntimeAnalysis:
             dataset = "Validation"
 
         # Iterate over batches in the validation/train dataset
-        for j, (xs, ys) in enumerate(dataloader):
+        for j, batch in enumerate(dataloader):
             # Break the loop after processing the specified number of batches or to drop the last incomplete batch
+            match self.config["task"]:
+                case "cls":
+                    xs, ys = batch
+                case "detection":
+                    xs = batch["img"]
+                case _:
+                    assert False
+
             if (
                 j >= self.config["num_batches"]
                 or xs.shape[0] != self.config["batch_size"]
@@ -478,53 +500,112 @@ class RuntimeAnalysis:
             # Store the calculated average power
             gpu_power_usages.append(avg_power)
 
-            # Calculate accuracy and loss for the batch
-            loss = torch.nn.functional.cross_entropy(preds, ys)
-            acc = metric(preds, ys)
-            accs.append(acc.item())
-            losses.append(loss.item())
+            match self.config["task"]:
+                case "cls":
+                    # Calculate accuracy and loss for the batch
+                    loss = torch.nn.functional.cross_entropy(preds, ys)
+                    acc = metric(preds, ys)
+                    accs.append(acc.item())
+                    losses.append(loss.item())
 
-            # Update torchmetrics metrics
-            preds_labels = torch.argmax(preds, dim=1)
-            precision_metric(preds_labels, ys)
-            recall_metric(preds_labels, ys)
-            f1_metric(preds_labels, ys)
+                    # Update torchmetrics metrics
+                    preds_labels = torch.argmax(preds, dim=1)
+                    precision_metric(preds_labels, ys)
+                    recall_metric(preds_labels, ys)
+                    f1_metric(preds_labels, ys)
+                case "detection":
 
-        # Compute final precision, recall, and F1 for this configuration
-        avg_precision = precision_metric.compute()
-        avg_recall = recall_metric.compute()
-        avg_f1 = f1_metric.compute()
+                    def prepare_batch(si, batch):
+                        """Prepares a batch of images and annotations for validation."""
+                        idx = batch["batch_idx"] == si
+                        cls = batch["cls"][idx].squeeze(-1)
+                        bbox = batch["bboxes"][idx]
+                        ori_shape = batch["ori_shape"][si]
+                        imgsz = batch["img"].shape[2:]
+                        ratio_pad = batch["ratio_pad"][si]
+                        if len(cls):
+                            bbox = ops.xywh2xyxy(bbox) * torch.tensor(imgsz, device=bbox.device)[[1, 0, 1, 0]]  # target boxes
+                            ops.scale_boxes(imgsz, bbox, ori_shape, ratio_pad=ratio_pad)  # native-space labels
+                        return {"cls": cls, "bbox": bbox, "ori_shape": ori_shape, "imgsz": imgsz, "ratio_pad": ratio_pad}
+                    def prepare_pred(pred, pbatch):
+                        predn = pred.clone()
+                        ops.scale_boxes(
+                            pbatch["imgsz"], predn[:, :4], pbatch["ori_shape"], ratio_pad=pbatch["ratio_pad"]
+                        )  # native-space pred
+                        return predn
 
-        # Convert metrics to float if they are tensors
-        avg_precision = (
-            avg_precision.item() if torch.is_tensor(avg_precision) else avg_precision
-        )
-        avg_recall = avg_recall.item() if torch.is_tensor(avg_recall) else avg_recall
-        avg_f1 = avg_f1.item() if torch.is_tensor(avg_f1) else avg_f1
+                    preds_post, preds_post_nms = postprocess_detection_outputs(preds)
+                    metrics_pred = []
+                    metrics_target = []
+                    for si, pred in enumerate(preds_post_nms):
+                        pbatch = prepare_batch(si, batch)
+                        cls, bbox = pbatch.pop("cls"), pbatch.pop("bbox")
+                        predn = prepare_pred(pred, pbatch)
+                        metrics_pred.append({
+                            "boxes": predn[:, :4],
+                            "scores": predn[:, 4],
+                            "labels": predn[:, 5].int()
+                        })
+                        metrics_target.append({
+                            "boxes": bbox,
+                            "labels": cls.int(),
+                        })
 
-        # Reset metrics for the next configuration
-        precision_metric.reset()
-        recall_metric.reset()
-        f1_metric.reset()
+                    map(metrics_pred, metrics_target)
 
-        # Calculate and record average metrics for the current configuration
-        acc_avg = sum(accs) / len(accs)
-        loss_avg = sum(losses) / len(losses)
-        recorded_accs.append(acc_avg)
+        match self.config["task"]:
+            case "cls":
+                # Compute final precision, recall, and F1 for this configuration
+                avg_precision = precision_metric.compute()
+                avg_recall = recall_metric.compute()
+                avg_f1 = f1_metric.compute()
+
+                # Convert metrics to float if they are tensors
+                avg_precision = (
+                    avg_precision.item() if torch.is_tensor(avg_precision) else avg_precision
+                )
+                avg_recall = avg_recall.item() if torch.is_tensor(avg_recall) else avg_recall
+                avg_f1 = avg_f1.item() if torch.is_tensor(avg_f1) else avg_f1
+
+                # Reset metrics for the next configuration
+                precision_metric.reset()
+                recall_metric.reset()
+                f1_metric.reset()
+
+                # Calculate and record average metrics for the current configuration
+                acc_avg = sum(accs) / len(accs)
+                loss_avg = sum(losses) / len(losses)
+                recorded_accs.append(acc_avg)
+
+            case "detection":
+                breakpoint()
+                map_score = map.compute()
+
         avg_latency = sum(latencies) / len(latencies)
         avg_gpu_power_usage = sum(gpu_power_usages) / len(gpu_power_usages)
         avg_gpu_energy_usage = (avg_gpu_power_usage * 1000) * (avg_latency / 3600000)
 
-        metrics = [
-            ["Average " + dataset + " Accuracy", f"{acc_avg:.5g}"],
-            ["Average Precision", f"{avg_precision:.5g}"],
-            ["Average Recall", f"{avg_recall:.5g}"],
-            ["Average F1 Score", f"{avg_f1:.5g}"],
-            ["Average Loss", f"{loss_avg:.5g}"],
+        match self.config["task"]:
+            case "cls":
+                metrics = [
+                    ["Average " + dataset + " Accuracy", f"{acc_avg:.5g}"],
+                    ["Average Precision", f"{avg_precision:.5g}"],
+                    ["Average Recall", f"{avg_recall:.5g}"],
+                    ["Average F1 Score", f"{avg_f1:.5g}"],
+                    ["Average Loss", f"{loss_avg:.5g}"],
+                ]
+            case "detection":
+                metrics = [
+                        ["mAP", f"{map_score['map']:.5g}"],
+                        ["mAP50", f"{map_score['map_50']:.5g}"],
+                        ["mAP75", f"{map_score['map_75']:.5g}"],
+                ]
+
+        metrics.extend([
             ["Average Latency", f"{avg_latency:.5g} ms"],
             ["Average GPU Power Usage", f"{avg_gpu_power_usage:.5g} W"],
             ["Inference Energy Consumption", f"{avg_gpu_energy_usage:.5g} mWh"],
-        ]
+        ])
 
         # Formatting the table with tabulate
         formatted_metrics = tabulate(
@@ -538,14 +619,26 @@ class RuntimeAnalysis:
         self.logger.info(f"\nResults {self.model_name}:\n" + formatted_metrics)
 
         # Store the results in a dictionary and return it
-        results = {
-            "Average Accuracy": acc_avg,
-            "Average Precision": avg_precision,
-            "Average Recall": avg_recall,
-            "Average F1 Score": avg_f1,
-            "Average Loss": loss_avg,
+        results = {}
+        match self.config["task"]:
+            case "cls":
+                results.update({
+                    "Average Accuracy": acc_avg,
+                    "Average Precision": avg_precision,
+                    "Average Recall": avg_recall,
+                    "Average F1 Score": avg_f1,
+                    "Average Loss": loss_avg,
+                })
+            case "detection":
+                results.update({
+                    "mAP": f"{map_score['map']:.5g}",
+                    "mAP50": f"{map_score['map_50']:.5g}",
+                    "mAP75": f"{map_score['map_75']:.5g}",
+                })
+
+        results.update({
             "Average Latency": avg_latency,
             "Average GPU Power Usage": avg_gpu_power_usage,
             "Inference Energy Consumption": avg_gpu_energy_usage,
-        }
+        })
         return results
