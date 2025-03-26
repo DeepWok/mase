@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 # Global configuration
 BATCH_SIZE = 4
-NUM_TRIALS = 30
+NUM_TRIALS = 2
 EPOCHS = 0.1
 ENHANCED_OBJECTIVE = False  # Whether to use phase-by-phase training and evaluation
 CHECKPOINT = "facebook/wav2vec2-base-960h"
