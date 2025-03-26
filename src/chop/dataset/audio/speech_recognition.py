@@ -16,10 +16,7 @@ LIBRISPEECH_CONFIG = {
     "sample_rate": 16000,
     "normalize_waveform": True,
     "tokenizer_checkpoint": "facebook/wav2vec2-base-960h",
-    "train_size": 0.6,
-    "validation_size": 0.2,
-    "test_size": 0.2,
-    "max_audio_length": 16 * 16000,
+    "max_audio_length": 16 * 16000, # Validate?
 }
 
 processor = Wav2Vec2Processor.from_pretrained(LIBRISPEECH_CONFIG["tokenizer_checkpoint"])
@@ -29,7 +26,7 @@ processor = Wav2Vec2Processor.from_pretrained(LIBRISPEECH_CONFIG["tokenizer_chec
     dataset_source="hf_datasets",
     available_splits=("train", "validation", "test"),
     seq2seqLM=True,
-    num_features=LIBRISPEECH_CONFIG["sample_rate"] * 16,
+    num_features=LIBRISPEECH_CONFIG["sample_rate"] * 16, # Validate?
     data_collator_cls=DataCollatorCTCWithPadding,
 )
 
@@ -48,7 +45,6 @@ class CondensedLibrispeechASRDataset(Dataset):
     ):
         super().__init__()
         self.split = split
-        # If dataset_path is provided, use it, otherwise use the provided path
         self.dataset_path = Path(dataset_path) if dataset_path else Path(path)
         self.config = config
         self.X = None
@@ -72,12 +68,6 @@ class CondensedLibrispeechASRDataset(Dataset):
                 "Dataset is not setup. Please call `dataset.prepare_data()` + `dataset.setup()` or pass `auto_setup=True` before using the dataset."
             )
         return len(self.X)
-
-
-    # def __getitem__(self, idx):
-    #     if self.X is None or self.Y is None:
-    #         raise ValueError("Dataset is not setup. Please call prepare_data() and setup() first.")
-    #     return self.X[idx], self.Y[idx]
     
     def __getitem__(self, idx):
         if self.X is None or self.Y is None:
@@ -91,40 +81,58 @@ class CondensedLibrispeechASRDataset(Dataset):
         librispeech_split = "train.clean.100"  # default
         
         if self.split == "train":
-            librispeech_split = "train.clean.100"  # or other training split as needed
+            hf_split = "train.clean.100"
         elif self.split == "validation":
-            librispeech_split = "validation.clean"
-        elif self.split == "test":
-            librispeech_split = "test.clean"
-        elif self.split == "pred":
-            librispeech_split = "test.clean"
+            hf_split = "validation.clean"
+        elif self.split in ["test", "pred"]:
+            hf_split = "test.clean"
+        else:
+            raise ValueError(f"Unknown split {self.split}")
             
-        _preprocess_librispeech_dataset(self.dataset_path, self.config, split=librispeech_split)
+        _preprocess_librispeech_dataset(
+            save_path=self.dataset_path,
+            config=self.config,
+            hf_split=hf_split, 
+            local_split_name=self.split
+        )
 
     def setup(self) -> None:
-        # Map the standard split name to the corresponding file paths
+        """Load the .pt files for our split into memory."""
         if self.split == "train":
             x_path, y_path, raw_path = "X_train.pt", "Y_train.pt", "raw_train.pt"
         elif self.split == "validation":
-            x_path, y_path, raw_path = "X_val.pt", "Y_val.pt", "raw_val.pt"
-        elif self.split in ("test", "pred"):
+            x_path, y_path, raw_path = "X_validation.pt", "Y_validation.pt", "raw_validation.pt"
+        elif self.split == "test":
             x_path, y_path, raw_path = "X_test.pt", "Y_test.pt", "raw_test.pt"
+        elif self.split == "pred":
+            x_path, y_path, raw_path = "X_pred.pt", "Y_pred.pt", "raw_pred.pt"
         else:
-            raise ValueError(f"Split {self.split} is not supported.")
+            raise ValueError(f"Unknown split {self.split}")
             
-        assert (self.dataset_path / x_path).exists(), f"Dataset file {self.dataset_path / x_path} is missing, run prepare_data() first."
-
+        assert (self.dataset_path / x_path).exists(), \
+            f"Missing file {x_path}, have you called prepare_data()?"
+        
         self.X = torch.load(self.dataset_path / x_path)
         self.Y = torch.load(self.dataset_path / y_path)
         self.raw = torch.load(self.dataset_path / raw_path)
 
-        print(f"[DEBUG] Loaded {len(self.raw)} raw labels from {self.dataset_path / raw_path}")
+        print(f"[DEBUG] Loaded {len(self.X)} samples for {self.split} split.")
 
 
-def _preprocess_librispeech_dataset(save_path: Path, config: dict = LIBRISPEECH_CONFIG, split="validation.clean"):
-    dataset = load_dataset("nyalpatel/condensed_librispeech_asr", split=split)
+def _preprocess_librispeech_dataset(
+    save_path: Path,
+    config: dict,
+    hf_split: str, 
+    local_split_name: str
+):
+    """
+    Loads a single HF subset (e.g. "train.clean.100"), preprocesses, and saves
+    X_<local_split_name>.pt, Y_<local_split_name>.pt, raw_<local_split_name>.pt
+    """
+    dataset = load_dataset("nyalpatel/condensed_librispeech_asr", split=hf_split)
+
     input_values, labels, raw_labels = [], [], []
-    done = False
+    printed_example = False
 
     for example in dataset:
         waveform = example["audio"]["array"]
@@ -134,6 +142,9 @@ def _preprocess_librispeech_dataset(save_path: Path, config: dict = LIBRISPEECH_
         if isinstance(waveform, list):
             waveform = torch.tensor(waveform, dtype=torch.float32)
 
+        if waveform.shape[0] > config["max_audio_length"]:
+            continue
+
         if sampling_rate != config["sample_rate"]:
             waveform = torchaudio.transforms.Resample(
                 orig_freq=sampling_rate, new_freq=config["sample_rate"]
@@ -142,7 +153,7 @@ def _preprocess_librispeech_dataset(save_path: Path, config: dict = LIBRISPEECH_
         if config["normalize_waveform"]:
             if waveform.numel() > 0 and waveform.std() > 0:
                 waveform = (waveform - waveform.mean()) / waveform.std()
-            elif waveform.numel() > 0:
+            else:
                 waveform = waveform - waveform.mean()
 
         with processor.as_target_processor():
@@ -152,30 +163,17 @@ def _preprocess_librispeech_dataset(save_path: Path, config: dict = LIBRISPEECH_
         labels.append(label)
         raw_labels.append(text)
 
-        while done == False:  # Print the first few samples for debugging
+        if not printed_example:  # Just debug-print once
             print(f"[DEBUG] Preprocess sample: raw label = '{text}'")
-            done = True
-
-    X_train, X_temp, Y_train, Y_temp, raw_train, raw_temp = train_test_split(
-        input_values, labels, raw_labels,
-        test_size=config["test_size"] + config["validation_size"], 
-        random_state=42
-    )
-    X_val, X_test, Y_val, Y_test, raw_val, raw_test = train_test_split(
-        X_temp, Y_temp, raw_temp,
-        test_size=config["test_size"] / (config["test_size"] + config["validation_size"]), 
-        random_state=42
-    )
+            printed_example = True
 
     save_path.mkdir(parents=True, exist_ok=True)
-    torch.save(X_train, save_path / "X_train.pt")
-    torch.save(Y_train, save_path / "Y_train.pt")
-    torch.save(raw_train, save_path / "raw_train.pt")
-    torch.save(X_val, save_path / "X_val.pt")
-    torch.save(Y_val, save_path / "Y_val.pt")
-    torch.save(raw_val, save_path / "raw_val.pt")
-    torch.save(X_test, save_path / "X_test.pt")
-    torch.save(Y_test, save_path / "Y_test.pt")
-    torch.save(raw_test, save_path / "raw_test.pt")
+    torch.save(input_values, save_path / f"X_{local_split_name}.pt")
+    torch.save(labels, save_path / f"Y_{local_split_name}.pt")
+    torch.save(raw_labels, save_path / f"raw_{local_split_name}.pt")
 
-    logger.info("✅ Condensed Librispeech dataset preprocessed and saved!")
+    logger.info(
+        f"✅ Condensed Librispeech dataset for '{local_split_name}' "
+        f"({hf_split}) preprocessed and saved! "
+        f"Total samples: {len(input_values)}"
+    )

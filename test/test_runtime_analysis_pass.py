@@ -1,9 +1,5 @@
 # Run these to run the test on golab
-
-
 # !python /content/mase-individual/test/test_runtime_analysis_pass.py
-
-
 
 import sys
 from pathlib import Path
@@ -17,21 +13,15 @@ import logging
 import numpy as np
 
 from pyctcdecode import build_ctcdecoder
-
-# CHOP imports
 from chop.tools import get_tokenized_dataset  # type: ignore
-from transformers import AutoModelForCTC, Wav2Vec2Processor
+from transformers import AutoModelForCTC
 from chop import MaseGraph
 import chop.passes as passes  # type: ignore
 from chop.passes.graph import (
-    summarize_quantization_analysis_pass,
-    add_common_metadata_analysis_pass,
     init_metadata_analysis_pass,
     runtime_analysis_pass,
     onnx_runtime_interface_pass,
-    quantize_transform_pass,
 )
-from chop.dataset.audio.speech_recognition import CondensedLibrispeechASRDataset
 from chop.dataset import MaseDataModule
 
 # Suppress extraneous log output from pyctcdecode and other libraries.
@@ -69,14 +59,7 @@ class TestRuntimeAnalysisPass(unittest.TestCase):
         cls.encoder = model.wav2vec2  # static, FX-friendly
         cls.ctc_head = model.lm_head  # dynamic CTC head
 
-        # 4. Load the CondensedLibrispeechASRDataset (train split) and set it up
-        # dataset_path = Path("./preprocessed_data")  # Adjust path if needed
-        # condensed_dataset = CondensedLibrispeechASRDataset(path=dataset_path, split="train")
-        # condensed_dataset.setup()
-
-
-
-        # 5. Create a MaseDataModule with the same parameters you used in your script
+        # 4. Create a MaseDataModule with the same parameters you used in your script
         cls.batch_size = 2
         cls.data_module = MaseDataModule(
             name=cls.dataset_name,
