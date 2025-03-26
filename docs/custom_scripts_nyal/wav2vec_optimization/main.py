@@ -6,6 +6,7 @@ import logging
 import torch
 import argparse
 
+import config
 from config import define_search_space, NUM_TRIALS
 from data_utils import import_model_and_dataset
 from model_utils import setup_mase_graph, create_combined_model
@@ -21,6 +22,10 @@ logger = logging.getLogger(__name__)
 def main(args):
     """Main function to run the optimization pipeline"""
     logger.info("Starting optimization pipeline")
+
+    # Log the entire configuration from the config module (filter out built-ins)
+    config_dict = {k: v for k, v in vars(config).items() if not k.startswith('__')}
+    logger.info("Entire config: %s", config_dict)
     
     # Check for CUDA availability
     if not torch.cuda.is_available():
