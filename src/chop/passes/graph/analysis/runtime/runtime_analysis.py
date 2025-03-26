@@ -44,12 +44,21 @@ def runtime_analysis_pass(model, pass_args=None):
         raise ImportError("tensorrt is required for this functionality. Please install it from NVIDIA's repositories.")
 
     try:
-        from cuda import cudart # type: ignore
+        # Try to import using the alias (if the 'cuda' package exists)
+        from cuda import cudart  # type: ignore
         globals()['cudart'] = cudart
-        print("[DEBUG] Successfully imported cuda.cudart")
+        print("[DEBUG] Successfully imported cuda.cudart via alias")
     except ImportError as e:
-        print(f"[DEBUG] Failed to import cuda.cudart: {e}")
-        raise ImportError("pycuda's cudart is required for this functionality. Please install pycuda.")
+        print(f"[DEBUG] Failed to import cuda.cudart via alias: {e}")
+        try:
+            # Fall back to the standard pycuda import
+            from pycuda.driver import cudart
+            globals()['cudart'] = cudart
+            print("[DEBUG] Successfully imported cudart from pycuda.driver")
+        except ImportError as e:
+            print(f"[DEBUG] Failed to import cudart from pycuda.driver: {e}")
+            print("[DEBUG] pycuda's cudart is not available, continuing without it.")
+            globals()['cudart'] = None  # Optionally set to None so your code can check later.
 
     print(f"[DEBUG] Creating RuntimeAnalysis with model type: {type(model)}")
     analysis = RuntimeAnalysis(model, pass_args)
