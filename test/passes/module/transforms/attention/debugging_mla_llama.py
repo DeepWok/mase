@@ -173,6 +173,7 @@ def test_llama_mla_transform():
     
     # Check which modules were not transformed
     if original_modules == transformed_modules:
+        print(original_modules, transformed_modules)
         logger.warning("No modules were transformed - same modules present before and after")
     else:
         transformed = original_modules - transformed_modules
@@ -196,12 +197,28 @@ def test_llama_mla_transform():
     except Exception as e:
         logger.error(f"Error inspecting transform maps: {e}")
 
+    print("\nDEBUG - Checking for MLAAttentionWrapper modules:")
+    found_wrappers = 0
+    mla_modules = []
+    for name, module in mla_model.named_modules():
+        module_type = type(module).__name__
+        if 'MLAAttention' in module_type or hasattr(module, 'is_mla_wrapper'):
+            found_wrappers += 1
+            mla_modules.append(name)
+            print(f"Found MLA wrapper: {name} of type {module_type}")
+    print(f"Total MLA wrappers found: {found_wrappers}")
+
     return model, mla_model
 
 if __name__ == "__main__":
     orig_model, mla_model = test_llama_mla_transform()
     if mla_model is not None:
-        if any(isinstance(m, torch.nn.Module) and 'MLA' in type(m).__name__ for _, m in mla_model.named_modules()):
+        has_mla = any(
+            isinstance(m, torch.nn.Module) and 
+            ('MLA' in type(m).__name__ or hasattr(m, 'is_mla_wrapper'))
+            for _, m in mla_model.named_modules()
+        )
+        if has_mla:
             logger.info("Test completed successfully with MLA modules found!")
         else:
             logger.error("Test completed but no MLA modules were found in the transformed model.")
