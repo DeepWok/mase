@@ -14,6 +14,11 @@ from ...module_modify_helper import replace_by_name, instantiate_module
 from ...state_dict_map import match_a_pattern, check_is_huggingface_model
 from .attention_transform_helper import instantiate_attention_module, replace_attention_by_name
 
+from transformers.models.llama.modeling_llama import (
+    LlamaAttention,
+    LlamaDecoderLayer
+)
+
 def get_config(config: dict, name: str):
     if name in config:
         return config[name]["config"]
@@ -31,6 +36,8 @@ def mla_by_type(network, pass_args):
             module = BertAttention
         elif type_name == "gpt2spda":
             module = GPT2Block
+        elif type_name == "llama":
+            module = LlamaAttention
         else:
             raise ValueError(f"{type_name} is not supported!")
         config = config["config"]
