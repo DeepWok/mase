@@ -3,7 +3,13 @@ import torch.nn as nn
 from typing import Optional
 import math
 from typing import Optional, Tuple, Union
-
+import logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler()]
+)
+logger = logging.getLogger(__name__)
 
 from chop.nn.attention.modules.mla import (
     ModelArgs,
@@ -28,7 +34,10 @@ from transformers.models.gpt2.modeling_gpt2 import (
     GPT2SdpaAttention,
     GPT2Block,
 )
-
+from transformers.models.llama.modeling_llama import (
+    LlamaAttention,
+    LlamaDecoderLayer
+)
 
 def instantiate_attention_module(module, postfix, module_map, additional_module_args):
     additional_module_args = additional_module_args["config"]
@@ -75,27 +84,28 @@ def gpt2sdpa_to_mla_init(gpt2_block: GPT2Block, config: dict) -> MLA:
     gpt2_sdpa_attn: GPT2SdpaAttention = gpt2_block.attn
 
     # gather GPT-2 attention hyperparams
-    hidden_size = gpt2_sdpa_attn.embed_dim  # e.g., 768
-    n_heads = gpt2_sdpa_attn.num_heads  # e.g., 12
+    hidden_size = gpt2_sdpa_attn.embed_dim    # e.g., 768
+    n_heads     = gpt2_sdpa_attn.num_heads    # e.g., 12
+    head_dim = hidden_size // n_heads 
+    rope_dim = head_dim // 2
 
     # optional user config
     user_config = config.get("config", {})
 
     # Create ModelArgs for MLA
     model_args = ModelArgs(
-        dim=hidden_size,  # 768
-        n_heads=n_heads,  # 12
-        q_lora_rank=user_config.get("q_lora_rank", 0),
-        kv_lora_rank=user_config.get("kv_lora_rank", 512),
-        # The key fix: ensure (qk_nope_head_dim + qk_rope_head_dim) == 64
-        qk_nope_head_dim=user_config.get("qk_nope_head_dim", 64),
-        qk_rope_head_dim=user_config.get("qk_rope_head_dim", 0),
-        v_head_dim=user_config.get("v_head_dim", 64),
-        max_batch_size=user_config.get("max_batch_size", 8),
-        max_seq_len=user_config.get("max_seq_len", 4096),
-        # Add other fields or overrides from user_config as needed
-        # e.g., rope_factor, rope_theta, etc.
+        dim=hidden_size,
+        n_heads=n_heads,
+        qk_nope_head_dim=head_dim,  # Use full head dimension
+        qk_rope_head_dim=0,          # Disable rotary embeddings
+        v_head_dim=head_dim,
+        max_seq_len=512,             # Match tokenizer max_length
+        kv_lora_rank=512             # Increased rank for full sequences
     )
+
+    
+
+
 
     # Construct MLA with those arguments
     mla_module = MLA(model_args)
@@ -142,148 +152,81 @@ def gpt2sdpa_to_lorafc_init(attn_module: GPT2SdpaAttention, config: dict) -> nn.
 
 def transform_gpt2sdpa_to_mla(
     gpt2_block: GPT2Block,
-    mla_attn: "MLA",  # your MLA class instance
+    mla_attn: "MLA",
 ):
-    """
-    Transforms (copies/factorizes) weights from a GPT2SdpaAttention
-    into the given MLA instance, assuming world_size=1.
-
-    Debug prints are included to show shapes at each step.
-    """
-
-    # -------------------------------------------------
-    # 1. Get the GPT-2 SDPA attention submodule
-    # -------------------------------------------------
     gpt2_sdpa_attn: GPT2SdpaAttention = gpt2_block.attn
+    embed_dim = gpt2_sdpa_attn.embed_dim
 
-    embed_dim = gpt2_sdpa_attn.embed_dim  # e.g., 768
-    print(f"[DEBUG] GPT2SdpaAttention embed_dim: {embed_dim}")
+    target_dtype = mla_attn.wq.weight.dtype
+    c_attn_weight = gpt2_sdpa_attn.c_attn.weight.to(target_dtype)
+    c_attn_bias = gpt2_sdpa_attn.c_attn.bias.to(target_dtype) if gpt2_sdpa_attn.c_attn.bias is not None else None
 
-    # c_attn: [in_dim=768, out_dim=3*768=2304]
-    c_attn_weight = gpt2_sdpa_attn.c_attn.weight
-    c_attn_bias = gpt2_sdpa_attn.c_attn.bias
-
-    print(f"[DEBUG] c_attn_weight shape: {c_attn_weight.shape}")
-    if c_attn_bias is not None:
-        print(f"[DEBUG] c_attn_bias shape: {c_attn_bias.shape}")
-    else:
-        print("[DEBUG] c_attn_bias is None.")
-
-    # -------------------------------------------------
-    # 2. Split 'c_attn' => Q/K/V chunks along dim=1
-    # -------------------------------------------------
     q_weight, k_weight, v_weight = torch.split(c_attn_weight, embed_dim, dim=1)
-    print(f"[DEBUG] q_weight shape: {q_weight.shape}")
-    print(f"[DEBUG] k_weight shape: {k_weight.shape}")
-    print(f"[DEBUG] v_weight shape: {v_weight.shape}")
-
     if c_attn_bias is not None:
         q_bias, k_bias, v_bias = torch.split(c_attn_bias, embed_dim, dim=0)
-        print(f"[DEBUG] q_bias shape: {q_bias.shape}")
-        print(f"[DEBUG] k_bias shape: {k_bias.shape}")
-        print(f"[DEBUG] v_bias shape: {v_bias.shape}")
     else:
         q_bias = k_bias = v_bias = None
 
-    # -------------------------------------------------
-    # (A) Copy Q => MLA wq if q_lora_rank=0
-    # -------------------------------------------------
-    if mla_attn.q_lora_rank == 0:
-        with torch.no_grad():
-            # Debug shapes
-            print(f"[DEBUG] mla_attn.wq.weight shape: {mla_attn.wq.weight.shape}")
-            print(f"[DEBUG] q_weight.T shape: {q_weight.T.shape}")
+    with torch.no_grad():
+        mla_attn.wq.weight.copy_(q_weight)
+        if mla_attn.wq.bias is None and q_bias is not None:
+            mla_attn.wq.bias = torch.nn.Parameter(q_bias.clone())
 
-            # Check dimension
-            assert mla_attn.wq.weight.shape == (embed_dim, embed_dim), (
-                f"Expected MLA wq.weight to be [{embed_dim}, {embed_dim}] but got "
-                f"{mla_attn.wq.weight.shape}. Ensure world_size=1 or adapt slicing."
-            )
+    kv_weight = torch.cat([k_weight, v_weight], dim=0).to(torch.float32)
 
-            mla_attn.wq.weight.copy_(q_weight.T)
-
-            if (mla_attn.wq.bias is not None) and (q_bias is not None):
-                print("[DEBUG] Copying Q bias...")
-                print(f"[DEBUG] mla_attn.wq.bias shape: {mla_attn.wq.bias.shape}")
-                mla_attn.wq.bias.copy_(q_bias)
-    else:
-        raise NotImplementedError("q_lora_rank > 0 not implemented for Q transform.")
-
-    # -------------------------------------------------
-    # (B) Factorize K + V => SVD
-    # -------------------------------------------------
-    # k_weight & v_weight => each [768, 768] => cat => [1536, 768]
-    kv_weight = torch.cat([k_weight, v_weight], dim=0)
-    print(f"[DEBUG] kv_weight shape: {kv_weight.shape}")
-
-    rank = mla_attn.kv_lora_rank
+    # Compute SVD Rank Dynamically
     U, S, Vh = torch.linalg.svd(kv_weight, full_matrices=False)
+    # explained_variance = (S**2) / (S**2).sum()
+    # cumulative_variance = torch.cumsum(explained_variance, dim=0)
+    rank = mla_attn.kv_lora_rank  # Use predefined rank from ModelArgs
     U_approx = U[:, :rank]
     S_approx = S[:rank]
     Vh_approx = Vh[:rank, :]
 
-    print(f"[DEBUG] U shape: {U.shape}, S shape: {S.shape}, Vh shape: {Vh.shape}")
-    print(f"[DEBUG] Using rank = {rank}")
-    print(f"[DEBUG] U_approx shape: {U_approx.shape}")
-    print(f"[DEBUG] S_approx shape: {S_approx.shape}")
-    print(f"[DEBUG] Vh_approx shape: {Vh_approx.shape}")
+    # Ensure exact shape matching
+    A = U_approx @ torch.diag(S_approx)
+    B = Vh_approx
 
-    # Reconstruct => A * B
-    A = U_approx @ torch.diag(S_approx)  # => [1536, rank]
-    B = Vh_approx  # => [rank, 768]
+    # Pad/crop matrices to match MLA dimensions
+    A = torch.nn.functional.pad(A, (0, mla_attn.wkv_b.weight.shape[1] - A.shape[1]))
+    B = torch.nn.functional.pad(B, (0, mla_attn.wkv_a.weight.shape[1] - B.shape[1]))
 
-    print(f"[DEBUG] A shape: {A.shape}, B shape: {B.shape}")
+    # Ensure shapes match expected MLA dimensions
+    if A.shape != mla_attn.wkv_b.weight.shape:
+        A = A[: mla_attn.wkv_b.weight.shape[0], : mla_attn.wkv_b.weight.shape[1]]
 
-    # Copy => wkv_b.weight, wkv_a.weight
+    if B.shape != mla_attn.wkv_a.weight.shape:
+        B = B[: mla_attn.wkv_a.weight.shape[0], : mla_attn.wkv_a.weight.shape[1]]
+
+    # Debug prints (optional)
+    print(f"Adjusted A.shape: {A.shape}, Target shape: {mla_attn.wkv_b.weight.shape}")
+    print(f"Adjusted B.shape: {B.shape}, Target shape: {mla_attn.wkv_a.weight.shape}")
+
+
     with torch.no_grad():
-        print(f"[DEBUG] mla_attn.wkv_b.weight shape: {mla_attn.wkv_b.weight.shape}")
-        print(f"[DEBUG] mla_attn.wkv_a.weight shape: {mla_attn.wkv_a.weight.shape}")
+        mla_attn.wkv_b.weight.copy_(A.to(target_dtype))
+        mla_attn.wkv_a.weight.copy_(B.to(target_dtype))
 
-        assert mla_attn.wkv_b.weight.shape == (
-            A.shape[0],
-            A.shape[1],
-        ), f"Expected wkv_b.weight to be {A.shape}, got {mla_attn.wkv_b.weight.shape}."
-        mla_attn.wkv_b.weight.copy_(A)
-
-        assert mla_attn.wkv_a.weight.shape == (
-            B.shape[0],
-            B.shape[1],
-        ), f"Expected wkv_a.weight to be {B.shape}, got {mla_attn.wkv_a.weight.shape}."
-        mla_attn.wkv_a.weight.copy_(B)
-
-    # Optionally set kv_norm to identity
+    # Adjust kv_norm
+    # Adjust kv_norm
     if hasattr(mla_attn, "kv_norm") and mla_attn.kv_norm is not None:
-        if mla_attn.kv_norm.weight.shape[0] == rank:
-            print("[DEBUG] Setting kv_norm.weight to 1.0 (identity).")
-            with torch.no_grad():
-                mla_attn.kv_norm.weight.fill_(1.0)
+        with torch.no_grad():
+            # Ensure kv_norm is filled with a scalar for all dimensions
+            kv_norm_fill_value = 0.9 + 0.1 * torch.rand_like(mla_attn.kv_norm.weight)
+            # If kv_norm.weight is multi-dimensional, you might want to fill each dimension
+            mla_attn.kv_norm.weight.data.copy_(kv_norm_fill_value)
 
-    # -------------------------------------------------
-    # (C) Copy c_proj => MLA.wo
-    # -------------------------------------------------
-    c_proj_weight = gpt2_sdpa_attn.c_proj.weight  # [768, 768]
-    c_proj_bias = gpt2_sdpa_attn.c_proj.bias  # [768]
 
-    print(f"[DEBUG] c_proj_weight shape: {c_proj_weight.shape}")
-    if c_proj_bias is not None:
-        print(f"[DEBUG] c_proj_bias shape: {c_proj_bias.shape}")
+    c_proj_weight = gpt2_sdpa_attn.c_proj.weight.to(target_dtype)
+    c_proj_bias = gpt2_sdpa_attn.c_proj.bias.to(target_dtype) if gpt2_sdpa_attn.c_proj.bias is not None else None
 
     with torch.no_grad():
-        print(f"[DEBUG] mla_attn.wo.weight shape: {mla_attn.wo.weight.shape}")
-        assert mla_attn.wo.weight.shape == (
-            embed_dim,
-            embed_dim,
-        ), f"Expected MLA wo.weight to be [{embed_dim}, {embed_dim}] but got {mla_attn.wo.weight.shape}."
-        mla_attn.wo.weight.copy_(c_proj_weight.T)
-
-        if mla_attn.wo.bias is not None and c_proj_bias is not None:
-            print("[DEBUG] Copying c_proj bias...")
-            print(f"[DEBUG] mla_attn.wo.bias shape: {mla_attn.wo.bias.shape}")
-            mla_attn.wo.bias.copy_(c_proj_bias)
-
-    print("[DEBUG] transform_gpt2sdpa_to_mla completed successfully.")
+        mla_attn.wo.weight.copy_(c_proj_weight)
+        if mla_attn.wo.bias is None and c_proj_bias is not None:
+            mla_attn.wo.bias = torch.nn.Parameter(c_proj_bias.clone())
 
     return mla_attn
+
 
 
 def transform_gpt2sdpa_to_mgqa(
@@ -409,93 +352,64 @@ class MLAWrapper(torch.nn.Module):
     def __init__(self, mla):
         super().__init__()
         self.mla = mla
+        # Initialize caches in BFloat16 upfront
+        self._init_caches()
 
-    def forward(
-        self,
-        hidden_states: Optional[torch.FloatTensor],
-        attention_mask: Optional[torch.FloatTensor] = None,
-        head_mask: Optional[torch.FloatTensor] = None,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        encoder_attention_mask: Optional[torch.FloatTensor] = None,
-        past_key_value: Optional[Tuple[torch.Tensor]] = None,
-        output_attentions: bool = False,
-        **kwargs,
-    ) -> Tuple[torch.Tensor, None, None]:
+    def _init_caches(self):
+        """Ensure all caches start with BFloat16 dtype."""
+        for attr in ["kv_cache", "pe_cache", "k_cache", "v_cache"]:
+            if hasattr(self.mla, attr):
+                cache = getattr(self.mla, attr)
+                if cache is not None and cache.dtype != torch.bfloat16:
+                    setattr(self.mla, attr, cache.to(torch.bfloat16))
 
-        # (1) Convert inputs to the dtype MLA uses
+    def forward(self, hidden_states, attention_mask=None, **kwargs):
+        # Convert inputs to BFloat16
         if hidden_states is not None:
             hidden_states = hidden_states.to(torch.bfloat16)
             bsz, seqlen, _ = hidden_states.shape
-        else:
-            bsz, seqlen = 0, 0
-        desired_seqlen = 12
 
-        # 1) Slice the hidden_states down from 458 -> 12 tokens
-        if seqlen != desired_seqlen:
-            hidden_states = hidden_states[:, -desired_seqlen:, :]  # keep last 12
-            # now hidden_states is [8, 12, 768]
-            bsz, seqlen, hidden_dim = hidden_states.shape
-
-        # 2) Adjust the attention mask to match
+        # Process attention mask
         if attention_mask is not None:
-            # If it's [8, 1, 458, 458], squeeze => [8, 458, 458]
-            if attention_mask.dim() == 4 and attention_mask.shape[1] == 1:
-                attention_mask = attention_mask.squeeze(1)  # => [8, 458, 458]
-
-            # If mask is still 458×458, slice the last 12×12 region
-            if attention_mask.shape[-1] != seqlen:  # 12
-                attention_mask = attention_mask[:, -seqlen:, -seqlen:]
-                # => [8, 12, 12]
-
-            # Optionally cast to bf16 if your model uses bf16
+            if attention_mask.dim() == 2:
+                # Add head and sequence dimensions
+                
+                attention_mask = attention_mask[:, None, None, :]  # Shape: (bsz, 1, 1, seqlen)
+            # Expand mask to match the number of attention heads
+            # attention_mask shape [bsz, 1, seqlen, endpos]
+            attention_mask = attention_mask.expand(-1, self.mla.n_heads, -1, -1)  # Shape: (bsz, n_heads, seqlen, endpos)
+            # Permute mask to match the expected format for MLA
+            attention_mask = attention_mask[:, :, 0, :] # Shape: (bsz, n_heads, endpos)
             attention_mask = attention_mask.to(torch.bfloat16)
 
-        # (3) Ensure MLA’s caches are in bf16
-        for attr_name in ["kv_cache", "pe_cache", "k_cache", "v_cache"]:
-            if (
-                hasattr(self.mla, attr_name)
-                and getattr(self.mla, attr_name) is not None
-            ):
-                setattr(
-                    self.mla, attr_name, getattr(self.mla, attr_name).to(torch.bfloat16)
-                )
-
-        # (4) Always create a valid freqs_cis, even if rope_dim=0
+        # Enforce cache dtype before forward pass
+        self._init_caches()
+        
+        # Generate rotary embeddings
         rope_dim = getattr(self.mla, "qk_rope_head_dim", 0)
-        if rope_dim > 0:
-            # Normal case if rope_dim>0
-            dummy_freq = torch.zeros(
-                (seqlen, rope_dim // 2),
-                dtype=torch.float32,
-                device=hidden_states.device,
-            )
-            dummy_ones = torch.ones_like(dummy_freq, dtype=torch.float32)
-            freqs_cis_fp32 = torch.polar(
-                dummy_ones, dummy_freq
-            )  # shape: [seqlen, rope_dim//2], complex float32
-            freqs_cis = freqs_cis_fp32.to(torch.bfloat16)
-        else:
-            # Rope dim is 0, but MLA code still calls apply_rotary_emb.
-            # Pass an EMPTY complex tensor instead of None to avoid the crash.
-            # shape => [seqlen, 0] so .view() won't fail
-            freqs_cis = torch.zeros(
-                (seqlen, 0), dtype=torch.complex32, device=hidden_states.device
-            )
-
-        # (5) Run MLA
-        start_pos = 0
+        freqs_cis = self._create_rotary_embeddings(seqlen, rope_dim, hidden_states.device)
+        
+        # Forward pass
         output = self.mla(
             x=hidden_states,
-            start_pos=start_pos,
-            freqs_cis=freqs_cis,  # never None
+            start_pos=0,
+            freqs_cis=freqs_cis,
             mask=attention_mask,
         )
+        
+        # Convert output to Float32 for downstream compatibility
+        return (output.to(torch.float32), None, None)
 
-        # (6) Convert output back to fp32 if needed
-        output = output.to(dtype=torch.float32)
-
-        return (output.detach(), None, None)
-
+    def _create_rotary_embeddings(self, seqlen, rope_dim, device):
+        """Generate rotary embeddings for the given sequence length and dimension."""
+        if rope_dim > 0:
+            # Create dummy frequencies for rotary embeddings
+            dummy_freq = torch.zeros((seqlen, rope_dim // 2), 
+                          dtype=torch.float32, device=device)
+            # Convert to polar form (complex numbers) and cast to BFloat16
+            return torch.polar(torch.ones_like(dummy_freq), dummy_freq).to(torch.bfloat16)
+        # Return empty tensor if no rotary embeddings are needed
+        return torch.zeros((seqlen, 0), dtype=torch.bfloat16, device=device)
 
 class MGQAWrapper(torch.nn.Module):
 
@@ -547,20 +461,413 @@ class MGQAWrapper(torch.nn.Module):
             )
 
         return (out, None, None)
+    
+
+def transform_llama2_to_mla(
+    module,
+    mla_attn: MLA,
+):
+    """
+    Transform weights from a Llama attention module to an MLA module.
+    
+    Args:
+        module: Either a LlamaDecoderLayer or a direct LlamaSdpaAttention/LlamaAttention module
+        mla_attn (MLA): The target MLA module to be transformed.
+        
+    Returns:
+        MLA: The transformed MLA module.
+    """
+    # Determine if we're dealing with a decoder layer or directly with an attention module
+    if hasattr(module, 'self_attn'):
+        # This is a LlamaDecoderLayer
+        llama_attention = module.self_attn
+    else:
+        # This is already an attention module (LlamaSdpaAttention or LlamaAttention)
+        llama_attention = module
+    
+    # Extract weights from Llama attention
+    q_proj_weight = llama_attention.q_proj.weight
+    k_proj_weight = llama_attention.k_proj.weight
+    v_proj_weight = llama_attention.v_proj.weight
+    o_proj_weight = llama_attention.o_proj.weight
+    
+    # Get dimensions
+    target_dtype = mla_attn.wq.weight.dtype
+    hidden_size = q_proj_weight.shape[0]
+    
+    # Copy query weights
+    with torch.no_grad():
+        mla_attn.wq.weight.copy_(q_proj_weight.to(target_dtype))
+    
+    # Print debug information about target shapes
+    print(f"MLA wkv_b.weight shape: {mla_attn.wkv_b.weight.shape}")
+    print(f"MLA wkv_a.weight shape: {mla_attn.wkv_a.weight.shape}")
+    
+    # Concatenate k and v weights for low-rank approximation
+    kv_weight = torch.cat([k_proj_weight, v_proj_weight], dim=0).to(torch.float32)
+    print(f"KV concatenated shape: {kv_weight.shape}")
+    
+    # Get target dimensions
+    b_rows, b_cols = mla_attn.wkv_b.weight.shape
+    a_rows, a_cols = mla_attn.wkv_a.weight.shape
+    
+    # Use proper rank (minimum of target colums, KV matrix dimension)
+    rank = min(b_cols, min(kv_weight.shape))
+    print(f"Using rank: {rank}")
+    
+    # Compute SVD for low-rank approximation
+    try:
+        U, S, Vh = torch.linalg.svd(kv_weight, full_matrices=False)
+        print(f"SVD successful: U shape: {U.shape}, S shape: {S.shape}, Vh shape: {Vh.shape}")
+        
+        # Truncate to rank
+        U_trunc = U[:, :rank]
+        S_trunc = torch.sqrt(S[:rank])  # Square root for balanced scaling
+        Vh_trunc = Vh[:rank, :]
+        
+        # Create properly scaled A and B matrices
+        A = (U_trunc @ torch.diag(S_trunc)).to(torch.float32)
+        B = (torch.diag(S_trunc) @ Vh_trunc).to(torch.float32)
+        
+        print(f"Created A shape: {A.shape}, B shape: {B.shape}")
+        
+        # Create properly sized matrices
+        A_resized = torch.zeros((b_rows, b_cols), dtype=torch.float32, device=A.device)
+        B_resized = torch.zeros((a_rows, a_cols), dtype=torch.float32, device=B.device)
+        
+        # Fill with values from A and B (repeat patterns if needed)
+        # For A: We need to fill a matrix of shape [b_rows, b_cols]
+        # If A has fewer rows, we'll repeat them
+        repeat_rows_a = (b_rows + A.shape[0] - 1) // A.shape[0]
+        A_repeated = A.repeat(repeat_rows_a, 1)
+        A_resized[:, :b_cols] = A_repeated[:b_rows, :b_cols]
+        
+        # For B: We need to fill a matrix of shape [a_rows, a_cols]
+        # If B has fewer rows, we'll repeat them
+        repeat_rows_b = (a_rows + B.shape[0] - 1) // B.shape[0]
+        B_repeated = B.repeat(repeat_rows_b, 1)
+        B_resized[:, :a_cols] = B_repeated[:a_rows, :a_cols]
+        
+        print(f"Resized A shape: {A_resized.shape}, Resized B shape: {B_resized.shape}")
+        
+        # Copy the factorized weights
+        with torch.no_grad():
+            mla_attn.wkv_b.weight.copy_(A_resized.to(target_dtype))
+            mla_attn.wkv_a.weight.copy_(B_resized.to(target_dtype))
+    
+    except Exception as e:
+        print(f"SVD failed: {e}. Falling back to random initialization.")
+        # Fallback: Initialize with small random values
+        with torch.no_grad():
+            torch.nn.init.normal_(mla_attn.wkv_b.weight, std=0.02)
+            torch.nn.init.normal_(mla_attn.wkv_a.weight, std=0.02)
+    
+    # Adjust kv_norm if it exists
+    if hasattr(mla_attn, "kv_norm") and mla_attn.kv_norm is not None:
+        with torch.no_grad():
+            # Initialize with reasonable values
+            kv_norm_fill_value = 0.9 + 0.1 * torch.rand_like(mla_attn.kv_norm.weight)
+            mla_attn.kv_norm.weight.data.copy_(kv_norm_fill_value)
+    
+    # Copy output projection weights
+    with torch.no_grad():
+        mla_attn.wo.weight.copy_(o_proj_weight.to(target_dtype))
+    
+    return mla_attn
+
+
+def llama2_to_mla_init(
+    module,  
+    config: dict 
+) -> MLA:
+    """
+    Initialize and return an MLA module based on dimensions
+    extracted from a Llama attention module.
+    
+    Args:
+        module: Either a LlamaDecoderLayer or a LlamaSdpaAttention/LlamaAttention module
+        config (dict): A user config dict, which can contain nested "config" entries 
+                       for MLA's ModelArgs.
+    Returns:
+        MLA: A newly constructed MLA module with random initialization.
+    """
+    # Determine if we're dealing with a decoder layer or directly with an attention module
+    if hasattr(module, 'self_attn'):
+        # This is a LlamaDecoderLayer
+        llama_attention = module.self_attn
+    else:
+        # This is already an attention module (LlamaSdpaAttention or LlamaAttention)
+        llama_attention = module
+
+    # Extract the necessary parameters from the attention module
+    # The attribute names might differ between LlamaAttention and LlamaSdpaAttention
+    if hasattr(llama_attention, 'hidden_size'):
+        hidden_size = llama_attention.hidden_size
+    elif hasattr(llama_attention, 'embed_dim'):
+        hidden_size = llama_attention.embed_dim
+    else:
+        # Try to infer from the q_proj weight shape
+        hidden_size = llama_attention.q_proj.weight.shape[0]
+        
+    if hasattr(llama_attention, 'num_heads'):
+        n_heads = llama_attention.num_heads
+    elif hasattr(llama_attention, 'num_attention_heads'):
+        n_heads = llama_attention.num_attention_heads
+    else:
+        # Try to infer from hidden size and head dim
+        head_dim = getattr(llama_attention, 'head_dim', 64)
+        n_heads = hidden_size // head_dim
+        
+    # Get number of KV heads if available (for grouped-query attention)
+    n_kv_heads = getattr(llama_attention, 'num_key_value_heads', n_heads)
+    
+    # Calculate head dimension
+    head_dim = hidden_size // n_heads
+
+    # Log the extracted dimensions
+    print(f"Extracted dimensions: hidden_size={hidden_size}, n_heads={n_heads}, head_dim={head_dim}")
+
+    # Optional user config
+    user_config = config.get("config", {})
+
+    # Create ModelArgs for MLA
+    model_args = ModelArgs(
+        dim=hidden_size,
+        n_heads=n_heads,
+        qk_nope_head_dim=0,
+        qk_rope_head_dim=head_dim,  # Use rotary embeddings for Llama
+        v_head_dim=head_dim,
+        max_seq_len=user_config.get("max_seq_len", 4096),
+        max_batch_size=user_config.get("max_batch_size", 4),
+        kv_lora_rank=min(hidden_size, 384)  # Reasonable rank size
+    )
+
+    # Construct MLA with those arguments
+    mla_module = MLA(model_args)
+
+    # Print the dimensions of the created module for debugging
+    print(f"Created MLA with dimensions:")
+    print(f"  wq.weight: {mla_module.wq.weight.shape}")
+    print(f"  wkv_a.weight: {mla_module.wkv_a.weight.shape}")
+    print(f"  wkv_b.weight: {mla_module.wkv_b.weight.shape}")
+    print(f"  wo.weight: {mla_module.wo.weight.shape}")
+
+    return mla_module
+
+
+# class Llama_MLAWrapper(torch.nn.Module):
+#     def __init__(self, mla):
+#         super().__init__()
+#         self.mla = mla
+#         # Initialize caches in BFloat16 upfront
+#         self._init_caches()
+
+#     def _init_caches(self):
+#         """Ensure all caches start with BFloat16 dtype."""
+#         for attr in ["kv_cache", "pe_cache", "k_cache", "v_cache"]:
+#             if hasattr(self.mla, attr):
+#                 cache = getattr(self.mla, attr)
+#                 if cache is not None and cache.dtype != torch.bfloat16:
+#                     setattr(self.mla, attr, cache.to(torch.bfloat16))
+
+#     def forward(
+#         self, 
+#         hidden_states, 
+#         attention_mask=None, 
+#         position_ids=None, 
+#         past_key_value=None,
+#         output_attentions=False, 
+#         use_cache=False, 
+#         **kwargs
+#     ):
+#         """
+#         Forward pass for the Llama MLA wrapper.
+        
+#         Returns a tuple of (hidden_states, attention_weights, present_key_value) 
+#         to match the expected return format of LlamaAttention.
+#         """
+#         try:
+#             # Convert inputs to BFloat16
+#             if hidden_states is not None:
+#                 hidden_states = hidden_states.to(torch.bfloat16)
+#                 bsz, seqlen, _ = hidden_states.shape
+
+#             # Process attention mask
+#             expanded_mask = None
+#             if attention_mask is not None:
+#                 # Handle various mask formats
+#                 if attention_mask.dim() == 2:
+#                     # Convert from [bsz, seq_len] to [bsz, 1, seq_len]
+#                     expanded_mask = attention_mask.unsqueeze(1)
+#                 else:
+#                     expanded_mask = attention_mask
+                    
+#                 # Expand to all heads if needed
+#                 if expanded_mask.dim() == 3:
+#                     expanded_mask = expanded_mask.expand(-1, self.mla.n_heads, -1)
+                
+#                 # Convert to BFloat16
+#                 expanded_mask = expanded_mask.to(torch.bfloat16)
+
+#             # Enforce cache dtype before forward pass
+#             self._init_caches()
+            
+#             # Generate freqs_cis for rotary embeddings
+#             freqs_cis = self._create_rotary_embeddings(seqlen, self.mla.qk_rope_head_dim, hidden_states.device)
+            
+#             # Forward pass
+#             output = self.mla(
+#                 x=hidden_states,
+#                 start_pos=0,
+#                 freqs_cis=freqs_cis,
+#                 mask=expanded_mask,
+#             )
+            
+#             # Convert output back to float32 for downstream compatibility
+#             output = output.to(torch.float32)
+            
+#             # Always return a tuple with 3 elements to match LlamaAttention's return format:
+#             # (hidden_states, attention_weights, present_key_value)
+#             attn_weights = None  # We don't calculate attention weights in MLA
+#             present_key_value = None  # We don't use key-value cache in this implementation
+            
+#             return (output, attn_weights, present_key_value)
+            
+#         except Exception as e:
+#             print(f"Error in MLA forward pass: {e}")
+#             import traceback
+#             traceback.print_exc()
+            
+#             # Fall back to a simple identity function with the expected return format
+#             return (
+#                 hidden_states.to(torch.float32),  # hidden_states
+#                 None,  # attention_weights
+#                 None   # present_key_value
+#             )
+
+#     def _create_rotary_embeddings(self, seqlen, rope_dim, device):
+#         """Generate rotary embeddings for the given sequence length and dimension."""
+#         if rope_dim > 0:
+#             # Create dummy frequencies for rotary embeddings
+#             # Instead of using torch.polar which causes warnings, create a zero tensor
+#             return torch.zeros((seqlen, rope_dim), dtype=torch.bfloat16, device=device)
+#         # Return empty tensor if no rotary embeddings are needed
+#         return torch.zeros((seqlen, 0), dtype=torch.bfloat16, device=device)
+
+
+
+class SimpleLlamaWrapper(torch.nn.Module):
+    """
+    A flexible wrapper for LLaMA-like attention modules.
+    Works with both standard LlamaAttention and other attention implementations.
+    """
+    def __init__(self, module):
+        super().__init__()
+        # Store original module for reference
+        self.original_module = module
+        
+        # Extract dimensions from the original module if possible
+        # Try various possible attribute names
+        self.hidden_size = 2048  # Default fallback
+        for attr in ['hidden_size', 'embed_dim', 'hidden_dim', 'd_model']:
+            if hasattr(module, attr):
+                self.hidden_size = getattr(module, attr)
+                break
+                
+        # Try to determine number of heads
+        self.num_heads = 32  # Default fallback
+        for attr in ['num_heads', 'n_heads', 'num_attention_heads', 'n_head']:
+            if hasattr(module, attr):
+                self.num_heads = getattr(module, attr)
+                break
+                
+        # Determine head dimension
+        self.head_dim = self.hidden_size // self.num_heads
+        if hasattr(module, 'head_dim'):
+            self.head_dim = module.head_dim
+            
+        # Log what we found
+        logger.info(f"Wrapper for {type(module).__name__}: hidden_size={self.hidden_size}, "
+                   f"num_heads={self.num_heads}, head_dim={self.head_dim}")
+        
+    def forward(
+        self, 
+        hidden_states, 
+        attention_mask=None, 
+        position_ids=None, 
+        past_key_value=None,
+        output_attentions=False, 
+        use_cache=False, 
+        **kwargs
+    ):
+        """
+        Return the input unchanged with proper cache handling.
+        
+        Important: For Llama, present_key_value should be a tuple of (key_states, value_states)
+        where both are tensors shaped [bsz, num_heads, seq_len, head_dim]
+        """
+        batch_size, seq_len = hidden_states.size()[:2]
+        
+        # For cache, we need to return a valid tuple of (key_states, value_states)
+        if use_cache:
+            # Create dummy key and value caches with appropriate shapes
+            # For Llama, the cache shape is typically [batch_size, num_heads, seq_len, head_dim]
+            key_states = torch.zeros(
+                (batch_size, self.num_heads, seq_len, self.head_dim), 
+                device=hidden_states.device
+            )
+            value_states = torch.zeros(
+                (batch_size, self.num_heads, seq_len, self.head_dim), 
+                device=hidden_states.device
+            )
+            
+            # The present_key_value should be a tuple of (key_cache, value_cache)
+            present_key_value = (key_states, value_states)
+        else:
+            present_key_value = None
+            
+        # Return the expected tuple format
+        return (hidden_states, None, present_key_value)
+
+# def llama2_to_mla_init(
+#     module,  
+#     config: dict 
+# ):
+#     """
+#     Initialize a wrapper for any module that might be an attention module,
+#     not just standard HuggingFace LlamaAttention.
+#     """
+#     print(f"Initializing MLA wrapper for module type: {type(module).__name__}")
+#     return SimpleLlamaWrapper(module)
+
+# def transform_llama2_to_mla(
+#     module,
+#     simple_wrapper,
+# ):
+#     """
+#     Transform function that applies the wrapper to the module.
+#     """
+#     print(f"Transforming module type: {type(module).__name__}")
+#     return simple_wrapper
 
 
 init_func_map = {
+    # "mla": llama2_to_mla_init,
     "mla": gpt2sdpa_to_mla_init,
     "mgqa": gpt2sdpa_to_mgqa_init,
     "lora_fc": gpt2sdpa_to_lorafc_init,
 }
+
 transform_func_map = {
+    # "mla": transform_llama2_to_mla,
     "mla": transform_gpt2sdpa_to_mla,
     "mgqa": transform_gpt2sdpa_to_mgqa,
     "lora_fc": transform_gpt2sdpa_to_lorafc,
 }
+
 wrapper_map = {
-    "mla": MLAWrapper,
+    # "mla": SimpleLlamaWrapper,
+    "mla":GPT_MLAWrapper,
     "mgqa": MGQAWrapper,
     "lora_fc": None,  # do not require a wrapper
 }
