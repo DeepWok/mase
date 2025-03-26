@@ -76,6 +76,7 @@ def gpt2sdpa_to_mla_init(
     hidden_size = gpt2_sdpa_attn.embed_dim    # e.g., 768
     n_heads     = gpt2_sdpa_attn.num_heads    # e.g., 12
     head_dim = hidden_size // n_heads 
+    rope_dim = head_dim // 2
 
     # optional user config
     user_config = config.get("config", {})

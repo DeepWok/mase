@@ -80,7 +80,7 @@ else:
 #####################################
 trainer_original = Trainer(
     model=model,
-    args=TrainingArguments(output_dir="./tmp_original", per_device_eval_batch_size=8),
+    args=TrainingArguments(output_dir="./tmp_original", per_device_eval_batch_size=8, num_train_epochs = 1),
     train_dataset=tokenized_dataset["train"],
     eval_dataset=tokenized_dataset["test"],
     tokenizer=tokenizer,
@@ -111,11 +111,11 @@ mla_model = transform_to_mla(model)
 # Create a new trainer for the MLA model
 trainer_mla = Trainer(
     model=mla_model,
-    args=TrainingArguments(output_dir="./tmp_mla", per_device_eval_batch_size=8),
+    args=TrainingArguments(output_dir="./tmp_mla", per_device_eval_batch_size=8, num_train_epochs = 1),
     train_dataset=tokenized_dataset["train"],
     eval_dataset=tokenized_dataset["test"],
     tokenizer=tokenizer,
-    num_train_epochs=5,
+    # num_train_epochs=5,
 )
 
 ce_after, ppl_after = evaluate_ce_and_ppl(trainer_mla, tokenized_dataset["test"])
