@@ -22,28 +22,10 @@ from chop.passes.module.transforms import (
 from pathlib import Path
 import time
 
-# --------------------------------------------------
-#   Model specifications
-# --------------------------------------------------
 
 checkpoint = "openai-community/gpt2"
 tokenizer_checkpoint = "openai-community/gpt2"
-dataset_name = "imdb"
-
-dataset, tokenizer = get_tokenized_dataset(
-    dataset=dataset_name,
-    checkpoint=tokenizer_checkpoint,
-    return_tokenizer=True,
-)
-tokenizer.pad_token = tokenizer.eos_token
-
-
-# model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
-with open(
-    f"{Path.home()}/Projects/mase/mase_output/bert-uncased-2epoch.pkl", "rb"
-) as f:
-    model = dill.load(f)
-
+model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
 
 def test_mla_transform_pass(model):
     pass_args = {
@@ -60,19 +42,4 @@ def test_mla_transform_pass(model):
 
 
 model = test_mla_transform_pass(model)
-
 print(model)
-
-# trainer = get_trainer(
-#     model=model,
-#     tokenized_dataset=dataset,
-#     tokenizer=tokenizer,
-#     evaluate_metric="accuracy",
-#     num_train_epochs=5,
-# )
-# eval_results = trainer.evaluate()
-# print(f"Evaluation accuracy before fintuning: {eval_results['eval_accuracy']}")
-
-# trainer.train()
-# eval_results = trainer.evaluate()
-# print(f"Evaluation accuracy: {eval_results['eval_accuracy']}")
