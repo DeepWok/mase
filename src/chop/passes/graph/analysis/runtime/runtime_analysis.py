@@ -625,6 +625,8 @@ class RuntimeAnalysis:
             dataset = "Validation"
 
         print(f"[DEBUG] {dataset} dataloader created")
+        num_batches_total = len(dataloader)
+        max_batches = self.config["num_batches"]
 
         # ---------- 3) ARRAYS FOR LATENCIES & POWER FOR ALL TASKS ----------
         latencies = []
@@ -637,8 +639,14 @@ class RuntimeAnalysis:
 
         # Inside the evaluate() method of RuntimeAnalysis, in the main evaluation loop:
         for j, batch in enumerate(dataloader):
+            
+            # Stop if we've exceeded our number of evaluation batches, or if the batch is incomplete
+            if j >= max_batches:
+                break
             print(f"[DEBUG] Processing batch {j+1}")
             print(f"[DEBUG] Batch type: {type(batch)}")
+
+            is_last_batch = (j == num_batches_total - 1)
             
             # Convert BatchFeature to dict if necessary.
             if isinstance(batch, BatchFeature):
@@ -649,50 +657,48 @@ class RuntimeAnalysis:
                 print(f"[DEBUG] Batch is a dict with keys: {batch.keys()}")
                 xs = batch["input_values"]
                 ys = batch["labels"]
+                actual_batch_size = xs.shape[0]
+
+                if (not is_last_batch) and (actual_batch_size != self.config["batch_size"]):
+                    print(f"[DEBUG] Skipping partial batch {j+1} of size {actual_batch_size}")
+                    break
+
                 attention_mask = batch.get("attention_mask", None)
-                raw_labels = batch.get("raw_labels", None)
+                print(f"[DEBUG] input_values shape: {xs.shape}, labels shape: {ys.shape}")
+                if attention_mask is not None:
+                    print(f"[DEBUG] attention_mask shape: {attention_mask.shape}")
                 if raw_labels is not None:
                     if hasattr(raw_labels, "shape"):
-                        print(f"[DEBUG] Extracted raw_labels with shape: {raw_labels.shape}")
+                        print(f"[DEBUG] raw_labels shape: {raw_labels.shape}")
                     else:
-                        print(f"[DEBUG] Extracted raw_labels, length: {len(raw_labels)}")
+                        print(f"[DEBUG] raw_labels length: {len(raw_labels)}")
 
-                print(f"[DEBUG] Extracted input_values with shape: {xs.shape}")
-                print(f"[DEBUG] Extracted labels with shape: {ys.shape}")
-                if attention_mask is not None:
-                    print(f"[DEBUG] Extracted attention_mask with shape: {attention_mask.shape}")
             elif isinstance(batch, (list, tuple)):
                 print(f"[DEBUG] Batch is a {type(batch).__name__} with length: {len(batch)}")
                 xs = batch[0]
                 ys = batch[1]
-                attention_mask = None
-                raw_labels = None
+                actual_batch_size = xs.shape[0]
 
-                if len(batch) > 2:
-                    attention_mask = batch[2]
-                if len(batch) > 3:
-                    raw_labels = batch[3]
+                if (not is_last_batch) and (actual_batch_size != self.config["batch_size"]):
+                    print(f"[DEBUG] Skipping partial batch {j+1} of size {actual_batch_size}")
+                    break
 
-                print(f"[DEBUG] Extracted inputs with shape: {xs.shape}")
-                print(f"[DEBUG] Extracted labels with shape: {ys.shape}")
+                attention_mask = batch[2] if len(batch) > 2 else None
+                raw_labels = batch[3] if len(batch) > 3 else None
+
+                print(f"[DEBUG] input_values shape: {xs.shape}, labels shape: {ys.shape}")
                 if attention_mask is not None:
-                    print(f"[DEBUG] Extracted attention_mask with shape: {attention_mask.shape}")
+                    print(f"[DEBUG] attention_mask shape: {attention_mask.shape}")
                 if raw_labels is not None:
                     if hasattr(raw_labels, "shape"):
-                        print(f"[DEBUG] Extracted raw_labels with shape: {raw_labels.shape}")
+                        print(f"[DEBUG] raw_labels shape: {raw_labels.shape}")
                     else:
-                        print(f"[DEBUG] Extracted raw_labels, length: {len(raw_labels)}")
+                        print(f"[DEBUG] raw_labels length: {len(raw_labels)}")
             else:
                 error_msg = f"Unsupported batch format: {type(batch)}"
                 self.logger.error(error_msg)
                 print(f"[DEBUG] {error_msg}")
                 raise TypeError(f"Expected batch to be dict or list/tuple, got {type(batch)}")
-                        
-            # Stop if we've exceeded our number of evaluation batches, or if the batch is incomplete
-            if j >= self.config["num_batches"] or xs.shape[0] != self.config["batch_size"]:
-                print(f"[DEBUG] Batch {j+1} - xs shape: {xs.shape}, Expected batch size: {self.config['batch_size']}")
-                print(f"[DEBUG] Breaking loop: {'max batches reached' if j >= self.config['num_batches'] else 'incomplete batch'}")
-                break
 
             # Power monitoring (start)
             print("[DEBUG] Starting power monitoring")
@@ -909,19 +915,6 @@ class RuntimeAnalysis:
                             print(f"[DEBUG] Error: {error_msg}")
                             raise Exception(error_msg)
                         pred_texts.append(transcription.lower())
-
-                    # print("[DEBUG] Decoding ground truth labels")
-                    # for label_seq in ys:
-                    #     print(f"[DEBUG] Label sequence shape: {label_seq.shape}, min: {label_seq.min()}, max: {label_seq.max()}")
-                    #     label_filtered = [token for token in label_seq if token != padding_value]
-                    #     print(f"[DEBUG] Filtered {len(label_seq) - len(label_filtered)} padding tokens")
-                    #     try:
-                    #         label_text = tokenizer.decode(label_filtered, skip_special_tokens=True)
-                    #         print(f"[DEBUG] Decoded label: '{label_text}'")
-                    #     except Exception as e:
-                    #         print(f"[DEBUG] Error decoding label: {e}")
-                    #         label_text = ""
-                    #     label_texts.append(label_text.lower())
 
                     # ---- Use raw_labels if present, else fallback to label IDs ----
                     raw_labels_in_batch = batch.get("raw_labels", None)
