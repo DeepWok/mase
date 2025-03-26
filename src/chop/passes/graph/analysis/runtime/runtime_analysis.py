@@ -597,6 +597,8 @@ class RuntimeAnalysis:
         elif task == "ctc":
             print("[DEBUG] Creating CTC metrics")
             wer_metric = jiwer.wer
+            cer_metric = jiwer.cer
+
             decoder = self.config.get("decoder", None)
             print(f"[DEBUG] Decoder provided: {decoder is not None}")
             
@@ -616,6 +618,7 @@ class RuntimeAnalysis:
 
             # We'll collect WER from each batch
             batch_wers = []
+            batch_cers = []
 
         else:
             print(f"[DEBUG] Unsupported task type: {task}")
@@ -958,17 +961,45 @@ class RuntimeAnalysis:
                                 label_text = ""
                             label_texts.append(label_text.lower())
 
-                    # Now compute batch WER
+                    # Now compute batch WER & CER
+                    def safe_wer(pred, ref):
+                        if pred.strip() == "" and ref.strip() != "":
+                            return 1.0
+                        elif pred.strip() == "" and ref.strip() == "":
+                            return 0.0
+                        else:
+                            return wer_metric([pred], [ref])
+                        
+                    def safe_cer(pred, ref):
+                        if pred.strip() == "" and ref.strip() != "":
+                            return 1.0
+                        elif pred.strip() == "" and ref.strip() == "":
+                            return 0.0
+                        else:
+                            return cer_metric([pred], [ref])
+                
                     print(f"[DEBUG] Computing WER for batch {j+1}")
+                    sample_wers = []
+                    sample_cers = []
                     for i, (pred, label) in enumerate(zip(pred_texts, label_texts)):
                         print(f"[DEBUG] Sample {i+1}:")
                         print(f"[DEBUG]   Prediction: '{pred}'")
                         print(f"[DEBUG]   Reference:  '{label}'")
+                        sample_wer = safe_wer(pred, label)
+                        sample_cer = safe_cer(pred, label)
+                        sample_wers.append(sample_wer)
+                        sample_cers.append(sample_cer)
                     
-                    batch_wer = wer_metric(pred_texts, label_texts)
+                    batch_wer = np.mean(sample_wers)
+                    batch_cer = np.mean(sample_cers)
+                    print(f"[DEBUG] Batch WER: {batch_wer:.4f}, Batch CER: {batch_cer:.4f}")
                     wer_value = batch_wer.item() if torch.is_tensor(batch_wer) else batch_wer
+                    cer_value = batch_cer.item() if torch.is_tensor(batch_cer) else batch_cer
+                    print(f"[DEBUG] Batch WER (float): {wer_value:.4f}, Batch CER (float): {cer_value:.4f}")
                     batch_wers.append(wer_value)
-                    print(f"[DEBUG] Batch WER: {wer_value:.4f}")
+                    batch_cers.append(cer_value)
+                    print(f"[DEBUG] Batch WER: {wer_value:.4f}", f"Batch CER: {cer_value:.4f}")
+
                 except Exception as e:
                     print(f"[DEBUG] Error in CTC processing: {e}")
                     import traceback
@@ -1050,10 +1081,13 @@ class RuntimeAnalysis:
             # CTC final metrics
             print(f"[DEBUG] Collected {len(batch_wers)} WER measurements")
             avg_wer = sum(batch_wers) / len(batch_wers) if batch_wers else 0
+            avg_cer = sum(batch_cers) / len(batch_cers) if batch_cers else 0
             print(f"[DEBUG] Average WER: {avg_wer:.4f}")
+            print(f"[DEBUG] Average CER: {avg_cer:.4f}")
 
             metrics_table = [
                 ["Average " + dataset + " WER", f"{avg_wer:.5g}"],
+                ["Average " + dataset + " CER", f"{avg_cer:.5g}"],
                 ["Average Latency", f"{avg_latency:.5g} ms"],
                 ["Average RTF", f"{avg_rtf:.5g}"],
                 ["Average GPU Power Usage", f"{avg_gpu_power_usage:.5g} W"],
@@ -1062,6 +1096,7 @@ class RuntimeAnalysis:
 
             results = {
                 "Average WER": avg_wer,
+                "Average CER": avg_cer,
                 "Average Latency": avg_latency,
                 "Average RTF": avg_rtf,
                 "Average GPU Power Usage": avg_gpu_power_usage,

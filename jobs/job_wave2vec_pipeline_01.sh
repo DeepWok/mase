@@ -1,7 +1,7 @@
 #!/bin/bash
-#PBS -l walltime=02:00:00
+#PBS -l walltime=24:00:00
 #PBS -l select=1:ncpus=32:mem=64gb:ngpus=1:gpu_type=RTX6000:cpu_type=rome
-#PBS -N wave2vec_full_pipeline_01
+#PBS -N wave2vec_full_pipeline_02
 
 module load anaconda3/personal
 source /rds/general/user/at5424/home/anaconda3/etc/profile.d/conda.sh
