@@ -52,10 +52,12 @@ class ONNXRuntime:
 
     def _prepare_save_path(self, quantized_type: str):
         """Creates and returns a save path for the model."""
-        root = Path(__file__).resolve().parents[6]
+        # root = Path(__file__).resolve().parents[6]
+        root = Path(os.environ["HOME"]) / "mase_output/onnxrt"
         current_date = datetime.now().strftime("%Y-%m-%d")
         model_dir = f'{self.config["model"]}_{self.config["task"]}_{self.config["dataset"]}_{current_date}'
-        save_dir = root / f"mase_output/onnxrt/{model_dir}/{quantized_type}"
+        # save_dir = root / f"mase_output/onnxrt/{model_dir}/{quantized_type}"
+        save_dir = root / model_dir / quantized_type
         save_dir.mkdir(parents=True, exist_ok=True)
 
         existing_versions = len(os.listdir(save_dir))
