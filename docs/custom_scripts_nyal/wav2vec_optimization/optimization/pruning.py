@@ -110,9 +110,8 @@ def apply_pruning(model, pruning_method, sparsity, structured_sparsity=False,
                 per_device_eval_batch_size=2,
             )
             
-            # Make sure everything is on the same device
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            combined_model = combined_model.to(device)
+            
+            combined_model = combined_model.cpu()
             
             # Add movement tracking callback
             trainer.add_callback(MovementTrackingCallback())
@@ -162,10 +161,8 @@ def apply_pruning(model, pruning_method, sparsity, structured_sparsity=False,
             args = trainer.args
             state = trainer.state
             control = trainer.control
-            
-            # Make sure everything is on the same device
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            combined_model = combined_model.to(device)
+
+            combined_model = combined_model.cpu()
             
             try:
                 # Call the callback with proper arguments
