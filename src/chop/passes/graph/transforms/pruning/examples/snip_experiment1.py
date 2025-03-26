@@ -48,9 +48,18 @@ print("Available pruning methods:", list(prune_mod.weight_criteria_map["local"][
 
 def get_achieved_sparsity(model):
     """Calculate the actual achieved sparsity in the model."""
-    total_params = sum(p.numel() for p in model.parameters())
-    non_zero_params = sum((p != 0).sum().item() for p in model.parameters())
-    return 1.0 - (non_zero_params / total_params)
+    total_params = 0
+    zero_params = 0
+    
+    for name, param in model.named_parameters():
+        if 'weight' in name:  # Only count weight parameters
+            total_params += param.numel()
+            zero_params += (param == 0).sum().item()
+    
+    if total_params == 0:
+        return 0.0
+    
+    return float(zero_params) / total_params
 
 
 # Create a fixed version of the MovementTrackingCallback that properly initializes metadata
@@ -322,19 +331,37 @@ def main():
                 
             print(f"\nSparsity level: {sparsity:.1f}")
             
-            # Create a fresh MASE graph with appropriate model
+            # Create a fresh model instance for each run
             if method == "movement":
-                # Use the model with movement data
+                # Use the model with movement data for movement pruning
+                # Clone it to avoid modifying the original
+                encoder_copy = copy.deepcopy(movement_encoder)
+                
+                # Completely disable masking to avoid tracing errors
+                if hasattr(encoder_copy, 'feature_extractor') and hasattr(encoder_copy.feature_extractor, 'config'):
+                    encoder_copy.feature_extractor.config.mask_time_prob = 0.0
+                    encoder_copy.feature_extractor.config.mask_feature_prob = 0.0
+                # Disable masking in the base config too
+                if hasattr(encoder_copy, 'config'):
+                    encoder_copy.config.mask_time_prob = 0.0
+                    encoder_copy.config.mask_feature_prob = 0.0
+                
+                # Create MaseGraph with special tracing config for wav2vec2
                 mg = MaseGraph(
-                    copy.deepcopy(movement_encoder),
+                    encoder_copy,
                     hf_input_names=["input_values", "attention_mask"],
+                    # Disable masking during tracing to avoid issues
+                    hf_transformers_config={"mask_time_prob": 0.0, "mask_feature_prob": 0.0}
                 )
                 print("Using model with movement data")
             else:
-                # Use the original model
+                # Use the original model for other methods
+                encoder_copy = copy.deepcopy(encoder)
                 mg = MaseGraph(
-                    copy.deepcopy(encoder),
+                    encoder_copy,
                     hf_input_names=["input_values", "attention_mask"],
+                    # Disable masking during tracing
+                    hf_transformers_config={"mask_time_prob": 0.0, "mask_feature_prob": 0.0}
                 )
             
             # Initialize metadata
@@ -368,6 +395,18 @@ def main():
             # Apply pruning
             mg, _ = passes.prune_transform_pass(mg, pass_args=pruning_config)
             print(f"Applied {method} pruning with sparsity {sparsity:.1f}")
+            
+            # Apply weight pruning after parameterization to actually zero out weights
+            for name, module in mg.model.named_modules():
+                if hasattr(module, 'parametrizations') and hasattr(module.parametrizations, 'weight'):
+                    # Get the original weight
+                    orig_weight = module.weight.data
+                    
+                    # Apply the mask by actually zeroing out weights
+                    # Get the mask from the first parametrization (usually there's just one)
+                    if hasattr(module.parametrizations.weight[0], 'mask'):
+                        mask = module.parametrizations.weight[0].mask
+                        module.weight.data = orig_weight * mask
             
             # Calculate achieved sparsity
             sparsity_achieved = get_achieved_sparsity(mg.model)
