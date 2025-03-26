@@ -121,6 +121,7 @@ def apply_pruning(model, pruning_method, sparsity, structured_sparsity=False,
             # Get the updated model with movement tracking data
             temp_mg.model = combined_model.encoder
             
+        # For the SNIP section:
         elif pruning_method == "snip":
             # Create combined model
             combined_model = CombinedWav2Vec2CTC(
@@ -143,15 +144,23 @@ def apply_pruning(model, pruning_method, sparsity, structured_sparsity=False,
                 per_device_eval_batch_size=2,
             )
             
-            # Get representative batch for SNIP
-            first_batch = next(iter(trainer.get_train_dataloader()))
+            # Add SNIPCallback to the trainer
+            snip_callback = SNIPCallback(representative_batch=next(iter(trainer.get_train_dataloader())))
+            trainer.add_callback(snip_callback)
             
-            # Use SNIPCallback to prepare the model for SNIP pruning
-            snip_callback = SNIPCallback(representative_batch=first_batch)
-            snip_callback.on_init_end(snip_callback)
+            # Run a single training step to trigger callbacks
+            logger.info("Running initialization for SNIP pruning...")
+            # Make sure everything is on the same device
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            combined_model = combined_model.to(device)
+            try:
+                trainer.train()
+            except Exception as e:
+                logger.warning(f"SNIP initialization encountered an error: {e}")
+                logger.warning("Continuing with standard pruning instead")
             
-            # Get the updated model with SNIP weights
-            temp_mg.model = combined_model.encoder
+            # Get the updated model and move it back to CPU for further processing
+            temp_mg.model = combined_model.encoder.cpu()
     
     # Apply pruning transform pass
     temp_mg, _ = passes.prune_transform_pass(temp_mg, pass_args=pruning_config)
