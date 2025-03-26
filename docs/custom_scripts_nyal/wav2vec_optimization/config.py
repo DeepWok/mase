@@ -18,9 +18,9 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 # Global configuration
-BATCH_SIZE = 4
+BATCH_SIZE = 16
 NUM_TRIALS = 30
-EPOCHS = 0.1
+EPOCHS = 3
 ENHANCED_OBJECTIVE = False  # Whether to use phase-by-phase training and evaluation
 CHECKPOINT = "facebook/wav2vec2-base-960h"
 TOKENIZER_CHECKPOINT = "facebook/wav2vec2-base-960h"
