@@ -140,6 +140,7 @@ def save_best_model(best_trial, baseline_model_data):
                 "bias_width": best_trial.params.get("bias_width"),
                 "bias_exponent_width": best_trial.params.get("bias_exponent_width"),
                 "bias_exponent_bias": best_trial.params.get("bias_exponent_bias"),
+                
             }
         else:
             bit_config = {

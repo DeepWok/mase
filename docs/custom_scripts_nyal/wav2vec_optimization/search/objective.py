@@ -150,6 +150,11 @@ def objective(trial, baseline_model_data):
                                                                search_space["quantization"]["minifloat_configs"]["bias_exponent_width"]),
                 "bias_exponent_bias": trial.suggest_categorical("bias_exponent_bias", 
                                                               search_space["quantization"]["minifloat_configs"]["bias_exponent_bias"]),
+                                                              
+                # Add placeholders for frac_width to prevent KeyError
+                "weight_frac_width": 0,  # Placeholder - not used for minifloat
+                "data_in_frac_width": 0,  # Placeholder - not used for minifloat 
+                "bias_frac_width": 0,     # Placeholder - not used for minifloat
             }
         else:
             # For other methods, just use basic width configuration
