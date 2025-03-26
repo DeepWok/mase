@@ -962,6 +962,7 @@ class RuntimeAnalysis:
                             label_texts.append(label_text.lower())
 
                     # Now compute batch WER & CER
+                    
                     def safe_wer(ref, pred):
                         if pred.strip() == "" and ref.strip() != "":
                             return 1.0
