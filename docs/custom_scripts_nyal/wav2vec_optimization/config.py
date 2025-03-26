@@ -61,7 +61,7 @@ def define_search_space():
     
     # Search space for pruning
     #pruning_methods = ["hwpq", "random", "l1-norm", "movement", "snip"]
-    pruning_methods = ["movement", "snip"]
+    pruning_methods = ["snip"]
     pruning_sparsity_levels = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9]
     structured_sparsity_options = [True, False]  # True for structured pruning patterns
     
