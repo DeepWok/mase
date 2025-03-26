@@ -37,7 +37,6 @@ checkpoint = "facebook/wav2vec2-base-960h"
 tokenizer_checkpoint = "facebook/wav2vec2-base-960h"
 dataset_name = "nyalpatel/condensed_librispeech_asr"
 
-# Logic inside get_tockenized_dataset needs to be improved using nyal's changes
 tokenized_dataset, tokenizer, processor = get_tokenized_dataset(
     dataset=dataset_name,
     checkpoint=checkpoint,
@@ -46,7 +45,6 @@ tokenized_dataset, tokenizer, processor = get_tokenized_dataset(
     return_processor=True,
 )
 
-data_collator = DataCollatorCTCWithPadding(processor=processor, padding=True)
 vocab = tokenizer.convert_ids_to_tokens(range(tokenizer.vocab_size))
 decoder = build_ctcdecoder(vocab)
 
@@ -56,20 +54,17 @@ encoder = model.wav2vec2    # static, FX-friendly
 ctc_head = model.lm_head    # dynamic CTC head, separate this
 
 # -------------------------------
-# 2. Import ONNX dataset & Wrapper
+# 2. Import dataset
 # -------------------------------
 
-dataset_path = Path("./preprocessed_data")
-condensed_dataset = CondensedLibrispeechASRDataset(dataset_path=dataset_path, split="train") # Choose valid split
-condensed_dataset.prepare_data()
-condensed_dataset.setup()
-batch_size = 4
+batch_size = 3
 
 data_module = MaseDataModule(
     name=dataset_name,
     batch_size=batch_size,
     model_name=checkpoint,
     num_workers=0,
+    processor=processor
 )
 data_module.prepare_data()
 data_module.setup()
@@ -108,7 +103,7 @@ smoothquant_config = {
     "model": checkpoint,
     "task": "ctc",
     "dataset": dataset_name,
-    "accelerator": "cuda",
+    "accelerator": "cuda",  
     "data_module": data_module,
     "batch_size": batch_size,
 }
@@ -139,7 +134,7 @@ quantization_config = {
 
 
 runtime_analysis_config = {
-    "num_batches": 100,
+    "num_batches": 30,
     "num_GPU_warmup_batches": 5,
     "test": True,
     "data_module": data_module,
@@ -148,12 +143,11 @@ runtime_analysis_config = {
     "task": "ctc",
     "decoder": decoder,
     "beam_width": 10,
-    "ctc_head": ctc_head,
     "tokenizer": tokenizer,
     "batch_size": batch_size,
     "sample_rate": 16000,
+    "ctc_head": ctc_head
 }
-
 
 mg_onnx, onnx_meta = onnx_runtime_interface_pass(mg, pass_args=smoothquant_config)
 
@@ -162,10 +156,11 @@ mg_onnx, _ = passes.quantize_transform_pass(
     pass_args=quantization_config,
 )
 
-_, results_onnx = runtime_analysis_pass(mg, pass_args=runtime_analysis_config)
+_, results_onnx = runtime_analysis_pass(mg_onnx, pass_args=runtime_analysis_config)
+# _, results_onnx = runtime_analysis_pass(mg, pass_args=runtime_analysis_config)
 
-# print(f"Average WER", f"{results_onnx['Average WER']:.5g}")
-# print(f"Average Latency", f"{results_onnx['Average Latency']:.5g} ms")
-# print(f"Average RTF", f"{results_onnx['Average RTF']:.5g}")
-# print(f"Average GPU Power Usage", f"{results_onnx['Average GPU Power Usage']:.5g} W")
-# print(f"Inference Energy Consumption", f"{results_onnx['Inference Energy Consumption']:.5g} mWh")
+print(f"Average WER", f"{results_onnx['Average WER']:.5g}")
+print(f"Average Latency", f"{results_onnx['Average Latency']:.5g} ms")
+print(f"Average RTF", f"{results_onnx['Average RTF']:.5g}")
+print(f"Average GPU Power Usage", f"{results_onnx['Average GPU Power Usage']:.5g} W")
+print(f"Inference Energy Consumption", f"{results_onnx['Inference Energy Consumption']:.5g} mWh")

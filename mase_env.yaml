@@ -133,7 +133,7 @@ dependencies:
       - nest-asyncio==1.6.0
       - networkx==3.4.2
       - numba==0.61.0
-      - numpy==1.26.4
+      - numpy==1.25.2
       - nvidia-ml-py==12.570.86
       - onnx==1.17.0
       - onnxconverter-common==1.14.0
