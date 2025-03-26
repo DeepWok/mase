@@ -17,6 +17,7 @@ from optimization.pruning import apply_pruning, calculate_pruning_metrics
 from optimization.smoothquant import apply_smoothquant
 from optimization.quantization import apply_quantization
 from config import BATCH_SIZE
+from config import EPOCHS
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -150,7 +151,7 @@ def objective(trial, baseline_model_data):
                                                                search_space["quantization"]["minifloat_configs"]["bias_exponent_width"]),
                 "bias_exponent_bias": trial.suggest_categorical("bias_exponent_bias", 
                                                               search_space["quantization"]["minifloat_configs"]["bias_exponent_bias"]),
-                                                              
+
                 # Add placeholders for frac_width to prevent KeyError
                 "weight_frac_width": 0,  # Placeholder - not used for minifloat
                 "data_in_frac_width": 0,  # Placeholder - not used for minifloat 
@@ -198,7 +199,7 @@ def objective(trial, baseline_model_data):
         tokenizer=tokenizer,
         evaluate_metric="wer",
         data_collator=data_collator,
-        num_train_epochs=1,  # Reduced for faster trials
+        num_train_epochs= EPOCHS,  # Reduced for faster trials
         gradient_accumulation_steps=4,
         per_device_train_batch_size=2,
         per_device_eval_batch_size=2,
