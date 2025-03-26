@@ -3,6 +3,7 @@ Global configuration and search space definition for Wav2Vec2 optimization.
 """
 
 import torch.nn as nn
+import pprint
 import logging
 from chop.nn.quantized.modules.linear import (
     LinearInteger,
@@ -83,5 +84,5 @@ def define_search_space():
         }
     }
     
-    logger.info("Global search space defined")
+    logger.info("Global search space defined:\n%s", pprint.pformat(search_space))
     return search_space

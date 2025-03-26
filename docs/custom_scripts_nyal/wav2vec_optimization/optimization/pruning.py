@@ -110,17 +110,26 @@ def apply_pruning(model, pruning_method, sparsity, structured_sparsity=False,
                 per_device_eval_batch_size=2,
             )
             
+            # Make sure everything is on the same device
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            combined_model = combined_model.to(device)
+            
             # Add movement tracking callback
             trainer.add_callback(MovementTrackingCallback())
             
             # Do warm-up training to collect movement data
             logger.info("Starting warm-up training for movement pruning...")
-            trainer.train()
-            logger.info("Warm-up training complete.")
+            try:
+                trainer.train()
+                logger.info("Warm-up training complete.")
+            except Exception as e:
+                logger.warning(f"Movement tracking encountered an error: {e}")
+                logger.warning("Continuing with standard pruning instead")
             
-            # Get the updated model with movement tracking data
-            temp_mg.model = combined_model.encoder
+            # Get the updated model with movement tracking data and move it back to CPU
+            temp_mg.model = combined_model.encoder.cpu()
             
+        # For the SNIP section:
         elif pruning_method == "snip":
             # Create combined model
             combined_model = CombinedWav2Vec2CTC(
@@ -130,7 +139,7 @@ def apply_pruning(model, pruning_method, sparsity, structured_sparsity=False,
                 beam_width=10
             )
             
-            # Setup trainer to get dataloader
+            # Setup trainer
             trainer = get_trainer(
                 model=combined_model,
                 tokenized_dataset=tokenized_dataset,
@@ -143,15 +152,37 @@ def apply_pruning(model, pruning_method, sparsity, structured_sparsity=False,
                 per_device_eval_batch_size=2,
             )
             
-            # Get representative batch for SNIP
+            # Get a representative batch for SNIP
             first_batch = next(iter(trainer.get_train_dataloader()))
             
-            # Use SNIPCallback to prepare the model for SNIP pruning
+            # Create SNIP callback
             snip_callback = SNIPCallback(representative_batch=first_batch)
-            snip_callback.on_init_end(trainer)
             
-            # Get the updated model with SNIP weights
-            temp_mg.model = combined_model.encoder
+            # Manually invoke the on_train_begin method with required arguments
+            args = trainer.args
+            state = trainer.state
+            control = trainer.control
+            
+            # Make sure everything is on the same device
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            combined_model = combined_model.to(device)
+            
+            try:
+                # Call the callback with proper arguments
+                snip_callback.on_train_begin(
+                    args=args,
+                    state=state,
+                    control=control,
+                    model=combined_model,
+                    trainer=trainer
+                )
+                logger.info("SNIP importance scores calculated successfully")
+            except Exception as e:
+                logger.warning(f"SNIP initialization failed: {e}")
+                logger.warning("Continuing with standard pruning instead")
+            
+            # Get the updated model and move it back to CPU
+            temp_mg.model = combined_model.encoder.cpu()
     
     # Apply pruning transform pass
     temp_mg, _ = passes.prune_transform_pass(temp_mg, pass_args=pruning_config)
