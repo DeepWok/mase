@@ -664,14 +664,16 @@ class RuntimeAnalysis:
                     break
 
                 attention_mask = batch.get("attention_mask", None)
-                print(f"[DEBUG] input_values shape: {xs.shape}, labels shape: {ys.shape}")
-                if attention_mask is not None:
-                    print(f"[DEBUG] attention_mask shape: {attention_mask.shape}")
+                raw_labels = batch.get("raw_labels", None)
                 if raw_labels is not None:
                     if hasattr(raw_labels, "shape"):
-                        print(f"[DEBUG] raw_labels shape: {raw_labels.shape}")
+                        print(f"[DEBUG] Extracted raw_labels with shape: {raw_labels.shape}")
                     else:
-                        print(f"[DEBUG] raw_labels length: {len(raw_labels)}")
+                        print(f"[DEBUG] Extracted raw_labels, length: {len(raw_labels)}")
+                print(f"[DEBUG] Extracted input_values with shape: {xs.shape}")
+                print(f"[DEBUG] Extracted labels with shape: {ys.shape}")
+                if attention_mask is not None:
+                    print(f"[DEBUG] Extracted attention_mask with shape: {attention_mask.shape}")
 
             elif isinstance(batch, (list, tuple)):
                 print(f"[DEBUG] Batch is a {type(batch).__name__} with length: {len(batch)}")
@@ -683,17 +685,23 @@ class RuntimeAnalysis:
                     print(f"[DEBUG] Skipping partial batch {j+1} of size {actual_batch_size}")
                     break
 
-                attention_mask = batch[2] if len(batch) > 2 else None
-                raw_labels = batch[3] if len(batch) > 3 else None
+                attention_mask = None
+                raw_labels = None
 
-                print(f"[DEBUG] input_values shape: {xs.shape}, labels shape: {ys.shape}")
+                if len(batch) > 2:
+                    attention_mask = batch[2]
+                if len(batch) > 3:
+                    raw_labels = batch[3]
+
+                print(f"[DEBUG] Extracted inputs with shape: {xs.shape}")
+                print(f"[DEBUG] Extracted labels with shape: {ys.shape}")
                 if attention_mask is not None:
-                    print(f"[DEBUG] attention_mask shape: {attention_mask.shape}")
+                    print(f"[DEBUG] Extracted attention_mask with shape: {attention_mask.shape}")
                 if raw_labels is not None:
                     if hasattr(raw_labels, "shape"):
-                        print(f"[DEBUG] raw_labels shape: {raw_labels.shape}")
+                        print(f"[DEBUG] Extracted raw_labels with shape: {raw_labels.shape}")
                     else:
-                        print(f"[DEBUG] raw_labels length: {len(raw_labels)}")
+                        print(f"[DEBUG] Extracted raw_labels, length: {len(raw_labels)}")
             else:
                 error_msg = f"Unsupported batch format: {type(batch)}"
                 self.logger.error(error_msg)
