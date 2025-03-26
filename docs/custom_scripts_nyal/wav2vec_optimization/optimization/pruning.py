@@ -148,7 +148,7 @@ def apply_pruning(model, pruning_method, sparsity, structured_sparsity=False,
             
             # Use SNIPCallback to prepare the model for SNIP pruning
             snip_callback = SNIPCallback(representative_batch=first_batch)
-            snip_callback.on_init_end(trainer)
+            snip_callback.on_init_end(snip_callback)
             
             # Get the updated model with SNIP weights
             temp_mg.model = combined_model.encoder
