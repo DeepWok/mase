@@ -152,6 +152,7 @@ def save_best_model(best_trial, baseline_model_data):
     quantized_model = apply_quantization(smoothed_mg.model, quant_method_name, quant_class, bit_config)
     
     # 6. Create final optimized model
+    # Create final optimized model
     best_model = CombinedWav2Vec2CTC(
         encoder=quantized_model,
         ctc_head=ctc_head,
@@ -159,10 +160,9 @@ def save_best_model(best_trial, baseline_model_data):
         beam_width=10
     )
     
-    # Save model using dill
-    model_filename = "best_optimized_model.pkl"
-    with open(model_filename, "wb") as f:
-        dill.dump(best_model, f)
+    # Save model's state dictionary instead of the full model
+    model_filename = "best_optimized_model_state_dict.pt"
+    torch.save(best_model.state_dict(), model_filename)
     
     # Save configuration
     config = {
@@ -178,7 +178,7 @@ def save_best_model(best_trial, baseline_model_data):
     with open("best_model_config.json", "w") as f:
         json.dump(config, f, indent=2)
     
-    logger.info(f"Best model saved to {model_filename}")
+    logger.info(f"Best model state dict saved to {model_filename}")
     logger.info(f"Best model config saved to best_model_config.json")
     
     return best_model

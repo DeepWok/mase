@@ -221,8 +221,8 @@ def objective(trial, baseline_model_data):
     
     # Configure runtime analysis
     runtime_analysis_config = {
-        "num_batches": 100,
-        "num_GPU_warmup_batches": 5,
+        "num_batches": 15,
+        "num_GPU_warmup_batches": 2,
         "test": True,
         "data_module": data_module,
         "model": checkpoint,
