@@ -252,28 +252,28 @@ def power2n_softmax(x, dim=-1, n=1):
     result = power_x / sum_power_x
     
     return result
-class MXIntSoftmax(nn.Module):
-    def __init__(self, q_config: Dict = {}):
-        super().__init__()
-        self.q_config = q_config
+# class MXIntSoftmax(nn.Module):
+#     def __init__(self, q_config: Dict = {}):
+#         super().__init__()
+#         self.q_config = q_config
 
-    def forward(self, x: torch.Tensor, dim: int = -1) -> torch.Tensor:
+#     def forward(self, x: torch.Tensor, dim: int = -1) -> torch.Tensor:
 
-        qx, _, _ = mxint_hardware(
-            x,
-            q_config = {
-                "width": self.q_config["data_in_width"],
-                "exponent_width": self.q_config["data_in_exponent_width"],
-            },
-            parallelism = [1,1]
-        )
-        qout = power2n_softmax(qx, dim)
-        qout, _, _ = mxint_hardware(
-            qout,
-            q_config = {
-                "width": self.q_config["data_out_width"],
-                "exponent_width": self.q_config["data_out_exponent_width"],
-            },
-            parallelism = [1,1]
-        )
-        return qout
+#         qx, _, _ = mxint_hardware(
+#             x,
+#             q_config = {
+#                 "width": self.q_config["data_in_width"],
+#                 "exponent_width": self.q_config["data_in_exponent_width"],
+#             },
+#             parallelism = [1,1]
+#         )
+#         qout = power2n_softmax(qx, dim)
+#         qout, _, _ = mxint_hardware(
+#             qout,
+#             q_config = {
+#                 "width": self.q_config["data_out_width"],
+#                 "exponent_width": self.q_config["data_out_exponent_width"],
+#             },
+#             parallelism = [1,1]
+#         )
+#         return qout

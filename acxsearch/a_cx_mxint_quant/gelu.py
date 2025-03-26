@@ -43,8 +43,12 @@ def mxint_gelu(x, q_config):
         # set the hash config
         hash_in_width = q_config["hash_in_int_width"] + q_config["hash_in_frac_width"]
         hash_in_frac_width = q_config["hash_in_frac_width"]
-        upper_bound = (2**(hash_in_width - 1) - 1) / 2**hash_in_frac_width
-        lower_bound = -(2**(hash_in_width - 1)) / 2**hash_in_frac_width
+        if q_config.get("bound") is not None:
+            upper_bound = q_config["bound"]
+            lower_bound = -q_config["bound"]
+        else:
+            upper_bound = (2**(hash_in_width - 1) - 1) / 2**hash_in_frac_width
+            lower_bound = -(2**(hash_in_width - 1)) / 2**hash_in_frac_width
 
         hash_out_width = q_config["hash_out_int_width"] + q_config["hash_out_frac_width"]
         hash_out_frac_width = q_config["hash_out_frac_width"]
