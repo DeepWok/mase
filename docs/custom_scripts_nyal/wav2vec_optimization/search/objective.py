@@ -174,9 +174,9 @@ def objective(trial, baseline_model_data):
                                                               search_space["quantization"]["minifloat_configs"]["bias_exponent_bias"]),
 
                 # Add placeholders for frac_width to prevent KeyError
-                "weight_frac_width": 0,  # Placeholder - not used for minifloat
-                "data_in_frac_width": 0,  # Placeholder - not used for minifloat 
-                "bias_frac_width": 0,     # Placeholder - not used for minifloat
+                "weight_frac_width": 16,  # Placeholder - not used for minifloat
+                "data_in_frac_width": 16,  # Placeholder - not used for minifloat 
+                "bias_frac_width": 16,     # Placeholder - not used for minifloat
             }
         else:
             # For other methods, just use basic width configuration
@@ -257,7 +257,7 @@ def objective(trial, baseline_model_data):
     
     # Configure runtime analysis
     runtime_analysis_config = {
-        "num_batches": 15,
+        "num_batches": 24,
         "num_GPU_warmup_batches": 2,
         "test": True,
         "data_module": data_module,
@@ -278,7 +278,7 @@ def objective(trial, baseline_model_data):
     
     # Run bit width analysis
     _, bitwidth_results = calculate_avg_bits_mg_analysis_pass(final_mg)
-    avg_bitwidth = bitwidth_results.get("average_bitwidth", 32)
+    avg_bitwidth = bitwidth_results.get("data_avg_bit", 32)  # fix this to be averadge of both
     trial.set_user_attr("avg_bitwidth", avg_bitwidth)
     
     # Store individual runtime metrics
