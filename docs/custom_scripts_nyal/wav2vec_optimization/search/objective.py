@@ -163,6 +163,15 @@ def objective(trial, baseline_model_data):
     # Apply quantization to the smoothed model
     quantized_model = apply_quantization(smoothed_mg.model, quant_method_name, quant_class, bit_config)
     
+    # Add debug logging
+    logger.info(f"Applied quantization method: {quant_method_name}")
+    logger.info(f"Quantization config: {bit_config}")
+    # Check if quantization was actually applied
+    for name, module in quantized_model.named_modules():
+        if isinstance(module, quant_class):
+            logger.info(f"Found quantized module: {name}")
+            logger.info(f"Module config: {module.config if hasattr(module, 'config') else 'No config'}")
+    
     # Create final optimized model combining all phases
     optimized_model = CombinedWav2Vec2CTC(
         encoder=quantized_model,
