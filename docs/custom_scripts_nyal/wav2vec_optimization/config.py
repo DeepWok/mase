@@ -65,7 +65,7 @@ def define_search_space():
     structured_sparsity_options = [True, False]  # True for structured pruning patterns
     
     # Search space for SmoothQuant
-    smoothquant_alpha_values = [0.1, 0.3, 0.4, 0.5, 0.6, 0.7, 0.9]
+    smoothquant_alpha_values = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
     
     search_space = {
         "quantization": {
