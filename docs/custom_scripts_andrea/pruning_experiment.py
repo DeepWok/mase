@@ -56,9 +56,9 @@ tokenized_dataset, tokenizer, processor = get_tokenized_dataset(
     return_processor=True,
 )
 
-# Take a larger subset of the dataset for training
-train_subset = tokenized_dataset["train"].select(range(500))  # Use 500 samples
-test_subset = tokenized_dataset["test"].select(range(100))     # Use 100 samples
+# Take a smaller subset of the dataset for training
+train_subset = tokenized_dataset["train"].select(range(200)) 
+test_subset = tokenized_dataset["test"].select(range(100))    
 tokenized_dataset = DatasetDict({
     "train": train_subset,
     "test": test_subset
@@ -71,7 +71,7 @@ decoder = build_ctcdecoder(vocab)
 # 2. Import dataset
 # -------------------------------
 
-batch_size = 8  # Increased batch size since we have more data
+batch_size = 4  # Reduced from 8 to 4
 data_module = MaseDataModule(
     name=dataset_name,
     batch_size=batch_size,
@@ -171,16 +171,16 @@ def compute_actual_sparsity(model: nn.Module) -> float:
 
 def run_pruning_experiment(
     pruning_methods: List[str] = ["random", "l1-norm", "movement", "snip", "hwpq"],
-    sparsity_levels: List[float] = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
-    num_train_epochs: int = 2,
+    sparsity_levels: List[float] = [0.1, 0.3, 0.5, 0.7, 0.9],
+    num_train_epochs: int = 1,
     save_results: bool = True
 ) -> Dict:
     """Run the pruning comparison experiment."""
     results = {}
 
     runtime_analysis_config = {
-        "num_batches": 15,
-        "num_GPU_warmup_batches": 2,
+        "num_batches": 5,  # Reduced from 15 to 5
+        "num_GPU_warmup_batches": 1,  # Reduced from 2 to 1
         "test": True,
         "data_module": data_module,
         "model": checkpoint,
@@ -209,6 +209,10 @@ def run_pruning_experiment(
         for sparsity in sparsity_levels:
             print(f"\n--- Testing sparsity level: {sparsity:.2f} ---")
             
+            # Clear CUDA cache before each experiment
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            
             # Reset model for each experiment
             mg, ctc_head = setup_model_and_graph()
             runtime_analysis_config["ctc_head"] = ctc_head
@@ -221,7 +225,7 @@ def run_pruning_experiment(
                 beam_width=10
             )
 
-            # Setup trainer
+            # Setup trainer with reduced gradient accumulation steps
             trainer = get_trainer(
                 model=combined_model,
                 tokenized_dataset=tokenized_dataset,
@@ -229,7 +233,7 @@ def run_pruning_experiment(
                 evaluate_metric="wer",
                 num_train_epochs=num_train_epochs,
                 data_collator=DataCollatorCTCWithPadding(processor=processor, padding=True),
-                gradient_accumulation_steps=4,
+                gradient_accumulation_steps=2,  # Reduced from 4 to 2
                 per_device_train_batch_size=batch_size,
                 per_device_eval_batch_size=batch_size,
             )
