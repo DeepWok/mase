@@ -11,6 +11,7 @@ import torchvision.transforms as transforms
 import os
 import argparse
 
+from models import *
 from utils import progress_bar
 
 
@@ -53,18 +54,32 @@ classes = ('plane', 'car', 'bird', 'cat', 'deer',
 
 # Model
 print('==> Building model..')
-import timm
-net = timm.create_model("resnet18", pretrained=True, num_classes=10)
-net = net.to(device)
-# if device == 'cuda':
+# net = VGG('VGG19')
+net = ResNet18()
+# net = PreActResNet18()
+# net = GoogLeNet()
+# net = DenseNet121()
+# net = ResNeXt29_2x64d()
+# net = MobileNet()
+# net = MobileNetV2()
+# net = DPN92()
+# net = ShuffleNetG2()
+# net = SENet18()
+# net = ShuffleNetV2(1)
+# net = EfficientNetB0()
+# net = RegNetX_200MF()
+# net = SimpleDLA()
+# net = net.to(device)
+# if device == 'cuda'
 #     net = torch.nn.DataParallel(net)
 #     cudnn.benchmark = True
 
+net = net.to(device)
 if args.resume:
     # Load checkpoint.
     print('==> Resuming from checkpoint..')
     assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-    checkpoint = torch.load('./checkpoint/ckpt.pth')
+    checkpoint = torch.load('acxsearch/checkpoint/ckpt.pth')
     net.load_state_dict(checkpoint['net'])
     best_acc = checkpoint['acc']
     start_epoch = checkpoint['epoch']
@@ -100,14 +115,9 @@ net = vit_module_level_quantize(net, {
 })
 net = net.to(device)
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=5e-4)
-import numpy as np
-from torch.optim.lr_scheduler import ReduceLROnPlateau
-
-scheduler = ReduceLROnPlateau(optimizer, factor=np.sqrt(0.1),
-                               cooldown=0,
-                               patience=5,
-                               min_lr=0.5e-6)
+optimizer = optim.SGD(net.parameters(), lr=args.lr,
+                      momentum=0.9, weight_decay=5e-4)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
 
 # Training
@@ -167,10 +177,10 @@ def test(epoch):
             os.mkdir('checkpoint')
         torch.save(state, './checkpoint/ckpt.pth')
         best_acc = acc
-    return acc
 
 
 for epoch in range(start_epoch, start_epoch+200):
     train(epoch)
-    acc = test(epoch)
-    scheduler.step(metrics=acc)
+    test(epoch)
+    scheduler.step()
+
