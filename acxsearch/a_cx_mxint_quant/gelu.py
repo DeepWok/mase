@@ -19,6 +19,20 @@ from .utils import reshape_to_block, reshape_back
 
 logger = get_logger(__name__)
 
+def hash_gelu(x, q_config):
+    bound = q_config.get("bound")
+    hash_bits = q_config["hash_bits"]
+    scaling = 2**(hash_bits - 1) / bound
+    outer = (x > bound) | (x < -bound)
+    inner = ~outer
+    qx = torch.zeros_like(x)
+    qx[inner] = (x[inner] * scaling).round()/scaling
+    qx[outer] = x[outer]
+    out = torch.relu(qx)
+    out[outer] = torch.nn.ReLU()(qx[outer])
+    out[inner] = torch.nn.GELU()(qx[inner])
+    return out
+
 def mxint_gelu(x, q_config):
     """Vectorized range reduction"""
     qx, mx, ex = mxint_hardware(
@@ -85,7 +99,8 @@ class MXIntGELU(nn.Module):
         self.q_config = q_config
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        out, _, _  = mxint_gelu(x, self.q_config)
+        # out, _, _  = mxint_gelu(x, self.q_config)
+        out = hash_gelu(x, self.q_config)
         return out
 
 def gelu_relu6_approx(x, q_config):

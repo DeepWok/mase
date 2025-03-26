@@ -190,15 +190,19 @@ def search_top():
     acc_list_all = []
     # Graph 1: GELU
     # 1. we need to use hash table to hash the total bit width
+    # for int_width in [1,2,3,4]:
+    #     fixed_op = {"bound": int_width}
+    #     target_op = {"hash_bits": [1,2,3,4,5,6,7,8]}
+    #     acc_list = search_gelu(fixed_op, target_op)
+    #     acc_list_all.append(acc_list)
+    # save_accuracy_list(acc_list_all, directory=save_dir, base_filename="gelu_mxint_clipping_search")
+
     for int_width in [3]:
-        fixed_op = {"hash_in_int_width": 3,
-                    "bound": int_width,
-                    }
-        target_op = {"hash_in_frac_width": [1,2,3,4,5,6,7,8]}
+        fixed_op = {"bound": int_width}
+        target_op = {"hash_bits": [1,2,3,4,5,6,7,8]}
         acc_list = search_gelu(fixed_op, target_op)
         acc_list_all.append(acc_list)
     save_accuracy_list(acc_list_all, directory=save_dir, base_filename="gelu_mxint_search")
-
     # acc_list_all = []
     # for int_width in [1,2,3]:
     #     fixed_op = {"var_int_width": int_width}
