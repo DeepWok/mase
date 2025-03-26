@@ -14,8 +14,8 @@ from chop.nn.attention.modules.mgqa import (
     MGQALayers,
     MGQA
 )
-from chop.nn.attention.modules.residual_fc import (
-    ResidualFC,
+from chop.nn.attention.modules.lora_linear import (
+    LowRankLinear,
 )
 from ...module_modify_helper import (
     get_module_by_name, 
@@ -130,17 +130,22 @@ def gpt2sdpa_to_mgqa_init(
     mgqa_layers = MGQA(**mgqa_kwargs)
     return mgqa_layers
 
-def gpt2sdpa_to_fc_init(
+def gpt2sdpa_to_lorafc_init(
     attn_module: GPT2SdpaAttention, 
     config: dict
-) -> ResidualFC:
-    
-    alpha = config.get("alpha", 0.6)
+) -> nn.Module:
     hidden_size = attn_module.embed_dim
-    fc_layer = nn.Linear(hidden_size, hidden_size)
-    residual_fc = ResidualFC(fc_layer, attn_module.c_proj, alpha)
-
-    return residual_fc
+    
+    # get desired rank from config
+    use_low_rank = config.get("low_rank", True) 
+    rank = config.get("rank", hidden_size // 4)  # default to 1/4 of hidden size
+    
+    if use_low_rank:
+        fc_layer = LowRankLinear(hidden_size, hidden_size, rank)
+    else:
+        fc_layer = nn.Linear(hidden_size, hidden_size)
+    
+    return fc_layer
 
 def transform_gpt2sdpa_to_mla(
     gpt2_block: GPT2Block,
@@ -354,17 +359,44 @@ def transform_gpt2sdpa_to_mgqa(
 
     return mgqa
 
-def transform_gpt2sdpa_to_fc(
+def transform_gpt2sdpa_to_lorafc(
     gpt2sdpa: GPT2SdpaAttention,
-    residual_fc: ResidualFC,
+    new_fc: nn.Module,
 )-> GPT2SdpaAttention:
     
-    with torch.no_grad():
-        residual_fc.new_fc.weight.copy_(gpt2sdpa.c_proj.weight.t())
-        if gpt2sdpa.c_proj.bias is not None:
-            residual_fc.new_fc.bias.copy_(gpt2sdpa.c_proj.bias)
+    use_low_rank = isinstance(new_fc, LowRankLinear)
+
+    if use_low_rank:
+        rank = new_fc.rank
+        with torch.no_grad():
+            weight = gpt2sdpa.c_proj.weight.T
+            # Apply SVD
+            try:
+                U, S, V = torch.svd(weight)
+                # keep only top 'rank' singular values
+                U = U[:, :rank]
+                S = S[:rank]
+                V = V[:, :rank]
+                
+                # set weights of low-rank approximation
+                new_fc.A.weight.copy_(V.T * torch.sqrt(S))
+                new_fc.B.weight.copy_(U * torch.sqrt(S))
+                
+                if gpt2sdpa.c_proj.bias is not None:
+                    new_fc.B.bias.copy_(gpt2sdpa.c_proj.bias)
+            except Exception as e:
+                print(f"SVD failed: {e}. Falling back to random initialization.")
+                # if SVD fails, initialize with random weights
+                if gpt2sdpa.c_proj.bias is not None:
+                    new_fc.B.bias.copy_(gpt2sdpa.c_proj.bias)
+    else:
+        # regular FC layer
+        with torch.no_grad():
+            new_fc.weight.copy_(gpt2sdpa.c_proj.weight.T)
+            if gpt2sdpa.c_proj.bias is not None:
+                new_fc.bias.copy_(gpt2sdpa.c_proj.bias)
     
-    gpt2sdpa.c_proj = residual_fc
+    gpt2sdpa.c_proj = new_fc
     return gpt2sdpa
 
 class MLAWrapper(torch.nn.Module):
@@ -498,15 +530,15 @@ class MGQAWrapper(torch.nn.Module):
 init_func_map = {
     "mla": gpt2sdpa_to_mla_init,
     "mgqa": gpt2sdpa_to_mgqa_init,
-    "res_fc": gpt2sdpa_to_fc_init,
+    "lora_fc": gpt2sdpa_to_lorafc_init,
 }
 transform_func_map = {
     "mla": transform_gpt2sdpa_to_mla,
     "mgqa": transform_gpt2sdpa_to_mgqa,
-    "res_fc": transform_gpt2sdpa_to_fc
+    "lora_fc": transform_gpt2sdpa_to_lorafc
 }
 wrapper_map = {
     "mla": MLAWrapper,
     "mgqa": MGQAWrapper,
-    "res_fc": None, # do not require a wrapper
+    "lora_fc": None, # do not require a wrapper
 }

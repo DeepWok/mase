@@ -8,7 +8,7 @@ class LowRankLinear(nn.Module):
         super().__init__()
         if rank is None:
             rank = min(in_features, out_features) // 4
-        
+        self.rank = rank
         self.A = nn.Linear(in_features, rank, bias=False)
         self.B = nn.Linear(rank, out_features, bias=True)
     

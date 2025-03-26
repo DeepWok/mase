@@ -15,7 +15,10 @@ import chop.passes as passes
 
 sys.path.append(Path(__file__).resolve().parents[5].as_posix())
 
-from chop.passes.module.transforms import quantize_module_transform_pass, attention_transform_pass
+from chop.passes.module.transforms import (
+    attention_transform_pass,
+    fc_transform_pass
+)
 from pathlib import Path
 import time
 
@@ -45,12 +48,11 @@ def test_fc_transform_pass(model):
         "by": "type",
         "gpt2spda": {
             "config": {
-                "name": "res_fc",
-                "alpha": 1.0,
+                "name": "lora_fc",
             }
         },
     }
-    model, _ = attention_transform_pass(model, pass_args)
+    model = fc_transform_pass(model, "transformer.h.11.attn", pass_args)
     return model
 
 model = test_fc_transform_pass(model)
