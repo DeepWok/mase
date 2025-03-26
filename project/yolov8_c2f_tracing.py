@@ -7,10 +7,12 @@ import torch.nn as nn
 import torch
 import ultralytics
 from chop.passes.graph.transforms import metadata_value_type_cast_transform_pass
+from chop.models.yolo.yolov8 import get_yolo_detection_model
 
 
 # Load a pretrained YOLO model
-model = YOLO("yolov8n.yaml", task="detect")
+# model = YOLO("yolov8n.yaml", task="detect")
+model = get_yolo_detection_model("yolov8n.pt")
 
 
 # Define a safe wrapper for torch.cat to avoid tracing its internals

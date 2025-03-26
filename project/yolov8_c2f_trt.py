@@ -116,6 +116,7 @@ summarize_quantization_analysis_pass(
 )
 # %%
 tensorrt_config["dataset_input_field"] = "img"
+# Set evaluation mode
 mg, _ = tensorrt_calibrate_transform_pass(mg, pass_args=tensorrt_config)
 
 # %%

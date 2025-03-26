@@ -15,6 +15,7 @@ style = "graph"
 by = "type"
 num_calibration_batches = 10
 post_calibration_analysis = true
+dataset_input_field = 'img' #
 
 [passes.tensorrt.default.config]
 quantize = true
@@ -33,7 +34,7 @@ calibrator = 'histogram'
 quantize_axis = false
 
 [passes.tensorrt.fine_tune]
-fine_tune = false
+fine_tune = true
 
 [passes.tensorrt.runtime_analysis]
 num_batches = 500
