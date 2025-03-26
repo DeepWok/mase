@@ -1,6 +1,8 @@
 from chop.models.utils import register_mase_model, ModelSource, ModelTaskType
 from ultralytics.nn.tasks import DetectionModel
+from ultralytics import YOLO
 import ultralytics.nn.modules as unnmod
+from ultralytics.utils.ops import non_max_suppression
 import torch
 import types
 
@@ -12,11 +14,14 @@ import types
     model_source=ModelSource.VISION_OTHERS,
     task_type=ModelTaskType.VISION,
     image_detection=True,
+    is_fx_traceable=True,
 )
 class MaseYoloDetectionModel(DetectionModel):
     def forward(self, x):
-        # this is to fix *args and **kwargs handling in BaseModel.forward
-        return super().forward(x)
+        if self.training:
+            return super().forward(x)
+        # return the bounding boxes directly
+        return non_max_suppression(super().forward(x))
 
 def c2f_forward(self, x):
     # patched to avoid chunk
@@ -33,6 +38,9 @@ def patch_yolo(model):
     return model
 
 def get_yolo_detection_model(checkpoint):
-    model = MaseYoloDetectionModel(cfg=checkpoint)
+    model = MaseYoloDetectionModel(cfg=checkpoint.replace(".pt", ".yaml"))
     model = patch_yolo(model)
+    if ".pt" in checkpoint:
+        umodel = YOLO(checkpoint)
+        model.load_state_dict(umodel.model.state_dict())
     return model
