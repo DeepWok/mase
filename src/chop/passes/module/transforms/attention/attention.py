@@ -1,9 +1,9 @@
 import torch
-from transformers.models.bert.modeling_bert import(
-    BertSelfAttention, 
-    BertSdpaSelfAttention, 
-    BertSelfOutput, 
-    BertAttention
+from transformers.models.bert.modeling_bert import (
+    BertSelfAttention,
+    BertSdpaSelfAttention,
+    BertSelfOutput,
+    BertAttention,
 )
 from transformers.models.gpt2.modeling_gpt2 import (
     GPT2SdpaAttention,
@@ -12,7 +12,11 @@ from transformers.models.gpt2.modeling_gpt2 import (
 from chop.nn.attention.modules import attention_module_map
 from ...module_modify_helper import replace_by_name, instantiate_module
 from ...state_dict_map import match_a_pattern, check_is_huggingface_model
-from .attention_transform_helper import instantiate_attention_module, replace_attention_by_name
+from .attention_transform_helper import (
+    instantiate_attention_module,
+    replace_attention_by_name,
+)
+
 
 def get_config(config: dict, name: str):
     if name in config:
@@ -111,4 +115,3 @@ def attention_transform_pass(network, pass_args):
         case _:
             raise ValueError(f'Unsupported quantize "by": {by}')
     return network, {}
-

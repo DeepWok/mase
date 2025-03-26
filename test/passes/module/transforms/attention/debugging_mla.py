@@ -18,16 +18,19 @@ raw_dataset = load_dataset(dataset_name)
 tokenizer = AutoTokenizer.from_pretrained(checkpoint)
 tokenizer.pad_token = tokenizer.eos_token
 
+
 # 3) First, do a broader tokenize to e.g. 256 or 512 so we see the entire text
 def initial_tokenize_fn(examples):
     return tokenizer(
         examples["text"] if "text" in examples else examples["sentence"],
         truncation=True,
         padding=False,  # We'll do final padding after slicing
-        max_length=512, # just an upper bound
+        max_length=512,  # just an upper bound
     )
 
+
 tokenized_dataset = raw_dataset.map(initial_tokenize_fn, batched=True)
+
 
 # 4) Slice to last 12 tokens
 def keep_last_12_tokens(examples):
@@ -45,17 +48,24 @@ def keep_last_12_tokens(examples):
     examples["attention_mask"] = new_attn_masks
     return examples
 
+
 tokenized_dataset = tokenized_dataset.map(keep_last_12_tokens, batched=True)
+
 
 # 5) Now we do final padding to ensure shape [batch_size, 12]
 def pad_to_12(examples):
     return tokenizer.pad(examples, padding="max_length", max_length=12)
 
+
 tokenized_dataset = tokenized_dataset.map(pad_to_12, batched=True)
 
 # 6) Remove unwanted columns, keep "label"
 tokenized_dataset = tokenized_dataset.remove_columns(
-    [col for col in tokenized_dataset["train"].column_names if col not in ("input_ids","attention_mask","label")]
+    [
+        col
+        for col in tokenized_dataset["train"].column_names
+        if col not in ("input_ids", "attention_mask", "label")
+    ]
 )
 tokenized_dataset.set_format("torch")
 
@@ -63,6 +73,7 @@ tokenized_dataset.set_format("torch")
 model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
 model.config.problem_type = "single_label_classification"
 model.config.pad_token_id = tokenizer.eos_token_id
+
 
 def test_mla_transform_pass(model):
     pass_args = {
@@ -77,6 +88,7 @@ def test_mla_transform_pass(model):
     print("[INFO] Transformed GPT2 model with MLA:")
     print(mla_network)
     return mla_network
+
 
 mla_net = test_mla_transform_pass(model)
 

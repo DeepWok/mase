@@ -20,7 +20,7 @@ from transformers.models.llama.modeling_llama import (
 )
 
 from transformers.models.bert.modeling_bert import (
-    BertSelfAttention, 
+    BertSelfAttention,
     BertSdpaSelfAttention,
 )
 
@@ -39,8 +39,9 @@ llama_prefix_map = {
 
 bert_prefix_map = {
     BertSelfAttention: "bert_self_attention",
-    BertSdpaSelfAttention: "bert_self_attention"
+    BertSdpaSelfAttention: "bert_self_attention",
 }
+
 
 def check_module_instance(module, prefix_map):
     """
@@ -221,8 +222,9 @@ def instantiate_llama_module(
     )
     return llama_module
 
+
 def instantiate_bert_module(
-        module, postfix, prefix, module_map, module_args, network_args
+    module, postfix, prefix, module_map, module_args, network_args
 ):
     bert_cls = module_map[f"{prefix}_{postfix}"]
 

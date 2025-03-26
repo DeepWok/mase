@@ -1,5 +1,6 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "3" # Example
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"  # Example
 import torch
 from datasets import load_dataset
 from transformers import (
@@ -12,11 +13,12 @@ from transformers import (
 from transformers.trainer_utils import get_last_checkpoint
 from chop.passes.module.transforms import attention_transform_pass
 
+
 def apply_mgqa_transform(model, kv_heads=2):
     """Apply MGQA transform with a given 'kv_heads' count."""
     pass_args = {
         "by": "type",
-        "gpt2spda": { # Assuming 'gpt2spda' is the correct key
+        "gpt2spda": {  # Assuming 'gpt2spda' is the correct key
             "config": {
                 "name": "mgqa",
                 "kv_heads": kv_heads,
@@ -26,8 +28,9 @@ def apply_mgqa_transform(model, kv_heads=2):
     transformed_model, _ = attention_transform_pass(model.cpu(), pass_args)
     return transformed_model
 
+
 def train_gpt2_on_wikitext2(
-    model, 
+    model,
     model_name="gpt2",
     output_dir="./gpt2-finetuned",
     num_train_epochs=1,
@@ -41,21 +44,22 @@ def train_gpt2_on_wikitext2(
 ):
     """
     Fine-tune a GPT2 model on the WikiText-2 dataset using Hugging Face's Trainer.
-    
+
     Returns:
         tuple: (model, tokenizer, evaluation results)
     """
     # Load the WikiText-2 dataset
     print("Loading WikiText-2 dataset...")
     dataset = load_dataset("wikitext", "wikitext-2-raw-v1")
-    
+
     # Load tokenizer
     tokenizer = GPT2Tokenizer.from_pretrained(model_name)
     tokenizer.pad_token = tokenizer.eos_token
     model.config.pad_token_id = tokenizer.pad_token_id
-    
+
     # Tokenize the dataset
     print("Tokenizing dataset...")
+
     def tokenize_function(examples):
         return tokenizer(
             examples["text"],
@@ -63,7 +67,7 @@ def train_gpt2_on_wikitext2(
             max_length=max_seq_length,
             return_special_tokens_mask=True,
         )
-    
+
     tokenized_datasets = dataset.map(
         tokenize_function,
         batched=True,
@@ -71,13 +75,13 @@ def train_gpt2_on_wikitext2(
         remove_columns=["text"],
         desc="Tokenizing dataset",
     )
-    
+
     # Create data collator for language modeling
     data_collator = DataCollatorForLanguageModeling(
         tokenizer=tokenizer,
         mlm=False,  # Using CLM (Causal Language Modeling) not MLM
     )
-    
+
     # Set up training arguments
     training_args = TrainingArguments(
         output_dir=output_dir,
@@ -107,7 +111,7 @@ def train_gpt2_on_wikitext2(
         greater_is_better=False,
         report_to="tensorboard",
     )
-    
+
     # Create trainer
     trainer = Trainer(
         model=model,
@@ -116,14 +120,14 @@ def train_gpt2_on_wikitext2(
         train_dataset=tokenized_datasets["train"],
         eval_dataset=tokenized_datasets["validation"],
     )
-    
+
     # Check if a checkpoint exists
     last_checkpoint = None
     if os.path.isdir(output_dir) and resume_from_checkpoint:
         last_checkpoint = get_last_checkpoint(output_dir)
         if last_checkpoint is not None:
             print(f"Resuming from checkpoint: {last_checkpoint}")
-    
+
     # Train model
     print("Starting training...")
     train_result = trainer.train(resume_from_checkpoint=last_checkpoint)
@@ -131,19 +135,20 @@ def train_gpt2_on_wikitext2(
     trainer.log_metrics("train", train_result.metrics)
     trainer.save_metrics("train", train_result.metrics)
     trainer.save_state()
-    
+
     # Evaluate model
     print("Evaluating model...")
     eval_results = trainer.evaluate()
     perplexity = torch.exp(torch.tensor(eval_results["eval_loss"]))
-    
+
     eval_results["perplexity"] = perplexity.item()
     print(f"Evaluation perplexity: {perplexity.item():.2f}")
-    
+
     trainer.log_metrics("eval", eval_results)
     trainer.save_metrics("eval", eval_results)
-    
+
     return model, tokenizer, eval_results
+
 
 if __name__ == "__main__":
     base_model = GPT2LMHeadModel.from_pretrained("gpt2")
@@ -153,8 +158,8 @@ if __name__ == "__main__":
     model, tokenizer, eval_results = train_gpt2_on_wikitext2(
         mgqa_model,
         output_dir=output_dir,
-        batch_size=4,        # Smaller batch size as MGQA could be memory intensive
+        batch_size=4,  # Smaller batch size as MGQA could be memory intensive
         num_train_epochs=3,  # Train for more epochs
-        learning_rate=3e-5   # Slightly lower learning rate
+        learning_rate=3e-5,  # Slightly lower learning rate
     )
     model, tokenizer, eval_results = train_gpt2_on_wikitext2(model)

@@ -15,10 +15,7 @@ import chop.passes as passes
 
 sys.path.append(Path(__file__).resolve().parents[5].as_posix())
 
-from chop.passes.module.transforms import (
-    attention_transform_pass,
-    fc_transform_pass
-)
+from chop.passes.module.transforms import attention_transform_pass, fc_transform_pass
 from pathlib import Path
 import time
 
@@ -39,7 +36,9 @@ tokenizer.pad_token = tokenizer.eos_token
 
 
 # model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
-with open(f"{Path.home()}/Projects/mase/mase_output/bert-uncased-2epoch.pkl", "rb") as f:
+with open(
+    f"{Path.home()}/Projects/mase/mase_output/bert-uncased-2epoch.pkl", "rb"
+) as f:
     model = dill.load(f)
 
 
@@ -55,7 +54,7 @@ def test_fc_transform_pass(model):
     model = fc_transform_pass(model, "transformer.h.11.attn", pass_args)
     return model
 
+
 model = test_fc_transform_pass(model)
 
 print(model)
-

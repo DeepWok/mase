@@ -15,7 +15,10 @@ import chop.passes as passes
 
 sys.path.append(Path(__file__).resolve().parents[5].as_posix())
 
-from chop.passes.module.transforms import quantize_module_transform_pass, attention_transform_pass
+from chop.passes.module.transforms import (
+    quantize_module_transform_pass,
+    attention_transform_pass,
+)
 from pathlib import Path
 
 # --------------------------------------------------
@@ -54,6 +57,7 @@ model.config.problem_type = "single_label_classification"
 # mg, _ = passes.add_common_metadata_analysis_pass(mg)
 # mg.export(f"{Path.home()}/Projects/mase/mase_output/bert-uncased-2epoch")
 
+
 def test_mla_transform_pass():
     # Sanity check and report
     # mg = verify_common_metadata_analysis_pass(mg)
@@ -68,6 +72,7 @@ def test_mla_transform_pass():
     mla_network, _ = attention_transform_pass(model, pass_args)
     print(mla_network)
     return mla_network
+
 
 mla_net = test_mla_transform_pass()
 

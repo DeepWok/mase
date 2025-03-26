@@ -12,7 +12,10 @@ from chop.passes.module.transforms.attention.attention_transform_helper import (
     gpt2sdpa_to_mgqa_init,
     transform_gpt2sdpa_to_mgqa,
 )
-from chop.passes.module.transforms import quantize_module_transform_pass, attention_transform_pass
+from chop.passes.module.transforms import (
+    quantize_module_transform_pass,
+    attention_transform_pass,
+)
 
 
 device = torch.device("cuda:0")
@@ -31,6 +34,7 @@ tokenizer.pad_token = tokenizer.eos_token
 
 def extract_gpt2sdpa(model, layer_index=0):
     return model.transformer.h[layer_index].attn
+
 
 def spda_transform_pass(model):
     pass_args = {
@@ -53,7 +57,7 @@ def test_single_attn(model):
     sdpa_attn.eval()
     for p in sdpa_attn.parameters():
         torch.nn.init.normal_(p, mean=0, std=0.02)
-    
+
     batch_size, seq_len, embed_dim = 2, 5, sdpa_attn.embed_dim
     hidden_states = torch.randn(batch_size, seq_len, embed_dim)
     hidden_states = hidden_states.to(device)
@@ -63,7 +67,7 @@ def test_single_attn(model):
             hidden_states=hidden_states,
             attention_mask=None,
             use_cache=False,
-            output_attentions=False
+            output_attentions=False,
         )
 
     mgqa_cfg = {"causal": True}
@@ -74,18 +78,21 @@ def test_single_attn(model):
 
     with torch.no_grad():
         mgqa_out = mgqa_module(x=hidden_states)
-    
+
     diff = (orig_out - mgqa_out).abs().max().item()
     print("GPT2Sdpa output shape:", orig_out.shape)
     print("MGQA output shape:", mgqa_out.shape)
     print(f"Max difference: {diff:.6f}")
     assert diff < 1e-4, "Outputs differ too much!"
 
+
 def test_whole_model(model):
     model = model.to(device)
     model.eval()
     sample_text = "Hello, how are you today?"
-    tokenized = tokenizer.encode(sample_text, return_tensors="pt")  # shape: [batch_size=1, sequence_length]
+    tokenized = tokenizer.encode(
+        sample_text, return_tensors="pt"
+    )  # shape: [batch_size=1, sequence_length]
     tokenized = tokenized.to(device)
 
     # Pass those token IDs into the model:
@@ -97,6 +104,7 @@ def test_whole_model(model):
     with torch.no_grad():
         output = model(tokenized)
     mgqalogits = output.logits
+
 
 def test_attn_from_model(model):
     model = model.to(device)
@@ -119,10 +127,10 @@ def test_attn_from_model(model):
             hidden_states=hidden_states,
             attention_mask=None,
             use_cache=False,
-            output_attentions=False
+            output_attentions=False,
         )
         mgqa_out = mgqa_module(x=hidden_states)
-    
+
     diff = (orig_out - mgqa_out).abs().max().item()
     print("GPT2Sdpa output shape:", orig_out.shape)
     print("MGQA output shape:", mgqa_out.shape)
@@ -132,7 +140,7 @@ def test_attn_from_model(model):
     # further tesing
     embed_dim = sdpa_attn.embed_dim
     c_attn_weight = sdpa_attn.c_attn.weight
-    c_attn_bias   = sdpa_attn.c_attn.bias  
+    c_attn_bias = sdpa_attn.c_attn.bias
 
     q_w, k_w, v_w = torch.split(c_attn_weight, embed_dim, dim=1)
     q_w, k_w, v_w = q_w.transpose(0, 1), k_w.transpose(0, 1), v_w.transpose(0, 1)
@@ -157,8 +165,6 @@ def test_attn_from_model(model):
     print("v_b:", torch.equal(v_b, m_vb))
 
 
-
-
 def get_intermediates(model):
     model = model.to(device)
     handles = []
@@ -169,8 +175,10 @@ def get_intermediates(model):
         Return a function that can be used as a forward hook for a module.
         It will store the output in a dict, keyed by the module's name.
         """
+
         def hook(module, input, output):
             intermediate_outputs.append((name, output))
+
         return hook
 
     # Register hooks on submodules
@@ -179,10 +187,12 @@ def get_intermediates(model):
         if any(name.endswith(suf) for suf in suffixes):
             h = module.register_forward_hook(make_hook(name))
             handles.append(h)
-    
+
     # feed sample input in model
     sample_text = "Hello, how are you today?"
-    tokenized = tokenizer.encode(sample_text, return_tensors="pt")  # shape: [batch_size=1, sequence_length]
+    tokenized = tokenizer.encode(
+        sample_text, return_tensors="pt"
+    )  # shape: [batch_size=1, sequence_length]
     tokenized = tokenized.to(device)
 
     # Pass those token IDs into the model:
@@ -193,8 +203,9 @@ def get_intermediates(model):
     # Clean up hooks
     for h in handles:
         h.remove()
-    
+
     return intermediate_outputs
+
 
 def analysis(data1, data2):
     """
@@ -205,9 +216,9 @@ def analysis(data1, data2):
     # Sanity check that both lists have the same length
     if len(data1) != len(data2):
         print(f"Warning: data1 has {len(data1)} items, data2 has {len(data2)} items.")
-    
+
     num_pairs = min(len(data1), len(data2))
-    
+
     for i in range(num_pairs):
         name1, out1 = data1[i]
         name2, out2 = data2[i]
@@ -219,22 +230,21 @@ def analysis(data1, data2):
         # Compare shape
         shape1 = out1.shape if isinstance(out1, torch.Tensor) else None
         shape2 = out2.shape if isinstance(out2, torch.Tensor) else None
-        
+
         print(f"\n--- Layer {i} ---")
         print(f"Model1 layer name: {name1}, shape: {shape1}")
         print(f"Model2 layer name: {name2}, shape: {shape2}")
-        
+
         if shape1 != shape2:
             print("  Shape mismatch!")
             continue  # No point in numeric comparison if shapes differ
 
         # Compute numeric differences
-        
 
         diff = out1 - out2
         max_abs_diff = diff.abs().max().item()
         mean_abs_diff = diff.abs().mean().item()
-        
+
         # A norm-based measure:
         l2_diff = diff.norm(2).item()
         print(f"  max |delta|: {max_abs_diff:.6g}")
@@ -242,9 +252,10 @@ def analysis(data1, data2):
         print(f"  L2 norm of delta: {l2_diff:.6g}")
 
 
-
 if __name__ == "__main__":
-    with open(f"{Path.home()}/Projects/mase/mase_output/bert-uncased-2epoch.pkl", "rb") as f:
+    with open(
+        f"{Path.home()}/Projects/mase/mase_output/bert-uncased-2epoch.pkl", "rb"
+    ) as f:
         model = dill.load(f)
     # test_single_attn(model)
     test_attn_from_model(model)
@@ -254,9 +265,4 @@ if __name__ == "__main__":
     # mgqa_inter = get_intermediates(model)
     # analysis(gpt2_inter, mgqa_inter)
 
-
-
     # test_single_attn()
-
-    
-

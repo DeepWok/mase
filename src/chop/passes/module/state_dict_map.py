@@ -15,7 +15,11 @@ import torch
 from pathlib import Path
 from functools import reduce
 from transformers import PreTrainedModel, TFPreTrainedModel
-from transformers.models.bert.modeling_bert import BertSelfAttention, BertSdpaSelfAttention
+from transformers.models.bert.modeling_bert import (
+    BertSelfAttention,
+    BertSdpaSelfAttention,
+)
+
 
 def match_a_pattern(name: str, patterns: list[str]) -> str | None:
     for pattern in patterns:
@@ -114,7 +118,6 @@ def lsqinteger_to_st_bif(LSQ: LSQInteger, ST_BIF: ST_BIFNode) -> ST_BIFNode:
     ST_BIF.is_init = False
 
     return ST_BIF
-
 
 
 SPECIAL_CONVERT_PATTERNS = {
