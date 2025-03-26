@@ -71,7 +71,7 @@ decoder = build_ctcdecoder(vocab)
 # 2. Import dataset
 # -------------------------------
 
-batch_size = 8  
+batch_size = 4  
 data_module = MaseDataModule(
     name=dataset_name,
     batch_size=batch_size,
