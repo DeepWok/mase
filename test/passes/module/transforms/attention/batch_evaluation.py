@@ -202,7 +202,7 @@ def transform_to_mla(model):
     # Using GPT2Attention as the target key based on previous findings
     pass_args = {
         "by": "type",
-        "GPT2Attention": { # Target the standard GPT-2 Attention
+        "gpt2spda": { # Target the standard GPT-2 Attention
             "config": {
                 "name": "mla",
                 # Add any specific MLA args needed by your 'chop' pass here

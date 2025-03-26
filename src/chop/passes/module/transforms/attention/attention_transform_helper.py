@@ -841,16 +841,19 @@ class SimpleLlamaWrapper(torch.nn.Module):
 
 
 init_func_map = {
-    "mla": llama2_to_mla_init,
+    # "mla": llama2_to_mla_init,
+    "mla": gpt2sdpa_to_mla_init,
     "mgqa": gpt2sdpa_to_mgqa_init
 }
 
 transform_func_map = {
-    "mla": transform_llama2_to_mla,
+    # "mla": transform_llama2_to_mla,
+    "mla": transform_gpt2sdpa_to_mla,
     "mgqa": transform_gpt2sdpa_to_mgqa,
 }
 
 wrapper_map = {
-    "mla": SimpleLlamaWrapper,
+    # "mla": SimpleLlamaWrapper,
+    "mla":GPT_MLAWrapper,
     "mgqa": MGQAWrapper,
 }
