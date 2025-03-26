@@ -21,7 +21,7 @@ from pathlib import Path
 from chop.ir.graph.mase_graph import MaseGraph
 from chop.passes.graph.transforms.pruning.prune import prune_transform_pass
 from chop.passes.graph.transforms.pruning.snip_helper import SNIPCallback
-from chop.passes.graph.transforms.pruning.prune_movment_helper import MovementTrackingCallback
+from chop.passes.graph.transforms.pruning.prune_movment_helper import MovementTrackingCallback as OriginalMovementTrackingCallback
 import chop.passes as passes
 from chop.passes.module import report_trainable_parameters_analysis_pass
 from chop.tools import get_tokenized_dataset, get_trainer
@@ -48,30 +48,90 @@ print("Available pruning methods:", list(prune_mod.weight_criteria_map["local"][
 
 def get_achieved_sparsity(model):
     """Calculate the actual achieved sparsity in the model."""
-    total_params = sum(p.numel() for p in model.parameters())
-    non_zero_params = sum((p != 0).sum().item() for p in model.parameters())
-    return 1.0 - (non_zero_params / total_params)
+    total_params = 0
+    zero_params = 0
+    
+    for name, param in model.named_parameters():
+        if 'weight' in name:  # Only count weight parameters
+            total_params += param.numel()
+            zero_params += (param == 0).sum().item()
+    
+    if total_params == 0:
+        return 0.0
+    
+    return float(zero_params) / total_params
 
 
-def train_model_with_movement_tracking(model, dataloader, num_epochs=1, learning_rate=5e-5):
+# Create a fixed version of the MovementTrackingCallback that properly initializes metadata
+class FixedMovementTrackingCallback(OriginalMovementTrackingCallback):
+    def on_train_begin(self, args, state, control, **kwargs):
+        self.prev_params = {}
+        self.movement_stats = {}
+        model = kwargs["model"]
+        for name, module in model.encoder.named_modules():
+            if isinstance(module, (nn.Conv2d, nn.Linear)) and hasattr(module, "weight"):
+                self.prev_params[name] = module.weight.detach().clone()
+                self.movement_stats[name] = torch.zeros_like(module.weight)
+                
+                # Fix: Initialize metadata attribute first if it doesn't exist
+                if not hasattr(module, "metadata"):
+                    module.metadata = {}
+                if "weight" not in module.metadata:
+                    module.metadata["weight"] = {}
+                if "stats" not in module.metadata["weight"]:
+                    module.metadata["weight"]["stats"] = {}
+                    
+                module.metadata["weight"]["stats"]["movement"] = self.movement_stats[name]
+        return control
+
+    def on_step_end(self, args, state, control, **kwargs):
+        model = kwargs["model"]
+        for name, module in model.encoder.named_modules():
+            if isinstance(module, (nn.Conv2d, nn.Linear)) and hasattr(module, "weight"):
+                movement = (module.weight.detach() - self.prev_params[name]).abs()
+                self.movement_stats[name] += movement
+                self.prev_params[name].copy_(module.weight.detach())
+                
+                # Fix: Ensure metadata exists before accessing
+                if not hasattr(module, "metadata"):
+                    module.metadata = {}
+                if "weight" not in module.metadata:
+                    module.metadata["weight"] = {}
+                if "stats" not in module.metadata["weight"]:
+                    module.metadata["weight"]["stats"] = {}
+                    
+                module.metadata["weight"]["stats"]["movement"] = self.movement_stats[name]
+        return control
+
+
+def train_model_with_movement_tracking(encoder, ctc_head, decoder, dataloader, num_epochs=1, learning_rate=5e-5):
     """Train the model while tracking weight movement."""
     print("\n== Training model with movement tracking ==")
     
-    # Initialize optimizer
-    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
+    # Create a combined model with encoder, CTC head, and decoder
+    combined_model = CombinedWav2Vec2CTC(
+        encoder=encoder,
+        ctc_head=ctc_head,
+        blank_id=0,           # Default blank ID
+        beam_width=10,        # Default beam width
+        decoder=decoder,      # Pass the decoder for inference
+    )
     
-    # Initialize movement tracking using the existing callback
-    movement_tracker = MovementTrackingCallback()
+    # Initialize optimizer
+    optimizer = torch.optim.AdamW(combined_model.parameters(), lr=learning_rate)
+    
+    # Initialize movement tracking using the fixed callback
+    movement_tracker = FixedMovementTrackingCallback()
     # Call on_train_begin manually since we're not using a Trainer
-    movement_tracker.on_train_begin(None, None, None, model=model)
+    movement_tracker.on_train_begin(None, None, None, model=combined_model)
     
     # Move model to device
-    device = next(model.parameters()).device
+    device = next(combined_model.parameters()).device
     
     # Train for specified epochs
     for epoch in range(num_epochs):
         print(f"\nEpoch {epoch+1}/{num_epochs}")
-        model.train()
+        combined_model.train()
         
         # Track progress
         running_loss = 0.0
@@ -85,7 +145,7 @@ def train_model_with_movement_tracking(model, dataloader, num_epochs=1, learning
                     batch[k] = v.to(device)
             
             # Forward pass
-            outputs = model(**batch)
+            outputs = combined_model(**batch)
             loss = outputs.loss if hasattr(outputs, "loss") else outputs["loss"]
             
             # Backward pass
@@ -94,7 +154,7 @@ def train_model_with_movement_tracking(model, dataloader, num_epochs=1, learning
             optimizer.step()
             
             # Update movement tracking
-            movement_tracker.on_step_end(None, None, None, model=model)
+            movement_tracker.on_step_end(None, None, None, model=combined_model)
             
             # Log progress
             running_loss += loss.item()
@@ -112,7 +172,8 @@ def train_model_with_movement_tracking(model, dataloader, num_epochs=1, learning
         print(f"Epoch {epoch+1} completed. Average loss: {epoch_loss:.4f}")
     
     print("Training with movement tracking completed.")
-    return model
+    # Return the encoder part for pruning
+    return combined_model.encoder
 
 
 def main():
@@ -212,15 +273,14 @@ def main():
         collate_fn=DataCollatorCTCWithPadding(processor=processor, padding=True)
     )
     
-    # Train model with movement tracking
-    movement_trained_model = train_model_with_movement_tracking(
-        model=copy.deepcopy(model),
+    # Train model with movement tracking using the combined model approach
+    movement_encoder = train_model_with_movement_tracking(
+        encoder=copy.deepcopy(encoder),
+        ctc_head=copy.deepcopy(ctc_head),
+        decoder=decoder,
         dataloader=train_dataloader,
         num_epochs=1  # Just one epoch for demonstration
     )
-    
-    # Extract encoder for pruning
-    movement_encoder = movement_trained_model.wav2vec2
     
     # -------------------------------
     # 2. Run analysis for each method and sparsity
@@ -271,19 +331,37 @@ def main():
                 
             print(f"\nSparsity level: {sparsity:.1f}")
             
-            # Create a fresh MASE graph with appropriate model
+            # Create a fresh model instance for each run
             if method == "movement":
-                # Use the model with movement data
+                # Use the model with movement data for movement pruning
+                # Clone it to avoid modifying the original
+                encoder_copy = copy.deepcopy(movement_encoder)
+                
+                # Completely disable masking to avoid tracing errors
+                if hasattr(encoder_copy, 'feature_extractor') and hasattr(encoder_copy.feature_extractor, 'config'):
+                    encoder_copy.feature_extractor.config.mask_time_prob = 0.0
+                    encoder_copy.feature_extractor.config.mask_feature_prob = 0.0
+                # Disable masking in the base config too
+                if hasattr(encoder_copy, 'config'):
+                    encoder_copy.config.mask_time_prob = 0.0
+                    encoder_copy.config.mask_feature_prob = 0.0
+                
+                # Create MaseGraph with special tracing config for wav2vec2
                 mg = MaseGraph(
-                    copy.deepcopy(movement_encoder),
+                    encoder_copy,
                     hf_input_names=["input_values", "attention_mask"],
+                    # Disable masking during tracing to avoid issues
+                    hf_transformers_config={"mask_time_prob": 0.0, "mask_feature_prob": 0.0}
                 )
                 print("Using model with movement data")
             else:
-                # Use the original model
+                # Use the original model for other methods
+                encoder_copy = copy.deepcopy(encoder)
                 mg = MaseGraph(
-                    copy.deepcopy(encoder),
+                    encoder_copy,
                     hf_input_names=["input_values", "attention_mask"],
+                    # Disable masking during tracing
+                    hf_transformers_config={"mask_time_prob": 0.0, "mask_feature_prob": 0.0}
                 )
             
             # Initialize metadata
@@ -317,6 +395,18 @@ def main():
             # Apply pruning
             mg, _ = passes.prune_transform_pass(mg, pass_args=pruning_config)
             print(f"Applied {method} pruning with sparsity {sparsity:.1f}")
+            
+            # Apply weight pruning after parameterization to actually zero out weights
+            for name, module in mg.model.named_modules():
+                if hasattr(module, 'parametrizations') and hasattr(module.parametrizations, 'weight'):
+                    # Get the original weight
+                    orig_weight = module.weight.data
+                    
+                    # Apply the mask by actually zeroing out weights
+                    # Get the mask from the first parametrization (usually there's just one)
+                    if hasattr(module.parametrizations.weight[0], 'mask'):
+                        mask = module.parametrizations.weight[0].mask
+                        module.weight.data = orig_weight * mask
             
             # Calculate achieved sparsity
             sparsity_achieved = get_achieved_sparsity(mg.model)

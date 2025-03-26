@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 # Global configuration
 BATCH_SIZE = 4
 NUM_TRIALS = 30
-ENHANCED_OBJECTIVE = True  # Whether to use phase-by-phase training and evaluation
+ENHANCED_OBJECTIVE = False  # Whether to use phase-by-phase training and evaluation
 CHECKPOINT = "facebook/wav2vec2-base-960h"
 TOKENIZER_CHECKPOINT = "facebook/wav2vec2-base-960h"
 DATASET_NAME = "nyalpatel/condensed_librispeech_asr"
@@ -34,9 +34,7 @@ def define_search_space():
         ("full_precision", nn.Linear),  # Baseline for comparison
         ("integer", LinearInteger),     # INT quantization
         ("minifloat_denorm", LinearMinifloatDenorm),  # Minifloat with denormalized numbers
-        ("minifloat_ieee", LinearMinifloatIEEE),      # IEEE-style minifloat
-        ("log", LinearLog),             # Logarithmic quantization
-        ("block_fp", LinearBlockFP),    # Block floating point
+        ("minifloat_ieee", LinearMinifloatIEEE),      # IEEE-style minifloat         # Logarithmic quantization
     ]
     
     # Bit width configurations for precision
@@ -60,7 +58,7 @@ def define_search_space():
     }
     
     # Search space for pruning
-    pruning_methods = ["hwpq", "movement", "random", "l1-norm"]
+    pruning_methods = ["hwpq", "random", "l1-norm"]
     pruning_sparsity_levels = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9]
     structured_sparsity_options = [True, False]  # True for structured pruning patterns
     

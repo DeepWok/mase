@@ -29,16 +29,16 @@ class DataCollatorCTCWithPadding:
             setattr(self, key, value)
 
     def __call__(self, features: List[Union[Dict[str, Any], tuple]]) -> Dict[str, torch.Tensor]:
-        print(f"[DEBUG] DataCollator received batch of {len(features)} samples")
+        #print(f"[DEBUG] DataCollator received batch of {len(features)} samples")
         # Check the type of the first element to decide how to extract values.
         if isinstance(features[0], dict):
             input_features = [{"input_values": feature["input_values"]} for feature in features]
             label_features = [{"input_ids": feature["labels"]} for feature in features]
 
-            if "raw_labels" in features[0]:
-                print("[DEBUG] raw_labels key found in features[0]")
-            else:
-                print("[DEBUG] raw_labels key NOT found in features[0]")
+            #if "raw_labels" in features[0]:
+                #print("[DEBUG] raw_labels key found in features[0]")
+            #else:
+                #print("[DEBUG] raw_labels key NOT found in features[0]")
                 
         elif isinstance(features[0], (list, tuple)):
             # Assumes the first element is input_values and second is labels.

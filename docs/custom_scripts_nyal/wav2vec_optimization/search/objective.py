@@ -60,7 +60,6 @@ def objective(trial, baseline_model_data):
     
     # Apply pruning to the model
     pruned_model = apply_pruning(mg.model, pruning_method, sparsity, structured)
-    
     # Calculate pruning metrics
     pruning_metrics = calculate_pruning_metrics(pruned_model)
     for k, v in pruning_metrics.items():
@@ -198,13 +197,15 @@ def objective(trial, baseline_model_data):
     loss = eval_results.get("eval_loss", None)
     trial.set_user_attr("eval_wer_pt", wer)
     trial.set_user_attr("eval_loss_pt", loss)
+
+    trainer.model = trainer.model.cpu()
     
     # Create new MG for runtime analysis
     final_mg = MaseGraph(
         trainer.model.encoder,
         hf_input_names=["input_values", "attention_mask"],
     )
-    
+
     # Initialize metadata
     final_mg, _ = passes.init_metadata_analysis_pass(final_mg)
     
@@ -220,8 +221,8 @@ def objective(trial, baseline_model_data):
     
     # Configure runtime analysis
     runtime_analysis_config = {
-        "num_batches": 100,
-        "num_GPU_warmup_batches": 5,
+        "num_batches": 15,
+        "num_GPU_warmup_batches": 2,
         "test": True,
         "data_module": data_module,
         "model": checkpoint,

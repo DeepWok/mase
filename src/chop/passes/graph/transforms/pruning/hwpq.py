@@ -51,9 +51,6 @@ class HWPQ_PruningOnly:
         total_weights = weights.numel()
         total_kept = 0
         
-        print(f"\nPruning details:")
-        print(f"  Input tensor shape: {weights.shape}")
-        print(f"  Target sparsity: {sparsity_level:.2%}")
         
         # Process each row independently
         for i in range(weights.shape[0]):
@@ -94,12 +91,6 @@ class HWPQ_PruningOnly:
             # Count non-zeros after pruning
             kept_weights = row_mask.sum().item()
             
-            # Print row statistics
-            if i < 3 or i == weights.shape[0] - 1:  # Print first 3 rows and last row
-                print(f"  Row {i}: kept {kept_weights}/{n_weights} weights " 
-                    f"({kept_weights/n_weights:.2%})")
-            elif i == 3:
-                print("  ...")
             
             # Update total statistics
             total_kept += kept_weights
@@ -108,10 +99,7 @@ class HWPQ_PruningOnly:
             pruned_weights[i] = result.reshape(weights[i].shape)
             mask[i] = row_mask.reshape(weights[i].shape)
         
-        # Overall statistics
-        actual_sparsity = 1 - (total_kept / total_weights)
-        print(f"  Overall: kept {total_kept}/{total_weights} weights, "
-            f"sparsity = {actual_sparsity:.4f}")
+
         
         return pruned_weights, mask
 
