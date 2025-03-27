@@ -7,7 +7,7 @@ import torch
 import argparse
 
 import config
-from config import define_search_space, NUM_TRIALS, CREATE_VISUALISATONS
+from config import define_search_space, NUM_TRIALS, CREATE_VISUALISATONS, EPOCHS
 from data_utils import import_model_and_dataset
 from model_utils import setup_mase_graph, create_combined_model
 from optimization.baseline import run_baseline_metrics
@@ -22,6 +22,10 @@ logger = logging.getLogger(__name__)
 def main(args):
     """Main function to run the optimization pipeline"""
     logger.info("Starting optimization pipeline")
+
+    # Override default config values with command line arguments
+    config.EPOCHS = args.epochs
+    logger.info(f"Using {config.EPOCHS} epochs for training")
 
     # Log the entire configuration from the config module (filter out built-ins)
     config_dict = {k: v for k, v in vars(config).items() if not k.startswith('__')}
@@ -79,7 +83,7 @@ def main(args):
     
     # 7. Process results and create visualizations
     results_df = process_study_results(study)
-    
+
     if CREATE_VISUALISATONS:
         create_visualizations(study, results_df, baseline_metrics)
     
@@ -110,6 +114,9 @@ if __name__ == "__main__":
                         help=f"Number of optimization trials (default: {NUM_TRIALS})")
     parser.add_argument("--seed", type=int, default=42,
                         help="Random seed for reproducibility (default: 42)")
+    parser.add_argument("--epochs", type=int, default=EPOCHS,
+                        help=f"Number of training epochs (default: {EPOCHS})")
+    
     
     args = parser.parse_args()
     
