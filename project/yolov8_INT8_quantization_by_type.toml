@@ -1,5 +1,5 @@
 # basics
-model = "yolov8n"
+model = "yolov8x"
 dataset = "coco-detection"
 
 max_epochs = 10
