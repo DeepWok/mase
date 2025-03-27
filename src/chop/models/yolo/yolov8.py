@@ -58,6 +58,12 @@ class MaseYoloSegmentationModel(SegmentationModel):
         }
 
     def forward(self, x):
+        if self.training:
+            return super().forward(x)
+
+        # Make sure to run the model head in training
+        # mode such that it gives the correct output format
+        self.model[-1].training = True
         return super().forward(x)
 
 
