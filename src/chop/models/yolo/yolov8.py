@@ -47,7 +47,7 @@ class MaseYoloDetectionModel(DetectionModel):
     ],
     model_source=ModelSource.VISION_OTHERS,
     task_type=ModelTaskType.VISION,
-    image_segmentation=True,
+    image_instance_segmentation=True,
     is_fx_traceable=True,
 )
 class MaseYoloSegmentationModel(SegmentationModel):
@@ -90,6 +90,9 @@ def get_yolo_segmentation_model(checkpoint):
     assert "-seg" in checkpoint
     model = MaseYoloSegmentationModel(cfg=checkpoint.replace(".pt", ".yaml"))
     model = patch_yolo(model)
+    if ".pt" in checkpoint:
+        umodel = YOLO(checkpoint)
+        model.load_state_dict(umodel.model.state_dict())
     return model
 
 
