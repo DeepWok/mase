@@ -64,6 +64,8 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "conv2d"
             elif isinstance(module, nn.Conv1d):
                 mase_op = "conv1d"
+            elif isinstance(module, nn.ConvTranspose2d):
+                mase_op = "convtranspose2d"
             elif isinstance(module, nn.LayerNorm):
                 mase_op = "layer_norm"
             elif isinstance(module, nn.GroupNorm):

@@ -38,6 +38,13 @@ from .conv2d import (
     Conv2dLUT,
     Conv2DLogicNets,
 )
+from .convtranspose2d import (
+    ConvTranspose2dBinary,
+    ConvTranspose2dInteger,
+    ConvTranspose2dLog,
+    ConvTranspose2dMinifloatDenorm,
+    ConvTranspose2dMinifloatIEEE,
+)
 from .linear import (
     LinearBlockFP,
     LinearBlockMinifloat,
@@ -183,6 +190,11 @@ quantized_basic_module_map = {
     "conv2d_block_fp": Conv2dBlockFP,
     "conv2d_lutnet": Conv2dLUT,
     "conv2d_logicnets": Conv2DLogicNets,
+    "convtranspose2d_integer": ConvTranspose2dInteger,
+    "convtranspose2d_binary": ConvTranspose2dBinary,
+    "convtranspose2d_log": ConvTranspose2dLog,
+    "convtranspose2d_minifloat_ieee": ConvTranspose2dMinifloatIEEE,
+    "convtranspose2d_minifloat_denorm": ConvTranspose2dMinifloatDenorm,
     "linear_block_minifloat": LinearBlockMinifloat,
     "linear_integer": LinearInteger,
     "linear_fixed": LinearInteger,

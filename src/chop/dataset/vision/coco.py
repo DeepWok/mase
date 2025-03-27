@@ -147,6 +147,7 @@ class CocoMase(YOLODataset):
         super().__init__(
             data=coco, img_path=img_path, imgsz=640, task=task_name, augment=False
         )
+        self.transforms.transforms[1].mask_overlap = False
 
     def prepare_data(self) -> None:
         pass

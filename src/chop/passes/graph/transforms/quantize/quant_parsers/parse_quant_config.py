@@ -368,6 +368,10 @@ MASE_OP_TO_ENTRIES = {
         ("name", "data_in_entries", "weight_entries"),
         ("bias_entries", "bypass", "data_out_entries"),
     ),
+    "convtranspose2d": (
+        ("name", "data_in_entries", "weight_entries"),
+        ("bias_entries", "bypass", "data_out_entries"),
+    ),
     "matmul": (("name", "data_in_entries", "weight_entries"), ("bypass",)),
     "mul": (("name", "data_in_entries"), ("bypass",)),
     "linear": (

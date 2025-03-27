@@ -1,26 +1,26 @@
 # basics
-model = "yolov8n.pt"
-dataset = "coco-detection"
+model = "yolov8n-seg.pt"
+dataset = "coco-segmentation"
 
 max_epochs = 2
 batch_size = 40
 learning_rate = 1e-3
 accelerator = "gpu"
-task="detection"
+task="instance-segmentation"
 
 [transform]
 style = "graph"
 
 [passes.tensorrt]
 by = "type"
-task= "detection"
+task= "instance-segmentation"
 num_calibration_batches = 10
-post_calibration_analysis = true
-dataset_input_field = 'img'
+post_calibration_analysis = false
+dataset_input_field = "img"
 
 [passes.tensorrt.default.config]
 quantize = true
-calibrators = ["percentile", "mse", "entropy"]
+calibrators = ["percentile"]
 percentiles = [99.0, 99.9, 99.99]
 precision = 'int8'
 

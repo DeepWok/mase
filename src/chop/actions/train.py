@@ -39,9 +39,9 @@ def train(
     plt_trainer_args: dict,
     auto_requeue: bool,
     save_path: str,
-    visualizer: TensorBoardLogger,
     load_name: str,
     load_type: str,
+    visualizer: TensorBoardLogger,
 ):
     """
     Train the model using PyTorch Lightning.
@@ -81,7 +81,6 @@ def train(
             checkpoint_callback,
             lr_monitor_callback,
         ]
-        plt_trainer_args["logger"] = visualizer
 
     # plugin
     if auto_requeue:

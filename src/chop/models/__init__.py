@@ -25,7 +25,6 @@ from .wideresnet.wideresnet import *
 
 
 def get_model_info(name: str) -> MaseModelInfo:
-    print("Name", name)
     return ModelFactory._model_info_dict[name]
 
 

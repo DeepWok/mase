@@ -181,7 +181,6 @@ class Calibrator:
             )
 
             if self.config.get("dataset_input_field", None) is not None:
-                print("USING DATASET INPUT FIELD")
                 for i, sample in enumerate(calibrator_dataloader):
                     graph.model(
                         Variable(sample[self.config["dataset_input_field"]]).cuda()
