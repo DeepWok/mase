@@ -11,7 +11,7 @@ import types
 @register_mase_model(
     name="yolov8-detection",
     checkpoints=[
-        "yolov8n.pt",
+        "yolov8n",
     ],
     model_source=ModelSource.VISION_OTHERS,
     task_type=ModelTaskType.VISION,

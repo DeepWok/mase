@@ -141,8 +141,8 @@ class FineTuning:
             False,
             ckpt_save_path,
             None,
+            None,
             "",
-            visualizer=None,
         )
 
         self.logger.info("Fine Tuning Complete")

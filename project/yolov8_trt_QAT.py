@@ -62,7 +62,7 @@ from chop.passes.graph.transforms.tensorrt.quantize.fine_tune import (
 
 # %%
 # Load a pretrained YOLO model
-model = get_yolo_detection_model("yolov8n.pt")
+model = get_yolo_detection_model("yolov8x.pt")
 
 
 # Define a safe wrapper for torch.cat to avoid tracing its internals
@@ -258,7 +258,7 @@ summarize_quantization_analysis_pass(
     new_mg, {"save_dir": "trt_fake_quantize_summary", "original_graph": mg}
 )
 # %%
-# mg, _ = tensorrt_calibrate_transform_pass(new_mg, pass_args=tensorrt_config)
+mg, _ = tensorrt_calibrate_transform_pass(new_mg, pass_args=tensorrt_config)
 
 # %%
 # Reload package to avoid errors
@@ -272,8 +272,9 @@ from chop.passes.graph.transforms.tensorrt.quantize.fine_tune import (
 )
 
 mg, _ = tensorrt_fine_tune_transform_pass(mg, pass_args=tensorrt_config)
+mg.export("mase_calibrated_qat")
 
 # %%
-mg, meta = tensorrt_engine_interface_pass(mg, pass_args=tensorrt_config)
+# mg, meta = tensorrt_engine_interface_pass(mg, pass_args=tensorrt_config)
 
 # %%

@@ -36,6 +36,7 @@ quantize_axis = false
 
 [passes.tensorrt.fine_tune]
 fine_tune = true
+epochs = 2
 
 [passes.tensorrt.runtime_analysis]
 num_batches = 500
