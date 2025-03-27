@@ -298,11 +298,11 @@ def objective(trial, baseline_model_data):
     sparsity = pruning_metrics["overall_sparsity"]
     
     # Define weights for each metric
-    wer_weight = 0.3     
-    latency_weight = 0.1
-    energy_weight = 0.1
+    wer_weight = 0.4 
+    latency_weight = 0.05
+    energy_weight = 0.05
     bitwidth_weight = 0.2
-    sparsity_weight = 0.3
+    sparsity_weight = 0.2
     
     # Combine into new composite score
     composite_score = (
