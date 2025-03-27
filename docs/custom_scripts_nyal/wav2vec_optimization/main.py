@@ -83,10 +83,13 @@ def main(args):
     )
     
     # 7. Process results and create visualizations
-    results_df = process_study_results(study)
-    
-    # Generate additional mixed precision analysis
+    results_df, layer_df = process_study_results(study)
     mixed_precision_analysis = generate_mixed_precision_analysis(results_df)
+    
+    print(results_df, layer_df)
+
+    print(mixed_precision_analysis)
+
     logger.info("Mixed precision analysis complete")
 
     if CREATE_VISUALISATONS:
@@ -119,6 +122,8 @@ def main(args):
     logger.info("Best configuration:")
     for k, v in best_config.items():
         logger.info(f"  {k}: {v}")
+
+    print("STUDY COMPLETED")
     
     return study, results_df, baseline_model_data
 
