@@ -79,7 +79,7 @@ def get_params(trial):
         f"{block_size=}, {batch_parallelism=}, {params['e_width']=}, {params['m_width']=}, {params['batches']=}"
     )
 
-    mg, mlp = shared_emit_verilog_mxint(mlp, input_shape, params, simulate=False)
+    mg, mlp = shared_emit_verilog_mxint(mlp, input_shape, params, sim=False)
 
     return params, mg, mlp
 
