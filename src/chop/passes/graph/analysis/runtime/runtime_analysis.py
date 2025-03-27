@@ -16,7 +16,10 @@ from pathlib import Path
 import time
 import tensorrt as trt
 from chop.passes.utils import register_mase_pass
-from chop.models.yolo.yolov8 import postprocess_detection_outputs, postprocess_segmentation_outputs
+from chop.models.yolo.yolov8 import (
+    postprocess_detection_outputs,
+    postprocess_segmentation_outputs,
+)
 from ultralytics.utils import ops
 
 
@@ -439,7 +442,6 @@ class RuntimeAnalysis:
         else:
             dataloader = self.config["data_module"].val_dataloader()
             dataset = "Validation"
-
         # Iterate over batches in the validation/train dataset
         for j, batch in enumerate(dataloader):
             # Break the loop after processing the specified number of batches or to drop the last incomplete batch
@@ -590,6 +592,7 @@ class RuntimeAnalysis:
 
                     map(metrics_pred, metrics_target)
                 case "instance-segmentation":
+
                     def prepare_batch(si, batch):
                         """Prepares a batch of images and annotations for validation."""
                         idx = batch["batch_idx"] == si
@@ -613,7 +616,7 @@ class RuntimeAnalysis:
                             "ori_shape": ori_shape,
                             "imgsz": imgsz,
                             "ratio_pad": ratio_pad,
-                            "masks": masks
+                            "masks": masks,
                         }
 
                     def prepare_pred(pred_bbox_and_coef, pred_mask_protos, pbatch):
@@ -624,7 +627,12 @@ class RuntimeAnalysis:
                             pbatch["ori_shape"],
                             ratio_pad=pbatch["ratio_pad"],
                         )  # native-space pred
-                        pred_masks = ops.process_mask(pred_mask_protos, pred_bbox_and_coef[:,6:], predn[:,:4], shape=pbatch["imgsz"])
+                        pred_masks = ops.process_mask(
+                            pred_mask_protos,
+                            pred_bbox_and_coef[:, 6:],
+                            predn[:, :4],
+                            shape=pbatch["imgsz"],
+                        )
                         return predn, pred_masks
 
                     preds_box_coef, masks = postprocess_segmentation_outputs(preds)
@@ -635,19 +643,22 @@ class RuntimeAnalysis:
                         cls, bbox = pbatch.pop("cls"), pbatch.pop("bbox")
                         gt_masks = pbatch.pop("masks")
                         predn, pred_masks = prepare_pred(pred, mask, pbatch)
-                        metrics_pred.append({
-                            "boxes": predn[:, :4],
-                            "scores": predn[:, 4],
-                            "labels": predn[:, 5].int(),
-                            "masks": pred_masks.bool(),
-                        })
-                        metrics_target.append({
-                            "boxes": bbox,
-                            "labels": cls.int(),
-                            "masks": gt_masks.bool(),
-                        })
+                        metrics_pred.append(
+                            {
+                                "boxes": predn[:, :4],
+                                "scores": predn[:, 4],
+                                "labels": predn[:, 5].int(),
+                                "masks": pred_masks.bool(),
+                            }
+                        )
+                        metrics_target.append(
+                            {
+                                "boxes": bbox,
+                                "labels": cls.int(),
+                                "masks": gt_masks.bool(),
+                            }
+                        )
                     map(metrics_pred, metrics_target)
-
 
         match self.config["task"]:
             case "cls":
@@ -680,7 +691,6 @@ class RuntimeAnalysis:
             case "detection":
                 map_score = map.compute()
             case "instance-segmentation":
-                breakpoint()
                 map_score = map.compute()
 
         avg_latency = sum(latencies) / len(latencies)

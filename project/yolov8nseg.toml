@@ -1,0 +1,42 @@
+# basics
+model = "yolov8n-seg.pt"
+dataset = "coco-segmentation"
+
+max_epochs = 2
+batch_size = 40
+learning_rate = 1e-3
+accelerator = "gpu"
+task="instance-segmentation"
+
+[transform]
+style = "graph"
+
+[passes.tensorrt]
+by = "type"
+task= "instance-segmentation"
+num_calibration_batches = 10
+post_calibration_analysis = false
+dataset_input_field = "img"
+
+[passes.tensorrt.default.config]
+quantize = true
+calibrators = ["percentile"]
+percentiles = [99.0, 99.9, 99.99]
+precision = 'int8'
+
+[passes.tensorrt.default.input]
+calibrator = 'histogram'
+quantize_axis = false
+
+[passes.tensorrt.default.weight]
+calibrator = 'histogram'
+quantize_axis = false
+
+[passes.tensorrt.fine_tune]
+fine_tune = true
+epochs = 2
+
+[passes.tensorrt.runtime_analysis]
+num_batches = 500
+num_GPU_warmup_batches = 5
+test = true
