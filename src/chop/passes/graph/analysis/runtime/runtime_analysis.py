@@ -599,13 +599,6 @@ class RuntimeAnalysis:
             wer_metric = jiwer.wer
             cer_metric = jiwer.cer
 
-            wer_transform = jiwer.Compose([
-                jiwer.ToLowerCase(),
-                jiwer.RemovePunctuation(),
-                jiwer.RemoveMultipleSpaces(),
-                jiwer.Strip()
-            ])
-
             decoder = self.config.get("decoder", None)
             print(f"[DEBUG] Decoder provided: {decoder is not None}")
             
@@ -970,24 +963,20 @@ class RuntimeAnalysis:
 
                     # Now compute batch WER & CER
                     def safe_wer(ref, pred):
-                        ref_processed = wer_transform(ref)
-                        pred_processed = wer_transform(pred)
-                        if pred_processed == "" and ref_processed != "":
+                        if pred == "" and ref != "":
                             return 1.0
-                        elif pred_processed == "" and ref_processed == "":
+                        elif pred == "" and ref == "":
                             return 0.0
                         else:
-                            return wer_metric(ref_processed, pred_processed)
+                            return wer_metric(ref, pred)
 
                     def safe_cer(ref, pred):
-                        ref_processed = wer_transform(ref)
-                        pred_processed = wer_transform(pred)
-                        if pred_processed == "" and ref_processed != "":
+                        if pred == "" and ref != "":
                             return 1.0
-                        elif pred_processed == "" and ref_processed == "":
+                        elif pred == "" and ref == "":
                             return 0.0
                         else:
-                            return cer_metric(ref_processed, pred_processed)
+                            return cer_metric(ref, pred)
                         
                     print(f"[DEBUG] Computing WER for batch {j+1}")
                     sample_wers = []
