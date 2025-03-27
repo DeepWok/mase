@@ -1,6 +1,5 @@
 # %%
-import logging
-from ultralytics import YOLO
+
 from chop import MaseGraph
 import torch.fx as fx
 import torch.nn as nn
@@ -11,14 +10,7 @@ import sys
 import os
 from pathlib import Path
 import toml
-import logging
-from ultralytics import YOLO
 from chop import MaseGraph
-import torch.fx as fx
-import torch.nn as nn
-import torch
-import ultralytics
-from chop.passes.graph.transforms import metadata_value_type_cast_transform_pass
 from chop.models.yolo.yolov8 import get_yolo_detection_model
 
 
@@ -32,25 +24,15 @@ new_path = "../../.."
 full_path = os.path.abspath(new_path)
 os.environ["PATH"] += os.pathsep + full_path
 
-from chop.tools.utils import to_numpy_if_tensor
+import chop.passes as passes
+from chop.passes.graph.analysis.add_metadata.common_metadata_layers import func_data
 from chop.tools.logger import set_logging_verbosity
-from chop.tools import get_cf_args, get_dummy_input
-from chop.passes.graph.utils import deepcopy_mase_graph
 from chop.tools.get_input import InputGenerator
-from chop.tools.checkpoint_load import load_model
-from chop.ir import MaseGraph
-from chop.models import get_model_info, get_model, get_tokenizer
-from chop.dataset import MaseDataModule, get_dataset_info
-from chop.passes.graph.transforms import metadata_value_type_cast_transform_pass
 from chop.passes.graph import (
     summarize_quantization_analysis_pass,
-    add_common_metadata_analysis_pass,
-    init_metadata_analysis_pass,
-    add_software_metadata_analysis_pass,
     tensorrt_calibrate_transform_pass,
     tensorrt_fake_quantize_transform_pass,
     tensorrt_engine_interface_pass,
-    runtime_analysis_pass,
 )
 
 set_logging_verbosity("info")
@@ -63,6 +45,7 @@ from chop.passes.graph.transforms.tensorrt.quantize.fine_tune import (
 # %%
 # Load a pretrained YOLO model
 model = get_yolo_detection_model("yolov8x.pt")
+# model = get_yolo_segmentation_model("yolov8m-seg.pt")
 
 
 # Define a safe wrapper for torch.cat to avoid tracing its internals
@@ -121,9 +104,8 @@ cf_args = {
     # "embed": None,
 }
 
-# %%
-
 mg = MaseGraph(model, cf_args=cf_args)
+
 # Set custom_ops
 CUSTOM_OPS = {
     "modules": {
@@ -144,11 +126,6 @@ mg.model.patched_op_names = [
 ]
 
 # %%
-
-import chop.passes as passes
-from chop.passes.graph.analysis.add_metadata.common_metadata_layers import func_data
-
-
 func_data["safe_detect"] = {"module": "detect", "input": "data_in"}
 func_data["safe_cat"] = {"module": "concat", "input": "data_in", "dim": "config"}
 func_data["safe_settatr"] = {
@@ -261,16 +238,6 @@ summarize_quantization_analysis_pass(
 mg, _ = tensorrt_calibrate_transform_pass(new_mg, pass_args=tensorrt_config)
 
 # %%
-# Reload package to avoid errors
-import importlib
-import chop
-
-importlib.reload(passes.graph.transforms.tensorrt.quantize.fine_tune)
-# importlib.reload(chop.tools.plt_wrapper.vision.ultralytics_detection)
-from chop.passes.graph.transforms.tensorrt.quantize.fine_tune import (
-    tensorrt_fine_tune_transform_pass,
-)
-
 mg, _ = tensorrt_fine_tune_transform_pass(mg, pass_args=tensorrt_config)
 mg.export("mase_calibrated_qat")
 
