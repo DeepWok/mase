@@ -1,9 +1,9 @@
 from chop.models.utils import register_mase_model, ModelSource, ModelTaskType
-from ultralytics.nn.tasks import DetectionModel
+from ultralytics.nn.tasks import DetectionModel, SegmentationModel
 from ultralytics import YOLO
 import ultralytics.nn.modules as unnmod
 from ultralytics.utils.ops import non_max_suppression
-from ultralytics.utils.tal import make_anchors, dist2bbox, dist2rbox
+from ultralytics.utils.tal import make_anchors, dist2bbox
 import torch
 import types
 
@@ -11,7 +11,7 @@ import types
 @register_mase_model(
     name="yolov8-detection",
     checkpoints=[
-        "yolov8n",
+        "yolov8n.pt",
     ],
     model_source=ModelSource.VISION_OTHERS,
     task_type=ModelTaskType.VISION,
@@ -19,11 +19,38 @@ import types
     is_fx_traceable=True,
 )
 class MaseYoloDetectionModel(DetectionModel):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.custom_ops = {
+            "modules": {},
+        }
+
     def forward(self, x):
         if self.training:
             return super().forward(x)
         # return the bounding boxes directly
         return non_max_suppression(super().forward(x))
+
+
+@register_mase_model(
+    name="yolov8-segmentation",
+    checkpoints=[
+        "yolov8n-seg.pt",
+    ],
+    model_source=ModelSource.VISION_OTHERS,
+    task_type=ModelTaskType.VISION,
+    image_segmentation=True,
+    is_fx_traceable=True,
+)
+class MaseYoloSegmentationModel(SegmentationModel):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.custom_ops = {
+            "modules": {},
+        }
+
+    def forward(self, x):
+        return super().forward(x)
 
 
 def c2f_forward(self, x):
@@ -48,6 +75,13 @@ def get_yolo_detection_model(checkpoint):
     if ".pt" in checkpoint:
         umodel = YOLO(checkpoint)
         model.load_state_dict(umodel.model.state_dict())
+    return model
+
+
+def get_yolo_segmentation_model(checkpoint):
+    assert "-seg" in checkpoint
+    model = MaseYoloSegmentationModel(cfg=checkpoint.replace(".pt", ".yaml"))
+    model = patch_yolo(model)
     return model
 
 

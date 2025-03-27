@@ -324,6 +324,8 @@ module_data = {
     "conv2d": {"input": "data_in"},
     # https://pytorch.org/docs/stable/_modules/torch/nn/modules/conv.html#Conv3d
     "conv3d": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/_modules/torch/nn/modules/conv.html#ConvTranspose2d
+    "convtranspose2d": {"input": "data_in", "output_size": "config"},
     # https://pytorch.org/docs/stable/generated/torch.nn.Embedding.html
     "embedding": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.nn.LayerNorm.html#torch.nn.LayerNorm
