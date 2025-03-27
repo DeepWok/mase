@@ -31,16 +31,13 @@ def gpt2sdpa_to_fc_init(attn_module: GPT2SdpaAttention, config: dict) -> nn.Modu
         # initialize with SVD of original weights
         with torch.no_grad():
             weight = attn_module.c_proj.weight.T
-            #print(f"Original weight shape: {weight.shape}")
             try:
                 U, S, V = torch.svd(weight)
-                #print(f"SVD results - U: {U.shape}, S: {S.shape}, V: {V.shape}")
                 
                 # slice to rank
                 U_r = U[:, :rank]
                 S_r = S[:rank]
                 V_r = V[:, :rank]
-                #print(f"Sliced to rank {rank} - U_r: {U_r.shape}, S_r: {S_r.shape}, V_r: {V_r.shape}")
                 
                 # compute factors directly
                 A_weight = V_r * torch.sqrt(S_r)  
