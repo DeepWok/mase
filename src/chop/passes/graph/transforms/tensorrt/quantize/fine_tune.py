@@ -124,12 +124,15 @@ class FineTuning:
             "accelerator": self.config["accelerator"],
         }
         self.logger.info(f"Starting Fine Tuning for {epochs} epochs...")
+
+        task = self.config.get("task", "Quantization Fine Tuning")
+
         train(
             self.graph.model,
             model_info,
             self.config["data_module"],
             self.config["data_module"].dataset_info,
-            "Quantization Fine Tuning",
+            task,
             optimizer,
             initial_fine_tune_lr,
             weight_decay,
@@ -138,8 +141,8 @@ class FineTuning:
             False,
             ckpt_save_path,
             None,
-            None,
             "",
+            visualizer=None,
         )
 
         self.logger.info("Fine Tuning Complete")
