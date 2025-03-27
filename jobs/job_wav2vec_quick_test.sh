@@ -11,4 +11,4 @@ conda activate mase_hpc
 cd /rds/general/user/at5424/home/mase-individual
 
 # Run the script with 0.1 epochs and 2 trials
-python docs/custom_scripts_nyal/wav2vec_optimization/main.py --epochs 0.1 --n_trials 2
+python docs/custom_scripts_nyal/wav2vec_optimization/main.py --epochs 1 --n_trials 100
