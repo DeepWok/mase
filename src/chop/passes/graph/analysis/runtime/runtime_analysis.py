@@ -549,7 +549,7 @@ class RuntimeAnalysis:
                         )  # native-space pred
                         return predn
 
-                    preds_post, preds_post_nms = postprocess_detection_outputs(preds)
+                    preds_post_nms = postprocess_detection_outputs(preds)
                     metrics_pred = []
                     metrics_target = []
                     for si, pred in enumerate(preds_post_nms):
