@@ -27,6 +27,26 @@ TOKENIZER_CHECKPOINT = "facebook/wav2vec2-base-960h"
 DATASET_NAME = "nyalpatel/condensed_librispeech_asr"
 CREATE_VISUALISATONS = False
 
+# Define global constants for parameter choices to ensure consistency
+# These are used by the quantization module to ensure parameter consistency
+WEIGHT_WIDTH_CHOICES = [8, 16, 32]
+WEIGHT_FRAC_WIDTH_CHOICES = [4, 8, 16]
+DATA_IN_WIDTH_CHOICES = [8, 16, 32]
+DATA_IN_FRAC_WIDTH_CHOICES = [4, 8, 16]
+BIAS_WIDTH_CHOICES = [8, 16, 32]
+BIAS_FRAC_WIDTH_CHOICES = [4, 8, 16]
+
+# Minifloat constants
+WEIGHT_EXPONENT_WIDTH_CHOICES = [3, 5, 8]
+WEIGHT_EXPONENT_BIAS_CHOICES = [7, 15, 31]  # Include all possible values across all types
+DATA_IN_EXPONENT_WIDTH_CHOICES = [3, 5, 8]
+DATA_IN_EXPONENT_BIAS_CHOICES = [7, 15, 31]  # Include all possible values across all types
+BIAS_EXPONENT_WIDTH_CHOICES = [3, 5, 8]
+BIAS_EXPONENT_BIAS_CHOICES = [7, 15, 31]  # Include all possible values across all types
+
+# Special handling for LinearLog, making sure to use the same choices as other types
+LOG_EXPONENT_BIAS_CHOICES = [0, 7, 15, 31]  # Ensuring all possible values are included
+
 
 def define_search_space():
     """Define the global search space for all optimization phases"""
@@ -44,22 +64,29 @@ def define_search_space():
     
     # Bit width configurations for precision
     bit_width_configs = {
-        "weight_width": [8, 16, 32],
-        "weight_frac_width": [4, 8, 16],
-        "data_in_width": [8, 16, 32],
-        "data_in_frac_width": [4, 8, 16],
-        "bias_width": [8, 16, 32],
-        "bias_frac_width": [4, 8, 16],
+        "weight_width": WEIGHT_WIDTH_CHOICES,
+        "weight_frac_width": WEIGHT_FRAC_WIDTH_CHOICES,
+        "data_in_width": DATA_IN_WIDTH_CHOICES,
+        "data_in_frac_width": DATA_IN_FRAC_WIDTH_CHOICES,
+        "bias_width": BIAS_WIDTH_CHOICES,
+        "bias_frac_width": BIAS_FRAC_WIDTH_CHOICES,
     }
     
     # Minifloat-specific configs
     minifloat_configs = {
-        "weight_exponent_width": [3, 5, 8],
-        "weight_exponent_bias": [7, 15, 31],
-        "data_in_exponent_width": [3, 5, 8],
-        "data_in_exponent_bias": [7, 15, 31],
-        "bias_exponent_width": [3, 5, 8], 
-        "bias_exponent_bias": [7, 15, 31],
+        "weight_exponent_width": WEIGHT_EXPONENT_WIDTH_CHOICES,
+        "weight_exponent_bias": WEIGHT_EXPONENT_BIAS_CHOICES,
+        "data_in_exponent_width": DATA_IN_EXPONENT_WIDTH_CHOICES,
+        "data_in_exponent_bias": DATA_IN_EXPONENT_BIAS_CHOICES,
+        "bias_exponent_width": BIAS_EXPONENT_WIDTH_CHOICES, 
+        "bias_exponent_bias": BIAS_EXPONENT_BIAS_CHOICES,
+    }
+    
+    # Log-specific configs
+    log_configs = {
+        "weight_exponent_bias": LOG_EXPONENT_BIAS_CHOICES,
+        "data_in_exponent_bias": LOG_EXPONENT_BIAS_CHOICES,
+        "bias_exponent_bias": LOG_EXPONENT_BIAS_CHOICES,
     }
     
     # Search space for pruning
@@ -80,10 +107,10 @@ def define_search_space():
             LinearLog,
             LinearBlockFP,
         ],
-        "width_choices": [8, 16, 32],
-        "frac_width_choices": [4, 8, 16],
-        "exponent_width_choices": [3, 5, 8],
-        "exponent_bias_choices": [7, 15, 31],
+        "width_choices": WEIGHT_WIDTH_CHOICES,
+        "frac_width_choices": WEIGHT_FRAC_WIDTH_CHOICES,
+        "exponent_width_choices": WEIGHT_EXPONENT_WIDTH_CHOICES,
+        "exponent_bias_choices": WEIGHT_EXPONENT_BIAS_CHOICES,
     }
     
     search_space = {
@@ -91,6 +118,7 @@ def define_search_space():
             "methods": quantization_methods,
             "bit_width_configs": bit_width_configs,
             "minifloat_configs": minifloat_configs,
+            "log_configs": log_configs,
         },
         "pruning": {
             "methods": pruning_methods,
