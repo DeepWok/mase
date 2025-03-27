@@ -1,5 +1,5 @@
 # basics
-model = "yolov8"
+model = "yolov8n"
 dataset = "coco-detection"
 
 max_epochs = 10
@@ -13,8 +13,10 @@ style = "graph"
 
 [passes.tensorrt]
 by = "type"
+task= "detection"
 num_calibration_batches = 10
 post_calibration_analysis = true
+dataset_input_field = "img"
 
 [passes.tensorrt.default.config]
 quantize = true
@@ -33,7 +35,7 @@ calibrator = 'histogram'
 quantize_axis = false
 
 [passes.tensorrt.fine_tune]
-fine_tune = false
+fine_tune = true
 
 [passes.tensorrt.runtime_analysis]
 num_batches = 500

@@ -11,6 +11,16 @@ import sys
 import os
 from pathlib import Path
 import toml
+import logging
+from ultralytics import YOLO
+from chop import MaseGraph
+import torch.fx as fx
+import torch.nn as nn
+import torch
+import ultralytics
+from chop.passes.graph.transforms import metadata_value_type_cast_transform_pass
+from chop.models.yolo.yolov8 import get_yolo_detection_model
+
 
 # Figure out the correct path
 machop_path = Path(".").resolve().parent.parent.parent
@@ -49,9 +59,142 @@ from chop.passes.graph.transforms.tensorrt.quantize.fine_tune import (
     tensorrt_fine_tune_transform_pass,
 )
 
-set_logging_verbosity("info")
 
-from yolov8_c2f_tracing import mg
+# %%
+# Load a pretrained YOLO model
+model = get_yolo_detection_model("yolov8n.pt")
+
+
+# Define a safe wrapper for torch.cat to avoid tracing its internals
+@fx.wrap
+def safe_cat(x, dim):
+    return torch.cat(tuple(x), dim=dim)
+
+
+def safe_settatr(obj, name, value):
+    if isinstance(value, int):
+        setattr(obj, name, value)
+    elif isinstance(value, list):
+        setattr(obj, name, value)
+    elif isinstance(value, str):
+        setattr(obj, name, value)
+    elif isinstance(value, float):
+        setattr(obj, name, value)
+
+
+# FX-safe wrapper for Concat
+class FXSafeConcat(nn.Module):
+    def __init__(self, orig_module):
+        super().__init__()
+        attrs = vars(orig_module)
+        for name, value in attrs.items():
+            safe_settatr(self, name, value)
+        self.d = orig_module.d
+
+    def forward(self, x):
+        return safe_cat(x, dim=self.d)
+
+
+# Define a safe wrapper for Detect module calls
+@fx.wrap
+def safe_detect(
+    module,
+    *args,
+):
+    return module(
+        *args,
+    )
+
+
+# Replace problematic modules in the model with FX-safe versions
+for name, module in model.model.named_children():
+    if isinstance(module, ultralytics.nn.modules.conv.Concat):
+        print(f"Replacing module {name} with FXSafeConcat")
+        setattr(model.model, name, FXSafeConcat(module))
+
+
+cf_args = {
+    # "x": torch.randn(1, 3, 640, 640),
+    # "profile": False,
+    # "visualize": False,
+    # "augment": False,
+    # "embed": None,
+}
+
+# %%
+
+mg = MaseGraph(model, cf_args=cf_args)
+# Set custom_ops
+CUSTOM_OPS = {
+    "modules": {
+        FXSafeConcat: "",
+    },
+    # "functions": {safe_cat: "", safe_detect: "", },
+}
+setattr(mg.model, "custom_ops", CUSTOM_OPS)
+
+
+mg.model.patched_op_names = [
+    "safe_cat",
+    "safe_detect",
+    "safe_settatr",
+    "safe_list_create",
+    "safe_append",
+    "safe_unbind",
+]
+
+# %%
+
+import chop.passes as passes
+from chop.passes.graph.analysis.add_metadata.common_metadata_layers import func_data
+
+
+func_data["safe_detect"] = {"module": "detect", "input": "data_in"}
+func_data["safe_cat"] = {"module": "concat", "input": "data_in", "dim": "config"}
+func_data["safe_settatr"] = {
+    "module": "settatr",
+    "input": "data_in",
+    "name": "config",
+    "value": "config",
+}
+func_data["safe_list_create"] = {
+    "module": "list_create",
+    "m": "config",
+    "x": "data_in",
+    "y": "config",
+}
+func_data["safe_append"] = {
+    "module": "append",
+    "x": "data_in",
+}
+func_data["safe_unbind"] = {
+    "module": "unbind",
+    "x": "data_in",
+    "dim": "config",
+}
+
+param = next(mg.model.model.parameters())[1]
+
+dummy_input = torch.rand(1, 3, 640, 640, dtype=param.dtype).to(param.device)
+
+mg, _ = passes.init_metadata_analysis_pass(mg)
+mg, _ = passes.add_common_metadata_analysis_pass(
+    mg,
+    {
+        "dummy_in": {
+            "x": dummy_input,
+            "profile_1": False,
+            "visualize_1": False,
+            "augment_1": False,
+            "embed_1": None,
+        },
+        "add_value": True,
+    },
+)
+mg, _ = passes.add_software_metadata_analysis_pass(mg, None)
+
+# %%
+
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TOML_PATH = f"{HERE}/yolov8_INT8_quantization_by_type.toml"
@@ -94,7 +237,7 @@ for config in configs:
     if config["accelerator"] == "gpu":
         os.environ["CUDA_MODULE_LOADING"] = "LAZY"
 
-
+# %%
 from chop.models.utils import MaseModelInfo, ModelSource, ModelTaskType
 
 model_info = MaseModelInfo(
@@ -115,7 +258,22 @@ summarize_quantization_analysis_pass(
     new_mg, {"save_dir": "trt_fake_quantize_summary", "original_graph": mg}
 )
 # %%
-tensorrt_config["dataset_input_field"] = "img"
-mg, _ = tensorrt_calibrate_transform_pass(mg, pass_args=tensorrt_config)
+# mg, _ = tensorrt_calibrate_transform_pass(new_mg, pass_args=tensorrt_config)
+
+# %%
+# Reload package to avoid errors
+import importlib
+import chop
+
+importlib.reload(passes.graph.transforms.tensorrt.quantize.fine_tune)
+# importlib.reload(chop.tools.plt_wrapper.vision.ultralytics_detection)
+from chop.passes.graph.transforms.tensorrt.quantize.fine_tune import (
+    tensorrt_fine_tune_transform_pass,
+)
+
+mg, _ = tensorrt_fine_tune_transform_pass(mg, pass_args=tensorrt_config)
+
+# %%
+mg, meta = tensorrt_engine_interface_pass(mg, pass_args=tensorrt_config)
 
 # %%
