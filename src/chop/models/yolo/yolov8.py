@@ -11,7 +11,11 @@ import types
 @register_mase_model(
     name="yolov8-detection",
     checkpoints=[
-        "yolov8n",
+        "yolov8n.pt",
+        "yolov8s.pt",
+        "yolov8m.pt",
+        "yolov8l.pt",
+        "yolov8x.pt",
     ],
     model_source=ModelSource.VISION_OTHERS,
     task_type=ModelTaskType.VISION,
@@ -36,6 +40,10 @@ class MaseYoloDetectionModel(DetectionModel):
     name="yolov8-segmentation",
     checkpoints=[
         "yolov8n-seg.pt",
+        "yolov8s-seg.pt",
+        "yolov8m-seg.pt",
+        "yolov8l-seg.pt",
+        "yolov8x-seg.pt",
     ],
     model_source=ModelSource.VISION_OTHERS,
     task_type=ModelTaskType.VISION,
