@@ -6,9 +6,6 @@ from .transforms import (
     attention_transform_pass,
 )
 
-# FC
-from .transforms import fc_transform_pass
-
 ANALYSIS_PASSES = ["calculate_avg_bits_module_analysis_pass"]
 
 TRANSFORM_PASSES = [
