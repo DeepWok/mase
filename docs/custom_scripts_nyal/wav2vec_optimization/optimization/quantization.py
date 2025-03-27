@@ -76,6 +76,8 @@ def apply_mixed_precision_quantization(model, precision_choices, trial):
                     "bias_width": trial.suggest_categorical(f"{name}_bias_width", [8, 16, 32]),
                     "bias_exponent_width": trial.suggest_categorical(f"{name}_bias_exponent_width", [3, 5, 8]),
                     "bias_exponent_bias": trial.suggest_categorical(f"{name}_bias_exponent_bias", [7, 15, 31]),
+                    "data_in_frac_width": 16,  
+                    "bias_frac_width": 16,  
                 }
             elif chosen_type_name == "LinearLog":
                 config = {
@@ -83,10 +85,10 @@ def apply_mixed_precision_quantization(model, precision_choices, trial):
                     "weight_exponent_bias": trial.suggest_categorical(f"{name}_weight_exponent_bias", [0, 7, 15]),
                     "data_in_width": trial.suggest_categorical(f"{name}_data_in_width", [8, 16, 32]),
                     "data_in_exponent_bias": trial.suggest_categorical(f"{name}_data_in_exponent_bias", [0, 7, 15]),
-                    "data_in_frac_width": 0,  # Add this for compatibility with metadata analysis
+                    "data_in_frac_width": 16,  
                     "bias_width": trial.suggest_categorical(f"{name}_bias_width", [8, 16, 32]),
                     "bias_exponent_bias": trial.suggest_categorical(f"{name}_bias_exponent_bias", [0, 7, 15]),
-                    "bias_frac_width": 0,  # Add this for compatibility with metadata analysis
+                    "bias_frac_width": 16,  
                 }
             elif chosen_type_name == "LinearBlockFP":
                 config = {
@@ -99,13 +101,13 @@ def apply_mixed_precision_quantization(model, precision_choices, trial):
                     "data_in_exponent_bias": 15,
                     "data_in_block_size": [16],
                     "data_in_skip_first_dim": True,
-                    "data_in_frac_width": 0,  # Add this for compatibility with metadata analysis
+                    "data_in_frac_width": 16,  
                     "bias_width": trial.suggest_categorical(f"{name}_bias_width", [8, 16, 32]),
                     "bias_exponent_width": 5,
                     "bias_exponent_bias": 15,
                     "bias_block_size": [16],
-                    "bias_frac_width": 0,  # Add this for compatibility with metadata analysis
-                    "weight_frac_width": 0,  # Add this for compatibility with metadata analysis
+                    "bias_frac_width": 16,
+                    "weight_frac_width": 16,  
                 }
                 
             # Create the new (quantized) layer and copy the parameters
