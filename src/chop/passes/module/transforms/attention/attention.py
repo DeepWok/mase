@@ -62,8 +62,16 @@ def attention_by_name(network, pass_args):
         if n in quantize_names:
             quan_config = pass_args[n]
 
+            if isinstance(m, GPT2SdpaAttention):
+                type_name = "gpt2spda"
+            elif isinstance(m, GPT2Block):
+                type_name = "gpt2block"
+            else:
+                raise ValueError(f"{type_name} is not supported!")
+
             quan_config = quan_config["config"]
             postfix = quan_config.pop("name")
+            transform_name = type_name + "_to_" + postfix
 
             additional_module_args = (
                 {"config": quan_config, "network_config": network.config}
@@ -71,10 +79,10 @@ def attention_by_name(network, pass_args):
                 else {"config": quan_config}
             )
 
-            new_m = instantiate_module(
-                m, postfix, attention_module_map, additional_module_args
+            new_m = instantiate_attention_module(
+                m, transform_name, attention_module_map, additional_module_args
             )
-            network = replace_by_name(network, n, new_m)
+            network = replace_attention_by_name(network, n, new_m, transform_name)
     return network
 
 

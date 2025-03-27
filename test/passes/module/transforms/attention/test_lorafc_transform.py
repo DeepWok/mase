@@ -24,8 +24,8 @@ model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
 
 def test_fc_transform_pass(model):
     pass_args = {
-        "by": "type",
-        "gpt2spda": {
+        "by": "name",
+        "transformer.h.11.attn": {
             "config": {
                 "name": "lora_fc",
             }

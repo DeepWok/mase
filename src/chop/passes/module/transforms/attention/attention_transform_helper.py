@@ -317,14 +317,18 @@ def transform_gpt2sdpa_to_lorafc(
             # Apply SVD
             try:
                 U, S, V = torch.svd(weight)
-                # keep only top 'rank' singular values
-                U = U[:, :rank]
-                S = S[:rank]
-                V = V[:, :rank]
 
-                # set weights of low-rank approximation
-                new_fc.A.weight.copy_(V.T * torch.sqrt(S))
-                new_fc.B.weight.copy_(U * torch.sqrt(S))
+                # slice to rank
+                U_r = U[:, :rank]
+                S_r = S[:rank]
+                V_r = V[:, :rank]
+
+                # compute factors directly
+                A_weight = V_r * torch.sqrt(S_r)
+                B_weight = U_r * torch.sqrt(S_r.unsqueeze(0))
+
+                new_fc.A.weight.copy_(A_weight.t())
+                new_fc.B.weight.copy_(B_weight)
 
                 if gpt2sdpa.c_proj.bias is not None:
                     new_fc.B.bias.copy_(gpt2sdpa.c_proj.bias)
