@@ -996,8 +996,8 @@ class RuntimeAnalysis:
                         print(f"[DEBUG] Sample {i+1}:")
                         print(f"[DEBUG]   Prediction: '{pred}'")
                         print(f"[DEBUG]   Reference:  '{label}'")
-                        sample_wer = safe_wer(pred, label)
-                        sample_cer = safe_cer(pred, label)
+                        sample_wer = safe_wer(label, pred)
+                        sample_cer = safe_cer(label, pred)
                         sample_wers.append(sample_wer)
                         sample_cers.append(sample_cer)
                     
