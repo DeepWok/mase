@@ -599,6 +599,13 @@ class RuntimeAnalysis:
             wer_metric = jiwer.wer
             cer_metric = jiwer.cer
 
+            wer_transform = jiwer.Compose([
+                jiwer.ToLowerCase(),
+                jiwer.RemovePunctuation(),
+                jiwer.RemoveMultipleSpaces(),
+                jiwer.Strip()
+            ])
+
             decoder = self.config.get("decoder", None)
             print(f"[DEBUG] Decoder provided: {decoder is not None}")
             
@@ -962,23 +969,26 @@ class RuntimeAnalysis:
                             label_texts.append(label_text.lower())
 
                     # Now compute batch WER & CER
-                    
                     def safe_wer(ref, pred):
-                        if pred.strip() == "" and ref.strip() != "":
+                        ref_processed = wer_transform(ref)
+                        pred_processed = wer_transform(pred)
+                        if pred_processed == "" and ref_processed != "":
                             return 1.0
-                        elif pred.strip() == "" and ref.strip() == "":
+                        elif pred_processed == "" and ref_processed == "":
                             return 0.0
                         else:
-                            return wer_metric(ref, pred)
-                        
+                            return wer_metric(ref_processed, pred_processed)
+
                     def safe_cer(ref, pred):
-                        if pred.strip() == "" and ref.strip() != "":
+                        ref_processed = wer_transform(ref)
+                        pred_processed = wer_transform(pred)
+                        if pred_processed == "" and ref_processed != "":
                             return 1.0
-                        elif pred.strip() == "" and ref.strip() == "":
+                        elif pred_processed == "" and ref_processed == "":
                             return 0.0
                         else:
-                            return cer_metric(ref, pred)
-                
+                            return cer_metric(ref_processed, pred_processed)
+                        
                     print(f"[DEBUG] Computing WER for batch {j+1}")
                     sample_wers = []
                     sample_cers = []
