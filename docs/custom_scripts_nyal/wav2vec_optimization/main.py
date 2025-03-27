@@ -7,7 +7,7 @@ import torch
 import argparse
 
 import config
-from config import define_search_space, NUM_TRIALS, CREATE_VISUALISATONS, EPOCHS
+from config import define_search_space, NUM_TRIALS, CREATE_VISUALISATONS
 from data_utils import import_model_and_dataset
 from model_utils import setup_mase_graph, create_combined_model
 from optimization.baseline import run_baseline_metrics
@@ -128,8 +128,8 @@ if __name__ == "__main__":
                         help=f"Number of optimization trials (default: {NUM_TRIALS})")
     parser.add_argument("--seed", type=int, default=42,
                         help="Random seed for reproducibility (default: 42)")
-    parser.add_argument("--epochs", type=float, default=EPOCHS,
-                        help=f"Number of training epochs (default: {EPOCHS}). Can be a decimal value like 0.1 for partial epochs.")
+    parser.add_argument("--epochs", type=float, default=config.EPOCHS,
+                        help=f"Number of training epochs (default: {config.EPOCHS}). Can be a decimal value like 0.1 for partial epochs.")
     
     args = parser.parse_args()
     

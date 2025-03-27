@@ -17,7 +17,8 @@ import torch.nn as nn
 from optimization.pruning import apply_pruning, calculate_pruning_metrics
 from optimization.smoothquant import apply_smoothquant
 from optimization.quantization import apply_mixed_precision_quantization
-from config import BATCH_SIZE, EPOCHS
+import config  # Import the config module instead of specific constants
+from config import BATCH_SIZE  # We can keep BATCH_SIZE as direct import since it's not modified
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -45,6 +46,7 @@ def objective(trial, baseline_model_data):
     processor = baseline_model_data["processor"]
     
     logger.info(f"Starting trial {trial.number}")
+    logger.info(f"Using {config.EPOCHS} epochs for training")
     
     # -----------------------------
     # Phase 1: Pruning
@@ -170,7 +172,7 @@ def objective(trial, baseline_model_data):
         tokenizer=tokenizer,
         evaluate_metric="wer",
         data_collator=data_collator,
-        num_train_epochs=EPOCHS,  # Reduced for faster trials
+        num_train_epochs=config.EPOCHS,  # Use config.EPOCHS instead of EPOCHS
         gradient_accumulation_steps=4,
         per_device_train_batch_size=2,
         per_device_eval_batch_size=2,
