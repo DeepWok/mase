@@ -45,8 +45,6 @@ from chop.dataset import MaseDataModule
 
 # %%
 # Load a pretrained YOLO model
-model_name = "yolov8n.pt"
-model = get_yolo_detection_model(model_name)
 # model = get_yolo_segmentation_model("yolov8m-seg.pt")
 
 
@@ -91,86 +89,88 @@ def safe_detect(
     )
 
 
-# Replace problematic modules in the model with FX-safe versions
-for name, module in model.model.named_children():
-    if isinstance(module, ultralytics.nn.modules.conv.Concat):
-        print(f"Replacing module {name} with FXSafeConcat")
-        setattr(model.model, name, FXSafeConcat(module))
+mg = MaseGraph.from_checkpoint("mase_calibrated_qat")
+
+# # Replace problematic modules in the model with FX-safe versions
+# for name, module in model.model.named_children():
+#     if isinstance(module, ultralytics.nn.modules.conv.Concat):
+#         print(f"Replacing module {name} with FXSafeConcat")
+#         setattr(model.model, name, FXSafeConcat(module))
 
 
-cf_args = {
-    # "x": torch.randn(1, 3, 640, 640),
-    # "profile": False,
-    # "visualize": False,
-    # "augment": False,
-    # "embed": None,
-}
+# cf_args = {
+#     # "x": torch.randn(1, 3, 640, 640),
+#     # "profile": False,
+#     # "visualize": False,
+#     # "augment": False,
+#     # "embed": None,
+# }
 
-mg = MaseGraph(model, cf_args=cf_args)
+# mg = MaseGraph(model, cf_args=cf_args)
 
-# Set custom_ops
-CUSTOM_OPS = {
-    "modules": {
-        FXSafeConcat: "",
-    },
-    # "functions": {safe_cat: "", safe_detect: "", },
-}
-setattr(mg.model, "custom_ops", CUSTOM_OPS)
+# # Set custom_ops
+# CUSTOM_OPS = {
+#     "modules": {
+#         FXSafeConcat: "",
+#     },
+#     # "functions": {safe_cat: "", safe_detect: "", },
+# }
+# setattr(mg.model, "custom_ops", CUSTOM_OPS)
 
 
-mg.model.patched_op_names = [
-    "safe_cat",
-    "safe_detect",
-    "safe_settatr",
-    "safe_list_create",
-    "safe_append",
-    "safe_unbind",
-]
+# mg.model.patched_op_names = [
+#     "safe_cat",
+#     "safe_detect",
+#     "safe_settatr",
+#     "safe_list_create",
+#     "safe_append",
+#     "safe_unbind",
+# ]
 
-# %%
-func_data["safe_detect"] = {"module": "detect", "input": "data_in"}
-func_data["safe_cat"] = {"module": "concat", "input": "data_in", "dim": "config"}
-func_data["safe_settatr"] = {
-    "module": "settatr",
-    "input": "data_in",
-    "name": "config",
-    "value": "config",
-}
-func_data["safe_list_create"] = {
-    "module": "list_create",
-    "m": "config",
-    "x": "data_in",
-    "y": "config",
-}
-func_data["safe_append"] = {
-    "module": "append",
-    "x": "data_in",
-}
-func_data["safe_unbind"] = {
-    "module": "unbind",
-    "x": "data_in",
-    "dim": "config",
-}
+# # %%
+# func_data["safe_detect"] = {"module": "detect", "input": "data_in"}
+# func_data["safe_cat"] = {"module": "concat", "input": "data_in", "dim": "config"}
+# func_data["safe_settatr"] = {
+#     "module": "settatr",
+#     "input": "data_in",
+#     "name": "config",
+#     "value": "config",
+# }
+# func_data["safe_list_create"] = {
+#     "module": "list_create",
+#     "m": "config",
+#     "x": "data_in",
+#     "y": "config",
+# }
+# func_data["safe_append"] = {
+#     "module": "append",
+#     "x": "data_in",
+# }
+# func_data["safe_unbind"] = {
+#     "module": "unbind",
+#     "x": "data_in",
+#     "dim": "config",
+# }
 
-param = next(mg.model.model.parameters())[1]
+# param = next(mg.model.model.parameters())[1]
 
-dummy_input = torch.rand(1, 3, 640, 640, dtype=param.dtype).to(param.device)
+# dummy_input = torch.rand(1, 3, 640, 640, dtype=param.dtype).to(param.device)
 
-mg, _ = passes.init_metadata_analysis_pass(mg)
-mg, _ = passes.add_common_metadata_analysis_pass(
-    mg,
-    {
-        "dummy_in": {
-            "x": dummy_input,
-            "profile_1": False,
-            "visualize_1": False,
-            "augment_1": False,
-            "embed_1": None,
-        },
-        "add_value": True,
-    },
-)
-mg, _ = passes.add_software_metadata_analysis_pass(mg, None)
+# mg, _ = passes.init_metadata_analysis_pass(mg)
+# mg, _ = passes.add_common_metadata_analysis_pass(
+#     mg,
+#     {
+#         "dummy_in": {
+#             "x": dummy_input,
+#             "profile_1": False,
+#             "visualize_1": False,
+#             "augment_1": False,
+#             "embed_1": None,
+#         },
+#         "add_value": True,
+#     },
+# )
+# mg, _ = passes.add_software_metadata_analysis_pass(mg, None)
 
 # %%
 
@@ -216,7 +216,6 @@ for config in configs:
     if config["accelerator"] == "gpu":
         os.environ["CUDA_MODULE_LOADING"] = "LAZY"
 
-# %%
 from chop.models.utils import MaseModelInfo, ModelSource, ModelTaskType
 
 model_info = MaseModelInfo(
@@ -232,19 +231,7 @@ input_generator = InputGenerator(
     which_dataloader="train",
 )
 
-new_mg, _ = tensorrt_fake_quantize_transform_pass(graph=mg, pass_args=tensorrt_config)
-summarize_quantization_analysis_pass(
-    new_mg, {"save_dir": "trt_fake_quantize_summary", "original_graph": mg}
-)
-# %%
-mg, _ = tensorrt_calibrate_transform_pass(new_mg, pass_args=tensorrt_config)
-mg.export("yolov8m_int8_trt_calibrated")
+from chop.passes.graph.analysis.runtime.runtime_analysis import RuntimeAnalysis
 
-# %%
-mg, _ = tensorrt_fine_tune_transform_pass(mg, pass_args=tensorrt_config)
-mg.export("yolov8m_int8_trt_QAT")
-
-# %%
-# mg, meta = tensorrt_engine_interface_pass(mg, pass_args=tensorrt_config)
-
-# %%
+analysis = RuntimeAnalysis(mg, tensorrt_config)
+analysis.evaluate()
