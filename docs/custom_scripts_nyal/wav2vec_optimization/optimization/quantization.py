@@ -83,8 +83,10 @@ def apply_mixed_precision_quantization(model, precision_choices, trial):
                     "weight_exponent_bias": trial.suggest_categorical(f"{name}_weight_exponent_bias", [0, 7, 15]),
                     "data_in_width": trial.suggest_categorical(f"{name}_data_in_width", [8, 16, 32]),
                     "data_in_exponent_bias": trial.suggest_categorical(f"{name}_data_in_exponent_bias", [0, 7, 15]),
+                    "data_in_frac_width": 0,  # Add this for compatibility with metadata analysis
                     "bias_width": trial.suggest_categorical(f"{name}_bias_width", [8, 16, 32]),
                     "bias_exponent_bias": trial.suggest_categorical(f"{name}_bias_exponent_bias", [0, 7, 15]),
+                    "bias_frac_width": 0,  # Add this for compatibility with metadata analysis
                 }
             elif chosen_type_name == "LinearBlockFP":
                 config = {
@@ -97,10 +99,13 @@ def apply_mixed_precision_quantization(model, precision_choices, trial):
                     "data_in_exponent_bias": 15,
                     "data_in_block_size": [16],
                     "data_in_skip_first_dim": True,
+                    "data_in_frac_width": 0,  # Add this for compatibility with metadata analysis
                     "bias_width": trial.suggest_categorical(f"{name}_bias_width", [8, 16, 32]),
                     "bias_exponent_width": 5,
                     "bias_exponent_bias": 15,
                     "bias_block_size": [16],
+                    "bias_frac_width": 0,  # Add this for compatibility with metadata analysis
+                    "weight_frac_width": 0,  # Add this for compatibility with metadata analysis
                 }
                 
             # Create the new (quantized) layer and copy the parameters
