@@ -5,7 +5,7 @@ import os
 from .utils import prepare_save_path, check_for_value_in_dict
 
 
-def tensorrt_fine_tune_transform_pass(graph, pass_args=None):
+def tensorrt_fine_tune_transform_pass(graph, pass_args=None, device=None):
     """
     Fine-tunes a quantized model using Quantization Aware Training (QAT) to improve its accuracy post-quantization.
 
@@ -43,7 +43,7 @@ def tensorrt_fine_tune_transform_pass(graph, pass_args=None):
 
     This example demonstrates initiating the fine-tuning process with custom epochs, and initial and final learning rates, adapting the training regime to the specific requirements of the quantized model.
     """
-    trainer = FineTuning(graph, pass_args)
+    trainer = FineTuning(graph, pass_args, device)
     ckpt = trainer.train()
 
     # Link the model with the graph for further operations or evaluations
@@ -53,11 +53,15 @@ def tensorrt_fine_tune_transform_pass(graph, pass_args=None):
 
 
 class FineTuning:
-    def __init__(self, graph, config):
+    def __init__(self, graph, config, device):
         self.logger = logging.getLogger(__name__)
         self.config = config
         self.graph = graph
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        if device is None:
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        else:
+            self.device = device
+
         self.graph.model.to(self.device)
 
     def train(self):
@@ -142,7 +146,7 @@ class FineTuning:
             ckpt_save_path,
             None,
             None,
-            "",
+            visualizer=None,
         )
 
         self.logger.info("Fine Tuning Complete")

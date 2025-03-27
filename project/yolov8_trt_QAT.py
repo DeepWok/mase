@@ -45,7 +45,7 @@ from chop.dataset import MaseDataModule
 
 # %%
 # Load a pretrained YOLO model
-model_name = "yolov8n.pt"
+model_name = "yolov8m.pt"
 model = get_yolo_detection_model(model_name)
 # model = get_yolo_segmentation_model("yolov8m-seg.pt")
 
@@ -237,14 +237,17 @@ summarize_quantization_analysis_pass(
     new_mg, {"save_dir": "trt_fake_quantize_summary", "original_graph": mg}
 )
 # %%
-mg, _ = tensorrt_calibrate_transform_pass(new_mg, pass_args=tensorrt_config)
-mg.export("yolov8m_int8_trt_calibrated")
+# mg, _ = tensorrt_calibrate_transform_pass(new_mg, pass_args=tensorrt_config)
+# mg.export("yolov8m_int8_trt_calibrated")
 
 # %%
-mg, _ = tensorrt_fine_tune_transform_pass(mg, pass_args=tensorrt_config)
+mg = MaseGraph.from_checkpoint("yolov8m_int8_trt_calibrated")
+print("Loaded model from checkpoint")
+device = torch.device("cuda:1")
+mg, _ = tensorrt_fine_tune_transform_pass(mg, pass_args=tensorrt_config, device=device)
 mg.export("yolov8m_int8_trt_QAT")
 
 # %%
-# mg, meta = tensorrt_engine_interface_pass(mg, pass_args=tensorrt_config)
+mg, meta = tensorrt_engine_interface_pass(mg, pass_args=tensorrt_config)
 
 # %%

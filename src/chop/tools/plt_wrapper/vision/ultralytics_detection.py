@@ -61,9 +61,8 @@ class UltralyticsDetectionWrapper(WrapperBase):
         return loss
 
     def on_test_epoch_end(self):
-        # self.log("test_bleu_epoch", self.bleu_test, prog_bar=True)
-        # self.log("test_loss_epoch", self.loss_test, prog_bar=True)
-        print("Test BLEU: ", self.loss_test)
+        self.log("test_bleu_epoch", self.bleu_test, prog_bar=True)
+        self.log("test_loss_epoch", self.loss_test, prog_bar=True)
 
     def predict_step(self, batch, batch_idx: int, dataloader_idx: int = 0):
         input_ids = batch["input_ids"]
