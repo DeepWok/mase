@@ -101,6 +101,6 @@ def postprocess_detection_outputs(x):
     anchors, strides = (x.transpose(0, 1) for x in make_anchors(x, strides, 0.5))
     box = x_cat[:, : 16 * 4]
     cls = x_cat[:, 16 * 4 :]
-    dbox = dist2bbox(dfl(box), anchors.unsqueeze(0), xywh=True, dim=1)
+    dbox = dist2bbox(dfl(box), anchors.unsqueeze(0), xywh=True, dim=1) * strides
     bboxes_preds = torch.cat((dbox, cls.sigmoid()), 1)
-    return bboxes_preds, non_max_suppression(bboxes_preds)
+    return bboxes_preds, non_max_suppression(bboxes_preds, multi_label=True)
