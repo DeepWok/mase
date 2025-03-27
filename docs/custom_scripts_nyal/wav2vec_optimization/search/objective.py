@@ -1,5 +1,5 @@
 """
-Objective functions for optimization.
+Objective functions for optimization with mixed precision support.
 """
 
 import torch
@@ -12,28 +12,23 @@ from chop.passes.graph import (
 )
 from chop.models import CombinedWav2Vec2CTC
 from chop.tools import get_trainer
+import torch.nn as nn
 
 from optimization.pruning import apply_pruning, calculate_pruning_metrics
 from optimization.smoothquant import apply_smoothquant
-from optimization.quantization import apply_quantization
-from config import BATCH_SIZE
-from config import EPOCHS
+from optimization.quantization import apply_mixed_precision_quantization
+from config import BATCH_SIZE, EPOCHS
 
 # Set up logging
 logger = logging.getLogger(__name__)
 
-
 def objective(trial, baseline_model_data):
     """
-    Objective function for optimization that:
-    1) Creates optimized model (quantized + pruned)
+    Objective function for optimization with mixed precision support that:
+    1) Creates optimized model (mixed precision quantized + pruned)
     2) Trains the optimized model
     3) Performs runtime analysis
-    4) Calculates composite score based on normalized metrics:
-       - WER: capped at 1.0
-       - Latency & Energy: normalized percentage change from baseline
-       - Bit width: normalized between 0-1 (with max of 32)
-       - Sparsity: already normalized between 0-1
+    4) Calculates composite score based on normalized metrics
     """
     # Unpack baseline data
     search_space = baseline_model_data["search_space"]
@@ -47,6 +42,7 @@ def objective(trial, baseline_model_data):
     checkpoint = baseline_model_data["checkpoint"]
     dataset_name = baseline_model_data["dataset_name"]
     baseline_metrics = baseline_model_data["baseline_metrics"]
+    processor = baseline_model_data["processor"]
     
     logger.info(f"Starting trial {trial.number}")
     
@@ -63,9 +59,6 @@ def objective(trial, baseline_model_data):
     if pruning_method == "hwpq":
         structured = trial.suggest_categorical("structured_sparsity", 
                                             search_space["pruning"]["structured_options"])
-
-    # Extract processor from baseline_model_data
-    processor = baseline_model_data["processor"]
 
     # Apply pruning to the model
     if pruning_method in ["movement", "snip"]:
@@ -127,80 +120,34 @@ def objective(trial, baseline_model_data):
     smoothed_mg, _ = apply_smoothquant(pruned_mg, alpha, data_module, checkpoint, dataset_name)
     
     # -----------------------------
-    # Phase 3: Quantization
+    # Phase 3: Mixed Precision Quantization
     # -----------------------------
     
-    # Select quantization method
-    quant_methods = search_space["quantization"]["methods"]
-    quant_method_idx = trial.suggest_categorical("quantization_method_idx", 
-                                                list(range(len(quant_methods))))
-    quant_method_name, quant_class = quant_methods[quant_method_idx]
+    # Define available precision choices, including full precision
+    precision_choices = [nn.Linear]  # Start with full precision
     
-    # Prepare bit width config based on quantization method
-    bit_config = None
-    if quant_method_name != "full_precision":
-        # Create a configuration based on method type
-        if quant_method_name == "integer":
-            bit_config = {
-                "weight_width": trial.suggest_categorical("weight_width", 
-                                                         search_space["quantization"]["bit_width_configs"]["weight_width"]),
-                "weight_frac_width": trial.suggest_categorical("weight_frac_width", 
-                                                             search_space["quantization"]["bit_width_configs"]["weight_frac_width"]),
-                "data_in_width": trial.suggest_categorical("data_in_width", 
-                                                         search_space["quantization"]["bit_width_configs"]["data_in_width"]),
-                "data_in_frac_width": trial.suggest_categorical("data_in_frac_width", 
-                                                              search_space["quantization"]["bit_width_configs"]["data_in_frac_width"]),
-                "bias_width": trial.suggest_categorical("bias_width", 
-                                                      search_space["quantization"]["bit_width_configs"]["bias_width"]),
-                "bias_frac_width": trial.suggest_categorical("bias_frac_width", 
-                                                           search_space["quantization"]["bit_width_configs"]["bias_frac_width"]),
-            }
-        elif quant_method_name in ["minifloat_denorm", "minifloat_ieee"]:
-            bit_config = {
-                "weight_width": trial.suggest_categorical("weight_width", 
-                                                         search_space["quantization"]["bit_width_configs"]["weight_width"]),
-                "weight_exponent_width": trial.suggest_categorical("weight_exponent_width", 
-                                                                 search_space["quantization"]["minifloat_configs"]["weight_exponent_width"]),
-                "weight_exponent_bias": trial.suggest_categorical("weight_exponent_bias", 
-                                                                search_space["quantization"]["minifloat_configs"]["weight_exponent_bias"]),
-                "data_in_width": trial.suggest_categorical("data_in_width", 
-                                                         search_space["quantization"]["bit_width_configs"]["data_in_width"]),
-                "data_in_exponent_width": trial.suggest_categorical("data_in_exponent_width", 
-                                                                  search_space["quantization"]["minifloat_configs"]["data_in_exponent_width"]),
-                "data_in_exponent_bias": trial.suggest_categorical("data_in_exponent_bias", 
-                                                                 search_space["quantization"]["minifloat_configs"]["data_in_exponent_bias"]),
-                "bias_width": trial.suggest_categorical("bias_width", 
-                                                      search_space["quantization"]["bit_width_configs"]["bias_width"]),
-                "bias_exponent_width": trial.suggest_categorical("bias_exponent_width", 
-                                                               search_space["quantization"]["minifloat_configs"]["bias_exponent_width"]),
-                "bias_exponent_bias": trial.suggest_categorical("bias_exponent_bias", 
-                                                              search_space["quantization"]["minifloat_configs"]["bias_exponent_bias"]),
-
-                # Add placeholders for frac_width to prevent KeyError
-                "weight_frac_width": 16,  # Placeholder - not used for minifloat
-                "data_in_frac_width": 16,  # Placeholder - not used for minifloat 
-                "bias_frac_width": 16,     # Placeholder - not used for minifloat
-            }
-        else:
-            # For other methods, just use basic width configuration
-            bit_config = {
-                "weight_width": trial.suggest_categorical("weight_width", 
-                                                         search_space["quantization"]["bit_width_configs"]["weight_width"]),
-                "data_in_width": trial.suggest_categorical("data_in_width", 
-                                                         search_space["quantization"]["bit_width_configs"]["data_in_width"]),
-            }
+    # Add quantization types from search space
+    for _, quant_class in search_space["quantization"]["methods"]:
+        if quant_class not in precision_choices:
+            precision_choices.append(quant_class)
     
-    # Apply quantization to the smoothed model
-    quantized_model = apply_quantization(smoothed_mg.model, quant_method_name, quant_class, bit_config)
+    # Apply mixed precision quantization
+    quantized_model, precision_decisions = apply_mixed_precision_quantization(
+        smoothed_mg.model, 
+        precision_choices, 
+        trial
+    )
     
-    # Add debug logging
-    logger.info(f"Applied quantization method: {quant_method_name}")
-    logger.info(f"Quantization config: {bit_config}")
-    # Check if quantization was actually applied
-    for name, module in quantized_model.named_modules():
-        if isinstance(module, quant_class):
-            logger.info(f"Found quantized module: {name}")
-            logger.info(f"Module config: {module.config if hasattr(module, 'config') else 'No config'}")
+    # Store the precision decisions
+    trial.set_user_attr("precision_decisions", precision_decisions)
+    
+    # Count the number of layers for each quantization type
+    type_counts = {}
+    for layer_type in precision_decisions.values():
+        type_counts[layer_type] = type_counts.get(layer_type, 0) + 1
+    
+    for type_name, count in type_counts.items():
+        trial.set_user_attr(f"count_{type_name}", count)
     
     # Create final optimized model combining all phases
     optimized_model = CombinedWav2Vec2CTC(
@@ -211,7 +158,7 @@ def objective(trial, baseline_model_data):
     )
     
     # Store configuration info in trial
-    trial.set_user_attr("quantization_method", quant_method_name)
+    trial.set_user_attr("mixed_precision", True)
     trial.set_user_attr("pruning_method", pruning_method)
     trial.set_user_attr("smoothquant_alpha", alpha)
     
@@ -285,8 +232,6 @@ def objective(trial, baseline_model_data):
     weight_avg_bit = bitwidth_results.get("w_avg_bit", 32)
 
     # Calculate the combined average bit width
-    # We can either use a simple average or a weighted one depending on importance
-    # Simple average:
     avg_bitwidth = (data_avg_bit + weight_avg_bit) / 2.0
 
     # Store both individual metrics and the combined average
@@ -322,9 +267,7 @@ def objective(trial, baseline_model_data):
     bitwidth_reduction = (base_bitwidth - avg_bitwidth) / base_bitwidth
     trial.set_user_attr("bitwidth_reduction", bitwidth_reduction)
     
-    # ----------------------------------------
-    # NEW NORMALIZED METRICS CALCULATION
-    # ----------------------------------------
+    # Normalized metrics calculation
     
     # 1. Cap WER at 1.0 (100%)
     wer_value = runtime_results.get("Average WER", 1)
@@ -334,14 +277,12 @@ def objective(trial, baseline_model_data):
     # 2. Normalize latency between 0-1 based on percentage change
     latency_pct_change = pct_changes.get("Average Latency", 0.0)
     # Convert to 0-1 scale where 0 is best (large reduction), 1 is worst (large increase)
-    # Assuming a maximum reasonable increase of 100% and maximum reduction of -100%
     normalized_latency = (latency_pct_change + 100) / 200
     normalized_latency = max(0.0, min(normalized_latency, 1.0))  # Clamp between 0-1
     trial.set_user_attr("normalized_latency", normalized_latency)
     
     # 3. Normalize energy between 0-1 based on percentage change
     energy_pct_change = pct_changes.get("Inference Energy Consumption", 0.0)
-    # Convert to 0-1 scale where 0 is best (large reduction), 1 is worst (large increase)
     normalized_energy = (energy_pct_change + 100) / 200
     normalized_energy = max(0.0, min(normalized_energy, 1.0))  # Clamp between 0-1
     trial.set_user_attr("normalized_energy", normalized_energy)
@@ -352,7 +293,6 @@ def objective(trial, baseline_model_data):
     trial.set_user_attr("normalized_bitwidth", normalized_bitwidth)
     
     # 5. Sparsity is already normalized between 0-1
-    # Note: For sparsity, higher is better (more sparsity = smaller model)
     sparsity = pruning_metrics["overall_sparsity"]
     
     # Define weights for each metric
@@ -363,8 +303,6 @@ def objective(trial, baseline_model_data):
     sparsity_weight = 0.3
     
     # Combine into new composite score
-    # For WER, latency, energy, and bitwidth, lower is better (0 is best)
-    # For sparsity, higher is better (1 is best)
     composite_score = (
         wer_weight * normalized_wer +
         latency_weight * normalized_latency +
@@ -383,4 +321,3 @@ def objective(trial, baseline_model_data):
                 f"Energy={normalized_energy:.4f}, Bitwidth={normalized_bitwidth:.4f}, Sparsity={sparsity:.4f}")
     
     return composite_metric
-

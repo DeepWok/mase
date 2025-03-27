@@ -1,10 +1,9 @@
 """
-Optimization study implementation.
+Optimization study implementation with mixed precision support.
 """
 import torch
 import logging
 import optuna
-import dill
 import json
 from optuna.samplers import TPESampler
 from copy import deepcopy
@@ -12,10 +11,11 @@ from copy import deepcopy
 from chop import MaseGraph
 import chop.passes as passes
 from chop.models import CombinedWav2Vec2CTC
+import torch.nn as nn
 
 from optimization.pruning import apply_pruning
 from optimization.smoothquant import apply_smoothquant
-from optimization.quantization import apply_quantization
+from optimization.quantization import apply_mixed_precision_quantization
 from search.objective import objective
 from config import NUM_TRIALS
 
@@ -30,7 +30,7 @@ def run_optimization_study(baseline_model_data, n_trials=NUM_TRIALS):
     sampler = TPESampler()
     study = optuna.create_study(
         direction="maximize",
-        study_name="wav2vec2_optimization",
+        study_name="wav2vec2_mixed_precision_optimization",
         sampler=sampler
     )
     
@@ -45,7 +45,18 @@ def run_optimization_study(baseline_model_data, n_trials=NUM_TRIALS):
     logger.info("\nBest trial:")
     logger.info(f"  Trial Number: {best_trial.number}")
     logger.info(f"  Composite Metric: {best_trial.value}")
-    logger.info(f"  Quantization Method: {best_trial.user_attrs.get('quantization_method', 'N/A')}")
+    
+    # Log mixed precision stats
+    if "precision_decisions" in best_trial.user_attrs:
+        precision_decisions = best_trial.user_attrs["precision_decisions"]
+        type_counts = {}
+        for layer_type in precision_decisions.values():
+            type_counts[layer_type] = type_counts.get(layer_type, 0) + 1
+        
+        logger.info("  Quantization Type Distribution:")
+        for type_name, count in type_counts.items():
+            logger.info(f"    {type_name}: {count} layers")
+    
     logger.info(f"  Pruning Method: {best_trial.params.get('pruning_method', 'N/A')}")
     logger.info(f"  SmoothQuant Alpha: {best_trial.params.get('smoothquant_alpha', 'N/A')}")
     
@@ -53,7 +64,6 @@ def run_optimization_study(baseline_model_data, n_trials=NUM_TRIALS):
         logger.info(f"  Overall Sparsity: {best_trial.user_attrs['overall_sparsity']:.2%}")
     
     logger.info(f"  Average Bit Width: {best_trial.user_attrs.get('avg_bitwidth', 'N/A')}")
-    
     logger.info(f"  WER: {best_trial.user_attrs.get('runtime_average_wer', 'N/A')}")
     
     # Save best trial model
@@ -62,7 +72,7 @@ def run_optimization_study(baseline_model_data, n_trials=NUM_TRIALS):
     return study
 
 def save_best_model(best_trial, baseline_model_data):
-    """Save the best model from the study"""
+    """Save the best model from the study with mixed precision support"""
     logger.info("Saving best model...")
     
     # Reconstruct the best model
@@ -80,12 +90,6 @@ def save_best_model(best_trial, baseline_model_data):
     structured_sparsity = best_trial.params.get("structured_sparsity", False)
     smoothquant_alpha = best_trial.params.get("smoothquant_alpha")
     
-    quant_methods = search_space["quantization"]["methods"]
-    quant_method_idx = best_trial.params.get("quantization_method_idx", 0)
-    quant_method_name, quant_class = quant_methods[quant_method_idx]
-    
-    # 1. Apply pruning
-
     processor = baseline_model_data["processor"]
 
     # 1. Apply pruning
@@ -136,43 +140,23 @@ def save_best_model(best_trial, baseline_model_data):
     logger.info(f"Applying SmoothQuant with alpha: {smoothquant_alpha}")
     smoothed_mg, _ = apply_smoothquant(pruned_mg, smoothquant_alpha, data_module, checkpoint, dataset_name)
     
-    # 4. Build bit config for quantization
-    bit_config = None
-    if quant_method_name != "full_precision":
-        if quant_method_name == "integer":
-            bit_config = {
-                "weight_width": best_trial.params.get("weight_width"),
-                "weight_frac_width": best_trial.params.get("weight_frac_width"),
-                "data_in_width": best_trial.params.get("data_in_width"),
-                "data_in_frac_width": best_trial.params.get("data_in_frac_width"),
-                "bias_width": best_trial.params.get("bias_width"),
-                "bias_frac_width": best_trial.params.get("bias_frac_width"),
-            }
-        elif quant_method_name in ["minifloat_denorm", "minifloat_ieee"]:
-            bit_config = {
-                "weight_width": best_trial.params.get("weight_width"),
-                "weight_exponent_width": best_trial.params.get("weight_exponent_width"),
-                "weight_exponent_bias": best_trial.params.get("weight_exponent_bias"),
-                "data_in_width": best_trial.params.get("data_in_width"),
-                "data_in_exponent_width": best_trial.params.get("data_in_exponent_width"),
-                "data_in_exponent_bias": best_trial.params.get("data_in_exponent_bias"),
-                "bias_width": best_trial.params.get("bias_width"),
-                "bias_exponent_width": best_trial.params.get("bias_exponent_width"),
-                "bias_exponent_bias": best_trial.params.get("bias_exponent_bias"),
-
-            }
-        else:
-            bit_config = {
-                "weight_width": best_trial.params.get("weight_width"),
-                "data_in_width": best_trial.params.get("data_in_width"),
-            }
+    # 4. Apply mixed precision quantization
+    # Define available precision choices
+    precision_choices = [nn.Linear]  # Start with full precision
     
-    # 5. Apply quantization
-    logger.info(f"Applying quantization: {quant_method_name}")
-    quantized_model = apply_quantization(smoothed_mg.model, quant_method_name, quant_class, bit_config)
+    # Add quantization types from search space
+    for _, quant_class in search_space["quantization"]["methods"]:
+        if quant_class not in precision_choices:
+            precision_choices.append(quant_class)
     
-    # 6. Create final optimized model
-    # Create final optimized model
+    logger.info("Applying mixed precision quantization")
+    quantized_model, precision_decisions = apply_mixed_precision_quantization(
+        smoothed_mg.model, 
+        precision_choices, 
+        best_trial
+    )
+    
+    # 5. Create final optimized model
     best_model = CombinedWav2Vec2CTC(
         encoder=quantized_model,
         ctc_head=ctc_head,
@@ -181,7 +165,7 @@ def save_best_model(best_trial, baseline_model_data):
     )
     
     # Save model's state dictionary instead of the full model
-    model_filename = "best_optimized_model_state_dict.pt"
+    model_filename = "best_mixed_precision_model_state_dict.pt"
     torch.save(best_model.state_dict(), model_filename)
     
     # Save configuration
@@ -190,15 +174,19 @@ def save_best_model(best_trial, baseline_model_data):
         "pruning_sparsity": pruning_sparsity,
         "structured_sparsity": structured_sparsity,
         "smoothquant_alpha": smoothquant_alpha,
-        "quantization_method": quant_method_name,
-        "bit_config": bit_config,
-        "composite_score": best_trial.user_attrs.get("composite_score"),
+        "mixed_precision": True,
+        "precision_decisions": precision_decisions,
+        "composite_score": best_trial.user_attrs.get("new_composite_score"),
+        "wer": best_trial.user_attrs.get("runtime_average_wer"),
+        "latency": best_trial.user_attrs.get("runtime_average_latency"),
+        "energy": best_trial.user_attrs.get("runtime_inference_energy_consumption"),
+        "avg_bitwidth": best_trial.user_attrs.get("avg_bitwidth"),
     }
     
-    with open("best_model_config.json", "w") as f:
-        json.dump(config, f, indent=2)
+    with open("best_mixed_precision_model_config.json", "w") as f:
+        json.dump(config, f, indent=2, default=str)  # Use default=str to handle non-serializable objects
     
     logger.info(f"Best model state dict saved to {model_filename}")
-    logger.info(f"Best model config saved to best_model_config.json")
+    logger.info(f"Best model config saved to best_mixed_precision_model_config.json")
     
     return best_model

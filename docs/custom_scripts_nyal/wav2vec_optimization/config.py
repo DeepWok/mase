@@ -37,7 +37,9 @@ def define_search_space():
         ("full_precision", nn.Linear),  # Baseline for comparison
         ("integer", LinearInteger),     # INT quantization
         ("minifloat_denorm", LinearMinifloatDenorm),  # Minifloat with denormalized numbers
-        ("minifloat_ieee", LinearMinifloatIEEE),      # IEEE-style minifloat         # Logarithmic quantization
+        ("minifloat_ieee", LinearMinifloatIEEE),      # IEEE-style minifloat
+        ("log", LinearLog),             # Logarithmic quantization
+        ("block_fp", LinearBlockFP),    # Block floating point quantization
     ]
     
     # Bit width configurations for precision
@@ -68,6 +70,22 @@ def define_search_space():
     # Search space for SmoothQuant
     smoothquant_alpha_values = [0.0, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
     
+    # Mixed precision configuration
+    mixed_precision = {
+        "quantization_classes": [
+            nn.Linear,  # Full precision
+            LinearInteger,
+            LinearMinifloatDenorm,
+            LinearMinifloatIEEE,
+            LinearLog,
+            LinearBlockFP,
+        ],
+        "width_choices": [8, 16, 32],
+        "frac_width_choices": [4, 8, 16],
+        "exponent_width_choices": [3, 5, 8],
+        "exponent_bias_choices": [7, 15, 31],
+    }
+    
     search_space = {
         "quantization": {
             "methods": quantization_methods,
@@ -81,7 +99,8 @@ def define_search_space():
         },
         "smoothquant": {
             "alpha_values": smoothquant_alpha_values,
-        }
+        },
+        "mixed_precision": mixed_precision,
     }
     
     logger.info("Global search space defined:\n%s", pprint.pformat(search_space))

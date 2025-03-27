@@ -1,5 +1,5 @@
 """
-Main script to run the Wav2Vec2 optimization.
+Main script to run the Wav2Vec2 optimization with mixed precision support.
 """
 
 import logging
@@ -12,7 +12,7 @@ from data_utils import import_model_and_dataset
 from model_utils import setup_mase_graph, create_combined_model
 from optimization.baseline import run_baseline_metrics
 from search.study import run_optimization_study
-from visualization.results import process_study_results
+from visualization.results import process_study_results, generate_mixed_precision_analysis
 from visualization.plots import create_visualizations
 
 # Set up logging
@@ -20,12 +20,13 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 def main(args):
-    """Main function to run the optimization pipeline"""
+    """Main function to run the optimization pipeline with mixed precision support"""
     logger.info("Starting optimization pipeline")
 
     # Override default config values with command line arguments
     config.EPOCHS = args.epochs
     logger.info(f"Using {config.EPOCHS} epochs for training")
+    logger.info("Mixed precision quantization enabled")
 
     # Log the entire configuration from the config module (filter out built-ins)
     config_dict = {k: v for k, v in vars(config).items() if not k.startswith('__')}
@@ -83,6 +84,10 @@ def main(args):
     
     # 7. Process results and create visualizations
     results_df = process_study_results(study)
+    
+    # Generate additional mixed precision analysis
+    mixed_precision_analysis = generate_mixed_precision_analysis(results_df)
+    logger.info("Mixed precision analysis complete")
 
     if CREATE_VISUALISATONS:
         create_visualizations(study, results_df, baseline_metrics)
@@ -94,13 +99,22 @@ def main(args):
     
     # Create a summary of the best configuration
     best_config = {
-        "quantization_method": study.best_trial.user_attrs.get("quantization_method", "N/A"),
         "pruning_method": study.best_trial.params.get("pruning_method", "N/A"),
         "pruning_sparsity": study.best_trial.params.get("pruning_sparsity", None),
         "structured_sparsity": study.best_trial.params.get("structured_sparsity", None),
         "smoothquant_alpha": study.best_trial.params.get("smoothquant_alpha", None),
         "runtime_average_wer": study.best_trial.user_attrs.get("runtime_average_wer", None),
     }
+    
+    # Add mixed precision information
+    if "precision_decisions" in study.best_trial.user_attrs:
+        precision_decisions = study.best_trial.user_attrs["precision_decisions"]
+        type_counts = {}
+        for layer_type in precision_decisions.values():
+            type_counts[layer_type] = type_counts.get(layer_type, 0) + 1
+        
+        best_config["mixed_precision"] = True
+        best_config["quantization_distribution"] = type_counts
     
     logger.info("Best configuration:")
     for k, v in best_config.items():
@@ -114,9 +128,8 @@ if __name__ == "__main__":
                         help=f"Number of optimization trials (default: {NUM_TRIALS})")
     parser.add_argument("--seed", type=int, default=42,
                         help="Random seed for reproducibility (default: 42)")
-    parser.add_argument("--epochs", type=int, default=EPOCHS,
-                        help=f"Number of training epochs (default: {EPOCHS})")
-    
+    parser.add_argument("--epochs", type=float, default=EPOCHS,
+                        help=f"Number of training epochs (default: {EPOCHS}). Can be a decimal value like 0.1 for partial epochs.")
     
     args = parser.parse_args()
     
