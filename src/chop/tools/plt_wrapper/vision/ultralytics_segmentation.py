@@ -2,10 +2,10 @@ import torch
 import torch.nn as nn
 
 from .base import VisionModelWrapper
-from .losses import v8DetectionLoss
+from .losses import v8SegmentationLoss
 
 
-class UltralyticsDetectionWrapper(VisionModelWrapper):
+class UltralyticsSegmentationWrapper(VisionModelWrapper):
     def __init__(
         self,
         model,
@@ -14,7 +14,7 @@ class UltralyticsDetectionWrapper(VisionModelWrapper):
         weight_decay=0,
         scheduler_args=None,
         epochs=3,
-        criterion=v8DetectionLoss,
+        criterion=v8SegmentationLoss,
         optimizer=None,
     ):
         super().__init__(
@@ -61,9 +61,7 @@ class UltralyticsDetectionWrapper(VisionModelWrapper):
         return loss
 
     def on_test_epoch_end(self):
-        # self.log("test_bleu_epoch", self.bleu_test, prog_bar=True)
-        # self.log("test_loss_epoch", self.loss_test, prog_bar=True)
-        print("Test BLEU: ", self.loss_test)
+        print("Test: ", self.loss_test)
 
     def predict_step(self, batch, batch_idx: int, dataloader_idx: int = 0):
         prediction = self.model.predict(batch["img"])
