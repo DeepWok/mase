@@ -39,4 +39,3 @@ def test_llama_transform_pass(model):
 
 
 model = test_llama_transform_pass(model)
-print(model)

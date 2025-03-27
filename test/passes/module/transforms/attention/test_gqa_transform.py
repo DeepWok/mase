@@ -43,4 +43,3 @@ def test_mla_transform_pass(model):
 
 
 model = test_mla_transform_pass(model)
-print(model)

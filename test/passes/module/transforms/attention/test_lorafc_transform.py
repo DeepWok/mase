@@ -13,7 +13,7 @@ from chop.tools import get_tokenized_dataset, get_trainer
 from chop import MaseGraph
 from pathlib import Path
 import chop.passes as passes
-from chop.passes.module.transforms import attention_transform_pass, fc_transform_pass
+from chop.passes.module.transforms import attention_transform_pass
 
 sys.path.append(Path(__file__).resolve().parents[5].as_posix())
 
@@ -37,4 +37,3 @@ def test_fc_transform_pass(model):
 
 
 model = test_fc_transform_pass(model)
-print(model)

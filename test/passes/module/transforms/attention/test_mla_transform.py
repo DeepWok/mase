@@ -21,7 +21,6 @@ from chop.passes.module.transforms import (
 )
 from pathlib import Path
 
-
 checkpoint = "openai-community/gpt2"
 model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
 
@@ -40,4 +39,3 @@ def test_mla_transform_pass():
 
 
 mla_network = test_mla_transform_pass()
-print(mla_network)
