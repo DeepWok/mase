@@ -9,7 +9,6 @@ from .minifloat import minifloat_denorm_quantizer, minifloat_ieee_quantizer
 from .quantizers_for_hw import (
     integer_quantizer_for_hw,
     integer_floor_quantizer_for_hw,
-    mxint_quantizer_for_hw,
 )
 from .mxint import mxint_quantizer
 

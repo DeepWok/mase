@@ -17,7 +17,6 @@ from chop.passes.graph.utils import vf, v2p, get_module_by_name, init_project
 from chop.nn.quantizers import (
     integer_quantizer_for_hw,
     integer_floor_quantizer_for_hw,
-    mxint_quantizer_for_hw,
 )
 
 logger = logging.getLogger(__name__)
@@ -307,8 +306,6 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
             else:
                 base_quantizer = integer_quantizer_for_hw
 
-            scale = 2**frac_width
-            thresh = 2**width
             data_buff = ""
             for i in range(0, out_depth):
                 line_buff = ""
