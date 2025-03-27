@@ -40,11 +40,13 @@ set_logging_verbosity("info")
 from chop.passes.graph.transforms.tensorrt.quantize.fine_tune import (
     tensorrt_fine_tune_transform_pass,
 )
+from chop.dataset import MaseDataModule
 
 
 # %%
 # Load a pretrained YOLO model
-model = get_yolo_detection_model("yolov8x.pt")
+model_name = "yolov8n.pt"
+model = get_yolo_detection_model(model_name)
 # model = get_yolo_segmentation_model("yolov8m-seg.pt")
 
 
@@ -236,6 +238,7 @@ summarize_quantization_analysis_pass(
 )
 # %%
 mg, _ = tensorrt_calibrate_transform_pass(new_mg, pass_args=tensorrt_config)
+mg.export("mase_calibrated")
 
 # %%
 mg, _ = tensorrt_fine_tune_transform_pass(mg, pass_args=tensorrt_config)
