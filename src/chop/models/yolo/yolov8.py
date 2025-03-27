@@ -47,7 +47,7 @@ class MaseYoloDetectionModel(DetectionModel):
     ],
     model_source=ModelSource.VISION_OTHERS,
     task_type=ModelTaskType.VISION,
-    image_segmentation=True,
+    image_instance_segmentation=True,
     is_fx_traceable=True,
 )
 class MaseYoloSegmentationModel(SegmentationModel):
@@ -90,10 +90,12 @@ def get_yolo_segmentation_model(checkpoint):
     assert "-seg" in checkpoint
     model = MaseYoloSegmentationModel(cfg=checkpoint.replace(".pt", ".yaml"))
     model = patch_yolo(model)
+    if ".pt" in checkpoint:
+        umodel = YOLO(checkpoint)
+        model.load_state_dict(umodel.model.state_dict())
     return model
 
-
-def postprocess_detection_outputs(x):
+def postprocess_outputs_no_nms(x):
     dfl = unnmod.DFL(16)
     shape = x[0].shape
     strides = [8, 16, 32]
@@ -103,4 +105,16 @@ def postprocess_detection_outputs(x):
     cls = x_cat[:, 16 * 4 :]
     dbox = dist2bbox(dfl(box), anchors.unsqueeze(0), xywh=True, dim=1) * strides
     bboxes_preds = torch.cat((dbox, cls.sigmoid()), 1)
-    return bboxes_preds, non_max_suppression(bboxes_preds, multi_label=True)
+    return bboxes_preds
+
+def postprocess_detection_outputs(x):
+    bboxes_preds = postprocess_outputs_no_nms(x)
+    return non_max_suppression(bboxes_preds, multi_label=True)
+
+def postprocess_segmentation_outputs(seg_outputs):
+    x, mask_coefs, mask_protos = seg_outputs
+    bboxes_preds = postprocess_outputs_no_nms(x)
+    catted = torch.cat([bboxes_preds, mask_coefs], 1)
+    # COCO has 80 classes
+    pruned_preds = non_max_suppression(catted, multi_label=True, nc=80)
+    return pruned_preds, mask_protos

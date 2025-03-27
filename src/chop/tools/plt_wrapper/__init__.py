@@ -7,6 +7,7 @@ from .nlp import (
     NLPTranslationModelWrapper,
 )
 from .vision.ultralytics_detection import UltralyticsDetectionWrapper
+from .vision.ultralytics_segmentation import UltralyticsSegmentationWrapper
 
 
 def get_model_wrapper(model_info, task: str):
@@ -18,6 +19,8 @@ def get_model_wrapper(model_info, task: str):
         match task:
             case "detection":
                 return UltralyticsDetectionWrapper
+            case "instance-segmentation":
+                return UltralyticsSegmentationWrapper
             case _:
                 return VisionModelWrapper
     elif model_info.is_nlp_model:

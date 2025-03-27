@@ -1,11 +1,13 @@
 import logging
 import torch
+import torch.nn.functional as F
 from pathlib import PosixPath
 from chop.ir import MaseGraph
 from .utils import PowerMonitor, get_execution_provider
 import os
 from tabulate import tabulate
 import torchmetrics
+import torchmetrics.detection
 import numpy as np
 import onnxruntime as ort
 import json
@@ -14,7 +16,7 @@ from pathlib import Path
 import time
 import tensorrt as trt
 from chop.passes.utils import register_mase_pass
-from chop.models.yolo.yolov8 import postprocess_detection_outputs
+from chop.models.yolo.yolov8 import postprocess_detection_outputs, postprocess_segmentation_outputs
 from ultralytics.utils import ops
 
 
@@ -224,13 +226,19 @@ class RuntimeAnalysis:
             end_time - start_time
         ) * 1000.0  # Convert from seconds to milliseconds
 
-        # Return the predictions
-        if isinstance(preds, torch.Tensor):
-            return preds.detach(), latency
-        elif isinstance(preds, list):
-            return [p.detach() for p in preds]
-        else:
-            raise NotImplementedError(f"Unsupported prediction type: {type(preds)}")
+        def detach(preds):
+            if isinstance(preds, torch.Tensor):
+                return preds.detach(), latency
+            elif isinstance(preds, list):
+                return [detach(p) for p in preds]
+            elif isinstance(preds, tuple):
+                return tuple(detach(p) for p in preds)
+            elif isinstance(preds, dict):
+                return {k: detach(v) for k, v in preds.items()}
+            else:
+                raise NotImplementedError(f"Unsupported prediction type: {type(preds)}")
+
+        return detach(preds)
 
     def infer_mg_cuda(self, model, input_data):
         # send model and input data to GPU for inference
@@ -252,13 +260,20 @@ class RuntimeAnalysis:
         # Calculate latency between start and end events
         latency = start.elapsed_time(end)
 
+        def cpu_detach(preds):
+            if isinstance(preds, torch.Tensor):
+                return preds.detach().cpu()
+            elif isinstance(preds, list):
+                return [cpu_detach(p) for p in preds]
+            elif isinstance(preds, tuple):
+                return tuple(cpu_detach(p) for p in preds)
+            elif isinstance(preds, dict):
+                return {k: cpu_detach(v) for k, v in preds.items()}
+            else:
+                raise NotImplementedError(f"Unsupported prediction type: {type(preds)}")
+
         # return the prediction back to the CPU
-        if isinstance(preds, torch.Tensor):
-            return preds.detach().cpu(), latency
-        elif isinstance(preds, list):
-            return [p.detach().cpu() for p in preds], latency
-        else:
-            raise NotImplementedError(f"Unsupported prediction type: {type(preds)}")
+        return cpu_detach(preds), latency
 
     def infer_trt_cuda(self, trt_context, input_data):
         bufferH = []
@@ -403,9 +418,10 @@ class RuntimeAnalysis:
                     average="weighted",
                     task="multiclass",
                 )
-            # TODO: Add support for detection and segmentation tasks
             case "detection":
                 map = torchmetrics.detection.MeanAveragePrecision()
+            case "instance-segmentation":
+                map = torchmetrics.detection.MeanAveragePrecision(iou_type="segm")
             case _:
                 raise Exception(
                     f"Unsupported task type {self.config['task']}. Please set a supported task type in the config file."
@@ -431,6 +447,8 @@ class RuntimeAnalysis:
                 case "cls":
                     xs, ys = batch
                 case "detection":
+                    xs = batch["img"]
+                case "instance-segmentation":
                     xs = batch["img"]
                 case _:
                     assert False
@@ -549,7 +567,7 @@ class RuntimeAnalysis:
                         )  # native-space pred
                         return predn
 
-                    preds_post, preds_post_nms = postprocess_detection_outputs(preds)
+                    preds_post_nms = postprocess_detection_outputs(preds)
                     metrics_pred = []
                     metrics_target = []
                     for si, pred in enumerate(preds_post_nms):
@@ -571,6 +589,65 @@ class RuntimeAnalysis:
                         )
 
                     map(metrics_pred, metrics_target)
+                case "instance-segmentation":
+                    def prepare_batch(si, batch):
+                        """Prepares a batch of images and annotations for validation."""
+                        idx = batch["batch_idx"] == si
+                        cls = batch["cls"][idx].squeeze(-1)
+                        bbox = batch["bboxes"][idx]
+                        ori_shape = batch["ori_shape"][si]
+                        imgsz = batch["img"].shape[2:]
+                        ratio_pad = batch["ratio_pad"][si]
+                        masks = batch["masks"][idx]
+                        if len(cls):
+                            bbox = (
+                                ops.xywh2xyxy(bbox)
+                                * torch.tensor(imgsz, device=bbox.device)[[1, 0, 1, 0]]
+                            )  # target boxes
+                            ops.scale_boxes(
+                                imgsz, bbox, ori_shape, ratio_pad=ratio_pad
+                            )  # native-space labels
+                        return {
+                            "cls": cls,
+                            "bbox": bbox,
+                            "ori_shape": ori_shape,
+                            "imgsz": imgsz,
+                            "ratio_pad": ratio_pad,
+                            "masks": masks
+                        }
+
+                    def prepare_pred(pred_bbox_and_coef, pred_mask_protos, pbatch):
+                        predn = pred_bbox_and_coef.clone()
+                        ops.scale_boxes(
+                            pbatch["imgsz"],
+                            predn[:, :4],
+                            pbatch["ori_shape"],
+                            ratio_pad=pbatch["ratio_pad"],
+                        )  # native-space pred
+                        pred_masks = ops.process_mask(pred_mask_protos, pred_bbox_and_coef[:,6:], predn[:,:4], shape=pbatch["imgsz"])
+                        return predn, pred_masks
+
+                    preds_box_coef, masks = postprocess_segmentation_outputs(preds)
+                    metrics_pred = []
+                    metrics_target = []
+                    for si, (pred, mask) in enumerate(zip(preds_box_coef, masks)):
+                        pbatch = prepare_batch(si, batch)
+                        cls, bbox = pbatch.pop("cls"), pbatch.pop("bbox")
+                        gt_masks = pbatch.pop("masks")
+                        predn, pred_masks = prepare_pred(pred, mask, pbatch)
+                        metrics_pred.append({
+                            "boxes": predn[:, :4],
+                            "scores": predn[:, 4],
+                            "labels": predn[:, 5].int(),
+                            "masks": pred_masks.bool(),
+                        })
+                        metrics_target.append({
+                            "boxes": bbox,
+                            "labels": cls.int(),
+                            "masks": gt_masks.bool(),
+                        })
+                    map(metrics_pred, metrics_target)
+
 
         match self.config["task"]:
             case "cls":
@@ -602,6 +679,9 @@ class RuntimeAnalysis:
 
             case "detection":
                 map_score = map.compute()
+            case "instance-segmentation":
+                breakpoint()
+                map_score = map.compute()
 
         avg_latency = sum(latencies) / len(latencies)
         avg_gpu_power_usage = sum(gpu_power_usages) / len(gpu_power_usages)
@@ -616,7 +696,7 @@ class RuntimeAnalysis:
                     ["Average F1 Score", f"{avg_f1:.5g}"],
                     ["Average Loss", f"{loss_avg:.5g}"],
                 ]
-            case "detection":
+            case "detection" | "instance-segmentation":
                 metrics = [
                     ["mAP", f"{map_score['map']:.5g}"],
                     ["mAP50", f"{map_score['map_50']:.5g}"],
