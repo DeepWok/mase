@@ -224,13 +224,19 @@ class RuntimeAnalysis:
             end_time - start_time
         ) * 1000.0  # Convert from seconds to milliseconds
 
-        # Return the predictions
-        if isinstance(preds, torch.Tensor):
-            return preds.detach(), latency
-        elif isinstance(preds, list):
-            return [p.detach() for p in preds]
-        else:
-            raise NotImplementedError(f"Unsupported prediction type: {type(preds)}")
+        def detach(preds):
+            if isinstance(preds, torch.Tensor):
+                return preds.detach(), latency
+            elif isinstance(preds, list):
+                return [detach(p) for p in preds]
+            elif isinstance(preds, tuple):
+                return tuple(detach(p) for p in preds)
+            elif isinstance(preds, dict):
+                return {k: detach(v) for k, v in preds.items()}
+            else:
+                raise NotImplementedError(f"Unsupported prediction type: {type(preds)}")
+
+        return detach(preds)
 
     def infer_mg_cuda(self, model, input_data):
         # send model and input data to GPU for inference
@@ -252,13 +258,20 @@ class RuntimeAnalysis:
         # Calculate latency between start and end events
         latency = start.elapsed_time(end)
 
+        def cpu_detach(preds):
+            if isinstance(preds, torch.Tensor):
+                return preds.detach().cpu()
+            elif isinstance(preds, list):
+                return [cpu_detach(p) for p in preds]
+            elif isinstance(preds, tuple):
+                return tuple(cpu_detach(p) for p in preds)
+            elif isinstance(preds, dict):
+                return {k: cpu_detach(v) for k, v in preds.items()}
+            else:
+                raise NotImplementedError(f"Unsupported prediction type: {type(preds)}")
+
         # return the prediction back to the CPU
-        if isinstance(preds, torch.Tensor):
-            return preds.detach().cpu(), latency
-        elif isinstance(preds, list):
-            return [p.detach().cpu() for p in preds], latency
-        else:
-            raise NotImplementedError(f"Unsupported prediction type: {type(preds)}")
+        return cpu_detach(preds), latency
 
     def infer_trt_cuda(self, trt_context, input_data):
         bufferH = []
