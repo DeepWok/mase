@@ -33,19 +33,19 @@ def gpt2sdpa_to_fc_init(attn_module: GPT2SdpaAttention, config: dict) -> nn.Modu
             weight = attn_module.c_proj.weight.T
             try:
                 U, S, V = torch.svd(weight)
-                
+
                 # slice to rank
                 U_r = U[:, :rank]
                 S_r = S[:rank]
                 V_r = V[:, :rank]
-                
+
                 # compute factors directly
-                A_weight = V_r * torch.sqrt(S_r)  
+                A_weight = V_r * torch.sqrt(S_r)
                 B_weight = U_r * torch.sqrt(S_r.unsqueeze(0))
-                
+
                 fc_layer.A.weight.copy_(A_weight.t())
                 fc_layer.B.weight.copy_(B_weight)
-                
+
                 if attn_module.c_proj.bias is not None:
                     fc_layer.B.bias.copy_(attn_module.c_proj.bias)
             except Exception as e:
