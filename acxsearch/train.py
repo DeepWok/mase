@@ -84,34 +84,34 @@ if args.resume:
     best_acc = checkpoint['acc']
     start_epoch = checkpoint['epoch']
 
-from cim.module_level_tranform import vit_module_level_quantize
-net = vit_module_level_quantize(net, {
+from cim.module_level_tranform import vit_module_level_add_noise
+net = vit_module_level_add_noise(net, {
     "by": "type",
     "conv2d": {
         "config": {
-            "num_bits": 8,
-            "weight_range": 1.0,
-            "bias_range": 1.0,
-            "range_decay": 0.0,
+            # "num_bits": 8,
+            # "weight_range": 1.0,
+            # "bias_range": 1.0,
+            # "range_decay": 1e-3,
             "noise_magnitude": 0.2,
         }
     },
-    "linear": {
-        "config": {
-            "num_bits": 8,
-            "weight_range": 1.0,
-            "bias_range": 1.0,
-            "range_decay": 0.0,
-            "noise_magnitude": 0.2,
-        }
-    },
-    "batch_norm": {
-        "config": {
-            "num_bits": 8,
-            "max_value": 6.0,
-            "decay": 1e-3,
-        }
-    }
+    # "linear": {
+    #     "config": {
+    #         "num_bits": 8,
+    #         "weight_range": 1.0,
+    #         "bias_range": 1.0,
+    #         "range_decay": 0.0,
+    #         "noise_magnitude": 0.2,
+    #     }
+    # },
+    # "batch_norm": {
+    #     "config": {
+    #         "num_bits": 8,
+    #         "max_value": 6.0,
+    #         "decay": 1e-3,
+    #     }
+    # }
 })
 net = net.to(device)
 criterion = nn.CrossEntropyLoss()

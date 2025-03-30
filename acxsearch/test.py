@@ -43,36 +43,36 @@ net.load_state_dict(checkpoint['net'])
 # acc = acc_cal(net, datamodule.test_dataloader())
 # print(acc)
 # breakpoint()
-qmodel = vit_module_level_quantize(net, {
-    "by": "type",
-    "conv2d": {
-        "config": {
-            "num_bits": 8,
-            "weight_range": 1.0,
-            "bias_range": 1.0,
-            "range_decay": 0.0,
-            "noise_magnitude": 0.2,
-        }
-    },
-    "linear": {
-        "config": {
-            "num_bits": 8,
-            "weight_range": 1.0,
-            "bias_range": 1.0,
-            "range_decay": 0.0,
-            "noise_magnitude": 0.2,
-        }
-    },
-    "batch_norm": {
-        "config": {
-            "num_bits": 8,
-            "max_value": 6.0,
-            "decay": 1e-3,
-        }
-    }
-})
+# qmodel = vit_module_level_quantize(net, {
+#     "by": "type",
+    # "conv2d": {
+    #     "config": {
+    #         "num_bits": 8,
+    #         "weight_range": 1.0,
+    #         "bias_range": 1.0,
+    #         "range_decay": 0.0,
+    #         "noise_magnitude": 0.2,
+    #     }
+    # },
+    # "linear": {
+    #     "config": {
+    #         "num_bits": 8,
+    #         "weight_range": 1.0,
+    #         "bias_range": 1.0,
+    #         "range_decay": 0.0,
+    #         "noise_magnitude": 0.2,
+    #     }
+    # },
+    # "batch_norm": {
+    #     "config": {
+    #         "num_bits": 8,
+    #         "max_value": 6.0,
+    #         "decay": 1e-3,
+    #     }
+    # }
+# })
 
-acc = acc_cal(qmodel, datamodule.test_dataloader())
+acc = acc_cal(net, datamodule.test_dataloader())
 print(acc)
 # model(next(iter(datamodule.train_dataloader()))[0])
 # fine_tune(model, {

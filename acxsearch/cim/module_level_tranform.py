@@ -45,10 +45,12 @@ def parse_q_config(module, q_config):
         raise ValueError(f"Invalid q_config: {q_config}")
 
 
-def vit_module_level_quantize(model, q_config = {}):
+def vit_module_level_add_noise(model, q_config = {}):
     from chop.passes.graph.utils import deepsetattr
     for module in model.named_modules():
         config = parse_q_config(module, q_config)
+        if config is None:
+            continue
         if get_module_type(module) == "conv2d":
             ori_module = module[1]
             new_module = Conv2dNoise(
