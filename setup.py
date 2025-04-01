@@ -33,8 +33,8 @@ requirements = [
     "toml",
     "timm",
     "pytorch-nlp",
-    "datasets==3.3.2",
-    "evaluate==0.4.3",
+    "datasets",
+    "evaluate",
     "ipython",
     "ipdb",
     "sentencepiece",
@@ -48,7 +48,7 @@ requirements = [
     "stable-baselines3[extra]",
     "h5py",
     "scikit-learn",
-    "scipy==1.14.1",
+    "scipy",
     "onnxruntime",
     "matplotlib",
     "sphinx-rtd-theme",
@@ -94,7 +94,7 @@ requirements = [
     "sphinx-book-theme",
     "pydot",
     "attr-dot-dict",
-    "mase-triton"
+    "mase-triton",
 ]
 
 setup(
