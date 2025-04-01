@@ -42,7 +42,7 @@ requirements = [
     "pybind11",
     "tabulate",
     "tensorboardx",
-    "hyperopt",
+    "hyperopt @ git+https://github.com/hyperopt/hyperopt.git",
     "accelerate",
     "optuna",
     "stable-baselines3[extra]",
@@ -73,7 +73,7 @@ requirements = [
     "bitarray",
     "bitstring",
     "emoji",
-    "numpy<2.0",
+    "numpy",
     "tensorboard",
     "sphinx_needs",
     "onnxconverter-common",
@@ -94,6 +94,7 @@ requirements = [
     "sphinx-book-theme",
     "pydot",
     "attr-dot-dict",
+    "mase-triton"
 ]
 
 setup(
