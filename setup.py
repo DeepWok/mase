@@ -94,6 +94,7 @@ requirements = [
     "sphinx-book-theme",
     "pydot",
     "attr-dot-dict",
+    "mase-triton",
 ]
 
 setup(
