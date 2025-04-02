@@ -48,7 +48,7 @@ requirements = [
     "stable-baselines3[extra]",
     "h5py",
     "scikit-learn",
-    "scipy,
+    "scipy",
     "onnxruntime",
     "matplotlib",
     "sphinx-rtd-theme",
