@@ -25,8 +25,47 @@ def weight_replacement_optical(original, new_module):
             "weight replacement function for the optical module not implemented"
         )
 
+def weight_replacement_linear_optical(linear_layer, morr_layer):
+    """
+    Replace the weights of AllPassMORRLinear (morr_layer) with those from a standard nn.Linear (linear_layer).
+    Focuses only on weight copying (no bias copying).
+    """
+    # Extract dimensions
+    out_features = morr_layer.out_features
+    in_features = morr_layer.in_features
+    miniblock = morr_layer.miniblock
+    grid_dim_x = morr_layer.grid_dim_x
+    grid_dim_y = morr_layer.grid_dim_y
+    in_features_pad = morr_layer.in_features_pad
+    
+    # Get the weights from the standard linear layer
+    standard_weights = linear_layer.weight.data  # [out_features, in_features]
+    
+    # Ensure the shapes match
+    assert standard_weights.shape[0] == out_features, "Output feature dimensions don't match"
+    assert standard_weights.shape[1] == in_features, "Input feature dimensions don't match"
+    
+    # Pad the standard weights to match in_features_pad
+    if in_features_pad > in_features:
+        padded_weights = torch.zeros(out_features, in_features_pad, 
+                                    device=standard_weights.device, 
+                                    dtype=standard_weights.dtype)
+        padded_weights[:, :in_features] = standard_weights
+        standard_weights = padded_weights # [out_features, in_features_pad]
+    
+    # Reshape to match the MORR structure [grid_dim_y, grid_dim_x, miniblock]
+    assert grid_dim_y == out_features, "grid_dim_y does not match out_features"
+    assert grid_dim_x * miniblock == in_features_pad, "grid_dim_x * miniblock does not match in_features_pad"
+    
+    reshaped_weights = standard_weights.reshape(grid_dim_y, grid_dim_x, miniblock)
+    
+    # Copy the weights to the MORR layer
+    with torch.no_grad():
+        morr_layer.weight.data.copy_(reshaped_weights)
+    
+    return morr_layer
 
-def weight_replacement_linear_optical(x, y):
+def weight_replacement_circulant_linear_optical(x, y):
     """
     Replace the weights of AllPassMORRCirculantLinear (y)
     with those from a standard nn.Linear (x).
