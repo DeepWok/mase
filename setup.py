@@ -42,7 +42,7 @@ requirements = [
     "pybind11",
     "tabulate",
     "tensorboardx",
-    "hyperopt",
+    "hyperopt @ git+https://github.com/hyperopt/hyperopt.git",
     "accelerate",
     "optuna",
     "stable-baselines3[extra]",
