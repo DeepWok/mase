@@ -1,7 +1,9 @@
 import mase_triton.random_bitflip
+import torch
 import transformers
 import mase_triton
 from chop.passes.module.transforms.bitflip import bitflip_module_transform_pass
+import pytest
 
 """
 default:
@@ -17,6 +19,7 @@ default:
 """
 
 
+@pytest.skipif(not torch.cuda.is_available(), reason="CUDA is not available")
 def test_bitflip_module_transform_pass():
     model = transformers.AutoModelForCausalLM.from_pretrained("AICrossSim/clm-60m")
 
