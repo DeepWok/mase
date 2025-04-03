@@ -273,13 +273,17 @@ class MultiSignalStreamDriver(Driver):
 
 
 class MultiSignalStreamMonitor(Monitor):
-    def __init__(self, clk, data, valid, ready, check=True):
+    def __init__(
+        self, clk, data, valid, ready, check=True, signed=True, off_by_one=False
+    ):
         super().__init__(clk)
         self.clk = clk
         self.data = data
         self.valid = valid
         self.ready = ready
         self.check = check
+        self.signed = signed
+        self.off_by_one = off_by_one
 
     def _trigger(self):
         return self.valid.value == 1 and self.ready.value == 1
@@ -287,9 +291,15 @@ class MultiSignalStreamMonitor(Monitor):
     def _recv(self):
         def cast_data(value):
             if type(value) == list:
-                return [x.signed_integer for x in value]
+                if self.signed:
+                    return [x.signed_integer for x in value]
+                else:
+                    return [x.integer for x in value]
             elif type(value) == BinaryValue:
-                return value.signed_integer
+                if self.signed:
+                    return value.signed_integer
+                else:
+                    return value.integer
 
         return tuple([cast_data(target.value) for target in self.data])
 
@@ -297,4 +307,12 @@ class MultiSignalStreamMonitor(Monitor):
         if self.check:
             for g, e in zip(got, exp):
                 if not np.equal(g, e).all():
-                    raise TestFailure("\nGot \n%s, \nExpected \n%s" % (got, exp))
+                    diff = np.subtract(g, e)
+                    if self.off_by_one and np.isclose(g, e, atol=1).all():
+                        self.log.warning(
+                            f"Off-by-one error: {diff=}\nGot {got}\nExpected {exp}"
+                        )
+                    else:
+                        raise TestFailure(
+                            "\nGot \n%s, \nExpected \n%s,\nDiff \n%s" % (got, exp, diff)
+                        )

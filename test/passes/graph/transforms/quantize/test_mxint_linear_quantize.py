@@ -70,22 +70,21 @@ def test_quantize():
     # torch.manual_seed(0)
     quan_args = {
         "by": "type",
-        "default": {"config": {"name": None}},
-        "linear": {
+        "default": {
             "config": {
-                "name": "mxint_hardware",
+                "name": "mxint",
                 # data
                 "data_in_width": 12,
                 "data_in_exponent_width": 4,
-                "data_in_parallelism": [1, 2],
+                "weight_block_size": [1, 2],
                 # weight
                 "weight_width": 12,
                 "weight_exponent_width": 4,
-                "weight_parallelism": [2, 2],
+                "bias_block_size": [2, 2],
                 # bias
                 "bias_width": 12,
                 "bias_exponent_width": 4,
-                "bias_parallelism": [1, 2],
+                "data_in_block_size": [1, 2],
             }
         },
     }

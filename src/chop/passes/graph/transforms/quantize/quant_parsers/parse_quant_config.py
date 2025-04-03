@@ -251,21 +251,21 @@ QUANT_ARITH_ENTRIES = {
             "bias_block_size",
         ),
     },
-    "mxint_hardware": {
+    "mxint": {
         "weight_entries": (
             "weight_width",
             "weight_exponent_width",
-            "weight_parallelism",
+            "weight_block_size",
         ),
         "data_in_entries": (
             "data_in_width",
             "data_in_exponent_width",
-            "data_in_parallelism",
+            "data_in_block_size",
         ),
         "bias_entries": (
             "bias_width",
             "bias_exponent_width",
-            "bias_parallelism",
+            "bias_block_size",
         ),
     },
 }
@@ -294,8 +294,10 @@ def cp_data_in_entries(
     cp_multi_values(config, p_config, entries["data_in_entries"], strict=strict)
 
 
-def cp_data_out_entries(config: dict, p_config: dict, entries: dict):
-    cp_multi_values(config, p_config, entries["data_out_entries"])
+def cp_data_out_entries(
+    config: dict, p_config: dict, entries: dict, strict: bool = True
+):
+    cp_multi_values(config, p_config, entries["data_out_entries"], strict=strict)
 
 
 def cp_bias_entries(config: dict, p_config: dict, entries: dict, strict: bool = True):
@@ -319,12 +321,6 @@ def cp_weight_entries_to_bias(
 
 def cp_layer_entries(config: dict, p_config: dict, entries: dict, strict: bool = True):
     cp_multi_values(config, p_config, entries["additional_layers_entries"])
-
-
-def cp_data_out_entries(
-    config: dict, p_config: dict, entries: dict, strict: bool = True
-):
-    cp_multi_values(config, p_config, entries["data_out_entries"], strict=strict)
 
 
 """QUANT_ARITH_TO_CP_FN
@@ -436,6 +432,10 @@ def parse_node_config(config: dict, mase_op: str, strict: bool = True) -> dict:
     assert isinstance(
         op_optional_entries, tuple
     ), f"op_optional_entries must be a tuple: {op_optional_entries}"
+
+    # replace any instance of fixed with integer since they are the same, but all hardware is named after fixed
+    config["name"] = "fixed" if config["name"] == "integer" else config["name"]
+
     p_config = {}
     for entry in op_entries:
         entry_cp_fn = QUANT_ARITH_TO_CP_FN[config["name"]][entry]

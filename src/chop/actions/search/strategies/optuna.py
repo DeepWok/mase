@@ -110,7 +110,12 @@ class SearchStrategyOptuna(SearchStrategyBase):
         trial.set_user_attr("scaled_metrics", scaled_metrics)
         trial.set_user_attr("sampled_config", sampled_config)
 
-        self.visualizer.log_metrics(metrics=scaled_metrics, step=trial.number)
+        log_scaled_metrics = {
+            self.quantization_name + k: v
+            for k, v in scaled_metrics.items()
+            if v is not None
+        }
+        self.visualizer.log_metrics(metrics=log_scaled_metrics, step=trial.number)
 
         if not self.sum_scaled_metrics:
             return list(scaled_metrics.values())

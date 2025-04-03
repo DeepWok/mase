@@ -1,3 +1,9 @@
+from typing import Dict, Literal, Tuple
+from mase_components.linear_layers.mxint_operators.test.utils import (
+    block_mxint_quant,
+    pack_tensor_to_mx_listed_chunk,
+)
+import numpy as np
 import logging, torch
 from pathlib import Path
 from textwrap import indent
@@ -16,11 +22,154 @@ torch.manual_seed(0)
 
 import cocotb
 from mase_cocotb.testbench import Testbench
-from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
+from mase_cocotb.interfaces.streaming import (
+    MultiSignalStreamDriver,
+    MultiSignalStreamMonitor,
+    StreamDriver,
+    StreamMonitor,
+)
+from cocotb.result import TestFailure
 
 
 import dill
 import inspect
+
+
+class FixedDriver(StreamDriver):
+    def __init__(
+        self, clk, data, valid, ready, precision, parallelism, record_num_beats=False
+    ) -> None:
+        super().__init__(clk, data, valid, ready, record_num_beats)
+        self.precision = precision
+        self.parallelism = parallelism
+
+    def quantize_and_load(self, tensor_batches):
+        from mase_cocotb.utils import fixed_preprocess_tensor
+
+        in_data_blocks = fixed_preprocess_tensor(
+            tensor=tensor_batches,
+            q_config={
+                "width": self.precision[0],
+                "frac_width": self.precision[1],
+            },
+            parallelism=self.parallelism,
+        )
+
+        block_size = self.parallelism[0] * self.parallelism[1]
+        for block in in_data_blocks:
+            if len(block) < block_size:
+                block = block + [0] * (block_size - len(block))
+            self.append(block)
+
+
+class MxIntDriver(MultiSignalStreamDriver):
+    def __init__(self, clk, data, valid, ready, config, parallelism) -> None:
+        super().__init__(clk, data, valid, ready)
+        self.config = config
+        self.parallelism = parallelism
+
+    def quantize_and_load(self, tensor_batches):
+        (_qtensor, mtensor, etensor) = block_mxint_quant(
+            tensor_batches, self.config, self.parallelism
+        )
+        driver_input = pack_tensor_to_mx_listed_chunk(
+            mtensor, etensor, self.parallelism
+        )
+        self.load_driver(driver_input)
+
+
+class FixedMonitor(StreamMonitor):
+    def __init__(
+        self,
+        clk,
+        data,
+        valid,
+        ready,
+        precision,
+        parallelism,
+        check=True,
+        name=None,
+        unsigned=False,
+    ):
+        super().__init__(clk, data, valid, ready, check, name, unsigned)
+        self.precision = precision
+        self.parallelism = parallelism
+
+    def quantize_and_expect(self, tensor_expectation):
+        from mase_cocotb.utils import fixed_preprocess_tensor
+
+        output_blocks = fixed_preprocess_tensor(
+            tensor=tensor_expectation,
+            q_config={
+                "width": self.precision[0],
+                "frac_width": self.precision[1],
+            },
+            parallelism=self.parallelism,
+        )
+
+        block_size = self.parallelism[0] * self.parallelism[1]
+        for block in output_blocks:
+            if len(block) < block_size:
+                block = block + [0] * (block_size - len(block))
+            self.expect(block)
+        self.in_flight = True
+
+
+class MxIntMonitor(MultiSignalStreamMonitor):
+    def __init__(
+        self, clk, e_data, m_data, valid, ready, config, parallelism, off_by_value=0
+    ):
+        self.off_by = off_by_value
+        self.config = config
+        self.parallelism = parallelism
+        super().__init__(
+            clk,
+            (m_data, e_data),
+            valid,
+            ready,
+            check=True,
+            signed=True,
+            off_by_one=False,
+        )
+
+    def quantize_and_expect(self, tensor_expectation):
+        (qtensor, mtensor, etensor) = block_mxint_quant(
+            tensor_expectation, self.config, self.parallelism
+        )
+        tensor_output = pack_tensor_to_mx_listed_chunk(
+            mtensor, etensor, self.parallelism
+        )
+
+        exp_max_val = 2 ** self.config["exponent_width"]
+        for i, (tensor, exp) in enumerate(tensor_output):
+            exp_signed = (2 * exp) % exp_max_val - (exp % exp_max_val)
+            tensor_output[i] = (tensor, exp_signed)
+
+        self.load_monitor(tensor_output)
+        self.in_flight = True
+
+    def _check(self, got, exp):
+        got_m, got_e = got
+        exp_m, exp_e = exp
+
+        def check_equality(got, exp):
+            if not np.equal(got, exp).all():
+                diff = np.subtract(got, exp)
+                if np.isclose(got, exp, atol=self.off_by).all():
+                    self.log.warning(
+                        f"Off-by-{max(abs(diff))} error: {diff=}\nGot {got}\nExp {exp}"
+                    )
+                else:
+                    raise TestFailure(
+                        "\nGot \n%s, \nExp \n%s,\nDiff \n%s" % (got, exp, diff)
+                    )
+
+        if exp_e == got_e:
+            check_equality(got_m, exp_m)
+        elif abs(diff := (exp_e - got_e)) == 1:
+            adj_m = np.array(got_m) * 2 ** (-diff)
+            self.log.warning(f"Normalisation Error {exp_e=} {got_e=}")
+            check_equality(adj_m, exp_m)
 
 
 def _cap(name):
@@ -31,11 +180,9 @@ def _cap(name):
 
 
 def _emit_cocotb_test(graph, pass_args={}):
-
-    wait_time = pass_args.get("wait_time", 2)
-    wait_unit = pass_args.get("wait_units", "ms")
-    batch_size = pass_args.get("batch_size", 1)
-
+    wait_time = pass_args.get("wait_time", 100)
+    wait_unit = pass_args.get("wait_units", "us")
+    num_batches = pass_args.get("num_batches", 1)
     test_template = f"""
 import cocotb
 
@@ -51,7 +198,7 @@ async def test(dut):
 
     await tb.initialize()
 
-    in_tensors = tb.generate_inputs(batches={batch_size})
+    in_tensors = tb.generate_inputs(batches={num_batches})
     exp_out = tb.model(*list(in_tensors.values()))
 
     tb.load_drivers(in_tensors)
@@ -71,127 +218,135 @@ def _emit_cocotb_tb(graph):
         def __init__(self, dut, fail_on_checks=True):
             super().__init__(dut, dut.clk, dut.rst, fail_on_checks=fail_on_checks)
 
-            # Instantiate as many drivers as required inputs to the model
-            self.input_drivers = {}
-            self.output_monitors = {}
-
+            self.input_drivers: Dict[str, FixedDriver | MxIntDriver] = {}
+            self.output_monitors: Dict[str, FixedMonitor | MxIntMonitor] = {}
             for node in graph.nodes_in:
-                for arg in node.meta["mase"]["common"]["args"].keys():
+                for arg, arg_info in node.meta["mase"]["common"]["args"].items():
                     if "data_in" not in arg:
                         continue
-                    self.input_drivers[arg] = StreamDriver(
-                        dut.clk,
-                        getattr(dut, arg),
-                        getattr(dut, f"{arg}_valid"),
-                        getattr(dut, f"{arg}_ready"),
-                    )
-                    self.input_drivers[arg].log.setLevel(logging.DEBUG)
+                    match arg_info.get("type", None):
+                        case "mxint":
+                            config = {
+                                "width": self.get_parameter(f"{_cap(arg)}_PRECISION_0"),
+                                "exponent_width": self.get_parameter(
+                                    f"{_cap(arg)}_PRECISION_1"
+                                ),
+                            }
+                            parallelism = [
+                                self.get_parameter(f"{_cap(arg)}_PARALLELISM_DIM_1"),
+                                self.get_parameter(f"{_cap(arg)}_PARALLELISM_DIM_0"),
+                            ]
+                            self.input_drivers[arg] = MxIntDriver(
+                                dut.clk,
+                                (
+                                    getattr(dut, f"m_{arg}"),
+                                    getattr(dut, f"e_{arg}"),
+                                ),
+                                getattr(dut, f"{arg}_valid"),
+                                getattr(dut, f"{arg}_ready"),
+                                config,
+                                parallelism,
+                            )
+                        case "fixed":
+                            precision = [
+                                self.get_parameter(f"{_cap(arg)}_PRECISION_0"),
+                                self.get_parameter(f"{_cap(arg)}_PRECISION_1"),
+                            ]
+                            parallelism = [
+                                self.get_parameter(f"{_cap(arg)}_PARALLELISM_DIM_1"),
+                                self.get_parameter(f"{_cap(arg)}_PARALLELISM_DIM_0"),
+                            ]
+                            self.input_drivers[arg] = FixedDriver(
+                                dut.clk,
+                                getattr(dut, arg),
+                                getattr(dut, f"{arg}_valid"),
+                                getattr(dut, f"{arg}_ready"),
+                                precision,
+                                parallelism,
+                            )
+                        case t:
+                            raise NotImplementedError(
+                                f"Unsupported type format {t} for {node} {arg}"
+                            )
+                    self.input_drivers[arg].log.setLevel(logging.INFO)
 
-            # Instantiate as many monitors as required outputs
             for node in graph.nodes_out:
-                for result in node.meta["mase"]["common"]["results"].keys():
+                for result, result_info in node.meta["mase"]["common"][
+                    "results"
+                ].items():
                     if "data_out" not in result:
                         continue
-                    self.output_monitors[result] = StreamMonitor(
-                        dut.clk,
-                        getattr(dut, result),
-                        getattr(dut, f"{result}_valid"),
-                        getattr(dut, f"{result}_ready"),
-                        check=False,
-                    )
-                    self.output_monitors[result].log.setLevel(logging.DEBUG)
+                    match result_info.get("type", None):
+                        case "mxint":
+                            config = {
+                                "width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
+                                "exponent_width": self.get_parameter(
+                                    "DATA_OUT_0_PRECISION_1"
+                                ),
+                            }
+                            parallelism = [
+                                self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1"),
+                                self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"),
+                            ]
+                            self.output_monitors[result] = MxIntMonitor(
+                                dut.clk,
+                                getattr(dut, f"e_{result}"),
+                                getattr(dut, f"m_{result}"),
+                                getattr(dut, f"{result}_valid"),
+                                getattr(dut, f"{result}_ready"),
+                                config,
+                                parallelism,
+                                off_by_value=1,
+                            )
+                        case "fixed":
+                            precision = [
+                                self.get_parameter("DATA_OUT_0_PRECISION_0"),
+                                self.get_parameter("DATA_OUT_0_PRECISION_1"),
+                            ]
+                            parallelism = [
+                                self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_1"),
+                                self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"),
+                            ]
+                            self.output_monitors[result] = FixedMonitor(
+                                dut.clk,
+                                getattr(dut, result),
+                                getattr(dut, f"{result}_valid"),
+                                getattr(dut, f"{result}_ready"),
+                                precision,
+                                parallelism,
+                                check=False,
+                            )
+                        case t:
+                            raise NotImplementedError(
+                                f"Unsupported type format {t} for {node} {result}"
+                            )
+                    self.output_monitors[result].log.setLevel(logging.INFO)
 
             self.model = graph.model
-
-            # To do: precision per input argument
             self.input_precision = graph.meta["mase"]["common"]["args"]["data_in_0"][
                 "precision"
             ]
 
-        def generate_inputs(self, batches):
-            """
-            Generate inputs for the model by sampling a random tensor
-            for each input argument, according to its shape
-
-            :param batches: number of batches to generate for each argument
-            :type batches: int
-            :return: a dictionary of input arguments and their corresponding tensors
-            :rtype: Dict
-            """
-            # ! TO DO: iterate through graph.args instead to generalize
+        def generate_inputs(self, batches=1):
             inputs = {}
             for node in graph.nodes_in:
                 for arg, arg_info in node.meta["mase"]["common"]["args"].items():
-                    # Batch dimension always set to 1 in metadata
                     if "data_in" not in arg:
                         continue
-                    # print(f"Generating data for node {node}, arg {arg}: {arg_info}")
-                    inputs[f"{arg}"] = torch.rand(([batches] + arg_info["shape"][1:]))
+                    print(
+                        f"Generating data for node {node}, arg {arg}: {arg_info} {arg_info['shape']}"
+                    )
+                    inputs[f"{arg}"] = torch.randn(([batches] + arg_info["shape"]))
             return inputs
 
         def load_drivers(self, in_tensors):
             for arg, arg_batches in in_tensors.items():
-                # Quantize input tensor according to precision
-                if len(self.input_precision) > 1:
-                    from mase_cocotb.utils import fixed_preprocess_tensor
-
-                    in_data_blocks = fixed_preprocess_tensor(
-                        tensor=arg_batches,
-                        q_config={
-                            "width": self.get_parameter(f"{_cap(arg)}_PRECISION_0"),
-                            "frac_width": self.get_parameter(
-                                f"{_cap(arg)}_PRECISION_1"
-                            ),
-                        },
-                        parallelism=[
-                            self.get_parameter(f"{_cap(arg)}_PARALLELISM_DIM_1"),
-                            self.get_parameter(f"{_cap(arg)}_PARALLELISM_DIM_0"),
-                        ],
-                    )
-
-                else:
-                    # TO DO: convert to integer equivalent of floating point representation
-                    pass
-
-                # Append all input blocks to input driver
-                # ! TO DO: generalize
-                block_size = self.get_parameter(
-                    "DATA_IN_0_PARALLELISM_DIM_0"
-                ) * self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1")
-                for block in in_data_blocks:
-                    if len(block) < block_size:
-                        block = block + [0] * (block_size - len(block))
-                    self.input_drivers[arg].append(block)
+                self.input_drivers[arg].quantize_and_load(arg_batches)
 
         def load_monitors(self, expectation):
-            from mase_cocotb.utils import fixed_preprocess_tensor
+            for result, monitor in self.output_monitors.items():
+                monitor.quantize_and_expect(expectation)
 
-            # Process the expectation tensor
-            output_blocks = fixed_preprocess_tensor(
-                tensor=expectation,
-                q_config={
-                    "width": self.get_parameter(f"DATA_OUT_0_PRECISION_0"),
-                    "frac_width": self.get_parameter(f"DATA_OUT_0_PRECISION_1"),
-                },
-                parallelism=[
-                    self.get_parameter(f"DATA_OUT_0_PARALLELISM_DIM_1"),
-                    self.get_parameter(f"DATA_OUT_0_PARALLELISM_DIM_0"),
-                ],
-            )
-
-            # Set expectation for each monitor
-            for block in output_blocks:
-                # ! TO DO: generalize to multi-output models
-                if len(block) < self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"):
-                    block = block + [0] * (
-                        self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0") - len(block)
-                    )
-                self.output_monitors["data_out_0"].expect(block)
-
-            # Drive the in-flight flag for each monitor
-            self.output_monitors["data_out_0"].in_flight = True
-
-    # Serialize testbench object to be instantiated within test by cocotb runner
     cls_obj = MaseGraphTB
     tb_path = Path.home() / ".mase" / "top" / "hardware" / "test" / "mase_top_tb"
     tb_path.mkdir(parents=True, exist_ok=True)

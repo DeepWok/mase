@@ -5,6 +5,9 @@ import logging
 import os
 import sys
 
+import toml
+
+from chop.passes.graph.transforms.quantize.quantize import quantize_transform_pass
 import torch
 
 from chop.tools.logger import set_logging_verbosity
@@ -39,6 +42,25 @@ def test_report_node_shape_analysis_pass():
         mg, {"dummy_in": dummy_in, "add_value": False}
     )
     mg, _ = add_software_metadata_analysis_pass(mg, pass_args)
+    # Quantize to fixed-point
+    config_file = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        "..",
+        "..",
+        "..",
+        "..",
+        "..",
+        "configs",
+        "tests",
+        "quantize",
+        "fixed.toml",
+    )
+
+    # load toml config file
+    with open(config_file, "r") as f:
+        quan_args = toml.load(f)["passes"]["quantize"]
+    mg, _ = quantize_transform_pass(mg, quan_args)
+
     mg, _ = add_hardware_metadata_analysis_pass(mg, pass_args)
 
     mg, _ = report_node_shape_analysis_pass(mg, pass_args)

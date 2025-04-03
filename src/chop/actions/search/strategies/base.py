@@ -41,6 +41,7 @@ class SearchStrategyBase:
         accelerator,
         save_dir,
         visualizer,
+        quantization_name: str = "",
     ):
         self.dataset_info = dataset_info
         self.task = task
@@ -49,6 +50,10 @@ class SearchStrategyBase:
         self.save_dir = save_dir
         self.data_module = data_module
         self.visualizer = visualizer
+
+        if quantization_name != "":
+            quantization_name = f"{quantization_name}/"
+        self.quantization_name = quantization_name
 
         self.sw_runner = []
         self.hw_runner = []

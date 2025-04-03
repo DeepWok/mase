@@ -1,13 +1,28 @@
+from torch._tensor import Tensor
+
+
 from torch import Tensor
 import torch.nn as nn
 import torch
 from typing import Any
+import pytorch_lightning as pl
 import numpy as np
 import torch.nn.functional as F
+from chop.models.utils import register_mase_model, register_mase_checkpoint
+
+from .rendering import post_render_vision, pre_render_vision
 
 
-# Model
-class NeRFVision(nn.Module, output_ch=4):
+# Model# Model
+@register_mase_model(
+    "nerfvision",
+    checkpoints=["nerfvision"],
+    model_source="nerfvision",
+    task_type="nerfvision",
+    physical_data_point_classification=True,
+    is_fx_traceable=True,
+)
+class NeRFVision(nn.Module):
     def __init__(
         self,
         D=8,
@@ -16,7 +31,7 @@ class NeRFVision(nn.Module, output_ch=4):
         input_ch_views=3,
         output_ch=4,
         skips=[4],
-        use_viewdirs=False,
+        use_viewdirs=True,
     ):
         """
         This is the Nerf model from the Nerf Paper
@@ -59,11 +74,11 @@ class NeRFVision(nn.Module, output_ch=4):
         else:
             self.output_linear = nn.Linear(W, output_ch)
 
-    def forward(self, x):
-        input_pts, input_views = torch.split(
-            x, [self.input_ch, self.input_ch_views], dim=-1
-        )
+    def forward(self, pts, viewdirs):
+        raw: Tensor | Any = self.apply_layers(pts, viewdirs)
+        return raw
 
+    def apply_layers(self, input_pts, input_views):
         h = input_pts
         for i, l in enumerate(self.pts_linears):
             h = self.pts_linears[i](h)
@@ -72,9 +87,13 @@ class NeRFVision(nn.Module, output_ch=4):
                 h = torch.cat([input_pts, h], -1)
 
         if self.use_viewdirs:
+            # Add a new dimension and expand it
+            expanded_input_views = input_views.unsqueeze(1).expand(
+                -1, h.shape[1], -1
+            )  # -1 means it will retain the size of that dimension
             alpha = self.alpha_linear(h)
             feature = self.feature_linear(h)
-            h = torch.cat([feature, input_views], -1)
+            h = torch.cat([feature, expanded_input_views], -1)
 
             for i, l in enumerate(self.views_linears):
                 h = self.views_linears[i](h)
@@ -139,11 +158,28 @@ class NeRFVision(nn.Module, output_ch=4):
 
 # Getters ------------------------------------------------------------------------------
 def get_nerf(
-    info,
     pretrained=False,
     **kwargs: Any,
 ):
-    # image_size = info["image_size"]
-    num_classes = info.num_classes
-    # TODO: number of channels
-    return NeRFVision(output_ch=num_classes)
+    return NeRFVision()
+
+
+@register_mase_checkpoint("nerfvision")
+def get_nerfvision(
+    pretrained: bool = False,
+    **kwargs: Any,
+) -> NeRFVision:
+    model = get_nerf(
+        pretrained=pretrained,
+        **kwargs,
+    )
+    if pretrained:
+        weights = np.load(
+            "/teamspace/studios/this_studio/mase-team-coursework/mase/nerf_vision/lego_example/model_200000.npy",
+            allow_pickle=True,
+        )
+        model.set_weights(weights)
+    else:
+        pretrained_weight_cls = None
+
+    return model

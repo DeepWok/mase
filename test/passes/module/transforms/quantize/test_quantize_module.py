@@ -48,7 +48,7 @@ def test_quantize_module_transform_pass():
         "by": "name",
         "fc1": {
             "config": {
-                "name": "integer",
+                "name": "fixed",
                 "data_in_width": 8,
                 "data_in_frac_width": 4,
                 "weight_width": 8,

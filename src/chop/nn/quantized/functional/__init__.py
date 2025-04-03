@@ -73,6 +73,7 @@ from .relu import (
     relu_minifloat_ieee,
     relu_binary,
     relu_ternary,
+    relu_mxint,
 )
 
 from .selu import (
@@ -149,7 +150,7 @@ from .linear import (
     linearTernary,
     linearLUT,
     linearLogicNets,
-    linearMXIntHardware,
+    linearMXInt,
 )
 
 quantized_func_map = {
@@ -213,6 +214,7 @@ quantized_func_map = {
     "relu_block_log": relu_block_log,
     "relu_binary": relu_binary,
     "relu_ternary": relu_ternary,
+    "relu_mxint": relu_mxint,
     "selu_block_minifloat": selu_block_minifloat,
     "selu_integer": selu_integer,
     "selu_fixed": selu_integer,
@@ -267,7 +269,7 @@ quantized_func_map = {
     "linear_integer": linearInteger,
     "linear_fixed": linearInteger,
     "linear_log": linearLog,
-    "linear_mxint_hardware": linearMXIntHardware,
+    "linear_mxint": linearMXInt,
     "linear_block_log": linearBlockLog,
     "linear_minifloat_ieee": linearMinifloatIEEE,
     "linear_minifloat_denorm": linearMinifloatDenorm,

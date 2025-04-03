@@ -8,7 +8,7 @@ from chop.nn.quantized.functional.linear import (
     linearBlockMinifloat,
     linearInteger,
     linearLog,
-    linearMXIntHardware,
+    linearMXInt,
     linearMinifloatDenorm,
     linearMinifloatIEEE,
     linearTernary,
@@ -21,6 +21,7 @@ from torch.nn import functional as F
 from ..utils import get_stats, quantiser_passthrough
 
 from chop.nn.quantizers import (
+    mxint,
     residual_sign_quantizer,
     block_fp_quantizer,
     block_log_quantizer,
@@ -32,7 +33,6 @@ from chop.nn.quantizers import (
     minifloat_ieee_quantizer,
     binary_quantizer,
     ternary_quantizer,
-    mxint_hardware,
 )
 
 # LUTNet
@@ -785,7 +785,7 @@ class LinearLogicNets(_LinearBase):
             return self.math_forward(x)
 
 
-class LinearMXIntHardware(_LinearBase):
+class LinearMXInt(_LinearBase):
     def __init__(
         self,
         in_features: int,
@@ -794,12 +794,10 @@ class LinearMXIntHardware(_LinearBase):
         device=None,
         dtype=None,
         config=None,
-        out_config=None,
     ) -> None:
         super().__init__(in_features, out_features, bias, device, dtype)
         assert config is not None, "config is None!"
         self.config = config
-        self.out_config = out_config
         self.bypass = config.get("bypass", False)
         if self.bypass:
             return
@@ -807,6 +805,4 @@ class LinearMXIntHardware(_LinearBase):
     def forward(self, x):
         if self.bypass:
             return F.linear(x, self.weight, self.bias)
-        return linearMXIntHardware(
-            x, self.weight, self.bias, self.config, self.out_config
-        )
+        return linearMXInt(x, self.weight, self.bias, self.config)

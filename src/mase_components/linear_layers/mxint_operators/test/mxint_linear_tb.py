@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+import random
+import sys
+from mase_cocotb.utils import bit_driver
 import os, pytest
 
 import torch
@@ -23,7 +26,9 @@ from utils import MXIntLinear
 
 
 class LinearTB(Testbench):
-    def __init__(self, dut) -> None:
+    def __init__(
+        self, dut, data_in_p=1.0, weight_p=1.0, bias_p=1.0, data_out_p=1.0
+    ) -> None:
         super().__init__(dut, dut.clk, dut.rst)
 
         if not hasattr(self, "log"):
@@ -36,15 +41,19 @@ class LinearTB(Testbench):
             dut.data_in_0_valid,
             dut.data_in_0_ready,
         )
+        self.data_in_0_driver.set_valid_prob(data_in_p)
+
         self.weight_driver = MultiSignalStreamDriver(
             dut.clk, (dut.mweight, dut.eweight), dut.weight_valid, dut.weight_ready
         )
+        self.weight_driver.set_valid_prob(weight_p)
 
         if self.get_parameter("HAS_BIAS") == 1:
             self.bias_driver = MultiSignalStreamDriver(
                 dut.clk, (dut.mbias, dut.ebias), dut.bias_valid, dut.bias_ready
             )
             self.bias_driver.log.setLevel(logging.DEBUG)
+            self.bias_driver.set_valid_prob(bias_p)
 
         self.data_out_0_monitor = MultiSignalStreamMonitor(
             dut.clk,
@@ -52,7 +61,10 @@ class LinearTB(Testbench):
             dut.data_out_0_valid,
             dut.data_out_0_ready,
             check=True,
+            signed=False,
+            off_by_one=True,
         )
+        cocotb.start_soon(bit_driver(dut.data_out_0_ready, dut.clk, data_out_p))
 
         # Model
         self.model = MXIntLinear(
@@ -101,6 +113,11 @@ class LinearTB(Testbench):
         from utils import pack_tensor_to_mx_listed_chunk
 
         (qtensor, mtensor, etensor) = block_mxint_quant(tensor, config, parallelism)
+        # take the mod to get the unsigned representation of the number
+        mtensor = mtensor.remainder(2 ** config["width"])
+        self.log.info(f"Mantissa Tensor: {mtensor}")
+        self.log.info(f"Exponent Tensor: {etensor}")
+
         tensor_inputs = pack_tensor_to_mx_listed_chunk(mtensor, etensor, parallelism)
         return tensor_inputs
 
@@ -122,7 +139,7 @@ class LinearTB(Testbench):
 
         # * Load the inputs driver
         self.log.info(f"Processing inputs: {inputs}")
-        inputs = self.preprocess_tensor_for_mxint(
+        inputs_quant = self.preprocess_tensor_for_mxint(
             tensor=inputs,
             config={
                 "width": self.get_parameter("DATA_IN_0_PRECISION_0"),
@@ -133,12 +150,12 @@ class LinearTB(Testbench):
                 self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"),
             ],
         )
-        self.data_in_0_driver.load_driver(inputs)
-
+        self.data_in_0_driver.load_driver(inputs_quant)
+        self.log.info(f"processed inputs\n{inputs_quant}")
         # * Load the weights driver
         weights = self.model.weight
 
-        self.log.info(f"Processing weights: {weights}")
+        self.log.info(f"Processing weights:\n{weights}")
         weights = self.preprocess_tensor_for_mxint(
             tensor=weights,
             config={
@@ -150,6 +167,7 @@ class LinearTB(Testbench):
                 self.get_parameter("WEIGHT_PARALLELISM_DIM_0"),
             ],
         )
+        self.log.info(f"Processed weights:\n{weights}")
         self.weight_driver.load_driver(weights)
 
         # * Load the bias driver
@@ -182,7 +200,6 @@ class LinearTB(Testbench):
                 self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"),
             ],
         )
-        breakpoint()
         self.data_out_0_monitor.load_monitor(outs)
 
         await Timer(us, units="us")
@@ -191,52 +208,77 @@ class LinearTB(Testbench):
 
 @cocotb.test()
 async def cocotb_test(dut):
-    tb = LinearTB(dut)
-    await tb.run_test(us=100)
+    probs = [torch.rand(1).item() for _ in range(4)]
+    # probs = [1 for _ in range(4)]
+    tb = LinearTB(
+        dut,
+        data_in_p=probs[0],
+        weight_p=probs[1],
+        bias_p=probs[2],
+        data_out_p=probs[3],
+    )
+    await tb.run_test(us=200)
 
 
-def get_fixed_linear_config(kwargs={}):
-    # if pretranspose
-    #   weight1 = in0
-    # else
-    #   weight0 = in0
-    # currently, we only consider the transposed situation
-    # config = {
-    #     "HAS_BIAS": 1,
-    #     "DATA_IN_0_TENSOR_SIZE_DIM_0": 2,
-    #     "DATA_IN_0_TENSOR_SIZE_DIM_1": 2,
-    #     "DATA_IN_0_PARALLELISM_DIM_0": 2,
-    #     "DATA_IN_0_PARALLELISM_DIM_1": 1,
-    #     "WEIGHT_TENSOR_SIZE_DIM_0": 2,
-    #     "WEIGHT_TENSOR_SIZE_DIM_1": 2,
-    #     "WEIGHT_PARALLELISM_DIM_0": 2,
-    #     "WEIGHT_PARALLELISM_DIM_1": 1,
-    #     "DATA_IN_0_PRECISION_0": 8,
-    #     "DATA_IN_0_PRECISION_1": 4,
-    #     "WEIGHT_PRECISION_0": 8,
-    #     "WEIGHT_PRECISION_1": 4,
-    #     "BIAS_PRECISION_0": 8,
-    #     "BIAS_PRECISION_1": 4,
-    #     "DATA_OUT_0_PRECISION_0": 10,
-    #     "DATA_OUT_0_PRECISION_1": 4,
-    # }
+def get_mxint_linear_config_random(seed, kwargs={}):
+    MAX_IN_FEATURES = 16
+    MAX_OUT_FEATURES = 16
+    MAX_BATCH_SIZE = 8
+    random.seed(seed)
+
+    BLOCK_SIZE = random.randint(2, 8)
+    PARALLELISM = random.randint(1, 8)
+    BATCH_SIZE = random.randint(1, MAX_BATCH_SIZE // PARALLELISM) * PARALLELISM
+    IN_FEATURES = random.randint(2, MAX_IN_FEATURES // BLOCK_SIZE) * BLOCK_SIZE
+    OUT_FEATURES = random.randint(2, MAX_OUT_FEATURES // BLOCK_SIZE) * BLOCK_SIZE
+
+    MAX_MANTISSA = 16
+    MAX_EXPONENT = 6
+
+    mantissas = [random.randint(4, MAX_MANTISSA)] * 4
+    exps = [random.randint(3, min(mantissas[0], MAX_EXPONENT))] * 4
+
+    config = {
+        "HAS_BIAS": random.randint(0, 1),
+        "DATA_IN_0_TENSOR_SIZE_DIM_0": IN_FEATURES,
+        "DATA_IN_0_TENSOR_SIZE_DIM_1": BATCH_SIZE,
+        "DATA_IN_0_PARALLELISM_DIM_0": BLOCK_SIZE,
+        "DATA_IN_0_PARALLELISM_DIM_1": PARALLELISM,
+        "WEIGHT_TENSOR_SIZE_DIM_0": IN_FEATURES,
+        "WEIGHT_TENSOR_SIZE_DIM_1": OUT_FEATURES,
+        "WEIGHT_PARALLELISM_DIM_0": BLOCK_SIZE,
+        "WEIGHT_PARALLELISM_DIM_1": BLOCK_SIZE,
+        "DATA_IN_0_PRECISION_0": mantissas[0],
+        "DATA_IN_0_PRECISION_1": exps[0],
+        "WEIGHT_PRECISION_0": mantissas[1],
+        "WEIGHT_PRECISION_1": exps[1],
+        "BIAS_PRECISION_0": mantissas[2],
+        "BIAS_PRECISION_1": exps[2],
+        "DATA_OUT_0_PRECISION_0": mantissas[3],
+        "DATA_OUT_0_PRECISION_1": exps[3],
+    }
+    config.update(kwargs)
+    return config
+
+
+def get_mxint_linear_config(kwargs={}):
     config = {
         "HAS_BIAS": 1,
-        "DATA_IN_0_TENSOR_SIZE_DIM_0": 32,
-        "DATA_IN_0_TENSOR_SIZE_DIM_1": 16,
-        "DATA_IN_0_PARALLELISM_DIM_0": 4,
-        "DATA_IN_0_PARALLELISM_DIM_1": 4,
-        "WEIGHT_TENSOR_SIZE_DIM_0": 32,
-        "WEIGHT_TENSOR_SIZE_DIM_1": 16,
-        "WEIGHT_PARALLELISM_DIM_0": 4,
-        "WEIGHT_PARALLELISM_DIM_1": 4,
-        "DATA_IN_0_PRECISION_0": 9,
+        "DATA_IN_0_TENSOR_SIZE_DIM_0": 2,
+        "DATA_IN_0_TENSOR_SIZE_DIM_1": 2,
+        "DATA_IN_0_PARALLELISM_DIM_0": 2,
+        "DATA_IN_0_PARALLELISM_DIM_1": 1,
+        "WEIGHT_TENSOR_SIZE_DIM_0": 2,
+        "WEIGHT_TENSOR_SIZE_DIM_1": 2,
+        "WEIGHT_PARALLELISM_DIM_0": 2,
+        "WEIGHT_PARALLELISM_DIM_1": 1,
+        "DATA_IN_0_PRECISION_0": 8,
         "DATA_IN_0_PRECISION_1": 4,
         "WEIGHT_PRECISION_0": 8,
-        "WEIGHT_PRECISION_1": 3,
+        "WEIGHT_PRECISION_1": 4,
         "BIAS_PRECISION_0": 8,
         "BIAS_PRECISION_1": 4,
-        "DATA_OUT_0_PRECISION_0": 12,
+        "DATA_OUT_0_PRECISION_0": 10,
         "DATA_OUT_0_PRECISION_1": 4,
     }
     config.update(kwargs)
@@ -244,59 +286,55 @@ def get_fixed_linear_config(kwargs={}):
 
 
 @pytest.mark.dev
-def test_fixed_linear_smoke():
+def test_mxint_linear_full_random():
     """
-    Some quick tests to check if the module is working.
+    Fully randomized parameter testing.
     """
-    mase_runner(
-        trace=True,
-        extra_build_args=["--trace-depth", "8"],
-        module_param_list=[
-            get_fixed_linear_config(),
-            # noticed here if change WEIGHT_PRE_TRANSPOSED also need to change the DIM_SIZE to match ACTIVATION
-            # get_fixed_linear_config(
-            #     {
-            #         "WEIGHT_TENSOR_SIZE_DIM_0": 32,
-            #         "WEIGHT_TENSOR_SIZE_DIM_1": 16,
-            #         "WEIGHT_PARALLELISM_DIM_0": 4,
-            #         "WEIGHT_PARALLELISM_DIM_1": 2,
-            #     },
-            # ),
-        ],
-    )
+    torch.manual_seed(10)
+    seed = os.getenv("COCOTB_SEED")
+
+    # use this to fix a particular parameter value
+    param_override = {
+        "HAS_BIAS": 1,
+    }
+
+    if seed is not None:
+        seed = int(seed)
+        mase_runner(
+            trace=True,
+            module_param_list=[get_mxint_linear_config_random(seed, param_override)],
+        )
+    else:
+        num_configs = int(os.getenv("NUM_CONFIGS", default=5))
+        base_seed = random.randrange(sys.maxsize)
+        mase_runner(
+            trace=True,
+            module_param_list=[
+                get_mxint_linear_config_random(base_seed + i, param_override)
+                for i in range(num_configs)
+            ],
+            jobs=min(num_configs, 10),
+        )
+        print(f"Test seeds: \n{[(i,base_seed+i) for i in range(num_configs)]}")
 
 
 @pytest.mark.dev
-def test_fixed_linear_regression():
-    """
-    More extensive tests to check realistic parameter sizes.
-    """
+def test_mxint_linear():
     mase_runner(
         trace=True,
         module_param_list=[
-            get_fixed_linear_config(
-                {
-                    "DATA_IN_0_TENSOR_SIZE_DIM_0": 768,
-                    "DATA_IN_0_PARALLELISM_DIM_0": 32,
-                    "WEIGHT_TENSOR_SIZE_DIM_0": 768,
-                    "WEIGHT_TENSOR_SIZE_DIM_1": 768,
-                    "WEIGHT_PARALLELISM_DIM_0": 32,
-                    "WEIGHT_PARALLELISM_DIM_1": 32,
-                    "BIAS_TENSOR_SIZE_DIM_0": 768,
-                    "BIAS_PARALLELISM_DIM_0": 32,
-                }
-            ),
-            get_fixed_linear_config(
+            get_mxint_linear_config(
                 {
                     "HAS_BIAS": 1,
-                    "DATA_IN_0_TENSOR_SIZE_DIM_0": 768,
-                    "DATA_IN_0_PARALLELISM_DIM_0": 32,
-                    "WEIGHT_TENSOR_SIZE_DIM_0": 768,
-                    "WEIGHT_TENSOR_SIZE_DIM_1": 768,
-                    "WEIGHT_PARALLELISM_DIM_0": 32,
-                    "WEIGHT_PARALLELISM_DIM_1": 32,
-                    "BIAS_TENSOR_SIZE_DIM_0": 768,
-                    "BIAS_PARALLELISM_DIM_0": 32,
+                    "DATA_IN_0_TENSOR_SIZE_DIM_0": 4,
+                    "DATA_IN_0_TENSOR_SIZE_DIM_1": 10,
+                    "DATA_IN_0_PARALLELISM_DIM_0": 2,
+                    "WEIGHT_TENSOR_SIZE_DIM_0": 4,
+                    "WEIGHT_TENSOR_SIZE_DIM_1": 4,
+                    "WEIGHT_PARALLELISM_DIM_0": 2,
+                    "WEIGHT_PARALLELISM_DIM_1": 2,
+                    "BIAS_TENSOR_SIZE_DIM_0": 4,
+                    "BIAS_PARALLELISM_DIM_0": 2,
                 }
             ),
         ],
@@ -304,5 +342,5 @@ def test_fixed_linear_regression():
 
 
 if __name__ == "__main__":
-    test_fixed_linear_smoke()
-    # test_fixed_linear_regression()
+    # test_mxint_linear()
+    test_mxint_linear_full_random()
