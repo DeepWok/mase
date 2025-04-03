@@ -73,7 +73,7 @@ requirements = [
     "bitarray",
     "bitstring",
     "emoji",
-    "numpy",
+    "numpy==2.2.4",
     "tensorboard",
     "sphinx_needs",
     "onnxconverter-common",
