@@ -38,6 +38,8 @@ def simulate(
     gui: bool = False,
     waves: bool = False,
     simulator: str = "verilator",
+    build_jobs: int = 1,
+    unroll_count: int = 1024,
 ):
     SIM = getenv("SIM", simulator)
     runner = get_runner(SIM)
@@ -62,8 +64,12 @@ def simulate(
                 "-Wno-style",
                 "--trace-fst",
                 "--trace-structs",
-                "--trace-depth",
+                "-trace-depth",
                 str(trace_depth),
+                "--build-jobs",
+                str(build_jobs),
+                "--unroll-count",
+                str(unroll_count),
             ]
         else:
             raise ValueError(f"Unrecognized simulator: {simulator}")

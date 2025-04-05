@@ -117,7 +117,7 @@ def trace_torch_module(
     if isinstance(model, PreTrainedModel):
         tracer_cls = HFTracer
 
-        if custom_ops is not None:
+        if custom_ops:
             custom_modules = tuple(custom_ops.get("modules", {}).keys())
         else:
             custom_ops = {"modules": {}, "functions": {}}
@@ -169,6 +169,10 @@ def trace_torch_module(
         custom_leaf_modules = ()
         custom_leaf_functions = ()
         custom_leaf_layers = ()
+        # user defined custom layer:
+        if custom_ops:
+            custom_leaf_functions += tuple(custom_ops.get("functions", {}).keys())
+            custom_leaf_layers += tuple(custom_ops.get("modules", {}).keys())
         # quantized functions/layers
         custom_leaf_functions += tuple(quantized_func_map.values())
         custom_leaf_layers += tuple(quantized_module_map.values())
@@ -186,6 +190,7 @@ def trace_torch_module(
         )
 
         graph_module = fx.GraphModule(model, tracer.trace(model, cf_args))
+        graph_module.custom_ops = custom_ops
 
         if patched_nodes is not None:
             graph_module.patched_op_names = [
