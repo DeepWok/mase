@@ -29,12 +29,12 @@ def optical_transform_by_type(network, pass_args):
         config = config["config"]
         postfix = config.pop("name")
         for n, m in n_m.items():
-            print(f"processing {n}...")
             if isinstance(m, module):
+                print(f"processing {n}")
                 new_m = instantiate_module(
                     m, postfix, optical_module_map, {"config": config}
                 )
-                network = replace_by_name_optical(network, n, new_m)
+                network = replace_by_name_optical(network, n, new_m, type_name +'_'+postfix)
     return network
 
 
@@ -68,6 +68,7 @@ def optical_transform_by_regex_name(network, pass_args):
         matched_pattern = match_a_pattern(n, patterns)
         if not matched_pattern:
             continue
+        print(f"processing {n}")
 
         optical_config = pass_args[matched_pattern]["config"]
         postfix = optical_config["name"]
@@ -78,10 +79,17 @@ def optical_transform_by_regex_name(network, pass_args):
             else {"config": optical_config}
         )
 
+        if isinstance(m, torch.nn.Linear):
+            type_name = "linear"
+        elif isinstance(m, torch.nn.Conv2d):
+            type_name = "conv2d"
+        else:
+            raise ValueError(f"{type_name} is not supported!")
+        
         new_m = instantiate_module(
             m, postfix, optical_module_map, additional_module_args
         )
-        network = replace_by_name_optical(network, n, new_m)
+        network = replace_by_name_optical(network, n, new_m, type_name +'_'+postfix)
 
     return network
 

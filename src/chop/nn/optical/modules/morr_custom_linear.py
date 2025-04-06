@@ -148,13 +148,13 @@ class AllPassMORRLinear(ONNBaseLayer):
         )
         ### Learnable balancing factor (morr_output_scale)
         ### We use a single scaling factor for each block
-        # we init this to be identical to retrive the original output distribution
-        self.morr_output_scale = Parameter(
-            torch.ones(1, 1, max(1, self.grid_dim_x // 2) + 1, 1, device=self.device)
-        )
 
-        # instead of unique scaling factor each column, we apply a uniform scale for all rows.
-        self.uniform_scale = Parameter(torch.tensor(1.0, device=self.device))
+        # Init this to ones and non-trainable
+        # TODO: Verify the effectiveness of making this trainable
+        self.morr_output_scale = Parameter(
+            torch.ones(1, 1, max(1, self.grid_dim_x), 1, device=self.device)
+        )
+        # self.morr_output_scale.requires_grad = False
         
         if self.trainable_morr_bias:
             ### initialize with the finest-granularity, i.e., per mini-block
@@ -259,9 +259,9 @@ class AllPassMORRLinear(ONNBaseLayer):
         if self.finegrain_drop_mask is not None:
             weight = weight.mul(self.finegrain_drop_mask.float())
         
-        # morr_output_scale is removed here
+        # morr_output_scale processing is removed here
 
-        return weight, None
+        return weight, self.morr_output_scale.squeeze(-1).unsqueeze(0)
 
     def enable_fast_forward(self) -> None:
         self.fast_forward_flag = True
@@ -358,7 +358,7 @@ class AllPassMORRLinear(ONNBaseLayer):
         weight = weight.unsqueeze(0).unsqueeze(-2)  # [1, M, N/k, 1, k]
         x = x.unsqueeze(1).unsqueeze(-1)  # [bs, 1, N/k, k, 1]
         x = weight.matmul(x) # [bs, M, N/k, 1, 1]
-        x = x.squeeze(-1).squeeze(-1)  # [bs, M, N/k]
+        x = x.squeeze(-1)  # [bs, M, N/k, 1]
         
         if self.enable_phase_noise and self.phase_noise_std > 1e-5:
             x = x + torch.zeros_like(x).normal_(0, self.phase_noise_std)
@@ -374,8 +374,8 @@ class AllPassMORRLinear(ONNBaseLayer):
         x = self.mrr_roundtrip_phase_to_tr(x)
         
         # Flatten output
-        x = morr_output_scale.matmul(x)  # [1, 1, 1, N/k] x [bs, M, N/k, k] = [bs, M, 1, k]
-        x = x.flatten(1)  # [bs, M*k]
+        x = morr_output_scale.matmul(x)  # [1, 1, 1, N/k] x [bs, M, N/k, 1] = [bs, M, 1, 1]
+        x = x.squeeze(-1).squeeze(-1)  # [bs, M]
             
         return x
 
@@ -442,7 +442,11 @@ class AllPassMORRLinear(ONNBaseLayer):
             self.weight.data.masked_fill_(~mask.view_as(self.weight.data), 0)
 
     def forward(self, x: Tensor) -> Tensor:
-        B, N, D = x.shape
+        # adjust output shape if used in transformer
+        is_transformer = len(x.shape) == 3
+        if is_transformer:
+            B, N, D = x.shape
+        
         assert (
             x.size(-1) == self.in_features
         ), f"[E] Input dimension does not match the weight size {self.out_features, self.in_features}, but got input size ({tuple(x.size())}))"
@@ -477,12 +481,14 @@ class AllPassMORRLinear(ONNBaseLayer):
         x = self.propagate_morr(weight, x, morr_output_scale)
 
         # Apply uniform scaling
-        out = out * x_max * w_max
+        # x = x * x_max * w_max
 
         if self.out_features < self.out_features_pad:
             x = x[..., : self.out_features]
         if self.bias is not None:
             x = x + self.bias.unsqueeze(0)
-            
-        x = x.view(B, N, self.out_features)
+        
+        # adjust output shape if used in transformer
+        if is_transformer:
+            x = x.view(B, N, self.out_features)
         return x
