@@ -13,12 +13,17 @@ logger = get_logger(__name__)
 
 from quant_aware_search import iterative_search
 from pathlib import Path
-checkpoint = "deit_tiny_patch16_224"
+import argparse
 
-imagenet_dir = Path("/data/datasets/imagenet_pytorch/")
-save_dir = "deit_tiny_saved_results"
+parser = argparse.ArgumentParser(description='DeiT Tiny Search')
+parser.add_argument('--model', type=str, default="deit_tiny", help='Model checkpoint name')
+args = parser.parse_args()
+
+checkpoint = f"{args.model}_patch16_224"
+save_dir = f"{args.model}_saved_results"
 # Override the DATASET_CACHE_DIR with our target directory
 import chop.dataset
+imagenet_dir = Path("/data/datasets/imagenet_pytorch/")
 chop.dataset.DATASET_CACHE_DIR = imagenet_dir
 
 exponent_width = 8
@@ -190,19 +195,19 @@ def search_top():
     acc_list_all = []
     # Graph 1: GELU
     # 1. we need to use hash table to hash the total bit width
-    # for int_width in [1,2,3,4]:
+    # for int_width in [8]:
+    #     fixed_op = {"hash_bits": int_width}
+    #     target_op = {"bound": [1,2,3,4,5]}
+    #     acc_list = search_gelu(fixed_op, target_op)
+    #     acc_list_all.append(acc_list)
+    # save_accuracy_list(acc_list_all, directory=save_dir, base_filename="gelu_mxint_clipping_search_new")
+
+    # for int_width in [3]:
     #     fixed_op = {"bound": int_width}
     #     target_op = {"hash_bits": [1,2,3,4,5,6,7,8]}
     #     acc_list = search_gelu(fixed_op, target_op)
     #     acc_list_all.append(acc_list)
-    # save_accuracy_list(acc_list_all, directory=save_dir, base_filename="gelu_mxint_clipping_search")
-
-    for int_width in [3]:
-        fixed_op = {"bound": int_width}
-        target_op = {"hash_bits": [1,2,3,4,5,6,7,8]}
-        acc_list = search_gelu(fixed_op, target_op)
-        acc_list_all.append(acc_list)
-    save_accuracy_list(acc_list_all, directory=save_dir, base_filename="gelu_mxint_search")
+    # save_accuracy_list(acc_list_all, directory=save_dir, base_filename="gelu_mxint_search")
     # acc_list_all = []
     # for int_width in [1,2,3]:
     #     fixed_op = {"var_int_width": int_width}
@@ -220,13 +225,13 @@ def search_top():
     #     acc_list_all.append(acc_list)
     # save_accuracy_list(acc_list_all, directory="vit_tiny_saved_results", base_filename="layer_norm_isqrt_search")
 
-    # acc_list_all = []
-    # for int_width in [8]:
-    #     fixed_op = {"exp_exponent_width": int_width}
-    #     target_op = {"exp_width": [1,2,3,4,5,6,7,8]}
-    #     acc_list = search_softmax(fixed_op, target_op)
-    #     acc_list_all.append(acc_list)
-    # save_accuracy_list(acc_list_all, directory="vit_tiny_saved_results", base_filename="attention_exp_search")
+    acc_list_all = []
+    for int_width in [8]:
+        fixed_op = {"exp_exponent_width": int_width}
+        target_op = {"exp_width": [1,2,3,4,5,6,7,8]}
+        acc_list = search_softmax(fixed_op, target_op)
+        acc_list_all.append(acc_list)
+    save_accuracy_list(acc_list_all, directory="vit_tiny_saved_results", base_filename="attention_exp_search")
 
 if __name__ == "__main__":
     set_logging_verbosity("info")  

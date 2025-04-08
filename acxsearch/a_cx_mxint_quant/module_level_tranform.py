@@ -105,7 +105,8 @@ def vit_module_level_quantize(model, q_config = {}):
             if module[0] == "head":
                 continue
             ori_module = module[1]
-            new_module = MXIntLinear(
+            from .linear import QuantLinear
+            new_module = QuantLinear(
                 ori_module.in_features,
                 ori_module.out_features,
                 q_config=config,

@@ -171,3 +171,86 @@ class MXIntLinear(_LinearBase):
         # out = fast_linear(x, self.weight, self.bias, self.config)
         out = torch.nn.Linear(in_features, out_features, bias=True)(x)
         return out
+
+from .int_quant.quant_modules import QuantAct
+class IntLinear(_LinearBase):
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        bias: bool = True,
+        q_config=None,
+    ) -> None:
+        super().__init__(in_features, out_features, bias)
+        assert q_config is not None, "config is None!"
+        self.in_features = in_features
+        self.out_features = out_features
+        self.q_config = q_config    
+        from .quantizers import mxint_quant_block
+        from functools import partial
+        # self.x_quantizer = partial(
+        #     mxint_quant_block, 
+        #     width=self.q_config["data_in_width"],
+        #     exponent_width=self.q_config["data_in_exponent_width"]
+        # )
+        # self.w_quantizer = partial(mxint_quant_block, 
+        #                            width=self.q_config["weight_width"],
+        #                            exponent_width=self.q_config["weight_exponent_width"])
+        # self.b_quantizer = partial(mxint_quant_block, 
+        #                            width=self.q_config["bias_width"],
+        #                            exponent_width=self.q_config["bias_exponent_width"])
+        self.x_quantizer = QuantAct(
+            activation_bit=self.q_config["data_in_width"],
+            act_range_momentum=0.995
+        )
+        self.w_quantizer = QuantAct(
+            activation_bit=self.q_config["weight_width"],
+            act_range_momentum=0.995
+        )
+        self.b_quantizer = QuantAct(
+            activation_bit=self.q_config["bias_width"],
+            act_range_momentum=0.995
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        # breakpoint()
+        qx, _ = self.x_quantizer(x)
+        # qx, _, _ = self.x_quantizer(x)
+        qweight, _ = self.w_quantizer(self.weight)
+        # qweight, _, _ = self.w_quantizer(self.weight)
+        if self.bias is not None:
+            # qbias, _, _ = self.b_quantizer(self.bias)
+            qbias, _ = self.b_quantizer(self.bias)
+        else:
+            qbias = None
+        out = torch.nn.functional.linear(qx, qweight, qbias)
+        return out
+
+class QuantLinear(_LinearBase):
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        bias: bool = True,
+        device=None,
+        dtype=None,
+        q_config=None,
+    ) -> None:
+        super().__init__(in_features, out_features, bias, device, dtype)
+        assert q_config is not None, "config is None!"
+        self.in_features = in_features
+        self.out_features = out_features
+        self.q_config = q_config
+        self.quant_type = q_config["quant_type"]
+        self.use_bias = bias
+
+    def forward(self, x: Tensor) -> Tensor:
+        if self.quant_type == "mxint":
+            return MXIntLinear(self.in_features, self.out_features, self.use_bias, self.q_config)(x)
+        elif self.quant_type == "int":
+            model = IntLinear(self.in_features, self.out_features, self.use_bias, self.q_config)
+            model.weight = self.weight
+            model.bias = self.bias
+            return model(x)
+        else:
+            raise ValueError(f"Invalid quant_type: {self.quant_type}")

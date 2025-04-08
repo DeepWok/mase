@@ -5,6 +5,7 @@ from torch import Tensor
 from chop.nn.quantized.modules.linear import _LinearBase
 from .utils import reshape_to_block, reshape_back
 
+
 def mxint_quant_block(
     x, width: int = 12, exponent_width: int = 6, exponent: int = None, round_bits: int = 4,
 ):
@@ -23,7 +24,8 @@ def mxint_quant_block(
     exponent_min = -exponent_bias
     
     # Vectorized max and log2 operations
-    abs_max = x.abs().max(dim=-1, keepdim=True).values
+    # abs_max = x.abs().max(dim=-1, keepdim=True).values
+    abs_max = x.abs().max()
     log2 = torch.log2(abs_max + torch.finfo(torch.float32).tiny)
 
     exponent = torch.ceil(log2) 

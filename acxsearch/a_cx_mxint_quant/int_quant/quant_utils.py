@@ -32,7 +32,10 @@ def linear_quantize(input, scale, zero_point, is_weight):
             scale = scale.view(-1)
             zero_point = zero_point.view(-1)
     else:
-        if len(input.shape) == 2:
+        if len(input.shape) == 1:
+            scale = scale.view(-1)
+            zero_point = zero_point.view(-1)
+        elif len(input.shape) == 2:
             scale = scale.view(1, -1)
             zero_point = zero_point.view(1, -1)
         elif len(input.shape) == 3:
