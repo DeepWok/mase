@@ -108,43 +108,43 @@ def gelu_relu6_approx(x, q_config):
     GELU Approximation:
     GELU(x) ≈ x * ReLU6(1.702 * x + 3) / 6
     """
-    qx, mx, ex = mxint_hardware(
-        x,
-        {
-            "width": q_config["data_in_width"],
-            "exponent_width": q_config["data_in_exponent_width"],
-            "round_bits": 4,
-        }, 
-        parallelism=q_config["data_in_parallelism"]
-    )
+    # qx, mx, ex = mxint_hardware(
+    #     x,
+    #     {
+    #         "width": q_config["data_in_width"],
+    #         "exponent_width": q_config["data_in_exponent_width"],
+    #         "round_bits": 4,
+    #     }, 
+    #     parallelism=q_config["data_in_parallelism"]
+    # )
     qout = x * torch.nn.functional.relu6(1.702*x + 3)/6
-    qx, mx, ex = mxint_hardware(
-        qout,
-        {
-            "width": q_config["data_out_width"],
-            "exponent_width": q_config["data_out_exponent_width"],
-            "round_bits": 4,
-        }, 
-        parallelism=q_config["data_out_parallelism"]
-    )
-    return qx, mx, ex 
+    # qx, mx, ex = mxint_hardware(
+    #     qout,
+    #     {
+    #         "width": q_config["data_out_width"],
+    #         "exponent_width": q_config["data_out_exponent_width"],
+    #         "round_bits": 4,
+    #     }, 
+    #     parallelism=q_config["data_out_parallelism"]
+    # )
+    return qout 
 
-def gelu_poly2_approx(x, q_config, alpha=0.2888, beta=1.769):
+def gelu_poly2_approx(x, q_config, alpha=-0.2888, beta=-1.769):
     """
     GELU Approximation:
     GELU(x) ≈ x * 0.5 * (1 + L(x / sqrt(2)))
     where:
     L(x) = sign(x) * [ alpha * (clip(|x|, max=-beta) + beta)^2 + 1 ]
     """
-    qx, mx, ex = mxint_hardware(
-        x,
-        {
-            "width": q_config["data_in_width"],
-            "exponent_width": q_config["data_in_exponent_width"],
-            "round_bits": 4,
-        }, 
-        parallelism=q_config["data_in_parallelism"]
-    )
+    # qx, mx, ex = mxint_hardware(
+    #     x,
+    #     {
+    #         "width": q_config["data_in_width"],
+    #         "exponent_width": q_config["data_in_exponent_width"],
+    #         "round_bits": 4,
+    #     }, 
+    #     parallelism=q_config["data_in_parallelism"]
+    # )
     sqrt2 = torch.sqrt(torch.tensor(2.0, dtype=x.dtype, device=x.device))
     x_div = x / sqrt2
     abs_x = torch.abs(x_div)
@@ -152,16 +152,16 @@ def gelu_poly2_approx(x, q_config, alpha=0.2888, beta=1.769):
     poly = alpha * (clipped ** 2) + 1
     L = torch.sign(x_div) * poly
     qout = x * 0.5 * (1 + L)
-    qx, mx, ex = mxint_hardware(
-        qout,
-        {
-            "width": q_config["data_out_width"],
-            "exponent_width": q_config["data_out_exponent_width"],
-            "round_bits": 4,
-        }, 
-        parallelism=q_config["data_out_parallelism"]
-    )
-    return qx, mx, ex
+    # qx, mx, ex = mxint_hardware(
+    #     qout,
+    #     {
+    #         "width": q_config["data_out_width"],
+    #         "exponent_width": q_config["data_out_exponent_width"],
+    #         "round_bits": 4,
+    #     }, 
+    #     parallelism=q_config["data_out_parallelism"]
+    # )
+    return qout
 
 from .int_quant.quant_modules import IntGELUImpl, QuantAct
 
@@ -170,14 +170,16 @@ class IntGELU(nn.Module):
         super().__init__()
         self.q_config = q_config
         self.quant_act = QuantAct(
-            activation_bit=self.q_config.get('in_width'), 
-            act_range_momentum=self.q_config.get('in_range_momentum')
+            activation_bit=8, 
+            act_range_momentum=0.995
             )
-        self.impl = IntGELUImpl(output_bit=self.q_config.get('out_width'))
+        # self.impl = IntGELUImpl(output_bit=self.q_config.get('out_width'))
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         qx, scaling_factor = self.quant_act(x)
-        qout, out_scaling_factor = self.impl(qx, scaling_factor)
+        qout = gelu_relu6_approx(qx, self.q_config)
+        # qout = gelu_poly2_approx(qx, self.q_config)
+        # qout, out_scaling_factor = self.impl(qx, scaling_factor)
         return qout
 
 class QuantGELU(nn.Module):

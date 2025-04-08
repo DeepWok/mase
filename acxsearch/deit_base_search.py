@@ -16,10 +16,10 @@ from pathlib import Path
 checkpoint = "deit_base_patch16_224"
 save_dir = "deit_base_saved_results"
 
-imagenet_dir = Path("/data/datasets/imagenet_pytorch/")
 
 # Override the DATASET_CACHE_DIR with our target directory
 import chop.dataset
+imagenet_dir = Path("/data/datasets/imagenet_pytorch/")
 chop.dataset.DATASET_CACHE_DIR = imagenet_dir
 
 exponent_width = 8
