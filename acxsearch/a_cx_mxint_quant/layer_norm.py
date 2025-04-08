@@ -163,6 +163,7 @@ def layer_norm_hardware(
                                 },
                                 q_config.get("data_out_parallelism"))
     return qout
+
 def int_layer_norm(x, normalized_shape, weight=None, bias=None, eps=1e-5, s=1, z=0, r=0, bit_width=8):
     """
     Integer-only LayerNorm implementation as described in the paper.
@@ -268,16 +269,18 @@ class IntLayerNorm(nn.LayerNorm):
         super().__init__(normalized_shape, eps, elementwise_affine, bias)
         self.q_config = q_config
         self.quant_act = QuantAct(
-            activation_bit=self.q_config.get('in_width'), 
-            act_range_momentum=self.q_config.get('in_range_momentum')
+            activation_bit=8, 
+            act_range_momentum=0.995
             )
-        self.impl = IntLayerNormImpl(normalized_shape, eps, elementwise_affine)
+        # self.impl = IntLayerNormImpl(normalized_shape, eps, elementwise_affine)
 
     def forward(self, x: Tensor) -> Tensor:
-        self.impl.weight=self.weight
-        self.impl.bias=self.bias
+        # self.impl.weight=self.weight
+        # self.impl.bias=self.bias
         qx, scaling_factor = self.quant_act(x)
-        qout, out_scaling_factor = self.impl(qx, scaling_factor)
+        # breakpoint()
+        qout = nn.functional.layer_norm(qx, self.normalized_shape, self.weight, self.bias, self.eps)
+        # qout, out_scaling_factor = self.impl(qx, scaling_factor)
         return qout
 
 

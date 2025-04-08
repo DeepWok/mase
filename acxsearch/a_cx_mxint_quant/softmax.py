@@ -14,8 +14,11 @@ from .quantizers import mxint_quant_block, mxint_hardware
 from chop.nn.quantizers.integer import integer_quantizer, integer_floor_quantizer
 from functools import partial
 from tqdm import tqdm
+from chop.tools import get_logger
+logger = get_logger(__name__)
 
 from .int_quant.quant_modules import IntSoftmaxImpl
+
 
 class MXIntHardwareExp(nn.Module):
     def __init__(self, q_config: Dict = {}):
@@ -165,15 +168,61 @@ class IntSoftmax(nn.Module):
         super().__init__()
         self.q_config = q_config
         self.quant_act = QuantAct(
-            activation_bit=self.q_config.get('in_width'), 
-            act_range_momentum=self.q_config.get('in_range_momentum')
+            activation_bit=8, 
+            act_range_momentum=0.995
             )
-        self.impl = IntSoftmaxImpl(output_bit=self.q_config.get('out_width'))
+        # self.impl = IntSoftmaxImpl(output_bit=self.q_config.get('out_width'))
     
     def forward(self, x: torch.Tensor, dim) -> torch.Tensor:
         qx, scaling_factor = self.quant_act(x)
-        qout, out_scaling_factor = self.impl(qx, scaling_factor)
+        # qout, out_scaling_factor = self.impl(qx, scaling_factor)
+        qout = poly_softmax(qx, dim)
         return qout
+
+def original_softmax(x, dim=-1):
+    qx_max = x.max()
+    qx_hat = x - qx_max
+    qout = nn.Softmax(dim=dim)(qx_hat)
+    return qout
+
+def poly_softmax(x, dim=-1, n=1):
+    """
+    Implements the approximated Softmax function as described:
+    Softmax_aprx(x_i) = (δ2 * exp(x̃_i)) / (∑(j=1 to N) exp(x̃_j))
+    where x̃_i = x_i - x_max and δ2 < 1
+    
+    exp(p) = 0.3585(p + 1.353)^2 + 0.344
+    where p is derived from x̃ = (-ln 2)z + p
+    
+    Args:
+        x (torch.Tensor): Input tensor
+        dim (int): Dimension along which to compute Softmax
+        n (int): Not used, kept for interface consistency
+    """
+    # Find x_max for numerical stability
+    x_max, _ = torch.max(x, dim=dim, keepdim=True)
+    x_tilde = x - x_max  # x̃_i = x_i - x_max
+    
+    # Calculate z and p
+    # x̃ = (-ln 2)z + p, where z = ⌊-x̃/ln 2⌋
+    ln2 = math.log(2)
+    z = torch.floor(-x_tilde / ln2)
+    p = x_tilde + z * ln2
+    
+    # Approximate exp(p) = 0.3585(p + 1.353)^2 + 0.344
+    exp_p = 0.3585 * (p + 1.353)**2 + 0.344
+    
+    # Calculate exp(x̃) using exp(p) >> z
+    exp_x_tilde = exp_p * (2.0 ** (-z))
+    
+    # Apply δ2 < 1 (e.g., 0.9 for stability)
+    delta_2 = 0.9
+    
+    # Calculate final softmax
+    exp_sum = torch.sum(exp_x_tilde, dim=dim, keepdim=True)
+    softmax_out = (delta_2 * exp_x_tilde) / exp_sum
+    
+    return softmax_out
 
 def approx_softmax(x, dim=-1):
     """
@@ -277,3 +326,27 @@ def power2n_softmax(x, dim=-1, n=1):
 #             parallelism = [1,1]
 #         )
 #         return qout
+class QuantGELU(nn.Module):
+    def __init__(self, q_config: Dict = {}):
+        super().__init__()
+        self.q_config = q_config
+        if q_config.get('quant_type') == 'mxint':
+            logger.debug("Using MXIntSoftmax")
+            self.module = MXIntSoftmax(
+                q_config=q_config
+            )
+        elif q_config.get('quant_type') == 'int':
+            logger.debug("Using IntSoftmax")
+            self.module = IntSoftmax(
+                q_config=q_config
+            )
+        else:
+            self.module = nn.GELU()
+
+    def forward(self, x: Tensor) -> Tensor:
+        # original_module = nn.GELU()
+        # from .utils import _get_similarity
+        # similarity = _get_similarity(original_module(x), self.module(x), "cosine")
+        # print(similarity.mean())
+        # breakpoint()
+        return self.module(x)
