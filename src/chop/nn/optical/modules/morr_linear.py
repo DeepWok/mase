@@ -46,7 +46,7 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
         in_features: int,
         out_features: int,
         bias: bool = False,
-        config=None,
+        config={},
         device: Device = torch.device("cpu"),
     ) -> None:
         super(AllPassMORRCirculantLinear, self).__init__()

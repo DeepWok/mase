@@ -10,6 +10,10 @@ import torch.nn.functional as F
 from torch import Tensor
 from torch.nn import Parameter, init
 from torch.types import Device
+import pytorch_lightning as pl
+import torchmetrics
+import transformers
+from transformers import GPT2TokenizerFast
 
 from ..utils import MORRConfig_20um_MQ
 from ..utils import mrr_roundtrip_phase_to_tr_func, mrr_roundtrip_phase_to_tr_fused
@@ -20,9 +24,133 @@ from .base_layer import ONNBaseLayer
 from .morr_custom_linear import AllPassMORRLinear
 from .morr_linear import AllPassMORRCirculantLinear
 
+from transformers import BertModel, BertForSequenceClassification
+from transformers.models.gpt2.modeling_gpt2 import (
+    GPT2Attention,
+    GPT2MLP,
+    GPT2Block,
+    Conv1D,
+)
+
 logger = logging.getLogger(__name__)
 
 __all__ = ["AllPassMORRCirculantMatMals"]
+
+def make_autoregressive_mask_for(x):
+    length = x.size(1)
+    ones = x.new_ones((length, length))
+    mask = torch.triu(ones, diagonal=1) != 0.0
+    return mask
+
+
+def make_position_indices_for(x):
+    length = x.size(1)
+    batch_size = x.size(0)
+    indices = torch.arange(length, device=x.device).repeat(batch_size, 1)
+    return indices
+
+
+def load_lookup_table(file, device):
+    data = torch.from_numpy(numpy.genfromtxt(file, delimiter='\t')).float()
+    levels = data.size(0)
+    lower_bound = data[0,1].item()
+    weight = data[:,1].unsqueeze(1).cuda(device)
+    return weight, lower_bound, levels
+
+
+def apply_lut_to_normalized(x, lut, bit_degredation=0):
+    lut_weight, lut_lb, lut_levels = lut
+    deg_factor = 2**bit_degredation
+    x = x.mul(lut_levels - deg_factor).div(deg_factor).round().mul(deg_factor).to(dtype=torch.long)
+    x = F.embedding(x, lut_weight).squeeze(-1)
+    return x
+
+
+class QuantizeValue(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, x, quant_levels, min_val, max_val, quant_mode, lut_min=None):
+        with torch.no_grad():
+            diff = max_val - min_val
+            x = x.clamp(min_val, max_val).add(-1.0 * min_val).div(diff + 1e-8).mul(quant_levels - 1)
+
+            if quant_mode == 'det':
+                x = x.round()
+                x = x.div(quant_levels - 1).mul(diff).add(min_val)
+            elif quant_mode == 'rand':
+                x = x.add(torch.rand_like(x).add(-0.5)).round() # randn* 0.288 gives same std as 0-1 rand(), if want to use normal dist.
+                x = x.div(quant_levels - 1).mul(diff).add(min_val)
+            
+            if lut_min is not None:
+                pos_x = torch.relu(x)
+                neg_x = x - pos_x
+                lms = lut_min * max_val
+                pos_x[pos_x < lms] = lms
+                lms = lut_min * torch.abs(min_val)
+                neg_x[neg_x > -lms] = -lms
+                x = pos_x + neg_x
+
+            return x
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        # STE
+        return grad_output, None, None, None, None, None
+
+class QuantizeStats(nn.Module):
+    def __init__(self, percentile, use_clipping=True):
+        super(QuantizeStats, self).__init__()
+        self.register_buffer('running_min', torch.tensor(0.0))
+        self.register_buffer('running_max', torch.tensor(0.0))
+        self.max_calibration_steps = 1
+        self.initial_calibration_steps = 0
+        #self.register_buffer('calibration_done', torch.tensor(False))
+        self.calibration_done = torch.tensor(False)
+        self.activations = []
+        self.percentile = percentile
+        self.use_clipping = use_clipping
+
+    def update(self, tensor):
+        if self.use_clipping:
+            if not self.calibration_done.item():
+                self.initial_calibration_steps += 1
+                finished = False
+
+                if self.initial_calibration_steps >= self.max_calibration_steps:
+                    finished = True
+                    self.calibration_done = torch.tensor(True)
+
+                with torch.no_grad():
+                    self.activations.extend(tensor.detach().cpu().tolist())
+
+                    if finished:
+                        maximum = numpy.percentile(self.activations, self.percentile)
+                        self.running_max = torch.tensor(maximum, device=tensor.device, dtype=tensor.dtype)
+                        minimum = tensor.min()
+                        minimum = minimum if minimum >= 0.0 else -maximum
+                        self.running_min = torch.tensor(minimum, device=tensor.device, dtype=tensor.dtype)
+                        self.activations.clear() # free the memory
+                    else:
+                        self.running_min = tensor.min()
+                        self.running_max = tensor.max()
+        
+        else:
+            alpha = 0.999
+            with torch.no_grad():
+                cur_min = tensor.min()
+                cur_max = tensor.max()
+
+                if self.initial_calibration_steps == 0:
+                    self.initial_calibration_steps += 1
+                    self.running_min = cur_min
+                    self.running_max = cur_max
+                else:
+                    self.running_min = alpha * self.running_min + (1.0 - alpha) * cur_min
+                    self.running_max = alpha * self.running_max + (1.0 - alpha) * cur_max
+
+
+
+    def get(self):
+        return self.running_min, self.running_max
 
 class AllPassMORRCirculantMatMals(ONNBaseLayer):
     """
@@ -525,8 +653,6 @@ class MORRMHA(nn.Module):
         out = self.dropout2(out)
         out = self.Wout(out)
         return out
-    
-
 
 class MORRFF(nn.Module):
     def __init__(self, embed_dim, expansion_dim):
@@ -568,3 +694,191 @@ class MORRDecoderLayer(nn.Module):
         out = self.drop2(out)
         out = out + identity
         return out
+
+class _MORRGPT(nn.Module):
+    def __init__(self, features, heads, tokenizer, layers, max_length):
+        super(_MORRGPT, self).__init__()
+        vocab_size = len(tokenizer) + 8 - len(tokenizer) % 8 # pad vocab size to 8-multiple for tensor core acceleration
+        assert vocab_size % 8 == 0
+        self.pos_embedding = nn.Embedding(max_length, features)
+        self.word_embedding = nn.Embedding(vocab_size, features, padding_idx = tokenizer.pad_token_id)
+        self.embedding_dropout = nn.Dropout(0.1)
+        self.decoders = nn.ModuleList([MORRDecoderLayer(features, heads) for _ in range(layers)])
+        self.norm = nn.LayerNorm(features)
+        self.output_head = nn.Linear(features, vocab_size)
+        nn.init.normal_(self.word_embedding.weight, std=0.02)
+        nn.init.normal_(self.pos_embedding.weight, std=0.02)
+
+    def forward_embedding(self, x):
+        embedded = self.word_embedding(x)
+        return embedded
+
+    def forward_attn(self, x):
+        mask = make_autoregressive_mask_for(x)
+        pos = make_position_indices_for(x)
+        pos_embed = self.embedding_dropout(self.pos_embedding(pos) + x)
+        decoded = pos_embed
+        for layer in self.decoders:
+            decoded = layer(decoded, mask)
+        
+        out = self.norm(decoded)
+        return out
+
+    def forward(self, x):
+        embedded = self.forward_embedding(x)
+        decoded = self.forward_attn(embedded)
+        out = self.output_head(decoded)
+        return out
+
+
+class MORRGPT(pl.LightningModule):
+    def __init__(self, features, heads, layers=6, max_length=1024):
+        super().__init__()
+        self.tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
+        self.tokenizer.add_special_tokens({'pad_token': '<|pad|>'})
+        self.transformer = _MORRGPT(features, heads, self.tokenizer, layers, max_length)
+        self.loss = nn.CrossEntropyLoss(ignore_index=self.tokenizer.pad_token_id)
+        self.val_loss = torchmetrics.MeanMetric()
+        self.test_loss = torchmetrics.MeanMetric()
+        self.lr = 0.0005
+        self.photon_target = 0
+        self.training_steps = 100000
+        self.extracting = False
+        self.use_adam = True
+
+    def get_tokenizer(self):
+        return self.tokenizer
+
+    def forward(self, x):
+        return self.transformer(x)
+
+    def training_step(self, batch, batch_idx):
+        xs, ys = batch
+        preds = self(xs)
+        features = preds.size(2)
+        preds = preds.view(-1, features)
+        ys = ys.view(-1)
+        loss = self.loss(preds, ys)
+        self.log('train loss', loss)
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        xs, ys = batch
+        preds = self(xs)
+        features = preds.size(2)
+        preds = preds.view(-1, features)
+        ys = ys.view(-1)
+        loss = self.loss(preds, ys)
+        self.val_loss.update(loss)
+
+    def validation_epoch_end(self, outputs):
+        self.log('validation loss', self.val_loss)
+
+    def test_step(self, batch, batch_idx):
+        xs, ys = batch
+        preds = self(xs)
+        features = preds.size(2)
+        preds = preds.view(-1, features)
+        ys = ys.view(-1)
+        loss = self.loss(preds, ys)
+        self.test_loss.update(loss)
+        if self.extracting:
+            raise ValueError("Extraction done, aborting")
+
+    def test_epoch_end(self, outputs):
+        self.log('test loss', self.test_loss)
+        self.log('photon target', self.photon_target)
+
+    def configure_optimizers(self):
+        if self.use_adam:
+            decay = set()
+            no_decay = set()
+            blacklist_weight_modules = (nn.LayerNorm, nn.Embedding)
+
+            for mn, m in self.named_modules():
+                for pn, p in m.named_parameters(recurse=False):
+                    fpn = '%s.%s' % (mn, pn) if mn else pn # full param name
+
+                    if 'bias' in pn:
+                        no_decay.add(fpn)
+                    elif 'weight' in pn and not isinstance(m, blacklist_weight_modules):
+                        decay.add(fpn)
+                    else:
+                        no_decay.add(fpn)
+
+            param_dict = {pn: p for pn, p in self.named_parameters()}
+            inter_params = decay & no_decay
+            union_params = decay | no_decay
+
+            assert len(inter_params) == 0, "parameters %s made it into both decay/no_decay sets!" % (str(inter_params), )
+            assert len(param_dict.keys() - union_params) == 0, "parameters %s were not separated into either decay/no_decay set!" \
+                                                        % (str(param_dict.keys() - union_params), )
+
+            optim_groups = [
+                {"params": [param_dict[pn] for pn in sorted(list(decay))], "weight_decay": 0.02},
+                {"params": [param_dict[pn] for pn in sorted(list(no_decay))], "weight_decay": 0.0},
+            ]
+
+            optimizer = torch.optim.AdamW(optim_groups, lr=self.lr)
+            scheduler = transformers.get_cosine_schedule_with_warmup(optimizer, num_warmup_steps=2500, num_training_steps=self.training_steps)
+            return {
+                'optimizer': optimizer,
+                'lr_scheduler': {
+                    'scheduler': scheduler,
+                    'interval': 'step',
+                    'name': 'Cosine LR scheduler'
+                }
+            }
+        else:
+            optimizer = torch.optim.RMSprop(self.parameters(), lr=self.lr, weight_decay=1e-5)
+            scheduler = transformers.get_cosine_schedule_with_warmup(optimizer, num_warmup_steps=2500, num_training_steps=self.training_steps)
+            return {
+                'optimizer': optimizer,
+                'lr_scheduler': {
+                    'scheduler': scheduler,
+                    'interval': 'step',
+                    'name': 'Cosine LR scheduler'
+                }
+            }
+    
+    def replace_output_head(self, module):
+        self.transformer.output_head = module
+
+    def enable_quantization(self):
+        for m in self.transformer.modules():
+            if isinstance(m, AllPassMORRCirculantLinear) or isinstance(m, AllPassMORRCirculantMatMals):
+                m.enable_quantization()
+
+    def set_photon_target(self, n_photons):
+        self.photon_target = n_photons
+        for m in self.transformer.modules():
+            if isinstance(m, AllPassMORRCirculantLinear) or isinstance(m, AllPassMORRCirculantMatMals):
+                m.set_photon_target(n_photons)
+
+    def set_quantized_eval(self, value=True):
+        for m in self.transformer.modules():
+            if isinstance(m, AllPassMORRCirculantLinear) or isinstance(m, AllPassMORRCirculantMatMals):
+                print("setting quantized eval")
+                m.force_quantized_eval = value
+
+    def save(self, fname):
+        torch.save(self.transformer.state_dict(), fname)
+
+    def load(self, fname):
+        self.transformer.load_state_dict(torch.load(fname))
+
+    def enable_extraction(self):
+        lin1 = self.transformer.decoders[0].ff.layer2
+        lin1.extract_simulated = True
+        lin1.extract_name = 'first_linear'
+        lin2 = self.transformer.decoders[-1].ff.layer2
+        lin2.extract_simulated = True
+        lin2.extract_name = 'last_linear'
+        attn1 = self.transformer.decoders[0].attn.qmm1
+        attn1.extract_simulated = True
+        attn1.extract_name = 'first_attn'
+        attn2 = self.transformer.decoders[-1].attn.qmm1
+        attn2.extract_simulated = True
+        attn2.extract_name = 'last_attn'
+        self.extracting = True
+    
