@@ -4,9 +4,7 @@ import shutil
 import torch.nn as nn
 
 from chop.passes.graph.utils import init_project
-from chop.nn.quantized.modules.linear import (
-    LinearLogicNets,
-)
+from chop.nn.quantized.modules.linear import LinearLogicNets
 
 from .util import (
     generate_lut_verilog,

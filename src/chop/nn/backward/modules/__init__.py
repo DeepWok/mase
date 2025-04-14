@@ -1,6 +1,4 @@
-from .linear import (
-    CustomLinear,
-)
+from .linear import CustomLinear
 
 
 custom_module_map = {

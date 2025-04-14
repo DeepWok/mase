@@ -17,9 +17,7 @@ from chop.passes.graph.analysis import (
     verify_common_metadata_analysis_pass,
 )
 from chop.ir.graph.mase_graph import MaseGraph
-from chop.passes.graph.transforms import (
-    training_base_pass,
-)
+from chop.passes.graph.transforms import training_base_pass
 from chop.passes.graph.utils import deepcopy_mase_graph
 from chop.tools.logger import set_logging_verbosity
 
