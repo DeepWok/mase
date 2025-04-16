@@ -65,7 +65,8 @@ from .roberta import (
     RobertaSelfAttentionSA,
     RobertaSelfOutputSA,
     RobertaOutputSA,
-    RobertaIntermediateSA
+    RobertaIntermediateSA,
+    RobertaClassificationHeadSA
 )
 
 spiking_basic_module_map = {
@@ -113,7 +114,8 @@ spiking_roberta_module_map = {
     "roberta_embeddings_sa": RobertaEmbeddingsSA,
     "roberta_self_output_sa": RobertaSelfOutputSA,
     "roberta_output_sa": RobertaOutputSA,
-    "roberta_intermediate_sa": RobertaIntermediateSA
+    "roberta_intermediate_sa": RobertaIntermediateSA,
+    "roberta_classification_head_sa": RobertaClassificationHeadSA
 }
 
 spiking_module_map = {

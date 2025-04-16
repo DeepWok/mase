@@ -26,6 +26,7 @@ tokenizer = AutoTokenizer.from_pretrained(pretrained, do_lower_case=True)
 for param in bert.parameters():
     param.requires_grad = True  # QAT training
 
+print(bert)
 
 # def test_ann2snn_module_transform_pass():
 quan_pass_args = {
@@ -66,6 +67,8 @@ mg, _ = quantize_module_transform_pass(bert, quan_pass_args)
 # f.write(str(mg))
 # f.close()
 
+print(mg)
+
 convert_pass_args = {
     "by": "regex_name",
     "roberta\.encoder\.layer\.\d+\.attention\.self": {
@@ -76,7 +79,8 @@ convert_pass_args = {
         },
     },
 }
-mg, _ = ann2snn_module_transform_pass(mg, convert_pass_args)
+#mg, _ = ann2snn_module_transform_pass(bert, convert_pass_args)
+#print(mg)
 
 convert_pass_args = {
     "by": "type",
@@ -121,7 +125,10 @@ convert_pass_args = {
         },
     },
 }
-mg, _ = ann2snn_module_transform_pass(mg, convert_pass_args)
+#mg, _ = ann2snn_module_transform_pass(mg, convert_pass_args)
+#print(mg)
+
+#print(mg)
 
 # f = open(f"spiking_model_arch.txt", "w")
 # f.write(str(mg))

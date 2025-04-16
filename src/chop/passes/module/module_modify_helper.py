@@ -13,6 +13,7 @@ from transformers.models.roberta.modeling_roberta import (
     RobertaIntermediate,
     RobertaOutput,
     RobertaSelfOutput,
+    RobertaEmbeddings,
 )
 
 from transformers.models.llama.modeling_llama import (
@@ -20,6 +21,7 @@ from transformers.models.llama.modeling_llama import (
 )
 
 roberta_prefix_map = {
+    RobertaEmbeddings: "roberta_embeddings",
     RobertaSdpaSelfAttention: "roberta_self_attention",
     RobertaSelfAttention: "roberta_self_attention",
     RobertaIntermediate: "roberta_intermediate",

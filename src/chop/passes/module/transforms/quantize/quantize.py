@@ -87,6 +87,7 @@ def quantize_by_regex_name(network, pass_args):
         new_m = instantiate_module(
             m, postfix, quantized_module_map, additional_module_args
         )
+        print(new_m)
         network = replace_by_name(network, n, new_m)
 
     return network
