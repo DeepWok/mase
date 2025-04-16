@@ -14,12 +14,21 @@ import argparse
 from models import *
 from utils import progress_bar
 
+from pathlib import Path
+relative_path = Path(__file__).parent
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
-parser.add_argument('--resume', '-r', action='store_true',
-                    help='resume from checkpoint')
+parser.add_argument('--target_name', '-t', type=str,
+                    help='target name of the experiment')
+parser.add_argument('--load_name', '-l', type=str,
+                    help='load name of the experiment')
 args = parser.parse_args()
+
+target_name = args.target_name
+load_name = args.load_name
+save_name = load_name + '_' + target_name
+
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 best_acc = 0  # best test accuracy
@@ -54,65 +63,41 @@ classes = ('plane', 'car', 'bird', 'cat', 'deer',
 
 # Model
 print('==> Building model..')
-# net = VGG('VGG19')
 net = ResNet18()
-# net = PreActResNet18()
-# net = GoogLeNet()
-# net = DenseNet121()
-# net = ResNeXt29_2x64d()
-# net = MobileNet()
-# net = MobileNetV2()
-# net = DPN92()
-# net = ShuffleNetG2()
-# net = SENet18()
-# net = ShuffleNetV2(1)
-# net = EfficientNetB0()
-# net = RegNetX_200MF()
-# net = SimpleDLA()
-# net = net.to(device)
-# if device == 'cuda'
-#     net = torch.nn.DataParallel(net)
-#     cudnn.benchmark = True
 
-net = net.to(device)
-if args.resume:
-    # Load checkpoint.
-    print('==> Resuming from checkpoint..')
-    assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-    checkpoint = torch.load('acxsearch/checkpoint/ckpt.pth')
-    net.load_state_dict(checkpoint['net'])
-    best_acc = checkpoint['acc']
-    start_epoch = checkpoint['epoch']
-
-from cim.module_level_tranform import vit_module_level_quantize
-net = vit_module_level_quantize(net, {
+quan_config = {
     "by": "type",
     "conv2d": {
         "config": {
             "num_bits": 8,
-            "weight_range": 1.0,
-            "bias_range": 1.0,
-            "range_decay": 0.0,
             "noise_magnitude": 0.2,
-        }
+        },
     },
     "linear": {
         "config": {
             "num_bits": 8,
-            "weight_range": 1.0,
-            "bias_range": 1.0,
-            "range_decay": 0.0,
             "noise_magnitude": 0.2,
         }
     },
-    "batch_norm": {
+    "relu": {
         "config": {
-            "num_bits": 8,
-            "max_value": 6.0,
+            "num_bits": 3,
+            "max_value": 15.0,
             "decay": 1e-3,
         }
-    }
-})
+    },
+}
+if args.load_name is not None:
+    # Load checkpoint.
+    print('==> Resuming from checkpoint..')
+    assert os.path.isdir(relative_path / 'checkpoint'), 'Error: no checkpoint directory found!'
+    checkpoint = torch.load(relative_path / f'checkpoint/{load_name}.pth')
+    net.load_state_dict(checkpoint['net'])
+    best_acc = 0.0
+    start_epoch = checkpoint['epoch']
+
+from cim.module_level_tranform import vit_module_level_add_noise
+net = vit_module_level_add_noise(net, quan_config)
 net = net.to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=args.lr,
@@ -143,7 +128,6 @@ def train(epoch):
         progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                      % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
-
 def test(epoch):
     global best_acc
     net.eval()
@@ -166,16 +150,16 @@ def test(epoch):
 
     # Save checkpoint.
     acc = 100.*correct/total
-    if acc > best_acc:
+    if acc > best_acc and args.target_name is not None:
         print('Saving..')
         state = {
             'net': net.state_dict(),
             'acc': acc,
             'epoch': epoch,
         }
-        if not os.path.isdir('checkpoint'):
-            os.mkdir('checkpoint')
-        torch.save(state, './checkpoint/ckpt.pth')
+        if not os.path.isdir(relative_path / 'checkpoint'):
+            os.mkdir(relative_path/ 'checkpoint')
+        torch.save(state, relative_path / f'checkpoint/{save_name}.pth')
         best_acc = acc
 
 
