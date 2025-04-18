@@ -94,9 +94,10 @@ requirements = [
     "sphinx-book-theme",
     "pydot",
     "attr-dot-dict",
-    "mase-triton",
     "ultralytics",
 ]
+
+gpu_requirements = ["mase-triton"]
 
 setup(
     name="mase-tools",
@@ -111,4 +112,7 @@ setup(
     },
     packages=find_packages("src"),
     install_requires=requirements,
+    extras_require={
+        "gpu": gpu_requirements,
+    }
 )

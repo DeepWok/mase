@@ -86,12 +86,20 @@ class MaseModelInfo:
 
         # NLP models
         if self.task_type == ModelTaskType.NLP:
-            assert any([self.sequence_classification, self.seq2seqLM, self.causal_LM]), "Must be a language model"
+            assert any(
+                [self.sequence_classification, self.seq2seqLM, self.causal_LM]
+            ), "Must be a language model"
 
         # Vision models
         if self.task_type == ModelTaskType.VISION:
-            assert any([self.image_classification, self.image_detection,
-                self.image_segmentation, self.image_instance_segmentation]), "Must be an image model"
+            assert any(
+                [
+                    self.image_classification,
+                    self.image_detection,
+                    self.image_segmentation,
+                    self.image_instance_segmentation,
+                ]
+            ), "Must be an image model"
 
         # Classification models
         if self.task_type == ModelTaskType.PHYSICAL:

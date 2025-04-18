@@ -136,7 +136,9 @@ def graph_iterator_for_mase_ops(graph):
                         mase_op = "user_defined_module"
                         break
                 if mase_op is None:
-                    raise ValueError(f"Unknown module: {module_name}, which is class {module_cls}")
+                    raise ValueError(
+                        f"Unknown module: {module_name}, which is class {module_cls}"
+                    )
             node.meta["mase"].parameters["common"]["mase_type"] = mase_type
             node.meta["mase"].parameters["common"]["mase_op"] = mase_op
 

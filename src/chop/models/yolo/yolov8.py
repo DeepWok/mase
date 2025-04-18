@@ -101,6 +101,7 @@ def get_yolo_segmentation_model(checkpoint):
         model.load_state_dict(umodel.model.state_dict())
     return model
 
+
 def postprocess_outputs_no_nms(x):
     dfl = unnmod.DFL(16)
     shape = x[0].shape
@@ -113,9 +114,11 @@ def postprocess_outputs_no_nms(x):
     bboxes_preds = torch.cat((dbox, cls.sigmoid()), 1)
     return bboxes_preds
 
+
 def postprocess_detection_outputs(x):
     bboxes_preds = postprocess_outputs_no_nms(x)
     return non_max_suppression(bboxes_preds, multi_label=True)
+
 
 def postprocess_segmentation_outputs(seg_outputs):
     x, mask_coefs, mask_protos = seg_outputs

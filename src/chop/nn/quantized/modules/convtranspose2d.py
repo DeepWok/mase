@@ -20,6 +20,7 @@ from chop.nn.quantizers import (
     ternary_quantizer,
 )
 
+
 class _ConvTranspose2dBase(torch.nn.ConvTranspose2d):
     def __init__(
         self,
@@ -117,6 +118,7 @@ class _ConvTranspose2dBase(torch.nn.ConvTranspose2d):
     def get_output_bitwidth(self) -> dict:
         raise NotImplementedError()
 
+
 class ConvTranspose2dInteger(_ConvTranspose2dBase):
     def __init__(
         self,
@@ -168,6 +170,7 @@ class ConvTranspose2dInteger(_ConvTranspose2dBase):
         self.b_quantizer = partial(
             integer_quantizer, width=b_width, frac_width=b_frac_width
         )
+
 
 class ConvTranspose2dMinifloatDenorm(_ConvTranspose2dBase):
     def __init__(
@@ -243,6 +246,7 @@ class ConvTranspose2dMinifloatDenorm(_ConvTranspose2dBase):
             exponent_bias=b_exponent_bias,
         )
 
+
 class ConvTranspose2dMinifloatIEEE(_ConvTranspose2dBase):
     def __init__(
         self,
@@ -317,6 +321,7 @@ class ConvTranspose2dMinifloatIEEE(_ConvTranspose2dBase):
             exponent_bias=b_exponent_bias,
         )
 
+
 class ConvTranspose2dLog(_ConvTranspose2dBase):
     def __init__(
         self,
@@ -384,6 +389,7 @@ class ConvTranspose2dLog(_ConvTranspose2dBase):
             width=b_width,
             exponent_bias=b_exponent_bias,
         )
+
 
 class ConvTranspose2dBinary(_ConvTranspose2dBase):
     def __init__(
