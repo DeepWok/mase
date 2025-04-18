@@ -64,6 +64,8 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "conv2d"
             elif isinstance(module, nn.Conv1d):
                 mase_op = "conv1d"
+            elif isinstance(module, nn.ConvTranspose2d):
+                mase_op = "convtranspose2d"
             elif isinstance(module, nn.LayerNorm):
                 mase_op = "layer_norm"
             elif isinstance(module, nn.GroupNorm):
@@ -123,6 +125,10 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "grouped_query_attention"
             elif isinstance(module, nn.Flatten):
                 mase_op = "flatten"
+            elif isinstance(module, nn.Identity):
+                mase_op = "identity"
+            elif isinstance(module, nn.modules.upsampling.Upsample):
+                mase_op = "upsample"
             else:
                 mase_op = None
                 for module_cls in graph.model.custom_ops["modules"].keys():
@@ -130,7 +136,7 @@ def graph_iterator_for_mase_ops(graph):
                         mase_op = "user_defined_module"
                         break
                 if mase_op is None:
-                    raise ValueError(f"Unknown module: {module_name}")
+                    raise ValueError(f"Unknown module: {module_name}, which is class {module_cls}")
             node.meta["mase"].parameters["common"]["mase_type"] = mase_type
             node.meta["mase"].parameters["common"]["mase_op"] = mase_op
 

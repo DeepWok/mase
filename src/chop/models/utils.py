@@ -52,6 +52,9 @@ class MaseModelInfo:
 
     # Vision models
     image_classification: bool = False
+    image_detection: bool = False
+    image_segmentation: bool = False
+    image_instance_segmentation: bool = False
 
     # Physical models
     physical_data_point_classification: bool = False
@@ -83,11 +86,12 @@ class MaseModelInfo:
 
         # NLP models
         if self.task_type == ModelTaskType.NLP:
-            assert self.sequence_classification + self.seq2seqLM + self.causal_LM >= 1
+            assert any([self.sequence_classification, self.seq2seqLM, self.causal_LM]), "Must be a language model"
 
         # Vision models
         if self.task_type == ModelTaskType.VISION:
-            assert self.image_classification, "Must be an image classification model"
+            assert any([self.image_classification, self.image_detection,
+                self.image_segmentation, self.image_instance_segmentation]), "Must be an image model"
 
         # Classification models
         if self.task_type == ModelTaskType.PHYSICAL:
@@ -136,6 +140,9 @@ def register_mase_model(
     model_source: ModelSource,
     task_type: ModelTaskType,
     image_classification: bool = False,
+    image_detection: bool = False,
+    image_segmentation: bool = False,
+    image_instance_segmentation: bool = False,
     physical_data_point_classification: bool = False,
     sequence_classification: bool = False,
     seq2seqLM: bool = False,
@@ -154,6 +161,9 @@ def register_mase_model(
             model_source=model_source,
             task_type=task_type,
             image_classification=image_classification,
+            image_detection=image_detection,
+            image_segmentation=image_segmentation,
+            image_instance_segmentation=image_instance_segmentation,
             physical_data_point_classification=physical_data_point_classification,
             sequence_classification=sequence_classification,
             seq2seqLM=seq2seqLM,

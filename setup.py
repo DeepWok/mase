@@ -95,6 +95,7 @@ requirements = [
     "pydot",
     "attr-dot-dict",
     "mase-triton",
+    "ultralytics",
 ]
 
 setup(

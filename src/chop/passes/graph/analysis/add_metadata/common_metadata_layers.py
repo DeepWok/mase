@@ -324,6 +324,8 @@ module_data = {
     "conv2d": {"input": "data_in"},
     # https://pytorch.org/docs/stable/_modules/torch/nn/modules/conv.html#Conv3d
     "conv3d": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/_modules/torch/nn/modules/conv.html#ConvTranspose2d
+    "convtranspose2d": {"input": "data_in", "output_size": "config"},
     # https://pytorch.org/docs/stable/generated/torch.nn.Embedding.html
     "embedding": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.nn.LayerNorm.html#torch.nn.LayerNorm
@@ -362,6 +364,7 @@ module_data = {
     "grouped_query_attention": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.nn.Flatten.html#flatten
     "flatten": {"input": "data_in", "start_dim": "config", "end_dim": "config"},
+    "upsample": {"input": "data_in", "size": "config", "scale_factor": "config"},
 }
 
 
@@ -462,6 +465,8 @@ method_data = {
     "ne": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.int.html#torch-tensor-int
     "int": {"memory_format": "config"},
+    "_assert": {"input": "data_in"},
+    "flatten": {"start_dim": "config", "end_dim": "config"},
 }
 
 # ----------------------------------------------------------

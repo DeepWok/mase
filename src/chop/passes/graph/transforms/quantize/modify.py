@@ -152,7 +152,23 @@ def create_new_module(
                 copy_weights(original_module.pruning_masks, new_module.pruning_masks)
             if use_bias:
                 copy_weights(original_module.weight, new_module.weight)
-
+    elif mase_op == "convtranspose2d":
+        name = f"{mase_op}_{quant_name}"
+        new_module_cls = quantized_module_map[name]
+        use_bias = original_module.bias is not None
+        new_module = new_module_cls(
+            in_channels=original_module.in_channels,
+            out_channels=original_module.out_channels,
+            kernel_size=original_module.kernel_size,
+            stride=original_module.stride,
+            padding=original_module.padding,
+            output_padding=original_module.output_padding,
+            groups=original_module.groups,
+            bias=use_bias,
+            dilation=original_module.dilation,
+            padding_mode=original_module.padding_mode,
+            config=config,
+        )
     elif mase_op == "relu":
         new_module_cls = quantized_module_map[f"relu_{quant_name}"]
         new_module = new_module_cls(inplace=original_module.inplace, config=config)
