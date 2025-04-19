@@ -6,10 +6,10 @@ from transformers.models.bert.modeling_bert import (
     BertAttention,
 )
 from transformers.models.gpt2.modeling_gpt2 import (
-    GPT2SdpaAttention,
+    GPT2Attention,
     GPT2Block,
 )
-from chop.nn.attention.modules import attention_module_map
+from chop.nn.modules import MLA, MGQALayers
 from ...module_modify_helper import replace_by_name, instantiate_module
 from ...state_dict_map import match_a_pattern, check_is_huggingface_model
 from .attention_transform_helper import (
@@ -19,6 +19,8 @@ from .attention_transform_helper import (
 )
 from transformers.models.llama.modeling_llama import LlamaAttention, LlamaDecoderLayer
 
+
+attention_module_map = {"attention_latent": MLA, "attention_gpa": MGQALayers}
 
 def get_config(config: dict, name: str):
     if name in config:
@@ -34,7 +36,7 @@ def attention_by_type(network, pass_args):
             n_m[n] = m
 
         if type_name == "gpt2spda":
-            module = GPT2SdpaAttention
+            module = GPT2Attention
         elif type_name == "gpt2block":
             module = GPT2Block
         else:
@@ -125,7 +127,37 @@ def attention_by_model(network, pass_args):
     return new_network
 
 
-def attention_transform_pass(network, pass_args):
+def attention_swap_transform_pass(network, pass_args):
+    """
+    Apply attention swap transformation to the given nn.Module.
+    Currently, this transformation supports transforming MHA to MLA or Grouped attention (MGQA), it only works with GPT2 models for now.
+    This is a placeholder for future work.
+
+    :param network: The input network to be transformed.
+    :type network: torch.nn.Module
+
+    :param pass_args: Additional arguments for the transformation.
+    :type pass_args: dict, optional
+
+    Examples pass_args:
+
+    .. code-block:: python
+
+        pass_args = {
+            "by": "type", # transform by type, name, or regex_name
+            "gpt2spda": {
+                "config": {
+                    "name": "mgqa",
+                    "kv_heads": 2,
+                },
+            },
+        }
+
+    :return: The transformed torch.nn.Module.
+    :rtype: tuple
+    :raises ValueError: If the quantize "by" argument is unsupported.
+
+    """
     by = pass_args.pop("by")
     stats = {}
     match by:

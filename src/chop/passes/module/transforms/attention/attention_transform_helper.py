@@ -6,13 +6,12 @@ from typing import Optional, Tuple, Union
 import logging
 import copy
 
-from chop.nn.attention.modules.mla import (
+from chop.nn.modules.mla import (
     ModelArgs,
     MLA,
-    RMSNorm,
 )
-from chop.nn.attention.modules.mgqa import MGQALayers, MGQA
-from chop.nn.attention.modules.lora_linear import (
+from chop.nn.modules.mgqa import MGQALayers, MGQA
+from chop.nn.modules.lora_linear import (
     LowRankLinear,
 )
 from ...module_modify_helper import (
@@ -26,7 +25,7 @@ from transformers.models.bert.modeling_bert import (
     BertSelfOutput,
 )
 from transformers.models.gpt2.modeling_gpt2 import (
-    GPT2SdpaAttention,
+    GPT2Attention,
     GPT2Block,
 )
 from transformers.models.llama.modeling_llama import LlamaAttention, LlamaDecoderLayer
@@ -64,10 +63,10 @@ def replace_attention_by_name(network, name, module, transform_name):
 def gpt2sdpa_to_mla_init(gpt2_block: GPT2Block, config: dict) -> MLA:
     """
     Initialize and return an MLA module based on dimensions
-    extracted from a GPT2SdpaAttention (within GPT2Block).
+    extracted from a GPT2Attention (within GPT2Block).
 
     Args:
-        gpt2_block (GPT2Block): A GPT-2 block containing GPT2SdpaAttention as `.attn`.
+        gpt2_block (GPT2Block): A GPT-2 block containing GPT2Attention as `.attn`.
         config (dict): A user config dict, which can contain nested "config" entries
                        for MLA's ModelArgs.
                        e.g. {"config": {"max_batch_size": 8, "q_lora_rank": 0, ...}}
@@ -75,8 +74,8 @@ def gpt2sdpa_to_mla_init(gpt2_block: GPT2Block, config: dict) -> MLA:
         MLA: A newly constructed MLA module with random initialization.
     """
 
-    # GPT2Block -> GPT2SdpaAttention
-    gpt2_sdpa_attn: GPT2SdpaAttention = gpt2_block.attn
+    # GPT2Block -> GPT2Attention
+    gpt2_sdpa_attn: GPT2Attention = gpt2_block.attn
 
     # gather GPT-2 attention hyperparams
     hidden_size = gpt2_sdpa_attn.embed_dim  # e.g., 768
@@ -105,7 +104,7 @@ def gpt2sdpa_to_mla_init(gpt2_block: GPT2Block, config: dict) -> MLA:
     return mla_module
 
 
-def gpt2sdpa_to_mgqa_init(gpt2_sdpa: GPT2SdpaAttention, config: dict) -> MGQA:
+def gpt2sdpa_to_mgqa_init(gpt2_sdpa: GPT2Attention, config: dict) -> MGQA:
 
     # Basic info from gpt2_sdpa
     hidden_size = gpt2_sdpa.embed_dim
@@ -126,7 +125,7 @@ def gpt2sdpa_to_mgqa_init(gpt2_sdpa: GPT2SdpaAttention, config: dict) -> MGQA:
     return mgqa_layers
 
 
-def gpt2sdpa_to_lorafc_init(attn_module: GPT2SdpaAttention, config: dict) -> nn.Module:
+def gpt2sdpa_to_lorafc_init(attn_module: GPT2Attention, config: dict) -> nn.Module:
     hidden_size = attn_module.embed_dim
 
     # get desired rank from config
@@ -145,7 +144,7 @@ def transform_gpt2sdpa_to_mla(
     gpt2_block: GPT2Block,
     mla_attn: "MLA",
 ):
-    gpt2_sdpa_attn: GPT2SdpaAttention = gpt2_block.attn
+    gpt2_sdpa_attn: GPT2Attention = gpt2_block.attn
     embed_dim = gpt2_sdpa_attn.embed_dim
 
     target_dtype = mla_attn.wq.weight.dtype
@@ -226,11 +225,11 @@ def transform_gpt2sdpa_to_mla(
 
 
 def transform_gpt2sdpa_to_mgqa(
-    gpt2sdpa: GPT2SdpaAttention,
+    gpt2sdpa: GPT2Attention,
     mgqa: MGQA,
 ):
 
-    # GPT2SdpaAttention: gather shapes & param references
+    # GPT2Attention: gather shapes & param references
     embed_dim = gpt2sdpa.embed_dim
     c_attn_weight = gpt2sdpa.c_attn.weight  # shape [embed_dim, 3*embed_dim]
     c_attn_bias = gpt2sdpa.c_attn.bias  # shape [3*embed_dim]
@@ -304,9 +303,9 @@ def transform_gpt2sdpa_to_mgqa(
 
 
 def transform_gpt2sdpa_to_lorafc(
-    gpt2sdpa: GPT2SdpaAttention,
+    gpt2sdpa: GPT2Attention,
     new_fc: nn.Module,
-) -> GPT2SdpaAttention:
+) -> GPT2Attention:
 
     use_low_rank = isinstance(new_fc, LowRankLinear)
 
