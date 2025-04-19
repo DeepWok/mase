@@ -2,6 +2,8 @@ from torch import nn
 import chop.nn.snn.base as base
 import torch
 
+from chop.nn.quantizers.SNN.LSQ import AlphaInit, ElasticBiSpiking
+
 
 class Linear(nn.Linear, base.StepModule):
     def __init__(
@@ -105,3 +107,66 @@ class LinearUnfoldBias(nn.Linear):
         self.first = False
 
         return output
+
+
+class LinearElasticBiSpiking(nn.Linear):
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        bias: bool = True,
+        device=None,
+        dtype=None,
+        symmetric=True,
+        config=None,
+    ) -> None:
+        super().__init__(
+            in_features,
+            out_features,
+            bias,
+            device,
+            dtype,
+        )
+        # NOTE: dead code from the original implementation (maybe useful in future reference)
+        # self.weight_bits = config["weight_bits"]
+        # self.quantize_act = config["quantize_act"]
+        # self.register_buffer('weight_clip_val', torch.tensor([config["clip_val"]]))
+        # self.input_bits = config["input_bits"]
+
+        self.T = config["T"]
+        self.act_clip_val = nn.ParameterList(
+            [AlphaInit(torch.tensor(1.0), requires_grad=False) for i in range(self.T)]
+        )
+        self.act_quantizer = ElasticBiSpiking
+
+    def forward(self, input):
+        # quantize weight
+        assert len(self.weight.size()) == 2
+
+        weight = self.weight
+        mem = torch.zeros_like(input[0]).cuda()
+        output = torch.zeros_like(input).cuda()
+        mem_old = 0
+        for i in range(self.T):
+            if i == 0:
+                mem = input[0]
+            else:
+                # v = beta * mem_old (alpha - spike) + v_reset(which is 0) + input
+                mem = (
+                    mem_old
+                    * 0.25
+                    * (self.act_clip_val[i - 1].detach() - output[i - 1].detach())
+                    + input[i]
+                )
+
+            # spike
+            output[i] = self.act_quantizer.apply(
+                mem, self.act_clip_val[i], self.input_bits, True
+            )
+            mem_old = mem.clone()
+
+        out = nn.functional.linear(output, weight)
+        if not self.bias is None:
+            out += self.bias.view(1, -1).expand_as(out)
+
+        return out

@@ -102,7 +102,7 @@ instantiation of different supported modules
 """
 
 
-def instantiate_linear(module, postfix, module_map, additional_module_args):
+def instantiate_linear(module, postfix, module_map, additional_module_args: dict):
     linear_cls = module_map[f"linear_{postfix}"]
     has_bias = not (module.bias is None)
 
@@ -126,7 +126,7 @@ def instantiate_linear(module, postfix, module_map, additional_module_args):
     return linear
 
 
-def instantiate_conv2d(module, postfix, module_map, additional_module_args):
+def instantiate_conv2d(module, postfix, module_map, additional_module_args: dict):
     conv2d_cls = module_map[f"conv2d_{postfix}"]
     has_bias = not (module.bias is None)
     # TODO: some transformed modules have "config" as an argument then extract the additional_module_args from it. Some directly take the additional_module_args.
