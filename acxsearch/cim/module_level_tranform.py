@@ -3,7 +3,8 @@ import chop as chop
 from chop.tools import get_logger
 from chop.tools.logger import set_logging_verbosity
 
-from .layer_utils import LinearNoise, Conv2dNoise, ReLUNoise
+# from .layer_utils import LinearNoise, Conv2dNoise, ReLUNoise
+from .noise_layer import NoiseLinear, NoiseConv2d
 import torch
 
 
@@ -55,7 +56,7 @@ def vit_module_level_add_noise(model, q_config = {}):
             continue
         if get_module_type(module) == "conv2d":
             ori_module = module[1]
-            new_module = Conv2dNoise(
+            new_module = NoiseConv2d(
                 ori_module.in_channels,
                 ori_module.out_channels,
                 ori_module.kernel_size,
@@ -69,7 +70,7 @@ def vit_module_level_add_noise(model, q_config = {}):
             logger.debug(f"Replacing module: {module[0]}")
         elif get_module_type(module) == "linear":
             ori_module = module[1]
-            new_module = LinearNoise(
+            new_module = NoiseLinear(
                 ori_module.in_features,
                 ori_module.out_features,
                 q_config=config,
@@ -79,13 +80,15 @@ def vit_module_level_add_noise(model, q_config = {}):
             logger.debug(f"Replacing module: {module[0]}")
 
             deepsetattr(model, module[0], new_module)
-        elif get_module_type(module) == "relu":
-            # breakpoint()
-            ori_module = module[1]
-            new_module = ReLUNoise(
-                q_config=config,
-            )
-            deepsetattr(model, module[0], new_module)
-            logger.debug(f"Replacing module: {module[0]}")
+        else:
+            continue
+        # elif get_module_type(module) == "relu":
+        #     # breakpoint()
+        #     ori_module = module[1]
+        #     new_module = ReLUNoise(
+        #         q_config=config,
+        #     )
+        #     deepsetattr(model, module[0], new_module)
+        #     logger.debug(f"Replacing module: {module[0]}")
 
     return model

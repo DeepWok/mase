@@ -71,6 +71,8 @@ quan_config = {
         "config": {
             "num_bits": 8,
             "noise_magnitude": 0.2,
+            "programming_noise": True,
+            "read_noise": True,
         },
     },
     "linear": {
@@ -79,13 +81,13 @@ quan_config = {
             "noise_magnitude": 0.2,
         }
     },
-    "relu": {
-        "config": {
-            "num_bits": 3,
-            "max_value": 15.0,
-            "decay": 1e-3,
-        }
-    },
+    # "relu": {
+    #     "config": {
+    #         "num_bits": 3,
+    #         "max_value": 15.0,
+    #         "decay": 1e-3,
+    #     }
+    # },
 }
 if args.load_name is not None:
     # Load checkpoint.
