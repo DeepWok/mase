@@ -48,7 +48,8 @@ def test_yolo_quantize():
     # mg = verify_common_metadata_analysis_pass(mg)
     quan_args = {
         "by": "type",
-        "default": {"config": {
+        "default": {
+            "config": {
                 "name": "integer",
                 # data
                 "data_in_width": 8,
@@ -58,7 +59,8 @@ def test_yolo_quantize():
                 "weight_frac_width": 4,
                 # bias
                 "bias_width": 8,
-                "bias_frac_width": 4,},
+                "bias_frac_width": 4,
+            },
         },
     }
 

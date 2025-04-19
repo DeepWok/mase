@@ -1,6 +1,7 @@
 try:
     import mase_triton
     import mase_triton.random_bitflip
+
     MASE_TRITON_AVAILABLE = True
 except ImportError:
     MASE_TRITON_AVAILABLE = False
@@ -80,10 +81,10 @@ if MASE_TRITON_AVAILABLE:
             replace_by_name(network, name=m_name, module=new_m)
 
         return network
+
 else:
+
     def bitflip_module_transform_pass(
         network: torch.nn.Module, pass_args: dict
     ) -> torch.nn.Module:
-        raise RuntimeError(
-            "mase_triton is not available, please install it first."
-        )
+        raise RuntimeError("mase_triton is not available, please install it first.")
