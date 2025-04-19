@@ -159,6 +159,7 @@ test-hardware-slow:
 
 reformat:
 	# format python files
+	black *.py
 	black src/chop
 	black src/mase_components
 	black src/mase_cocotb

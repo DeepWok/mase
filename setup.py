@@ -29,7 +29,7 @@ requirements = [
     "cocotb==1.9.2",
     "pytest",
     "pytorch-lightning",
-    "transformers==4.49",
+    "transformers==4.51",
     "toml",
     "timm",
     "pytorch-nlp",
@@ -94,8 +94,11 @@ requirements = [
     "sphinx-book-theme",
     "pydot",
     "attr-dot-dict",
-    "mase-triton",
+    "ultralytics",
 ]
+
+if is_cuda_available:
+    requirements += ["mase-triton", "pycuda", "tensorrt"]
 
 setup(
     name="mase-tools",

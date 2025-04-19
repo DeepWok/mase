@@ -24,6 +24,7 @@ QUANTIZEABLE_OP = (
     "bmm",
     "conv1d",
     "conv2d",
+    "convtranspose2d",
     "matmul",
     "mul",
     "linear",
