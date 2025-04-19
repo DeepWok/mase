@@ -40,7 +40,6 @@ class NoiseConv2d(nn.Conv2d):
 
     def forward(self, x):
         B, C, H, W = x.shape
-        # 统一 kernel/stride/padding 为 tuple
         kH, kW = (self.kernel_size,)*2 if isinstance(self.kernel_size, int) else self.kernel_size
         sH, sW = (self.stride,)*2     if isinstance(self.stride, int)     else self.stride
         pH, pW = (self.padding,)*2    if isinstance(self.padding, int)    else self.padding
