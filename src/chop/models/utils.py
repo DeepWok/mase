@@ -30,12 +30,14 @@ class ModelTaskType(Enum):
     - VISION: computer vision
     - PHYSICAL: categorize data points into predefined classes based on their features or attributes
     - NERF: estimate neural radiance field (NeRF) of a 3D scene
+    - SPEECH: speech processing tasks
     """
 
     NLP = "nlp"
     VISION = "vision"
     PHYSICAL = "physical"
     NERF = "nerf"
+    SPEECH = "speech"
 
 
 @dataclass

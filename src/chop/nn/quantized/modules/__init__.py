@@ -317,3 +317,14 @@ quantized_module_map = (
     | quantized_roberta_module_map
     | quantized_llama_module_map
 )
+
+
+from .flexround import LinearFlexRound, Conv2dFlexRound, Conv1dFlexRound
+
+quantized_module_map.update(
+    {
+        "linear_flexround": LinearFlexRound,
+        "conv2d_flexround": Conv2dFlexRound,
+        "conv1d_flexround": Conv1dFlexRound,
+    }
+)

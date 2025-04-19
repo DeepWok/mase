@@ -53,6 +53,9 @@ MASE_IMPLICIT_FUNCS = [
     "index_select",
     "detach",
     "tensor",
+    "cumsum",  # Added for Wave2Vec
+    "flip",  # Added for Wave2Vec
+    "repeat",  # Added for Wave2Vec
 ]
 
 MASE_MODULE_RELATED_FUNCS = [
@@ -129,6 +132,9 @@ MASE_BUILTIN_FUNCS = [
     "embedding",
     "df_split",
     "getitem",
+    "zeros",  # Added for Wave2Vec
+    "setitem",  # Added for Wave2Vec
+    "invert",  # Added for Wave2Vec
 ]
 
 

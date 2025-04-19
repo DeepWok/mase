@@ -100,6 +100,8 @@ requirements = [
 if is_cuda_available:
     requirements += [
         "mase-triton",
+        "pycuda",
+        "tensorrt"
     ]
 
 setup(

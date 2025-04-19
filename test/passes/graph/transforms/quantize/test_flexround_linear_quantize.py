@@ -24,20 +24,41 @@ from chop.passes.graph.transforms import (
 from chop.passes.graph.utils import deepcopy_mase_graph
 from chop.tools.logger import set_logging_verbosity
 
-from chop.models.yolo.yolov8 import get_yolo_detection_model
-
-
 set_logging_verbosity("debug")
 
 
-def test_yolov8():
-    model_name = "yolov8n-seg.pt"
-    yolo = get_yolo_detection_model(model_name)
-    mg = MaseGraph(model=yolo)
+# --------------------------------------------------
+#   Model specifications
+# --------------------------------------------------
+class MLP(torch.nn.Module):
+    """
+    Toy quantized FC model for digit recognition on MNIST
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.fc1 = nn.Linear(28 * 28, 28 * 28)
+        self.fc2 = nn.Linear(28 * 28, 28 * 28 * 4)
+        self.fc3 = nn.Linear(28 * 28 * 4, 10)
+
+    def forward(self, x):
+        x = torch.flatten(x, start_dim=1, end_dim=-1)
+        x = torch.nn.functional.relu(self.fc1(x))
+        # w = torch.randn((4, 28 * 28))
+        # x = torch.nn.functional.relu(nn.functional.linear(x, w))
+        x = torch.nn.functional.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+
+
+def test_quantize():
+    mlp = MLP()
+    mg = MaseGraph(model=mlp)
 
     # Provide a dummy input for the graph so it can use for tracing
     batch_size = 1
-    x = torch.randn((batch_size, 3, 640, 640))
+    x = torch.randn((batch_size, 28, 28))
     dummy_in = {"x": x}
 
     mg, _ = init_metadata_analysis_pass(mg, {})
@@ -46,11 +67,13 @@ def test_yolov8():
     )
     # Sanity check and report
     # mg = verify_common_metadata_analysis_pass(mg)
+    # torch.manual_seed(0)
     quan_args = {
         "by": "type",
-        "default": {
+        "default": {"config": {"name": None}},
+        "linear": {
             "config": {
-                "name": "integer",
+                "name": "flexround",
                 # data
                 "data_in_width": 8,
                 "data_in_frac_width": 4,
@@ -60,14 +83,15 @@ def test_yolov8():
                 # bias
                 "bias_width": 8,
                 "bias_frac_width": 4,
-            },
+            }
         },
     }
 
     # deep copy is only possible if we put "add_value" to False
     ori_mg = deepcopy_mase_graph(mg)
     mg, _ = quantize_transform_pass(mg, quan_args)
-
+    print(mg.model(x))
+    print(ori_mg.model(x))
     pass_args = {
         "original_graph": ori_mg,
         "save_dir": "quantize_summary",
@@ -75,4 +99,4 @@ def test_yolov8():
     summarize_quantization_analysis_pass(mg, pass_args)
 
 
-test_yolov8()
+test_quantize()
