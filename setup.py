@@ -97,7 +97,10 @@ requirements = [
     "ultralytics",
 ]
 
-gpu_requirements = ["mase-triton"]
+if is_cuda_available:
+    requirements += [
+        "mase-triton",
+    ]
 
 setup(
     name="mase-tools",
@@ -112,7 +115,4 @@ setup(
     },
     packages=find_packages("src"),
     install_requires=requirements,
-    extras_require={
-        "gpu": gpu_requirements,
-    }
 )
