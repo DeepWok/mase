@@ -22,6 +22,7 @@ from transformers.models.llama.modeling_llama import LlamaAttention, LlamaDecode
 
 attention_module_map = {"attention_latent": MLA, "attention_gpa": MGQALayers}
 
+
 def get_config(config: dict, name: str):
     if name in config:
         return config[name]["config"]
@@ -64,7 +65,7 @@ def attention_by_name(network, pass_args):
         if n in quantize_names:
             quan_config = pass_args[n]
 
-            if isinstance(m, GPT2SdpaAttention):
+            if isinstance(m, GPT2Attention):
                 type_name = "gpt2spda"
             elif isinstance(m, GPT2Block):
                 type_name = "gpt2block"

@@ -32,6 +32,7 @@ def test_gqa_transform_pass():
     }
     model, _ = attention_swap_transform_pass(model, pass_args)
 
+
 def test_fc_transform_pass():
 
     model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
@@ -44,6 +45,7 @@ def test_fc_transform_pass():
         },
     }
     model = attention_swap_transform_pass(model, pass_args)
+
 
 def test_mla_transform_pass():
 

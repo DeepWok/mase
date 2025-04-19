@@ -15,6 +15,7 @@ from pathlib import Path
 from functools import reduce
 from transformers import PreTrainedModel, TFPreTrainedModel
 
+
 def match_a_pattern(name: str, patterns: list[str]) -> str | None:
     for pattern in patterns:
         match = re.fullmatch(pattern, name)
