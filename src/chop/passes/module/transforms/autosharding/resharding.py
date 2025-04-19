@@ -18,6 +18,9 @@ def resharding_transform_pass(mg, pass_args={}):
             "module_map and device_mesh are required for resharding_transform_pass"
         )
 
+    raise NotImplementedError(
+        "Resharding transform pass is not implemented yet. Please check the code."
+    )
     for node in mg.fx_graph.nodes:
         pass
 
