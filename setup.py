@@ -98,11 +98,7 @@ requirements = [
 ]
 
 if is_cuda_available:
-    requirements += [
-        "mase-triton",
-        "pycuda",
-        "tensorrt"
-    ]
+    requirements += ["mase-triton", "pycuda", "tensorrt"]
 
 setup(
     name="mase-tools",
