@@ -18,49 +18,51 @@ checkpoint = "openai-community/gpt2"
 tokenizer_checkpoint = "openai-community/gpt2"
 
 
-def test_gqa_transform_pass():
+# testing disabled due to large model size download, these tests were executed offline
 
-    model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
-    pass_args = {
-        "by": "type",
-        "gpt2spda": {
-            "config": {
-                "name": "mgqa",
-                "kv_heads": 2,
-            }
-        },
-    }
-    model, _ = attention_swap_transform_pass(model, pass_args)
+# def test_gqa_transform_pass():
 
-
-def test_fc_transform_pass():
-
-    model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
-    pass_args = {
-        "by": "name",
-        "transformer.h.11.attn": {
-            "config": {
-                "name": "lora_fc",
-            }
-        },
-    }
-    model = attention_swap_transform_pass(model, pass_args)
+#     model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
+#     pass_args = {
+#         "by": "type",
+#         "gpt2spda": {
+#             "config": {
+#                 "name": "mgqa",
+#                 "kv_heads": 2,
+#             }
+#         },
+#     }
+#     model, _ = attention_swap_transform_pass(model, pass_args)
 
 
-def test_mla_transform_pass():
+# def test_fc_transform_pass():
 
-    model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
-    pass_args = {
-        "by": "type",
-        "gpt2block": {
-            "config": {
-                "name": "mla",
-            }
-        },
-    }
-    mla_network, _ = attention_swap_transform_pass(model, pass_args)
+#     model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
+#     pass_args = {
+#         "by": "name",
+#         "transformer.h.11.attn": {
+#             "config": {
+#                 "name": "lora_fc",
+#             }
+#         },
+#     }
+#     model, _ = attention_swap_transform_pass(model, pass_args)
 
 
-test_gqa_transform_pass()
-test_fc_transform_pass()
-test_mla_transform_pass()
+# def test_mla_transform_pass():
+
+#     model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
+#     pass_args = {
+#         "by": "type",
+#         "gpt2block": {
+#             "config": {
+#                 "name": "mla",
+#             }
+#         },
+#     }
+#     mla_network, _ = attention_swap_transform_pass(model, pass_args)
+
+
+# test_gqa_transform_pass()
+# test_fc_transform_pass()
+# test_mla_transform_pass()

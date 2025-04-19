@@ -239,7 +239,7 @@ def instantiate_bert_module(
 def instantiate_module(module, postfix, module_map, additional_module_args):
     is_roberta, roberta_layer_name = check_module_instance(module, roberta_prefix_map)
     is_llama, llama_layer_name = check_module_instance(module, llama_prefix_map)
-    is_bert, bert_layer_name = check_module_instance((module, bert_prefix_map))
+    is_bert, bert_layer_name = check_module_instance(module, bert_prefix_map)
 
     module_args = additional_module_args["config"]
     network_args = additional_module_args.get("network_config", None)
