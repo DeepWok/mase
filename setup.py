@@ -29,7 +29,7 @@ requirements = [
     "cocotb==1.9.2",
     "pytest",
     "pytorch-lightning",
-    "transformers==4.49",
+    "transformers==4.51",
     "toml",
     "timm",
     "pytorch-nlp",
