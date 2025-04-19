@@ -97,7 +97,7 @@ requirements = [
     "ultralytics",
 ]
 
-if is_cuda_available:
+if is_cuda_available():
     requirements += ["mase-triton", "pycuda", "tensorrt"]
 
 setup(
