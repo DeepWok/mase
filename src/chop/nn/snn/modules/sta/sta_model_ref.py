@@ -11,13 +11,17 @@ import math
 # from torch.autograd import Variable
 # from torch.utils.data import TensorDataset, DataLoader, ConcatDataset
 import random
+from pathlib import Path
 
 
 DEVICE = 'cuda:0' if torch.cuda.is_available() else "cpu"
-INV_PATH = '/home/george/mase/src/chop/nn/snn/modules/sta/premodels/distilled_inv_64.pth'
-EXP_PATH = '/home/george/mase/src/chop/nn/snn/modules/sta/premodels/distilled_exp_32.pth'
-SQRTINV_PATH = '/home/george/mase/src/chop/nn/snn/modules/sta/premodels/distilled_sqrtinv_8.pth'
-GELU_PATH = '/home/george/mase/src/chop/nn/snn/modules/sta/premodels/distilled_gelu_64.pth'
+BASE_DIR = Path(__file__).resolve().parent  # this gets the current file's directory
+PREMODEL_DIR = BASE_DIR / 'premodels'  # relative to your script location
+INV_PATH = PREMODEL_DIR / 'distilled_inv_64.pth'
+EXP_PATH = PREMODEL_DIR / 'distilled_exp_32.pth'
+SQRTINV_PATH = PREMODEL_DIR / 'distilled_sqrtinv_8.pth'
+GELU_PATH = PREMODEL_DIR / 'distilled_gelu_64.pth'
+
 
 class Ref_StraightThrough(nn.Module):
     
