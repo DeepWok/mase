@@ -64,7 +64,7 @@ def simulate(
                 "-Wno-style",
                 "--trace-fst",
                 "--trace-structs",
-                "-trace-depth",
+                "--trace-depth",
                 str(trace_depth),
                 "--build-jobs",
                 str(build_jobs),

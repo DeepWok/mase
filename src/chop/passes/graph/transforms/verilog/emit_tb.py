@@ -56,8 +56,6 @@ async def test(dut):
 
     tb.load_drivers(in_tensors)
     tb.load_monitors(exp_out)
-    
-    print(exp_out)
 
     await tb.wait_end(timeout={wait_time}, timeout_unit="{wait_unit}")
 """

@@ -167,3 +167,6 @@ prof/
 # HuggingFace trainer cache
 mase-trainer/
 test-trainer/
+
+# DiffLogic: tutorial files
+docs/tutorials/difflogic/data-mnist/

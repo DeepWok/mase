@@ -117,7 +117,7 @@ def trace_torch_module(
     if isinstance(model, PreTrainedModel):
         tracer_cls = HFTracer
 
-        if custom_ops:
+        if custom_ops is not None:
             custom_modules = tuple(custom_ops.get("modules", {}).keys())
         else:
             custom_ops = {"modules": {}, "functions": {}}

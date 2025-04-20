@@ -69,13 +69,9 @@ shell:
 	docker run -it --shm-size 256m \
         --hostname mase-ubuntu2204 \
         -w /workspace \
-		-w /workspace/mase-DLG \
-		-w /workspace/traceable-difflogic \
         -v /$(USER_PREFIX)/$(shell whoami)/.gitconfig:/root/.gitconfig \
         -v /$(USER_PREFIX)/$(shell whoami)/.ssh:/root/.ssh \
         -v /$(USER_PREFIX)/$(shell whoami)/.mase:/root/.mase:z \
-        -v $(shell pwd):/workspace/mase-DLG:z \
-		-v $(shell pwd)/../traceable-difflogic:/workspace/traceable-difflogic:z \
         $(DOCKER_RUN_EXTRA_ARGS) \
         $(img) /bin/bash
 
