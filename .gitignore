@@ -8,6 +8,9 @@ vagrant/.vagrant/
 # Project
 *.py~
 *.swp
+*.py-e
+*.mz
+*.pt
 /history/
 */data/
 /tb_summary/

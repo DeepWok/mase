@@ -326,7 +326,7 @@ def add_hardware_metadata_analysis_pass(graph, pass_args={}):
 
     The hardware metadata of the linear layer after this pass:
 
-    .. code-block:: JSON
+    .. code-block:: TEXT
 
         {
             "common": {...},
@@ -335,7 +335,7 @@ def add_hardware_metadata_analysis_pass(graph, pass_args={}):
                 "is_implicit": False,
                 "interface": {
                     "weight": {"storage": "BRAM", "transpose": False},
-                    "bias": {"storage": "BRAM", "transpose": False},
+                    "bias": {"storage": "BRAM", "transpose": False}
                 },
                 "toolchain": "INTERNAL",
                 "module": "fixed_linear",
@@ -350,7 +350,7 @@ def add_hardware_metadata_analysis_pass(graph, pass_args={}):
                     "fixed_arithmetic/fixed_adder_tree_layer.sv",
                     "fixed_arithmetic/fixed_mult.sv",
                     "common/join2.sv",
-                    "linear/fixed_linear.sv",
+                    "linear/fixed_linear.sv"
                 ],
                 "verilog_param": {
                     "DATA_IN_0_PRECISION_0": 8,
@@ -384,9 +384,9 @@ def add_hardware_metadata_analysis_pass(graph, pass_args={}):
                     "DATA_OUT_0_TENSOR_SIZE_1_DIM_1": 784,
                     "DATA_OUT_0_PARALLELISM_1_DIM_1": 784,
                     "DATA_OUT_0_TENSOR_SIZE_1_DIM_2": 1,
-                    "DATA_OUT_0_PARALLELISM_1_DIM_2": 1,
-                },
-            },
+                    "DATA_OUT_0_PARALLELISM_1_DIM_2": 1
+                }
+            }
         }
 
     A relu layer in a mase graph with the following common metadata:
@@ -396,7 +396,7 @@ def add_hardware_metadata_analysis_pass(graph, pass_args={}):
         %relu : [num_users=1] = call_function[target=torch.nn.functional.relu](args = (%fc1,), kwargs = {inplace: False})
 
 
-    .. code-block:: JSON
+    .. code-block:: TEXT
 
         {
             "common": {
@@ -426,7 +426,7 @@ def add_hardware_metadata_analysis_pass(graph, pass_args={}):
 
     The hardware metadata of the relu layer after this pass:
 
-    .. code-block:: JSON
+    .. code-block:: TEXT
 
         {
             "common": {...},
