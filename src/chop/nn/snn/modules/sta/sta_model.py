@@ -10,10 +10,10 @@ import math
 # from clip.model import QuickGELU
 # from torch.autograd import Variable
 # from torch.utils.data import TensorDataset, DataLoader, ConcatDataset
-import random
+
 from pathlib import Path
 
-DEVICE = 'cuda:0' if torch.cuda.is_available() else "cpu"
+DEVICE = 'cuda' if torch.cuda.is_available() else "cpu"
 BASE_DIR = Path(__file__).resolve().parent  # this gets the current file's directory
 PREMODEL_DIR = BASE_DIR / 'premodels'  # relative to your script location
 INV_PATH = PREMODEL_DIR / 'distilled_inv_64.pth'
@@ -33,7 +33,7 @@ class StraightThrough(nn.Module):
 class SpikeLinear_ReLU(nn.Module):
     def __init__(self, in_features: int, out_features: int, bias: bool = True, **kwargs):
         super(SpikeLinear_ReLU, self).__init__()
-        module = nn.Linear(in_features=in_features, out_features=out_features, bias=bias)
+        module = nn.Linear(in_features=in_features, out_features=out_features, bias=bias, device=DEVICE)
         self.T = kwargs.get('T', 32)
         self.t = 0
         self.threshold = None
@@ -149,10 +149,10 @@ def ann_qk_product(x,q_proj_weight,k_proj_weight,q_proj_bias,k_proj_bias,num_hea
 class SpikeAttention(nn.Module):
 
     def __init__(self, embed_dim: int, num_heads: int, batch_first: bool = True, **kwargs):
-        module = nn.MultiheadAttention(embed_dim=embed_dim, num_heads=num_heads, batch_first=batch_first)
+        module = nn.MultiheadAttention(embed_dim=embed_dim, num_heads=num_heads, batch_first=batch_first, device=DEVICE)
         super(SpikeAttention, self).__init__()
         self.T = kwargs.get('T', 32)
-        self.product = SpikeProduct(T=T,module=module)
+        self.product = SpikeProduct(T=self.T,module=module)
         self.spike_x2x = x2x_to_spike_module(X2X().to(next(module.parameters()).device),T)
         self.spike_x2x_pos = x2x_pos_to_spike_module(X2X_POS().to(next(module.parameters()).device),T)
         self.q_proj_weight,self.k_proj_weight,self.v_proj_weight = module.in_proj_weight.chunk(3)
@@ -294,7 +294,7 @@ class LinearLN(nn.Module):
 class SpikeLN(nn.Module):
     def __init__(self, normalized_shape: int, eps: float, elementwise_affine: bool,  **kwargs):
         super(SpikeLN, self).__init__()
-        module = nn.LayerNorm(normalized_shape=normalized_shape, eps=eps, elementwise_affine=elementwise_affine)
+        module = nn.LayerNorm(normalized_shape=normalized_shape, eps=eps, elementwise_affine=elementwise_affine, device=DEVICE)
         self.module = module
         self.T = kwargs.get('T', 32)
         self.use_spike = False
@@ -438,36 +438,36 @@ class SpikeLN(nn.Module):
 #                 prev_module = self.spike_module_refactor(
 #                     immediate_child_module, T=T, prev_module=prev_module)
 #         return prev_module
-    def set_spike_state(self, use_spike: bool = True):
-        self.use_spike = use_spike
-        for m in self.model.modules():
-            if isinstance(m, SpikeLinear_ReLU):
-                m.use_spike = use_spike
-            if isinstance(m, SpikeLN):
-                m.use_spike = use_spike
-            if isinstance(m, SpikeAttention):
-                m.use_spike = use_spike
-                m.product.use_spike = use_spike
+    # def set_spike_state(self, use_spike: bool = True):
+    #     self.use_spike = use_spike
+    #     for m in self.model.modules():
+    #         if isinstance(m, SpikeLinear_ReLU):
+    #             m.use_spike = use_spike
+    #         if isinstance(m, SpikeLN):
+    #             m.use_spike = use_spike
+    #         if isinstance(m, SpikeAttention):
+    #             m.use_spike = use_spike
+    #             m.product.use_spike = use_spike
             
 
-    def init_model(self):
-        for m in self.model.modules():
-            if isinstance(m, (SpikeLinear_ReLU,SpikeAttention,SpikeLN)):
-                m.init_module()
+    # def init_model(self):
+    #     for m in self.model.modules():
+    #         if isinstance(m, (SpikeLinear_ReLU,SpikeAttention,SpikeLN)):
+    #             m.init_module()
 
-    def forward(self, input):
-        if self.use_spike:
-            self.init_model()
-            out = 0
-            for t in range(self.T):
-                out_t = self.model(input)
-                out += out_t
-                torch.cuda.empty_cache()
-                import gc 
-                gc.collect()
-        else:
-            out = self.model(input)
-        return out
+    # def forward(self, input):
+    #     if self.use_spike:
+    #         self.init_model()
+    #         out = 0
+    #         for t in range(self.T):
+    #             out_t = self.model(input)
+    #             out += out_t
+    #             torch.cuda.empty_cache()
+    #             import gc 
+    #             gc.collect()
+    #     else:
+    #         out = self.model(input)
+    #     return out
     
 def TransformRelu (module: nn.Module, **kwargs):
     for name, immediate_child_module in reversed(list(module.named_children())):
@@ -490,45 +490,65 @@ def TransformRelu (module: nn.Module, **kwargs):
 #                     prev_module.burst_T = self.burst_T
 #                 else:
 
-# @torch.no_grad()
-# def get_maximum_activation(train_loader: Union[torch.utils.data.DataLoader,torch.Tensor],
-#                            model: SpikeModel,
-#                            momentum: Union[float, None] = 0.9,
-#                            iters: int = 20,
-#                            T: int = 8,
-#                            mse: bool = True, 
-#                            percentile: Union[float, None] = None,
-#                            neuron_wise: bool = False,
-#                            dist_avg: bool = False):
-#     model.set_spike_state(use_spike=False)
-#     model.eval()
-#     device = next(model.parameters()).device
-#     dtype = next(model.parameters()).dtype
-#     hook_list = []
-#     for n,m in model.named_modules():
-#         if isinstance(m, SpikeLinear_ReLU) and not isinstance(m.relu, StraightThrough):
-#             hook_list += [m.register_forward_hook(DataSaverHook(momentum, T, mse, percentile, neuron_wise=neuron_wise, dist_avg=dist_avg,name=n))]
-#     if isinstance(train_loader,torch.Tensor):
-#         for input in train_loader:
-#             input = input.to(device=device)
-#             _ = model(input)
-#         for h in hook_list:
-#             h.remove()
-#     else:
-#         # batch_elem_len = len(train_loader._get_iterator().next()) 
-#         batch_elem_len = len(next(iter(train_loader)))
-#         if batch_elem_len == 2:
-#             for i, (input, target) in enumerate(train_loader):
-#                 print(f'{i}/{iters}')
-#                 input = input.to(device=device).type(dtype)
-#                 _ = model(input)
-#                 if i >= iters:
-#                     break
-#         for h in hook_list:
-#             h.remove()
+
+def set_spike_state(model: nn.Module, use_spike: bool = True):
+    model.use_spike = use_spike
+    for m in model.modules():
+        if isinstance(m, SpikeLinear_ReLU):
+            m.use_spike = use_spike
+        if isinstance(m, SpikeLN):
+            m.use_spike = use_spike
+        if isinstance(m, SpikeAttention):
+            m.use_spike = use_spike
+            m.product.use_spike = use_spike
 
 
+@torch.no_grad()
+def get_maximum_activation(train_loader: Union[torch.utils.data.DataLoader,torch.Tensor],
+                           model: nn.Module,
+                           momentum: Union[float, None] = 0.9,
+                           iters: int = 20,
+                           T: int = 8,
+                           mse: bool = True, 
+                           percentile: Union[float, None] = None,
+                           neuron_wise: bool = False,
+                           dist_avg: bool = False):
+    set_spike_state(model, use_spike=False)
+    model.eval()
+    device = next(model.parameters()).device
+    dtype = next(model.parameters()).dtype
+    hook_list = []
+    for n,m in model.named_modules():
+        if isinstance(m, SpikeLinear_ReLU) and not isinstance(m.relu, StraightThrough):
+            hook_list += [m.register_forward_hook(DataSaverHook(momentum, T, mse, percentile, neuron_wise=neuron_wise, dist_avg=dist_avg,name=n))]
+    if isinstance(train_loader,torch.Tensor):
+        for input in train_loader:
+            input = input.to(device=device)
+            _ = model(input)
+        for h in hook_list:
+            h.remove()
+    else:
+        # batch_elem_len = len(train_loader._get_iterator().next()) 
+        batch_elem_len = len(next(iter(train_loader)))
+        #Modified for Roberta
 
+        if batch_elem_len == 3:
+            for step, batch in enumerate(train_loader):
+                batch = {k: v.to(device) for k, v in batch.items()}
+                _ = model(
+                        **batch
+                     )
+                if step >= iters + 1:
+                    break
+        for h in hook_list:
+            h.remove()
+    set_spike_state(model, use_spike=True)
+
+
+def init_sta_converted_model(model: nn.Module):
+    for m in model.modules():
+        if isinstance(m, (SpikeLinear_ReLU, SpikeAttention, SpikeLN)):
+            m.init_module()
 
 
 

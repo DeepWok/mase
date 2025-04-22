@@ -7,3 +7,5 @@ from .sta_model import SpikeLN
 from .sta_model import SpikeLinear_ReLU
 from .sta_model import StraightThrough
 from .sta_model import TransformRelu
+from .sta_model import get_maximum_activation
+from .sta_model import init_sta_converted_model

@@ -368,61 +368,61 @@ class Ref_SpikeLN(nn.Module):
 # ===============================================================================
 
 
-# class SpikeModel(nn.Module):
-#     def __init__(self, model: nn.Module, T: int, convert_layers = None, bipolar_with_memory=False, burst_T=0):
-#         super().__init__()
-#         self.model = model
-#         self.use_spike = False
-#         self.bipolar_with_memory = bipolar_with_memory
-#         self.burst_T = burst_T
-#         self.spike_model_refactor(model,T,convert_layers)
-#         assert T > 0, "SNN does not accept negative simulation length"
-#         self.T = T
+class SpikeModel(nn.Module):
+    def __init__(self, model: nn.Module, T: int, convert_layers = None, bipolar_with_memory=False, burst_T=0):
+        super().__init__()
+        self.model = model
+        self.use_spike = False
+        self.bipolar_with_memory = bipolar_with_memory
+        self.burst_T = burst_T
+        self.spike_model_refactor(model,T,convert_layers)
+        assert T > 0, "SNN does not accept negative simulation length"
+        self.T = T
     
-#     def spike_model_refactor(self, module: nn.Module, T: int, convert_layers=None):
-#         for m_str in convert_layers:
-#             m = eval(f'module.{m_str}')
-#             self.spike_module_refactor(m,T)
+    def spike_model_refactor(self, module: nn.Module, T: int, convert_layers=None):
+        for m_str in convert_layers:
+            m = eval(f'module.{m_str}')
+            self.spike_module_refactor(m,T)
 
-#     def spike_module_refactor(self, module: nn.Module, T: int, prev_module=None):
-#         for name, immediate_child_module in module.named_children():
-#             print("name",name)
-#             print("immediate_child_module",immediate_child_module)
-#             if isinstance(immediate_child_module,nn.LayerNorm):
-#                 setattr(module,name,SpikeLN(T=T,module = immediate_child_module))
-#                 prev_module = getattr(module, name)
-#                 for n,m in prev_module.named_modules():
-#                     if isinstance(m,SpikeLinear_ReLU) and not isinstance(m.relu,StraightThrough):
-#                         m.bipolar_with_memory = self.bipolar_with_memory
-#                         m.burst_T = self.burst_T
-#                 pass
-#             elif name == 'attn':
-#                 print("immediate_child_module",immediate_child_module)
-#                 setattr(module,name,SpikeAttention(T=T,module = immediate_child_module))
-#                 prev_module = getattr(module, name)
-#                 for n,m in prev_module.named_modules():
-#                     if isinstance(m,SpikeLinear_ReLU) and not isinstance(m.relu,StraightThrough):
-#                         m.bipolar_with_memory = self.bipolar_with_memory
-#                         m.burst_T = self.burst_T
-#                 pass
-#             elif isinstance(immediate_child_module,nn.Linear):
-#                 setattr(module,name,SpikeLinear_ReLU(T=T,module = immediate_child_module))
-#                 prev_module = getattr(module, name)
-#                 pass
-#             elif isinstance(immediate_child_module, (nn.ReLU, nn.ReLU6)):
-#                 if prev_module is not None: # nn.Linear
-#                     prev_module.add_module('relu', immediate_child_module)
-#                     setattr(module, name, StraightThrough())
-#                     prev_module.bipolar_with_memory = self.bipolar_with_memory
-#                     prev_module.burst_T = self.burst_T
-#                 else:
-#                     continue
-#                 pass
+    def spike_module_refactor(self, module: nn.Module, T: int, prev_module=None):
+        for name, immediate_child_module in module.named_children():
+            print("name",name)
+            print("immediate_child_module",immediate_child_module)
+            if isinstance(immediate_child_module,nn.LayerNorm):
+                setattr(module,name,Ref_SpikeLN(T=T,module = immediate_child_module))
+                prev_module = getattr(module, name)
+                for n,m in prev_module.named_modules():
+                    if isinstance(m,Ref_SpikeLinear_ReLU) and not isinstance(m.relu,Ref_StraightThrough):
+                        m.bipolar_with_memory = self.bipolar_with_memory
+                        m.burst_T = self.burst_T
+                pass
+            elif name == 'attn':
+                print("immediate_child_module",immediate_child_module)
+                setattr(module,name,Ref_SpikeAttention(T=T,module = immediate_child_module))
+                prev_module = getattr(module, name)
+                for n,m in prev_module.named_modules():
+                    if isinstance(m,Ref_SpikeLinear_ReLU) and not isinstance(m.relu,Ref_StraightThrough):
+                        m.bipolar_with_memory = self.bipolar_with_memory
+                        m.burst_T = self.burst_T
+                pass
+            elif isinstance(immediate_child_module,nn.Linear):
+                setattr(module,name,Ref_SpikeLinear_ReLU(T=T,module = immediate_child_module))
+                prev_module = getattr(module, name)
+                pass
+            elif isinstance(immediate_child_module, (nn.ReLU, nn.ReLU6)):
+                if prev_module is not None: # nn.Linear
+                    prev_module.add_module('relu', immediate_child_module)
+                    setattr(module, name, Ref_StraightThrough())
+                    prev_module.bipolar_with_memory = self.bipolar_with_memory
+                    prev_module.burst_T = self.burst_T
+                else:
+                    continue
+                pass
             
-#             else:
-#                 prev_module = self.spike_module_refactor(
-#                     immediate_child_module, T=T, prev_module=prev_module)
-#         return prev_module
+            else:
+                prev_module = self.spike_module_refactor(
+                    immediate_child_module, T=T, prev_module=prev_module)
+        return prev_module
     
     def set_spike_state(self, use_spike: bool = True):
         self.use_spike = use_spike

@@ -133,7 +133,6 @@ def convert_by_regex_name(network, pass_args):
                 m, postfix, spiking_module_map, additional_module_args
             )
         else:
-            print("instantiating")
             new_m = instantiate_module(
                 m, postfix, spiking_module_map, additional_module_args
             )
@@ -193,15 +192,15 @@ def convert_sta_module(module: torch.nn.Module, pass_args, prev_module=None):
             pass
         elif isinstance(immediate_child_module, (torch.nn.ReLU, torch.nn.ReLU6)):
             if prev_module is not None: # nn.Linear
-                print("module", module)
-                print("name",name)  
-                print("<-----WithinReLU----->")
-                print("immediate_child_module",immediate_child_module)
-                print("prev_module",prev_module)
+                # print("module", module)
+                # print("name",name)  
+                # print("<-----WithinReLU----->")
+                # print("immediate_child_module",immediate_child_module)
+                # print("prev_module",prev_module)
                 prev_module.add_module('relu', immediate_child_module)
-                print("updated prev_module",prev_module)
+                # print("updated prev_module",prev_module)
                 setattr(module, name, Ref_StraightThrough())
-                print("module",module)
+                # print("module",module)
                 prev_module.bipolar_with_memory = pass_args.get("bipolar_with_memory")
                 prev_module.burst_T = pass_args.get("burst_T")
             else:

@@ -75,6 +75,8 @@ from .sta import (
     Ref_SpikeLN,
     Ref_SpikeLinear_ReLU,
     Ref_StraightThrough,
+    get_maximum_activation,
+    init_sta_converted_model
 )
 
 spiking_basic_module_map = {
