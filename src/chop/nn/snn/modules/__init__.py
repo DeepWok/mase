@@ -66,7 +66,8 @@ from .roberta import (
 
 
 from .sta import (
-    SpikeAttention,
+    STARobertaAttention,
+    SpikeMultiheadAttention,
     SpikeLN,
     SpikeLinear_ReLU,
     TransformRelu,
@@ -124,7 +125,8 @@ spiking_roberta_module_map = {
 
 
 spiking_sta_module_map = {
-    "attn_sta": SpikeAttention,
+    "attn_sta": SpikeMultiheadAttention,
+    "attn_roberta_sta": STARobertaAttention,
     "layernorm_sta": SpikeLN,
     "linear_sta": SpikeLinear_ReLU,
     "relu_sta": TransformRelu

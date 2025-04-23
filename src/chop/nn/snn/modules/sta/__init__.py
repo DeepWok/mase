@@ -2,7 +2,9 @@ from .sta_model_ref import Ref_SpikeAttention
 from .sta_model_ref import Ref_SpikeLN
 from .sta_model_ref import Ref_SpikeLinear_ReLU
 from .sta_model_ref import Ref_StraightThrough
-from .sta_model import SpikeAttention
+# from .sta_model import SpikeAttention
+from .sta_model import STARobertaAttention
+from .sta_model import SpikeMultiheadAttention
 from .sta_model import SpikeLN
 from .sta_model import SpikeLinear_ReLU
 from .sta_model import StraightThrough

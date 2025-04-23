@@ -1,6 +1,6 @@
 from chop.nn.quantizers.SNN.LSQ import LSQInteger
 import torch
-
+import transformers
 from chop.nn.snn.modules import spiking_module_map
 from ...module_modify_helper import (
     manual_instantiate_module,
@@ -38,7 +38,8 @@ def convert_by_type(network, pass_args):
         elif type_name == "lsqinteger":
             module = LSQInteger
         elif type_name == "attention":
-            module = torch.nn.MultiheadAttention
+            # module = torch.nn.MultiheadAttention
+            module = transformers.models.roberta.modeling_roberta.RobertaAttention
         else:
             raise ValueError(f"{type_name} is not supported!")
 
@@ -64,7 +65,6 @@ def convert_by_type(network, pass_args):
                         m, postfix, spiking_module_map, additional_module_args
                     )
                 network = replace_by_name(network, n, new_m)
-
     return network
 
 

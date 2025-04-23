@@ -7,10 +7,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
+from typing import List, Optional, Tuple, Union
 # from clip.model import QuickGELU
 # from torch.autograd import Variable
 # from torch.utils.data import TensorDataset, DataLoader, ConcatDataset
-
+from transformers.pytorch_utils import find_pruneable_heads_and_indices, prune_linear_layer
 from pathlib import Path
 
 DEVICE = 'cuda' if torch.cuda.is_available() else "cpu"
@@ -31,10 +32,10 @@ class StraightThrough(nn.Module):
 
 
 class SpikeLinear_ReLU(nn.Module):
-    def __init__(self, in_features: int, out_features: int, bias: bool = True, **kwargs):
+    def __init__(self, module: nn.Module, T:int = None, **kwargs):
         super(SpikeLinear_ReLU, self).__init__()
-        module = nn.Linear(in_features=in_features, out_features=out_features, bias=bias, device=DEVICE)
-        self.T = kwargs.get('T', 32)
+        # module = nn.Linear(in_features=in_features, out_features=out_features, bias=bias, device=DEVICE)
+        self.T = T if T is not None else kwargs.get('T', 32)
         self.t = 0
         self.threshold = None
         self.mem_pot = 0
@@ -122,6 +123,7 @@ def snn_qk_product(sx_t,sum_q,sum_k,q_proj_weight,k_proj_weight, q_proj_bias,k_p
     head_dim = hidden_dim//num_heads 
     sq_t = sx_t @ q_proj_weight.t() + q_proj_bias # [seq_len, batch_size, hidden_dim]
     sk_t = sx_t @ k_proj_weight.t() + k_proj_bias  # [seq_len, batch_size, hidden_dim]
+
     sq_t = sq_t.contiguous().view(seq_len, bsz * num_heads, head_dim).transpose(0, 1) # [num_head*bsz, seq_len, head_dim]
     sk_t = sk_t.contiguous().view(-1, bsz * num_heads, head_dim).transpose(0, 1)
     sum_q += sq_t 
@@ -146,15 +148,15 @@ def ann_qk_product(x,q_proj_weight,k_proj_weight,q_proj_bias,k_proj_bias,num_hea
     return p
 
 
-class SpikeAttention(nn.Module):
+class SpikeMultiheadAttention(nn.Module):
 
-    def __init__(self, embed_dim: int, num_heads: int, batch_first: bool = True, **kwargs):
-        module = nn.MultiheadAttention(embed_dim=embed_dim, num_heads=num_heads, batch_first=batch_first, device=DEVICE)
-        super(SpikeAttention, self).__init__()
+    def __init__(self, module: nn.Module, T:int = None, **kwargs):
+        # module = nn.MultiheadAttention(embed_dim=embed_dim, num_heads=num_heads, batch_first=batch_first, device=DEVICE)
+        super(SpikeMultiheadAttention, self).__init__()
         self.T = kwargs.get('T', 32)
         self.product = SpikeProduct(T=self.T,module=module)
-        self.spike_x2x = x2x_to_spike_module(X2X().to(next(module.parameters()).device),T)
-        self.spike_x2x_pos = x2x_pos_to_spike_module(X2X_POS().to(next(module.parameters()).device),T)
+        self.spike_x2x = x2x_to_spike_module(X2X().to(next(module.parameters()).device),self.T)
+        self.spike_x2x_pos = x2x_pos_to_spike_module(X2X_POS().to(next(module.parameters()).device),self.T)
         self.q_proj_weight,self.k_proj_weight,self.v_proj_weight = module.in_proj_weight.chunk(3)
         self.q_proj_bias,self.k_proj_bias,self.v_proj_bias = module.in_proj_bias.chunk(3)
         self.out_proj_weight = module.out_proj.weight
@@ -173,7 +175,7 @@ class SpikeAttention(nn.Module):
                 m.bipolar_with_memory = self.bipolar_with_memory
                 m.burst_T = self.burst_T
 
-    def forward(self, input: torch.Tensor, k: torch.Tensor, v: torch.Tensor, need_weights = False, attn_mask = None):
+    def forward(self, input: torch.Tensor, k: torch.Tensor, v: torch.Tensor, need_weights = False, attn_mask = None, output_attentions = False):
         bsz = input.shape[1]
         seq_len = input.shape[0]
         embed_size = input.shape[2]
@@ -274,6 +276,350 @@ class SpikeProduct(nn.Module):
         self.t = 0
 
 
+class STARobertaSelfAttention(nn.Module):
+    def __init__(self, module: nn.Module, T:int = None, **kwargs):
+        super(STARobertaSelfAttention, self).__init__()
+        # Basic Vars
+        self.num_attention_heads = module.num_attention_heads
+        self.attention_head_size = module.attention_head_size
+        self.all_head_size = module.all_head_size
+
+        self.query = module.query
+        self.key = module.key
+        self.value = module.value
+
+        self.dropout = module.dropout
+        self.position_embedding_type = module.position_embedding_type
+
+        if self.position_embedding_type == "relative_key" or self.position_embedding_type == "relative_key_query":
+            self.max_position_embeddings = module.max_position_embeddings
+            self.distance_embedding = module.distance_embedding
+
+        self.is_decoder = module.is_decoder
+        # STA
+        self.T = T if T is not None else kwargs.get('T', 32)
+        self.spike_x2x =        x2x_to_spike_module(X2X().to(next(module.parameters()).device),self.T)
+        self.spike_x2x_pos =    x2x_pos_to_spike_module(X2X_POS().to(next(module.parameters()).device),self.T)
+        self.sum_input  = 0
+        self.sum_output = 0
+        self.t = 0
+        self.output_encoder = True
+        self.use_spike      = False
+        self.bipolar_with_memory = kwargs.get('bipolar_with_memory', False)
+        self.value_scale_factor = 1.
+        self.burst_T = kwargs.get('burst_T', 2)
+        for n,m in self.named_modules():
+            if isinstance(m,SpikeLinear_ReLU) and not isinstance(m.relu,StraightThrough):
+                m.bipolar_with_memory = self.bipolar_with_memory
+                m.burst_T = self.burst_T
+
+    def transpose_for_scores(self, x: torch.Tensor) -> torch.Tensor:
+        new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)
+        x = x.view(new_x_shape)
+        return x.permute(0, 2, 1, 3)
+
+    def forward(
+        self,
+        hidden_states: torch.Tensor,
+        attention_mask: Optional[torch.FloatTensor] = None,
+        head_mask: Optional[torch.FloatTensor] = None,
+        encoder_hidden_states: Optional[torch.FloatTensor] = None,
+        encoder_attention_mask: Optional[torch.FloatTensor] = None,
+        past_key_value: Optional[Tuple[Tuple[torch.FloatTensor]]] = None,
+        output_attentions: Optional[bool] = False,
+    ) -> Tuple[torch.Tensor]:
+        mixed_query_layer = self.query(hidden_states)
+        bsz = hidden_states.shape[0]
+        seq_len = hidden_states.shape[1]
+        embed_size = hidden_states.shape[2]
+        hidden_dim = self.query.weight.shape[0]
+        head_dim = hidden_dim // self.num_attention_heads
+        device = hidden_states.device
+        if self.use_spike: # snn
+
+            if self.self_att_t == 0:
+                self.sum_p = torch.zeros(self.num_attention_heads * bsz, seq_len, seq_len).to(device)
+                self.sum_m = 0
+                self.sum_p2 = 0
+                self.mem_pot = 0
+                self.sum_p2_corr = 0
+                self.sum_sum_p = 0
+                self.sum_m_pre = 0
+            is_cross_attention = encoder_hidden_states is not None
+
+            if is_cross_attention and past_key_value is not None:
+                # reuse k,v, cross_attentions
+                key_layer = past_key_value[0]
+                value_layer = past_key_value[1]
+                attention_mask = encoder_attention_mask
+            elif is_cross_attention:
+                key_layer = self.key(encoder_hidden_states)
+                value_layer = self.value(encoder_hidden_states)
+                attention_mask = encoder_attention_mask
+            elif past_key_value is not None:
+                key_layer = self.key(hidden_states)
+                value_layer = self.value(hidden_states)
+                key_layer = torch.cat([past_key_value[0], key_layer], dim=2)
+                value_layer = torch.cat([past_key_value[1], value_layer], dim=2)
+            else:
+                key_layer = self.key(hidden_states)
+                value_layer = self.value(hidden_states)
+
+            query_layer = mixed_query_layer
+
+            
+
+            use_cache = past_key_value is not None
+            if self.is_decoder:
+                past_key_value = (self.transpose_for_scores(key_layer), self.transpose_for_scores(value_layer))
+
+            # attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
+
+            ## QK^T product ##
+            if self.prod_t == 0:
+                self.prod_sum_q = torch.zeros(self.num_attention_heads * bsz, seq_len, head_dim).to(device)
+                self.prod_sum_k = torch.zeros(self.num_attention_heads * bsz, seq_len, head_dim).to(device)
+                self.prod_sum_p = torch.zeros(self.num_attention_heads * bsz, seq_len, seq_len).to(device)
+
+            sq_t    = query_layer.contiguous().view(seq_len, bsz * self.num_attention_heads, head_dim).transpose(0, 1) # [num_head*bsz, seq_len, head_dim]
+            sk_t    = key_layer.contiguous().view(-1, bsz * self.num_attention_heads, head_dim).transpose(0, 1)
+            self.prod_sum_q += sq_t 
+            sp_t = self.prod_sum_q @ sk_t.transpose(1,2) + sq_t @ self.prod_sum_k.transpose(1,2)
+            sp_t /= math.sqrt(sk_t.shape[-1])
+            sp_t *= self.value_scale_factor
+            self.prod_sum_k += sk_t
+            self.prod_t = (self.prod_t+1) % self.T  
+            self.sum_p += sp_t
+            ## softmax ##
+            attention_scores = self.sum_p/(self.t+1)**2
+            attention_scores = attention_scores.view(bsz, self.num_attention_heads, seq_len, seq_len)
+
+
+            if self.position_embedding_type == "relative_key" or self.position_embedding_type == "relative_key_query":
+                query_length, key_length = query_layer.shape[2], key_layer.shape[2]
+                if use_cache:
+                    position_ids_l = torch.tensor(key_length - 1, dtype=torch.long, device=hidden_states.device).view(
+                        -1, 1
+                    )
+                else:
+                    position_ids_l = torch.arange(query_length, dtype=torch.long, device=hidden_states.device).view(-1, 1)
+                position_ids_r = torch.arange(key_length, dtype=torch.long, device=hidden_states.device).view(1, -1)
+                distance = position_ids_l - position_ids_r
+
+                positional_embedding = self.distance_embedding(distance + self.max_position_embeddings - 1)
+                positional_embedding = positional_embedding.to(dtype=query_layer.dtype)  # fp16 compatibility
+
+                if self.position_embedding_type == "relative_key":
+                    relative_position_scores = torch.einsum("bhld,lrd->bhlr", query_layer, positional_embedding)
+                    attention_scores = attention_scores + relative_position_scores
+                elif self.position_embedding_type == "relative_key_query":
+                    relative_position_scores_query = torch.einsum("bhld,lrd->bhlr", query_layer, positional_embedding)
+                    relative_position_scores_key = torch.einsum("bhrd,lrd->bhlr", key_layer, positional_embedding)
+                    attention_scores = attention_scores + relative_position_scores_query + relative_position_scores_key
+
+            attention_scores = attention_scores / math.sqrt(self.attention_head_size)
+            if attention_mask is not None:
+                attention_scores = attention_scores + attention_mask
+            # Normalize the attention scores to probabilities.
+            convert_back_attention_scores = attention_scores.view(self.num_attention_heads * bsz, seq_len, seq_len)
+            
+            attention_probs = fit_softmax(convert_back_attention_scores, dim=-1)
+            attention_probs = attention_probs.view(bsz, self.num_attention_heads, seq_len, seq_len)
+            attention_probs = self.dropout(attention_probs)
+            # Mask heads if we want to
+            if head_mask is not None:
+                attention_probs = attention_probs * head_mask
+
+            attention_probs = attention_probs.view(bsz * self.num_attention_heads, seq_len, seq_len)
+            attention_probs = (self.self_att_t+1) * attention_probs - self.sum_m
+            sm = self.spike_x2x_pos(attention_probs)
+            
+            ## (QK)V product ##
+            self.sum_m += sm
+            value_layer = value_layer.contiguous().view(-1, bsz * self.num_attention_heads, head_dim).transpose(0, 1)
+
+            if self.self_att_t == 0: 
+                self.sum_v = torch.zeros_like(value_layer)
+            p2 = self.sum_m @ value_layer + sm @ self.sum_v
+            
+            self.sum_v += value_layer
+            self.sum_p2 += p2
+            p2_corr = (self.self_att_t+1) * self.sum_p2/(self.self_att_t+1)**2 - self.sum_p2_corr
+            self.sum_p2_corr += p2_corr
+            output = p2_corr.transpose(0, 1).contiguous().view(seq_len, bsz, embed_size)
+            if self.output_encoder:
+                context_layer = self.spike_x2x(output) # float to spikes 
+            
+            context_layer = context_layer.view(bsz, self.num_attention_heads, seq_len, self.attention_head_size)
+            context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
+            new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
+            context_layer = context_layer.view(new_context_layer_shape)
+
+            outputs = (context_layer, attention_probs) if output_attentions else (context_layer,)
+            self.self_att_t = (self.self_att_t+1) % self.T
+
+            if self.is_decoder:
+                outputs = outputs + (past_key_value,)
+            return outputs        
+        else: # ann
+            # If this is instantiated as a cross-attention module, the keys
+            # and values come from an encoder; the attention mask needs to be
+            # such that the encoder's padding tokens are not attended to.
+            is_cross_attention = encoder_hidden_states is not None
+
+            if is_cross_attention and past_key_value is not None:
+                # reuse k,v, cross_attentions
+                key_layer = past_key_value[0]
+                value_layer = past_key_value[1]
+                attention_mask = encoder_attention_mask
+            elif is_cross_attention:
+                key_layer = self.transpose_for_scores(self.key(encoder_hidden_states))
+                value_layer = self.transpose_for_scores(self.value(encoder_hidden_states))
+                attention_mask = encoder_attention_mask
+            elif past_key_value is not None:
+                key_layer = self.transpose_for_scores(self.key(hidden_states))
+                value_layer = self.transpose_for_scores(self.value(hidden_states))
+                key_layer = torch.cat([past_key_value[0], key_layer], dim=2)
+                value_layer = torch.cat([past_key_value[1], value_layer], dim=2)
+            else:
+                key_layer = self.transpose_for_scores(self.key(hidden_states))
+                value_layer = self.transpose_for_scores(self.value(hidden_states))
+
+            query_layer = self.transpose_for_scores(mixed_query_layer)
+            # print("normal mode")
+            # print("hidden_states", hidden_states.shape)
+            use_cache = past_key_value is not None
+            if self.is_decoder:
+                # if cross_attention save Tuple(torch.Tensor, torch.Tensor) of all cross attention key/value_states.
+                # Further calls to cross_attention layer can then reuse all cross-attention
+                # key/value_states (first "if" case)
+                # if uni-directional self-attention (decoder) save Tuple(torch.Tensor, torch.Tensor) of
+                # all previous decoder key/value_states. Further calls to uni-directional self-attention
+                # can concat previous decoder key/value_states to current projected key/value_states (third "elif" case)
+                # if encoder bi-directional self-attention `past_key_value` is always `None`
+                past_key_value = (key_layer, value_layer)
+
+            # Take the dot product between "query" and "key" to get the raw attention scores.
+            attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
+            # print("attention_scores", attention_scores.shape)
+            if self.position_embedding_type == "relative_key" or self.position_embedding_type == "relative_key_query":
+                query_length, key_length = query_layer.shape[2], key_layer.shape[2]
+                if use_cache:
+                    position_ids_l = torch.tensor(key_length - 1, dtype=torch.long, device=hidden_states.device).view(
+                        -1, 1
+                    )
+                else:
+                    position_ids_l = torch.arange(query_length, dtype=torch.long, device=hidden_states.device).view(-1, 1)
+                position_ids_r = torch.arange(key_length, dtype=torch.long, device=hidden_states.device).view(1, -1)
+                distance = position_ids_l - position_ids_r
+
+                positional_embedding = self.distance_embedding(distance + self.max_position_embeddings - 1)
+                positional_embedding = positional_embedding.to(dtype=query_layer.dtype)  # fp16 compatibility
+
+                if self.position_embedding_type == "relative_key":
+                    relative_position_scores = torch.einsum("bhld,lrd->bhlr", query_layer, positional_embedding)
+                    attention_scores = attention_scores + relative_position_scores
+                elif self.position_embedding_type == "relative_key_query":
+                    relative_position_scores_query = torch.einsum("bhld,lrd->bhlr", query_layer, positional_embedding)
+                    relative_position_scores_key = torch.einsum("bhrd,lrd->bhlr", key_layer, positional_embedding)
+                    attention_scores = attention_scores + relative_position_scores_query + relative_position_scores_key
+
+            attention_scores = attention_scores / math.sqrt(self.attention_head_size)
+
+            if attention_mask is not None:
+                # Apply the attention mask is (precomputed for all layers in RobertaModel forward() function)
+                attention_scores = attention_scores + attention_mask
+            # Normalize the attention scores to probabilities.
+            attention_probs = nn.functional.softmax(attention_scores, dim=-1)
+
+            # This is actually dropping out entire tokens to attend to, which might
+            # seem a bit unusual, but is taken from the original Transformer paper.
+            attention_probs = self.dropout(attention_probs)
+
+            # Mask heads if we want to
+            if head_mask is not None:
+                attention_probs = attention_probs * head_mask
+
+            attention_probs = self.spike_x2x_pos(attention_probs)
+            context_layer = torch.matmul(attention_probs, value_layer)
+            context_layer_original_shape = context_layer.shape
+            context_layer.view(seq_len, bsz, embed_size)
+            if self.output_encoder:
+                context_layer = self.spike_x2x(context_layer) # float to spikes 
+            context_layer = context_layer.view(context_layer_original_shape)
+            context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
+            new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
+            context_layer = context_layer.view(new_context_layer_shape)
+
+            outputs = (context_layer, attention_probs) if output_attentions else (context_layer,)
+
+            if self.is_decoder:
+                outputs = outputs + (past_key_value,)
+            return outputs
+    
+    def init_module(self):
+        self.prod_t = 0
+        self.self_att_t = 0
+
+
+
+class STARobertaAttention(nn.Module):
+    def __init__(self, module: nn.Module, T:int = None, **kwargs):
+        super(STARobertaAttention, self).__init__()
+        self.self = STARobertaSelfAttention(module.self, T=T, **kwargs)
+        self.output = module.output
+        self.pruned_heads = set()
+        self.use_spike = False
+        self.output_encoder = True
+
+    def prune_heads(self, heads):
+        if len(heads) == 0:
+            return
+        heads, index = find_pruneable_heads_and_indices(
+            heads, self.self.num_attention_heads, self.self.attention_head_size, self.pruned_heads
+        )
+
+        # Prune linear layers
+        self.self.query = prune_linear_layer(self.self.query, index)
+        self.self.key = prune_linear_layer(self.self.key, index)
+        self.self.value = prune_linear_layer(self.self.value, index)
+        self.output.dense = prune_linear_layer(self.output.dense, index, dim=1)
+
+        # Update hyper params and store pruned heads
+        self.self.num_attention_heads = self.self.num_attention_heads - len(heads)
+        self.self.all_head_size = self.self.attention_head_size * self.self.num_attention_heads
+        self.pruned_heads = self.pruned_heads.union(heads)
+
+    def forward(
+        self,
+        hidden_states: torch.Tensor,
+        attention_mask: Optional[torch.FloatTensor] = None,
+        head_mask: Optional[torch.FloatTensor] = None,
+        encoder_hidden_states: Optional[torch.FloatTensor] = None,
+        encoder_attention_mask: Optional[torch.FloatTensor] = None,
+        past_key_value: Optional[Tuple[Tuple[torch.FloatTensor]]] = None,
+        output_attentions: Optional[bool] = False,
+    ) -> Tuple[torch.Tensor]:
+        self.self.use_spike = self.use_spike
+        self.self.output_encoder = self.output_encoder
+
+        self_outputs = self.self(
+            hidden_states,
+            attention_mask,
+            head_mask,
+            encoder_hidden_states,
+            encoder_attention_mask,
+            past_key_value,
+            output_attentions,
+        )
+        attention_output = self.output(self_outputs[0], hidden_states)
+        outputs = (attention_output,) + self_outputs[1:]  # add attentions if we output them
+        return outputs
+
+    def init_module(self):
+        self.self.init_module()
+
+
 class LinearLN(nn.Module):
     def __init__(self, embed_size: int, hidden_neuron: int, n_layer: int):
         super(LinearLN, self).__init__()
@@ -292,11 +638,11 @@ class LinearLN(nn.Module):
 
 
 class SpikeLN(nn.Module):
-    def __init__(self, normalized_shape: int, eps: float, elementwise_affine: bool,  **kwargs):
+    def __init__(self, module: nn.Module, T: int = None, **kwargs):
         super(SpikeLN, self).__init__()
-        module = nn.LayerNorm(normalized_shape=normalized_shape, eps=eps, elementwise_affine=elementwise_affine, device=DEVICE)
+        # module = nn.LayerNorm(normalized_shape=normalized_shape, eps=eps, elementwise_affine=elementwise_affine, device=DEVICE)
         self.module = module
-        self.T = kwargs.get('T', 32)
+        self.T = T if T is not None else kwargs.get('T', 32)
         self.use_spike = False
         self.t = 0
         self.gamma = module.weight
@@ -306,7 +652,6 @@ class SpikeLN(nn.Module):
         self.output_encoder = True
         self.bipolar_with_memory = kwargs.get('bipolar_with_memory', False)
         self.burst_T = kwargs.get('burst_T', 2)
-
         for n,m in self.named_modules():
             if isinstance(m,SpikeLinear_ReLU) and not isinstance(m.relu,StraightThrough):
                 m.bipolar_with_memory = self.bipolar_with_memory
@@ -378,96 +723,6 @@ class SpikeLN(nn.Module):
         self.t = 0
 
 
-# ===============================================================================
-#                                  SPIKE MODEL 
-# ===============================================================================
-
-
-# class SpikeModel(nn.Module):
-#     def __init__(self, model: nn.Module, T: int, convert_layers = None, bipolar_with_memory=False, burst_T=0):
-#         super().__init__()
-#         self.model = model
-#         self.use_spike = False
-#         self.bipolar_with_memory = bipolar_with_memory
-#         self.burst_T = burst_T
-#         self.spike_model_refactor(model,T,convert_layers)
-#         assert T > 0, "SNN does not accept negative simulation length"
-#         self.T = T
-    
-#     def spike_model_refactor(self, module: nn.Module, T: int, convert_layers=None):
-#         for m_str in convert_layers:
-#             m = eval(f'module.{m_str}')
-#             self.spike_module_refactor(m,T)
-
-#     def spike_module_refactor(self, module: nn.Module, T: int, prev_module=None):
-#         for name, immediate_child_module in module.named_children():
-#             print("name",name)
-#             print("immediate_child_module",immediate_child_module)
-#             if isinstance(immediate_child_module,nn.LayerNorm):
-#                 setattr(module,name,SpikeLN(T=T,module = immediate_child_module))
-#                 prev_module = getattr(module, name)
-#                 for n,m in prev_module.named_modules():
-#                     if isinstance(m,SpikeLinear_ReLU) and not isinstance(m.relu,StraightThrough):
-#                         m.bipolar_with_memory = self.bipolar_with_memory
-#                         m.burst_T = self.burst_T
-#                 pass
-#             elif name == 'attn':
-#                 print("immediate_child_module",immediate_child_module)
-#                 setattr(module,name,SpikeAttention(T=T,module = immediate_child_module))
-#                 prev_module = getattr(module, name)
-#                 for n,m in prev_module.named_modules():
-#                     if isinstance(m,SpikeLinear_ReLU) and not isinstance(m.relu,StraightThrough):
-#                         m.bipolar_with_memory = self.bipolar_with_memory
-#                         m.burst_T = self.burst_T
-#                 pass
-#             elif isinstance(immediate_child_module,nn.Linear):
-#                 setattr(module,name,SpikeLinear_ReLU(T=T,module = immediate_child_module))
-#                 prev_module = getattr(module, name)
-#                 pass
-#             elif isinstance(immediate_child_module, (nn.ReLU, nn.ReLU6)):
-#                 if prev_module is not None: # nn.Linear
-#                     prev_module.add_module('relu', immediate_child_module)
-#                     setattr(module, name, StraightThrough())
-#                     prev_module.bipolar_with_memory = self.bipolar_with_memory
-#                     prev_module.burst_T = self.burst_T
-#                 else:
-#                     continue
-#                 pass
-            
-#             else:
-#                 prev_module = self.spike_module_refactor(
-#                     immediate_child_module, T=T, prev_module=prev_module)
-#         return prev_module
-    # def set_spike_state(self, use_spike: bool = True):
-    #     self.use_spike = use_spike
-    #     for m in self.model.modules():
-    #         if isinstance(m, SpikeLinear_ReLU):
-    #             m.use_spike = use_spike
-    #         if isinstance(m, SpikeLN):
-    #             m.use_spike = use_spike
-    #         if isinstance(m, SpikeAttention):
-    #             m.use_spike = use_spike
-    #             m.product.use_spike = use_spike
-            
-
-    # def init_model(self):
-    #     for m in self.model.modules():
-    #         if isinstance(m, (SpikeLinear_ReLU,SpikeAttention,SpikeLN)):
-    #             m.init_module()
-
-    # def forward(self, input):
-    #     if self.use_spike:
-    #         self.init_model()
-    #         out = 0
-    #         for t in range(self.T):
-    #             out_t = self.model(input)
-    #             out += out_t
-    #             torch.cuda.empty_cache()
-    #             import gc 
-    #             gc.collect()
-    #     else:
-    #         out = self.model(input)
-    #     return out
     
 def TransformRelu (module: nn.Module, **kwargs):
     for name, immediate_child_module in reversed(list(module.named_children())):
@@ -498,9 +753,12 @@ def set_spike_state(model: nn.Module, use_spike: bool = True):
             m.use_spike = use_spike
         if isinstance(m, SpikeLN):
             m.use_spike = use_spike
-        if isinstance(m, SpikeAttention):
+        if isinstance(m, SpikeMultiheadAttention):
             m.use_spike = use_spike
             m.product.use_spike = use_spike
+        if isinstance(m, STARobertaAttention):
+            m.self.use_spike = use_spike
+            m.use_spike = use_spike
 
 
 @torch.no_grad()
@@ -547,7 +805,7 @@ def get_maximum_activation(train_loader: Union[torch.utils.data.DataLoader,torch
 
 def init_sta_converted_model(model: nn.Module):
     for m in model.modules():
-        if isinstance(m, (SpikeLinear_ReLU, SpikeAttention, SpikeLN)):
+        if isinstance(m, (SpikeLinear_ReLU, SpikeMultiheadAttention, STARobertaAttention, SpikeLN)):
             m.init_module()
 
 
@@ -819,11 +1077,11 @@ def sqrtinv_to_spike_module(ann_module,T):
     snn_module = copy.deepcopy(ann_module)
     snn_module.approximator[0]
 
-    snn_module.approximator[0] = SpikeLinear_ReLU(T=T,in_features = ann_module.approximator[0].in_features, out_features = ann_module.approximator[0].out_features, bias = not (ann_module.approximator[0].bias is None))
+    snn_module.approximator[0] = SpikeLinear_ReLU(module=ann_module.approximator[0], T=T)
     snn_module.approximator[0].relu = nn.ReLU()
     snn_module.approximator[0].belong_to_ln = True
     snn_module.approximator[1] = StraightThrough()
-    snn_module.approximator[2] = SpikeLinear_ReLU(T=T,in_features = ann_module.approximator[2].in_features, out_features = ann_module.approximator[2].out_features, bias = not (ann_module.approximator[2].bias is None))
+    snn_module.approximator[2] = SpikeLinear_ReLU(module=ann_module.approximator[2], T=T)
     return snn_module
 
 
@@ -878,19 +1136,19 @@ def x2x_to_spike_module(ann_module,T,belong_to_ln=False):
     snn_module = copy.deepcopy(ann_module)
     snn_module.approximator[0]
 
-    snn_module.approximator[0] = SpikeLinear_ReLU(T=T,in_features = ann_module.approximator[0].in_features, out_features = ann_module.approximator[0].out_features, bias = not (ann_module.approximator[0].bias is None))
+    snn_module.approximator[0] = SpikeLinear_ReLU(module=ann_module.approximator[0], T=T)
     snn_module.approximator[0].relu = nn.ReLU()
     snn_module.approximator[0].belong_to_x2x = True
     snn_module.approximator[0].belong_to_ln = belong_to_ln
     snn_module.approximator[1] = StraightThrough()
-    snn_module.approximator[2] = SpikeLinear_ReLU(T=T,in_features = ann_module.approximator[2].in_features, out_features = ann_module.approximator[2].out_features, bias = not (ann_module.approximator[2].bias is None))
+    snn_module.approximator[2] = SpikeLinear_ReLU(module=ann_module.approximator[2], T=T)
     return snn_module
 
 
 def x2x_pos_to_spike_module(ann_module,T):
     snn_module = copy.deepcopy(ann_module)
     snn_module.approximator[0]
-    snn_module.approximator[0] = SpikeLinear_ReLU(T=T,in_features = ann_module.approximator[0].in_features, out_features = ann_module.approximator[0].out_features, bias = not (ann_module.approximator[0].bias is None))
+    snn_module.approximator[0] = SpikeLinear_ReLU(module=ann_module.approximator[0], T=T)
     snn_module.approximator[0].relu = nn.ReLU()
     snn_module.approximator[0].belong_to_x2x_pos = True
     snn_module.approximator[1] = StraightThrough()

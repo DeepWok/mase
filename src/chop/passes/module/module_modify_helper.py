@@ -1,6 +1,6 @@
 from chop.passes.module.state_dict_map import SPECIAL_CONVERT_PATTERNS
 import torch
-
+import transformers
 from functools import reduce, partial
 from copy import deepcopy
 import logging
@@ -110,6 +110,7 @@ def instantiate_linear(module, postfix, module_map, additional_module_args):
     # Need to handle this better
     if "config" in inspect.signature(linear_cls.__init__).parameters:
         linear = linear_cls(
+            module=module,
             in_features=module.in_features,
             out_features=module.out_features,
             bias=has_bias,
@@ -117,6 +118,7 @@ def instantiate_linear(module, postfix, module_map, additional_module_args):
         )
     else:
         linear = linear_cls(
+            module=module,
             in_features=module.in_features,
             out_features=module.out_features,
             bias=has_bias,
@@ -179,6 +181,7 @@ def instantiate_layernorm(module, postfix, module_map, additional_module_args):
     layernorm_cls = module_map[f"layernorm_{postfix}"]
     has_bias = not (module.bias is None)
     layernorm = layernorm_cls(
+        module=module,
         normalized_shape=module.normalized_shape,
         eps=module.eps,
         elementwise_affine=module.elementwise_affine,
@@ -189,13 +192,26 @@ def instantiate_layernorm(module, postfix, module_map, additional_module_args):
 
 
 def instantiate_attention(module, postfix, module_map, additional_module_args):
-    attn_cls = module_map[f"attn_{postfix}"]
-    attn = attn_cls(
-        embed_dim=module.embed_dim,
-        num_heads=module.num_heads,
-        batch_first=module.batch_first,
-        **additional_module_args,
-    )
+    if isinstance(module, transformers.models.roberta.modeling_roberta.RobertaAttention):
+        # For RobertaAttention, we need to use the RobertaSelfAttention class
+        attn_cls = module_map[f"attn_roberta_{postfix}"]
+        attn = attn_cls(
+            module = module,
+            # embed_dim=module.embed_dim,
+            # num_heads=module.num_heads,
+            # batch_first=module.batch_first,
+            **additional_module_args,
+        )
+        return attn
+    else:
+        attn_cls = module_map[f"attn_{postfix}"]
+        attn = attn_cls(
+            module = module,
+            # embed_dim=module.embed_dim,
+            # num_heads=module.num_heads,
+            # batch_first=module.batch_first,
+            **additional_module_args,
+        )
     return attn
 
 
@@ -238,7 +254,7 @@ def instantiate_module(module, postfix, module_map, additional_module_args):
         module = instantiate_embedding(module, postfix, module_map, module_args)
     elif isinstance(module, torch.nn.LayerNorm):
         module = instantiate_layernorm(module, postfix, module_map, module_args)
-    elif isinstance(module, torch.nn.MultiheadAttention):
+    elif isinstance(module, torch.nn.MultiheadAttention) or isinstance(module, transformers.models.roberta.modeling_roberta.RobertaAttention):
         module = instantiate_attention(module, postfix, module_map, module_args)
     elif is_roberta:
         module = instantiate_roberta_module(
