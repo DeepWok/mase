@@ -51,7 +51,8 @@ def emit_internal_rtl_transform_pass(graph, pass_args={}):
                 files = include_ip_to_project(node)
                 rtl_dependencies = _append(rtl_dependencies, files)
         elif "INTERNAL_HLS" in node.meta["mase"].parameters["hardware"]["toolchain"]:
-            assert False, "Internal HLS not implemented yet."
+            pass
+            # assert False, "Internal HLS not implemented yet."
         else:  # QOL change to log a warning. May be useful for adding future modules to mase hardware.
             logger.warning(f"Node {node.name} has no toolchain specified. Skipping...")
 

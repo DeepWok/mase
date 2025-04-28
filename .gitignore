@@ -171,3 +171,5 @@ prof/
 mase-trainer/
 test-trainer/
 
+# DiffLogic: tutorial files
+docs/tutorials/difflogic/data-mnist/
