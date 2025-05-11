@@ -302,6 +302,22 @@ func_data = {
     "adaptive_avg_pool2d": {"input": "data_in", "output_size": "config"},
     "adaptive_max_pool1d": {"input": "data_in", "output_size": "config"},
     "adaptive_max_pool2d": {"input": "data_in", "output_size": "config"},
+    "zeros": {  # Added for Wave2Vec
+        "size": "config",
+        "dtype": "config",
+        "layout": "config",
+        "device": "config",
+        "requires_grad": "config",
+        "out": "config",
+    },
+    "setitem": {  # Added for Wave2Vec
+        "container": "data_in",
+        "key": "config",
+        "value": "data_in",
+    },
+    "invert": {  # Added for Wave2Vec
+        "input": "data_in",
+    },
 }
 
 module_data = {
@@ -324,6 +340,8 @@ module_data = {
     "conv2d": {"input": "data_in"},
     # https://pytorch.org/docs/stable/_modules/torch/nn/modules/conv.html#Conv3d
     "conv3d": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/_modules/torch/nn/modules/conv.html#ConvTranspose2d
+    "convtranspose2d": {"input": "data_in", "output_size": "config"},
     # https://pytorch.org/docs/stable/generated/torch.nn.Embedding.html
     "embedding": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.nn.LayerNorm.html#torch.nn.LayerNorm
@@ -362,6 +380,7 @@ module_data = {
     "grouped_query_attention": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.nn.Flatten.html#flatten
     "flatten": {"input": "data_in", "start_dim": "config", "end_dim": "config"},
+    "upsample": {"input": "data_in", "size": "config", "scale_factor": "config"},
 }
 
 
@@ -458,10 +477,20 @@ method_data = {
     },
     # https://pytorch.org/docs/stable/generated/torch.Tensor.detach.html
     "detach": {"input": "data_in"},
+    "cumsum": {"dim": "config"},  # Added for Wave2Vec
+    "flip": {"input": "data_in", "dims": "config"},  # Added for Wave2Vec
+    "repeat": {
+        "size_0": "config",
+        "size_1": "config",
+        "size_2": "config",
+        "size_3": "config",
+    },  # Added for Wave2Vec
     # https://pytorch.org/docs/stable/generated/torch.Tensor.ne.html#torch.Tensor.ne
     "ne": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.int.html#torch-tensor-int
     "int": {"memory_format": "config"},
+    "_assert": {"input": "data_in"},
+    "flatten": {"start_dim": "config", "end_dim": "config"},
 }
 
 # ----------------------------------------------------------

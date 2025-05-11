@@ -131,6 +131,26 @@ def _emit_cocotb_tb(graph):
 
         def load_drivers(self, in_tensors):
             for arg, arg_batches in in_tensors.items():
+                # DiffLogic: do not need precision, fully unrolled so 1 batch only
+                if "difflogic" in graph.nodes_in[0].meta["mase"]["hardware"]["module"]:
+                    block = arg_batches[0].round().int().tolist()
+                    if isinstance(block[0], list):
+                        out = []
+                        for row in block:
+                            num = ""
+                            for i in range(len(row) - 1, -1, -1):
+                                num += str(row[i])
+                            num = int(num, 2)
+                            out.append(num)
+                    else:
+                        num = ""
+                        for i in range(len(block) - 1, -1, -1):
+                            num += str(block[i])
+                        num = int(num, 2)
+                        out = [num]
+                    self.input_drivers[arg].append(out)
+                    continue
+
                 # Quantize input tensor according to precision
                 if len(self.input_precision) > 1:
                     from mase_cocotb.utils import fixed_preprocess_tensor
@@ -164,6 +184,12 @@ def _emit_cocotb_tb(graph):
                     self.input_drivers[arg].append(block)
 
         def load_monitors(self, expectation):
+            # DiffLogic: do not need precision, fully unrolled so 1 batch only
+            if "difflogic" in graph.nodes_out[0].meta["mase"]["hardware"]["module"]:
+                self.output_monitors["data_out_0"].expect(expectation)
+                self.output_monitors["data_out_0"].in_flight = True
+                return
+
             from mase_cocotb.utils import fixed_preprocess_tensor
 
             # Process the expectation tensor

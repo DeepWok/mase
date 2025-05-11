@@ -9,6 +9,7 @@ def entry_to_list(config: dict, entry: str, suffixes: tuple[str]):
 QUANT_ARITH_TO_SUFFIXES = {
     "integer": ("width", "frac_width"),
     "fixed": ("width", "frac_width"),
+    "flexround": ("width", "frac_width"),
     "binary": (
         "width",
         "stochastic",
@@ -58,6 +59,7 @@ MASE_OP_TO_INPUT_ENTRIES_AND_ARGS = {
     "bmm": (("data_in", "weight"), ("data_in_0", "data_in_1")),
     "conv1d": (("data_in", "weight", "bias"), ("data_in_0", "weight", "bias")),
     "conv2d": (("data_in", "weight", "bias"), ("data_in_0", "weight", "bias")),
+    "convtranspose2d": (("data_in", "weight", "bias"), ("data_in_0", "weight", "bias")),
     "matmul": (("data_in", "weight"), ("data_in_0", "data_in_1")),
     "mul": (("data_in", "data_in"), ("data_in_0", "data_in_1")),
     "linear": (("data_in", "weight", "bias"), ("data_in_0", "weight", "bias")),
@@ -97,6 +99,7 @@ MASE_OP_TO_OUTPUT_ENTRIES = {
     "bmm": (("data_out",), ("data_out_0",)),
     "conv1d": (("data_out",), ("data_out_0",)),
     "conv2d": (("data_out",), ("data_out_0",)),
+    "convtranspose2d": (("data_out",), ("data_out_0",)),
     "matmul": (("data_out",), ("data_out_0",)),
     "mul": (("data_out",), ("data_out_0",)),
     "linear": (("data_out",), ("data_out_0",)),

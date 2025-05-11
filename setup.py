@@ -29,7 +29,7 @@ requirements = [
     "cocotb==1.9.2",
     "pytest",
     "pytorch-lightning",
-    "transformers==4.49",
+    "transformers==4.51",
     "toml",
     "timm",
     "pytorch-nlp",
@@ -42,13 +42,13 @@ requirements = [
     "pybind11",
     "tabulate",
     "tensorboardx",
-    "hyperopt",
+    "hyperopt @ git+https://github.com/hyperopt/hyperopt.git",
     "accelerate",
     "optuna",
     "stable-baselines3[extra]",
     "h5py",
     "scikit-learn",
-    "scipy==1.14.1",
+    "scipy==1.14",
     "onnxruntime",
     "matplotlib",
     "sphinx-rtd-theme",
@@ -73,7 +73,7 @@ requirements = [
     "bitarray",
     "bitstring",
     "emoji",
-    "numpy<2.0",
+    "numpy==2.2.4",
     "tensorboard",
     "sphinx_needs",
     "onnxconverter-common",
@@ -94,7 +94,11 @@ requirements = [
     "sphinx-book-theme",
     "pydot",
     "attr-dot-dict",
+    "ultralytics",
 ]
+
+if is_cuda_available():
+    requirements += ["mase-triton", "pycuda", "tensorrt"]
 
 setup(
     name="mase-tools",

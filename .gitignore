@@ -8,6 +8,9 @@ vagrant/.vagrant/
 # Project
 *.py~
 *.swp
+*.py-e
+*.mz
+*.pt
 /history/
 */data/
 /tb_summary/
@@ -167,6 +170,9 @@ prof/
 # HuggingFace trainer cache
 mase-trainer/
 test-trainer/
+
+# DiffLogic: tutorial files
+docs/tutorials/difflogic/data-mnist/
 
 test/self
 model_sst2/
