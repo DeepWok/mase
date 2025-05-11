@@ -19,6 +19,13 @@ from transformers.models.llama.modeling_llama import (
     LlamaAttention,
 )
 
+from transformers.models.bert.modeling_bert import (
+    BertSdpaSelfAttention,
+    BertSelfAttention,
+)
+
+from transformers.models.bert.configuration_bert import BertConfig
+
 roberta_prefix_map = {
     RobertaSdpaSelfAttention: "roberta_self_attention",
     RobertaSelfAttention: "roberta_self_attention",
@@ -30,6 +37,11 @@ roberta_prefix_map = {
 
 llama_prefix_map = {
     LlamaAttention: "llama_self_attention",
+}
+
+bert_prefix_map = {
+    BertSdpaSelfAttention: "bert_self_attention",
+    BertSelfAttention: "bert_self_attention",
 }
 
 
@@ -212,10 +224,28 @@ def instantiate_llama_module(
     )
     return llama_module
 
+def instantiate_bert_module(
+    module, postfix, prefix, module_map, module_args,
+):
+    bert_cls = module_map[f"{prefix}_{postfix}"]
+
+    bert_module = bert_cls(
+        config=BertConfig(
+            hidden_size=module.query.in_features,
+            num_attention_heads=module.num_attention_heads,
+            attention_head_size=module.attention_head_size,
+            attention_probs_dropout_prob=module.dropout_prob,
+            is_decoder=False,
+        ),
+        morr_config=module_args,
+    )
+    return bert_module
+
 
 def instantiate_module(module, postfix, module_map, additional_module_args):
     is_roberta, roberta_layer_name = check_module_instance(module, roberta_prefix_map)
     is_llama, llama_layer_name = check_module_instance(module, llama_prefix_map)
+    is_bert, bert_layer_name = check_module_instance(module, bert_prefix_map)
 
     module_args = additional_module_args["config"]
     network_args = additional_module_args.get("network_config", None)
@@ -235,6 +265,10 @@ def instantiate_module(module, postfix, module_map, additional_module_args):
     elif is_llama:
         module = instantiate_llama_module(
             module, postfix, llama_layer_name, module_map, module_args, network_args
+        )
+    elif is_bert:
+        module = instantiate_bert_module(
+            module, postfix, bert_layer_name, module_map, module_args,
         )
     else:
         raise ValueError(f"{module} is not supported.")

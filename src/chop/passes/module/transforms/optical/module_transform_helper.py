@@ -12,8 +12,12 @@ def replace_by_name_optical(network, module_name: str, new_module, target_name):
     original = get_module_by_name(network, module_name)
     if target_name == "linear_morr_full":
         updated_module = weight_replacement_full_linear_optical(original, new_module)
-    elif target_name == "linear_morr":
+    elif target_name in ["linear_morr", "linear_morr_triton", "linear_morr_triton_mem"]:
         updated_module = weight_replacement_circulant_linear_optical(original, new_module)
+    elif target_name in ["bert_self_attention_morr"]:
+        updated_module = weight_replacement_circulant_bert_attention(original, new_module)
+    else:
+        raise NotImplementedError(f"weight replacement function for the optical module {target_name} not implemented")
     
     network = set_module_by_name(network, module_name, updated_module)
 
@@ -158,3 +162,14 @@ def weight_replacement_conv2d_optical(x, y):
     # Done. At this point, y.weight and y.bias (if present) have been overwritten
     # with a simple block-circulant approximation of x's parameters.
     return y
+
+def weight_replacement_circulant_bert_attention(original, new_module):
+    for name in ("query", "key", "value"):
+        src_linear = getattr(original, name)
+        dst_linear = getattr(new_module, name)
+        with torch.no_grad():
+            dst_linear.weight.copy_(src_linear.weight)
+            if src_linear.bias is not None:
+                dst_linear.bias.copy_(src_linear.bias)
+    
+    return new_module

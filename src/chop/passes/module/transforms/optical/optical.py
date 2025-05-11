@@ -1,4 +1,5 @@
 import torch
+from transformers.models.bert.modeling_bert import BertSdpaSelfAttention
 
 from chop.nn.optical.modules import optical_module_map
 from chop.passes.module.module_modify_helper import instantiate_module
@@ -24,6 +25,8 @@ def optical_transform_by_type(network, pass_args):
             module = torch.nn.Linear
         elif type_name == "conv2d":
             module = torch.nn.Conv2d
+        elif isinstance(m, BertSdpaSelfAttention):
+            type_name = "bert_self_attention"
         else:
             raise ValueError(f"{type_name} is not supported!")
         config = config["config"]
@@ -83,6 +86,8 @@ def optical_transform_by_regex_name(network, pass_args):
             type_name = "linear"
         elif isinstance(m, torch.nn.Conv2d):
             type_name = "conv2d"
+        elif isinstance(m, BertSdpaSelfAttention):
+            type_name = "bert_self_attention"
         else:
             raise ValueError(f"{type_name} is not supported!")
         
