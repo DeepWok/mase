@@ -22,7 +22,7 @@ from ..utils import toeplitz
 from ..utils import morr_uniform_
 from ..utils import input_quantize_fn, weight_quantize_fn
 from ..modules.base_layer import ONNBaseLayer
-from .morr_linear_kernel_mem import morr_linear_fn
+from .morr_linear_kernel_mem import morr_linear_fn_mem
 
 logger = logging.getLogger(__name__)
 

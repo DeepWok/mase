@@ -75,11 +75,14 @@ def optical_transform_by_regex_name(network, pass_args):
         print(f"processing {n}")
 
         optical_config = pass_args[matched_pattern]["config"]
-        optial_additional_config = pass_args[matched_pattern]["additional"]
+        optial_additional_config = pass_args[matched_pattern].get("additional", None)
         postfix = optical_config["name"]
 
         additional_module_args = (
-            {"config": optical_config, "additional": optial_additional_config}
+            {
+                "config": optical_config, 
+                "additional": optial_additional_config
+            }
             # if is_huggingface_model
             # else {"config": optical_config}
         )

@@ -9,7 +9,11 @@ import pdb
 
 from .dtype import TORCH_DTYPE_TO_TRITON
 PACKAGE_NAME = "mase_triton"
-from ..utils import toeplitz
+from ..utils import (
+    toeplitz,
+    input_quantize_fn,
+    weight_quantize_fn,
+)
 from .quantize import _input_quantize_fn, _weight_quantize_fn
 
 
@@ -56,22 +60,22 @@ def _mrr_roundtrip_phase_to_tr_func(
     return x
 
 # @triton.autotune(
-#     configs = _get_autotune_configs(),
+#     configs= [
+#         triton.Config(
+#         {
+#             "BLOCK_SIZE_M": 1,
+#             "BLOCK_SIZE_P": 1,
+#             "BLOCK_SIZE_Q": 1,
+#             # "BLOCK_SIZE_K1": 4,
+#             "BLOCK_SIZE_K2": 1,
+#         },
+#         num_stages=3,
+#         num_warps=8,
+#     ),],
 #     key=["M", "P", "Q", "K"],
 # )
 @triton.autotune(
-    configs= [
-        triton.Config(
-        {
-            "BLOCK_SIZE_M": 1,
-            "BLOCK_SIZE_P": 1,
-            "BLOCK_SIZE_Q": 1,
-            # "BLOCK_SIZE_K1": 4,
-            "BLOCK_SIZE_K2": 1,
-        },
-        num_stages=3,
-        num_warps=8,
-    ),],
+    configs = _get_autotune_configs(),
     key=["M", "P", "Q", "K"],
 )
 @triton.jit
@@ -114,9 +118,14 @@ def morr_propagate_kernel(
     # Program ID for block-based processing
     # each program is assigned GROUP_SIZE_MPQ * [1, 1, miniblock, 1] block
     pid = tl.program_id(axis=0)
-    pid_m = pid // (grid_dim_q * grid_dim_p)
-    pid_p = (pid // grid_dim_q) % grid_dim_p
-    pid_q = pid % grid_dim_q
+    # number of blocks (each program needs to handle) along M, P, Q dimension
+    pnum_m = grid_dim_p * grid_dim_q
+    pnum_p = grid_dim_p // BLOCK_SIZE_P
+    pnum_q = grid_dim_q // BLOCK_SIZE_Q
+    # block dimension of current program
+    pid_m = pid // (pnum_q * pnum_p)
+    pid_p = (pid // pnum_q) % pnum_p
+    pid_q = pid % pnum_q
 
     # starting element's m, p, q coordinates in the global tensor
     start_m = pid_m * BLOCK_SIZE_M
@@ -129,7 +138,7 @@ def morr_propagate_kernel(
     offs_wq = pid_q * BLOCK_SIZE_Q + tl.arange(0, 1)
     offs_wk1 = tl.arange(0, BLOCK_SIZE_K1)
     offs_wk2 = tl.arange(0, BLOCK_SIZE_K1)
-
+    # x [m, 1, q, k, 1]
     offs_xm = pid_m * BLOCK_SIZE_M + tl.arange(0, 1)
     offs_xp = tl.arange(0, 1)
     offs_xq = pid_q * BLOCK_SIZE_Q + tl.arange(0, 1)
@@ -183,22 +192,8 @@ def morr_propagate_kernel(
                 x = tl.load(x_ptrs, mask=x_mask, other=0.0)
                 b = tl.load(b_ptrs, mask=b_mask, other=0.0)
                 
-                # TODO: Test Quantization Function
-                # if in_bit < 16:
-                #     x = _input_quantize_fn(x)
-
-                # ----- build_weight() -----
-                # TODO: fix quantization func
-                # if w_bit < 16:
-                #     w = _weight_quantize_fn(w)
-                # else:
-                #     w = tl.abs(w)
-
-                w = tl.abs(w).reshape(BLOCK_SIZE_K1, BLOCK_SIZE_K1) # [1, 1, 1, k, k] -> [k, k]
+                w = w.reshape(BLOCK_SIZE_K1, BLOCK_SIZE_K1) # [1, 1, 1, k, k] -> [k, k]
                 x = x.reshape(BLOCK_SIZE_K1, BLOCK_SIZE_K2) # [1, 1, 1, k, 1] -> [k, 1]
-                
-                if finegrain_drop_mask is not None:
-                    w *= tl.cast(finegrain_drop_mask, tl.float32)
                 
                 x = x * x  # input_modulator()
                 # ----- propagate_morr() -----
@@ -254,16 +249,16 @@ def morr_propagate_kernel(
         # P loop end
         # reset pointer along P dimension
         w_ptrs -= stride_wp * (BLOCK_SIZE_P)
+        b_ptrs -= stride_bp * (BLOCK_SIZE_P)
         # x_ptrs -= stride_xp * (BLOCK_SIZE_P + 1) # x has P  dimension = 1、
 
         # propagate pointer along M dimension
         # w_ptrs += stride_wp # weight has M dimension = 1
         x_ptrs += stride_xm
 
-
     out = acc.to(INPUT_DTYPE)
     out = out.reshape(BLOCK_SIZE_M, BLOCK_SIZE_P, BLOCK_SIZE_Q, BLOCK_SIZE_K1) # [1, 1, q, k, 1] -> [1, 1, q, k]
-
+    
     offs_om = pid_m * BLOCK_SIZE_M + tl.arange(0, BLOCK_SIZE_M)
     offs_op = pid_p * BLOCK_SIZE_P + tl.arange(0, BLOCK_SIZE_P)
     offs_oq = pid_q * BLOCK_SIZE_Q + tl.arange(0, BLOCK_SIZE_Q)
@@ -282,9 +277,10 @@ def morr_propagate_kernel(
     k_valid = offs_ok1[None, None, None, :] < K   # K == BLOCK_SIZE_K1
     o_mask = m_valid & p_valid & q_valid & k_valid
     tl.store(o_ptrs, out, mask=o_mask)
+    # pdb.set_trace() 
 
 @torch.library.custom_op(
-    f"{PACKAGE_NAME}::optical_morr_linear_linear_fn", mutates_args={},
+    f"{PACKAGE_NAME}::optical_morr_linear_fn", mutates_args={},
 )
 def morr_linear_fn(
     x: Tensor,
@@ -292,6 +288,7 @@ def morr_linear_fn(
     morr_input_bias: Tensor,
     morr_output_scale: Tensor,
     bias: Tensor | None,
+    morr_input_scale: Tensor,
     morr_bias: Tensor | None,
     grid_dim_x: int,
     grid_dim_y: int,
@@ -311,9 +308,17 @@ def morr_linear_fn(
     in_bit: int,
     w_bit: int,
     morr_fwhm: float,
+    sigma_weight: float,
+    trainable_morr_scale: bool,
+    morr_scale: Tensor,
+    weight_quant_gain: float | None = None,
+    in_quant_alg: str = "dorefa",
+    w_quant_alg: str = "dorefa_pos",
+    morr_output_scale_quant_alg: str = "dorefa_sym",
     seed: int=42,
-) -> tuple[Tensor, int, Tensor, Tensor, Tensor, Tensor]:
-
+) -> tuple[Tensor, int, Tensor, Tensor, Tensor, Tensor, Tensor, float, Tensor, Tensor]:
+    Device = x.device
+    Dtype = x.dtype
     assert x.dtype in (
         torch.bfloat16,
         torch.float16,
@@ -342,11 +347,63 @@ def morr_linear_fn(
     P, Q, K = weight.shape
 
     if in_features_pad > D:
-        x_pad = torch.zeros(M, in_features_pad - D, device=x.device, dtype=x.dtype)
+        x_pad = torch.zeros(M, in_features_pad - D, device=Device, dtype=x.dtype)
         x = torch.cat([x, x_pad], dim=1)
     
     assert Q * K == in_features_pad, "input and weight dimension mismatch"
     assert P * K == out_features_pad, "weight and output dimension mismatch"
+
+    # Quantize input
+    ctx_x_quant = torch.empty(0, device=Device, dtype=Dtype)
+    if in_bit < 16:
+        input_quantizer = input_quantize_fn(in_bit, device=Device)
+        input_quantizer.set_bitwidth(in_bit)
+        ctx_x_quant = x.clone()
+        x = input_quantizer(x)
+    
+    # Build weight
+    ctx_w_quant = torch.empty(0, device=Device, dtype=Dtype)
+    if w_bit < 16:
+        weight_quantizer = weight_quantize_fn(w_bit, alg="dorefa_pos")
+        weight_quantizer.set_bitwidth(w_bit)
+        ctx_w_quant = weight.clone()
+        weight = weight_quantizer(weight)
+
+        ## rescale weights after quantization can maintain the initialization distribution
+        if weight_quant_gain is None:
+            weight_quant_gain = sigma_weight / weight.data.std()
+        if trainable_morr_scale:
+            morr_scale = morr_scale * weight_quant_gain
+        else:
+            morr_scale = weight_quant_gain
+        weight = weight.mul(
+            morr_scale
+        )  ### gain factor from Tanh used in quantization
+        ### quantize learnable balancing factor
+        morr_output_scale_quantizer = weight_quantize_fn(w_bit, alg="dorefa_sym")
+        morr_output_scale = morr_output_scale_quantizer(morr_output_scale)
+    else:
+        weight = weight.abs()  # positive only
+        morr_output_scale = (morr_output_scale - morr_output_scale.data.mean())
+    
+    if finegrain_drop_mask is not None:
+        weight = weight.mul(finegrain_drop_mask.float())
+    
+    # differential balancing factor concatenation
+    scale = morr_output_scale[..., :-1, :]
+    scale_pad = morr_output_scale[..., -1:, :]
+    if grid_dim_x % 2 == 0:
+        # even blocks
+        scale = torch.cat([scale, -scale], dim=2)  # [1, 1, q, 1]
+    else:
+        # odd blocks
+        if grid_dim_x > 1:
+            scale = torch.cat([morr_output_scale, -scale], dim=2)  # [1, 1, q, 1]
+        else:
+            scale = scale_pad  # [1, 1, q, 1]
+    morr_output_scale = scale.squeeze(-1).unsqueeze(0)  # [1 ,1, 1, q]
+    ctx_morr_output_scale = morr_output_scale.clone()
+
 
     # Reshape x and weight
     x = x.view(-1, grid_dim_x, miniblock)  # [M, q, k]
@@ -357,7 +414,7 @@ def morr_linear_fn(
     w_ctx = weight.clone()
     
     # Allocate output
-    output = torch.empty((M, P, Q, K, 1), device=x.device, dtype=x.dtype)
+    output = torch.empty((M, P, Q, K, 1), device=Device, dtype=x.dtype)
     # Launch the Triton kernel
     grid = lambda meta: (
         triton.cdiv(M, meta["BLOCK_SIZE_M"]) * triton.cdiv(P, meta["BLOCK_SIZE_P"]) * triton.cdiv(Q, meta["BLOCK_SIZE_Q"]),
@@ -408,27 +465,6 @@ def morr_linear_fn(
         BLOCK_SIZE_K1 = K,
     )
 
-    # ----- build_weight() morr_output_scale part ----- 
-    if w_bit < 16:
-        morr_output_scale = _weight_quantize_fn(morr_output_scale)
-    else:
-        morr_output_scale = (morr_output_scale - morr_output_scale.data.mean())
-    
-    # differential balancing factor concatenation
-    scale = morr_output_scale[..., :-1, :]
-    scale_pad = morr_output_scale[..., -1:, :]
-    if grid_dim_x % 2 == 0:
-        # even blocks
-        scale = torch.cat([scale, -scale], dim=2)  # [1, 1, q, 1]
-    else:
-        # odd blocks
-        if grid_dim_x > 1:
-            scale = torch.cat([morr_output_scale, -scale], dim=2)  # [1, 1, q, 1]
-        else:
-            scale = scale_pad  # [1, 1, q, 1]
-    morr_output_scale = scale.squeeze(-1).unsqueeze(0)  # [1 ,1, 1, q]
-    ctx_morr_output_scale = morr_output_scale.clone()
-
     # Apply output scale
     output = output.squeeze(-1)  # [m, p, q, k, 1] -> [m, p, q, k]
     ctx_x_scalematmul = output.clone() # record x input for matmul
@@ -439,7 +475,7 @@ def morr_linear_fn(
     if out_features < out_features_pad:
         output = output[:, :out_features]
     if bias is not None:
-        x = x + bias.unsqueeze(0)
+        output = output + bias.unsqueeze(0)
     # Reshape back for transformer
     if is_transformer:
         output = output.view(in_B, in_N, out_features)
@@ -449,7 +485,18 @@ def morr_linear_fn(
     #     x_ctx,                  # x_modulator: x before x^2
     # )
 
-    return output, seed, torch.abs(w_ctx), x_ctx, ctx_morr_output_scale, ctx_x_scalematmul
+    return (
+        output, 
+        seed, 
+        torch.abs(w_ctx), 
+        x_ctx, 
+        ctx_morr_output_scale, 
+        ctx_x_scalematmul, 
+        morr_scale.clone(), 
+        weight_quant_gain if weight_quant_gain is not None else 0.0,
+        ctx_x_quant,
+        ctx_w_quant,
+    )
 
 
 
@@ -461,8 +508,9 @@ def _morr_linear_setup_context(ctx, inputs, output):
         x,                       # 0  Tensor – input
         weight,                  # 1  Tensor – learnable weight
         morr_input_bias,         # 23 Tensor
-        _,                       # 3 morr_output_scale
+        origin_morr_output_scale,       # 3  Original input morr_output_scale
         bias,                    # 4  Tensor | None – bias
+        morr_input_scale,        # 5  Tensor
         morr_bias,               # 2 Tensor | None
         grid_dim_x,              # 5  int
         grid_dim_y,              # 6  int
@@ -482,10 +530,28 @@ def _morr_linear_setup_context(ctx, inputs, output):
         in_bit,                  # 20 int
         w_bit,                   # 21 int
         morr_fwhm,               # 22 float
+        sigma_weight,
+        trainable_morr_scale, # bool
+        _morr_scale,
+        _weight_quant_gain,
+        in_quant_alg,
+        w_quant_alg,
+        morr_output_scale_quant_alg,
         seed,
     ) = inputs
 
-    output, seed, w_morr, x_modulator, morr_output_scale, x_scalematmul = output
+    (
+        output, 
+        seed, 
+        w_morr, 
+        x_modulator, 
+        morr_output_scale, 
+        x_scalematmul, 
+        morr_scale, 
+        weight_quant_gain,
+        x_quant,
+        w_quant
+    ) = output
     # (
     #     w_morr, 
     #     x_modulator,
@@ -523,10 +589,9 @@ def _morr_linear_setup_context(ctx, inputs, output):
     # 3. stash tensors 
     ctx.save_for_backward(
         x,                        # original input
-        weight.sign(),              # original weight's sign
-        # TODO: complete self.tensor
+        weight,                   # original weight
         bias if bias is not None else torch.tensor([], device=device, dtype=dtype),
-        morr_output_scale,        # original morr_output_scale
+        morr_output_scale,        # morr_output_scale after modification in build_weight()
         x_mrr,                    # x input for mrr_roundtrip_phase_to_tr()
         x_morr,
         w_morr,                   # w input for propagate_morr() matmul
@@ -535,6 +600,11 @@ def _morr_linear_setup_context(ctx, inputs, output):
         # morr_input_bias, 
         x_scalematmul,   # x input for morr_output_scale.matmul
         tanh_input_bias,
+        morr_input_scale,
+        morr_scale, # morr_scale after modification in build_weight()
+        x_quant, # x input for input_quantize_fn()
+        w_quant, # w input for weight_quantize_fn()
+        origin_morr_output_scale, # original morr_output_scale
     )
     ctx.tensor_shape = tensor_shape
     ctx.mrr_para = mrr_para
@@ -545,14 +615,19 @@ def _morr_linear_setup_context(ctx, inputs, output):
     ctx.morr_fwhm = morr_fwhm
     ctx.grid_dim_x = grid_dim_x
     ctx.grid_dim_y = grid_dim_y
+    ctx.in_bit = in_bit
     ctx.w_bit = w_bit
     ctx.x_input_shape = x.shape
     ctx.device = x.device
     ctx.w_input_shape = weight.shape
-    ctx.morr_fwhm = morr_fwhm
     ctx.enable_phase_noise = enable_phase_noise
     ctx.phase_noise_std = phase_noise_std
     ctx.trainable_morr_bias = trainable_morr_bias
+    ctx.trainable_morr_scale = trainable_morr_scale
+    ctx.weight_quant_gain = weight_quant_gain
+    ctx.in_quant_alg = in_quant_alg
+    ctx.w_quant_alg = w_quant_alg
+    ctx.morr_output_scale_quant_alg = morr_output_scale_quant_alg
 
 
 
@@ -562,7 +637,7 @@ def _morr_linear_backward(ctx, grad_output, *ignored):
     """
     (
         x, 
-        w_input_sign, 
+        weight, 
         bias,
         morr_output_scale,
         x_mrr,
@@ -572,8 +647,12 @@ def _morr_linear_backward(ctx, grad_output, *ignored):
         x_modulator,
         # morr_input_bias,
         x_scalematmul,
-        tanh_input_bias
-
+        tanh_input_bias,
+        morr_input_scale,
+        morr_scale,
+        x_quant,
+        w_quant,
+        origin_morr_output_scale,
     ) = ctx.saved_tensors
 
     M, P, Q, K  = ctx.tensor_shape
@@ -633,21 +712,28 @@ def _morr_linear_backward(ctx, grad_output, *ignored):
             grad_s = grad_s.squeeze(0).unsqueeze(-1) # [1, 1, q, 1] gradient of scale
 
             t  = ctx.grid_dim_x // 2
-            grad_scale = grad_s.new_zeros((1, 1, t+1, 1))
+            grad_output_scale = grad_s.new_zeros((1, 1, t+1, 1))
 
             if ctx.grid_dim_x % 2 == 0:
-                grad_scale[..., :t, :] = grad_s[..., :t, :] - grad_s[..., t:, :]
+                grad_output_scale[..., :t, :] = grad_s[..., :t, :] - grad_s[..., t:, :]
             elif ctx.grid_dim_x == 1:
-                grad_scale = grad_s
+                grad_output_scale = grad_s
             else:
-                grad_scale[..., :t, :] = grad_s[..., :t, :] - grad_s[..., t+1:, :]
-                grad_scale[..., t:t+1, :] = grad_s[..., t:t+1, :]
-            
+                grad_output_scale[..., :t, :] = grad_s[..., :t, :] - grad_s[..., t+1:, :]
+                grad_output_scale[..., t:t+1, :] = grad_s[..., t:t+1, :]
+            # build_weight()
             if ctx.w_bit < 16:
-                # TODO: backprop of weight_quantizer
-                raise NotImplementedError("quantization not supported")                
+                # morr_output_scale_quantizer()
+                if ctx.morr_output_scale_quant_alg == "dorefa_sym":
+                    # local recompute: 
+                    w_in = torch.tanh(origin_morr_output_scale)                 # [-1, 1]
+                    # ignore gradient for r here
+                    grad_output_scale = grad_output_scale * (1.0 - w_in.pow(2))
+                    grad_output_scale = grad_output_scale.clamp_(-1, 1)
+                else:
+                    raise NotImplementedError
         else:
-            grad_scale = None
+            grad_output_scale = None
         
         # dL/dx
         grad_x = morr_output_scale.transpose(-2, -1).matmul(grad_out) # [bs, p, q, k]
@@ -682,14 +768,20 @@ def _morr_linear_backward(ctx, grad_output, *ignored):
         grad_x = grad_x.sum(dim=1, keepdim=True) # [bs, p, q, k, 1] -> [bs, 1, q, k, 1]
         grad_x = grad_x.squeeze(-1).squeeze(1) # [bs, 1, q, k, 1] -> [bs, q, k]
 
-        # 7. input modulator
+        # 7. input modulator(x)
         grad_x = grad_x * 2 * x_modulator # [bs, q, k]
 
         # 8. input reshape
         grad_x = grad_x.view(x_input_shape)
         grad_x = grad_x[:, :in_features]
 
-
+        # 9.input quantization
+        if ctx.in_bit >= 16 or ctx.in_quant_alg is None:
+            pass
+        elif ctx.in_quant_alg == "dorefa":
+            grad_x = grad_x * ((x_quant > 0) & (x_quant < 1))
+        else:
+            raise NotImplementedError
 
     # ----- Gradient w.r.t weight -----
     if ctx.needs_input_grad[1]:
@@ -710,21 +802,47 @@ def _morr_linear_backward(ctx, grad_output, *ignored):
         idx = idx.expand(grad_w.shape).to(DEVICE)
         buffer = torch.zeros_like(grad_w, device=DEVICE)
         buffer.scatter_add_(-2, idx, grad_w) # [1, p, q, k, k]
-        grad_w = buffer.sum(dim=-1, keepdim=True).squeeze(0).squeeze(-1)
+        grad_w = buffer.sum(dim=-1, keepdim=True).squeeze(0).squeeze(-1) # [p, q, k]
 
-        # 3. build_weight() weight = self.weight.abs()
-        grad_w = grad_w * w_input_sign
+        # 3. build_weight()
+        # morr_scale: [p, q, 1]
+        grad_morr_input_scale = None
+        if ctx.w_bit < 16:
+            # grad w.r.t morr_scale 
+            if ctx.needs_input_grad[5] & ctx.trainable_morr_scale:
+                grad_morr_scale = (grad_w * weight).sum(dim=2, keepdim=True) # [p, q, 1]
+                grad_morr_scale = grad_morr_scale * ctx.weight_quant_gain # [p, q, 1]
+                # ∂L/∂self.morr_input_scale
+                sigmoid_scale = torch.sigmoid(morr_input_scale)
+                grad_morr_input_scale = (grad_morr_scale * sigmoid_scale * (1-sigmoid_scale)).squeeze(-1) # [p, q]
+
+            # grad w.r.t weight
+            grad_w = grad_w * morr_scale # weight.mul(morr_scale)
+            # weight_quantizer()
+            if ctx.w_quant_alg is None:
+                pass
+            elif ctx.w_quant_alg == "dorefa_pos":
+                # local recompute: 
+                w_in = torch.tanh(w_quant)                 # [-1, 1]
+                # ignore gradient for r here
+                grad_w = grad_w * (1.0 - w_in.pow(2))
+                grad_w = grad_w.clamp_(-1, 1)
+            else:
+                raise NotImplementedError
+        else:
+            grad_w = grad_w * weight.sign()
     
     return (
         grad_x,               # ∂L/∂x
         grad_w,          # ∂L/∂w
         grad_inputbias, # ∂L/∂morr_input_bias
-        grad_scale,  # ∂L/∂morr_output_scale
+        grad_output_scale,  # ∂L/∂morr_output_scale
         grad_bias,        # ∂L/∂bias
+        grad_morr_input_scale,
         None, None, None, None, None, None, None, None, None,
         None, None, None,
         None, None, None, None, None, None, None,
-        None,
+        None, None, None, None
     )
 
 

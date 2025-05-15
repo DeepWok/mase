@@ -261,7 +261,9 @@ def instantiate_optical_linear(module, postfix, module_map, additional_module_ar
             bias=has_bias,
             **additional_module_args,
         )
-        
+    if additional_args is None:
+        return linear
+    
     # extra handling for morr optical module
     enable_thermal_crosstalk = additional_args.get("thermal_crosstalk", False)
     enable_phase_noise = additional_args.get("phase_noise", False)
@@ -282,10 +284,19 @@ def instantiate_optical_linear(module, postfix, module_map, additional_module_ar
     
     if enable_trainable_morr_scale:
         linear.enable_trainable_morr_scale()
+    else:
+        linear.disable_trainable_morr_scale()
     
     if enable_trainable_morr_bias:
         linear.enable_trainable_morr_bias()
+    else:
+        linear.disable_trainable_morr_bias()
     
+    if "in_bit" in additional_args:
+        linear.set_input_bitwidth(in_bit = additional_args["in_bit"])
+    if "w_bit" in additional_args:
+        linear.set_weight_bitwidth(w_bit = additional_args["w_bit"])
+
     return linear
 
 def instantiate_optical_conv2d(module, postfix, module_map, additional_module_args):
