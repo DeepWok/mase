@@ -444,13 +444,14 @@ class TritonMemMORRLinear(ONNBaseLayer):
             self.weight.data.masked_fill_(~mask.view_as(self.weight.data), 0)
 
     def forward(self, x: Tensor) -> Tensor:
-        output, *_ = morr_linear_fn(
-            x,
+        output, *_ = morr_linear_fn_mem(
+           x,
             self.weight,
             morr_input_bias = self.morr_input_bias,
             morr_output_scale = self.morr_output_scale,
             bias = None,
-            morr_bias = self.morr_bias,
+            morr_input_scale = self.morr_input_scale,
+            morr_bias = self.morr_bias.detach(),
             grid_dim_x = self.grid_dim_x,
             grid_dim_y = self.grid_dim_y,
             miniblock = self.miniblock,
@@ -469,5 +470,10 @@ class TritonMemMORRLinear(ONNBaseLayer):
             in_bit = self.in_bit,
             w_bit = self.w_bit,
             morr_fwhm = self.morr_fwhm,
+            sigma_weight=self.sigma_weight,
+            trainable_morr_scale=self.trainable_morr_scale, # bool
+            morr_scale=self.morr_scale,
+            weight_quant_gain=self.weight_quant_gain,
+            seed = 42,
         )
         return output

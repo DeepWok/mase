@@ -9,7 +9,12 @@ import pdb
 
 from .dtype import TORCH_DTYPE_TO_TRITON
 PACKAGE_NAME = "mase_triton"
-from ..utils import toeplitz
+from ..utils import (
+    toeplitz,
+    input_quantize_fn,
+    weight_quantize_fn,
+    mrr_roundtrip_phase_to_tr_func
+)
 from .quantize import _input_quantize_fn, _weight_quantize_fn
 
 
@@ -506,15 +511,11 @@ def _morr_linear_setup_context(ctx, inputs, output):
         sigma_weight,
         trainable_morr_scale, # bool
         _morr_scale,
-        _weight_quant_gain,
+        weight_quant_gain,
         seed,                    # 23 int
     ) = inputs
 
-    output, seed, w_morr, x_modulator, morr_output_scale, x_scalematmul, morr_scale, weight_quant_gain = output
-    # (
-    #     w_morr, 
-    #     x_modulator,
-    # ) = aux_tensor
+    output, seed, w_morr, x_modulator, morr_output_scale, x_scalematmul, morr_scale, _weight_quant_gain = output
 
     device, dtype = x.device, x.dtype
 
@@ -525,25 +526,25 @@ def _morr_linear_setup_context(ctx, inputs, output):
     tensor_shape = (M, P, Q, K)
 
     # mrr_para: para for mrr_roundtrip_phase_to_tr()
-    c1 = -2.0 * mrr_a * mrr_r
-    c2 = mrr_a * mrr_a + mrr_r * mrr_r
-    c3 = 1.0 + (mrr_r * mrr_r) * (mrr_a * mrr_a) - mrr_a * mrr_a - mrr_r * mrr_r
-    c4 = (mrr_a**2.0 - 1.0) * (mrr_r**2.0 - 1.0) * 2.0 * mrr_a * mrr_r                                       
-    intensity = True
-    mrr_para = (c1, c2, c3, c4, intensity)
+    # c1 = -2.0 * mrr_a * mrr_r
+    # c2 = mrr_a * mrr_a + mrr_r * mrr_r
+    # c3 = 1.0 + (mrr_r * mrr_r) * (mrr_a * mrr_a) - mrr_a * mrr_a - mrr_r * mrr_r
+    # c4 = (mrr_a**2.0 - 1.0) * (mrr_r**2.0 - 1.0) * 2.0 * mrr_a * mrr_r                                       
+    # intensity = True
+    # mrr_para = (c1, c2, c3, c4, intensity)
     
-    # x_morr: x input of matmal in propagate_morr()
-    x_morr = x_modulator ** 2 # [m, q, k]
-    x_morr = x_morr.unsqueeze(1).unsqueeze(-1) # [m, 1, q, k, 1]
+    # # x_morr: x input of matmal in propagate_morr()
+    # x_morr = x_modulator ** 2 # [m, q, k]
+    # x_morr = x_morr.unsqueeze(1).unsqueeze(-1) # [m, 1, q, k, 1]
 
-    # x_mrr: x input of mrr_roundtrip_phase_to_tr()
-    x_mrr = w_morr.matmul(x_morr).squeeze(-1)
-    if enable_phase_noise and phase_noise_std > 1e-5:
-        x_mrr = x_mrr + torch.zeros_like(x_mrr).normal_(0, phase_noise_std)
-    if trainable_morr_bias:
-        x_mrr = x_mrr - morr_bias # morr_bias here is the detached one from forward
+    # # x_mrr: x input of mrr_roundtrip_phase_to_tr()
+    # x_mrr = w_morr.matmul(x_morr).squeeze(-1)
+    # if enable_phase_noise and phase_noise_std > 1e-5:
+    #     x_mrr = x_mrr + torch.zeros_like(x_mrr).normal_(0, phase_noise_std)
+    # if trainable_morr_bias:
+    #     x_mrr = x_mrr - morr_bias # morr_bias here is the detached one from forward
 
-    tanh_input_bias = torch.tanh(morr_input_bias.unsqueeze(0).unsqueeze(-1)) # Added from linear.py
+    # tanh_input_bias = torch.tanh(morr_input_bias.unsqueeze(0).unsqueeze(-1)) # Added from linear.py
 
     # 3. stash tensors 
     ctx.save_for_backward(
@@ -553,16 +554,17 @@ def _morr_linear_setup_context(ctx, inputs, output):
         morr_output_scale,        # original morr_output_scale
         # x_mrr,                    # x input for mrr_roundtrip_phase_to_tr()
         # x_morr,
-        w_morr,                   # w input for propagate_morr() matmul
-        x_modulator,              # x input for input_modulator()
+        # w_morr,                   # w input for propagate_morr() matmul
+        # x_modulator,              # x input for input_modulator()
         morr_input_bias, 
         # x_scalematmul,
-        x_scalematmul,   # x input for morr_output_scale.matmul
+        # x_scalematmul,   # x input for morr_output_scale.matmul
         morr_input_scale, # morr input scale at input
-        morr_scale, # morr_scale after modification in build_weight()
+        # morr_scale, # morr_scale after modification in build_weight()
+        finegrain_drop_mask,
     )
     ctx.tensor_shape = tensor_shape
-    ctx.mrr_para = mrr_para
+    # ctx.mrr_para = mrr_para
     ctx.in_features = in_features 
     ctx.in_features_pad = in_features_pad                     
     ctx.out_features = out_features     
@@ -570,6 +572,7 @@ def _morr_linear_setup_context(ctx, inputs, output):
     ctx.morr_fwhm = morr_fwhm
     ctx.grid_dim_x = grid_dim_x
     ctx.grid_dim_y = grid_dim_y
+    ctx.in_bit = in_bit
     ctx.w_bit = w_bit
     ctx.x_input_shape = x.shape
     ctx.device = x.device
@@ -580,8 +583,163 @@ def _morr_linear_setup_context(ctx, inputs, output):
     ctx.trainable_morr_bias = trainable_morr_bias
     ctx.trainable_morr_scale = trainable_morr_scale
     ctx.weight_quant_gain = weight_quant_gain
+    ctx.miniblock = miniblock
+    ctx.crosstalk_factor = crosstalk_factor
+    ctx.sigma_weight = sigma_weight
+    ctx.enable_thermal_crosstalk = enable_thermal_crosstalk
+    ctx.mrr_a = mrr_a
+    ctx.mrr_r = mrr_r
 
+def recompute_activations(
+    ctx,
+    x: Tensor,
+    weight: Tensor,
+    bias: Tensor | None,
+    morr_output_scale: Tensor,
+    finegrain_drop_mask,
+    morr_input_bias: Tensor,
+    morr_input_scale: Tensor,
+):
+    """
+    Recompute activations for morr_linear_fn.
+    """
+    Device = x.device
+    Dtype = x.dtype
 
+    ctx_morr_scale = None
+    ctx_tanh_input_bias = None
+
+    # Handle transformer vs non-transformer inputs
+    ori_x_shape = x.shape
+    is_transformer = len(ori_x_shape) == 3
+
+    if is_transformer:
+        in_B, in_N, in_D = x.shape
+        M = in_B * in_N
+        x = x.reshape(M, in_D)
+    else:
+        M = x.shape[0]
+
+    # Get dimensions
+    M, D = x.shape
+    P, Q, K = weight.shape
+
+    if ctx.in_features_pad > D:
+        x_pad = torch.zeros(M, ctx.in_features_pad - D, device=Device, dtype=x.dtype)
+        x = torch.cat([x, x_pad], dim=1)
+
+    # Quantize input
+    if ctx.in_bit < 16:
+        input_quantizer = input_quantize_fn(ctx.in_bit, device=Device)
+        input_quantizer.set_bitwidth(ctx.in_bit)
+        x = input_quantizer(x)
+    
+    ################# Build weight #################
+    if ctx.w_bit < 16:
+        weight_quantizer = weight_quantize_fn(ctx.w_bit, alg="dorefa_pos")
+        weight_quantizer.set_bitwidth(ctx.w_bit)
+        weight = weight_quantizer(weight)
+
+        # Calculate morr_scale
+        if morr_input_scale is None:
+            return None
+        morr_scale = torch.sigmoid(morr_input_scale.unsqueeze(-1)) + 0.2  # [p, q, 1]
+
+        ## rescale weights after quantization can maintain the initialization distribution
+        weight_quant_gain = ctx.weight_quant_gain
+        if weight_quant_gain is None:
+            weight_quant_gain = ctx.sigma_weight / weight.data.std()
+        if ctx.trainable_morr_scale:
+            morr_scale = morr_scale * weight_quant_gain
+        else:
+            morr_scale = weight_quant_gain
+        
+        ctx_morr_scale = morr_scale.clone()
+        weight = weight.mul(
+            morr_scale
+        )  ### gain factor from Tanh used in quantization
+        ### quantize learnable balancing factor
+        morr_output_scale_quantizer = weight_quantize_fn(ctx.w_bit, alg="dorefa_sym")
+        morr_output_scale = morr_output_scale_quantizer(morr_output_scale)
+    else:
+        weight = weight.abs()  # positive only
+        morr_output_scale = (morr_output_scale - morr_output_scale.data.mean())
+    
+    if finegrain_drop_mask is not None:
+        weight = weight.mul(finegrain_drop_mask.float())
+    
+    # differential balancing factor concatenation
+    scale = morr_output_scale[..., :-1, :]
+    scale_pad = morr_output_scale[..., -1:, :]
+    if ctx.grid_dim_x % 2 == 0:
+        # even blocks
+        scale = torch.cat([scale, -scale], dim=2)  # [1, 1, q, 1]
+    else:
+        # odd blocks
+        if ctx.grid_dim_x > 1:
+            scale = torch.cat([morr_output_scale, -scale], dim=2)  # [1, 1, q, 1]
+        else:
+            scale = scale_pad  # [1, 1, q, 1]
+    morr_output_scale = scale.squeeze(-1).unsqueeze(0)  # [1 ,1, 1, q]
+    ctx_morr_output_scale = morr_output_scale.clone()
+
+    # Reshape x and weight
+    x = x.view(-1, ctx.grid_dim_x, ctx.miniblock)  # [M, q, k]
+
+    # input_modulator()
+    ctx_x_modulator = x.clone()
+    x = x ** 2
+    
+
+    ################# propagate_morr() #################
+    if ctx.enable_thermal_crosstalk and ctx.crosstalk_factor > 1:
+            weight = weight * ctx.crosstalk_factor
+    weight = toeplitz(weight).unsqueeze(0)  # [1, p, q, k, k]
+    x = x.unsqueeze(1).unsqueeze(-1)  # [bs, 1, q, k, 1]
+
+    ctx_x_morr = x.clone()
+    ctx_w_morr = weight.clone()
+    x = weight.matmul(x).squeeze(-1)  # [bs, p, q, k]
+
+    if ctx.enable_phase_noise and ctx.phase_noise_std > 1e-5:
+        x = x + torch.zeros_like(x).normal_(0, ctx.phase_noise_std)
+
+    if ctx.trainable_morr_bias:
+        ctx_tanh_input_bias = torch.tanh(morr_input_bias.unsqueeze(0).unsqueeze(-1))
+        morr_bias = ctx.morr_fwhm * ctx_tanh_input_bias
+        x = x - morr_bias
+    
+    ctx_x_mrr = x.clone()
+    
+    mrr_roundtrip_phase_to_tr = mrr_roundtrip_phase_to_tr_func(a=ctx.mrr_a, r=ctx.mrr_r, intensity=True)
+    x = mrr_roundtrip_phase_to_tr(x)
+
+    ctx_x_scalematmul = x.clone()
+    x = morr_output_scale.matmul(x) # [1, 1, 1, q] x [bs, p, q, k] = [bs, p, 1, k]
+    x = x.flatten(1) # [bs, p*k]
+
+    # ------------------------------------------------------
+
+    # # Trim output if needed
+    # if ctx.out_features < ctx.out_features_pad:
+    #     output = output[:, :ctx.out_features]
+    # if bias is not None:
+    #     output = output + bias.unsqueeze(0)
+    # # Reshape back for transformer
+    # if is_transformer:
+    #     output = output.view(in_B, in_N, ctx.out_features)
+
+    return (
+        # x, weight, bias, morr_output_scale,
+        # output, 
+        ctx_x_modulator, # x input for input_modulator()
+        ctx_x_morr, # x input for propagate_morr() matmul
+        ctx_w_morr, # w input for propagate_morr() matmul
+        ctx_x_mrr, # x input for mrr_roundtrip_phase_to_tr()
+        ctx_x_scalematmul, # x input for morr_output_scale.matmul
+        ctx_tanh_input_bias, # input_bias after tanh()
+        ctx_morr_scale, # morr_scale after modification in build_weight()
+    )
 
 def _morr_linear_backward(ctx, grad_output, *ignored):
     """
@@ -594,16 +752,17 @@ def _morr_linear_backward(ctx, grad_output, *ignored):
         morr_output_scale,
         # x_mrr,
         # x_morr,
-        w_morr,
-        x_modulator,
+        # w_morr,
+        # x_modulator,
         morr_input_bias,
-        x_scalematmul,
+        # x_scalematmul,
         morr_input_scale,
-        morr_scale,
+        # morr_scale,
+        finegrain_drop_mask
     ) = ctx.saved_tensors
 
     M, P, Q, K  = ctx.tensor_shape
-    c1, c2, c3, c4, intensity = ctx.mrr_para
+    # c1, c2, c3, c4, intensity = ctx.mrr_para
     in_features = ctx.in_features
     in_features_pad = ctx.in_features_pad
     out_features = ctx.out_features
@@ -613,17 +772,36 @@ def _morr_linear_backward(ctx, grad_output, *ignored):
     DEVICE = ctx.device
 
     # --- calculate intermediate activation on the fly ---
-    x_morr = (x_modulator ** 2).unsqueeze(1).unsqueeze(-1)  # [m, q, k] -> # [m, 1, q, k, 1]
+    (
+        x_modulator, # x input for input_modulator()
+        x_morr, # x input for propagate_morr() matmul
+        w_morr, # w input for propagate_morr() matmul
+        x_mrr, # x input for mrr_roundtrip_phase_to_tr()
+        x_scalematmul, # x input for morr_output_scale.matmul
+        tanh_input_bias, # input_bias after tanh()
+        morr_scale, # morr_scale after modificaiton in build_weight()
+    ) = recompute_activations(
+        ctx, 
+        x, 
+        weight, 
+        bias, 
+        morr_output_scale, 
+        finegrain_drop_mask, 
+        morr_input_bias, 
+        morr_input_scale
+    )
 
-    tanh_input_bias = torch.tanh(morr_input_bias.unsqueeze(0).unsqueeze(-1))
-    morr_bias = ctx.morr_fwhm * tanh_input_bias
+    # x_morr = (x_modulator ** 2).unsqueeze(1).unsqueeze(-1)  # [m, q, k] -> # [m, 1, q, k, 1]
 
-    # x_mrr: x input of mrr_roundtrip_phase_to_tr()
-    x_mrr = w_morr.matmul(x_morr).squeeze(-1)
-    if ctx.enable_phase_noise and ctx.phase_noise_std > 1e-5:
-        x_mrr = x_mrr + torch.zeros_like(x_mrr).normal_(0, ctx.phase_noise_std)
-    if ctx.trainable_morr_bias:
-        x_mrr = x_mrr - morr_bias
+    # tanh_input_bias = torch.tanh(morr_input_bias.unsqueeze(0).unsqueeze(-1))
+    # morr_bias = ctx.morr_fwhm * tanh_input_bias
+
+    # # x_mrr: x input of mrr_roundtrip_phase_to_tr()
+    # x_mrr = w_morr.matmul(x_morr).squeeze(-1)
+    # if ctx.enable_phase_noise and ctx.phase_noise_std > 1e-5:
+    #     x_mrr = x_mrr + torch.zeros_like(x_mrr).normal_(0, ctx.phase_noise_std)
+    # if ctx.trainable_morr_bias:
+    #     x_mrr = x_mrr - morr_bias
     
     
     
@@ -678,6 +856,12 @@ def _morr_linear_backward(ctx, grad_output, *ignored):
         grad_x = morr_output_scale.transpose(-2, -1).matmul(grad_out) # [bs, p, q, k]
 
         # 4. x = mrr_roundtrip_phase_to_tr(x)
+        mrr_a, mrr_r = ctx.mrr_a, ctx.mrr_r
+        c1 = -2.0 * mrr_a * mrr_r
+        c2 = mrr_a * mrr_a + mrr_r * mrr_r
+        c3 = 1.0 + (mrr_r * mrr_r) * (mrr_a * mrr_a) - mrr_a * mrr_a - mrr_r * mrr_r
+        c4 = (mrr_a**2.0 - 1.0) * (mrr_r**2.0 - 1.0) * 2.0 * mrr_a * mrr_r                                       
+        intensity = True
         denominator = x_mrr.cos().mul_(c1).add_(c2 + c3)
         if intensity:
             denominator.square_()
@@ -690,7 +874,7 @@ def _morr_linear_backward(ctx, grad_output, *ignored):
         grad_x = numerator.div_(denominator).mul_(grad_x) # [bs, p, q, k]
         
         # 5. x += phase_noise and morr_bias
-        if ctx.needs_input_grad[2]:
+        if ctx.trainable_morr_bias and ctx.needs_input_grad[2]:
             grad_inputbias = - grad_x # [bs, p, q, k]
             grad_inputbias = grad_inputbias * ctx.morr_fwhm # [bs, p, q, k]
             grad_inputbias = grad_inputbias - tanh_input_bias * tanh_input_bias # [bs, p, q, k]
@@ -738,6 +922,8 @@ def _morr_linear_backward(ctx, grad_output, *ignored):
         grad_w = buffer.sum(dim=-1, keepdim=True).squeeze(0).squeeze(-1)
 
         # 3. build_weight()
+        if finegrain_drop_mask is not None:
+            grad_w = grad_w * finegrain_drop_mask.float()
         # morr_scale: [p, q, 1]
         grad_morr_input_scale = None
         if ctx.w_bit < 16:

@@ -772,8 +772,9 @@ def _morr_linear_backward(ctx, grad_output, *ignored):
         grad_x = grad_x * 2 * x_modulator # [bs, q, k]
 
         # 8. input reshape
-        grad_x = grad_x.view(x_input_shape)
-        grad_x = grad_x[:, :in_features]
+        B, N, D = x_input_shape
+        grad_x = grad_x.view(-1, in_features_pad) # [b*n, in_features_pad]
+        grad_x = grad_x[:, :in_features] # [b*n, in_features = D]
 
         # 9.input quantization
         if ctx.in_bit >= 16 or ctx.in_quant_alg is None:
@@ -782,6 +783,9 @@ def _morr_linear_backward(ctx, grad_output, *ignored):
             grad_x = grad_x * ((x_quant > 0) & (x_quant < 1))
         else:
             raise NotImplementedError
+
+        # 10. input reshape
+        grad_x = grad_x.view(B, N, D) # [b, n, d]
 
     # ----- Gradient w.r.t weight -----
     if ctx.needs_input_grad[1]:
