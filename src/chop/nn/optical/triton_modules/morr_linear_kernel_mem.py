@@ -873,7 +873,7 @@ def _morr_linear_backward(ctx, grad_output, *ignored):
             )
         grad_x = numerator.div_(denominator).mul_(grad_x) # [bs, p, q, k]
         
-        # 5. x += phase_noise and morr_bias
+        # 5. x += phase_noise and x -= morr_bias
         if ctx.trainable_morr_bias and ctx.needs_input_grad[2]:
             grad_inputbias = - grad_x # [bs, p, q, k]
             grad_inputbias = grad_inputbias * ctx.morr_fwhm # [bs, p, q, k]
