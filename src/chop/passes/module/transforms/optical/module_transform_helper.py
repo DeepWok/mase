@@ -60,7 +60,8 @@ def replace_by_name_optical(network, module_name: str, new_module, target_name):
     if target_name == "linear_morr_full":
         updated_module = weight_replacement_full_linear_optical(original, new_module)
     elif target_name in ["linear_morr", "linear_morr_triton", "linear_morr_triton_mem"]:
-        updated_module = weight_replacement_circulant_linear_optical(original, new_module)
+        # updated_module = weight_replacement_circulant_linear_optical(original, new_module)
+        updated_module = weight_randominit_circulant_linear_optical(original, new_module)
     elif target_name in ["bert_self_attention_morr"]:
         updated_module = weight_replacement_circulant_bert_attention(original, new_module)
     else:
@@ -127,6 +128,52 @@ def weight_replacement_circulant_linear_optical(x, y):
     Focuses only on weight copying (no bias copying).
     """
 
+    # Dense weight
+    W = x.weight.data                     # [out_features, in_features]
+
+    # Dimensions defined by the MORR layer
+    k              = y.miniblock          # miniblock size
+    grid_dim_y     = y.grid_dim_y         # #block-rows  (p)
+    grid_dim_x     = y.grid_dim_x         # #block-cols  (q)
+    out_features_p = y.out_features_pad
+    in_features_p  = y.in_features_pad
+
+    # Zero-pad so every block is k×k
+    W_padded = W.new_zeros((out_features_p, in_features_p))
+    W_padded[: W.size(0), : W.size(1)] = W
+
+    new_weight = W.new_zeros((grid_dim_y, grid_dim_x, k))  # [p, q, k]
+
+    idx = torch.arange(k, device=W.device)  # 0 … k-1, reused in every block
+
+    with torch.no_grad():
+        for p in range(grid_dim_y):
+            row_slice = slice(p * k, (p + 1) * k)
+
+            for q in range(grid_dim_x):
+                col_slice = slice(q * k, (q + 1) * k)
+                block = W_padded[row_slice, col_slice]      # shape (k, k)
+
+                # Frobenius-projection onto the circulant subspace:
+                # c_j = mean of { block[i, (i+j) mod k], i=0…k-1 }
+                c = torch.stack([
+                        block[idx, (idx + j) % k].mean()
+                        for j in range(k)
+                    ])
+
+                new_weight[p, q, :] = c                    # first row
+
+        # Save back into the MORR layer
+        y.load_parameters({"weight": new_weight})
+
+    return y
+
+def weight_randominit_circulant_linear_optical(x, y):
+    """
+    Replace the weights of AllPassMORRCirculantLinear (y) with those from a standard nn.Linear (x).
+    Focuses only on weight copying (no bias copying).
+    """
+
     # Fetch original linear weight [out_features, in_features]
     W = x.weight.data  # [out_features, in_features]
 
@@ -165,7 +212,6 @@ def weight_replacement_circulant_linear_optical(x, y):
         y.load_parameters({"weight": new_weight})
 
     return y
-
 
 def weight_replacement_conv2d_optical(x, y):
     """
