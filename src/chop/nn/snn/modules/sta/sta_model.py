@@ -66,7 +66,7 @@ class SpikeLinear_ReLU(nn.Module):
             
             # set multi-scale threshold to reduce quantization error
             Vth_scale = torch.tensor([1.0]).to(input.device)
-            
+            print("SpikeLinear_ReLU threshold",self.threshold)
             self.mem_pot = self.mem_pot + x
 
             spike = 0
@@ -78,7 +78,6 @@ class SpikeLinear_ReLU(nn.Module):
                 else:
                     spike += torch.logical_and(self.mem_pot >= Vth_lower, self.mem_pot < Vth_upper).float() * Vth_lower
                     spike += torch.logical_and(torch.logical_and(self.mem_pot <= -Vth_lower, self.mem_pot > -Vth_upper), self.memory_spike > torch.zeros_like(self.mem_pot)).float() * (-Vth_lower)
-                
             self.mem_pot -= spike
             self.memory_spike += spike
 
@@ -336,7 +335,6 @@ class STARobertaSelfAttention(nn.Module):
         head_dim = hidden_dim // self.num_attention_heads
         device = hidden_states.device
         if self.use_spike: # snn
-
             if self.self_att_t == 0:
                 self.sum_p = torch.zeros(self.num_attention_heads * bsz, seq_len, seq_len).to(device)
                 self.sum_m = 0
@@ -858,6 +856,7 @@ class DataSaverHook:
             cur_max = get_act_thresh(output_batch)
             if self.momentum is None:
                 self.max_act = self.max_act if self.max_act > cur_max else cur_max
+                print(f"max_act: {self.max_act}")
             else:
                 self.max_act = self.momentum * self.max_act + (1 - self.momentum) * cur_max
             

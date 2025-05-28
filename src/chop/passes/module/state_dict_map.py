@@ -8,12 +8,14 @@ from chop.nn.quantizers.SNN.LSQ import LSQInteger
 from chop.nn.quantized.modules.roberta.attention import RobertaSelfAttentionLSQInteger
 from chop.nn.snn.modules.linear import LinearUnfoldBias
 from chop.nn.snn.modules.roberta.attention import RobertaSelfAttentionZIPTF
-
+from chop.nn.snn.modules import STARobertaAttention, SpikeLN, SpikeLinear_ReLU
 from chop.nn.snn.modules.neuron.st_bifnode import ST_BIFNode
 import torch
 from pathlib import Path
 from functools import reduce
 from transformers import PreTrainedModel, TFPreTrainedModel
+from transformers.models.roberta.modeling_roberta import RobertaAttention
+from torch.nn import LayerNorm, Linear
 
 
 def match_a_pattern(name: str, patterns: list[str]) -> str | None:
@@ -114,8 +116,14 @@ def lsqinteger_to_st_bif(LSQ: LSQInteger, ST_BIF: ST_BIFNode) -> ST_BIFNode:
 
     return ST_BIF
 
+def skip_convert(input_1, input_2):
+    return input_2
+
 
 SPECIAL_CONVERT_PATTERNS = {
     (RobertaSelfAttentionLSQInteger, RobertaSelfAttentionZIPTF): attn_convert,
     (LSQInteger, ST_BIFNode): lsqinteger_to_st_bif,
+    (RobertaAttention, STARobertaAttention): skip_convert,
+    (LayerNorm, SpikeLN): skip_convert,
+    (Linear, SpikeLinear_ReLU): skip_convert
 }
