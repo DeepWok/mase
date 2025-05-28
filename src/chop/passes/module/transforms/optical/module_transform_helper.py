@@ -5,6 +5,7 @@ from functools import reduce, partial
 from copy import deepcopy
 import logging
 import inspect
+import warnings
 
 from chop.passes.module.module_modify_helper import (
     get_module_by_name,
@@ -60,8 +61,8 @@ def replace_by_name_optical(network, module_name: str, new_module, target_name):
     if target_name == "linear_morr_full":
         updated_module = weight_replacement_full_linear_optical(original, new_module)
     elif target_name in ["linear_morr", "linear_morr_triton", "linear_morr_triton_mem"]:
-        # updated_module = weight_replacement_circulant_linear_optical(original, new_module)
-        updated_module = weight_randominit_circulant_linear_optical(original, new_module)
+        updated_module = weight_replacement_circulant_linear_optical(original, new_module)
+        # updated_module = weight_randominit_circulant_linear_optical(original, new_module)
     elif target_name in ["bert_self_attention_morr"]:
         updated_module = weight_replacement_circulant_bert_attention(original, new_module)
     else:
@@ -126,6 +127,7 @@ def weight_replacement_circulant_linear_optical(x, y):
     """
     Replace the weights of AllPassMORRCirculantLinear (y) with those from a standard nn.Linear (x).
     Focuses only on weight copying (no bias copying).
+    take mean value along diagonal
     """
 
     # Dense weight
@@ -173,7 +175,11 @@ def weight_randominit_circulant_linear_optical(x, y):
     Replace the weights of AllPassMORRCirculantLinear (y) with those from a standard nn.Linear (x).
     Focuses only on weight copying (no bias copying).
     """
-
+    warnings.warn(
+        "Random weight initiator is being used!",
+        category=RuntimeWarning,
+        stacklevel=2,           # point the warning at the caller
+    )
     # Fetch original linear weight [out_features, in_features]
     W = x.weight.data  # [out_features, in_features]
 
