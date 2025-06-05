@@ -815,7 +815,7 @@ def _morr_linear_backward(ctx, grad_output, *ignored):
     )  # [M, P, Q, K]
     
     # ----- Gradient w.r.t input x -----
-    if ctx.needs_input_grad[0]:
+    if True or ctx.needs_input_grad[0]:
         # 1. reshape
         grad_out = grad_out.view(M, -1) # [m, out_features]
 

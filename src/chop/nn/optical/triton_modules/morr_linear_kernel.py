@@ -605,6 +605,7 @@ def _morr_linear_setup_context(ctx, inputs, output):
         x_quant, # x input for input_quantize_fn()
         w_quant, # w input for weight_quantize_fn()
         origin_morr_output_scale, # original morr_output_scale
+        finegrain_drop_mask,
     )
     ctx.tensor_shape = tensor_shape
     ctx.mrr_para = mrr_para
@@ -653,6 +654,7 @@ def _morr_linear_backward(ctx, grad_output, *ignored):
         x_quant,
         w_quant,
         origin_morr_output_scale,
+        finegrain_drop_mask
     ) = ctx.saved_tensors
 
     M, P, Q, K  = ctx.tensor_shape
@@ -688,7 +690,7 @@ def _morr_linear_backward(ctx, grad_output, *ignored):
     )  # [M, P, Q, K]
     
     # ----- Gradient w.r.t input x -----
-    if ctx.needs_input_grad[0]:
+    if True or ctx.needs_input_grad[0]:
         # 1. reshape
         grad_out = grad_out.view(M, -1) # [m, out_features]
 
@@ -727,9 +729,13 @@ def _morr_linear_backward(ctx, grad_output, *ignored):
                 if ctx.morr_output_scale_quant_alg == "dorefa_sym":
                     # local recompute: 
                     w_in = torch.tanh(origin_morr_output_scale)                 # [-1, 1]
+                    r = torch.max(w_in.abs()).detach()
+
                     # ignore gradient for r here
+                    grad_output_scale = (grad_output_scale * 2 * r).clamp_(-1.0, 1.0)
+                    grad_output_scale = grad_output_scale * (1.0 / (2 * r)) 
                     grad_output_scale = grad_output_scale * (1.0 - w_in.pow(2))
-                    grad_output_scale = grad_output_scale.clamp_(-1, 1)
+                    
                 else:
                     raise NotImplementedError
         else:
@@ -786,9 +792,8 @@ def _morr_linear_backward(ctx, grad_output, *ignored):
 
         # 10. input reshape
         grad_x = grad_x.view(B, N, D) # [b, n, d]
-
     # ----- Gradient w.r.t weight -----
-    if ctx.needs_input_grad[1]:
+    if True or ctx.needs_input_grad[1]:
         
         # 0. gradient after x = weight.matmul(x)
         # grad_morr_matmul # [bs, p, q, k, 1]
@@ -805,10 +810,12 @@ def _morr_linear_backward(ctx, grad_output, *ignored):
 
         idx = idx.expand(grad_w.shape).to(DEVICE)
         buffer = torch.zeros_like(grad_w, device=DEVICE)
-        buffer.scatter_add_(-2, idx, grad_w) # [1, p, q, k, k]
+        buffer.scatter_add_(-2, idx, grad_w) # [1, p, q, k, k]cvb 
         grad_w = buffer.sum(dim=-1, keepdim=True).squeeze(0).squeeze(-1) # [p, q, k]
 
         # 3. build_weight()
+        if finegrain_drop_mask is not None:
+            grad_w = grad_w * finegrain_drop_mask.float()
         # morr_scale: [p, q, 1]
         grad_morr_input_scale = None
         if ctx.w_bit < 16:
@@ -827,10 +834,15 @@ def _morr_linear_backward(ctx, grad_output, *ignored):
                 pass
             elif ctx.w_quant_alg == "dorefa_pos":
                 # local recompute: 
-                w_in = torch.tanh(w_quant)                 # [-1, 1]
+                w_in = torch.tanh(w_quant)
+                r = torch.max(w_in.abs()).detach() + 1e-12      # ε avoids /0
                 # ignore gradient for r here
+                # grad_w = grad_w * (1.0 - w_in.pow(2))
+                # grad_w = grad_w.clamp_(-1, 1)
+                grad_w = grad_w * (2 * r)
+                grad_w = grad_w.clamp(-1.0, 1.0)
+                grad_w = grad_w / (2 * r)
                 grad_w = grad_w * (1.0 - w_in.pow(2))
-                grad_w = grad_w.clamp_(-1, 1)
             else:
                 raise NotImplementedError
         else:

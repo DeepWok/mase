@@ -451,7 +451,7 @@ class TritonMORRLinear(ONNBaseLayer):
             morr_output_scale = self.morr_output_scale,
             bias = None,
             morr_input_scale = self.morr_input_scale,
-            morr_bias = self.morr_bias.detach(),
+            morr_bias = self.morr_bias.detach() if self.morr_bias is not None else None,
             grid_dim_x = self.grid_dim_x,
             grid_dim_y = self.grid_dim_y,
             miniblock = self.miniblock,

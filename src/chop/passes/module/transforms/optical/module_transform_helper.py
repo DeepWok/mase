@@ -180,44 +180,45 @@ def weight_randominit_circulant_linear_optical(x, y):
         category=RuntimeWarning,
         stacklevel=2,           # point the warning at the caller
     )
-    # Fetch original linear weight [out_features, in_features]
-    W = x.weight.data  # [out_features, in_features]
-
-    # Grab dimensions and zero-pad if needed
-    out_features_pad = y.out_features_pad  # padded out_features in y
-    in_features_pad = y.in_features_pad  # padded in_features in y
-    miniblock = y.miniblock
-    grid_dim_y = y.grid_dim_y
-    grid_dim_x = y.grid_dim_x
-
-    # Construct padded weight tensor
-    W_padded = W.new_zeros((out_features_pad, in_features_pad))
-    W_padded[: W.size(0), : W.size(1)] = W
-
-    # Takes the mean across the miniblock slice.
-    new_weight = W.new_zeros((grid_dim_y, grid_dim_x, miniblock)) # [grid_dim_y, grid_dim_x, miniblock]
-
-    # Fill new_weight by averaging the corresponding sub-blocks in W_padded
-    # original miniblock: [k, k] new miniblock: [k, 1]
-    with torch.no_grad():
-        for p in range(grid_dim_y):
-            for q in range(grid_dim_x):
-                for k in range(miniblock):
-                    row_idx = p * miniblock + k # The row in W_padded:
-                    col_start = q * miniblock # The columns in W_padded:
-                    col_end = (q + 1) * miniblock
-                    block = W_padded[row_idx, col_start:col_end]
-
-                    new_weight[p, q, k] = block.mean()
-
-        bound = 1 / math.sqrt(miniblock)
-        new_weight = torch.rand((grid_dim_y, grid_dim_x, miniblock), 
-                                device=W.device, 
-                                dtype=W.dtype) * 2 * bound - bound
-        # Copy the result into y.weight
-        y.load_parameters({"weight": new_weight})
-
+    # y.reset_parameters()
     return y
+    # # Fetch original linear weight [out_features, in_features]
+    # W = x.weight.data  # [out_features, in_features]
+
+    # # Grab dimensions and zero-pad if needed
+    # out_features_pad = y.out_features_pad  # padded out_features in y
+    # in_features_pad = y.in_features_pad  # padded in_features in y
+    # miniblock = y.miniblock
+    # grid_dim_y = y.grid_dim_y
+    # grid_dim_x = y.grid_dim_x
+
+    # # Construct padded weight tensor
+    # W_padded = W.new_zeros((out_features_pad, in_features_pad))
+    # W_padded[: W.size(0), : W.size(1)] = W
+
+    # # Takes the mean across the miniblock slice.
+    # new_weight = W.new_zeros((grid_dim_y, grid_dim_x, miniblock)) # [grid_dim_y, grid_dim_x, miniblock]
+
+    # # Fill new_weight by averaging the corresponding sub-blocks in W_padded
+    # # original miniblock: [k, k] new miniblock: [k, 1]
+    # with torch.no_grad():
+    #     for p in range(grid_dim_y):
+    #         for q in range(grid_dim_x):
+    #             for k in range(miniblock):
+    #                 row_idx = p * miniblock + k # The row in W_padded:
+    #                 col_start = q * miniblock # The columns in W_padded:
+    #                 col_end = (q + 1) * miniblock
+    #                 block = W_padded[row_idx, col_start:col_end]
+
+    #                 new_weight[p, q, k] = block.mean()
+
+    #     bound = 1 / math.sqrt(miniblock)
+    #     new_weight = torch.rand((grid_dim_y, grid_dim_x, miniblock), 
+    #                             device=W.device, 
+    #                             dtype=W.dtype) * 2 * bound - bound
+    #     # Copy the result into y.weight
+    #     y.load_parameters({"weight": new_weight})
+
 
 def weight_replacement_conv2d_optical(x, y):
     """
