@@ -82,9 +82,7 @@ from .batch_norm2d import (
     BatchNorm2dInteger,
     BatchNorm2dBinary,
 )
-from .layer_norm import (
-    LayerNormInteger,
-)
+from .layer_norm import LayerNormInteger
 from .group_norm import GroupNormInteger
 from .instance_norm2d import InstanceNorm2dInteger
 
@@ -161,12 +159,8 @@ from .softplus import (
     SoftplusBinary,
     SoftplusTernary,
 )
-from .batch_norm1d import (
-    BatchNorm1dInteger,
-)
-from .gqa import (
-    GroupedQueryAttentionInteger,
-)
+from .batch_norm1d import BatchNorm1dInteger
+from .gqa import GroupedQueryAttentionInteger
 
 quantized_basic_module_map = {
     "conv1d_block_minifloat": Conv1dBlockMinifloat,

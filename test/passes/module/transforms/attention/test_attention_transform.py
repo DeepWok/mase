@@ -7,9 +7,7 @@ from pathlib import Path
 
 sys.path.append(Path(__file__).resolve().parents[5].as_posix())
 
-from chop.passes.module.transforms import (
-    attention_swap_transform_pass,
-)
+from chop.passes.module.transforms import attention_swap_transform_pass
 from pathlib import Path
 import time
 

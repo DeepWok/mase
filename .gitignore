@@ -173,3 +173,5 @@ test-trainer/
 
 # DiffLogic: tutorial files
 docs/tutorials/difflogic/data-mnist/
+
+test/self

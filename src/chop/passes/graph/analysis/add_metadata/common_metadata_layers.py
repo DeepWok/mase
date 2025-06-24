@@ -315,9 +315,9 @@ func_data = {
         "key": "config",
         "value": "data_in",
     },
-    "invert": {  # Added for Wave2Vec
+    "invert": {
         "input": "data_in",
-    },
+    },  # Added for Wave2Vec
 }
 
 module_data = {

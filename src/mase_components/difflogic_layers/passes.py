@@ -3,7 +3,6 @@ from collections import OrderedDict
 
 
 def difflogic_hardware_metadata_optimize_pass(graph, args={}):
-
     def _is_logiclayer(node):
         return node.meta["mase"]["common"]["mase_op"] == "user_defined_module"
 

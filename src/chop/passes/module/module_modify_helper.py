@@ -15,14 +15,14 @@ from transformers.models.roberta.modeling_roberta import (
     RobertaSelfOutput,
 )
 
-from transformers.models.llama.modeling_llama import (
-    LlamaAttention,
-)
+from transformers.models.llama.modeling_llama import LlamaAttention
 
 from transformers.models.bert.modeling_bert import (
-    BertSelfAttention,
     BertSdpaSelfAttention,
+    BertSelfAttention,
 )
+
+from transformers.models.bert.configuration_bert import BertConfig
 
 roberta_prefix_map = {
     RobertaSdpaSelfAttention: "roberta_self_attention",
@@ -38,8 +38,8 @@ llama_prefix_map = {
 }
 
 bert_prefix_map = {
-    BertSelfAttention: "bert_self_attention",
     BertSdpaSelfAttention: "bert_self_attention",
+    BertSelfAttention: "bert_self_attention",
 }
 
 
@@ -141,7 +141,7 @@ def instantiate_conv2d(module, postfix, module_map, additional_module_args):
     has_bias = not (module.bias is None)
     # TODO: some transformed modules have "config" as an argument then extract the additional_module_args from it. Some directly take the additional_module_args.
     # Need to handle this better
-    if "config" in inspect.signature(conv2d.__init__).parameters:
+    if "config" in inspect.signature(conv2d_cls.__init__).parameters:
         conv2d = conv2d_cls(
             in_channels=module.in_channels,
             out_channels=module.out_channels,
@@ -224,14 +224,23 @@ def instantiate_llama_module(
 
 
 def instantiate_bert_module(
-    module, postfix, prefix, module_map, module_args, network_args
+    module,
+    postfix,
+    prefix,
+    module_map,
+    module_args,
 ):
     bert_cls = module_map[f"{prefix}_{postfix}"]
 
     bert_module = bert_cls(
-        config=network_args,
-        layer_idx=module.layer_idx,
-        q_config=module_args,
+        config=BertConfig(
+            hidden_size=module.query.in_features,
+            num_attention_heads=module.num_attention_heads,
+            attention_head_size=module.attention_head_size,
+            attention_probs_dropout_prob=module.dropout_prob,
+            is_decoder=False,
+        ),
+        morr_config=module_args,
     )
     return bert_module
 
@@ -239,6 +248,7 @@ def instantiate_bert_module(
 def instantiate_module(module, postfix, module_map, additional_module_args):
     is_roberta, roberta_layer_name = check_module_instance(module, roberta_prefix_map)
     is_llama, llama_layer_name = check_module_instance(module, llama_prefix_map)
+    is_bert, bert_layer_name = check_module_instance(module, bert_prefix_map)
     is_bert, bert_layer_name = check_module_instance(module, bert_prefix_map)
 
     module_args = additional_module_args["config"]
@@ -262,7 +272,11 @@ def instantiate_module(module, postfix, module_map, additional_module_args):
         )
     elif is_bert:
         module = instantiate_bert_module(
-            module, postfix, llama_layer_name, module_map, module_args, network_args
+            module,
+            postfix,
+            bert_layer_name,
+            module_map,
+            module_args,
         )
     else:
         raise ValueError(f"{module} is not supported.")

@@ -6,9 +6,7 @@ import math
 from typing import Optional, Tuple
 from functools import partial
 
-from chop.nn.quantized.functional.matmul import (
-    generic_matmul_integer,
-)
+from chop.nn.quantized.functional.matmul import generic_matmul_integer
 from chop.nn.quantizers.integer import integer_quantizer
 
 

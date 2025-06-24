@@ -46,8 +46,6 @@ from .module.transforms import (
     ann2snn_module_transform_pass,
 )
 
-from .onnx.analysis import (
-    export_fx_graph_analysis_pass,
-)
+from .onnx.analysis import export_fx_graph_analysis_pass
 
 from .graph.analysis.autosharding import autosharding_analysis_pass
