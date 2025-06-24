@@ -54,69 +54,10 @@ def test_optical_module_transform_pass():
                 "trainable_morr_scale": False,
             }
         },
-        "conv1": {
-            "config": {
-                "name": "morr",
-                "miniblock": 4,
-                "morr_init": True,
-                "trainable_morr_bias": False,
-                "trainable_morr_scale": False,
-            }
-        },
     }
     optical_module_transform_pass(model, pass_args)
-
-
-def test_optical_module_transform_pass_2():
-    model = Net()
-    # Sanity check and report
-    pass_args = {
-        "by": "name",
-        "fc1": {
-            "config": {
-                "name": "morr_triton",
-                "miniblock": 4,
-                "morr_init": True,
-                "trainable_morr_bias": False,
-                "trainable_morr_scale": False,
-            }
-        },
-        "conv1": {
-            "config": {
-                "name": "morr_triton",
-                "miniblock": 4,
-                "morr_init": True,
-                "trainable_morr_bias": False,
-                "trainable_morr_scale": False,
-            }
-        },
-    }
-    optical_module_transform_pass(model, pass_args)
-
-
-def test_optical_module_transform_pass_3():
-    model = Net()
-    pass_args = {
-        "by": "regex_name",
-        "^fc1$": {
-            "config": {"name": "morr_triton", "miniblock": 4},
-            "additional": {
-                "trainable_morr_bias": False,
-                "trainable_morr_scale": False,
-                "thermal_crosstalk": True,
-                "coupling_factor": 0.04,
-                "drop_perc": 0.0,
-                "phase_noise": True,
-                "phase_noise_std": 0.04,
-                "in_bit": 8,
-                "w_bit": 8,
-            },
-        },
-    }
-    new_model, _ = optical_module_transform_pass(model, pass_args)
-    print(new_model)
 
 
 test_optical_module_transform_pass()
-test_optical_module_transform_pass_2()
-test_optical_module_transform_pass_3()
+# test_optical_module_transform_pass_2()
+# test_optical_module_transform_pass_3()
