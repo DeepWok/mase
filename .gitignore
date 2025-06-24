@@ -175,5 +175,3 @@ test-trainer/
 docs/tutorials/difflogic/data-mnist/
 
 test/self
-model_sst2/
-runs

@@ -22,23 +22,8 @@ from transformers.models.roberta.modeling_roberta import (
     RobertaSelfOutput,
 )
 
-from transformers.models.llama.modeling_llama import (
-    LlamaAttention,
-)
+from transformers.models.llama.modeling_llama import LlamaAttention
 
-from transformers.models.bert.modeling_bert import (
-    BertSdpaSelfAttention,
-    BertSelfAttention,
-)
-
-from transformers.models.bert.configuration_bert import BertConfig
-
-
-
-bert_prefix_map = {
-    BertSdpaSelfAttention: "bert_self_attention",
-    BertSelfAttention: "bert_self_attention",
-}
 
 def check_module_instance(module, prefix_map):
     """
@@ -55,19 +40,21 @@ def check_module_instance(module, prefix_map):
             return True, name
     return False, None
 
+
 def replace_by_name_optical(network, module_name: str, new_module, target_name):
 
     original = get_module_by_name(network, module_name)
     if target_name == "linear_morr_full":
         updated_module = weight_replacement_full_linear_optical(original, new_module)
-    elif target_name in ["linear_morr", "linear_morr_triton", "linear_morr_triton_mem"]:
-        updated_module = weight_replacement_circulant_linear_optical(original, new_module)
-        # updated_module = weight_randominit_circulant_linear_optical(original, new_module)
-    elif target_name in ["bert_self_attention_morr"]:
-        updated_module = weight_replacement_circulant_bert_attention(original, new_module)
+    elif target_name in ["linear_morr", "linear_morr_triton"]:
+        updated_module = weight_replacement_circulant_linear_optical(
+            original, new_module
+        )
     else:
-        raise NotImplementedError(f"weight replacement function for the optical module {target_name} not implemented")
-    
+        raise NotImplementedError(
+            f"weight replacement function for the optical module {target_name} not implemented"
+        )
+
     network = set_module_by_name(network, module_name, updated_module)
 
     return network
@@ -83,6 +70,7 @@ def weight_replacement_full_linear_optical(original, new_module):
             "weight replacement function for the optical module not implemented"
         )
 
+
 def weight_replacement_linear_optical(linear_layer, morr_layer):
     """
     Replace the weights of AllPassMORRLinear (morr_layer) with those from a standard nn.Linear (linear_layer).
@@ -95,33 +83,43 @@ def weight_replacement_linear_optical(linear_layer, morr_layer):
     grid_dim_x = morr_layer.grid_dim_x
     grid_dim_y = morr_layer.grid_dim_y
     in_features_pad = morr_layer.in_features_pad
-    
+
     # Get the weights from the standard linear layer
     standard_weights = linear_layer.weight.data  # [out_features, in_features]
-    
+
     # Ensure the shapes match
-    assert standard_weights.shape[0] == out_features, "Output feature dimensions don't match"
-    assert standard_weights.shape[1] == in_features, "Input feature dimensions don't match"
-    
+    assert (
+        standard_weights.shape[0] == out_features
+    ), "Output feature dimensions don't match"
+    assert (
+        standard_weights.shape[1] == in_features
+    ), "Input feature dimensions don't match"
+
     # Pad the standard weights to match in_features_pad
     if in_features_pad > in_features:
-        padded_weights = torch.zeros(out_features, in_features_pad, 
-                                    device=standard_weights.device, 
-                                    dtype=standard_weights.dtype)
+        padded_weights = torch.zeros(
+            out_features,
+            in_features_pad,
+            device=standard_weights.device,
+            dtype=standard_weights.dtype,
+        )
         padded_weights[:, :in_features] = standard_weights
-        standard_weights = padded_weights # [out_features, in_features_pad]
-    
+        standard_weights = padded_weights  # [out_features, in_features_pad]
+
     # Reshape to match the MORR structure [grid_dim_y, grid_dim_x, miniblock]
     assert grid_dim_y == out_features, "grid_dim_y does not match out_features"
-    assert grid_dim_x * miniblock == in_features_pad, "grid_dim_x * miniblock does not match in_features_pad"
-    
+    assert (
+        grid_dim_x * miniblock == in_features_pad
+    ), "grid_dim_x * miniblock does not match in_features_pad"
+
     reshaped_weights = standard_weights.reshape(grid_dim_y, grid_dim_x, miniblock)
-    
+
     # Copy the weights to the MORR layer
     with torch.no_grad():
         morr_layer.weight.data.copy_(reshaped_weights)
-    
+
     return morr_layer
+
 
 def weight_replacement_circulant_linear_optical(x, y):
     """
@@ -131,14 +129,14 @@ def weight_replacement_circulant_linear_optical(x, y):
     """
 
     # Dense weight
-    W = x.weight.data                     # [out_features, in_features]
+    W = x.weight.data  # [out_features, in_features]
 
     # Dimensions defined by the MORR layer
-    k              = y.miniblock          # miniblock size
-    grid_dim_y     = y.grid_dim_y         # #block-rows  (p)
-    grid_dim_x     = y.grid_dim_x         # #block-cols  (q)
+    k = y.miniblock  # miniblock size
+    grid_dim_y = y.grid_dim_y  # #block-rows  (p)
+    grid_dim_x = y.grid_dim_x  # #block-cols  (q)
     out_features_p = y.out_features_pad
-    in_features_p  = y.in_features_pad
+    in_features_p = y.in_features_pad
 
     # Zero-pad so every block is k×k
     W_padded = W.new_zeros((out_features_p, in_features_p))
@@ -154,70 +152,18 @@ def weight_replacement_circulant_linear_optical(x, y):
 
             for q in range(grid_dim_x):
                 col_slice = slice(q * k, (q + 1) * k)
-                block = W_padded[row_slice, col_slice]      # shape (k, k)
+                block = W_padded[row_slice, col_slice]  # shape (k, k)
 
                 # Frobenius-projection onto the circulant subspace:
                 # c_j = mean of { block[i, (i+j) mod k], i=0…k-1 }
-                c = torch.stack([
-                        block[idx, (idx + j) % k].mean()
-                        for j in range(k)
-                    ])
+                c = torch.stack([block[idx, (idx + j) % k].mean() for j in range(k)])
 
-                new_weight[p, q, :] = c                    # first row
+                new_weight[p, q, :] = c  # first row
 
         # Save back into the MORR layer
         y.load_parameters({"weight": new_weight})
 
     return y
-
-def weight_randominit_circulant_linear_optical(x, y):
-    """
-    Replace the weights of AllPassMORRCirculantLinear (y) with those from a standard nn.Linear (x).
-    Focuses only on weight copying (no bias copying).
-    """
-    warnings.warn(
-        "Random weight initiator is being used!",
-        category=RuntimeWarning,
-        stacklevel=2,           # point the warning at the caller
-    )
-    # y.reset_parameters()
-    return y
-    # # Fetch original linear weight [out_features, in_features]
-    # W = x.weight.data  # [out_features, in_features]
-
-    # # Grab dimensions and zero-pad if needed
-    # out_features_pad = y.out_features_pad  # padded out_features in y
-    # in_features_pad = y.in_features_pad  # padded in_features in y
-    # miniblock = y.miniblock
-    # grid_dim_y = y.grid_dim_y
-    # grid_dim_x = y.grid_dim_x
-
-    # # Construct padded weight tensor
-    # W_padded = W.new_zeros((out_features_pad, in_features_pad))
-    # W_padded[: W.size(0), : W.size(1)] = W
-
-    # # Takes the mean across the miniblock slice.
-    # new_weight = W.new_zeros((grid_dim_y, grid_dim_x, miniblock)) # [grid_dim_y, grid_dim_x, miniblock]
-
-    # # Fill new_weight by averaging the corresponding sub-blocks in W_padded
-    # # original miniblock: [k, k] new miniblock: [k, 1]
-    # with torch.no_grad():
-    #     for p in range(grid_dim_y):
-    #         for q in range(grid_dim_x):
-    #             for k in range(miniblock):
-    #                 row_idx = p * miniblock + k # The row in W_padded:
-    #                 col_start = q * miniblock # The columns in W_padded:
-    #                 col_end = (q + 1) * miniblock
-    #                 block = W_padded[row_idx, col_start:col_end]
-
-    #                 new_weight[p, q, k] = block.mean()
-
-    #     bound = 1 / math.sqrt(miniblock)
-    #     new_weight = torch.rand((grid_dim_y, grid_dim_x, miniblock), 
-    #                             device=W.device, 
-    #                             dtype=W.dtype) * 2 * bound - bound
-    #     # Copy the result into y.weight
-    #     y.load_parameters({"weight": new_weight})
 
 
 def weight_replacement_conv2d_optical(x, y):
@@ -263,38 +209,26 @@ def weight_replacement_conv2d_optical(x, y):
     # with a simple block-circulant approximation of x's parameters.
     return y
 
-def weight_replacement_circulant_bert_attention(original, new_module):
-    for name in ("query", "key", "value"):
-        src_linear = getattr(original, name)
-        dst_linear = getattr(new_module, name)
-        with torch.no_grad():
-            dst_linear.weight.copy_(src_linear.weight)
-            if src_linear.bias is not None:
-                dst_linear.bias.copy_(src_linear.bias)
-    
-    return new_module
-
 
 def instantiate_optical_module(module, postfix, module_map, additional_module_args):
-    is_bert, bert_layer_name = check_module_instance(module, bert_prefix_map)
-
     module_args = additional_module_args["config"]
     additional_args = additional_module_args["additional"]
     network_args = additional_module_args.get("network_config", None)
 
     if isinstance(module, torch.nn.Linear):
-        module = instantiate_optical_linear(module, postfix, module_map, module_args, additional_args)
+        module = instantiate_optical_linear(
+            module, postfix, module_map, module_args, additional_args
+        )
     elif isinstance(module, torch.nn.Conv2d):
         module = instantiate_optical_conv2d(module, postfix, module_map, module_args)
-    elif is_bert:
-        module = instantiate_optical_bert_module(
-            module, postfix, bert_layer_name, module_map, module_args,
-        )
     else:
         raise ValueError(f"{module} is not supported.")
     return module
 
-def instantiate_optical_linear(module, postfix, module_map, additional_module_args, additional_args):
+
+def instantiate_optical_linear(
+    module, postfix, module_map, additional_module_args, additional_args
+):
     linear_cls = module_map[f"linear_{postfix}"]
     has_bias = not (module.bias is None)
 
@@ -316,7 +250,7 @@ def instantiate_optical_linear(module, postfix, module_map, additional_module_ar
         )
     if additional_args is None:
         return linear
-    
+
     # extra handling for morr optical module
     enable_thermal_crosstalk = additional_args.get("thermal_crosstalk", False)
     enable_phase_noise = additional_args.get("phase_noise", False)
@@ -329,28 +263,29 @@ def instantiate_optical_linear(module, postfix, module_map, additional_module_ar
             additional_args.get("coupling_factor", 0.04),
             additional_args.get("drop_perc", 0.0),
         )
-    
+
     if enable_phase_noise:
         linear.enable_phase_variation()
         phase_noise_std = additional_args.get("phase_noise_std", 0.04)
         linear.set_phase_variation(phase_noise_std)
-    
+
     if enable_trainable_morr_scale:
         linear.enable_trainable_morr_scale()
     else:
         linear.disable_trainable_morr_scale()
-    
+
     if enable_trainable_morr_bias:
         linear.enable_trainable_morr_bias()
     else:
         linear.disable_trainable_morr_bias()
-    
+
     if "in_bit" in additional_args:
-        linear.set_input_bitwidth(in_bit = additional_args["in_bit"])
+        linear.set_input_bitwidth(in_bit=additional_args["in_bit"])
     if "w_bit" in additional_args:
-        linear.set_weight_bitwidth(w_bit = additional_args["w_bit"])
+        linear.set_weight_bitwidth(w_bit=additional_args["w_bit"])
 
     return linear
+
 
 def instantiate_optical_conv2d(module, postfix, module_map, additional_module_args):
     conv2d_cls = module_map[f"conv2d_{postfix}"]
@@ -384,20 +319,3 @@ def instantiate_optical_conv2d(module, postfix, module_map, additional_module_ar
             **additional_module_args,
         )
     return conv2d
-
-def instantiate_optical_bert_module(
-    module, postfix, prefix, module_map, module_args,
-):
-    bert_cls = module_map[f"{prefix}_{postfix}"]
-
-    bert_module = bert_cls(
-        config=BertConfig(
-            hidden_size=module.query.in_features,
-            num_attention_heads=module.num_attention_heads,
-            attention_head_size=module.attention_head_size,
-            attention_probs_dropout_prob=module.dropout_prob,
-            is_decoder=False,
-        ),
-        morr_config=module_args,
-    )
-    return bert_module

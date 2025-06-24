@@ -11,9 +11,7 @@ from chop.nn.modules.mla import (
     MLA,
 )
 from chop.nn.modules.mgqa import MGQALayers, MGQA
-from chop.nn.modules.lora_linear import (
-    LowRankLinear,
-)
+from chop.nn.modules.lora_linear import LowRankLinear
 from ...module_modify_helper import (
     get_module_by_name,
     set_module_by_name,
@@ -421,7 +419,6 @@ class MLAWrapper(torch.nn.Module):
 
 
 class MGQAWrapper(torch.nn.Module):
-
     def __init__(self, mgqa: MGQA):
         super().__init__()
         self.mgqa = mgqa

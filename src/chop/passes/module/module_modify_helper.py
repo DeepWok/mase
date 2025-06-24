@@ -15,9 +15,7 @@ from transformers.models.roberta.modeling_roberta import (
     RobertaSelfOutput,
 )
 
-from transformers.models.llama.modeling_llama import (
-    LlamaAttention,
-)
+from transformers.models.llama.modeling_llama import LlamaAttention
 
 from transformers.models.bert.modeling_bert import (
     BertSdpaSelfAttention,
@@ -224,8 +222,13 @@ def instantiate_llama_module(
     )
     return llama_module
 
+
 def instantiate_bert_module(
-    module, postfix, prefix, module_map, module_args,
+    module,
+    postfix,
+    prefix,
+    module_map,
+    module_args,
 ):
     bert_cls = module_map[f"{prefix}_{postfix}"]
 
@@ -240,6 +243,7 @@ def instantiate_bert_module(
         morr_config=module_args,
     )
     return bert_module
+
 
 def instantiate_module(module, postfix, module_map, additional_module_args):
     is_roberta, roberta_layer_name = check_module_instance(module, roberta_prefix_map)
@@ -268,7 +272,11 @@ def instantiate_module(module, postfix, module_map, additional_module_args):
         )
     elif is_bert:
         module = instantiate_bert_module(
-            module, postfix, bert_layer_name, module_map, module_args,
+            module,
+            postfix,
+            bert_layer_name,
+            module_map,
+            module_args,
         )
     else:
         raise ValueError(f"{module} is not supported.")

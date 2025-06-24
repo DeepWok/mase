@@ -11,7 +11,7 @@ def uniform_quantize(x: tl.tensor, k, gradient_clip=False):
     elif k == 1:
         out = tl.where(x >= 0, 1.0, -1.0)
     else:
-        n = float(2 ** k - 1)
+        n = float(2**k - 1)
         out = tl.extra.cuda.libdevice.rint(x * n) / n
 
     return out
@@ -23,7 +23,7 @@ def uniform_quantize_new(x: tl.tensor, k, scale, zero_point, gradient_clip=False
     elif k == 1:
         out = tl.where(x > 0, 1.0, tl.where(x < 0, -1.0, 0.0))
     else:
-        n = float(2 ** k - 1)
+        n = float(2**k - 1)
         out = tl.div(x, scale)
         out = out + zero_point
         out = tl.extra.cuda.libdevice.rint(out)
@@ -35,7 +35,11 @@ def uniform_quantize_new(x: tl.tensor, k, scale, zero_point, gradient_clip=False
 
 @triton.jit
 def _input_quantize_fn(
-    x: tl.tensor, quant_ratio, training, in_bit, alg,  # self.training
+    x: tl.tensor,
+    quant_ratio,
+    training,
+    in_bit,
+    alg,  # self.training
 ):
     # init
     if alg == "dorefa":
@@ -52,7 +56,7 @@ def _input_quantize_fn(
             qscheme=torch.per_tensor_affine,
             reduce_range=False,
             quant_min=0,
-            quant_max=2 ** in_bit - 1,
+            quant_max=2**in_bit - 1,
         )
     else:
         obs = None

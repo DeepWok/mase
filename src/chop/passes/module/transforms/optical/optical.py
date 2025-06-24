@@ -9,6 +9,7 @@ from chop.passes.module.transforms.optical.module_transform_helper import (
 )
 from ...state_dict_map import match_a_pattern, check_is_huggingface_model
 
+
 def get_config(config: dict, name: str):
     if name in config:
         return config[name]["config"]
@@ -30,15 +31,25 @@ def optical_transform_by_type(network, pass_args):
             type_name = "bert_self_attention"
         else:
             raise ValueError(f"{type_name} is not supported!")
-        config = config["config"]
-        postfix = config.pop("name")
+
+        # config = config["config"]
+        # postfix = config.pop("name")
+        optical_config = config["config"]
+        optial_additional_config = config.get("additional", None)
+        postfix = optical_config["name"]
+
+        additional_module_args = {
+            "config": optical_config,
+            "additional": optial_additional_config,
+        }
         for n, m in n_m.items():
             if isinstance(m, module):
-                print(f"processing {n}")
                 new_m = instantiate_optical_module(
-                    m, postfix, optical_module_map, {"config": config}
+                    m, postfix, optical_module_map, additional_module_args
                 )
-                network = replace_by_name_optical(network, n, new_m, type_name +'_'+postfix)
+                network = replace_by_name_optical(
+                    network, n, new_m, type_name + "_" + postfix
+                )
     return network
 
 
@@ -49,16 +60,31 @@ def optical_transform_by_name(network, pass_args):
         n_m[n] = m
     for n, m in n_m.items():
         if n in optical_names:
-            optical_config = pass_args[n]
+            optical_config = pass_args[n]["config"]
+            optial_additional_config = pass_args[n].get("additional", None)
+            postfix = optical_config["name"]
 
-            optical_config = optical_config["config"]
-            postfix = optical_config.pop("name")
+            additional_module_args = {
+                "config": optical_config,
+                "additional": optial_additional_config,
+            }
+
+            if isinstance(m, torch.nn.Linear):
+                type_name = "linear"
+            elif isinstance(m, torch.nn.Conv2d):
+                type_name = "conv2d"
+            else:
+                raise ValueError(f"{type_name} is not supported!")
 
             new_m = instantiate_optical_module(
-                m, postfix, optical_module_map, {"config": optical_config}
+                m, postfix, optical_module_map, additional_module_args
             )
-            network = replace_by_name_optical(network, n, new_m)
+            network = replace_by_name_optical(
+                network, n, new_m, type_name + "_" + postfix
+            )
+
     return network
+
 
 def optical_transform_by_regex_name(network, pass_args):
     is_huggingface_model = check_is_huggingface_model(network)
@@ -79,10 +105,7 @@ def optical_transform_by_regex_name(network, pass_args):
         postfix = optical_config["name"]
 
         additional_module_args = (
-            {
-                "config": optical_config, 
-                "additional": optial_additional_config
-            }
+            {"config": optical_config, "additional": optial_additional_config}
             # if is_huggingface_model
             # else {"config": optical_config}
         )
@@ -91,17 +114,16 @@ def optical_transform_by_regex_name(network, pass_args):
             type_name = "linear"
         elif isinstance(m, torch.nn.Conv2d):
             type_name = "conv2d"
-        elif isinstance(m, BertSdpaSelfAttention):
-            type_name = "bert_self_attention"
         else:
             raise ValueError(f"{type_name} is not supported!")
-        
+
         new_m = instantiate_optical_module(
             m, postfix, optical_module_map, additional_module_args
         )
-        network = replace_by_name_optical(network, n, new_m, type_name +'_'+postfix)
+        network = replace_by_name_optical(network, n, new_m, type_name + "_" + postfix)
 
     return network
+
 
 def optical_module_transform_pass(network, pass_args):
     """

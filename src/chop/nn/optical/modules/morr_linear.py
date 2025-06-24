@@ -447,7 +447,7 @@ class AllPassMORRCirculantLinear(ONNBaseLayer):
         is_transformer = len(x.shape) == 3
         if is_transformer:
             B, N, D = x.shape
-        
+
         assert (
             x.size(-1) == self.in_features
         ), f"[E] Input dimension does not match the weight size {self.out_features, self.in_features}, but got input size ({tuple(x.size())}))"
