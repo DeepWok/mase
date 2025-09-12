@@ -1,14 +1,10 @@
 import torch.nn as nn
-from ano.tools import get_logger, set_logging_verbosity
+import logging
 
-# from .layer_utils import LinearNoise, Conv2dNoise, ReLUNoise
-from .cim_layer import CIMLinear, CIMConv2d
-from ano.utils import deepsetattr
-import torch
+from chop.nn.cim.cim_layer import CIMLinear, CIMConv2d
+from chop.tools import deepsetattr
 
-
-logger = get_logger(__name__)
-set_logging_verbosity("debug")
+logger = logging.getLogger(__name__)
 
 def get_module_type(module):
     class_name = module[1].__class__.__name__
@@ -48,7 +44,7 @@ def parse_q_config(module, q_config):
         raise ValueError(f"Invalid q_config: {q_config}")
 
 
-def module_level_transform(model, q_config = {}):
+def cim_matmul_transform_pass(model, q_config = {}):
     for module in model.named_modules():
         config = parse_q_config(module, q_config)
         if config is None:
@@ -82,4 +78,4 @@ def module_level_transform(model, q_config = {}):
         else:
             continue
 
-    return model
+    return model, {}

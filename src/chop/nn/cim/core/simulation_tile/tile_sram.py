@@ -4,10 +4,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 from .quantization import scale_integer_quantizer
-from ano.tools import get_logger
-from cim.utils import _get_similarity
-
-logger = get_logger(__name__)
+from logging import getLogger
+logger = getLogger(__name__)
 
 
 def _runtime_rescale(
@@ -93,7 +91,6 @@ def sram_tile(x: Tensor, weight: Tensor, config: dict):
     else:
         qweight = weight
 
-    # similarity = _get_similarity(qx, x, metric="cosine")
 
     qweight = qweight.transpose(-1, -2) # permute back
     
@@ -101,12 +98,7 @@ def sram_tile(x: Tensor, weight: Tensor, config: dict):
         result = approximate_mode(qx, qweight)
     else:
         result = qx @ qweight # Considering in the flow of the paper there is no cast while sending back to AHB, so no cast in the end
-    # result = result * x_max * weight_max
     result = result
-    # similarity = _get_similarity(x@weight, result, 'L2_norm').mean()
-    # print(f"similarity: {similarity}")
-    # if similarity > 0.1:
-    #     breakpoint()
 
     return result
 

@@ -1,12 +1,11 @@
 import torch
 from torch import Tensor
 import torch.nn.functional as F
+import logging
 
 from .simulation_tile import sram_tile, reram_tile, pcm_tile
 
-from ano.tools import get_logger, set_logging_verbosity
-logger = get_logger(__name__)
-set_logging_verbosity("debug")
+logger = logging.getLogger(__name__)
 
 # ToDo: ADD Drift Noise
 # ToDo: add scaling factor, from weight to gt
