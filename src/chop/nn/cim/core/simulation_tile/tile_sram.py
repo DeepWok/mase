@@ -1,15 +1,18 @@
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 from .quantization import scale_integer_quantizer
 from logging import getLogger
+
 logger = getLogger(__name__)
 
 
 def _runtime_rescale(
-    x: Tensor, exponent_bits: int = 1, mantissa_bits: int = 1, rescale_dim: str = "element"
+    x: Tensor,
+    exponent_bits: int = 1,
+    mantissa_bits: int = 1,
+    rescale_dim: str = "element",
 ):
     """
     The rescaling in side the digital mm
@@ -21,45 +24,49 @@ def _runtime_rescale(
     #     max_exponent = (torch.abs(x) + 1e-8).max(dim=-1, keepdim=True).values.log2().ceil()
     # else:
     #     raise ValueError(f"Invalid rescale_dim: {rescale_dim}")
-    
+
     max_exponent = (torch.abs(x) + 1e-8).max(dim=-1, keepdim=True).values.log2().ceil()
-    exponent_min = -2**(exponent_bits - 1)
-    exponent_max = 2**(exponent_bits - 1) - 1
+    exponent_min = -(2 ** (exponent_bits - 1))
+    exponent_max = 2 ** (exponent_bits - 1) - 1
     max_exponent = torch.clamp(max_exponent, exponent_min, exponent_max)
 
     mantissa = x / 2**max_exponent
     mantissa_max = 2**mantissa_bits - 1
-    mantissa_min = -2**mantissa_bits
+    mantissa_min = -(2**mantissa_bits)
 
     # recast mantissa
-    mantissa = torch.clamp((mantissa * 2**mantissa_bits).round(), mantissa_min, mantissa_max)
+    mantissa = torch.clamp(
+        (mantissa * 2**mantissa_bits).round(), mantissa_min, mantissa_max
+    )
     mantissa = mantissa / 2**mantissa_bits
 
     return mantissa * (2**max_exponent)
 
+
 def approximate_mode(x: Tensor, weight: Tensor):
     """
-    The approximate mode is to simulate the lossy digital multiplication 
+    The approximate mode is to simulate the lossy digital multiplication
     and the lossy digital accumulation
     """
     output = x @ weight
     logger.info(f"The approximate mode is implemented with 5.3% noise")
-    output = output + output * torch.randn_like(output) * 0.053 # 5.3% noise
+    output = output + output * torch.randn_like(output) * 0.053  # 5.3% noise
 
     return output
 
+
 def sram_tile(x: Tensor, weight: Tensor, config: dict):
-    '''
-    There is two mode to conducting the digital mm, 
-    For the first accurate mode, 
-    we only need to rescale the x and weight, 
+    """
+    There is two mode to conducting the digital mm,
+    For the first accurate mode,
+    we only need to rescale the x and weight,
     and then quantize output to simulate the behaviour
 
-    For the second mode, 
-    we need to simulate the lossy digital multiplication 
+    For the second mode,
+    we need to simulate the lossy digital multiplication
     and the lossy digital accumulation
-    '''
-    
+    """
+
     x_quant_type = config.get("x_quant_type")
     weight_quant_type = config.get("weight_quant_type")
 
@@ -76,7 +83,9 @@ def sram_tile(x: Tensor, weight: Tensor, config: dict):
     else:
         qx = x
 
-    weight = weight.transpose(-1, -2) # the rescale dimension should be in the -2 dimension 
+    weight = weight.transpose(
+        -1, -2
+    )  # the rescale dimension should be in the -2 dimension
 
     if weight_quant_type == "e4m3":
         qweight = _runtime_rescale(weight, 4, 3, config.get("rescale_dim", "vector"))
@@ -91,15 +100,14 @@ def sram_tile(x: Tensor, weight: Tensor, config: dict):
     else:
         qweight = weight
 
+    qweight = qweight.transpose(-1, -2)  # permute back
 
-    qweight = qweight.transpose(-1, -2) # permute back
-    
     if config.get("approximate_mode", False):
         result = approximate_mode(qx, qweight)
     else:
-        result = qx @ qweight # Considering in the flow of the paper there is no cast while sending back to AHB, so no cast in the end
+        result = (
+            qx @ qweight
+        )  # Considering in the flow of the paper there is no cast while sending back to AHB, so no cast in the end
     result = result
 
     return result
-
-    

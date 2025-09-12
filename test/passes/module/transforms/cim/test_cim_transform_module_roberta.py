@@ -14,10 +14,14 @@ from transformers import RobertaForSequenceClassification, AutoTokenizer
 import yaml
 
 pretrained = "JeremiahZ/roberta-base-mnli"
-model = RobertaForSequenceClassification.from_pretrained(pretrained, num_labels=2, ignore_mismatched_sizes=True)
+model = RobertaForSequenceClassification.from_pretrained(
+    pretrained, num_labels=2, ignore_mismatched_sizes=True
+)
 tokenizer = AutoTokenizer.from_pretrained(pretrained, do_lower_case=True)
 
-q_config = yaml.load(open('/home/cx922/mase/configs/cim/pcm.yaml', 'r'), Loader=yaml.FullLoader)
+q_config = yaml.load(
+    open("/home/cx922/mase/configs/cim/pcm.yaml", "r"), Loader=yaml.FullLoader
+)
 qmodel, _ = cim_matmul_transform_pass(model, q_config)
 
 print(model)

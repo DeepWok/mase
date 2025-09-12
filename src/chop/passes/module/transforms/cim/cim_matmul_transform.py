@@ -6,6 +6,7 @@ from chop.tools import deepsetattr
 
 logger = logging.getLogger(__name__)
 
+
 def get_module_type(module):
     class_name = module[1].__class__.__name__
     if "Linear" in class_name:
@@ -28,6 +29,7 @@ def get_module_type(module):
     else:
         return None
 
+
 def parse_q_config(module, q_config):
     if q_config.get("by") == "name":
         if module[0] in q_config:
@@ -44,7 +46,7 @@ def parse_q_config(module, q_config):
         raise ValueError(f"Invalid q_config: {q_config}")
 
 
-def cim_matmul_transform_pass(model, q_config = {}):
+def cim_matmul_transform_pass(model, q_config={}):
     for module in model.named_modules():
         config = parse_q_config(module, q_config)
         if config is None:

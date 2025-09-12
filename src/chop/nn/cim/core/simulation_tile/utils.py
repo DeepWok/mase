@@ -51,16 +51,18 @@ class MyFloor(InplaceFunction):
         grad_input = grad_output.clone()
         return grad_input
 
+
 my_clamp = MyClamp.apply
 my_round = MyRound.apply
 my_floor = MyFloor.apply
 
+
 def _scale_integer_quantizer(
-    x: Tensor, 
-    width: int, 
-    is_signed: bool = True, 
+    x: Tensor,
+    width: int,
+    is_signed: bool = True,
     # Currently don't support any quantile
-    quantile: float = 1.0
+    quantile: float = 1.0,
 ):
     """
     - Do linear quantization to input according to a scale and number of bits
@@ -82,23 +84,23 @@ def _scale_integer_quantizer(
         quantile = 1.0
     # x_max = x.quantile(quantile)
     x_max = x.max()
-    
+
     if is_signed:
         int_min = -(2 ** (width - 1))
         int_max = 2 ** (width - 1) - 1
     else:
         int_min = 0
         int_max = 2**width - 1
-    
+
     if is_signed:
-        int_scale = 2**(width - 1)
+        int_scale = 2 ** (width - 1)
     else:
         int_scale = 2**width
 
     scale = int_scale / x_max
 
     int_x = my_clamp(my_round(x.mul(scale)), int_min, int_max).div(int_scale)
-    scale_x = scale/int_scale
+    scale_x = scale / int_scale
     q_x = int_x.div(scale_x)
     if isinstance(x, Tensor):
         return q_x, int_x, scale_x

@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 def mm_tile(x: Tensor, weight: Tensor, config: dict):
     return x @ weight
 
+
 def _cim_tile(x, weight, config):
     if config.get("tile_type") == "digital":
         return sram_tile(x, weight, config)
@@ -25,10 +26,10 @@ def _cim_tile(x, weight, config):
         return mm_tile(x, weight, config)
     else:
         raise ValueError(f"Invalid tile type: {config.get('tile_type')}")
-    
+
 
 def cim_core(x: Tensor, weight: Tensor, config: dict):
-    '''
+    """
     The digital mm is conducted in the following way:
     1. Reshape the x and weight to the vector-wise
     2. Conduct the digital mm
@@ -40,7 +41,7 @@ def cim_core(x: Tensor, weight: Tensor, config: dict):
     - weight_quant_type
     - rescale_dim
     - approximate_mode
-    '''
+    """
     x_shape = x.shape
     weight_shape = weight.shape
 
@@ -49,19 +50,19 @@ def cim_core(x: Tensor, weight: Tensor, config: dict):
     if core_size is None:
         logger.debug(f"No core size is provided, using the original mm")
         return cim_tile(x, weight, config)
-    
+
     # Pre-compute padding requirements
     x_pad_size_0 = (core_size - (x_shape[-2] % core_size)) % core_size
     x_pad_size_1 = (core_size - (x_shape[-1] % core_size)) % core_size
 
     w_pad_size_0 = (core_size - (weight_shape[0] % core_size)) % core_size
     w_pad_size_1 = (core_size - (weight_shape[1] % core_size)) % core_size
-    
-    # Pad x if needed 
-    px = F.pad(x, (0, x_pad_size_1, 0, x_pad_size_0), 'constant', 0)
+
+    # Pad x if needed
+    px = F.pad(x, (0, x_pad_size_1, 0, x_pad_size_0), "constant", 0)
     px_shape = px.shape
 
-    pw = F.pad(weight, (0, w_pad_size_1, 0, w_pad_size_0), 'constant', 0)
+    pw = F.pad(weight, (0, w_pad_size_1, 0, w_pad_size_0), "constant", 0)
     pw_shape = pw.shape
 
     # in order to follow the law of torch.mm
@@ -78,17 +79,22 @@ def cim_core(x: Tensor, weight: Tensor, config: dict):
     # and be view as (1, -1, pw_row_depth, core_size, core_size)
 
     # the output will be summed to (1, -1, pw_row_depth, core_size, core_size)
-    px = px.view(1, -1, core_size, px_shape[-1]//core_size, core_size).permute(3, 0, 1, 2, 4)
-    pw = pw.view(1, pw_shape[0]//core_size, core_size, pw_shape[1]//core_size, core_size).permute(1, 3, 0, 2, 4)
+    px = px.view(1, -1, core_size, px_shape[-1] // core_size, core_size).permute(
+        3, 0, 1, 2, 4
+    )
+    pw = pw.view(
+        1, pw_shape[0] // core_size, core_size, pw_shape[1] // core_size, core_size
+    ).permute(1, 3, 0, 2, 4)
 
     pout = cim_tile(px, pw, config)
-    pout = pout.sum(dim=0).permute(1,2,0,3)
+    pout = pout.sum(dim=0).permute(1, 2, 0, 3)
 
     pout = pout.reshape(-1, px_shape[-2], pw_shape[-1])
-    out = pout[:, :x_shape[-2], :weight_shape[1]]
-    out = out.view(*x_shape[:-1],weight_shape[1])
+    out = pout[:, : x_shape[-2], : weight_shape[1]]
+    out = out.view(*x_shape[:-1], weight_shape[1])
 
     return out
+
 
 class CIMTile(torch.autograd.Function):
     @staticmethod
@@ -96,7 +102,7 @@ class CIMTile(torch.autograd.Function):
         ctx.save_for_backward(x, weight)
         ctx.config = config
         return _cim_tile(x, weight, config)
-    
+
     @staticmethod
     def backward(ctx, grad_output):
         x, weight = ctx.saved_tensors
@@ -104,7 +110,6 @@ class CIMTile(torch.autograd.Function):
         grad_weight = x.transpose(-2, -1) @ grad_output
         return grad_input, grad_weight, None
 
+
 def cim_tile(x, weight, config):
     return CIMTile.apply(x, weight, config)
-
-

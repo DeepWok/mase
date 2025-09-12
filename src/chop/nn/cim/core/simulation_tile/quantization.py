@@ -17,6 +17,7 @@ logger = getLogger(__name__)
 
 from .utils import my_clamp, my_round
 
+
 def _scale_integer_quantize(
     x: Tensor | ndarray, width: int, is_signed: bool = True, quantile: float = None
 ):
@@ -40,17 +41,15 @@ def _scale_integer_quantize(
         quantile = 1.0
     x_max = x.abs().max(dim=-1, keepdim=True).values + 1e-9
 
-
-    
     if is_signed:
         int_min = -(2 ** (width - 1))
         int_max = 2 ** (width - 1) - 1
     else:
         int_min = 0
         int_max = 2**width - 1
-    
+
     if is_signed:
-        scale = 2**(width - 1) / x_max
+        scale = 2 ** (width - 1) / x_max
     else:
         scale = 2**width / x_max
 
@@ -62,10 +61,11 @@ def _scale_integer_quantize(
         return my_clamp(my_round(x * scale), int_min, int_max) / scale
 
 
-
 class ScaleIntegerQuantize(torch.autograd.Function):
     @staticmethod
-    def forward(ctx, x: Tensor, width: int, is_signed: bool = True, quantile: float = 1.0):
+    def forward(
+        ctx, x: Tensor, width: int, is_signed: bool = True, quantile: float = 1.0
+    ):
         return _scale_integer_quantize(
             x, width=width, is_signed=is_signed, quantile=quantile
         )
