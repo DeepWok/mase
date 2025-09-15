@@ -2,6 +2,69 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from .core.matmul import cim_core
+from ..modules.lora import LinearLora
+
+
+class LoraCIMLinear(LinearLora):
+    """
+    Linear layer with cim simulation and LoRA adapter.
+    lora_config should be a dict with the following keys:
+    - r: int
+    - lora_alpha: float
+    - lora_dropout: float
+    - adapter_name: str
+    - disable_adapter: bool
+
+    """
+
+    def __init__(
+        self,
+        in_features,
+        out_features,
+        bias=True,
+        q_config=None,
+        lora_config=None,
+    ):
+        self.q_config = {} if q_config is None else q_config
+        if lora_config == {} or lora_config is None:
+            lora_config = {
+                "r": 0,
+                "lora_alpha": 1,
+                "lora_dropout": 0,
+                "adapter_name": "default",
+                "disable_adapter": True,
+            }
+        LinearLora.__init__(self, in_features, out_features, config=lora_config)
+
+    def _linear(self, input: torch.Tensor) -> torch.Tensor:
+        output = cim_core(input, self.weight.t(), self.q_config)
+
+        # Add bias if provided
+        if self.bias is not None:
+            output = output + self.bias
+        return output
+
+    def forward(self, x: torch.Tensor):
+        previous_dtype = x.dtype
+
+        if self.active_adapter not in self.lora_A.keys():
+            return self._linear(x)
+
+        if self.disable_adapter:
+            if self.r[self.active_adapter] > 0 and self.merged:
+                self.unmerge()
+            result = self._linear(x)
+
+        elif self.r[self.active_adapter] == 0 or self.merged:
+            result = self._linear(x)
+
+        else:
+            self.merge()
+            result = self._linear(x)
+
+        result = result.to(previous_dtype)
+
+        return result
 
 
 class CIMLinear(nn.Linear):
@@ -52,7 +115,6 @@ class CIMConv2d(nn.Conv2d):
 
     def forward(self, x):
         B, C, H, W = x.shape
-        # 统一 kernel/stride/padding 为 tuple
         kH, kW = (
             (self.kernel_size,) * 2
             if isinstance(self.kernel_size, int)

@@ -1,7 +1,7 @@
 import torch.nn as nn
 import logging
 
-from chop.nn.cim.cim_layer import CIMLinear, CIMConv2d
+from chop.nn.cim.cim_layer import CIMLinear, CIMConv2d, LoraCIMLinear
 from chop.tools import deepsetattr
 
 logger = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ def parse_q_config(module, q_config):
         raise ValueError(f"Invalid q_config: {q_config}")
 
 
-def cim_matmul_transform_pass(model, q_config={}):
+def cim_matmul_transform_pass(model, q_config={}, lora_config={}):
     for module in model.named_modules():
         config = parse_q_config(module, q_config)
         if config is None:
@@ -67,10 +67,11 @@ def cim_matmul_transform_pass(model, q_config={}):
             logger.debug(f"Replacing module: {module[0]}")
         elif get_module_type(module) == "linear":
             ori_module = module[1]
-            new_module = CIMLinear(
+            new_module = LoraCIMLinear(
                 ori_module.in_features,
                 ori_module.out_features,
                 q_config=config,
+                lora_config=lora_config,
             )
             new_module.weight = ori_module.weight
             new_module.bias = ori_module.bias
