@@ -73,7 +73,7 @@ def cim_matmul_transform_pass(model, q_config={}, lora_config={}):
                 q_config=config,
                 lora_config=lora_config,
             )
-            new_module.weight = ori_module.weight
+            new_module.weight.data = ori_module.weight.data
             new_module.bias = ori_module.bias
             logger.debug(f"Replacing module: {module[0]}")
 

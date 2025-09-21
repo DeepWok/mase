@@ -46,6 +46,7 @@ class LoraCIMLinear(LinearLora):
 
     def forward(self, x: torch.Tensor):
         previous_dtype = x.dtype
+        breakpoint()
 
         if self.active_adapter not in self.lora_A.keys():
             return self._linear(x)
@@ -54,13 +55,13 @@ class LoraCIMLinear(LinearLora):
             if self.r[self.active_adapter] > 0 and self.merged:
                 self.unmerge()
             result = self._linear(x)
-
         elif self.r[self.active_adapter] == 0 or self.merged:
             result = self._linear(x)
 
         else:
             self.merge()
             result = self._linear(x)
+
 
         result = result.to(previous_dtype)
 
