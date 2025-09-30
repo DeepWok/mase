@@ -9,7 +9,7 @@ from transformers.models.llama.modeling_llama import LlamaRMSNorm
 
 
 class LlamaRMSNormLSQInteger(LlamaRMSNorm):
-    def __init__(self, hidden_size, eps=1e-6, q_config: dict = None):
+    def __init__(self, hidden_size, eps=1e-6, layer_idx=None, q_config: dict = None):
         """
         LlamaRMSNorm is equivalent to T5LayerNorm
         """
@@ -17,6 +17,7 @@ class LlamaRMSNormLSQInteger(LlamaRMSNorm):
         self.weight = nn.Parameter(torch.ones(hidden_size))
         self.variance_epsilon = eps
         self.quant_after_ln = LSQInteger(level=q_config["level"], sym=True)
+        self.layer_idx = layer_idx
 
     def forward(self, hidden_states):
         input_dtype = hidden_states.dtype

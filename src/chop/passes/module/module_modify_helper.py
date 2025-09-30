@@ -17,6 +17,8 @@ from transformers.models.roberta.modeling_roberta import (
 
 from transformers.models.llama.modeling_llama import (
     LlamaAttention,
+    LlamaMLP,
+    LlamaRMSNorm,
 )
 
 from transformers.models.bert.modeling_bert import (
@@ -35,6 +37,8 @@ roberta_prefix_map = {
 
 llama_prefix_map = {
     LlamaAttention: "llama_self_attention",
+    LlamaMLP: "llama_mlp",
+    LlamaRMSNorm: "llama_rms_norm",
 }
 
 bert_prefix_map = {

@@ -8,10 +8,11 @@ from typing import Optional, Tuple
 from transformers.models.llama.modeling_llama import LlamaMLP, ACT2FN
 
 class LlamaMLPLSQInteger(LlamaMLP):
-    def __init__(self, config, q_config: dict = None):
+    def __init__(self, config, layer_idx, q_config: dict = None):
         super().__init__(config)
         self.config = config
         self.q_config = q_config
+        self.layer_idx = layer_idx
         # NOTE: The only change from the original RobertaOutput is the quantization of the dense layer
         # Preserving the original layer architecture for state_dict compatibility
         self.gate_dense_quan = LSQInteger(level=q_config["level"], sym=False)
