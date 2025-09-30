@@ -221,7 +221,7 @@ def instantiate_llama_module(
 
     llama_module = llama_cls(
         config=network_args,
-        layer_idx=module.layer_idx,
+        layer_idx=module.layer_idx if hasattr(module, "layer_idx") else None,
         q_config=module_args,
     )
     return llama_module

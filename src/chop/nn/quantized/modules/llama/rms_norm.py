@@ -9,13 +9,13 @@ from transformers.models.llama.modeling_llama import LlamaRMSNorm
 
 
 class LlamaRMSNormLSQInteger(LlamaRMSNorm):
-    def __init__(self, hidden_size, eps=1e-6, layer_idx=None, q_config: dict = None):
+    def __init__(self, config=None, layer_idx=None, q_config: dict = None):
         """
         LlamaRMSNorm is equivalent to T5LayerNorm
         """
-        super().__init__()
-        self.weight = nn.Parameter(torch.ones(hidden_size))
-        self.variance_epsilon = eps
+        super().__init__(hidden_size=config.hidden_size, eps=config.rms_norm_eps)
+        self.weight = nn.Parameter(torch.ones(config.hidden_size))
+        self.variance_epsilon = config.rms_norm_eps
         self.quant_after_ln = LSQInteger(level=q_config["level"], sym=True)
         self.layer_idx = layer_idx
 
