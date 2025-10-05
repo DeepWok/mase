@@ -1,0 +1,20 @@
+by: "type"
+conv2d:
+  config:
+    tile_type: "pcm"
+    core_size: 256
+    num_bits: 8
+    programming_noise: true
+    read_noise: true
+    ir_drop: true
+    out_noise: true
+
+linear:
+  config:
+    tile_type: "pcm"
+    core_size: 256
+    num_bits: 8
+    programming_noise: true
+    read_noise: false
+    ir_drop: false
+    out_noise: false

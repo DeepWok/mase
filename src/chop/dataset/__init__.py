@@ -85,7 +85,7 @@ def get_dataset(
         path = DATASET_CACHE_DIR
         dataset = get_nerf_dataset(name, path, split)
     elif name in VISION_DATASET_MAPPING:
-        path = DATASET_CACHE_DIR / name
+        path = DATASET_CACHE_DIR if custom_path is None else custom_path
         dataset = get_vision_dataset(name, path, split, model_name)
     elif name in NLP_DATASET_MAPPING:
         path = DATASET_CACHE_DIR / name
@@ -129,6 +129,7 @@ class MaseDataModule(pl.LightningDataModule):
         tokenizer=None,
         load_from_cache_file: bool = True,
         model_name: str = None,
+        custom_path: str = None,
     ) -> None:
         super().__init__()
 
@@ -139,7 +140,7 @@ class MaseDataModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.load_from_cache_file = load_from_cache_file
         self.model_name = model_name
-
+        self.custom_path = custom_path
         self.train_dataset = None
         self.val_dataset = None
         self.test_dataset = None
@@ -156,6 +157,7 @@ class MaseDataModule(pl.LightningDataModule):
             load_from_cache_file=self.load_from_cache_file,
             auto_setup=False,
             model_name=self.model_name,
+            custom_path=self.custom_path,
         )
         val_dataset = get_dataset(
             self.name,
@@ -166,6 +168,7 @@ class MaseDataModule(pl.LightningDataModule):
             load_from_cache_file=self.load_from_cache_file,
             auto_setup=False,
             model_name=self.model_name,
+            custom_path=self.custom_path,
         )
         test_dataset = get_dataset(
             self.name,
@@ -176,6 +179,7 @@ class MaseDataModule(pl.LightningDataModule):
             load_from_cache_file=self.load_from_cache_file,
             auto_setup=False,
             model_name=self.model_name,
+            custom_path=self.custom_path,
         )
         pred_dataset = get_dataset(
             self.name,
@@ -186,6 +190,7 @@ class MaseDataModule(pl.LightningDataModule):
             load_from_cache_file=self.load_from_cache_file,
             auto_setup=False,
             model_name=self.model_name,
+            custom_path=self.custom_path,
         )
 
         train_dataset.prepare_data()
@@ -207,6 +212,7 @@ class MaseDataModule(pl.LightningDataModule):
                 load_from_cache_file=self.load_from_cache_file,
                 auto_setup=True,
                 model_name=self.model_name,
+                custom_path=self.custom_path,
             )
             if self.train_dataset is not None:
                 self.train_dataset.setup()
@@ -220,6 +226,7 @@ class MaseDataModule(pl.LightningDataModule):
                 load_from_cache_file=True,
                 auto_setup=True,
                 model_name=self.model_name,
+                custom_path=self.custom_path,
             )
             if self.val_dataset is not None:
                 self.val_dataset.setup()
@@ -233,6 +240,7 @@ class MaseDataModule(pl.LightningDataModule):
                 load_from_cache_file=True,
                 auto_setup=True,
                 model_name=self.model_name,
+                custom_path=self.custom_path,
             )
             if self.test_dataset is not None:
                 self.test_dataset.setup()
@@ -246,6 +254,7 @@ class MaseDataModule(pl.LightningDataModule):
                 load_from_cache_file=True,
                 auto_setup=True,
                 model_name=self.model_name,
+                custom_path=self.custom_path,
             )
             if self.pred_dataset is not None:
                 self.pred_dataset.setup()
