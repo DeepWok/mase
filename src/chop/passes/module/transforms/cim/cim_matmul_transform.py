@@ -67,12 +67,19 @@ def cim_matmul_transform_pass(model, q_config={}, lora_config={}):
             logger.debug(f"Replacing module: {module[0]}")
         elif get_module_type(module) == "linear":
             ori_module = module[1]
-            new_module = LoraCIMLinear(
-                ori_module.in_features,
-                ori_module.out_features,
-                q_config=config,
-                lora_config=lora_config,
-            )
+            if lora_config is not {} or lora_config is not None:
+                new_module = LoraCIMLinear(
+                    ori_module.in_features,
+                    ori_module.out_features,
+                    q_config=config,
+                    lora_config=lora_config,
+                )
+            else:
+                new_module = CIMLinear(
+                    ori_module.in_features,
+                    ori_module.out_features,
+                    q_config=config,
+                )
             new_module.weight.data = ori_module.weight.data
             new_module.bias = ori_module.bias
             logger.debug(f"Replacing module: {module[0]}")

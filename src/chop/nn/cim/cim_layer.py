@@ -2,10 +2,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from .core.matmul import cim_core
-from ..modules.lora import LinearLora
+import math
 
 
-class LoraCIMLinear(LinearLora):
+class LoraCIMLinear(nn.Linear):
     """
     Linear layer with cim simulation and LoRA adapter.
     lora_config should be a dict with the following keys:
@@ -26,18 +26,16 @@ class LoraCIMLinear(LinearLora):
         lora_config=None,
     ):
         self.q_config = {} if q_config is None else q_config
-        if lora_config == {} or lora_config is None:
-            lora_config = {
-                "r": 0,
-                "lora_alpha": 1,
-                "lora_dropout": 0,
-                "adapter_name": "default",
-                "disable_adapter": True,
-            }
-        LinearLora.__init__(self, in_features, out_features, config=lora_config)
+        super().__init__(in_features, out_features, bias)
+        lora_r = lora_config["r"]
+        self.lora_A = nn.Parameter(torch.zeros(in_features, lora_r))
+        self.lora_B = nn.Parameter(torch.zeros(lora_r, out_features))
+        nn.init.kaiming_normal_(self.lora_A, a=math.sqrt(5))
+        # self.weight.requires_grad = False
+        self.scaling = lora_config["lora_alpha"] / lora_r
 
-    def _linear(self, input: torch.Tensor) -> torch.Tensor:
-        output = cim_core(input, self.weight.t(), self.q_config)
+    def _linear(self, input: torch.Tensor, weight: torch.Tensor) -> torch.Tensor:
+        output = cim_core(input, weight.t(), self.q_config)
 
         # Add bias if provided
         if self.bias is not None:
@@ -45,25 +43,9 @@ class LoraCIMLinear(LinearLora):
         return output
 
     def forward(self, x: torch.Tensor):
-        previous_dtype = x.dtype
-        breakpoint()
-
-        if self.active_adapter not in self.lora_A.keys():
-            return self._linear(x)
-
-        if self.disable_adapter:
-            if self.r[self.active_adapter] > 0 and self.merged:
-                self.unmerge()
-            result = self._linear(x)
-        elif self.r[self.active_adapter] == 0 or self.merged:
-            result = self._linear(x)
-
-        else:
-            self.merge()
-            result = self._linear(x)
-
-
-        result = result.to(previous_dtype)
+        delta_weight = (self.lora_A @ self.lora_B * self.scaling).transpose(0, 1)
+        new_weight = self.weight + delta_weight
+        result = self._linear(x, new_weight)
 
         return result
 
