@@ -46,7 +46,7 @@ def parse_q_config(module, q_config):
         raise ValueError(f"Invalid q_config: {q_config}")
 
 
-def cim_matmul_transform_pass(model, q_config={}, lora_config={}):
+def cim_matmul_transform_pass(model, q_config={}, lora_config=None):
     for module in model.named_modules():
         config = parse_q_config(module, q_config)
         if config is None:
@@ -67,7 +67,7 @@ def cim_matmul_transform_pass(model, q_config={}, lora_config={}):
             logger.debug(f"Replacing module: {module[0]}")
         elif get_module_type(module) == "linear":
             ori_module = module[1]
-            if lora_config is not {} or lora_config is not None:
+            if lora_config is not None:
                 new_module = LoraCIMLinear(
                     ori_module.in_features,
                     ori_module.out_features,
