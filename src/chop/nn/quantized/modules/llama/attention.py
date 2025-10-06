@@ -2,7 +2,7 @@ from typing import Callable, List, Optional, Tuple, Union
 
 from chop.nn.quantizers.SNN.LSQ import LSQInteger
 import torch
-from torch import nn
+from torch import dropout, nn
 
 import math
 
@@ -16,6 +16,8 @@ from transformers.models.llama.modeling_llama import (
     repeat_kv,
     LlamaForCausalLM,
     LlamaDecoderLayer,
+    ALL_ATTENTION_FUNCTIONS,
+    eager_attention_forward,
 )
 
 import logging
@@ -25,10 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 class LlamaAttentionLSQInteger(nn.Module):
-    """Multi-headed attention from 'Attention Is All You Need' paper"""
-
     def __init__(self, config: LlamaConfig, layer_idx: int, q_config: dict = None):
-        tfwriter = SummaryWriter("runs/llamaAttention" + str(layer_idx))
         super().__init__()
         self.config = config
         self.layer_idx = layer_idx
@@ -63,19 +62,12 @@ class LlamaAttentionLSQInteger(nn.Module):
             bias=config.attention_bias,
         )
 
-        self.query_quan = LSQInteger(
-            level=q_config["level"], sym=True, tfwriter=tfwriter
-        )
-        self.key_quan = LSQInteger(level=q_config["level"], sym=True, tfwriter=tfwriter)
-        self.value_quan = LSQInteger(
-            level=q_config["level"], sym=True, tfwriter=tfwriter
-        )
-        self.attn_quan = LSQInteger(
-            level=q_config["level"], sym=False, tfwriter=tfwriter
-        )
-        self.after_attn_quan = LSQInteger(
-            level=q_config["level"], sym=False, tfwriter=tfwriter
-        )
+        self.query_quan = LSQInteger(level=q_config["level"], sym=True)
+        self.key_quan = LSQInteger(level=q_config["level"], sym=True)
+        self.value_quan = LSQInteger(level=q_config["level"], sym=True)
+        self.o_quant = LSQInteger(level=q_config["level"], sym=True)
+        self.attn_quan = LSQInteger(level=q_config["level"], sym=False)
+        self.after_attn_quan = LSQInteger(level=q_config["level"], sym=False)
 
     def forward(
         self,
@@ -86,15 +78,15 @@ class LlamaAttentionLSQInteger(nn.Module):
         cache_position: Optional[torch.LongTensor] = None,
         **kwargs,
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
-
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
 
         query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)
-        query_states = self.query_quan(query_states)
         key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)
-        key_states = self.key_quan(key_states)
         value_states = self.v_proj(hidden_states).view(hidden_shape).transpose(1, 2)
+
+        query_states = self.query_quan(query_states)
+        key_states = self.key_quan(key_states)
         value_states = self.value_quan(value_states)
 
         cos, sin = position_embeddings
@@ -112,10 +104,10 @@ class LlamaAttentionLSQInteger(nn.Module):
         key_states = repeat_kv(key_states, self.num_key_value_groups)
         value_states = repeat_kv(value_states, self.num_key_value_groups)
 
-        # *: matmul_0
-        attn_weights = torch.matmul(
-            query_states, key_states.transpose(2, 3)
-        ) / math.sqrt(self.head_dim)
+        attn_weights = (
+            torch.matmul(query_states, key_states.transpose(2, 3)) * self.scaling
+        )
+        attn_weights = self.attn_quan(attn_weights)
 
         if attention_mask is not None:
             causal_mask = attention_mask[:, :, :, : key_states.shape[-2]]
@@ -127,13 +119,12 @@ class LlamaAttentionLSQInteger(nn.Module):
         attn_weights = nn.functional.dropout(
             attn_weights, p=self.attention_dropout, training=self.training
         )
-        attn_weights = self.attn_quan(attn_weights)
-
-        # *: matmul_1
         attn_output = torch.matmul(attn_weights, value_states)
         attn_output = self.after_attn_quan(attn_output)
         attn_output = attn_output.transpose(1, 2).contiguous()
 
         attn_output = attn_output.reshape(*input_shape, -1).contiguous()
         attn_output = self.o_proj(attn_output)
+        attn_output = self.o_quant(attn_output)
+
         return attn_output, attn_weights
