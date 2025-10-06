@@ -7,6 +7,7 @@ from typing import Optional, Tuple
 
 from transformers.models.llama.modeling_llama import LlamaMLP, ACT2FN
 
+
 class LlamaMLPLSQInteger(LlamaMLP):
     def __init__(self, config, layer_idx, q_config: dict = None):
         super().__init__(config)
@@ -22,9 +23,15 @@ class LlamaMLPLSQInteger(LlamaMLP):
         self.config = config
         self.hidden_size = config.hidden_size
         self.intermediate_size = config.intermediate_size
-        self.gate_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=config.mlp_bias)
-        self.up_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=config.mlp_bias)
-        self.down_proj = nn.Linear(self.intermediate_size, self.hidden_size, bias=config.mlp_bias)
+        self.gate_proj = nn.Linear(
+            self.hidden_size, self.intermediate_size, bias=config.mlp_bias
+        )
+        self.up_proj = nn.Linear(
+            self.hidden_size, self.intermediate_size, bias=config.mlp_bias
+        )
+        self.down_proj = nn.Linear(
+            self.intermediate_size, self.hidden_size, bias=config.mlp_bias
+        )
         self.act_fn = ACT2FN[config.hidden_act]
 
     def forward(self, x):

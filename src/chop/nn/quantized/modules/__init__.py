@@ -9,11 +9,7 @@ from .roberta import (
     RobertaSelfOutputLSQInteger,
 )
 
-from .llama import (
-    LlamaAttentionLSQInteger, 
-    LlamaRMSNormLSQInteger, 
-    LlamaMLPLSQInteger
-)
+from .llama import LlamaAttentionLSQInteger, LlamaRMSNormLSQInteger, LlamaMLPLSQInteger
 
 # from .add import AddInteger
 from .conv1d import (

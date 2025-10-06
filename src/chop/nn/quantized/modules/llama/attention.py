@@ -31,42 +31,44 @@ class LlamaAttentionLSQInteger(nn.Module):
         super().__init__()
         self.config = config
         self.layer_idx = layer_idx
-        self.head_dim = getattr(config, "head_dim", config.hidden_size // config.num_attention_heads)
-        self.num_key_value_groups = config.num_attention_heads // config.num_key_value_heads
+        self.head_dim = getattr(
+            config, "head_dim", config.hidden_size // config.num_attention_heads
+        )
+        self.num_key_value_groups = (
+            config.num_attention_heads // config.num_key_value_heads
+        )
         self.scaling = self.head_dim**-0.5
         self.attention_dropout = config.attention_dropout
         self.is_causal = True
 
         self.q_proj = nn.Linear(
-            config.hidden_size, config.num_attention_heads * self.head_dim, bias=config.attention_bias
+            config.hidden_size,
+            config.num_attention_heads * self.head_dim,
+            bias=config.attention_bias,
         )
         self.k_proj = nn.Linear(
-            config.hidden_size, config.num_key_value_heads * self.head_dim, bias=config.attention_bias
+            config.hidden_size,
+            config.num_key_value_heads * self.head_dim,
+            bias=config.attention_bias,
         )
         self.v_proj = nn.Linear(
-            config.hidden_size, config.num_key_value_heads * self.head_dim, bias=config.attention_bias
+            config.hidden_size,
+            config.num_key_value_heads * self.head_dim,
+            bias=config.attention_bias,
         )
         self.o_proj = nn.Linear(
-            config.num_attention_heads * self.head_dim, config.hidden_size, bias=config.attention_bias
+            config.num_attention_heads * self.head_dim,
+            config.hidden_size,
+            bias=config.attention_bias,
         )
 
-        self.query_quan = LSQInteger(
-            level=q_config["level"], sym=True
-        )
+        self.query_quan = LSQInteger(level=q_config["level"], sym=True)
         self.key_quan = LSQInteger(level=q_config["level"], sym=True)
-        self.value_quan = LSQInteger(
-            level=q_config["level"], sym=True
-        )
-        self.o_quant = LSQInteger(
-            level=q_config["level"], sym=True
-        )
-        self.attn_quan = LSQInteger(
-            level=q_config["level"], sym=False
-        )
-        self.after_attn_quan = LSQInteger(
-            level=q_config["level"], sym=False
-        )
-    
+        self.value_quan = LSQInteger(level=q_config["level"], sym=True)
+        self.o_quant = LSQInteger(level=q_config["level"], sym=True)
+        self.attn_quan = LSQInteger(level=q_config["level"], sym=False)
+        self.after_attn_quan = LSQInteger(level=q_config["level"], sym=False)
+
     def forward(
         self,
         hidden_states: torch.Tensor,
@@ -88,25 +90,35 @@ class LlamaAttentionLSQInteger(nn.Module):
         value_states = self.value_quan(value_states)
 
         cos, sin = position_embeddings
-        query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin)
+        query_states, key_states = apply_rotary_pos_emb(
+            query_states, key_states, cos, sin
+        )
 
         if past_key_value is not None:
             # sin and cos are specific to RoPE models; cache_position needed for the static cache
             cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
-            key_states, value_states = past_key_value.update(key_states, value_states, self.layer_idx, cache_kwargs)
+            key_states, value_states = past_key_value.update(
+                key_states, value_states, self.layer_idx, cache_kwargs
+            )
 
         key_states = repeat_kv(key_states, self.num_key_value_groups)
         value_states = repeat_kv(value_states, self.num_key_value_groups)
 
-        attn_weights = torch.matmul(query_states, key_states.transpose(2, 3)) * self.scaling
+        attn_weights = (
+            torch.matmul(query_states, key_states.transpose(2, 3)) * self.scaling
+        )
         attn_weights = self.attn_quan(attn_weights)
 
         if attention_mask is not None:
             causal_mask = attention_mask[:, :, :, : key_states.shape[-2]]
             attn_weights = attn_weights + causal_mask
 
-        attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(query_states.dtype)
-        attn_weights = nn.functional.dropout(attn_weights, p=self.attention_dropout, training=self.training)
+        attn_weights = nn.functional.softmax(
+            attn_weights, dim=-1, dtype=torch.float32
+        ).to(query_states.dtype)
+        attn_weights = nn.functional.dropout(
+            attn_weights, p=self.attention_dropout, training=self.training
+        )
         attn_output = torch.matmul(attn_weights, value_states)
         attn_output = self.after_attn_quan(attn_output)
         attn_output = attn_output.transpose(1, 2).contiguous()
