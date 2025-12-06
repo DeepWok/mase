@@ -61,7 +61,7 @@ requirements = [
     "kornia",
     "einops",
     "ghp-import",
-    "optimum",
+    "optimum==1.24.0",
     "pytest-profiling",
     "myst_parser",
     "pytest-cov",
