@@ -26,7 +26,7 @@ endif
 ifeq ($(local), 1)
     img = "mase-ubuntu2204:latest"
 else
-    img = "thw20/mase-cpu:latest"
+    img = "thw20/mase-cpu:20251207200822"
 endif
 
 # * Check if running on a mac to set user path

@@ -21,7 +21,7 @@ jobs:
   software-test:
     runs-on: ubuntu-latest
     container:
-      image: thw20/mase-cpu:latest
+      image: thw20/mase-cpu:20251207200822
     steps:
 
       # -----------
@@ -223,7 +223,7 @@ jobs:
   hardware-test:
     runs-on: ubuntu-latest
     container:
-      image: thw20/mase-cpu:latest
+      image: thw20/mase-cpu:20251207200822
     steps:
 
       # -----------
@@ -333,7 +333,7 @@ jobs:
     needs: [software-test, hardware-test]
     runs-on: ubuntu-latest
     container:
-      image: thw20/mase-cpu:latest
+      image: thw20/mase-cpu:20251207200822
     steps:
 
       # -----------
