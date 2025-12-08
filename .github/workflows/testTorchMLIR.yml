@@ -21,7 +21,7 @@ jobs:
   torch-mlir-test:
     runs-on: ubuntu-latest
     container:
-      image: thw20/mase-cpu:20251207200822
+      image: thw20/mase-cpu:latest
     steps:
 
       # Clone the MASE repo and its submodules.
