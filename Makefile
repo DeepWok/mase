@@ -26,7 +26,7 @@ endif
 ifeq ($(local), 1)
     img = "mase-ubuntu2204:latest"
 else
-    img = "deepwok/mase-docker-$(PLATFORM):latest"
+    img = "thw20/mase-cpu:latest"
 endif
 
 # * Check if running on a mac to set user path
