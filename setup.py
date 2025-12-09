@@ -94,7 +94,7 @@ requirements = [
     "sphinx-book-theme",
     "pydot",
     "attr-dot-dict",
-    "ultralytics",
+    "ultralytics==8.3.235",
 ]
 
 if is_cuda_available():
