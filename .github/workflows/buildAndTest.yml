@@ -21,7 +21,7 @@ jobs:
   software-test:
     runs-on: ubuntu-latest
     container:
-      image: bingleilou/mase-docker-cpu-amd:latest
+      image: bingleilou/mase-docker-cpu:latest
     steps:
 
       # -----------
@@ -223,7 +223,7 @@ jobs:
   hardware-test:
     runs-on: ubuntu-latest
     container:
-      image: bingleilou/mase-docker-cpu-amd:latest
+      image: bingleilou/mase-docker-cpu:latest
     steps:
 
       # -----------
@@ -333,7 +333,7 @@ jobs:
     needs: [software-test, hardware-test]
     runs-on: ubuntu-latest
     container:
-      image: bingleilou/mase-docker-cpu-amd:latest
+      image: bingleilou/mase-docker-cpu:latest
     steps:
 
       # -----------
