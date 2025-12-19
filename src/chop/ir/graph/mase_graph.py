@@ -455,7 +455,7 @@ class MaseGraph:
 
         logger.info(f"Exporting GraphModule to {fname}.pt")
         with open(f"{fname}.pt", "wb") as f:
-            #torch.save(self.model, f)
+            # torch.save(self.model, f)
             # Parametrized modules cannot be pickled as full objects; save weights only.
             torch.save(self.model.state_dict(), f)
 
