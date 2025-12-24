@@ -12,8 +12,6 @@ logger = logging.getLogger(__name__)
 
 from pathlib import Path
 
-torch.manual_seed(0)
-
 import cocotb
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
@@ -167,6 +165,7 @@ def _emit_cocotb_tb(graph):
                             self.get_parameter(f"{_cap(arg)}_PARALLELISM_DIM_1"),
                             self.get_parameter(f"{_cap(arg)}_PARALLELISM_DIM_0"),
                         ],
+                        floor=True,
                     )
 
                 else:
@@ -203,6 +202,7 @@ def _emit_cocotb_tb(graph):
                     self.get_parameter(f"DATA_OUT_0_PARALLELISM_DIM_1"),
                     self.get_parameter(f"DATA_OUT_0_PARALLELISM_DIM_0"),
                 ],
+                floor=True,
             )
 
             # Set expectation for each monitor
