@@ -4,9 +4,7 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
-from chop.nn.quantizers import (
-    integer_quantizer,
-)
+from chop.nn.quantizers import integer_quantizer
 
 
 class _BatchNorm1dBase(torch.nn.BatchNorm1d):

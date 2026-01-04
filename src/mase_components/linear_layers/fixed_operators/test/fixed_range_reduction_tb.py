@@ -71,7 +71,6 @@ import pytest
 
 @pytest.mark.skip(reason="Needs to be fixed.")
 def test_fixed_range_reduction():
-
     def full_sweep():
         parameter_list = []
         for width in range(1, 17):

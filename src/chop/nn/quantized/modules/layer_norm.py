@@ -4,9 +4,7 @@ import torch.nn as nn
 from torch import Tensor
 import torch.nn.functional as F
 
-from chop.nn.quantizers import (
-    integer_quantizer,
-)
+from chop.nn.quantizers import integer_quantizer
 
 
 class _LayerNormBase(nn.LayerNorm):

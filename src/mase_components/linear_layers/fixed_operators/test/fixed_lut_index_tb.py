@@ -94,7 +94,6 @@ import pytest
 
 @pytest.mark.skip(reason="Needs to be fixed.")
 def test_fixed_lut_index():
-
     def full_sweep():
         parameter_list = []
         lut_pow = 5

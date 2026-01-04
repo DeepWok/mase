@@ -1,6 +1,4 @@
-from chop.nn.quantized.modules.attention_head import (
-    BertSelfAttentionHeadInteger,
-)
+from chop.nn.quantized.modules.attention_head import BertSelfAttentionHeadInteger
 from transformers import AutoConfig
 import torch
 

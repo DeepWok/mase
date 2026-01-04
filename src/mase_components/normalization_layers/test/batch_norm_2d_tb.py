@@ -344,7 +344,6 @@ import pytest
 
 @pytest.mark.skip(reason="Needs to be fixed.")
 def test_batch_norm_2d():
-
     def gen_cfg(
         total_dim0: int = 4,
         total_dim1: int = 4,

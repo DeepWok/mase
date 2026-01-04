@@ -302,8 +302,11 @@ def autosharding_analysis_pass(mg, pass_args: dict = {}):
     if not pass_args.get(f"skip_forward", False):
         tensor_sharding_map = _get_sharding_map(mg)
 
-    return mg, {
-        "autosharding_time": autosharding_time,
-        "tensor_sharding_map": tensor_sharding_map,
-        **pass_outs,
-    }
+    return (
+        mg,
+        {
+            "autosharding_time": autosharding_time,
+            "tensor_sharding_map": tensor_sharding_map,
+            **pass_outs,
+        },
+    )

@@ -4,12 +4,8 @@ import torch
 from typing import Any
 import numpy as np
 
-from chop.nn.quantized.modules.conv2d import (
-    Conv2dBinaryResidualSign,
-)
-from chop.nn.quantized.modules.linear import (
-    LinearBinaryResidualSign,
-)
+from chop.nn.quantized.modules.conv2d import Conv2dBinaryResidualSign
+from chop.nn.quantized.modules.linear import LinearBinaryResidualSign
 from chop.models.utils import register_mase_model, register_mase_checkpoint
 
 """

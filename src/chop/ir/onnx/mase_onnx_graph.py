@@ -9,7 +9,6 @@ from .utils import ONNX_OP_MAPPING
 
 
 class MaseOnnxGraph:
-
     def __init__(
         self,
         model_proto: onnx.onnx_ml_pb2.ModelProto,

@@ -47,9 +47,7 @@ from .interface import (
 
 from .transforms.quantize.quant_parsers import parse_node_config
 
-from chop.passes.graph.analysis.runtime.runtime_analysis import (
-    runtime_analysis_pass,
-)
+from chop.passes.graph.analysis.runtime.runtime_analysis import runtime_analysis_pass
 
 from .interface import tensorrt_engine_interface_pass
 

@@ -60,9 +60,7 @@ from .spiking_self_attention import (
 )
 
 from .embedding import EmbeddingZIPTF
-from .roberta import (
-    RobertaSelfAttentionZIPTF,
-)
+from .roberta import RobertaSelfAttentionZIPTF
 
 spiking_basic_module_map = {
     "conv1d": Conv1d,
