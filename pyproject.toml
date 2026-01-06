@@ -1,0 +1,87 @@
+[project]
+name = "mase"
+version = "1.0.0"
+description = "Machine-Learning Accelerator System Exploration Tools"
+readme = "README.md"
+requires-python = ">=3.11.9"
+
+dependencies = [
+    "torch==2.6",
+    "torchvision",
+    "onnx",
+    "black",
+    "toml",
+    "GitPython",
+    "colorlog",
+    "cocotb==1.9.2",
+    "pytest",
+    "pytorch-lightning",
+    "transformers==4.51",
+    "timm",
+    "pytorch-nlp",
+    "datasets==3.3.2",
+    "evaluate==0.4.3",
+    "ipython",
+    "ipdb",
+    "sentencepiece",
+    "einops",
+    "pybind11",
+    "tabulate",
+    "tensorboardx",
+    "hyperopt @ git+https://github.com/hyperopt/hyperopt.git",
+    "accelerate",
+    "optuna",
+    "stable-baselines3[extra]",
+    "h5py",
+    "scikit-learn",
+    "scipy==1.14",
+    "onnxruntime",
+    "matplotlib",
+    "sphinx-rtd-theme",
+    "sphinx-needs>=4",
+    "sphinx-test-reports @ git+https://github.com/useblocks/sphinx-test-reports",
+    "sphinxcontrib-plantuml",
+    "imageio",
+    "imageio-ffmpeg",
+    "opencv-python",
+    "kornia",
+    "ghp-import",
+    "optimum==1.24.0",
+    "pytest-profiling",
+    "myst_parser",
+    "pytest-cov",
+    "pytest-xdist",
+    "pytest-sugar",
+    "pytest-html",
+    "lightning",
+    "wandb",
+    "bitarray",
+    "bitstring>=4.2",
+    "emoji",
+    "numpy==2.2.4",
+    "tensorboard",
+    "onnxconverter-common",
+    "absl-py",
+    "sphinx-glpi-theme",
+    "prettytable",
+    "pyyaml",
+    "pynvml",
+    "cvxpy",
+    "py-cpuinfo",
+    "pandas",
+    "psutil",
+    "Pillow==10.4.0",
+    "mpmath==1.3.0",
+    "myst-nb",
+    "sphinx-book-theme",
+    "pydot",
+    "attr-dot-dict",
+    "ultralytics==8.3.235",
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
