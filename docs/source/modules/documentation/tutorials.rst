@@ -50,6 +50,7 @@ The following tutorials show how to deploy an optimized model to a range of plat
    tutorials/tutorial_7_distributed_deployment
    tutorials/tutorial_8_emit_verilog
    tutorials/tutorial_9_kernel_fusion
+   tutorials/tutorial_10_pim_transform
 
 Advanced Topics
 ---------------

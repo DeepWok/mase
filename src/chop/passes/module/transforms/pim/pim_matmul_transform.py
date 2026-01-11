@@ -1,7 +1,7 @@
 import torch.nn as nn
 import logging
 
-from chop.nn.cim.cim_layer import CIMLinear, CIMConv2d, LoraCIMLinear
+from chop.nn.pim.pim_layer import PIMLinear, PIMConv2d, LoraPIMLinear
 from chop.tools import deepsetattr
 
 logger = logging.getLogger(__name__)
@@ -46,14 +46,14 @@ def parse_q_config(module, q_config):
         raise ValueError(f"Invalid q_config: {q_config}")
 
 
-def cim_matmul_transform_pass(model, q_config={}, lora_config=None):
+def pim_matmul_transform_pass(model, q_config={}, lora_config=None):
     for module in model.named_modules():
         config = parse_q_config(module, q_config)
         if config is None:
             continue
         if get_module_type(module) == "conv2d":
             ori_module = module[1]
-            new_module = CIMConv2d(
+            new_module = PIMConv2d(
                 ori_module.in_channels,
                 ori_module.out_channels,
                 ori_module.kernel_size,
@@ -68,14 +68,14 @@ def cim_matmul_transform_pass(model, q_config={}, lora_config=None):
         elif get_module_type(module) == "linear":
             ori_module = module[1]
             if lora_config is not None:
-                new_module = LoraCIMLinear(
+                new_module = LoraPIMLinear(
                     ori_module.in_features,
                     ori_module.out_features,
                     q_config=config,
                     lora_config=lora_config,
                 )
             else:
-                new_module = CIMLinear(
+                new_module = PIMLinear(
                     ori_module.in_features,
                     ori_module.out_features,
                     q_config=config,

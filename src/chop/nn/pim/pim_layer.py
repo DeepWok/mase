@@ -1,13 +1,13 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .core.matmul import cim_core
+from .core.matmul import pim_core
 import math
 
 
-class LoraCIMLinear(nn.Linear):
+class LoraPIMLinear(nn.Linear):
     """
-    Linear layer with cim simulation and LoRA adapter.
+    Linear layer with pim simulation and LoRA adapter.
     lora_config should be a dict with the following keys:
     - r: int
     - lora_alpha: float
@@ -35,7 +35,7 @@ class LoraCIMLinear(nn.Linear):
         self.scaling = lora_config["lora_alpha"] / lora_r
 
     def _linear(self, input: torch.Tensor, weight: torch.Tensor) -> torch.Tensor:
-        output = cim_core(input, weight.t(), self.q_config)
+        output = pim_core(input, weight.t(), self.q_config)
 
         # Add bias if provided
         if self.bias is not None:
@@ -50,7 +50,7 @@ class LoraCIMLinear(nn.Linear):
         return result
 
 
-class CIMLinear(nn.Linear):
+class PIMLinear(nn.Linear):
     """
     Linear layer with PCM noise simulation.
     Similar to nn.Linear but with noise modeling for PCM-based computation.
@@ -63,12 +63,12 @@ class CIMLinear(nn.Linear):
     """
 
     def __init__(self, in_features, out_features, bias=True, q_config=None):
-        super(CIMLinear, self).__init__(in_features, out_features, bias)
+        super(PIMLinear, self).__init__(in_features, out_features, bias)
         self.q_config = {} if q_config is None else q_config
 
     def forward(self, input):
         # Apply noisy matrix multiplication using the custom autograd function
-        output = cim_core(input, self.weight.t(), self.q_config)
+        output = pim_core(input, self.weight.t(), self.q_config)
 
         # Add bias if provided
         if self.bias is not None:
@@ -80,7 +80,7 @@ class CIMLinear(nn.Linear):
         return f"in_features={self.in_features}, out_features={self.out_features}, bias={self.bias is not None}"
 
 
-class CIMConv2d(nn.Conv2d):
+class PIMConv2d(nn.Conv2d):
     def __init__(
         self,
         in_channels,
@@ -114,7 +114,7 @@ class CIMConv2d(nn.Conv2d):
         patches = x_unfold.transpose(1, 2).contiguous()  # [B, L, C*kH*kW]
         patches = patches.view(-1, weight_flat.size(1))  # [B*L, C*kH*kW]
 
-        out_flat = cim_core(patches, weight_flat.t(), self.q_config)
+        out_flat = pim_core(patches, weight_flat.t(), self.q_config)
         # -> [B*L, out_channels]
 
         # reshape back to [B, out_channels, L]
