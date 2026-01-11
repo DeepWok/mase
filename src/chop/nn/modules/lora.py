@@ -115,7 +115,6 @@ class LinearLora(nn.Linear, LoraLayer):
         LoraLayer.__init__(self, in_features=in_features, out_features=out_features)
         # Freezing the pre-trained weight matrix
         self.weight.requires_grad = False
-        breakpoint()
         self.disable_adapter = disable_adapter
         self.fan_in_fan_out = config.get("fan_in_fan_out", False)
         self.is_target_conv_1d_layer = config.get("is_target_conv_1d_layer", False)

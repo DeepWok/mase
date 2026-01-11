@@ -17,6 +17,7 @@ HOME_PATH = Path(__file__).resolve().parents[5].as_posix()
 
 import copy
 
+
 def test_pim_transform_module_roberta():
     pretrained = "JeremiahZ/roberta-base-mnli"
     model = RobertaForSequenceClassification.from_pretrained(
@@ -35,7 +36,7 @@ def test_pim_transform_module_roberta():
     original_summary = get_model_summary(model)
     print("Original Model Summary (Layer Counts):")
     for cls, count in original_summary.items():
-        if count > 1: # Only print interesting ones
+        if count > 1:  # Only print interesting ones
             print(f"  {cls}: {count}")
 
     for config_name in configs:
@@ -47,7 +48,7 @@ def test_pim_transform_module_roberta():
         # Use a deepcopy to avoid modifying the original model in each iteration
         model_to_transform = copy.deepcopy(model)
         qmodel, _ = pim_matmul_transform_pass(model_to_transform, q_config)
-        
+
         q_summary = get_model_summary(qmodel)
         print(f"Transformed Model ({config_name}) Summary:")
         for cls, count in q_summary.items():
@@ -57,10 +58,15 @@ def test_pim_transform_module_roberta():
         # Print a few specific differences from the config
         print(f"  Key Config Parameters:")
         if "linear" in q_config:
-            print(f"    Linear tile_type: {q_config['linear']['config'].get('tile_type')}")
-            print(f"    Linear core_size: {q_config['linear']['config'].get('core_size')}")
-        
+            print(
+                f"    Linear tile_type: {q_config['linear']['config'].get('tile_type')}"
+            )
+            print(
+                f"    Linear core_size: {q_config['linear']['config'].get('core_size')}"
+            )
+
         print(f"Successfully transformed with {config_name}")
+
 
 if __name__ == "__main__":
     test_pim_transform_module_roberta()

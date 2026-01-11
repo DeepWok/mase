@@ -1,1 +1,1 @@
-from .matmul import cim_core, cim_tile
+from .matmul import pim_core, pim_tile
