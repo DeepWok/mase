@@ -1,0 +1,16 @@
+by: "type"
+conv2d:
+  config:
+    tile_type: "original"
+    core_size: 16
+    # rescale_dim: "vector"
+    # x_quant_type: "e5m2"
+    # weight_quant_type: "e4m3"
+
+linear:
+  config:
+    tile_type: "original"
+    core_size: 16
+    # rescale_dim: "vector"
+    # x_quant_type: "e5m2"
+    # weight_quant_type: "e4m3"
