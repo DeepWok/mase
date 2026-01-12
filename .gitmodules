@@ -7,3 +7,6 @@
 [submodule "peft"]
 	path = peft
 	url = git@github.com:huggingface/peft.git
+[submodule "submodules/torchtitan"]
+	path = submodules/torchtitan
+	url = https://github.com/pytorch/torchtitan.git
