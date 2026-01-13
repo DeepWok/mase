@@ -140,7 +140,9 @@ if MASE_TRITON_IS_AVAILABLE:
             if m_config is None:
                 continue
             if isinstance(m, HfLlamaAttention):
-                new_m = OtLlamaAttention.from_pretrained(m, **m_config)
+                new_m = OtLlamaAttention.from_pretrained(
+                    m, layer_idx=m.layer_idx, **m_config
+                )
             elif isinstance(m, _SUPPORTED_MODULE_CLS):
                 continue
             else:

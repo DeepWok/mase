@@ -54,13 +54,14 @@ class TestOnnTransform(unittest.TestCase):
         y: torch.Tensor
         assert y.isfinite().all()
 
-        attn_onn = OtLlamaAttention.from_pretrained(attn, **onn_config)
+        attn_onn = OtLlamaAttention.from_pretrained(attn, layer_idx=0, **onn_config)
         attn_onn.train()
         for _ in range(3):
             y_onn, _ = attn_onn(x, (pos_emb, pos_emb), None)
 
             snr = _calculate_snr(y, y_onn)
-            assert snr > -1
+            print(f"Attn SNR: {snr:.2f} dB")
+            assert snr > 1
 
     def test_optical_transformer_module_transform_pass(self):
         onn_config = OtTransformConfig.create_default()
@@ -116,4 +117,5 @@ class TestOnnTransform(unittest.TestCase):
             assert y_onn.isfinite().all()
 
             snr = _calculate_snr(y, y_onn)
-            assert snr > 0
+            assert snr > 1
+            print(f"Network SNR: {snr:.2f} dB")

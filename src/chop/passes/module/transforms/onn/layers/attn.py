@@ -1,51 +1,32 @@
-import logging
-import math
-from collections import namedtuple
-from typing import Callable, Optional
+from typing import Optional
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 from mase_triton.optical_compute import OpticalTransformerFunctions as OTFunctions
-from mase_triton.optical_compute import layers as OTLayers
+from mase_triton.optical_compute.layers import OpticalTransformerLinear as OTLinear
 from mase_triton.optical_compute.layers import optical_transformer_update_qstats
-from torch import Tensor
+from mase_triton.utils.torch_module import get_layer_name, set_layer_by_name
+from torch import Tensor, nn
 from transformers.models.llama.modeling_llama import (
-    LlamaAttention as HFLlamaAttention,
-)
-from transformers.models.llama.modeling_llama import (
-    LlamaDecoderLayer as HFLlamaDecoderLayer,
-)
-from transformers.models.llama.modeling_llama import (
-    apply_rotary_pos_emb as hf_apply_rotary_pos_emb,
+    LlamaAttention,
+    LlamaConfig,
+    LlamaDecoderLayer,
+    LlamaForCausalLM,
+    apply_rotary_pos_emb,
+    eager_attention_forward,
+    repeat_kv,
 )
 
-logger = logging.getLogger(__name__)
 
-
-def optical_transformer_SDPA(
-    query,
-    key,
-    value,
-    query_min_max: Tensor,
-    key_min_max: Tensor,
-    qk_min_max: Tensor,
-    attn_min_max: Tensor,
-    value_min_max: Tensor,
-    av_min_max: Tensor,
-    q_min_max_quantiles: Tensor,
-    q_seed: Tensor,
-    q_update_stats: bool,
-    q_levels: int = 256,
-    q_lut_min: float = 0.020040,
-    q_smooth_factor: float = 0.9,
-    q_bypass: bool = False,
-    attn_mask=None,
-    dropout_p=0.0,
-    is_causal=False,
-    scale=None,
-    enable_gqa=False,
-) -> torch.Tensor:
+def ot_eager_attention_forward(
+    module: "OtLlamaAttention",
+    query: torch.Tensor,
+    key: torch.Tensor,
+    value: torch.Tensor,
+    attention_mask: Optional[torch.Tensor],
+    scaling: float,
+    dropout: float = 0.0,
+    **kwargs,
+):
     """
     Optical Transformer Scaled Dot-Product Attention.
 
@@ -60,135 +41,115 @@ def optical_transformer_SDPA(
         query (Tensor): Query tensor of shape ``(batch, heads, seq_len, head_dim)``.
         key (Tensor): Key tensor of shape ``(batch, kv_heads, seq_len, head_dim)``.
         value (Tensor): Value tensor of shape ``(batch, kv_heads, seq_len, head_dim)``.
-        query_min_max (Tensor): Running min/max statistics for query quantization.
-        key_min_max (Tensor): Running min/max statistics for key quantization.
-        qk_min_max (Tensor): Running min/max statistics for query-key product.
-        attn_min_max (Tensor): Min/max range for attention weights (typically [0, 1]).
-        value_min_max (Tensor): Running min/max statistics for value quantization.
-        av_min_max (Tensor): Running min/max statistics for attention-value product.
-        q_min_max_quantiles (Tensor): Quantile values for computing statistics.
-        q_seed (Tensor): Random seed for quantization noise.
-        q_update_stats (bool): Whether to update running statistics.
-        q_levels (int): Number of quantization levels. Default: 256.
-        q_lut_min (float): Minimum value for lookup table. Default: 0.020040.
-        q_smooth_factor (float): EMA smoothing factor for statistics. Default: 0.9.
-        q_bypass (bool): If True, skip quantization. Default: False.
-        attn_mask (Tensor, optional): Attention mask. Default: None.
-        dropout_p (float): Dropout probability. Default: 0.0.
-        is_causal (bool): If True, apply causal masking. Default: False.
-        scale (float, optional): Scaling factor. If None, uses ``1/sqrt(head_dim)``.
-        enable_gqa (bool): Enable grouped query attention. Default: False.
+        attention_mask (Tensor, optional): Attention mask. Default: None.
+        dropout (float): Dropout probability. Default: 0.0.
+        scaling (float, optional): Scaling factor. If None, uses ``1/sqrt(head_dim)``.
 
     Returns:
         Tensor: Attention output of shape ``(batch, heads, seq_len, head_dim)``.
     """
-    L, S = query.size(-2), key.size(-2)
-    scale_factor = 1 / math.sqrt(query.size(-1)) if scale is None else scale
-    attn_bias = torch.zeros(L, S, dtype=query.dtype, device=query.device)
-    if is_causal:
-        # When is_causal=True, we construct a causal mask and ignore attn_mask
-        # (similar to PyTorch's scaled_dot_product_attention behavior)
-        temp_mask = torch.ones(L, S, dtype=torch.bool).tril(diagonal=0).to(query.device)
-        attn_bias.masked_fill_(temp_mask.logical_not(), float("-inf"))
-        attn_bias.to(query.dtype)
-    elif attn_mask is not None:
-        if attn_mask.dtype == torch.bool:
-            attn_bias.masked_fill_(attn_mask.logical_not(), float("-inf"))
-        else:
-            attn_bias = attn_mask + attn_bias
-
-    if enable_gqa:
-        key = key.repeat_interleave(query.size(-3) // key.size(-3), -3)
-        value = value.repeat_interleave(query.size(-3) // value.size(-3), -3)
-
-    # attn_weight = query @ key.transpose(-2, -1) * scale_factor
-    #
-    if q_update_stats:
-        with torch.no_grad():
-            query_min_max_ = optical_transformer_update_qstats(
-                query, query_min_max, q_min_max_quantiles, q_smooth_factor
-            )
-            query_min_max.copy_(query_min_max_)
-            key_min_max_ = optical_transformer_update_qstats(
-                key, key_min_max, q_min_max_quantiles, q_smooth_factor
-            )
-            key_min_max.copy_(key_min_max_)
-            value_min_max_ = optical_transformer_update_qstats(
-                value, value_min_max, q_min_max_quantiles, q_smooth_factor
-            )
-            value_min_max.copy_(value_min_max_)
-            if not qk_min_max.isfinite().all():
-                attn_weight_ = query @ key.transpose(-2, -1)
-                attn_score_ = torch.softmax(
-                    attn_weight_ * scale_factor + attn_bias, dim=-1
-                )
-                y_ = attn_score_ @ value
-                qk_min_max_ = optical_transformer_update_qstats(
-                    attn_weight_, qk_min_max, q_min_max_quantiles, q_smooth_factor
-                )
-                qk_min_max.copy_(qk_min_max_)
-                # attn_min_max_ = _optical_transformer_update_stats(
-                #     attn_score_, attn_min_max, query_min_max, q_smooth_factor
-                # )
-                # attn_min_max.copy_(attn_min_max_)
-                av_min_max_ = optical_transformer_update_qstats(
-                    y_, av_min_max, q_min_max_quantiles, q_smooth_factor
-                )
-                av_min_max.copy_(av_min_max_)
-
-    attn_weight, _ = OTFunctions.quantized_matmul_fn(
-        a=query.contiguous(),
-        b=key.transpose(-2, -1).contiguous(),
-        a_min=query_min_max[0].item(),
-        a_max=query_min_max[1].item(),
-        b_min=key_min_max[0].item(),
-        b_max=key_min_max[1].item(),
-        b_lut_min=q_lut_min,
-        o_min=qk_min_max[0].item(),
-        o_max=qk_min_max[1].item(),
-        q_levels=q_levels,
-        q_seed=q_seed.item(),
-        skip_quantize=q_bypass,
-    )
-    if q_update_stats:
-        with torch.no_grad():
+    with torch.no_grad():
+        query_min_max_ = optical_transformer_update_qstats(
+            query,
+            module.query_min_max,
+            module.q_min_max_quantiles,
+            module.stat_smooth_factor,
+        )
+        module.query_min_max.copy_(query_min_max_)
+        key_min_max_ = optical_transformer_update_qstats(
+            key,
+            module.key_min_max,
+            module.q_min_max_quantiles,
+            module.stat_smooth_factor,
+        )
+        module.key_min_max.copy_(key_min_max_)
+        key_states = repeat_kv(key, module.num_key_value_groups)
+        if not module.qk_min_max.isfinite().all():
+            attn_weights = torch.matmul(query, key_states.transpose(-1, -2)) * scaling
             qk_min_max_ = optical_transformer_update_qstats(
-                attn_weight, qk_min_max, q_min_max_quantiles, q_smooth_factor
+                attn_weights,
+                module.qk_min_max,
+                module.q_min_max_quantiles,
+                module.stat_smooth_factor,
             )
-            qk_min_max.copy_(qk_min_max_)
+            module.qk_min_max.copy_(qk_min_max_)
 
-    attn_weight = attn_weight * scale_factor
-    #
-    attn_weight += attn_bias
-    attn_weight = torch.softmax(attn_weight, dim=-1)
-    attn_weight = torch.dropout(attn_weight, dropout_p, train=True)
-    # y = attn_weight @ value
-    #
-    y, _ = OTFunctions.quantized_matmul_fn(
-        a=attn_weight,
-        b=value.contiguous(),
-        a_min=attn_min_max[0].item(),
-        a_max=attn_min_max[1].item(),
-        b_min=value_min_max[0].item(),
-        b_max=value_min_max[1].item(),
-        b_lut_min=q_lut_min,
-        o_min=av_min_max[0].item(),
-        o_max=av_min_max[1].item(),
-        q_levels=q_levels,
-        q_seed=q_seed.item() + 1,
-        skip_quantize=q_bypass,
+    key_states = repeat_kv(key, module.num_key_value_groups)
+    value_states = repeat_kv(value, module.num_key_value_groups)
+
+    # attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling
+    attn_weights, _ = OTFunctions.quantized_matmul_fn(
+        a=query.contiguous(),
+        b=key_states.transpose(2, 3).contiguous(),
+        a_min=module.query_min_max[0],
+        a_max=module.query_min_max[1],
+        b_min=module.key_min_max[0],
+        b_max=module.key_min_max[1],
+        b_lut_min=module.q_lut_min,
+        o_min=module.qk_min_max[0],
+        o_max=module.qk_min_max[1],
+        q_levels=module.q_levels,
+        q_seed=module.seed.item(),
+        skip_quantize=False,
     )
-    if q_update_stats:
-        with torch.no_grad():
-            av_min_max_ = optical_transformer_update_qstats(
-                y, av_min_max, q_min_max_quantiles, q_smooth_factor
-            )
-            av_min_max.copy_(av_min_max_)
-    #
-    return y
+    attn_weights = attn_weights * scaling
 
+    if attention_mask is not None:
+        causal_mask = attention_mask[:, :, :, : key_states.shape[-2]]
+        attn_weights = attn_weights + causal_mask
 
-FakeModelArgs = namedtuple("FakeModelArgs", ["n_heads", "n_kv_heads", "dim"])
+    attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(
+        query.dtype
+    )
+    attn_weights = nn.functional.dropout(
+        attn_weights, p=dropout, training=module.training
+    )
+    # attn_output = torch.matmul(attn_weights, value_states)
+
+    with torch.no_grad():
+        attn_min_max_ = optical_transformer_update_qstats(
+            attn_weights,
+            module.attn_min_max,
+            module.q_min_max_quantiles,
+            module.stat_smooth_factor,
+        )
+        module.attn_min_max.copy_(attn_min_max_)
+        value_min_max_ = optical_transformer_update_qstats(
+            value_states,
+            module.value_min_max,
+            module.q_min_max_quantiles,
+            module.stat_smooth_factor,
+        )
+        module.value_min_max.copy_(value_min_max_)
+        attn_ = torch.matmul(attn_weights, value_states)
+        av_min_max_ = optical_transformer_update_qstats(
+            attn_,
+            module.av_min_max,
+            module.q_min_max_quantiles,
+            module.stat_smooth_factor,
+        )
+        module.av_min_max.copy_(av_min_max_)
+
+    attn_output, _ = OTFunctions.quantized_matmul_fn(
+        a=attn_weights.contiguous(),
+        b=value_states.contiguous(),
+        a_min=module.attn_min_max[0],
+        a_max=module.attn_min_max[1],
+        b_min=module.value_min_max[0],
+        b_max=module.value_min_max[1],
+        b_lut_min=module.q_lut_min,
+        o_min=module.av_min_max[0],
+        o_max=module.av_min_max[1],
+        q_levels=module.q_levels,
+        q_seed=module.seed.item(),
+        skip_quantize=module.bypass,
+    )
+    with torch.no_grad():
+        module.seed += 1
+
+    attn_output = attn_output.transpose(1, 2).contiguous()
+
+    return attn_output, attn_weights
 
 
 class OtLlamaAttention(nn.Module):
@@ -234,6 +195,7 @@ class OtLlamaAttention(nn.Module):
             # Create from existing HuggingFace attention layer
             ot_attn = OtLlamaAttention.from_pretrained(
                 hf_attention_layer,
+                layer_idx=0,
                 q_levels=256,
                 q_bypass=False,
             )
@@ -241,7 +203,7 @@ class OtLlamaAttention(nn.Module):
 
     def __init__(
         self,
-        config,
+        config: LlamaConfig,
         layer_idx: int,
         q_levels: int = 256,
         q_lut_min: float = 0.020040,
@@ -316,9 +278,9 @@ class OtLlamaAttention(nn.Module):
         self,
         hidden_states: torch.Tensor,
         position_embeddings: tuple[torch.Tensor, torch.Tensor],
-        attention_mask,
+        attention_mask: Optional[torch.Tensor],
         past_key_value=None,
-        cache_position=None,
+        cache_position: Optional[torch.LongTensor] = None,
         **kwargs,
     ) -> tuple[torch.Tensor, Optional[torch.Tensor], Optional[tuple[torch.Tensor]]]:
         input_shape = hidden_states.shape[:-1]
@@ -329,7 +291,7 @@ class OtLlamaAttention(nn.Module):
         value_states = self.v_proj(hidden_states).view(hidden_shape).transpose(1, 2)
 
         cos, sin = position_embeddings
-        query_states, key_states = hf_apply_rotary_pos_emb(
+        query_states, key_states = apply_rotary_pos_emb(
             query_states, key_states, cos, sin
         )
 
@@ -340,54 +302,30 @@ class OtLlamaAttention(nn.Module):
                 key_states, value_states, self.layer_idx, cache_kwargs
             )
 
-        attn_weights = None
         if self.bypass:
-            attn_output = F.scaled_dot_product_attention(
+            attn_output, attn_weights = eager_attention_forward(
+                self,
                 query_states,
                 key_states,
                 value_states,
-                is_causal=True,
-                dropout_p=0.0 if not self.training else self.attention_dropout,
-                scale=self.scaling,
-                attn_mask=attention_mask,
+                attention_mask,
+                dropout=0.0 if not self.training else self.attention_dropout,
+                scaling=self.scaling,
+                **kwargs,
             )
         else:
-            # Check if stats are uninitialized (inf)
-            is_uninitialized = (
-                self.query_min_max.isinf().any()
-                or self.key_min_max.isinf().any()
-                or self.value_min_max.isinf().any()
-                or self.qk_min_max.isinf().any()
-                or self.av_min_max.isinf().any()
-            )
-
-            attn_output = optical_transformer_SDPA(
+            attn_output, attn_weights = ot_eager_attention_forward(
+                self,
                 query_states,
                 key_states,
                 value_states,
-                query_min_max=self.query_min_max,
-                key_min_max=self.key_min_max,
-                qk_min_max=self.qk_min_max,
-                attn_min_max=self.attn_min_max,
-                value_min_max=self.value_min_max,
-                av_min_max=self.av_min_max,
-                q_min_max_quantiles=self.q_min_max_quantiles,
-                q_seed=self.seed,
-                q_update_stats=self.training or is_uninitialized,
-                q_levels=self.q_levels,
-                q_lut_min=self.q_lut_min,
-                q_smooth_factor=0.0 if is_uninitialized else self.stat_smooth_factor,
-                q_bypass=self.bypass,
-                is_causal=True,
-                dropout_p=0.0 if not self.training else self.attention_dropout,
-                scale=self.scaling,
-                attn_mask=attention_mask,
-                enable_gqa=self.num_key_value_groups > 1,
+                attention_mask,
+                dropout=0.0 if not self.training else self.attention_dropout,
+                scaling=self.scaling,
+                **kwargs,
             )
-            with torch.no_grad():
-                self.seed = self.seed + 2
+            self.seed += 1
 
-        attn_output = attn_output.transpose(1, 2).contiguous()
         attn_output = attn_output.reshape(*input_shape, -1).contiguous()
         attn_output = self.o_proj(attn_output)
         return attn_output, attn_weights
@@ -395,45 +333,26 @@ class OtLlamaAttention(nn.Module):
     @classmethod
     def from_pretrained(
         cls,
-        attn: HFLlamaAttention,
+        attn: LlamaAttention,
+        layer_idx: int,
         q_levels: int = 256,
         q_lut_min: float = 0.020040,
         q_quantiles: tuple[float, float] | None = None,
         q_smooth_factor: float = 0.9,
         q_init_seed: int = 0,
         q_bypass: bool = False,
-    ):
-        """
-        Create an OtLlamaAttention module from a pretrained HuggingFace LlamaAttention.
-
-        This factory method converts an existing LlamaAttention layer to its optical
-        transformer equivalent, copying over the pretrained weights.
-
-        Args:
-            attn (HFLlamaAttention): The source HuggingFace LlamaAttention module.
-            q_levels (int): Number of quantization levels. Default: 256.
-            q_lut_min (float): Minimum value for lookup table. Default: 0.020040.
-            q_quantiles (tuple[float, float], optional): Quantile range for statistics. Default: None.
-            q_smooth_factor (float): Smoothing factor for running statistics. Default: 0.9.
-            q_init_seed (int): Random seed for initialization. Default: 0.
-            q_bypass (bool): If True, bypass optical quantization. Default: False.
-
-        Returns:
-            OtLlamaAttention: A new optical transformer attention module with copied weights.
-        """
-        new_attn = cls(
+    ) -> "OtLlamaAttention":
+        assert isinstance(attn, LlamaAttention)
+        ot_attn = cls(
             attn.config,
-            attn.layer_idx,
-            q_levels=q_levels,
-            q_lut_min=q_lut_min,
-            q_quantiles=q_quantiles,
-            q_smooth_factor=q_smooth_factor,
-            q_init_seed=q_init_seed,
-            q_bypass=q_bypass,
+            layer_idx,
+            q_levels,
+            q_lut_min,
+            q_quantiles,
+            q_smooth_factor,
+            q_init_seed,
+            q_bypass,
         )
-
-        with torch.no_grad():
-            if attn.q_proj.weight.device != torch.device("meta"):
-                new_attn.load_state_dict(attn.state_dict(), strict=False)
-
-        return new_attn
+        ot_attn.to(attn.o_proj.weight.dtype)
+        ot_attn.load_state_dict(attn.state_dict(), strict=False)
+        return ot_attn
