@@ -1,5 +1,6 @@
-from setuptools import setup, find_packages
 import sys
+
+from setuptools import find_packages, setup
 
 
 def is_cuda_available():
@@ -98,7 +99,7 @@ requirements = [
 ]
 
 if is_cuda_available():
-    requirements += ["mase-triton", "pycuda", "tensorrt"]
+    requirements += ["mase-triton>=0.0.6.post4", "pycuda", "tensorrt"]
 
 setup(
     name="mase-tools",
