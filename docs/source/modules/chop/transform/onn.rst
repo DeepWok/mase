@@ -1,5 +1,5 @@
 chop.passes.module.transforms.onn
-=================================
+==================================
 
 This module provides transformation passes for converting standard neural network
 modules into Optical Neural Network (ONN) equivalents. The optical transformer
@@ -71,6 +71,10 @@ Configuration Parameters
      - float
      - 0.020040
      - Minimum value for the lookup table used in quantization
+   * - ``q_quantiles``
+     - tuple[float, float] or None
+     - None
+     - Quantile range for min/max statistics. If None, uses absolute min/max
    * - ``q_smooth_factor``
      - float
      - 0.9
@@ -111,7 +115,7 @@ OtLinear
 
       :param linear: Source linear layer
       :type linear: torch.nn.Linear
-      :param kwargs: Quantization parameters (q_levels, q_lut_min, etc.)
+      :param kwargs: Quantization parameters (q_levels, q_lut_min, q_smooth_factor, q_init_seed, q_bypass, etc.)
       :return: Optical transformer linear layer with copied weights
 
 
@@ -127,10 +131,10 @@ OtLlamaAttention
 Functional API
 --------------
 
-optical\_transformer\_SDPA
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+ot\_eager\_attention\_forward
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autofunction:: chop.passes.module.transforms.onn.layers.attn.optical_transformer_SDPA
+.. autofunction:: chop.passes.module.transforms.onn.layers.attn.ot_eager_attention_forward
 
 
 Usage Example
