@@ -5,7 +5,7 @@ chop.passes.module
 Summary of Mase Module Analysis Passes
 --------------------------------------
 
-.. list-table:: MASE module-level analysis passes 
+.. list-table:: MASE module-level analysis passes
   :widths: 20 40 40
   :header-rows: 1
 
@@ -25,7 +25,7 @@ Summary of Mase Module Analysis Passes
 Summary of Mase Module Transform Passes
 ---------------------------------------
 
-.. list-table:: MASE module-level transform passes 
+.. list-table:: MASE module-level transform passes
   :widths: 20 40 40
   :header-rows: 1
 
@@ -35,9 +35,13 @@ Summary of Mase Module Transform Passes
   * - :py:meth:`~chop.passes.module.transforms.quantize.quantize_module_transform_pass`
     - `test_module_quantize <https://github.com/DeepWok/mase/blob/main/test/passes/module/transforms/quantize/test_quantize_module.py>`_
     - Apply quantization transformation to the given nn.Module
+  * - :py:meth:`~chop.passes.module.transforms.onn.optical_transformer_module_transform_pass`
+    - See :doc:`transform/onn`
+    - Transform modules to Optical Neural Network (ONN) equivalents
 
 .. toctree::
   :maxdepth: 2
   :caption: Full list of module-level transform passes
 
   module_transform/quantization
+  transform/onn
