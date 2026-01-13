@@ -1,25 +1,11 @@
-import sys
+[project]
+name = "mase"
+version = "1.0.0"
+description = "Machine-Learning Accelerator System Exploration Tools"
+readme = "README.md"
+requires-python = ">=3.11.9"
 
-from setuptools import find_packages, setup
-
-
-def is_cuda_available():
-    try:
-        import torch
-
-        return torch.cuda.is_available()
-    except:
-        print(
-            "You need to install PyTorch before installing MASE: https://pytorch.org/get-started/locally/."
-        )
-        return False
-
-
-def get_system():
-    return sys.platform
-
-
-requirements = [
+dependencies = [
     "torch==2.6",
     "torchvision",
     "onnx",
@@ -31,7 +17,6 @@ requirements = [
     "pytest",
     "pytorch-lightning",
     "transformers==4.51",
-    "toml",
     "timm",
     "pytorch-nlp",
     "datasets==3.3.2",
@@ -60,7 +45,6 @@ requirements = [
     "imageio-ffmpeg",
     "opencv-python",
     "kornia",
-    "einops",
     "ghp-import",
     "optimum==1.24.0",
     "pytest-profiling",
@@ -72,19 +56,16 @@ requirements = [
     "lightning",
     "wandb",
     "bitarray",
-    "bitstring",
+    "bitstring>=4.2",
     "emoji",
     "numpy==2.2.4",
     "tensorboard",
-    "sphinx_needs",
     "onnxconverter-common",
     "absl-py",
     "sphinx-glpi-theme",
     "prettytable",
     "pyyaml",
     "pynvml",
-    "bitstring>=4.2",
-    "myst_parser",
     "cvxpy",
     "py-cpuinfo",
     "pandas",
@@ -95,23 +76,13 @@ requirements = [
     "sphinx-book-theme",
     "pydot",
     "attr-dot-dict",
-    "ultralytics",
+    "ultralytics==8.3.235",
+    "mase-triton>=0.0.6.post4",
 ]
 
-if is_cuda_available():
-    requirements += ["mase-triton>=0.0.6.post4", "pycuda", "tensorrt"]
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
-setup(
-    name="mase-tools",
-    version="1.0.0",
-    description="Machine-Learning Accelerator System Exploration Tools",
-    author="Aaron Zhao, Jianyi Cheng, Cheng Zhang, Pedro Gimenes",
-    author_email="a.zhao@imperial.ac.uk, jianyi.cheng17@imperial.ac.uk, chengzhang98@outlook.com, pedro.gimenes19@imperial.ac.uk",
-    license_files=("LICENSE",),
-    python_requires=">=3.11.9",
-    package_dir={
-        "": "src",
-    },
-    packages=find_packages("src"),
-    install_requires=requirements,
-)
+[tool.setuptools.packages.find]
+where = ["src"]

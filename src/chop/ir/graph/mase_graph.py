@@ -382,7 +382,7 @@ class MaseGraph:
             MaseGraph: Loaded MaseGraph.
         """
         with open(f"{checkpoint}.pt", "rb") as f:
-            loaded_model = torch.load(f)
+            loaded_model = torch.load(f, weights_only=False)
 
         assert isinstance(
             loaded_model, fx.GraphModule
@@ -455,7 +455,9 @@ class MaseGraph:
 
         logger.info(f"Exporting GraphModule to {fname}.pt")
         with open(f"{fname}.pt", "wb") as f:
-            torch.save(self.model, f)
+            # torch.save(self.model, f)
+            # Parametrized modules cannot be pickled as full objects; save weights only.
+            torch.save(self.model.state_dict(), f)
 
         logger.info(f"Exporting MaseMetadata to {fname}.mz")
 

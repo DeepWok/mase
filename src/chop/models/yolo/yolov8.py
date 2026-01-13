@@ -2,7 +2,10 @@ from chop.models.utils import register_mase_model, ModelSource, ModelTaskType
 from ultralytics.nn.tasks import DetectionModel, SegmentationModel
 from ultralytics import YOLO
 import ultralytics.nn.modules as unnmod
-from ultralytics.utils.ops import non_max_suppression
+try:
+    from ultralytics.utils.nms import non_max_suppression
+except ImportError:
+    from ultralytics.utils.ops import non_max_suppression
 from ultralytics.utils.tal import make_anchors, dist2bbox
 import torch
 import types

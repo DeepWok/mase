@@ -1,14 +1,14 @@
 try:
-    import mase_triton
-    import mase_triton.random_bitflip
+    from mase_triton.random_bitflip.layers import RandomBitFlipLinear
 
     MASE_TRITON_AVAILABLE = True
 except ImportError:
     MASE_TRITON_AVAILABLE = False
 
 import torch
-from ...state_dict_map import match_a_pattern
+
 from ...module_modify_helper import replace_by_name
+from ...state_dict_map import match_a_pattern
 
 
 def get_config_by_name(config: dict, name: str):
@@ -44,7 +44,7 @@ def get_layer_config(
 
 if MASE_TRITON_AVAILABLE:
     BITFLIP_CLS_MAP = {
-        torch.nn.Linear: mase_triton.random_bitflip.layers.RandomBitFlipLinear,
+        torch.nn.Linear: RandomBitFlipLinear,
     }
 
     def bitflip_module_transform_pass(
@@ -87,4 +87,4 @@ else:
     def bitflip_module_transform_pass(
         network: torch.nn.Module, pass_args: dict
     ) -> torch.nn.Module:
-        raise RuntimeError("mase_triton is not available, please install it first.")
+        raise RuntimeError("mase-triton is not available, please install it first.")

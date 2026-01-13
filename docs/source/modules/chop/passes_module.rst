@@ -5,7 +5,7 @@ chop.passes.module
 Summary of Mase Module Analysis Passes
 --------------------------------------
 
-.. list-table:: MASE module-level analysis passes 
+.. list-table:: MASE module-level analysis passes
   :widths: 20 40 40
   :header-rows: 1
 
@@ -25,7 +25,7 @@ Summary of Mase Module Analysis Passes
 Summary of Mase Module Transform Passes
 ---------------------------------------
 
-.. list-table:: MASE module-level transform passes 
+.. list-table:: MASE module-level transform passes
   :widths: 20 40 40
   :header-rows: 1
 
@@ -38,6 +38,9 @@ Summary of Mase Module Transform Passes
   * - :py:meth:`~chop.passes.module.transforms.pim.pim_matmul_transform_pass`
     - `test_cim_transform_module_roberta <https://github.com/DeepWok/mase/blob/main/test/passes/module/transforms/cim/test_cim_transform_module_roberta.py>`_
     - Apply PIM transformation to the given nn.Module to simulate PIM hardware.
+  * - :py:meth:`~chop.passes.module.transforms.onn.optical_transformer_module_transform_pass`
+    - See :doc:`transform/onn`
+    - Transform modules to Optical Neural Network (ONN) equivalents
 
 .. toctree::
   :maxdepth: 2
@@ -45,3 +48,4 @@ Summary of Mase Module Transform Passes
 
   module_transform/quantization
   module_transform/pim
+  transform/onn
