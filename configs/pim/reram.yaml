@@ -1,0 +1,14 @@
+by: "type"
+conv2d:
+  config:
+    tile_type: "reram"
+    core_size: 256
+    num_bits: 3
+    noise_magnitude: 0.1
+
+linear:
+  config:
+    tile_type: "reram"
+    core_size: 256
+    num_bits: 3
+    noise_magnitude: 0.1

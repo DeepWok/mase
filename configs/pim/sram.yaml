@@ -1,0 +1,16 @@
+by: "type"
+# conv2d:
+#   config:
+#     tile_type: "digital"
+#     core_size: 16
+#     rescale_dim: "vector"
+#     x_quant_type: "int4"
+#     weight_quant_type: "e4m3"
+
+linear:
+  config:
+    tile_type: "digital"
+    core_size: 64
+    rescale_dim: "vector"
+    x_quant_type: "e4m3"
+    weight_quant_type: "e4m3"

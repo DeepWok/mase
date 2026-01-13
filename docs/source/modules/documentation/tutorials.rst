@@ -59,6 +59,7 @@ Advanced Topics
 
    tutorials/advanced/tensorRT_quantization_tutorial
    tutorials/advanced/onnxrt_quantization_tutorial
+   tutorials/advanced/pim_transform_tutorial
    tutorials/advanced/cli
 
 
