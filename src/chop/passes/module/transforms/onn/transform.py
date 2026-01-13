@@ -126,9 +126,10 @@ if MASE_TRITON_IS_AVAILABLE:
             Install via ``pip install mase-triton``.
         """
         by = pass_args.pop("by", "regex_name")
-        assert by in ["name", "regex_name"], (
-            f"`by` can be either 'name' or 'regex_name', but got {by}"
-        )
+        assert by in [
+            "name",
+            "regex_name",
+        ], f"`by` can be either 'name' or 'regex_name', but got {by}"
         # replace attn layers if any
         for m_name, m in network.named_modules():
             if not isinstance(m, HfLlamaAttention):
