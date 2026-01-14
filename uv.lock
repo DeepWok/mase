@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.11.9"
 resolution-markers = [
     "python_full_version >= '3.13' and sys_platform == 'win32'",
@@ -2179,6 +2179,7 @@ dependencies = [
     { name = "ipython" },
     { name = "kornia" },
     { name = "lightning" },
+    { name = "mase-triton" },
     { name = "matplotlib" },
     { name = "mpmath" },
     { name = "myst-nb" },
@@ -2254,6 +2255,7 @@ requires-dist = [
     { name = "ipython" },
     { name = "kornia" },
     { name = "lightning" },
+    { name = "mase-triton", specifier = ">=0.0.6.post4" },
     { name = "matplotlib" },
     { name = "mpmath", specifier = "==1.3.0" },
     { name = "myst-nb" },
@@ -2302,6 +2304,21 @@ requires-dist = [
     { name = "transformers", specifier = "==4.51" },
     { name = "ultralytics", specifier = "==8.3.235" },
     { name = "wandb" },
+]
+
+[[package]]
+name = "mase-triton"
+version = "0.0.6.post4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "colorlog" },
+    { name = "numpy" },
+    { name = "torch" },
+    { name = "triton" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/40/74/7b48cdd7a54e712563d62f5d41681c5331f71daba39dd530d1c0ec6c7d43/mase_triton-0.0.6.post4.tar.gz", hash = "sha256:23ca61ad3a2402094ac1bd6510cddc51551c32ec7123bdf0ad556dbf1479db88", size = 53935, upload-time = "2025-09-16T11:07:34.675Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/03/47/086befcf31b7c35d6b3c1cf935d0f1e5839ce57926042b51347bdfaa3ad8/mase_triton-0.0.6.post4-py3-none-any.whl", hash = "sha256:264ceae871a52b74f3fc7172a3f15cd142a82dfe5a9520fbf54acb85126a77a9", size = 61797, upload-time = "2025-09-16T11:07:33.036Z" },
 ]
 
 [[package]]
