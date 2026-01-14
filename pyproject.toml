@@ -77,7 +77,9 @@ dependencies = [
     "pydot",
     "attr-dot-dict",
     "ultralytics==8.3.235",
-    "mase-triton>=0.0.6.post4",
+    # mase-triton is automatically installed on Linux x86_64
+    # On other platforms, install manually if needed: pip install mase-triton
+    "mase-triton>=0.0.6.post4; platform_machine == 'x86_64' and sys_platform == 'linux'",
 ]
 
 [build-system]
