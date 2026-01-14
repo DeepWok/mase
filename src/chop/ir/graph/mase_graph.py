@@ -424,13 +424,16 @@ class MaseGraph:
     def export(
         self,
         fname: str = "masegraph",
+        save_format: str = "full_model",
     ):
         """
         Export the MaseGraph to a pair of files: {fname}.pt and {fname}.mz.
-        {fname}.pt contains the GraphModule, and {fname}.mz contains the MaseMetadata.
+        {fname}.pt contains the complete GraphModule (structure + weights), 
+        and {fname}.mz contains the MaseMetadata.
 
         Args:
             fname (str): Filename to save the MaseGraph to. Defaults to "masegraph".
+            save_format (str): Format to save. "full_model" (default) or "state_dict".
         """
 
         fname = fname.split(".")[0]
@@ -455,9 +458,12 @@ class MaseGraph:
 
         logger.info(f"Exporting GraphModule to {fname}.pt")
         with open(f"{fname}.pt", "wb") as f:
-            # torch.save(self.model, f)
-            # Parametrized modules cannot be pickled as full objects; save weights only.
-            torch.save(self.model.state_dict(), f)
+            if save_format == "state_dict":
+                logger.info("Saving state_dict format")
+                torch.save(self.model.state_dict(), f)
+            else:
+                logger.info("Saving full model format")
+                torch.save(self.model, f)
 
         logger.info(f"Exporting MaseMetadata to {fname}.mz")
 
