@@ -35,7 +35,7 @@ You will start by generating a MaseGraph for a Bert model. You will then fine-tu
 Learning tasks
 ==============
 
-1. Make sure you have read and understood the installation of the framework, detailed `here <https://deepwok.github.io/mase/modules/documentation/getting_started.html>`__.
+1. Make sure you have read and understood the installation of the framework, detailed `here <https://deepwok.github.io/mase/modules/documentation/installation.html>`__.
 
 2. Go through `"Tutorial 1: Introduction to the Mase IR, MaseGraph and Torch FX passes" <https://github.com/DeepWok/mase/blob/main/docs/source/modules/documentation/tutorials/tutorial_1_introduction_to_mase.ipynb>`__ to understand the basic concepts of the framework.
 
