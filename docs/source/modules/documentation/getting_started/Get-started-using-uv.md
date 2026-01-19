@@ -47,20 +47,23 @@ In the `uv` workflow, the standard way to execute commands is via `uv run`. This
    ```
 
 2. **Running tests**:
+   You can run the test suite while ignoring tests that require heavy hardware dependencies (like Verilator) or platform-specific packages (like `mase-triton`):
    ```bash
-   uv run pytest test/
+   uv run pytest test/ --ignore=test/passes/graph/transforms/verilog --ignore=test/passes/module/transforms/onn/test_optical_transformer.py
    ```
 
 ## Test your installation
 
-1. (Optional but suggested) Verify the installation was successful by importing the software stack:
+To verify that the MASE software stack (Chop) is correctly installed without needing heavy hardware dependencies (like Verilator), run a simple smoke test:
 
-```bash
-uv run python -c "import chop"
-```
+1. **Verify software stack (Chop)**:
+   This test ensures the core IR and graph creation features are working correctly.
+   ```bash
+   uv run pytest test/ir/graph/test_create_masegraph.py
+   ```
 
-2. (Optional but suggested) Run the test stack to ensure the codebase is functioning correctly:
-
-```bash
-uv run pytest test/
-```
+2. **Verify Tutorial dependencies**:
+   Try importing the main package to ensure all Python dependencies (like `transformers`, `torch`, etc.) are available:
+   ```bash
+   uv run python -c "import chop; import transformers; print('Environment ready!')"
+   ```

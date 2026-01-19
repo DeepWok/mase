@@ -1,7 +1,7 @@
 Installation
 =============================
 
-To use MASE, you can easily create an environment with all required dependendies using uv, Docker or Anaconda. Follow the instructions on the links below according to your preferred method.
+To use MASE, you can easily create an environment with all required dependendies using uv (recommended), Docker. Follow the instructions on the links below according to your preferred method.
 
 .. hint::
 
@@ -10,7 +10,6 @@ To use MASE, you can easily create an environment with all required dependendies
 .. toctree::
     :maxdepth: 1
     getting_started/Get-started-using-uv
-    getting_started/Get-started-using-Anaconda
     getting_started/Get-started-using-Docker
     getting_started/Get-started-using-Nix
     getting_started/Get-started-students
