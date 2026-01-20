@@ -173,3 +173,9 @@ test-trainer/
 
 # DiffLogic: tutorial files
 docs/tutorials/difflogic/data-mnist/
+
+# HuggingFace cache (Transformers)
+.cache/huggingface/
+
+# Generated MASE / FX graphs
+*.svg
