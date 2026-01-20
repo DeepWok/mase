@@ -1,0 +1,34 @@
+# CUDA runtime base (works with nvidia-container-toolkit)
+FROM nvidia/cuda:12.3.2-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    HF_HOME=/workspace/.cache/huggingface \
+    TRANSFORMERS_CACHE=/workspace/.cache/huggingface
+
+# System deps: python, build tools, git, and graphviz for mg.draw()
+RUN apt-get update && apt-get install -y \
+    python3 python3-pip python3-venv \
+    git curl ca-certificates \
+    build-essential \
+    graphviz \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN ln -sf /usr/bin/python3 /usr/bin/python
+RUN python -m pip install --upgrade pip
+
+WORKDIR /workspace
+
+# Install MASE (editable) + tutorial deps
+# (MASE is "chop" module; transformers is needed for Tutorial 1)
+COPY pyproject.toml ./
+COPY README.md ./
+RUN pip install -e . || true
+
+COPY . .
+RUN pip install -e . \
+ && pip install "transformers" "accelerate" "sentencepiece"
+
+CMD ["bash"]
