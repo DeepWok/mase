@@ -1,5 +1,5 @@
 # CUDA runtime base (works with nvidia-container-toolkit)
-FROM nvidia/cuda:12.3.2-runtime-ubuntu24.04
+FROM nvidia/cuda:12.3.2-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
