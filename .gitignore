@@ -179,3 +179,7 @@ docs/tutorials/difflogic/data-mnist/
 
 # Generated MASE / FX graphs
 *.svg
+
+# Lab Outputs
+labs/**/outputs/
+labs/**/.ipynb_checkpoints/
