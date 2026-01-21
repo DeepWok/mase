@@ -171,3 +171,193 @@ This tutorial establishes the foundation for:
 
 MASE is not “yet another IR” — it is a **semantic layer on top of FX** that enables safe, automated, and cross-domain optimisation of deep learning systems.
 
+
+# Lab 0 – Tutorial 2: FX Graph Input Semantics and Forward-Path Sensitivity
+
+## Objective
+Understand how **HuggingFace forward-path semantics** interact with **Torch FX symbolic tracing**, and how changing model inputs alters the **captured compute graph topology** in MASE.
+
+This tutorial focuses on how `hf_input_names` controls which branches of `forward()` are executed and therefore traced.
+
+---
+
+## Model Used
+- **Model**: `prajjwal1/bert-tiny`
+- **API**: `AutoModelForSequenceClassification`
+- **Frameworks**: PyTorch + HuggingFace Transformers + Torch FX + MASE
+
+---
+
+## Baseline Configuration
+```python
+hf_input_names = ["input_ids", "attention_mask", "labels"]
+````
+
+### Observed Graph Tail
+
+```
+classifier
+→ crossentropyloss_0
+→ output
+```
+
+### Explanation
+
+When `labels` are provided:
+
+* HuggingFace executes **training-mode logic inside `forward()`**
+* `CrossEntropyLoss` is computed internally
+* FX captures **both inference and loss computation**
+
+This results in an **inference + training hybrid graph**, even though no explicit training loop exists.
+
+---
+
+## Experiment 1: Remove `attention_mask`, Keep `labels`
+
+```python
+hf_input_names = ["input_ids", "labels"]
+```
+
+### Observed Change
+
+* The `attention_mask` **placeholder node disappears**
+* All attention-related masking logic is removed from the graph
+
+### Explanation
+
+When `attention_mask` is omitted **but labels remain**:
+
+* HuggingFace no longer constructs or propagates a mask
+* Attention layers operate without masking
+* FX traces a **simplified attention path**
+
+This shows that attention masking is **conditionally executed**, not structurally mandatory.
+
+---
+
+## Experiment 2: Remove `labels`, Keep `attention_mask`
+
+```python
+hf_input_names = ["input_ids", "attention_mask"]
+```
+
+### Observed Change
+
+```
+classifier
+→ output
+```
+
+* `crossentropyloss_0` node is removed
+* Graph becomes **pure inference**
+
+### Explanation
+
+Without `labels`:
+
+* HuggingFace does not compute loss
+* Forward returns logits only
+* FX captures an **inference-only graph**
+
+This is the correct topology for deployment or inference optimisation.
+
+---
+
+## Experiment 3: Remove `attention_mask` and `labels`
+
+```python
+hf_input_names = ["input_ids"]
+```
+
+### Observed Change
+
+* No external attention mask placeholder
+* Attention masking logic may still exist via internally generated defaults
+* No loss node
+
+### Explanation
+
+HuggingFace may:
+
+* Generate a default all-ones mask internally
+* Preserve internal masking computation
+
+FX traces whatever is **actually executed**, not what is conceptually required.
+
+---
+
+## Key Observations
+
+### 1. FX Is Execution-Path Sensitive
+
+Torch FX captures:
+
+* **Executed Python code**
+* Not abstract model structure
+
+Changing inputs changes:
+
+* Which branches execute
+* Which nodes appear in the graph
+
+---
+
+### 2. Loss Computation Lives Inside `forward()`
+
+In HuggingFace models:
+
+* Loss is not external
+* Supplying `labels` **injects training semantics into the graph**
+
+This is why loss appears as a graph node.
+
+---
+
+### 3. Attention Masking Is Optional, Not Structural
+
+* Attention masking logic only appears if `attention_mask` is used
+* Removing it can materially change attention subgraphs
+
+This matters for:
+
+* Hardware emission
+* Graph simplification
+* Performance modelling
+
+---
+
+## Why This Matters for MASE
+
+MASE operates on **captured compute graphs**, not model definitions.
+
+Therefore:
+
+* Graph topology depends on input configuration
+* Training vs inference semantics must be **explicitly controlled**
+* Input selection directly impacts:
+
+  * Optimisation passes
+  * Hardware mapping
+  * Quantisation correctness
+
+---
+
+## Practical Guideline
+
+> Always trace models with the **minimal input set** required for your target workflow.
+
+* Inference → exclude `labels`
+* Hardware emit → exclude training-only paths
+* Performance analysis → use representative inputs
+
+---
+
+## Key Takeaway
+
+MASE + FX does not reason about *what a model is* — it reasons about **what the model does** for a given execution.
+
+Controlling `hf_input_names` is therefore a **first-class graph design decision**, not a cosmetic change.
+
+
+

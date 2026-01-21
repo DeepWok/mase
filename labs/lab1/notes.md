@@ -1,173 +1,248 @@
-# Lab 1 – Tutorial 1: Introduction to MASE IR and FX Graphs
+# Lab 1 – Tutorial 3: Bit-Width Sweeps and Accuracy–Precision Trade-offs (MASE Quantisation)
 
 ## Objective
-Understand how a PyTorch model is imported into MASE via Torch FX, how the resulting compute graph is structured, and how MASE augments FX with semantic metadata to enable principled analysis and transformation passes.
+Evaluate how **quantisation precision (bit-width)** impacts downstream **classification accuracy**, and observe the practical “knee” where increasing precision yields diminishing returns. This tutorial uses a simple sweep over quantisation widths and records accuracy, then repeats the sweep with an additional training/fine-tuning phase.
 
 ---
 
-## Model Used
-- **Model**: `prajjwal1/bert-tiny`
-- **Task**: Sequence classification
-- **Notes**:
-  - The classification head (`classifier.weight`, `classifier.bias`) is randomly initialised.
-  - This is expected behaviour when using `AutoModelForSequenceClassification`.
-  - The model is suitable for inference-time graph optimisation experiments.
+## Setup
+- **Graph**: Same MASEGraph topology as in the earlier screenshot (BERT Tiny sequence classification forward graph).
+- **Experiment**: Run the same evaluation pipeline with varying quantisation width.
+- **Widths tested**: `4`, `8`, `16`, `32`
+
+Notes on logs:
+- Warnings such as:
+  - `WARNING  Node finfo not found in loaded metadata.`
+  - `WARNING  Node getattr_2 not found in loaded metadata.`
+  indicate that some FX nodes present during tracing were not present in the saved/loaded metadata mapping for this run. This did **not** prevent training or evaluation, but suggests metadata caching or node-name alignment was not perfect.
+- HuggingFace warning:
+  - `FutureWarning: tokenizer is deprecated ... use processing_class instead.`
+  is an upstream API change notice and does not affect correctness of results.
 
 ---
 
-## FX Graph Overview
-The generated FX graph represents the **entire forward pass** of BERT Tiny, captured using symbolic tracing.
+## Part A: Accuracy Sweep (Evaluation Only)
+The first sweep ran quickly (~32–33s per width) and produced:
 
-High-level structure:
-```
+| Quant Width (bits) | Accuracy |
+|---:|---:|
+| 4  | 0.67572 |
+| 8  | 0.81092 |
+| 16 | 0.81508 |
+| 32 | 0.81520 |
 
-placeholder inputs
-→ embeddings
-→ encoder layer 0
-→ encoder layer 1
-→ pooler
-→ classifier
-→ output
+### Observations
+- **4-bit** is significantly worse than the others (large accuracy drop).
+- **8-bit** recovers most performance (big jump vs 4-bit).
+- **16-bit and 32-bit** are almost identical, indicating a **saturation point**.
 
-````
-
-Key observations:
-- The graph is **linear and acyclic** (no dynamic control flow).
-- Encoder layers are **repeated subgraphs**, ideal for automated optimisation.
-- Dropout layers are present even though they have no effect during inference.
-
----
-
-## FX Node Types Observed
-Torch FX nodes encode *Python execution semantics*:
-
-- `placeholder`  
-  Represents model inputs (e.g. `input_ids`, `attention_mask`).
-
-- `call_module`  
-  Invokes `nn.Module.forward()` (e.g. `Linear`, `LayerNorm`, `Dropout`).
-
-- `call_function`  
-  Calls free functions (e.g. `torch.matmul`, `operator.add`, `softmax`).
-
-- `call_method`  
-  Calls Tensor methods (e.g. `transpose`, `reshape`).
-
-- `output`  
-  Represents the return value of `forward()`.
-
-FX preserves **high-level intent**, not low-level kernels.
+### Interpretation
+This shows a classic quantisation trade-off:
+- At **low precision (4-bit)**, quantisation noise is large enough to distort activations/attention patterns and degrade classification.
+- At **moderate precision (8-bit)**, noise is reduced enough for the model to retain most useful signal.
+- Beyond **16-bit**, further precision offers minimal benefit because other factors (model capacity, dataset noise, training setup) dominate.
 
 ---
 
-## MASE IR: Why FX Alone Is Not Enough
-FX only encodes *how to regenerate Python code*.  
-It does **not** describe:
-- What operator is being executed (in ML terms)
-- Tensor shapes or datatypes
-- Hardware or software execution semantics
+## Part B: Accuracy Sweep After Training (1 Epoch)
+A second sweep ran with a visible training phase (1 epoch logged) before evaluation.
 
-MASE extends FX by attaching metadata to each node under:
-```python
-node.meta["mase"] = {
-  "common": {},
-  "hardware": {},
-  "software": {},
-}
-````
+### Training Loss Snapshots
+For **width = 4**, loss decreased then stabilised:
+- Step 500: 0.6144  
+- Step 1000: 0.5424  
+- Step 1500: 0.4969  
+- Step 2000: 0.4709  
+- Step 2500: 0.4732  
+- Step 3000: 0.4808  
 
----
+For **width = 8/16/32**, loss was lower and very similar across widths:
+- Step 500: ~0.415–0.416  
+- Step 1000: ~0.401  
+- Step 2000: ~0.389  
+- Step 3000: ~0.395  
 
-## Operator Classification in MASE IR
+### Post-Training Accuracy
+| Quant Width (bits) | Accuracy |
+|---:|---:|
+| 4  | 0.79256 |
+| 8  | 0.83800 |
+| 16 | 0.83764 |
+| 32 | 0.83776 |
 
-After running `add_common_metadata_analysis_pass`, each node is annotated with a **MASE operator type**:
+### Observations
+- Training dramatically improves **4-bit** accuracy (**0.6757 → 0.7926**).
+- **8/16/32** converge to ~0.838 and are effectively the same.
+- The gap between **8-bit and 16/32-bit** remains negligible after training.
 
-* `module_related_func`
-  Examples: `Linear`, `LayerNorm`, `ReLU`, `softmax`
-  (includes both `nn.Module` and `nn.functional` equivalents)
-
-* `module`
-  Modules with no functional counterpart (e.g. `BatchNorm2d`)
-
-* `builtin_func`
-  Core tensor operations (e.g. `torch.matmul`, `torch.cat`)
-
-* `placeholder`, `get_attr`, `output`
-  Same meaning as in FX
-
-This abstraction allows **hardware and software toolflows to share the same IR**.
-
----
-
-## Shape Propagation
-
-Using a dummy input (via HuggingFace tokenizer), MASE:
-
-* Executes a traced forward pass
-* Records tensor metadata (shape, dtype, stride)
-* Stores this under:
-
-```python
-node.meta["mase"]["common"]["args"]
-node.meta["mase"]["common"]["results"]
-```
-
-This enables:
-
-* Safe graph transformations
-* Memory / compute analysis
-* Parallelisation decisions
+### Interpretation
+Training acts like **adaptation to quantisation**:
+- Fine-tuning allows the classifier head and intermediate representations to adjust to quantisation-induced noise.
+- The largest gain is at **4-bit**, where noise is strongest and adaptation helps most.
+- For **8-bit+**, the model already sits in a regime where quantisation noise is not the dominant failure mode.
 
 ---
 
-## Analysis Pass Example: Dropout Counting
+## Key Result: “Knee” of the Curve
+Across both runs, the practical knee is around:
 
-A custom analysis pass was written to:
+> **8-bit quantisation** — close to full-precision accuracy, with far lower numeric precision requirements than 16/32-bit.
 
-* Traverse all nodes
-* Identify dropout layers
-* Count their occurrences
-
-Key insight:
-
-> Analysis passes **do not modify graph topology** — they only observe and annotate.
+Meanwhile:
+- **4-bit** is feasible, but accuracy depends heavily on training/fine-tuning and remains worse than 8-bit.
 
 ---
 
-## Transform Pass Example: Dropout Removal
+## Why the Graph Topology Stayed the Same
+Even though accuracy changed across widths (and training was enabled in the second sweep), the **graph structure** remained the same as the earlier screenshot because:
 
-A transform pass was implemented to remove all dropout nodes.
+- Quantisation changes **parameter/activation representation** (values, dtype/scale), not the logical ordering of layers.
+- The model still executes:
+  `embeddings → encoder blocks → pooler → classifier → output`
+- Training introduces gradient computation in the *autograd engine*, but the **forward FX graph** still describes the same forward pass topology.
 
-Important details:
-
-* `node.replace_all_uses_with(parent_node)` is required
-  to rewire downstream consumers.
-* Omitting this step causes FX graph validation errors.
-* After transformation, the graph remains valid and simpler.
-
-This demonstrates how:
-
-> Transform passes must preserve graph correctness while changing structure.
+So accuracy differences come from **numerical effects**, not from changing the sequence of operations.
 
 ---
 
-## Why This Matters
-
-The generated MASEGraph:
-
-* Preserves high-level ML semantics
-* Is suitable for both software and hardware optimisation
-* Enables principled automation (e.g. inference-only simplification)
-
-This tutorial establishes the foundation for:
-
-* Autosharding (software parallelism)
-* Hardware lowering (emit Verilog)
-* Cost / performance trade-off exploration
+## Key Takeaways
+- Quantisation width strongly affects accuracy at very low precision (4-bit).
+- 8-bit provides a strong **accuracy–efficiency sweet spot**.
+- Fine-tuning helps the most where quantisation is harsh (4-bit).
+- FX/MASE graphs are stable across these experiments because the transformation affects **numerics and metadata**, not control flow or module structure.
 
 ---
 
-## Key Takeaway
+# Lab 1 – Tutorial 4: Structured Pruning and Sparsity–Accuracy Trade-offs (MASE Pruning)
 
-MASE is not “yet another IR” — it is a **semantic layer on top of FX** that enables safe, automated, and cross-domain optimisation of deep learning systems.
+## Objective
+Evaluate how **parameter sparsity** affects downstream **classification accuracy**, and compare two pruning strategies — **Random pruning** and **L1-Norm–based pruning** — using the IMDb dataset. The goal is to understand how informed pruning preserves model performance relative to uninformed parameter removal.
 
+---
+
+## Setup
+- **Base model**: Best-performing quantised-and-trained model from Tutorial 3 (QAT).
+- **Graph**: Same forward MASEGraph topology (BERT Tiny sequence classification).
+- **Dataset**: IMDb sentiment classification.
+- **Fine-tuning**: 1 epoch after pruning (to adapt surviving parameters).
+- **Sparsity range**: `0.1 → 0.9`
+- **Pruning methods**:
+  - `random`: parameters removed uniformly at random.
+  - `l1-norm`: parameters with smallest magnitude removed first.
+
+Each experiment followed the same pipeline:
+1. Load the saved MASEGraph checkpoint.
+2. Apply pruning at a fixed sparsity.
+3. Fine-tune for one epoch.
+4. Evaluate accuracy on the test set.
+
+---
+
+## Part A: Random Pruning Results
+
+| Sparsity | Accuracy |
+|---:|---:|
+| 0.1 | 0.8186 |
+| 0.2 | 0.7972 |
+| 0.3 | 0.7652 |
+| 0.4 | 0.5845 |
+| 0.5 | 0.5149 |
+| 0.6 | 0.5016 |
+| 0.7 | 0.5015 |
+| 0.8 | 0.4984 |
+| 0.9 | 0.5007 |
+
+### Observations
+- Accuracy degrades **rapidly** as sparsity increases.
+- Beyond **~40% sparsity**, performance collapses toward **random guessing (~0.5)**.
+- Fine-tuning is unable to recover performance once too many critical parameters are removed.
+
+### Interpretation
+Random pruning removes parameters **without regard to importance**, which:
+- Destroys key attention and feed-forward pathways.
+- Prevents the model from preserving learned representations.
+- Leads to early catastrophic failure.
+
+This demonstrates that **sparsity alone is not sufficient** — *which* parameters are removed matters.
+
+---
+
+## Part B: L1-Norm Pruning Results
+
+| Sparsity | Accuracy |
+|---:|---:|
+| 0.1 | 0.8433 |
+| 0.2 | 0.8424 |
+| 0.3 | 0.8380 |
+| 0.4 | 0.8271 |
+| 0.5 | 0.8158 |
+| 0.6 | 0.8065 |
+| 0.7 | 0.7662 |
+| 0.8 | 0.6168 |
+| 0.9 | 0.5496 |
+
+### Observations
+- Accuracy degrades **gradually and smoothly** with increasing sparsity.
+- The model remains competitive up to **~60% sparsity**.
+- Even at high sparsity (70–80%), L1-norm pruning significantly outperforms random pruning.
+
+### Interpretation
+L1-norm pruning removes parameters with the **smallest magnitude**, which are more likely to:
+- Be redundant
+- Contribute weakly to activations
+- Represent noise rather than signal
+
+This preserves the **core computational structure** of the model while reducing parameter count.
+
+---
+
+## Training Efficiency Observations
+
+A notable secondary effect was **training efficiency**:
+
+- **Random pruning**
+  - Training time: ~300–530 seconds per run
+  - Slower convergence and unstable gradients
+
+- **L1-norm pruning**
+  - Training time: ~115–125 seconds per run
+  - Faster convergence and more stable loss
+
+This suggests that informed pruning not only preserves accuracy, but also:
+- Reduces effective computational complexity
+- Improves optimisation stability during fine-tuning
+
+---
+
+## Sparsity–Accuracy Trade-off Summary
+
+When plotted:
+- **Random pruning** shows a steep drop-off and early collapse.
+- **L1-norm pruning** produces a smooth decay curve, consistently dominating random pruning at all sparsity levels.
+
+The key takeaway:
+
+> **Structured pruning (L1-norm) enables substantial sparsity with minimal accuracy loss, while random pruning fails early.**
+
+---
+
+## Why One Epoch Is Sufficient
+The purpose of this experiment is **comparative robustness**, not full retraining.
+
+Using a fixed, small fine-tuning budget:
+- Ensures fairness across sparsity levels
+- Prevents prolonged retraining from masking pruning damage
+- Clearly exposes the structural differences between pruning strategies
+
+Thus, **1 epoch** is sufficient and appropriate for this analysis.
+
+---
+
+## Key Takeaways
+- Sparsity alone does not guarantee efficiency — *parameter importance matters*.
+- Random pruning leads to early catastrophic accuracy collapse.
+- L1-norm pruning preserves performance up to moderate–high sparsity.
+- Structured pruning yields both **higher accuracy** and **faster training**.
+- MASE enables systematic exploration of these trade-offs via graph-level transformations.
+
+---
