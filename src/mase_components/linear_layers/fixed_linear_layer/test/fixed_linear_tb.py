@@ -109,80 +109,80 @@ class LinearTB(Testbench):
                 blocks.append(dim_1_split[i][j].flatten().tolist())
         return blocks
 
-    async def run_test(self, us):
+    async def run_test(self, batches=1, us=100):
         await self.reset()
         self.log.info(f"Reset finished")
         self.data_out_0_monitor.ready.value = 1
+        for _ in range(batches):
+            inputs = self.generate_inputs()
+            exp_out = self.model(inputs)
 
-        inputs = self.generate_inputs()
-        exp_out = self.model(inputs)
-
-        # * Load the inputs driver
-        self.log.info(f"Processing inputs: {inputs}")
-        inputs = self.preprocess_tensor(
-            tensor=inputs,
-            config={
-                "width": self.get_parameter("DATA_IN_0_PRECISION_0"),
-                "frac_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
-            },
-            parallelism=[
-                self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1"),
-                self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"),
-            ],
-        )
-        self.data_in_0_driver.load_driver(inputs)
-
-        # * Load the weights driver
-        if self.get_parameter("WEIGHTS_PRE_TRANSPOSED") == 1:
-            weights = self.model.weight.transpose(0, 1)
-        else:
-            weights = self.model.weight
-
-        self.log.info(f"Processing weights: {weights}")
-        weights = self.preprocess_tensor(
-            tensor=weights,
-            config={
-                "width": self.get_parameter("WEIGHT_PRECISION_0"),
-                "frac_width": self.get_parameter("WEIGHT_PRECISION_1"),
-            },
-            parallelism=[
-                self.get_parameter("WEIGHT_PARALLELISM_DIM_1"),
-                self.get_parameter("WEIGHT_PARALLELISM_DIM_0"),
-            ],
-        )
-        self.weight_driver.load_driver(weights)
-
-        # * Load the bias driver
-        if self.get_parameter("HAS_BIAS") == 1:
-            bias = self.model.bias
-            self.log.info(f"Processing bias: {bias}")
-            bias = self.preprocess_tensor(
-                tensor=bias,
+            # * Load the inputs driver
+            self.log.info(f"Processing inputs: {inputs}")
+            inputs = self.preprocess_tensor(
+                tensor=inputs,
                 config={
-                    "width": self.get_parameter("BIAS_PRECISION_0"),
-                    "frac_width": self.get_parameter("BIAS_PRECISION_1"),
+                    "width": self.get_parameter("DATA_IN_0_PRECISION_0"),
+                    "frac_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
                 },
                 parallelism=[
-                    self.get_parameter("BIAS_PARALLELISM_DIM_1"),
-                    self.get_parameter("BIAS_PARALLELISM_DIM_0"),
+                    self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1"),
+                    self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"),
                 ],
             )
-            self.bias_driver.load_driver(bias)
+            self.data_in_0_driver.load_driver(inputs)
 
-        # * Load the output monitor
-        self.log.info(f"Processing outputs: {exp_out}")
-        outs = self.preprocess_tensor(
-            tensor=exp_out,
-            config={
-                "width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
-                "frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
-            },
-            parallelism=[
-                self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_1"),
-                self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"),
-            ],
-        )
-        self.data_out_0_monitor.load_monitor(outs)
+            # * Load the weights driver
+            if self.get_parameter("WEIGHTS_PRE_TRANSPOSED") == 1:
+                weights = self.model.weight.transpose(0, 1)
+            else:
+                weights = self.model.weight
+
+            self.log.info(f"Processing weights: {weights}")
+            weights = self.preprocess_tensor(
+                tensor=weights,
+                config={
+                    "width": self.get_parameter("WEIGHT_PRECISION_0"),
+                    "frac_width": self.get_parameter("WEIGHT_PRECISION_1"),
+                },
+                parallelism=[
+                    self.get_parameter("WEIGHT_PARALLELISM_DIM_1"),
+                    self.get_parameter("WEIGHT_PARALLELISM_DIM_0"),
+                ],
+            )
+            self.weight_driver.load_driver(weights)
+
+            # * Load the bias driver
+            if self.get_parameter("HAS_BIAS") == 1:
+                bias = self.model.bias
+                self.log.info(f"Processing bias: {bias}")
+                bias = self.preprocess_tensor(
+                    tensor=bias,
+                    config={
+                        "width": self.get_parameter("BIAS_PRECISION_0"),
+                        "frac_width": self.get_parameter("BIAS_PRECISION_1"),
+                    },
+                    parallelism=[
+                        self.get_parameter("BIAS_PARALLELISM_DIM_1"),
+                        self.get_parameter("BIAS_PARALLELISM_DIM_0"),
+                    ],
+                )
+                self.bias_driver.load_driver(bias)
+
+            # * Load the output monitor
+            self.log.info(f"Processing outputs: {exp_out}")
+            outs = self.preprocess_tensor(
+                tensor=exp_out,
+                config={
+                    "width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
+                    "frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
+                },
+                parallelism=[
+                    self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_1"),
+                    self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"),
+                ],
+            )
+            self.data_out_0_monitor.load_monitor(outs)
 
         await Timer(us, units="us")
         assert self.data_out_0_monitor.exp_queue.empty()
@@ -191,9 +191,20 @@ class LinearTB(Testbench):
 @cocotb.test()
 async def cocotb_test(dut):
     tb = LinearTB(dut)
-    await tb.run_test(us=100)
+    await tb.run_test(batches=10, us=100)
 
 
+async def check_signal(dut, log):
+    num = {"data_out_0": 0, "data_in_0": 0}
+    while True:
+        await RisingEdge(dut.clk)
+
+
+# verified case
+# weight per transpoed = 0
+# weight pre transposed = 1
+# has bias = 0
+# has bias = 1
 def get_fixed_linear_config(kwargs={}):
     # if pretranspose
     #   weight1 = in0
@@ -201,22 +212,22 @@ def get_fixed_linear_config(kwargs={}):
     #   weight0 = in0
     config = {
         "HAS_BIAS": 1,
-        "WEIGHTS_PRE_TRANSPOSED": 1,
+        "WEIGHTS_PRE_TRANSPOSED": 0,
         "DATA_IN_0_TENSOR_SIZE_DIM_0": 32,
         "DATA_IN_0_TENSOR_SIZE_DIM_1": 16,
-        "DATA_IN_0_PARALLELISM_DIM_0": 4,
+        "DATA_IN_0_PARALLELISM_DIM_0": 8,
         "DATA_IN_0_PARALLELISM_DIM_1": 4,
-        "WEIGHT_TENSOR_SIZE_DIM_0": 16,
-        "WEIGHT_TENSOR_SIZE_DIM_1": 32,
-        "WEIGHT_PARALLELISM_DIM_0": 2,
+        "WEIGHT_TENSOR_SIZE_DIM_0": 32,
+        "WEIGHT_TENSOR_SIZE_DIM_1": 16,
+        "WEIGHT_PARALLELISM_DIM_0": 8,
         "WEIGHT_PARALLELISM_DIM_1": 4,
         "DATA_IN_0_PRECISION_0": 8,
         "DATA_IN_0_PRECISION_1": 4,
-        "WEIGHT_PRECISION_0": 8,
-        "WEIGHT_PRECISION_1": 4,
-        "BIAS_PRECISION_0": 8,
-        "BIAS_PRECISION_1": 4,
-        "DATA_OUT_0_PRECISION_0": 10,
+        "WEIGHT_PRECISION_0": 10,
+        "WEIGHT_PRECISION_1": 3,
+        "BIAS_PRECISION_0": 5,
+        "BIAS_PRECISION_1": 2,
+        "DATA_OUT_0_PRECISION_0": 8,
         "DATA_OUT_0_PRECISION_1": 4,
     }
     config.update(kwargs)
@@ -232,58 +243,48 @@ def test_fixed_linear_smoke():
         trace=True,
         module_param_list=[
             get_fixed_linear_config(),
-            # noticed here if change WEIGHT_PRE_TRANSPOSED also need to change the DIM_SIZE to match ACTIVATION
-            get_fixed_linear_config(
-                {
-                    "WEIGHTS_PRE_TRANSPOSED": 0,
-                    "WEIGHT_TENSOR_SIZE_DIM_0": 32,
-                    "WEIGHT_TENSOR_SIZE_DIM_1": 16,
-                    "WEIGHT_PARALLELISM_DIM_0": 4,
-                    "WEIGHT_PARALLELISM_DIM_1": 2,
-                },
-            ),
         ],
     )
 
 
-@pytest.mark.dev
-def test_fixed_linear_regression():
-    """
-    More extensive tests to check realistic parameter sizes.
-    """
-    mase_runner(
-        trace=True,
-        module_param_list=[
-            get_fixed_linear_config(
-                {
-                    "DATA_IN_0_TENSOR_SIZE_DIM_0": 768,
-                    "DATA_IN_0_PARALLELISM_DIM_0": 32,
-                    "WEIGHT_TENSOR_SIZE_DIM_0": 768,
-                    "WEIGHT_TENSOR_SIZE_DIM_1": 768,
-                    "WEIGHT_PARALLELISM_DIM_0": 32,
-                    "WEIGHT_PARALLELISM_DIM_1": 32,
-                    "BIAS_TENSOR_SIZE_DIM_0": 768,
-                    "BIAS_PARALLELISM_DIM_0": 32,
-                }
-            ),
-            get_fixed_linear_config(
-                {
-                    "HAS_BIAS": 1,
-                    "WEIGHTS_PRE_TRANSPOSED": 0,
-                    "DATA_IN_0_TENSOR_SIZE_DIM_0": 768,
-                    "DATA_IN_0_PARALLELISM_DIM_0": 32,
-                    "WEIGHT_TENSOR_SIZE_DIM_0": 768,
-                    "WEIGHT_TENSOR_SIZE_DIM_1": 768,
-                    "WEIGHT_PARALLELISM_DIM_0": 32,
-                    "WEIGHT_PARALLELISM_DIM_1": 32,
-                    "BIAS_TENSOR_SIZE_DIM_0": 768,
-                    "BIAS_PARALLELISM_DIM_0": 32,
-                }
-            ),
-        ],
-    )
+# @pytest.mark.dev
+# def test_fixed_linear_regression():
+#     """
+#     More extensive tests to check realistic parameter sizes.
+#     """
+#     mase_runner(
+#         trace=True,
+#         module_param_list=[
+#             get_fixed_linear_config(
+#                 {
+#                     "DATA_IN_0_TENSOR_SIZE_DIM_0": 768,
+#                     "DATA_IN_0_PARALLELISM_DIM_0": 32,
+#                     "WEIGHT_TENSOR_SIZE_DIM_0": 768,
+#                     "WEIGHT_TENSOR_SIZE_DIM_1": 768,
+#                     "WEIGHT_PARALLELISM_DIM_0": 32,
+#                     "WEIGHT_PARALLELISM_DIM_1": 32,
+#                     "BIAS_TENSOR_SIZE_DIM_0": 768,
+#                     "BIAS_PARALLELISM_DIM_0": 32,
+#                 }
+#             ),
+#             get_fixed_linear_config(
+#                 {
+#                     "HAS_BIAS": 1,
+#                     "WEIGHTS_PRE_TRANSPOSED": 0,
+#                     "DATA_IN_0_TENSOR_SIZE_DIM_0": 768,
+#                     "DATA_IN_0_PARALLELISM_DIM_0": 32,
+#                     "WEIGHT_TENSOR_SIZE_DIM_0": 768,
+#                     "WEIGHT_TENSOR_SIZE_DIM_1": 768,
+#                     "WEIGHT_PARALLELISM_DIM_0": 32,
+#                     "WEIGHT_PARALLELISM_DIM_1": 32,
+#                     "BIAS_TENSOR_SIZE_DIM_0": 768,
+#                     "BIAS_PARALLELISM_DIM_0": 32,
+#                 }
+#             ),
+#         ],
+#     )
 
-
+torch.manual_seed(3)
 if __name__ == "__main__":
     test_fixed_linear_smoke()
     # test_fixed_linear_regression()

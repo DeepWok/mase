@@ -7,7 +7,7 @@ import time
 import torch
 
 from chop.passes.graph.utils import vf, v2p, get_module_by_name, init_project
-from chop.nn.quantizers import integer_quantizer_for_hw, integer_floor_quantizer_for_hw
+from chop.nn.quantizers import integer_quantizer_for_hw
 
 logger = logging.getLogger(__name__)
 from pathlib import Path
@@ -49,7 +49,7 @@ def emit_parameters_in_mem_internal(node, param_name, file_name, data_name):
             f"{_cap(verilog_param_name)}_PARALLELISM_DIM_1"
         ]
     )
-    out_depth = int((total_size + out_size - 1) / out_size)
+    out_depth = int(total_size / out_size)
     out_width = int(
         node.meta["mase"].parameters["common"]["args"][verilog_param_name]["precision"][
             0
@@ -84,7 +84,7 @@ module {node_param_name}_rom #(
   logic [DWIDTH-1:0] q0_t1;
 
   initial begin
-    $readmemh("{data_name}", ram);
+    $readmemb("{data_name}", ram);
   end
 
   assign q0 = q0_t1;
@@ -119,14 +119,14 @@ endmodule
 
 `timescale 1ns / 1ps
 module {node_param_name}_source #(
-    parameter {_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0  = 32,
-    parameter {_cap(verilog_param_name)}_TENSOR_SIZE_DIM_1  = 1,
-    parameter {_cap(verilog_param_name)}_PRECISION_0 = 16,
-    parameter {_cap(verilog_param_name)}_PRECISION_1 = 3,
+    parameter {_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0  = -1,
+    parameter {_cap(verilog_param_name)}_TENSOR_SIZE_DIM_1  = -1,
+    parameter {_cap(verilog_param_name)}_PRECISION_0 = -1,
+    parameter {_cap(verilog_param_name)}_PRECISION_1 = -1,
 
-    parameter {_cap(verilog_param_name)}_PARALLELISM_DIM_0 = 1,
-    parameter {_cap(verilog_param_name)}_PARALLELISM_DIM_1 = 1,
-    parameter OUT_DEPTH = (({_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0 + {_cap(verilog_param_name)}_PARALLELISM_DIM_0 - 1) / {_cap(verilog_param_name)}_PARALLELISM_DIM_0) * (({_cap(verilog_param_name)}_TENSOR_SIZE_DIM_1 + {_cap(verilog_param_name)}_PARALLELISM_DIM_1 - 1) / {_cap(verilog_param_name)}_PARALLELISM_DIM_1)
+    parameter {_cap(verilog_param_name)}_PARALLELISM_DIM_0 = -1,
+    parameter {_cap(verilog_param_name)}_PARALLELISM_DIM_1 = -1,
+    parameter OUT_DEPTH = ({_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0 / {_cap(verilog_param_name)}_PARALLELISM_DIM_0) * ({_cap(verilog_param_name)}_TENSOR_SIZE_DIM_1 / {_cap(verilog_param_name)}_PARALLELISM_DIM_1)
 ) (
     input clk,
     input rst,
@@ -138,7 +138,6 @@ module {node_param_name}_source #(
   // 1-bit wider so IN_DEPTH also fits.
   localparam COUNTER_WIDTH = $clog2(OUT_DEPTH);
   logic [COUNTER_WIDTH:0] counter;
-
   always_ff @(posedge clk)
     if (rst) counter <= 0;
     else begin
@@ -147,7 +146,6 @@ module {node_param_name}_source #(
         else counter <= counter + 1;
       end
     end
-
   logic [1:0] clear;
   always_ff @(posedge clk)
     if (rst) clear <= 0;
@@ -205,30 +203,39 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
             f"{_cap(verilog_param_name)}_PARALLELISM_DIM_1"
         ]
     )
-    out_depth = int((total_size + out_size - 1) / out_size)
+    out_depth = int(total_size / out_size)
 
     data_buff = ""
     param_data = node.meta["mase"].module.get_parameter(param_name).data
+    param_meta = node.meta["mase"].parameters["hardware"]["verilog_param"]
     if node.meta["mase"].parameters["hardware"]["interface"][verilog_param_name][
         "transpose"
     ]:
+        raise NotImplementedError("only support linear with not tranposed weight")
+    else:
+        assert (
+            param_meta[f"{_cap(verilog_param_name)}_TENSOR_SIZE_DIM_1"]
+            % param_meta[f"{_cap(verilog_param_name)}_PARALLELISM_DIM_1"]
+            == 0
+        ) and (
+            param_meta[f"{_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0"]
+            % param_meta[f"{_cap(verilog_param_name)}_PARALLELISM_DIM_0"]
+            == 0
+        ), "The parallesim parameter must be divisible by the tensor size parameter."
         param_data = torch.reshape(
             param_data,
             (
-                node.meta["mase"].parameters["hardware"]["verilog_param"][
-                    "DATA_OUT_0_SIZE"
-                ],
-                node.meta["mase"].parameters["hardware"]["verilog_param"][
-                    "DATA_IN_0_DEPTH"
-                ],
-                node.meta["mase"].parameters["hardware"]["verilog_param"][
-                    "DATA_IN_0_SIZE"
-                ],
+                -1,
+                param_meta[f"{_cap(verilog_param_name)}_TENSOR_SIZE_DIM_1"]
+                // param_meta[f"{_cap(verilog_param_name)}_PARALLELISM_DIM_1"],
+                param_meta[f"{_cap(verilog_param_name)}_PARALLELISM_DIM_1"],
+                param_meta[f"{_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0"]
+                // param_meta[f"{_cap(verilog_param_name)}_PARALLELISM_DIM_0"],
+                param_meta[f"{_cap(verilog_param_name)}_PARALLELISM_DIM_0"],
             ),
         )
-        param_data = torch.transpose(param_data, 0, 1)
+        param_data = param_data.permute(0, 1, 3, 2, 4)
     param_data = torch.flatten(param_data).tolist()
-
     if (
         node.meta["mase"].parameters["common"]["args"][verilog_param_name]["type"]
         == "fixed"
@@ -240,31 +247,21 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
             "precision"
         ][1]
 
-        if node.meta["mase"].module.config.get("floor", False):
-            base_quantizer = integer_floor_quantizer_for_hw
-        else:
-            base_quantizer = integer_quantizer_for_hw
-
         scale = 2**frac_width
         thresh = 2**width
         for i in range(0, out_depth):
             line_buff = ""
             for j in range(0, out_size):
-                if i * out_size + out_size - 1 - j >= len(param_data):
-                    value = 0
-                else:
-                    value = param_data[i * out_size + out_size - 1 - j]
-
-                # TODO: please clear this up later
-                value = base_quantizer(torch.tensor(value), width, frac_width).item()
+                value = param_data[i * out_size + j]
+                value = integer_quantizer_for_hw(
+                    torch.tensor(value), width, frac_width, floor=True
+                ).item()
                 value = str(bin(value))
                 value_bits = value[value.find("0b") + 2 :]
                 value_bits = "0" * (width - len(value_bits)) + value_bits
                 assert len(value_bits) == width
-                value_bits = hex(int(value_bits, 2))
-                value_bits = value_bits[value_bits.find("0x") + 2 :]
-                value_bits = "0" * (width // 4 - len(value_bits)) + value_bits
-                line_buff = value_bits + line_buff
+                line_buff += value_bits
+            hex_buff = hex(int(line_buff, 2))
 
             data_buff += line_buff + "\n"
     else:
