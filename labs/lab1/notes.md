@@ -112,3 +112,137 @@ So accuracy differences come from **numerical effects**, not from changing the s
 - FX/MASE graphs are stable across these experiments because the transformation affects **numerics and metadata**, not control flow or module structure.
 
 ---
+
+# Lab 1 – Tutorial 4: Structured Pruning and Sparsity–Accuracy Trade-offs (MASE Pruning)
+
+## Objective
+Evaluate how **parameter sparsity** affects downstream **classification accuracy**, and compare two pruning strategies — **Random pruning** and **L1-Norm–based pruning** — using the IMDb dataset. The goal is to understand how informed pruning preserves model performance relative to uninformed parameter removal.
+
+---
+
+## Setup
+- **Base model**: Best-performing quantised-and-trained model from Tutorial 3 (QAT).
+- **Graph**: Same forward MASEGraph topology (BERT Tiny sequence classification).
+- **Dataset**: IMDb sentiment classification.
+- **Fine-tuning**: 1 epoch after pruning (to adapt surviving parameters).
+- **Sparsity range**: `0.1 → 0.9`
+- **Pruning methods**:
+  - `random`: parameters removed uniformly at random.
+  - `l1-norm`: parameters with smallest magnitude removed first.
+
+Each experiment followed the same pipeline:
+1. Load the saved MASEGraph checkpoint.
+2. Apply pruning at a fixed sparsity.
+3. Fine-tune for one epoch.
+4. Evaluate accuracy on the test set.
+
+---
+
+## Part A: Random Pruning Results
+
+| Sparsity | Accuracy |
+|---:|---:|
+| 0.1 | 0.8186 |
+| 0.2 | 0.7972 |
+| 0.3 | 0.7652 |
+| 0.4 | 0.5845 |
+| 0.5 | 0.5149 |
+| 0.6 | 0.5016 |
+| 0.7 | 0.5015 |
+| 0.8 | 0.4984 |
+| 0.9 | 0.5007 |
+
+### Observations
+- Accuracy degrades **rapidly** as sparsity increases.
+- Beyond **~40% sparsity**, performance collapses toward **random guessing (~0.5)**.
+- Fine-tuning is unable to recover performance once too many critical parameters are removed.
+
+### Interpretation
+Random pruning removes parameters **without regard to importance**, which:
+- Destroys key attention and feed-forward pathways.
+- Prevents the model from preserving learned representations.
+- Leads to early catastrophic failure.
+
+This demonstrates that **sparsity alone is not sufficient** — *which* parameters are removed matters.
+
+---
+
+## Part B: L1-Norm Pruning Results
+
+| Sparsity | Accuracy |
+|---:|---:|
+| 0.1 | 0.8433 |
+| 0.2 | 0.8424 |
+| 0.3 | 0.8380 |
+| 0.4 | 0.8271 |
+| 0.5 | 0.8158 |
+| 0.6 | 0.8065 |
+| 0.7 | 0.7662 |
+| 0.8 | 0.6168 |
+| 0.9 | 0.5496 |
+
+### Observations
+- Accuracy degrades **gradually and smoothly** with increasing sparsity.
+- The model remains competitive up to **~60% sparsity**.
+- Even at high sparsity (70–80%), L1-norm pruning significantly outperforms random pruning.
+
+### Interpretation
+L1-norm pruning removes parameters with the **smallest magnitude**, which are more likely to:
+- Be redundant
+- Contribute weakly to activations
+- Represent noise rather than signal
+
+This preserves the **core computational structure** of the model while reducing parameter count.
+
+---
+
+## Training Efficiency Observations
+
+A notable secondary effect was **training efficiency**:
+
+- **Random pruning**
+  - Training time: ~300–530 seconds per run
+  - Slower convergence and unstable gradients
+
+- **L1-norm pruning**
+  - Training time: ~115–125 seconds per run
+  - Faster convergence and more stable loss
+
+This suggests that informed pruning not only preserves accuracy, but also:
+- Reduces effective computational complexity
+- Improves optimisation stability during fine-tuning
+
+---
+
+## Sparsity–Accuracy Trade-off Summary
+
+When plotted:
+- **Random pruning** shows a steep drop-off and early collapse.
+- **L1-norm pruning** produces a smooth decay curve, consistently dominating random pruning at all sparsity levels.
+
+The key takeaway:
+
+> **Structured pruning (L1-norm) enables substantial sparsity with minimal accuracy loss, while random pruning fails early.**
+
+---
+
+## Why One Epoch Is Sufficient
+The purpose of this experiment is **comparative robustness**, not full retraining.
+
+Using a fixed, small fine-tuning budget:
+- Ensures fairness across sparsity levels
+- Prevents prolonged retraining from masking pruning damage
+- Clearly exposes the structural differences between pruning strategies
+
+Thus, **1 epoch** is sufficient and appropriate for this analysis.
+
+---
+
+## Key Takeaways
+- Sparsity alone does not guarantee efficiency — *parameter importance matters*.
+- Random pruning leads to early catastrophic accuracy collapse.
+- L1-norm pruning preserves performance up to moderate–high sparsity.
+- Structured pruning yields both **higher accuracy** and **faster training**.
+- MASE enables systematic exploration of these trade-offs via graph-level transformations.
+
+---
