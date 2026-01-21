@@ -1,1 +1,1 @@
-from .attention import RobertaSelfAttentionZIPTF
+from .attention import RobertaSelfAttentionZIPTF, RobertaSelfAttentionSpikeLM
