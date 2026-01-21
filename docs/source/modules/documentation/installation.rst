@@ -3,6 +3,8 @@ Installation
 
 To use MASE, you can easily set up an environment with all required dependencies using either uv or Docker. Follow the instructions at the links below according to your preferred method.
 The model used in the following tutorials runs within a reasonable time on a CPU machine (under 10 minutes on a MacBook Air M4). Faster performance can be achieved on a local GPU machine, a university server, or Google Colab.
+
+
 .. hint::
 
     Some parts of the flow may assume you have a version of Vivado/Vitis installed. Other parts, such as the emit verilog flow, require Verilator, which is included in the Docker container, but not on the uv environment. If you prefer using uv, you can just install Verilator locally.
