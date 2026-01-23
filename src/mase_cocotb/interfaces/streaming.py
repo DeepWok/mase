@@ -240,50 +240,62 @@ class ErrorThresholdStreamMonitor(StreamMonitor):
             self.log.debug("Passed | Got: %20s Exp: %20s Err: %10s" % (g, e, err))
 
 
-class MultiSignalStreamDriver(Driver):
-    def __init__(self, clk, data, valid, ready) -> None:
-        super().__init__()
-        self.clk = clk
-        self.data = data
-        self.valid = valid
-        self.ready = ready
-        self.valid_prob = 1.0
-
-    def set_valid_prob(self, prob):
-        assert prob >= 0.0 and prob <= 1.0
-        self.valid_prob = prob
-
-    async def _driver_send(self, data) -> None:
+class MultiSignalStreamDriver(StreamDriver):
+    async def _driver_send(self, transaction) -> None:
         while True:
             await RisingEdge(self.clk)
-            for hardware_target, item in zip(self.data, data):
-                hardware_target.value = item
-
+            if type(self.data) == tuple:
+                # Drive multiple data bus
+                for wire, val in zip(self.data, transaction):
+                    wire.value = val
+            else:
+                # Drive single data
+                self.data.value = transaction
             if random.random() > self.valid_prob:
                 self.valid.value = 0
                 continue  # Try roll random valid again at next clock
             self.valid.value = 1
             await ReadOnly()
             if self.ready.value == 1:
-                self.log.debug(f"Sent {data}")
+                if type(self.data) == tuple:
+                    # Drive multiple data bus
+                    for t in transaction:
+                        self.log.debug("Sent %s" % t)
+                else:
+                    self.log.debug("Sent %s" % transaction)
+                if self.record_num_beats:
+                    self.num_beats += 1
                 break
+
+        # Load extra
+        # self.load_driver
+
         if self.send_queue.empty():
             await RisingEdge(self.clk)
             self.valid.value = 0
 
+    # async def _driver_send(self, data) -> None:
+    #     while True:
+    #         await RisingEdge(self.clk)
+    #         print(self.data, data)
+    #         for hardware_target, item in zip(self.data, data):
+    #             print(hardware_target, item)
+    #             hardware_target.value = item
 
-class MultiSignalStreamMonitor(Monitor):
-    def __init__(self, clk, data, valid, ready, check=True):
-        super().__init__(clk)
-        self.clk = clk
-        self.data = data
-        self.valid = valid
-        self.ready = ready
-        self.check = check
+    #         if random.random() > self.valid_prob:
+    #             self.valid.value = 0
+    #             continue  # Try roll random valid again at next clock
+    #         self.valid.value = 1
+    #         await ReadOnly()
+    #         if self.ready.value == 1:
+    #             self.log.debug(f"Sent {data}")
+    #             break
+    #     if self.send_queue.empty():
+    #         await RisingEdge(self.clk)
+    #         self.valid.value = 0
 
-    def _trigger(self):
-        return self.valid.value == 1 and self.ready.value == 1
 
+class MultiSignalStreamMonitor(StreamMonitor):
     def _recv(self):
         def cast_data(value):
             if type(value) == list:

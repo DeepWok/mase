@@ -49,6 +49,10 @@ class Testbench:
         self.rst.value = 1 if active_high else 0
         await RisingEdge(self.clk)
         self.rst.value = 0 if active_high else 1
+        for monitor in self.output_monitors.values():
+            monitor.ready.value = 1
+        for driver in self.input_drivers.values():
+            driver.valid.value = 0
         await RisingEdge(self.clk)
 
     async def initialize(self):

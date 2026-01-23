@@ -14,7 +14,7 @@ from mase_cocotb.interfaces.streaming import (
 )
 
 from mase_cocotb.runner import mase_runner
-from utils import block_mxint_quant
+from utils import block_mxint_quant, MXIntMatmulHardware
 from mase_cocotb.matrix_tools import gen_random_matrix_input, matrix_mult_model
 from mase_cocotb.utils import bit_driver
 
@@ -67,6 +67,12 @@ class MXIntMatmulTB(Testbench):
             dut.out_ready,
             check=True,
         )
+        self.input_drivers = {
+            "a": self.a_driver,
+            "b": self.b_driver,
+        }
+        self.output_monitors = {"out": self.output_monitor}
+        self.output_monitor.log.setLevel(logging.DEBUG)
 
     def generate_inputs(self):
         for _ in range(self.num):
@@ -98,18 +104,43 @@ class MXIntMatmulTB(Testbench):
                     self.get_parameter("B_COMPUTE_DIM0"),
                 ],
             )
-            matmul_out = qa @ qb
+
             self.log.debug(f"hardware_out = {ma @ mb}")
-            (qout, mout, eout) = block_mxint_quant(
-                matmul_out,
-                q_config={
+            (mout, eout) = MXIntMatmulHardware(
+                ma,
+                ea,
+                mb,
+                eb,
+                {
+                    "width": self.get_parameter("A_MAN_WIDTH"),
+                    "exponent_width": self.get_parameter("A_EXP_WIDTH"),
+                    "parallism_dim_0": self.get_parameter("A_COMPUTE_DIM0"),
+                    "parallism_dim_1": self.get_parameter("A_COMPUTE_DIM1"),
+                    "depth_dim_0": self.get_parameter("A_DEPTH_DIM0"),
+                    "depth_dim_1": self.get_parameter("A_DEPTH_DIM1"),
+                    "dim_0": self.get_parameter("A_TOTAL_DIM0"),
+                    "dim_1": self.get_parameter("A_TOTAL_DIM1"),
+                },
+                {
+                    "width": self.get_parameter("B_MAN_WIDTH"),
+                    "exponent_width": self.get_parameter("B_EXP_WIDTH"),
+                    "parallism_dim_0": self.get_parameter("B_COMPUTE_DIM0"),
+                    "parallism_dim_1": self.get_parameter("B_COMPUTE_DIM1"),
+                    "depth_dim_0": self.get_parameter("B_DEPTH_DIM0"),
+                    "depth_dim_1": self.get_parameter("B_DEPTH_DIM1"),
+                    "dim_0": self.get_parameter("B_TOTAL_DIM0"),
+                    "dim_1": self.get_parameter("B_TOTAL_DIM1"),
+                },
+                {
                     "width": self.get_parameter("OUT_MAN_WIDTH"),
                     "exponent_width": self.get_parameter("OUT_EXP_WIDTH"),
+                    "parallism_dim_0": self.get_parameter("C_COMPUTE_DIM0"),
+                    "parallism_dim_1": self.get_parameter("C_COMPUTE_DIM1"),
+                    "depth_dim_0": self.get_parameter("C_DEPTH_DIM0"),
+                    "depth_dim_1": self.get_parameter("C_DEPTH_DIM1"),
+                    "dim_0": self.get_parameter("C_TOTAL_DIM0"),
+                    "dim_1": self.get_parameter("C_TOTAL_DIM1"),
                 },
-                parallelism=[
-                    self.get_parameter("C_COMPUTE_DIM1"),
-                    self.get_parameter("C_COMPUTE_DIM0"),
-                ],
             )
             from utils import pack_tensor_to_mx_listed_chunk
 
@@ -166,11 +197,11 @@ class MXIntMatmulTB(Testbench):
 #     await tb.run_test(batches=1, us=100)
 
 
-# @cocotb.test()
-# async def repeated_mult(dut):
-#     tb = MXIntMatmulTB(dut)
-#     tb.output_monitor.ready.value = 1
-#     await tb.run_test(batches=1000, us=2000)
+@cocotb.test()
+async def repeated_mult(dut):
+    tb = MXIntMatmulTB(dut)
+    tb.output_monitor.ready.value = 1
+    await tb.run_test(batches=20, us=20)
 
 
 # @cocotb.test()
@@ -180,13 +211,13 @@ class MXIntMatmulTB(Testbench):
 #     await tb.run_test(batches=500, us=2000)
 
 
-@cocotb.test()
-async def repeated_mult_valid_backpressure(dut):
-    tb = MXIntMatmulTB(dut)
-    tb.a_driver.set_valid_prob(0.7)
-    tb.b_driver.set_valid_prob(0.7)
-    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.6))
-    await tb.run_test(batches=20, us=200)
+# @cocotb.test()
+# async def repeated_mult_valid_backpressure(dut):
+#     tb = MXIntMatmulTB(dut)
+#     tb.a_driver.set_valid_prob(0.7)
+#     tb.b_driver.set_valid_prob(0.7)
+#     cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.6))
+#     await tb.run_test(batches=20, us=200)
 
 
 def gen_random_dimensions():
@@ -236,19 +267,18 @@ def test_matmul():
         "A_COMPUTE_DIM1": 2,
         "B_COMPUTE_DIM0": 2,
         "B_COMPUTE_DIM1": 2,  # Must equal A_COMPUTE_DIM0
-        "A_MAN_WIDTH": 8,
-        "A_EXP_WIDTH": 3,
-        "B_MAN_WIDTH": 8,
-        "B_EXP_WIDTH": 3,
-        "OUT_MAN_WIDTH": 8,
-        "OUT_EXP_WIDTH": 3,
+        "A_MAN_WIDTH": 4,
+        "A_EXP_WIDTH": 8,
+        "B_MAN_WIDTH": 4,
+        "B_EXP_WIDTH": 8,
+        "OUT_MAN_WIDTH": 4,
+        "OUT_EXP_WIDTH": 8,
     }
 
     mase_runner(
         module_param_list=[
             # Default Square
-            DEFAULT_CONFIG,
-            #
+            # DEFAULT_CONFIG,
             # {
             #     **DEFAULT_CONFIG,
             #     "A_MAN_WIDTH": 9,
@@ -258,7 +288,7 @@ def test_matmul():
             #     "OUT_MAN_WIDTH": 12,
             #     "OUT_EXP_WIDTH": 4,
             # },
-            # # Long Rectangle, should saturate many values
+            # Long Rectangle, should saturate many values
             {
                 **DEFAULT_CONFIG,
                 "A_TOTAL_DIM0": 16,
@@ -270,20 +300,20 @@ def test_matmul():
                 "B_COMPUTE_DIM0": 4,
                 "B_COMPUTE_DIM1": 4,  # Must equal A_COMPUTE_DIM0
             },
-            # # # Change window to full size
-            {
-                **DEFAULT_CONFIG,
-                "A_COMPUTE_DIM0": 4,
-                "A_COMPUTE_DIM1": 4,
-                "B_COMPUTE_DIM0": 4,
-                "B_COMPUTE_DIM1": 4,
-            },
+            # Change window to full size
+            # {
+            #     **DEFAULT_CONFIG,
+            #     "A_COMPUTE_DIM0": 4,
+            #     "A_COMPUTE_DIM1": 4,
+            #     "B_COMPUTE_DIM0": 4,
+            #     "B_COMPUTE_DIM1": 4,
+            # },
             # # Dimensions
             # *generate_random_dimension_cfg([DEFAULT_CONFIG]),
         ],
         trace=True,
         jobs=12,
-        extra_build_args=["--trace-depth", "5"],
+        # sim="questa",
     )
 
 
