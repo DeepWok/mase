@@ -1,4 +1,4 @@
-# Lab 1 – Tutorial 1: Introduction to MASE IR and FX Graphs
+# Lab 0 – Tutorial 1: Introduction to MASE IR and FX Graphs
 
 ## Objective
 Understand how a PyTorch model is imported into MASE via Torch FX, how the resulting compute graph is structured, and how MASE augments FX with semantic metadata to enable principled analysis and transformation passes.
