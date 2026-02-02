@@ -85,8 +85,9 @@ def fetch_info(node, module):
         a_value = node.meta["mase"].parameters["common"]["args"]["data_in_0"]["value"]
         a_shape = node.meta["mase"].parameters["common"]["args"]["data_in_0"]["shape"]
 
-        w_value = node.meta["mase"].parameters["common"]["args"]["weight"]["value"]
-        w_shape = node.meta["mase"].parameters["common"]["args"]["weight"]["shape"]
+        # Use actual module weight to preserve device placement
+        w_value = module.weight.data
+        w_shape = module.weight.shape
 
         out = {
             "module_type": "conv2d",
@@ -112,8 +113,9 @@ def fetch_info(node, module):
         a_value = node.meta["mase"].parameters["common"]["args"]["data_in_0"]["value"]
         a_shape = node.meta["mase"].parameters["common"]["args"]["data_in_0"]["shape"]
 
-        w_value = node.meta["mase"].parameters["common"]["args"]["weight"]["value"]
-        w_shape = node.meta["mase"].parameters["common"]["args"]["weight"]["shape"]
+        # Use actual module weight to preserve device placement
+        w_value = module.weight.data
+        w_shape = module.weight.shape
         out = {
             "module_type": "linear",
             "weight_value": w_value,

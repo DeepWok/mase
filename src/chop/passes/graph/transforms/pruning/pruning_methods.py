@@ -92,7 +92,7 @@ def neurons_random_rank(
     :return: a sparsity mask
     :rtype: torch.Tensor
     """
-    mask = torch.ones(tensor.size(), dtype=torch.bool)
+    mask = torch.ones(tensor.size(), dtype=torch.bool, device=tensor.device)
     mask = mask.reshape(tensor.shape[0], -1)
     if layer_type == "Linear":
         for i in range(tensor.shape[0]):
@@ -115,7 +115,7 @@ def neurons_random_fan_in(
 ) -> torch.Tensor:
     if fan_in == None:
         raise ValueError("fan_in is not been specified")
-    mask = torch.zeros(tensor.size(), dtype=torch.bool)
+    mask = torch.zeros(tensor.size(), dtype=torch.bool, device=tensor.device)
     mask = mask.reshape(tensor.shape[0], -1)
     if layer_type == "Linear":
         for i in range(tensor.shape[0]):
