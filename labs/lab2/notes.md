@@ -1,108 +1,134 @@
-# Lab 2 – Tutorial 5: Neural Architecture Search with Optuna and Compression-Aware Optimisation
+# Lab 2 – Tutorial 5: Neural Architecture Search and Compression-Aware Optimisation
 
 ## Objective
-Investigate how different **search strategies** explore the model design space for BERT-based architectures, and evaluate how **compression-aware search** affects final model quality. The goal is to understand:
 
-1. How **GridSampler** and **TPESampler** compare to random search in NAS.
-2. Whether architectures found via NAS remain optimal after **quantisation and pruning**.
-3. Whether incorporating compression *during* search yields better post-compression models.
+The aim of this lab is to understand how different **search strategies** explore neural network architectures, and how **model compression** affects the final performance of a model.
+
+In particular, this lab looks at:
+
+1. How **GridSampler** and **TPESampler** behave when used for Neural Architecture Search (NAS)
+2. Whether architectures found by NAS still perform well after **quantisation and pruning**
+3. Whether applying compression **during** the search process leads to better final results
 
 ---
 
 ## Baseline NAS Setup (Task 1)
 
 ### Search Space
-The NAS search space included:
-- **Model-level hyperparameters**
+
+The architecture search was carried out over the following parameters:
+
+- **Model-level parameters**
   - `num_layers`
   - `num_heads`
   - `hidden_size`
   - `intermediate_size`
+
 - **Structural choices**
-  - Optional replacement of square `Linear` layers with `Identity`
+  - Some square `Linear` layers could be replaced with `Identity` layers
 
-Each trial:
-1. Constructed a BERT-like model from a sampled configuration.
-2. Trained for **1 epoch** on IMDb.
-3. Evaluated classification accuracy.
+For each trial, the following steps were performed:
 
-This limited training budget is intentional and standard in NAS, allowing many trials to be compared cheaply.
+1. A BERT-like model was built using the sampled parameters
+2. The model was trained for **1 epoch** on the IMDb dataset
+3. Classification accuracy was evaluated
+
+Training for only one epoch is intentional. In NAS, the goal is to quickly compare many architectures rather than fully training each model.
 
 ---
 
 ## Samplers Compared
 
 ### GridSampler
-- Exhaustively enumerates a **fixed Cartesian product** of hyperparameters.
-- Requires all parameters to be known *a priori*.
-- Cannot support dynamic, layer-specific parameters.
 
-To enable GridSampler, the search was restricted to **model-level hyperparameters only**.
+- Tries **all possible combinations** of parameters in a fixed grid
+- Requires the full set of parameters to be known **before** the search starts
+- Cannot support parameters that depend on the model structure, such as per-layer choices
+
+Because of this, GridSampler was only used for **model-level parameters**.  
+Layer-specific decisions were not included when using GridSampler.
+
+---
 
 ### TPESampler (Tree-structured Parzen Estimator)
-- A **Bayesian optimisation** method.
-- Builds probabilistic models of *good* vs *bad* regions of the search space.
-- Supports **conditional and dynamic parameters**, making it suitable for architecture-level NAS.
+
+- Uses results from previous trials to guide future sampling
+- Focuses more on parameter values that have performed well so far
+- Supports **dynamic and conditional parameters**, such as layer-by-layer decisions
+
+This makes TPESampler much more suitable for real NAS problems, where the model structure can change between trials.
 
 ---
 
 ## Task 1 Results: Sampler Comparison
 
 A plot was generated with:
+
 - **x-axis**: number of trials
-- **y-axis**: best accuracy achieved up to that trial
+- **y-axis**: best accuracy achieved up to that point
 
 ### Observations
-- **GridSampler** improved steadily but slowly.
-- **TPESampler** achieved higher accuracy in fewer trials.
-- TPESampler showed better *sample efficiency*, reaching strong configurations earlier.
+
+- GridSampler showed slow but steady improvement
+- TPESampler reached higher accuracy in fewer trials
+- TPESampler found strong architectures earlier in the search
 
 ### Interpretation
-Grid search treats all configurations equally, while TPE actively exploits promising regions of the space. This confirms that:
 
-> **Bayesian optimisation is more effective than exhaustive or random search in high-dimensional NAS problems.**
+GridSampler treats all configurations equally, while TPESampler learns which choices are more promising.  
+This shows that:
 
-TPESampler was therefore selected for subsequent compression-aware experiments.
+> **TPESampler is more efficient than grid search or random search for large architecture spaces.**
+
+For this reason, TPESampler was chosen for the next task.
 
 ---
 
 ## Compression-Aware NAS (Task 2)
 
 ### Motivation
-In earlier tutorials, NAS and compression were treated as **separate steps**:
-1. Search for the best architecture.
-2. Compress it afterward.
 
-However, different architectures exhibit **different sensitivities to quantisation and pruning**. A model that performs best *before* compression may not be optimal *after* compression.
+In earlier tutorials, architecture search and compression were handled as two separate steps:
 
-### Compression Pipeline
-Each trial applied:
-- **Quantisation**:
-  - Integer quantisation
-  - 8-bit data, weights, and bias
-- **Pruning**:
-  - 50% sparsity
-  - L1-norm based pruning
-  - Local scope (per-layer)
+1. Find the best architecture
+2. Apply compression afterward
+
+However, different architectures respond differently to compression.  
+A model that performs well before compression may lose a lot of accuracy after quantisation or pruning.
 
 ---
 
-## Compression-Aware Objective Variants
+## Compression Pipeline
 
-Three experiment variants were run:
+In Task 2, compression was included directly in the evaluation of each trial:
+
+- **Quantisation**
+  - Integer quantisation
+  - 8-bit precision for inputs, weights, and bias
+
+- **Pruning**
+  - 50% sparsity
+  - L1-norm based pruning
+  - Applied locally to each layer
+
+---
+
+## Compression-Aware Experiment Variants
+
+Three versions of the experiment were run:
 
 1. **Baseline NAS (no compression)**  
-   Standard TPESampler NAS results from Task 1.
+   Results from Task 1 using TPESampler
 
 2. **Compression-aware NAS (no post-training)**  
-   - Train model
+   - Train the model
    - Apply quantisation and pruning
    - Evaluate immediately
 
 3. **Compression-aware NAS (with post-training)**  
-   - Train model
+   - Train the model
    - Apply quantisation and pruning
-   - Fine-tune for an additional epoch
+   - Fine-tune for one additional epoch
    - Evaluate
 
 ---
@@ -110,58 +136,46 @@ Three experiment variants were run:
 ## Task 2 Results
 
 A second plot was generated with:
+
 - **x-axis**: number of trials
-- **y-axis**: best accuracy achieved up to that trial
+- **y-axis**: best accuracy achieved so far
 - **Three curves**:
   - Baseline NAS
-  - Compression-aware (no post-training)
-  - Compression-aware (with post-training)
+  - Compression-aware search without post-training
+  - Compression-aware search with post-training
 
 ### Observations
-- Applying compression **without post-training** caused a noticeable drop in accuracy.
-- Compression-aware search **with post-training** recovered much of the lost performance.
-- In some cases, compression-aware models approached or matched baseline NAS accuracy.
 
-### Interpretation
-These results demonstrate that:
+- Applying compression without post-training caused a large drop in accuracy
+- Post-compression fine-tuning recovered most of the lost performance
+- Compression-aware NAS with post-training achieved results close to the baseline
 
-- Compression significantly alters model behaviour.
-- Architectures must adapt to quantisation and pruning effects.
-- **Post-compression training is critical** to regain performance.
-- Compression-aware NAS produces models that are more robust to deployment constraints.
+---
+
+## Interpretation
+
+From these results, we can see that:
+
+- Compression changes how a model behaves
+- Some architectures are more robust to quantisation and pruning than others
+- Fine-tuning after compression is very important
+- Including compression during the search leads to better deployment-ready models
 
 ---
 
 ## Key Takeaways
 
-- TPESampler outperforms GridSampler and random search for NAS due to its adaptive, probabilistic search strategy.
-- Separating NAS and compression is suboptimal.
-- Compression-aware search yields better final models than compressing after NAS.
-- Fine-tuning after compression is essential, especially under aggressive quantisation and pruning.
+- TPESampler works better than GridSampler for NAS
+- GridSampler cannot handle layer-specific or dynamic parameters
+- Compression should not be treated as a separate final step
+- Compression-aware NAS produces more robust architectures
+- Post-compression training is necessary to achieve good accuracy
 
 ---
 
 ## Final Insight
 
-Neural architecture search should not be viewed in isolation. When deployment constraints such as quantisation and sparsity matter, they must be **co-optimised during search**, not applied as an afterthought.
+Neural architecture search should not be done in isolation.  
+If a model is going to be quantised or pruned during deployment, these constraints should be considered **during the search process**, not after.
 
-This tutorial demonstrates how MASE enables such **end-to-end, system-aware optimisation workflows**.
-
-## Why Compression-Aware NAS Matters
-
-A key insight from this tutorial is that *model quality is not absolute* — it depends on the constraints under which the model will be deployed.
-
-In Task 1, architectures were evaluated assuming full-precision, dense computation. However, in realistic deployment scenarios, models are often subject to:
-- Quantised arithmetic
-- Weight sparsity
-- Limited numerical precision
-
-Task 2 demonstrates that architectures which perform best *before* compression are not necessarily optimal *after* compression. Compression-aware NAS exposes each candidate architecture to quantisation and pruning during search, allowing Optuna to favour architectures that are intrinsically more robust to these transformations.
-
-This explains why:
-- Compression without post-training causes large accuracy drops
-- Post-compression fine-tuning restores performance
-- Compression-aware NAS can approach baseline accuracy despite deployment constraints
-
-The takeaway is that **architecture search, numerical representation, and training dynamics must be co-optimised**, rather than treated as independent steps.
-
+This tutorial shows how Optuna and MASE can be combined to perform **end-to-end, deployment-aware optimisation**.
