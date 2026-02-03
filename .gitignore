@@ -181,5 +181,4 @@ docs/tutorials/difflogic/data-mnist/
 *.svg
 
 # Lab Outputs
-labs/**/outputs/
 labs/**/.ipynb_checkpoints/
