@@ -173,3 +173,12 @@ test-trainer/
 
 # DiffLogic: tutorial files
 docs/tutorials/difflogic/data-mnist/
+
+# Tutorial generated outputs
+docs/source/modules/documentation/tutorials/*.svg
+
+# oh-my-claudecode
+.omc/
+
+# Misc
+=2.6
