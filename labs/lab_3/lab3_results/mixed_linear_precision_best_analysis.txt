@@ -1,0 +1,76 @@
+======================================================================
+MIXED PRECISION SEARCH - BEST MODEL ANALYSIS
+======================================================================
+Analysis generated: 2026-02-05 13:49:48.740903
+Model file: /Users/alihaidar/Desktop/lab3_results/mixed_linear_precision_best.pt
+Model saved at: 2026-02-04 18:09:14.726295
+Base checkpoint: prajjwal1/bert-tiny
+
+----------------------------------------------------------------------
+SUMMARY
+----------------------------------------------------------------------
+Best Accuracy: 0.8800
+Total Linear Layers: 23
+Quantized Layers: 8 (34.8%)
+Full Precision Layers: 15 (65.2%)
+
+----------------------------------------------------------------------
+QUANTIZATION DISTRIBUTION
+----------------------------------------------------------------------
+Width distribution:
+  width=8: 5 layers (62.5%)
+  width=16: 2 layers (25.0%)
+  width=32: 1 layers (12.5%)
+
+Fractional width distribution:
+  frac_width=2: 3 layers (37.5%)
+  frac_width=4: 3 layers (37.5%)
+  frac_width=8: 2 layers (25.0%)
+
+----------------------------------------------------------------------
+QUANTIZED LAYERS (LinearInteger)
+----------------------------------------------------------------------
+Layer Name                                              Width    Frac    
+----------------------------------------------------------------------
+bert.encoder.layer.0.intermediate.dense                 8        8       
+bert.encoder.layer.0.output.dense                       16       4       
+bert.encoder.layer.1.attention.self.key                 8        4       
+bert.encoder.layer.1.attention.self.value               8        2       
+bert.encoder.layer.2.attention.self.query               8        2       
+bert.encoder.layer.2.output.dense                       32       8       
+bert.encoder.layer.3.attention.self.query               16       4       
+bert.encoder.layer.3.attention.self.value               8        2       
+
+----------------------------------------------------------------------
+FULL PRECISION LAYERS (nn.Linear)
+----------------------------------------------------------------------
+  bert.encoder.layer.0.attention.output.dense
+  bert.encoder.layer.0.attention.self.query
+  bert.encoder.layer.0.attention.self.value
+  bert.encoder.layer.1.attention.output.dense
+  bert.encoder.layer.1.attention.self.query
+  bert.encoder.layer.1.intermediate.dense
+  bert.encoder.layer.1.output.dense
+  bert.encoder.layer.2.attention.output.dense
+  bert.encoder.layer.2.attention.self.key
+  bert.encoder.layer.2.attention.self.value
+  bert.encoder.layer.2.intermediate.dense
+  bert.encoder.layer.3.attention.output.dense
+  bert.encoder.layer.3.intermediate.dense
+  bert.encoder.layer.3.output.dense
+  classifier
+
+----------------------------------------------------------------------
+UNIQUE CONFIGURATIONS
+----------------------------------------------------------------------
+(width, frac_width)       Count      Percentage
+---------------------------------------------
+(8, 2)                  3          37.5%
+(8, 4)                  1          12.5%
+(8, 8)                  1          12.5%
+(16, 4)                  2          25.0%
+(32, 8)                  1          12.5%
+
+======================================================================
+END OF ANALYSIS
+======================================================================

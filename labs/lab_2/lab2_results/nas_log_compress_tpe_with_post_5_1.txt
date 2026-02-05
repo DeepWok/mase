@@ -1,0 +1,441 @@
+2026-02-04 12:02:58 | INFO     | ============================================================
+2026-02-04 12:02:58 | INFO     | Compression-Aware NAS Search
+2026-02-04 12:02:58 | INFO     | ============================================================
+2026-02-04 12:02:58 | INFO     | Sampler: TPE
+2026-02-04 12:02:58 | INFO     | Post-compression training: True
+2026-02-04 12:02:58 | INFO     | Epochs BEFORE compression: 5
+2026-02-04 12:02:58 | INFO     | Epochs AFTER compression: 1
+2026-02-04 12:02:58 | INFO     | Start time: 2026-02-04 12:02:58.080793
+2026-02-04 12:02:58 | INFO     | Number of trials: 20
+2026-02-04 12:02:58 | INFO     | Output directory: /rds/general/user/aah25/home/nas_results
+2026-02-04 12:02:58 | INFO     | Output file prefix: compress_tpe_with_post_5_1
+2026-02-04 12:02:58 | INFO     | Checkpoint: prajjwal1/bert-tiny
+2026-02-04 12:02:58 | INFO     | Dataset: imdb
+2026-02-04 12:02:58 | INFO     | ============================================================
+2026-02-04 12:02:58 | INFO     | Loading dataset...
+2026-02-04 12:03:03 | INFO     | Dataset loaded successfully
+2026-02-04 12:03:03 | INFO     | ============================================================
+2026-02-04 12:03:03 | INFO     | Trial 1 started
+2026-02-04 12:03:06 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 8, 'hidden_size': 512, 'intermediate_size': 1024}
+2026-02-04 12:03:06 | INFO     |   Model parameters: 22,727,682
+2026-02-04 12:03:06 | INFO     |   [BEFORE COMPRESSION] Training for 5 epoch(s)...
+2026-02-04 12:08:22 | INFO     |   [COMPRESSION] Applying quantization and pruning...
+2026-02-04 12:08:22 | INFO     |     Applying compression (quantization + pruning)...
+2026-02-04 12:08:24 | INFO     |     Compression applied successfully (device: cuda:0)
+2026-02-04 12:08:24 | INFO     |   Compressed model: 22,727,682 params (non-zero: 22,727,170)
+2026-02-04 12:08:24 | INFO     |   [AFTER COMPRESSION] Training for 1 epoch(s)...
+2026-02-04 12:09:51 | INFO     |   [EVALUATE] After post-compression training...
+2026-02-04 12:10:34 | INFO     |   Accuracy: 0.8587
+2026-02-04 12:10:34 | INFO     |   Duration: 0:07:31.420360
+2026-02-04 12:10:34 | INFO     | Trial 1 completed
+2026-02-04 12:10:34 | INFO     | --------------------------------------------------
+2026-02-04 12:10:34 | INFO     | *** New best accuracy: 0.8587 ***
+2026-02-04 12:10:35 | INFO     |   Best model state_dict saved to: /rds/general/user/aah25/home/nas_results/nas_best_model_compress_tpe_with_post_5_1.pt
+2026-02-04 12:10:35 | INFO     | Progress: 1/20 (5.0%)
+2026-02-04 12:10:35 | INFO     | Elapsed: 0:07:37.026390 | ETA: 2:24:43.501410
+2026-02-04 12:10:35 | INFO     | Best accuracy so far: 0.8587
+2026-02-04 12:10:35 | INFO     | ==================================================
+2026-02-04 12:10:35 | INFO     | Trial 2 started
+2026-02-04 12:10:35 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 2, 'hidden_size': 512, 'intermediate_size': 768}
+2026-02-04 12:10:35 | INFO     |   Model parameters: 21,678,082
+2026-02-04 12:10:35 | INFO     |   [BEFORE COMPRESSION] Training for 5 epoch(s)...
+2026-02-04 12:15:04 | INFO     |   [COMPRESSION] Applying quantization and pruning...
+2026-02-04 12:15:04 | INFO     |     Applying compression (quantization + pruning)...
+2026-02-04 12:15:05 | INFO     |     Compression applied successfully (device: cuda:0)
+2026-02-04 12:15:05 | INFO     |   Compressed model: 21,678,082 params (non-zero: 21,677,570)
+2026-02-04 12:15:05 | INFO     |   [AFTER COMPRESSION] Training for 1 epoch(s)...
+2026-02-04 12:16:28 | INFO     |   [EVALUATE] After post-compression training...
+2026-02-04 12:17:11 | INFO     |   Accuracy: 0.8595
+2026-02-04 12:17:11 | INFO     |   Duration: 0:06:36.549015
+2026-02-04 12:17:11 | INFO     | Trial 2 completed
+2026-02-04 12:17:11 | INFO     | --------------------------------------------------
+2026-02-04 12:17:11 | INFO     | *** New best accuracy: 0.8595 ***
+2026-02-04 12:17:11 | INFO     |   Best model state_dict saved to: /rds/general/user/aah25/home/nas_results/nas_best_model_compress_tpe_with_post_5_1.pt
+2026-02-04 12:17:11 | INFO     | Progress: 2/20 (10.0%)
+2026-02-04 12:17:11 | INFO     | Elapsed: 0:14:13.859612 | ETA: 2:08:04.736508
+2026-02-04 12:17:11 | INFO     | Best accuracy so far: 0.8595
+2026-02-04 12:17:11 | INFO     | ==================================================
+2026-02-04 12:17:11 | INFO     | Trial 3 started
+2026-02-04 12:17:12 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 4, 'hidden_size': 384, 'intermediate_size': 1536}
+2026-02-04 12:17:12 | INFO     |   Model parameters: 23,749,634
+2026-02-04 12:17:12 | INFO     |   [BEFORE COMPRESSION] Training for 5 epoch(s)...
+2026-02-04 12:24:15 | INFO     |   [COMPRESSION] Applying quantization and pruning...
+2026-02-04 12:24:15 | INFO     |     Applying compression (quantization + pruning)...
+2026-02-04 12:24:17 | INFO     |     Compression applied successfully (device: cuda:0)
+2026-02-04 12:24:17 | INFO     |   Compressed model: 23,749,634 params (non-zero: 23,749,250)
+2026-02-04 12:24:17 | INFO     |   [AFTER COMPRESSION] Training for 1 epoch(s)...
+2026-02-04 12:26:30 | INFO     |   [EVALUATE] After post-compression training...
+2026-02-04 12:27:42 | INFO     |   Accuracy: 0.8630
+2026-02-04 12:27:42 | INFO     |   Duration: 0:10:30.547556
+2026-02-04 12:27:42 | INFO     | Trial 3 completed
+2026-02-04 12:27:42 | INFO     | --------------------------------------------------
+2026-02-04 12:27:42 | INFO     | *** New best accuracy: 0.8630 ***
+2026-02-04 12:27:42 | INFO     |   Best model state_dict saved to: /rds/general/user/aah25/home/nas_results/nas_best_model_compress_tpe_with_post_5_1.pt
+2026-02-04 12:27:42 | INFO     | Progress: 3/20 (15.0%)
+2026-02-04 12:27:42 | INFO     | Elapsed: 0:24:44.842936 | ETA: 2:20:14.109965
+2026-02-04 12:27:42 | INFO     | Best accuracy so far: 0.8630
+2026-02-04 12:27:42 | INFO     | ==================================================
+2026-02-04 12:27:42 | INFO     | Trial 4 started
+2026-02-04 12:27:43 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 2, 'hidden_size': 512, 'intermediate_size': 1536}
+2026-02-04 12:27:43 | INFO     |   Model parameters: 19,834,370
+2026-02-04 12:27:43 | INFO     |   [BEFORE COMPRESSION] Training for 5 epoch(s)...
+2026-02-04 12:31:08 | INFO     |   [COMPRESSION] Applying quantization and pruning...
+2026-02-04 12:31:08 | INFO     |     Applying compression (quantization + pruning)...
+2026-02-04 12:31:09 | INFO     |     Compression applied successfully (device: cuda:0)
+2026-02-04 12:31:09 | INFO     |   Compressed model: 19,834,370 params (non-zero: 19,833,858)
+2026-02-04 12:31:09 | INFO     |   [AFTER COMPRESSION] Training for 1 epoch(s)...
+2026-02-04 12:32:01 | INFO     |   [EVALUATE] After post-compression training...
+2026-02-04 12:32:27 | INFO     |   Accuracy: 0.8605
+2026-02-04 12:32:27 | INFO     |   Duration: 0:04:44.906729
+2026-02-04 12:32:27 | INFO     | Trial 4 completed
+2026-02-04 12:32:27 | INFO     | --------------------------------------------------
+2026-02-04 12:32:28 | INFO     | Progress: 4/20 (20.0%)
+2026-02-04 12:32:28 | INFO     | Elapsed: 0:29:30.007274 | ETA: 1:58:00.029088
+2026-02-04 12:32:28 | INFO     | Best accuracy so far: 0.8630
+2026-02-04 12:32:28 | INFO     | ==================================================
+2026-02-04 12:32:28 | INFO     | Trial 5 started
+2026-02-04 12:32:28 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 2, 'hidden_size': 192, 'intermediate_size': 768}
+2026-02-04 12:32:28 | INFO     |   Model parameters: 7,553,858
+2026-02-04 12:32:28 | INFO     |   [BEFORE COMPRESSION] Training for 5 epoch(s)...
+2026-02-04 12:35:47 | INFO     |   [COMPRESSION] Applying quantization and pruning...
+2026-02-04 12:35:47 | INFO     |     Applying compression (quantization + pruning)...
+2026-02-04 12:35:48 | INFO     |     Compression applied successfully (device: cuda:0)
+2026-02-04 12:35:48 | INFO     |   Compressed model: 7,553,858 params (non-zero: 7,553,666)
+2026-02-04 12:35:48 | INFO     |   [AFTER COMPRESSION] Training for 1 epoch(s)...
+2026-02-04 12:37:03 | INFO     |   [EVALUATE] After post-compression training...
+2026-02-04 12:37:48 | INFO     |   Accuracy: 0.8644
+2026-02-04 12:37:48 | INFO     |   Duration: 0:05:20.756861
+2026-02-04 12:37:48 | INFO     | Trial 5 completed
+2026-02-04 12:37:48 | INFO     | --------------------------------------------------
+2026-02-04 12:37:48 | INFO     | *** New best accuracy: 0.8644 ***
+2026-02-04 12:37:48 | INFO     |   Best model state_dict saved to: /rds/general/user/aah25/home/nas_results/nas_best_model_compress_tpe_with_post_5_1.pt
+2026-02-04 12:37:49 | INFO     | Progress: 5/20 (25.0%)
+2026-02-04 12:37:49 | INFO     | Elapsed: 0:34:51.149513 | ETA: 1:44:33.448545
+2026-02-04 12:37:49 | INFO     | Best accuracy so far: 0.8644
+2026-02-04 12:37:49 | INFO     | ==================================================
+2026-02-04 12:37:49 | INFO     | Trial 6 started
+2026-02-04 12:37:49 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 8, 'hidden_size': 128, 'intermediate_size': 1024}
+2026-02-04 12:37:49 | INFO     |   Model parameters: 6,413,826
+2026-02-04 12:37:49 | INFO     |   [BEFORE COMPRESSION] Training for 5 epoch(s)...
+2026-02-04 12:42:57 | INFO     |   [COMPRESSION] Applying quantization and pruning...
+2026-02-04 12:42:57 | INFO     |     Applying compression (quantization + pruning)...
+2026-02-04 12:42:58 | INFO     |     Compression applied successfully (device: cuda:0)
+2026-02-04 12:42:58 | INFO     |   Compressed model: 6,413,826 params (non-zero: 6,413,698)
+2026-02-04 12:42:58 | INFO     |   [AFTER COMPRESSION] Training for 1 epoch(s)...
+2026-02-04 12:45:03 | INFO     |   [EVALUATE] After post-compression training...
+2026-02-04 12:46:17 | INFO     |   Accuracy: 0.8526
+2026-02-04 12:46:17 | INFO     |   Duration: 0:08:28.686054
+2026-02-04 12:46:17 | INFO     | Trial 6 completed
+2026-02-04 12:46:17 | INFO     | --------------------------------------------------
+2026-02-04 12:46:18 | INFO     | Progress: 6/20 (30.0%)
+2026-02-04 12:46:18 | INFO     | Elapsed: 0:43:20.196429 | ETA: 1:41:07.125008
+2026-02-04 12:46:18 | INFO     | Best accuracy so far: 0.8644
+2026-02-04 12:46:18 | INFO     | ==================================================
+2026-02-04 12:46:18 | INFO     | Trial 7 started
+2026-02-04 12:46:18 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 16, 'hidden_size': 384, 'intermediate_size': 2048}
+2026-02-04 12:46:18 | INFO     |   Model parameters: 20,148,610
+2026-02-04 12:46:18 | INFO     |   [BEFORE COMPRESSION] Training for 5 epoch(s)...
+2026-02-04 12:51:54 | INFO     |   [COMPRESSION] Applying quantization and pruning...
+2026-02-04 12:51:54 | INFO     |     Applying compression (quantization + pruning)...
+2026-02-04 12:51:55 | INFO     |     Compression applied successfully (device: cuda:0)
+2026-02-04 12:51:55 | INFO     |   Compressed model: 20,148,610 params (non-zero: 20,148,226)
+2026-02-04 12:51:55 | INFO     |   [AFTER COMPRESSION] Training for 1 epoch(s)...
+2026-02-04 12:53:38 | INFO     |   [EVALUATE] After post-compression training...
+2026-02-04 12:54:35 | INFO     |   Accuracy: 0.8634
+2026-02-04 12:54:35 | INFO     |   Duration: 0:08:17.043969
+2026-02-04 12:54:35 | INFO     | Trial 7 completed
+2026-02-04 12:54:35 | INFO     | --------------------------------------------------
+2026-02-04 12:54:35 | INFO     | Progress: 7/20 (35.0%)
+2026-02-04 12:54:35 | INFO     | Elapsed: 0:51:37.640034 | ETA: 1:35:52.760065
+2026-02-04 12:54:35 | INFO     | Best accuracy so far: 0.8644
+2026-02-04 12:54:35 | INFO     | ==================================================
+2026-02-04 12:54:35 | INFO     | Trial 8 started
+2026-02-04 12:54:35 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 4, 'hidden_size': 128, 'intermediate_size': 512}
+2026-02-04 12:54:35 | INFO     |   Model parameters: 4,320,130
+2026-02-04 12:54:35 | INFO     |   [BEFORE COMPRESSION] Training for 5 epoch(s)...
+2026-02-04 12:57:06 | INFO     |   [COMPRESSION] Applying quantization and pruning...
+2026-02-04 12:57:06 | INFO     |     Applying compression (quantization + pruning)...
+2026-02-04 12:57:07 | INFO     |     Compression applied successfully (device: cuda:0)
+2026-02-04 12:57:07 | INFO     |   Compressed model: 4,320,130 params (non-zero: 4,320,002)
+2026-02-04 12:57:07 | INFO     |   [AFTER COMPRESSION] Training for 1 epoch(s)...
+2026-02-04 12:57:53 | INFO     |   [EVALUATE] After post-compression training...
+2026-02-04 12:58:21 | INFO     |   Accuracy: 0.8738
+2026-02-04 12:58:21 | INFO     |   Duration: 0:03:45.489773
+2026-02-04 12:58:21 | INFO     | Trial 8 completed
+2026-02-04 12:58:21 | INFO     | --------------------------------------------------
+2026-02-04 12:58:21 | INFO     | *** New best accuracy: 0.8738 ***
+2026-02-04 12:58:21 | INFO     |   Best model state_dict saved to: /rds/general/user/aah25/home/nas_results/nas_best_model_compress_tpe_with_post_5_1.pt
+2026-02-04 12:58:21 | INFO     | Progress: 8/20 (40.0%)
+2026-02-04 12:58:21 | INFO     | Elapsed: 0:55:23.609131 | ETA: 1:23:05.413692
+2026-02-04 12:58:21 | INFO     | Best accuracy so far: 0.8738
+2026-02-04 12:58:21 | INFO     | ==================================================
+2026-02-04 12:58:21 | INFO     | Trial 9 started
+2026-02-04 12:58:21 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 8, 'hidden_size': 256, 'intermediate_size': 1536}
+2026-02-04 12:58:21 | INFO     |   Model parameters: 9,919,490
+2026-02-04 12:58:21 | INFO     |   [BEFORE COMPRESSION] Training for 5 epoch(s)...
+2026-02-04 13:01:13 | INFO     |   [COMPRESSION] Applying quantization and pruning...
+2026-02-04 13:01:13 | INFO     |     Applying compression (quantization + pruning)...
+2026-02-04 13:01:14 | INFO     |     Compression applied successfully (device: cuda:0)
+2026-02-04 13:01:14 | INFO     |   Compressed model: 9,919,490 params (non-zero: 9,919,234)
+2026-02-04 13:01:14 | INFO     |   [AFTER COMPRESSION] Training for 1 epoch(s)...
+2026-02-04 13:02:05 | INFO     |   [EVALUATE] After post-compression training...
+2026-02-04 13:02:34 | INFO     |   Accuracy: 0.8700
+2026-02-04 13:02:34 | INFO     |   Duration: 0:04:12.898259
+2026-02-04 13:02:34 | INFO     | Trial 9 completed
+2026-02-04 13:02:34 | INFO     | --------------------------------------------------
+2026-02-04 13:02:35 | INFO     | Progress: 9/20 (45.0%)
+2026-02-04 13:02:35 | INFO     | Elapsed: 0:59:36.933810 | ETA: 1:12:51.807990
+2026-02-04 13:02:35 | INFO     | Best accuracy so far: 0.8738
+2026-02-04 13:02:35 | INFO     | ==================================================
+2026-02-04 13:02:35 | INFO     | Trial 10 started
+2026-02-04 13:02:35 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 8, 'hidden_size': 512, 'intermediate_size': 512}
+2026-02-04 13:02:35 | INFO     |   Model parameters: 17,997,826
+2026-02-04 13:02:35 | INFO     |   [BEFORE COMPRESSION] Training for 5 epoch(s)...
+2026-02-04 13:05:43 | INFO     |   [COMPRESSION] Applying quantization and pruning...
+2026-02-04 13:05:43 | INFO     |     Applying compression (quantization + pruning)...
+2026-02-04 13:05:44 | INFO     |     Compression applied successfully (device: cuda:0)
+2026-02-04 13:05:44 | INFO     |   Compressed model: 17,997,826 params (non-zero: 17,997,314)
+2026-02-04 13:05:44 | INFO     |   [AFTER COMPRESSION] Training for 1 epoch(s)...
+2026-02-04 13:06:33 | INFO     |   [EVALUATE] After post-compression training...
+2026-02-04 13:06:59 | INFO     |   Accuracy: 0.8587
+2026-02-04 13:06:59 | INFO     |   Duration: 0:04:24.338574
+2026-02-04 13:06:59 | INFO     | Trial 10 completed
+2026-02-04 13:06:59 | INFO     | --------------------------------------------------
+2026-02-04 13:06:59 | INFO     | Progress: 10/20 (50.0%)
+2026-02-04 13:06:59 | INFO     | Elapsed: 1:04:01.722718 | ETA: 1:04:01.722720
+2026-02-04 13:06:59 | INFO     | Best accuracy so far: 0.8738
+2026-02-04 13:06:59 | INFO     | ==================================================
+2026-02-04 13:06:59 | INFO     | Trial 11 started
+2026-02-04 13:06:59 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 4, 'hidden_size': 128, 'intermediate_size': 512}
+2026-02-04 13:06:59 | INFO     |   Model parameters: 4,270,594
+2026-02-04 13:06:59 | INFO     |   [BEFORE COMPRESSION] Training for 5 epoch(s)...
+2026-02-04 13:09:23 | INFO     |   [COMPRESSION] Applying quantization and pruning...
+2026-02-04 13:09:23 | INFO     |     Applying compression (quantization + pruning)...
+2026-02-04 13:09:24 | INFO     |     Compression applied successfully (device: cuda:0)
+2026-02-04 13:09:24 | INFO     |   Compressed model: 4,270,594 params (non-zero: 4,270,466)
+2026-02-04 13:09:24 | INFO     |   [AFTER COMPRESSION] Training for 1 epoch(s)...
+2026-02-04 13:10:02 | INFO     |   [EVALUATE] After post-compression training...
+2026-02-04 13:10:25 | INFO     |   Accuracy: 0.8770
+2026-02-04 13:10:25 | INFO     |   Duration: 0:03:25.871381
+2026-02-04 13:10:25 | INFO     | Trial 11 completed
+2026-02-04 13:10:25 | INFO     | --------------------------------------------------
+2026-02-04 13:10:25 | INFO     | *** New best accuracy: 0.8770 ***
+2026-02-04 13:10:25 | INFO     |   Best model state_dict saved to: /rds/general/user/aah25/home/nas_results/nas_best_model_compress_tpe_with_post_5_1.pt
+2026-02-04 13:10:26 | INFO     | Progress: 11/20 (55.0%)
+2026-02-04 13:10:26 | INFO     | Elapsed: 1:07:28.152898 | ETA: 0:55:12.125100
+2026-02-04 13:10:26 | INFO     | Best accuracy so far: 0.8770
+2026-02-04 13:10:26 | INFO     | ==================================================
+2026-02-04 13:10:26 | INFO     | Trial 12 started
+2026-02-04 13:10:26 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 4, 'hidden_size': 128, 'intermediate_size': 512}
+2026-02-04 13:10:26 | INFO     |   Model parameters: 4,270,594
+2026-02-04 13:10:26 | INFO     |   [BEFORE COMPRESSION] Training for 5 epoch(s)...
+2026-02-04 13:12:50 | INFO     |   [COMPRESSION] Applying quantization and pruning...
+2026-02-04 13:12:50 | INFO     |     Applying compression (quantization + pruning)...
+2026-02-04 13:12:51 | INFO     |     Compression applied successfully (device: cuda:0)
+2026-02-04 13:12:51 | INFO     |   Compressed model: 4,270,594 params (non-zero: 4,270,466)
+2026-02-04 13:12:51 | INFO     |   [AFTER COMPRESSION] Training for 1 epoch(s)...
+2026-02-04 13:13:30 | INFO     |   [EVALUATE] After post-compression training...
+2026-02-04 13:13:52 | INFO     |   Accuracy: 0.8767
+2026-02-04 13:13:52 | INFO     |   Duration: 0:03:26.739860
+2026-02-04 13:13:52 | INFO     | Trial 12 completed
+2026-02-04 13:13:52 | INFO     | --------------------------------------------------
+2026-02-04 13:13:53 | INFO     | Progress: 12/20 (60.0%)
+2026-02-04 13:13:53 | INFO     | Elapsed: 1:10:55.391394 | ETA: 0:47:16.927600
+2026-02-04 13:13:53 | INFO     | Best accuracy so far: 0.8770
+2026-02-04 13:13:53 | INFO     | ==================================================
+2026-02-04 13:13:53 | INFO     | Trial 13 started
+2026-02-04 13:13:53 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 4, 'hidden_size': 128, 'intermediate_size': 512}
+2026-02-04 13:13:53 | INFO     |   Model parameters: 4,270,594
+2026-02-04 13:13:53 | INFO     |   [BEFORE COMPRESSION] Training for 5 epoch(s)...
+2026-02-04 13:16:17 | INFO     |   [COMPRESSION] Applying quantization and pruning...
+2026-02-04 13:16:17 | INFO     |     Applying compression (quantization + pruning)...
+2026-02-04 13:16:17 | INFO     |     Compression applied successfully (device: cuda:0)
+2026-02-04 13:16:17 | INFO     |   Compressed model: 4,270,594 params (non-zero: 4,270,466)
+2026-02-04 13:16:17 | INFO     |   [AFTER COMPRESSION] Training for 1 epoch(s)...
+2026-02-04 13:16:56 | INFO     |   [EVALUATE] After post-compression training...
+2026-02-04 13:17:18 | INFO     |   Accuracy: 0.8767
+2026-02-04 13:17:18 | INFO     |   Duration: 0:03:25.433257
+2026-02-04 13:17:18 | INFO     | Trial 13 completed
+2026-02-04 13:17:18 | INFO     | --------------------------------------------------
+2026-02-04 13:17:19 | INFO     | Progress: 13/20 (65.0%)
+2026-02-04 13:17:19 | INFO     | Elapsed: 1:14:21.342669 | ETA: 0:40:02.261435
+2026-02-04 13:17:19 | INFO     | Best accuracy so far: 0.8770
+2026-02-04 13:17:19 | INFO     | ==================================================
+2026-02-04 13:17:19 | INFO     | Trial 14 started
+2026-02-04 13:17:19 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 4, 'hidden_size': 128, 'intermediate_size': 512}
+2026-02-04 13:17:19 | INFO     |   Model parameters: 4,270,594
+2026-02-04 13:17:19 | INFO     |   [BEFORE COMPRESSION] Training for 5 epoch(s)...
+2026-02-04 13:19:43 | INFO     |   [COMPRESSION] Applying quantization and pruning...
+2026-02-04 13:19:43 | INFO     |     Applying compression (quantization + pruning)...
+2026-02-04 13:19:43 | INFO     |     Compression applied successfully (device: cuda:0)
+2026-02-04 13:19:43 | INFO     |   Compressed model: 4,270,594 params (non-zero: 4,270,466)
+2026-02-04 13:19:43 | INFO     |   [AFTER COMPRESSION] Training for 1 epoch(s)...
+2026-02-04 13:20:22 | INFO     |   [EVALUATE] After post-compression training...
+2026-02-04 13:20:44 | INFO     |   Accuracy: 0.8780
+2026-02-04 13:20:44 | INFO     |   Duration: 0:03:25.478088
+2026-02-04 13:20:44 | INFO     | Trial 14 completed
+2026-02-04 13:20:44 | INFO     | --------------------------------------------------
+2026-02-04 13:20:44 | INFO     | *** New best accuracy: 0.8780 ***
+2026-02-04 13:20:44 | INFO     |   Best model state_dict saved to: /rds/general/user/aah25/home/nas_results/nas_best_model_compress_tpe_with_post_5_1.pt
+2026-02-04 13:20:45 | INFO     | Progress: 14/20 (70.0%)
+2026-02-04 13:20:45 | INFO     | Elapsed: 1:17:47.433303 | ETA: 0:33:20.328558
+2026-02-04 13:20:45 | INFO     | Best accuracy so far: 0.8780
+2026-02-04 13:20:45 | INFO     | ==================================================
+2026-02-04 13:20:45 | INFO     | Trial 15 started
+2026-02-04 13:20:45 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 4, 'hidden_size': 128, 'intermediate_size': 512}
+2026-02-04 13:20:45 | INFO     |   Model parameters: 4,270,594
+2026-02-04 13:20:45 | INFO     |   [BEFORE COMPRESSION] Training for 5 epoch(s)...
+2026-02-04 13:23:09 | INFO     |   [COMPRESSION] Applying quantization and pruning...
+2026-02-04 13:23:09 | INFO     |     Applying compression (quantization + pruning)...
+2026-02-04 13:23:09 | INFO     |     Compression applied successfully (device: cuda:0)
+2026-02-04 13:23:09 | INFO     |   Compressed model: 4,270,594 params (non-zero: 4,270,466)
+2026-02-04 13:23:09 | INFO     |   [AFTER COMPRESSION] Training for 1 epoch(s)...
+2026-02-04 13:23:48 | INFO     |   [EVALUATE] After post-compression training...
+2026-02-04 13:24:11 | INFO     |   Accuracy: 0.8767
+2026-02-04 13:24:11 | INFO     |   Duration: 0:03:25.519564
+2026-02-04 13:24:11 | INFO     | Trial 15 completed
+2026-02-04 13:24:11 | INFO     | --------------------------------------------------
+2026-02-04 13:24:11 | INFO     | Progress: 15/20 (75.0%)
+2026-02-04 13:24:11 | INFO     | Elapsed: 1:21:13.518709 | ETA: 0:27:04.506235
+2026-02-04 13:24:11 | INFO     | Best accuracy so far: 0.8780
+2026-02-04 13:24:11 | INFO     | ==================================================
+2026-02-04 13:24:11 | INFO     | Trial 16 started
+2026-02-04 13:24:11 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 16, 'hidden_size': 192, 'intermediate_size': 512}
+2026-02-04 13:24:11 | INFO     |   Model parameters: 6,429,954
+2026-02-04 13:24:11 | INFO     |   [BEFORE COMPRESSION] Training for 5 epoch(s)...
+2026-02-04 13:26:55 | INFO     |   [COMPRESSION] Applying quantization and pruning...
+2026-02-04 13:26:55 | INFO     |     Applying compression (quantization + pruning)...
+2026-02-04 13:26:56 | INFO     |     Compression applied successfully (device: cuda:0)
+2026-02-04 13:26:56 | INFO     |   Compressed model: 6,429,954 params (non-zero: 6,429,762)
+2026-02-04 13:26:56 | INFO     |   [AFTER COMPRESSION] Training for 1 epoch(s)...
+2026-02-04 13:27:37 | INFO     |   [EVALUATE] After post-compression training...
+2026-02-04 13:28:00 | INFO     |   Accuracy: 0.8733
+2026-02-04 13:28:00 | INFO     |   Duration: 0:03:49.200494
+2026-02-04 13:28:00 | INFO     | Trial 16 completed
+2026-02-04 13:28:00 | INFO     | --------------------------------------------------
+2026-02-04 13:28:01 | INFO     | Progress: 16/20 (80.0%)
+2026-02-04 13:28:01 | INFO     | Elapsed: 1:25:03.306169 | ETA: 0:21:15.826544
+2026-02-04 13:28:01 | INFO     | Best accuracy so far: 0.8780
+2026-02-04 13:28:01 | INFO     | ==================================================
+2026-02-04 13:28:01 | INFO     | Trial 17 started
+2026-02-04 13:28:01 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 4, 'hidden_size': 256, 'intermediate_size': 2048}
+2026-02-04 13:28:01 | INFO     |   Model parameters: 17,019,394
+2026-02-04 13:28:01 | INFO     |   [BEFORE COMPRESSION] Training for 5 epoch(s)...
+2026-02-04 13:33:44 | INFO     |   [COMPRESSION] Applying quantization and pruning...
+2026-02-04 13:33:44 | INFO     |     Applying compression (quantization + pruning)...
+2026-02-04 13:33:45 | INFO     |     Compression applied successfully (device: cuda:0)
+2026-02-04 13:33:45 | INFO     |   Compressed model: 17,019,394 params (non-zero: 17,019,138)
+2026-02-04 13:33:45 | INFO     |   [AFTER COMPRESSION] Training for 1 epoch(s)...
+2026-02-04 13:35:47 | INFO     |   [EVALUATE] After post-compression training...
+2026-02-04 13:37:01 | INFO     |   Accuracy: 0.8670
+2026-02-04 13:37:01 | INFO     |   Duration: 0:08:59.728672
+2026-02-04 13:37:01 | INFO     | Trial 17 completed
+2026-02-04 13:37:01 | INFO     | --------------------------------------------------
+2026-02-04 13:37:01 | INFO     | Progress: 17/20 (85.0%)
+2026-02-04 13:37:01 | INFO     | Elapsed: 1:34:03.695083 | ETA: 0:16:35.946192
+2026-02-04 13:37:01 | INFO     | Best accuracy so far: 0.8780
+2026-02-04 13:37:01 | INFO     | ==================================================
+2026-02-04 13:37:01 | INFO     | Trial 18 started
+2026-02-04 13:37:01 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 4, 'hidden_size': 128, 'intermediate_size': 512}
+2026-02-04 13:37:01 | INFO     |   Model parameters: 4,270,594
+2026-02-04 13:37:01 | INFO     |   [BEFORE COMPRESSION] Training for 5 epoch(s)...
+2026-02-04 13:39:25 | INFO     |   [COMPRESSION] Applying quantization and pruning...
+2026-02-04 13:39:25 | INFO     |     Applying compression (quantization + pruning)...
+2026-02-04 13:39:25 | INFO     |     Compression applied successfully (device: cuda:0)
+2026-02-04 13:39:25 | INFO     |   Compressed model: 4,270,594 params (non-zero: 4,270,466)
+2026-02-04 13:39:25 | INFO     |   [AFTER COMPRESSION] Training for 1 epoch(s)...
+2026-02-04 13:40:04 | INFO     |   [EVALUATE] After post-compression training...
+2026-02-04 13:40:27 | INFO     |   Accuracy: 0.8770
+2026-02-04 13:40:27 | INFO     |   Duration: 0:03:25.479723
+2026-02-04 13:40:27 | INFO     | Trial 18 completed
+2026-02-04 13:40:27 | INFO     | --------------------------------------------------
+2026-02-04 13:40:27 | INFO     | Progress: 18/20 (90.0%)
+2026-02-04 13:40:27 | INFO     | Elapsed: 1:37:29.844660 | ETA: 0:10:49.982740
+2026-02-04 13:40:27 | INFO     | Best accuracy so far: 0.8780
+2026-02-04 13:40:27 | INFO     | ==================================================
+2026-02-04 13:40:27 | INFO     | Trial 19 started
+2026-02-04 13:40:28 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 4, 'hidden_size': 128, 'intermediate_size': 512}
+2026-02-04 13:40:28 | INFO     |   Model parameters: 4,270,594
+2026-02-04 13:40:28 | INFO     |   [BEFORE COMPRESSION] Training for 5 epoch(s)...
+2026-02-04 13:42:51 | INFO     |   [COMPRESSION] Applying quantization and pruning...
+2026-02-04 13:42:51 | INFO     |     Applying compression (quantization + pruning)...
+2026-02-04 13:42:51 | INFO     |     Compression applied successfully (device: cuda:0)
+2026-02-04 13:42:51 | INFO     |   Compressed model: 4,270,594 params (non-zero: 4,270,466)
+2026-02-04 13:42:51 | INFO     |   [AFTER COMPRESSION] Training for 1 epoch(s)...
+2026-02-04 13:43:30 | INFO     |   [EVALUATE] After post-compression training...
+2026-02-04 13:43:52 | INFO     |   Accuracy: 0.8689
+2026-02-04 13:43:52 | INFO     |   Duration: 0:03:25.009188
+2026-02-04 13:43:52 | INFO     | Trial 19 completed
+2026-02-04 13:43:52 | INFO     | --------------------------------------------------
+2026-02-04 13:43:53 | INFO     | Progress: 19/20 (95.0%)
+2026-02-04 13:43:53 | INFO     | Elapsed: 1:40:55.538568 | ETA: 0:05:18.712556
+2026-02-04 13:43:53 | INFO     | Best accuracy so far: 0.8780
+2026-02-04 13:43:53 | INFO     | ==================================================
+2026-02-04 13:43:53 | INFO     | Trial 20 started
+2026-02-04 13:43:53 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 16, 'hidden_size': 128, 'intermediate_size': 768}
+2026-02-04 13:43:53 | INFO     |   Model parameters: 5,804,930
+2026-02-04 13:43:53 | INFO     |   [BEFORE COMPRESSION] Training for 5 epoch(s)...
+2026-02-04 13:49:33 | INFO     |   [COMPRESSION] Applying quantization and pruning...
+2026-02-04 13:49:33 | INFO     |     Applying compression (quantization + pruning)...
+2026-02-04 13:49:34 | INFO     |     Compression applied successfully (device: cuda:0)
+2026-02-04 13:49:34 | INFO     |   Compressed model: 5,804,930 params (non-zero: 5,804,802)
+2026-02-04 13:49:34 | INFO     |   [AFTER COMPRESSION] Training for 1 epoch(s)...
+2026-02-04 13:51:33 | INFO     |   [EVALUATE] After post-compression training...
+2026-02-04 13:52:39 | INFO     |   Accuracy: 0.8711
+2026-02-04 13:52:39 | INFO     |   Duration: 0:08:45.382635
+2026-02-04 13:52:39 | INFO     | Trial 20 completed
+2026-02-04 13:52:39 | INFO     | --------------------------------------------------
+2026-02-04 13:52:39 | INFO     | Progress: 20/20 (100.0%)
+2026-02-04 13:52:39 | INFO     | Elapsed: 1:49:41.692019 | ETA: 0:00:00
+2026-02-04 13:52:39 | INFO     | Best accuracy so far: 0.8780
+2026-02-04 13:52:39 | INFO     | ==================================================
+2026-02-04 13:52:40 | INFO     | Results saved to: /rds/general/user/aah25/home/nas_results/nas_results_compress_tpe_with_post_5_1.pkl
+2026-02-04 13:52:40 | INFO     | Best model state_dict saved to: /rds/general/user/aah25/home/nas_results/nas_best_model_compress_tpe_with_post_5_1_final.pt
+2026-02-04 13:52:40 | INFO     | 
+2026-02-04 13:52:40 | INFO     | ============================================================
+2026-02-04 13:52:40 | INFO     | FINAL RESULTS - Compression-Aware NAS
+2026-02-04 13:52:40 | INFO     | ============================================================
+2026-02-04 13:52:40 | INFO     | Sampler: TPE
+2026-02-04 13:52:40 | INFO     | Post-compression training: True
+2026-02-04 13:52:40 | INFO     | Epochs before compression: 5
+2026-02-04 13:52:40 | INFO     | Epochs after compression: 1
+2026-02-04 13:52:40 | INFO     | Trials completed: 20/20
+2026-02-04 13:52:40 | INFO     | Best accuracy: 0.8780
+2026-02-04 13:52:40 | INFO     | Best trial: 14
+2026-02-04 13:52:40 | INFO     | Best hyperparameters:
+2026-02-04 13:52:40 | INFO     |   num_layers: 2
+2026-02-04 13:52:40 | INFO     |   num_heads: 4
+2026-02-04 13:52:40 | INFO     |   hidden_size: 128
+2026-02-04 13:52:40 | INFO     |   intermediate_size: 512
+2026-02-04 13:52:40 | INFO     | ------------------------------------------------------------
+2026-02-04 13:52:40 | INFO     | Start time: 2026-02-04 12:02:58.080793
+2026-02-04 13:52:40 | INFO     | End time: 2026-02-04 13:52:39.773230
+2026-02-04 13:52:40 | INFO     | Total duration: 1:49:41.692437
+2026-02-04 13:52:40 | INFO     | ============================================================
+2026-02-04 13:52:40 | INFO     | 
+2026-02-04 13:52:40 | INFO     | All Trial Results:
+2026-02-04 13:52:40 | INFO     | ------------------------------------------------------------
+2026-02-04 13:52:40 | INFO     | Trial    Accuracy     Best So Far 
+2026-02-04 13:52:40 | INFO     | ------------------------------------------------------------
+2026-02-04 13:52:40 | INFO     | 1        0.8587       0.8587      
+2026-02-04 13:52:40 | INFO     | 2        0.8595       0.8595      
+2026-02-04 13:52:40 | INFO     | 3        0.8630       0.8630      
+2026-02-04 13:52:40 | INFO     | 4        0.8605       0.8630      
+2026-02-04 13:52:40 | INFO     | 5        0.8644       0.8644      
+2026-02-04 13:52:40 | INFO     | 6        0.8526       0.8644      
+2026-02-04 13:52:40 | INFO     | 7        0.8634       0.8644      
+2026-02-04 13:52:40 | INFO     | 8        0.8738       0.8738      
+2026-02-04 13:52:40 | INFO     | 9        0.8700       0.8738      
+2026-02-04 13:52:40 | INFO     | 10       0.8587       0.8738      
+2026-02-04 13:52:40 | INFO     | 11       0.8770       0.8770      
+2026-02-04 13:52:40 | INFO     | 12       0.8767       0.8770      
+2026-02-04 13:52:40 | INFO     | 13       0.8767       0.8770      
+2026-02-04 13:52:40 | INFO     | 14       0.8780       0.8780      
+2026-02-04 13:52:40 | INFO     | 15       0.8767       0.8780      
+2026-02-04 13:52:40 | INFO     | 16       0.8733       0.8780      
+2026-02-04 13:52:40 | INFO     | 17       0.8670       0.8780      
+2026-02-04 13:52:40 | INFO     | 18       0.8770       0.8780      
+2026-02-04 13:52:40 | INFO     | 19       0.8689       0.8780      
+2026-02-04 13:52:40 | INFO     | 20       0.8711       0.8780      
+2026-02-04 13:52:40 | INFO     | ============================================================
+2026-02-04 13:52:40 | INFO     | Compression-aware NAS search completed!
