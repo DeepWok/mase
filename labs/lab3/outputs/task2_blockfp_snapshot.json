@@ -1,0 +1,24 @@
+{
+  "study_name": "tutorial6_prec_blockfp",
+  "storage": "sqlite:////workspace/labs/lab3/outputs/optuna_tutorial6.db",
+  "best_value": 0.8762,
+  "best_trial_number": 14,
+  "best_params": {
+    "bert.encoder.layer.0.attention.self.query_type": "fp",
+    "bert.encoder.layer.0.attention.self.key_type": "fp",
+    "bert.encoder.layer.0.attention.self.value_type": "blockfp",
+    "bert.encoder.layer.0.attention.output.dense_type": "blockfp",
+    "bert.encoder.layer.0.intermediate.dense_type": "blockfp",
+    "bert.encoder.layer.0.output.dense_type": "fp",
+    "bert.encoder.layer.1.attention.self.query_type": "blockfp",
+    "bert.encoder.layer.1.attention.self.key_type": "fp",
+    "bert.encoder.layer.1.attention.output.dense_type": "fp",
+    "bert.encoder.layer.1.intermediate.dense_type": "blockfp",
+    "bert.encoder.layer.1.output.dense_type": "fp",
+    "classifier_type": "fp"
+  },
+  "n_trials": 24,
+  "n_complete": 24,
+  "n_fail": 0,
+  "n_pruned": 0
+}
