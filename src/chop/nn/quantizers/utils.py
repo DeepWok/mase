@@ -71,6 +71,46 @@ class BinaryBipolar(InplaceFunction):
         return grad_input, None
 
 
+# class BinaryBipolarScaled(InplaceFunction):
+#     """A PyTorch function for binarizing input values.
+
+#     This function takes an input tensor and a threshold value and binarizes the input values,
+#     setting values greater than or equal to the threshold to mean and values below the threshold to -mean
+
+#     Args:
+#         ctx (torch.autograd.function._ContextMethodMixin): The context object to store intermediate results.
+#         input (torch.Tensor): The input tensor to be binarized.
+#         threshold (float or torch.Tensor): The threshold value for binarization.
+
+#     Returns:
+#         torch.Tensor: The binarized output tensor, where values are either -1 or 1.
+#     """
+
+#     @staticmethod
+#     def alpha(tensor):  # determine batch means
+#         absvalue = tensor.abs()
+#         alpha = absvalue.mean(dim=(1, 2, 3), keepdims=True)
+#         return alpha.view(-1, 1)
+
+#     @staticmethod
+#     def forward(ctx, input, _threshold):
+#         alpha = BinaryBipolarScaled.alpha(input)  # contains all averages per batch item
+
+#         output = torch.zeros_like(input)  # tracer compatability vs torch.zeros()
+#         pos_one = torch.where(input > 0, 1.0, 0.0)
+#         neg_one = pos_one - 1
+#         out = torch.add(pos_one, neg_one)
+#         output = out * alpha.view(-1, 1, 1, 1).expand(
+#             -1, input.size()[1], input.size()[2], input.size()[3]
+#         )
+
+#         return output
+
+#     @staticmethod
+#     def backward(ctx, grad_output):
+#         grad_input = grad_output.clone()
+#         return grad_input, None
+
 class BinaryBipolarScaled(InplaceFunction):
     """A PyTorch function for binarizing input values.
 
@@ -89,7 +129,17 @@ class BinaryBipolarScaled(InplaceFunction):
     @staticmethod
     def alpha(tensor):  # determine batch means
         absvalue = tensor.abs()
-        alpha = absvalue.mean(dim=(1, 2, 3), keepdims=True)
+        # FIX: Handle dimensions dynamically
+        if tensor.dim() == 4:
+            alpha = absvalue.mean(dim=(1, 2, 3), keepdims=True)
+        elif tensor.dim() == 2:
+            alpha = absvalue.mean(dim=(1,), keepdims=True)
+        else:
+            dims = tuple(range(1, tensor.dim()))
+            if not dims:
+                alpha = absvalue.mean()
+            else:
+                alpha = absvalue.mean(dim=dims, keepdims=True)
         return alpha.view(-1, 1)
 
     @staticmethod
@@ -100,9 +150,10 @@ class BinaryBipolarScaled(InplaceFunction):
         pos_one = torch.where(input > 0, 1.0, 0.0)
         neg_one = pos_one - 1
         out = torch.add(pos_one, neg_one)
-        output = out * alpha.view(-1, 1, 1, 1).expand(
-            -1, input.size()[1], input.size()[2], input.size()[3]
-        )
+        
+        # FIX: Dynamic broadcasting instead of hardcoded expansion
+        view_shape = [input.shape[0]] + [1] * (input.dim() - 1)
+        output = out * alpha.view(*view_shape)
 
         return output
 
@@ -110,7 +161,6 @@ class BinaryBipolarScaled(InplaceFunction):
     def backward(ctx, grad_output):
         grad_input = grad_output.clone()
         return grad_input, None
-
 
 class BinaryZeroOne(InplaceFunction):
     """A PyTorch function for binarizing input values.
@@ -152,20 +202,55 @@ class BinaryZeroScaled(InplaceFunction):
         torch.Tensor: The binarized output tensor
     """
 
+    # @staticmethod
+    # def alpha(tensor):  # determine batch means
+    #     absvalue = tensor.abs()
+    #     alpha = absvalue.mean(dim=(1, 2, 3), keepdims=True)
+    #     return alpha.view(-1, 1)
+    
     @staticmethod
-    def alpha(tensor):  # determine batch means
-        absvalue = tensor.abs()
-        alpha = absvalue.mean(dim=(1, 2, 3), keepdims=True)
-        return alpha.view(-1, 1)
+    def alpha(input):
+        # Original code assumes 4D input (Conv2d: [Out, In, H, W])
+        # We must handle 2D input (Linear: [Out, In])
+        absvalue = input.abs()
+        
+        if input.dim() == 4:
+            # Conv2d case: average over (In, H, W) -> dims (1, 2, 3)
+            alpha = absvalue.mean(dim=(1, 2, 3), keepdims=True)
+        elif input.dim() == 2:
+            # Linear case: average over (In) -> dim (1)
+            alpha = absvalue.mean(dim=(1,), keepdims=True)
+        else:
+            # Fallback: average over all dims except the first (Output channel)
+            dims = tuple(range(1, input.dim()))
+            if not dims: # Scalar or 1D
+                    alpha = absvalue.mean()
+            else:
+                    alpha = absvalue.mean(dim=dims, keepdims=True)
+        
+        return alpha
 
+    # @staticmethod
+    # def forward(ctx, input, _threshold):
+    #     alpha = BinaryZeroScaled.alpha(input)
+
+    #     pos_one = torch.where(input > 0, 1.0, 0.0)
+    #     output = pos_one * alpha.view(-1, 1, 1, 1).expand(
+    #         -1, input.size()[1], input.size()[2], input.size()[3]
+    #     )
+    #     return output
+    
     @staticmethod
     def forward(ctx, input, _threshold):
         alpha = BinaryZeroScaled.alpha(input)
 
         pos_one = torch.where(input > 0, 1.0, 0.0)
-        output = pos_one * alpha.view(-1, 1, 1, 1).expand(
-            -1, input.size()[1], input.size()[2], input.size()[3]
-        )
+        
+        # FIX: Dynamic broadcasting instead of hardcoded expansion
+        # This creates a shape like [N, 1, 1, 1] for 4D or [N, 1] for 2D automatically
+        view_shape = [input.shape[0]] + [1] * (input.dim() - 1)
+        output = pos_one * alpha.view(*view_shape)
+        
         return output
 
     @staticmethod
