@@ -5,7 +5,7 @@
 
 ### 1. Experiment Overview ###
 
-- For this task, we conducted a 100 trials (1 epoch training) mixed-precision NAS search on the BERT model for IMDB classification using the Optuna's TPE sampler, which exhibited the best performance in the Lab 2 (NAS Search). 
+- For this task, we conducted a 100 trials (1 epoch training) mixed-precision NAS search on the BERT model for IMDB classification using the Optuna's TPE sampler, which exhibited the best performance in Lab 2 (NAS Search). 
 
 - Each of the 23 linear layers could independently be assigned full precision (FP32) or integer quantization with configurable bit-widths `[8, 16, 32]` and fractional widths `[2, 4, 8]`.
 
@@ -74,14 +74,11 @@ We can also note the temporal distribution of these failing trials. The frequenc
 
 ### 4. Discussion: TPE Dynamics and Limitations ###
 
-- __TPE Dynamics:__ The search behavior reflects the TPE sampler's transition from exploration to exploitation. The initial 10 startup trials (random baseline `n_startup_trials`=10 by default) established a probability density, after which the sampler successfully identified and clustered around the high-performance manifold (87.7%–87.9%).
+- __TPE Dynamics:__ The search behavior reflects the TPE sampler's transition from exploration to exploitation. The initial 10 startup trials (random baseline `n_startup_trials`=10 [2]) established a probability density, after which the sampler successfully identified and clustered around the high-performance manifold (87.7%–87.9%).
 
-- __Limitations:__ The rapid plateau suggests that TPE's assumption of hyperparameter independence (Akiba et al., 2019) may be a bottleneck. By modeling each layer's precision independently, the sampler struggles to capture complex layer-to-layer dependencies (e.g., a quantized Key layer might require a high-precision Query layer). Additionally, the 1-epoch training budget likely constrained the model's ability to adapt to aggressive quantization, limiting the viability of lower-precision configurations.
-
-Another limitation worth mentioning is that we only trained for `1 epoch` per trial to keep the search tractable, but this means the model doesn't have much time to adapt to quantization. With longer training, more aggressive quantization might become viable as the model learns to compensate.
+- __Limitations:__ The rapid performance plateau suggests that TPE's underlying independence assumption might be a contributing bottleneck. [1] explicitly categorize TPE as an independent sampling method, noting that such algorithms are "known to perform well even without using the parameter correlations." However, in the context of deep quantization, this independence may hinder the discovery of complex, inter-layer dependencies (e.g., a quantized Key layer requiring a high-precision Query layer). While TPE is effective generally, it is probable that its inability to explicitly model these joint relationships limits efficiency in this specific high-dimensional space. Additionally, the `1-epoch` training budget likely constrained the model's ability to adapt to aggressive quantization, further limiting the viability of lower-precision configurations.
 
 ### 5. Best Configuration: ###
-
 
 The optimal configuration found by the search (Trial 83) reveals a highly selective quantization strategy. The optimal model includes 8 quantized layers out of the 23 layers (34.8%).
 
@@ -99,7 +96,7 @@ The distribution of bit-widths among the quantized layers shows a strong prefere
 
 #### Layer-Wise Configuration Detail ####
 
-The table below details exactly which layers were quantized. A key observation is the asymmetry in the attention mechanism: Query and Value projections were quantized more frequently than Key projections, suggesting the model is more sensitive to precision loss in the Key vectors.
+We have saved the best model in `.pt` format so that we can extract per-layer information and perform our analysis. The table below details exactly which layers were quantized. A key observation is the asymmetry in the attention mechanism: Query and Value projections were quantized more frequently than Key projections, suggesting the model is more sensitive to precision loss in the Key vectors.
 
 | Layer Name                                   | Type          | Width | Frac Width |
 |----------------------------------------------|---------------|------:|-----------:|
@@ -279,6 +276,9 @@ The winning configuration used 7 different precision types:
 | **Total**            | **23** | **100%**   |
 
 
+![Plot](./lab_3/lab3_results/plots/task2/best_precision_distribution.png)
+
+
 This is notably different from Task 1's best model, which used only LinearInteger for quantized layers. The diversity of formats suggests that different layers may indeed benefit from different quantization schemes—minifloat formats preserve dynamic range better for some layers, while block formats share exponents efficiently for others.
 
 #### Failure Configurations ####
@@ -304,3 +304,9 @@ The multi-precision search demonstrates that combining different quantization fo
 
 However, it's worth noting that we only trained for 1 epoch per trial to keep the search tractable. This limited training budget likely disadvantages the more exotic formats like `LinearBinary` and `LinearLog`, which require the model to learn fundamentally different weight representations. With more training epochs, these formats might adapt better and achieve competitive accuracy. Consequently, the high failure rate we observed may partly reflect insufficient training rather than inherent limitations of the formats themselves. Conversely, the formats that performed well (`LinearMinifloatIEEE`, `LinearBlockFP`) are closer to standard floating-point behaviour, making them easier for the model to adapt to quickly.
 
+
+# References: #
+
+[1] T. Akiba, S. Sano, T. Yanase, T. Ohta, and M. Koyama, “Optuna: A Next-generation Hyperparameter Optimization Framework,” arXiv preprint arXiv:1907.10902, 2019.
+
+[2] “Optuna.samplers.tpesampler,” optuna.samplers.TPESampler - Optuna 4.7.0 documentation, https://optuna.readthedocs.io/en/stable/reference/samplers/generated/optuna.samplers.TPESampler.html (accessed Feb. 4, 2026). 
