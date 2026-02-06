@@ -161,3 +161,231 @@ When measured correctly and run in steady state, `torch.compile` **does provide 
   https://github.com/pytorch/pytorch/tree/main/torch/_inductor
 - FX passes in Inductor  
   https://github.com/pytorch/pytorch/tree/main/torch/_inductor/fx_passes
+
+
+## Q2 — Profiling the SDPA Kernel: Naive vs Fused Implementation
+
+To understand the effect of kernel fusion in practice, we profiled both the naive Scaled Dot-Product Attention (SDPA) implementation and PyTorch’s fused SDPA kernel using the PyTorch profiler. Profiling was performed on both CPU and CUDA devices after warm-up, and outputs were verified to be numerically identical.
+
+---
+
+## Full Profiler Output
+
+### CPU — Naive SDPA
+
+
+```
+    Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg    # of Calls  
+
+    aten::bmm        97.30%        2.320s        98.37%        2.345s     117.248ms            20  
+    aten::_softmax         1.00%      23.830ms         1.00%      23.830ms       2.383ms            10  
+    aten::select         0.84%      20.097ms         1.04%      24.680ms       1.607us         15360  
+    aten::mul         0.53%      12.640ms         0.54%      12.967ms       1.297ms            10  
+```
+Self CPU time total: 2.384s
+
+---
+
+### CPU — Fused SDPA
+
+```
+    Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg    # of Calls  
+    aten::_scaled_dot_product_flash_attention_for_cpu        99.07%      70.043ms        99.84%      70.584ms       7.058ms            10  
+```
+
+
+Self CPU time total: 70.697ms
+
+
+---
+
+### CUDA — Naive SDPA
+
+```
+    Name    Self CPU %      Self CPU   CPU total %     CPU total     Self CUDA    CUDA total  
+
+    cudaDeviceSynchronize        80.35%       5.716ms        80.35%       5.716ms       0.000us       0.000us  
+    aten::bmm        11.59%     824.566us        12.71%     904.437us       3.243ms       3.243ms  
+    aten::_softmax         0.69%      49.247us         1.09%      77.402us       1.628ms       1.628ms  
+```
+
+Self CUDA time total: 6.486ms
+
+---
+
+### CUDA — Fused SDPA
+
+
+
+```
+    Name    Self CPU %      Self CPU   CPU total %     CPU total     Self CUDA    CUDA total  
+    aten::_flash_attention_forward         8.32%     357.124us        47.12%       2.022ms       2.207ms       2.207ms  
+    aten::_scaled_dot_product_flash_attention         4.50%     193.220us        56.97%       2.445ms       2.207ms       2.207ms  
+```
+
+
+Self CUDA time total: 2.207ms
+
+
+---
+
+## Summary Table
+
+### Runtime Comparison
+
+| Device | Implementation | Dominant Kernel | Total Runtime |
+|------|----------------|-----------------|---------------|
+| CPU  | Naive SDPA     | `aten::bmm`     | ~2.38 s       |
+| CPU  | Fused SDPA     | FlashAttention (CPU) | ~70.7 ms |
+| CUDA | Naive SDPA     | `aten::bmm` + softmax | ~6.49 ms |
+| CUDA | Fused SDPA     | FlashAttention (CUDA) | ~2.21 ms |
+
+---
+
+## Discussion
+
+On both CPU and CUDA, the fused SDPA implementation significantly reduces runtime compared to the naive implementation.
+
+- **CPU:** The naive implementation is dominated by repeated large matrix multiplications and intermediate tensor materialization. Kernel fusion collapses these operations into a single optimized kernel, resulting in an approximate **33× speedup**.
+- **CUDA:** While GPUs already handle matrix multiplications efficiently, the naive implementation still suffers from multiple kernel launches and synchronization overhead. The fused SDPA kernel reduces this overhead, yielding an approximate **3× speedup**.
+
+Crucially, **the qualitative behaviour is the same on CPU and CUDA**:
+- Naive SDPA executes attention as multiple independent operators.
+- Fused SDPA executes attention as a single, optimized kernel.
+
+This confirms that kernel fusion improves performance by reducing operator launch overhead and memory traffic, regardless of execution device, although the magnitude of the benefit depends on the hardware.
+
+## Connection to FlashAttention
+
+The fused SDPA kernel used by `torch.nn.functional.scaled_dot_product_attention` is an implementation of the **FlashAttention** algorithm. FlashAttention is not merely an optimized attention kernel; it is a **memory-efficient reformulation** of scaled dot-product attention that changes *how* the computation is executed rather than *what* is computed.
+
+In the naive SDPA implementation, attention is decomposed into multiple high-level operations: matrix multiplication (`QKᵀ`), scaling, softmax, and a second matrix multiplication (`AV`). Each of these operations materializes intermediate tensors in global memory. On modern hardware, this leads to excessive memory reads and writes, making the computation **memory-bandwidth bound** rather than compute-bound.
+
+FlashAttention addresses this by **fusing all attention steps into a single kernel** and computing attention **block-by-block**. Instead of storing the full attention matrix, it:
+- Streams query, key, and value blocks from memory,
+- Computes partial dot products on-chip,
+- Applies a numerically stable softmax incrementally, and
+- Accumulates the output without materializing intermediate tensors.
+
+As a result, FlashAttention dramatically reduces memory traffic and synchronization overhead. This explains the profiler results observed in both CPU and CUDA runs:
+- The naive SDPA path is dominated by `aten::bmm` and softmax kernels.
+- The fused path collapses these operations into a single FlashAttention kernel, visible as `aten::_scaled_dot_product_flash_attention_*`.
+
+The performance improvement is therefore a direct consequence of **kernel fusion and improved memory locality**, not just faster math. While the speedup is more pronounced on GPUs (where memory bandwidth is often the bottleneck), the same effect is observable on CPUs, confirming that FlashAttention’s benefits stem from reduced memory movement rather than device-specific tricks.
+
+In summary, the fused SDPA kernel is a practical demonstration of FlashAttention’s core idea: *restructuring attention to be memory-efficient through kernel fusion*, which is why it consistently outperforms the naive implementation across devices.
+
+### Relationship between `torch.compile` and FlashAttention
+
+It is important to distinguish between the optimizations provided by `torch.compile` and those provided by FlashAttention.
+
+`torch.compile` is a *general-purpose compilation framework* that captures PyTorch programs and applies graph-level optimizations such as operator fusion, kernel specialization, and code generation. These optimizations apply broadly across models and workloads, but they do not fundamentally change the underlying algorithm being executed.
+
+FlashAttention, by contrast, is a *specialized algorithmic reformulation* of scaled dot-product attention. It changes how attention is computed by avoiding materialization of the attention matrix and performing the computation in a memory-efficient, tiled manner within a single kernel.
+
+In practice, these two mechanisms are complementary:
+- `torch.compile` can help reduce Python overhead and fuse compatible operators.
+- FlashAttention provides a domain-specific kernel that addresses the memory-bandwidth bottleneck inherent in naive attention implementations.
+
+The profiler results in this lab demonstrate that the largest gains for SDPA come from the use of a FlashAttention-style fused kernel, rather than from general compiler optimizations alone.
+
+
+
+Nice — this fits *very* cleanly into your report already. You don’t need to rewrite anything you’ve written; you just need to **add one well-scoped section** that answers the MXINT question and explicitly ties it to **custom kernels + hardware efficiency**, the same way Q2 tied SDPA to FlashAttention.
+
+Below is a **drop-in addition** you can paste **after Q2** (or as Q3).
+I’ve written it in the same academic tone and depth as the rest of your report.
+
+---
+
+## Q3 — MXINT Quantization and Custom Kernels for Efficient Hardware Execution
+
+### Motivation: Why Custom Kernels Matter for Quantization
+
+While PyTorch provides highly optimized built-in kernels for common operations (e.g., `torch.matmul`, `torch.nn.functional.scaled_dot_product_attention`), these kernels are designed for general-purpose numerical formats such as FP32, FP16, or BF16. When models are quantized to custom formats, such as MXINT, the default kernels are no longer optimal.
+
+To fully exploit the benefits of quantization, **custom kernels** are required. These kernels can be designed to:
+- Operate directly on the quantized representation,
+- Minimize unnecessary data conversion,
+- Exploit hardware-friendly data layouts, and
+- Reduce memory traffic and instruction overhead.
+
+In this lab, a custom kernel is introduced for **MXINT dequantization**, demonstrating how numerical formats and kernel design interact to improve performance.
+
+---
+
+### Recap: MXINT Format
+
+MXINT is a *block-scaled quantization format* that sits between floating-point and fixed-point representations. Instead of storing a full exponent per value (as in floating-point), MXINT groups several values together and shares a single exponent across the group.
+
+An MXINT vector consists of:
+- **One shared exponent** (8-bit, biased by 127), and
+- **Multiple fixed-point mantissas**, each representing a scaled value.
+
+This structure can be summarized as:
+
+```
+
+Exp |- Mantissa 1
+|- Mantissa 2
+|- ...
+|- Mantissa group_size
+
+```
+
+The mantissas are signed fixed-point values, while the exponent provides a shared dynamic range. During dequantization, each mantissa is scaled by the same exponent factor.
+
+---
+
+### Why MXINT8 Benefits Custom Hardware
+
+When **both weights and activations in a linear layer are quantized to MXINT8**, the format provides several advantages for custom hardware and specialized kernels:
+
+#### 1. Reduced Memory Footprint
+- MXINT8 significantly reduces the number of bits required per value compared to FP16 or FP32.
+- Fewer bits mean lower memory bandwidth usage and better cache utilization.
+- This directly improves performance on memory-bound workloads, such as large matrix multiplications.
+
+#### 2. Simplified Arithmetic Units
+- Mantissas are fixed-point values, which can be processed using **integer arithmetic** instead of full floating-point units.
+- The exponent is shared across a group, so expensive per-element exponent handling is avoided.
+- This enables simpler, smaller, and more energy-efficient compute units.
+
+#### 3. Hardware-Friendly Dataflow
+- The block structure of MXINT aligns naturally with SIMD, systolic arrays, and tensor-core-like architectures.
+- A custom kernel can load one exponent and stream multiple mantissas through the same datapath.
+- This increases arithmetic intensity and reduces instruction overhead.
+
+#### 4. Reduced “Turing Tax”
+Using MXINT8 enables hardware designers to move away from fully general-purpose execution toward **domain-specific accelerators**. By fixing the numerical format and dataflow:
+- Instruction fetch and decode overhead is reduced,
+- Control logic is simplified, and
+- More transistors are dedicated to useful computation.
+
+This directly reduces the *Turing Tax*—the performance and energy cost of using a universal programmable processor instead of specialized hardware.
+
+---
+
+### Role of the Custom Dequantization Kernel
+
+The custom MXINT dequantization kernel shown in this lab illustrates how these benefits are realized in practice:
+
+- The kernel loads a shared exponent once per group.
+- Mantissas are converted from fixed-point to floating-point using simple scaling.
+- Intermediate representations are minimized, reducing memory traffic.
+- Dequantization is fused into the computation pipeline, avoiding unnecessary format conversions.
+
+Compared to naïve dequantization approaches that operate element-wise with full floating-point logic, this kernel is both **faster** and **more memory-efficient**.
+
+---
+
+### Summary
+
+MXINT8 benefits custom hardware when both weights and activations are quantized because it enables:
+- Compact data representation,
+- Integer-dominant arithmetic,
+- Efficient block-wise computation, and
+- Hardware designs that minimize general-purpose execution overhead.
+
+In combination with custom kernels, MXINT8 allows accelerators to achieve high performance and energy efficiency while maintaining acceptable numerical accuracy. This mirrors the broader theme observed in this lab: **the largest performance gains arise not only from compiler optimizations, but from co-designing numerical formats, kernels, and hardware execution models.**
+
