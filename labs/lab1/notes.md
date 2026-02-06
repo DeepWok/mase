@@ -246,3 +246,5 @@ Thus, **1 epoch** is sufficient and appropriate for this analysis.
 - MASE enables systematic exploration of these trade-offs via graph-level transformations.
 
 ---
+
+[https://mccormickml.com/2024/09/14/qlora-and-4bit-quantization/](https://mccormickml.com/2024/09/14/qlora-and-4bit-quantization/)

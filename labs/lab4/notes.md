@@ -289,16 +289,7 @@ In practice, these two mechanisms are complementary:
 
 The profiler results in this lab demonstrate that the largest gains for SDPA come from the use of a FlashAttention-style fused kernel, rather than from general compiler optimizations alone.
 
-
-
-Nice — this fits *very* cleanly into your report already. You don’t need to rewrite anything you’ve written; you just need to **add one well-scoped section** that answers the MXINT question and explicitly ties it to **custom kernels + hardware efficiency**, the same way Q2 tied SDPA to FlashAttention.
-
-Below is a **drop-in addition** you can paste **after Q2** (or as Q3).
-I’ve written it in the same academic tone and depth as the rest of your report.
-
----
-
-## Q3 — MXINT Quantization and Custom Kernels for Efficient Hardware Execution
+# Q3 — MXINT Quantization and Custom Kernels for Efficient Hardware Execution
 
 ### Motivation: Why Custom Kernels Matter for Quantization
 
@@ -389,3 +380,168 @@ MXINT8 benefits custom hardware when both weights and activations are quantized 
 
 In combination with custom kernels, MXINT8 allows accelerators to achieve high performance and energy efficiency while maintaining acceptable numerical accuracy. This mirrors the broader theme observed in this lab: **the largest performance gains arise not only from compiler optimizations, but from co-designing numerical formats, kernels, and hardware execution models.**
 
+## Q3 — MXINT8 Dequantization Kernel: Dataflow, Thread Tiling, and Bit-Level Reconstruction
+
+This section focuses on the **MXINT8 dequantization custom kernel** in `mase-cuda` and answers the embedded lab questions about:
+1) the purpose of `dont_need_abs` / `dont_need_bias` and `bias`,  
+2) how `cta_tiler` partitions global memory tensors using `local_tile`, and  
+3) how `layout_sX` / `layout_tX` partition work across threads using `local_partition`.
+
+---
+
+### Overview: What the kernel does
+
+Weights are stored in global memory in a quantized MXINT format:
+- `x`: an `int8` mantissa per element (packed as raw int8 values)
+- `scales`: a `uint8` exponent per group (shared micro-exponent)
+
+During execution of a layer:
+1. The GPU loads MXINT8 data from global memory.
+2. The kernel **dequantizes** the mantissas to **BF16** using the shared exponent.
+3. The dequantized BF16 values are written back to global memory for subsequent compute (e.g., GEMM).
+4. After the layer finishes, the temporary BF16 weights can be discarded.
+
+This saves GPU memory because the persistent storage is MXINT8 rather than BF16/FP16.
+
+---
+
+## Q3.1 — What is the purpose of `dont_need_abs` / `dont_need_bias` and `bias`?
+
+In the host reference implementation (and mirrored in the device kernel), dequantization constructs a BF16 value by **bit-packing**:
+
+```cpp
+auto sign = static_cast<uint16_t>(hX[i] & 0x80) << 8;
+auto exp  = static_cast<uint16_t>(hScales[i / group_size]) << 7;
+auto mantissa_abs = abs(hX[i]);
+auto frac = static_cast<uint16_t>((mantissa_abs & 0x3F) << 1);
+auto out  = cutlass::bfloat16_t::bitcast(sign | exp | frac);
+````
+
+This produces a BF16 number whose:
+
+* sign bit comes from MXINT mantissa sign,
+* exponent comes from the shared scale,
+* fraction bits come from the **lower 6 bits** of `|mantissa|`.
+
+However, MXINT mantissas are not IEEE-normalized floats (no implicit leading 1).
+To represent a wider signed fixed-point range efficiently, MXINT uses the `0x40` bit
+(`0100_0000`) as a **region selector**.
+
+```cpp
+auto dont_need_abs = bool(mantissa_abs & 0x40);
+auto bias = cutlass::bfloat16_t::bitcast(sign | exp | uint16_t(0));
+y[i] = dont_need_abs ? out : out - bias;
+```
+
+**Interpretation:**
+
+* If `mantissa_abs & 0x40` is **1**, the packed BF16 value `out` already represents the intended magnitude range → use `out` directly.
+* If `mantissa_abs & 0x40` is **0**, the format expects the value to be **offset by one unit** in the exponent bucket → subtract `bias`.
+
+`bias` is the BF16 value with:
+
+* same sign and exponent,
+* zero fraction,
+  which acts like a baseline constant for that exponent bucket.
+
+So `dont_need_abs` / `dont_need_bias` selects between two decoding rules:
+
+* **Rule A:** `y = out`
+* **Rule B:** `y = out - bias`
+
+This is a common trick for encoding signed ranges with limited bits: one bit selects whether the decoded value is interpreted as a pure fraction or as a shifted/offset value.
+
+---
+
+## Q3.2 — How does `cta_tiler` partition the data for copy? (`local_tile`)
+
+After reshaping, the kernel treats the mantissas as a 2D matrix:
+
+```cpp
+Tensor mX_raw = make_tensor(make_gmem_ptr(x_raw_int8), shape_x, stride_x);
+Tensor mX = flatten(flat_divide(mX_raw, group_tiler)); 
+// mX has shape (group_size, num_groups)
+```
+
+A CTA (threadblock) is assigned a tile:
+
+```cpp
+auto cta_tiler = make_shape(BLK_M, BLK_K);
+auto cta_coord = make_coord(blockIdx.x, blockIdx.y);
+
+Tensor gX = local_tile(mX, cta_tiler, cta_coord); // (BLK_M, BLK_K)
+Tensor gY = local_tile(mY, cta_tiler, cta_coord); // (BLK_M, BLK_K)
+```
+
+This means:
+
+* `blockIdx.x` selects which **row tile** (along `group_size`) the CTA owns.
+* `blockIdx.y` selects which **column tile** (along `num_groups`) the CTA owns.
+
+So the CTA loads/stores the block:
+
+* rows: `[blockIdx.x * BLK_M, ..., blockIdx.x * BLK_M + BLK_M - 1]`
+* cols: `[blockIdx.y * BLK_K, ..., blockIdx.y * BLK_K + BLK_K - 1]`
+
+Scales are tiled only along the K dimension:
+
+```cpp
+Tensor gScale = local_tile(vScale, select<1>(cta_tiler), select<1>(cta_coord)); // (BLK_K,)
+```
+
+So each CTA loads the **BLK_K shared exponents** corresponding to the group columns it processes.
+
+**In short:** `cta_tiler=(BLK_M,BLK_K)` divides the `(group_size × num_groups)` matrix into rectangular tiles, and `local_tile` selects the tile owned by `(blockIdx.x, blockIdx.y)`.
+
+---
+
+## Q3.3 — How does `layout_sX` partition threads for computation? (`local_partition`)
+
+Threads are arranged using:
+
+```cpp
+auto layout_tX = make_layout(make_shape(thd_m, thd_k));
+dim3 dimBlock(size(layout_tX)); // thd_m * thd_k threads
+```
+
+In each branch of the kernel, the code sets:
+
+* `thd_m = BLK_M`
+* `thd_k = BLK_K`
+
+So the block has `BLK_M * BLK_K` threads — logically matching the tile area.
+
+Thread-to-data mapping is created via:
+
+```cpp
+Tensor tXgX = local_partition(gX, layout_tX, threadIdx.x); // thread view of global tile
+Tensor tXsX = local_partition(sX, layout_sX, threadIdx.x); // thread view of shared tile
+```
+
+With these layouts, each thread is assigned responsibility for the element(s) at its logical `(m,k)` position in the CTA tile.
+This enables elementwise guarded copies:
+
+```cpp
+copy_if(tXpX, tXgX, tXsX);   // each thread copies its own element if in-bounds
+...
+copy_if(tXpX, tXrY, tXgY);   // each thread writes its own output if in-bounds
+```
+
+Predication is computed by partitioning an “identity tensor” with the same thread layout:
+
+```cpp
+Tensor cX = make_identity_tensor(shape(sX));               
+Tensor tXcX = local_partition(cX, layout_sX, threadIdx.x); 
+tXpX[i] = elem_less(tXcX[i], make_coord(m_max_coord, k_max_coord));
+```
+
+This ensures that edge CTAs (partial tiles) do not read/write out of bounds.
+
+A useful sanity check is how scales are indexed:
+
+```cpp
+auto scaleIdx = threadIdx.x / size<0>(layout_tX);
+auto exp = static_cast<uint16_t>(sScale[scaleIdx]) << 7;
+```
+
+Since `size<0>(layout_tX) == BLK_M`, dividing by `BLK_M` effectively groups threads by **K column**, so all `m` rows within the same column use the same shared exponent — matching the MXINT grouping semantics.
