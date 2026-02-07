@@ -27,34 +27,42 @@ Similarities:
 - Both confirm diminishing returns at higher bit widths -- my PTQ plateaus at ~0.814 from 16 bits onwards, matching the FP32 baseline.
 
 Differences:
-- Friends explored integer vs fractional width separately (finding "not much benefit beyond 5 integer bits with 4 fractional bits"), while my experiments sweep total bit width (4-32) uniformly. This means they had a finer-grained view of the integer/fractional tradeoff.
+- Friends explored integer vs fractional width separately (finding "not much benefit beyond 5 integer bits with 4 fractional bits"). I now also ran an imbalanced precision sweep across {8, 12, 16}-bit total widths with varying frac_width, confirming their finding: with only 2 fractional bits, accuracy collapses to 0.50 regardless of total width. PTQ peaks at balanced allocations (frac ~ total/2), while QAT is robust once frac >= 4 bits.
 - My QAT results (~0.835 at 8+ bits) actually **exceed the FP32 baseline** (0.814), suggesting QAT acts as a regulariser. Friends' writeup doesn't explicitly highlight this QAT-as-regularisation effect.
 - At 6-bit, the PTQ-QAT gap (+13.4%) is extremely large, strongly supporting the theoretical explanation about quantization noise.
+- My imbalanced sweep shows diminishing returns from extra integer bits: at frac=4, QAT accuracy is ~0.833 whether total width is 8, 12, or 16. The bottleneck is fractional precision, not dynamic range.
 
 ---
 
 ### Task 2: Pruning (Random vs L1-Norm)
 
-**My Results:**
+**My Results (expanded 9-level sweep):**
 
 | Sparsity | Random | L1-Norm | Gap |
 |----------|--------|---------|-----|
-| 30% | 0.7676 | 0.8322 | +0.0646 |
+| 10% | 0.8200 | 0.8409 | +0.0209 |
+| 20% | 0.7961 | 0.8366 | +0.0404 |
+| 30% | 0.7626 | 0.8322 | +0.0696 |
+| 40% | 0.6027 | 0.8263 | +0.2236 |
 | 50% | 0.5149 | 0.8151 | +0.3001 |
+| 60% | 0.5052 | 0.8023 | +0.2972 |
 | 70% | 0.4990 | 0.7535 | +0.2546 |
+| 80% | 0.4988 | 0.6073 | +0.1085 |
+| 90% | 0.5049 | 0.5363 | +0.0314 |
 
-- Baseline (pre-pruning): 0.8350
+- Baseline (pre-pruning): 0.83504
 
 **Comparison: STRONG AGREEMENT**
 
 Similarities:
 - Both confirm L1-norm consistently outperforms random pruning at every sparsity level.
 - Both show random pruning collapses to chance (~0.50) at higher sparsity -- my random at 50% (0.515) and 70% (0.499) match their description of "random pruning essentially collapses."
-- L1-norm degrades gracefully in both cases -- mine goes from 0.832 -> 0.815 -> 0.754.
+- L1-norm degrades gracefully in both cases -- mine goes from 0.841 -> 0.832 -> 0.815 -> 0.754 -> 0.607.
+- Both now cover the full 10%-90% range, allowing identification of the same regimes: safe (10-30%), transition (40-60%), and collapse (70-90%) for random; safe (10-60%), transition (70-80%), and collapse (90%) for L1-norm.
 
 Differences:
-- Friends tested a much wider range of sparsities (10%-90% in ~10% steps), while I only tested 3 levels (30%, 50%, 70%). Their finer granularity let them identify distinct regimes (low/medium/high/extreme).
-- My random pruning collapses earlier than described in their writeup: at 50% I'm already at 0.515 (near chance), while they describe 40-50% as a "sharper accuracy drop" but not yet collapsed. This could be due to different model sizes, training epochs, or random seeds.
+- L1-norm at 10% sparsity **exceeds the baseline** (0.841 > 0.835), a regularisation effect not highlighted in friends' writeup. Removing the smallest weights acts as beneficial noise reduction.
+- Random pruning cliff occurs sharply between 30% (0.763) and 40% (0.603) in my results. Friends describe 40-50% as the "sharper accuracy drop" zone -- this aligns well, with my cliff perhaps slightly earlier due to BERT-tiny's small parameter count.
 - My baseline of 0.835 (from the QAT model) vs their FP32 baseline may differ, since they built on "the best trained, quantized model from the previous tutorial."
 
 ---
@@ -218,8 +226,10 @@ Differences:
 
 1. **NAS samplers converge to identical best accuracy** (0.87232) at 100 trials in my results, while friends imply TPE reaches a higher ceiling. This likely reflects the discrete, bounded search space -- with enough trials, even Grid/Random find the optimum.
 2. **Lab 3 Task 1 had a code bug** (dynamic `suggest_categorical` choices) causing 70% crash rate. After fixing, results align with friends' analysis. This is a known Optuna pitfall worth noting.
-3. **Pruning shows earlier random collapse** in my results (50% sparsity = chance), possibly due to the smaller BERT-tiny model having less redundancy.
+3. **Pruning shows earlier random collapse** in my results (cliff at 40% sparsity, chance by 50%), possibly due to the smaller BERT-tiny model having less redundancy. The expanded 9-level sweep now matches friends' granularity and confirms the same regime structure.
 4. **QAT exceeds FP32 baseline** in my results (~0.835 vs 0.814) -- a regularisation effect worth highlighting if friends didn't observe it.
+5. **L1-norm pruning at 10% exceeds baseline** (0.841 > 0.835) -- another regularisation effect, where removing near-zero weights reduces noise. This complements the QAT regularisation finding.
+6. **Imbalanced precision sweep** confirms friends' finding that fractional bits matter more than integer bits: with frac=2, accuracy collapses regardless of total width.
 
 ### Accuracy Hierarchy Across All Labs
 
@@ -232,6 +242,6 @@ Differences:
 | Mixed Precision TPE Search | 0.85980 | Lab 3 Task 1 |
 | QAT (16-bit) | 0.83504 | Lab 1 Task 1 |
 | FP32 Baseline (no optimisation) | 0.81396 | Lab 1 Task 1 |
-| L1-Norm Pruning (30% sparse) | 0.83220 | Lab 1 Task 2 |
+| L1-Norm Pruning (10% sparse) | 0.84088 | Lab 1 Task 2 |
 
 The clear winner is compression-aware NAS with post-compression finetuning, which combines the benefits of architecture search with the regularisation effect of quantization.
