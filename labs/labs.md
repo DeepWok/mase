@@ -28,6 +28,7 @@ We utilized the MaseGraph to apply the pass transform. For the QAT phase, we re-
 ### 3. Results ###
 
 <img src="./plots/ptq_vs_qat_comparison.png" width="80%">
+
 Figure 1: Accuracy comparison between PTQ and QAT across different fixed-point widths.
 
 
@@ -59,7 +60,7 @@ Figure 1: Accuracy comparison between PTQ and QAT across different fixed-point w
 
 - Each of the 23 linear layers could independently be assigned full precision (FP32) or integer quantization with configurable bit-widths `[8, 16, 32]` and fractional widths `[2, 4, 8]`. We have also included a comparison between fixed integer widths for all layers from `tutorial 6` and the mixed widths search of this task.
 
-- We initialised the search using the best model from Lab 2 (`tutorial_5_best_model.pkl`) achieved by the `TPE Sampler`.
+- We initialised the search using the best model from Lab 2 (`tutorial_5_best_model.pkl`) achieved by the `TPE Sampler` in our case.
 
 #### Summary Results ####
 
@@ -114,7 +115,7 @@ Figure 2: Accuracy per trial for mixed integer widths (1 training epoch per tria
 
 Figure 3: Maximum accuracy achieved for mixed integer widths (1 training epoch per trial)
 
-As illustrated in Figure 1, the search process identified a high-performing configuration almost immediately. Trial 1 achieved an initial accuracy of 87.52%, which quickly improved to 87.99% by Trial 3. Following this rapid early gain, the cumulative best performance entered a significant plateau for 80 iterations until Trial 83 yielded a marginal increase to `88.00%`.
+As illustrated in Figure 3, the search process identified a high-performing configuration almost immediately. Trial 1 achieved an initial accuracy of 87.52%, which quickly improved to 87.99% by Trial 3. Following this rapid early gain, the cumulative best performance entered a significant plateau for 80 iterations until Trial 83 yielded a marginal increase to `88.00%`.
 
 While this extended plateau was initially unexpected, it can likely be attributed to two key factors:
 
@@ -123,18 +124,18 @@ While this extended plateau was initially unexpected, it can likely be attribute
 - __Search Space:__ the search space appears to be characterized by a high density of near-optimal solutions rather than a sparse global maximum. This indicates that the objective function is relatively "flat", where diverse quantization configurations yield statistically insignificant differences in model performance.
 
 #### 50% Accuracy Drops: ####
-A notable phenomenon in Figure 1 is the presence of five specific iterations (Trials 6, 15, 27, 38, and 72) where performance regressed to exactly 50% accuracy. In the context of the binary IMDB sentiment task, this represents random guessing.
+A notable phenomenon in Figure 2 is the presence of five specific iterations (Trials 6, 15, 27, 38, and 72) where performance regressed to exactly 50% accuracy. In the context of the binary IMDB sentiment task, this represents random guessing.
 
-This behavior is likely a result of over-aggressive quantization on high-sensitivity layers. An analysis of the optimal configuration supports this hypothesis: the `attention.output.dense` layers and the `classification head` were consistently maintained in `full precision (FP32)`. This suggests these components are critical for maintaining numerical stability and information flow of the network's forward pass.
+This behavior is likely a result of over-aggressive quantization on high-sensitivity layers. An analysis of the optimal configuration (in `section 5`) supports this hypothesis: the `attention.output.dense` layers and the `classification head` were consistently maintained in `full precision (FP32)`. This suggests these components are critical for maintaining numerical stability and information flow of the network's forward pass.
 
 We can also note the temporal distribution of these failing trials. The frequency of "crashed" trials dropped from 10% in the first 40 iterations to just 1.6% in the final 60. This confirms that the TPE effectively modeled the high-loss regions of the search space and learned to prioritize more robust configuration candidates as the optimization progressed.
 
 
 ### 4. Discussion: TPE Dynamics and Limitations ###
 
-- __TPE Dynamics:__ The search behavior reflects the TPE sampler's transition from exploration to exploitation. The initial 10 startup trials (random baseline `n_startup_trials`=10 [1]) established a probability density, after which the sampler successfully identified and clustered around the high-performance manifold (87.7%–87.9%).
+- __TPE Dynamics:__ The search behavior reflects the TPE sampler's transition from exploration to exploitation. The initial 10 startup trials (random baseline `n_startup_trials`=10 [1]) established a probability density, after which the sampler successfully identified and clustered around the high-performing configuration (87.7%–87.9%).
 
-- __Limitations:__ The rapid performance plateau suggests that TPE's underlying independence assumption might be a contributing bottleneck. [2] explicitly categorize TPE as an independent sampling method, noting that such algorithms are "known to perform well even without using the parameter correlations." However, in the context of deep quantization, this independence may hinder the discovery of complex, inter-layer dependencies (e.g., a quantized Key layer requiring a high-precision Query layer). While TPE is effective generally, it is probable that its inability to explicitly model these joint relationships limits efficiency in this specific high-dimensional space. Additionally, the `1-epoch` training budget likely constrained the model's ability to adapt to aggressive quantization, further limiting the viability of lower-precision configurations.
+- __Limitations:__ The rapid performance plateau suggests that TPE's underlying independence assumption might be a contributing bottleneck. [2] explicitly categorize TPE as an independent sampling method, noting that such algorithms are "known to perform well even without using the parameter correlations." However, in the context of deep quantization, this independence may hinder the discovery of complex, inter-layer dependencies (e.g., a quantized Key layer may require a high-precision Query layer). While TPE is effective generally, it is probable that its inability to explicitly model these joint relationships limits efficiency in this specific high-dimensional space. Additionally, the `1-epoch` training budget likely constrained the model's ability to adapt to aggressive quantization, further limiting the viability of lower-precision configurations.
 
 ### 5. Best Configuration: ###
 
@@ -359,13 +360,13 @@ Compared to Task 1, we observe more variance in accuracy. Beyond the 50% catastr
 | Runtime                       | ~2.5 hours           | ~11 hours                |
 
 
-The multi-precision search found a marginally better configuration (+0.02%) and did so faster (Trial 53 vs Trial 83). Interestingly, while Task 1's best model was conservative (65% full precision), Task 2's best model was aggressive—quantizing 78% of layers using a diverse mix of formats.
+The multi-precision search found a marginally better configuration (+0.02%) and did so faster (Trial 53 vs Trial 83). Interestingly, while Task 1's best model was conservative (65% full precision), Task 2's best model was aggressive, as it quantized 78% of layers using a diverse mix of formats.
 
 ### 5. Best and Worst Model Configurations ###
 
 #### Best Configurations ####
 
-The winning configuration used 7 different precision types:
+The best configuration used 7 different precision types:
 
 | Precision Type        | Layers | Percentage |
 |----------------------|--------|------------|
@@ -383,7 +384,7 @@ The winning configuration used 7 different precision types:
 Figure 8: Precision distribution for the best performing model.
 
 
-This is notably different from Task 1's best model, which used only LinearInteger for quantized layers. The diversity of formats suggests that different layers may indeed benefit from different quantization schemes—minifloat formats preserve dynamic range better for some layers, while block formats share exponents efficiently for others.
+This is notably different from Task 1's best model, which used only LinearInteger for quantized layers. The diversity of formats suggests that different layers may indeed benefit from different quantization schemes. For instance, minifloat formats preserve dynamic range better for some layers, while block formats share exponents efficiently for others.
 
 ### 6. Precision Performance Analysis ###
 
