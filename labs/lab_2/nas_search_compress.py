@@ -17,8 +17,8 @@ from datetime import datetime
 from pathlib import Path
 import numpy as np
 import dill
-import copy  # ✅ NEW: for deep-copying configs per trial
-import torch  # ✅ NEW: for reliable state_dict saving
+import copy  
+import torch  
 import torch.nn as nn
 
 import optuna
@@ -185,7 +185,7 @@ def compress_model(model, logger):
         )
         pipe = CompressionPipeline()
 
-        # ✅ NEW: Deep-copy configs so pipeline can't mutate globals across trials
+        #  Deep-copy configs so pipeline can't mutate globals across trials
         quant_cfg = copy.deepcopy(QUANTIZATION_CONFIG)
         prune_cfg = copy.deepcopy(PRUNING_CONFIG)
 
@@ -339,7 +339,7 @@ class LoggingCallback:
 
             if self.best_model is not None:
                 try:
-                    # ✅ NEW: save state_dict instead of pickling the whole module
+                    # save state_dict instead of pickling the whole module
                     model_path = self.output_dir / f"nas_best_model_{self.sampler_name}.pt"
                     payload = {
                         "state_dict": {k: v.detach().cpu() for k, v in self.best_model.state_dict().items()},
@@ -555,7 +555,7 @@ def main():
         dill.dump(results, f)
     logger.info(f"Results saved to: {results_path}")
 
-    # ✅ NEW: final best-model save (also as state_dict)
+    #final best-model save (also as state_dict)
     if study.best_trial and "model" in study.best_trial.user_attrs:
         best_model = study.best_trial.user_attrs["model"]
         model_path = output_dir / f"nas_best_model_{sampler_name}_final.pt"
