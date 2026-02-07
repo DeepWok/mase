@@ -1,0 +1,116 @@
+{
+  "n_trials": 10,
+  "compression_config": {
+    "quantization": {
+      "data_in_width": 8,
+      "data_in_frac_width": 4,
+      "weight_width": 8,
+      "weight_frac_width": 4,
+      "bias_width": 8,
+      "bias_frac_width": 4
+    },
+    "method": "module-level LinearInteger replacement",
+    "note": "Applied INT8 quantization to all Linear layers"
+  },
+  "conditions": {
+    "Baseline": {
+      "trial_accuracies": [
+        0.85836,
+        0.85892,
+        0.83784,
+        0.845,
+        0.85856,
+        0.85644,
+        0.845,
+        0.86624,
+        0.845,
+        0.86624
+      ],
+      "best_so_far": [
+        0.85836,
+        0.85892,
+        0.85892,
+        0.85892,
+        0.85892,
+        0.85892,
+        0.85892,
+        0.86624,
+        0.86624,
+        0.86624
+      ],
+      "best_accuracy": 0.86624,
+      "best_params": {
+        "num_layers": 0,
+        "num_heads": 1,
+        "hidden_size": 3,
+        "intermediate_size": 4
+      }
+    },
+    "Compress-Only": {
+      "trial_accuracies": [
+        0.86188,
+        0.74948,
+        0.74948,
+        0.83876,
+        0.77664,
+        0.71344,
+        0.76556,
+        0.59688,
+        0.81276,
+        0.83284
+      ],
+      "best_so_far": [
+        0.86188,
+        0.86188,
+        0.86188,
+        0.86188,
+        0.86188,
+        0.86188,
+        0.86188,
+        0.86188,
+        0.86188,
+        0.86188
+      ],
+      "best_accuracy": 0.86188,
+      "best_params": {
+        "num_layers": 1,
+        "num_heads": 3,
+        "hidden_size": 3,
+        "intermediate_size": 2
+      }
+    },
+    "Compress+Finetune": {
+      "trial_accuracies": [
+        0.8718,
+        0.8736,
+        0.87212,
+        0.87236,
+        0.87644,
+        0.87124,
+        0.86968,
+        0.87148,
+        0.87096,
+        0.87352
+      ],
+      "best_so_far": [
+        0.8718,
+        0.8736,
+        0.8736,
+        0.8736,
+        0.87644,
+        0.87644,
+        0.87644,
+        0.87644,
+        0.87644,
+        0.87644
+      ],
+      "best_accuracy": 0.87644,
+      "best_params": {
+        "num_layers": 0,
+        "num_heads": 2,
+        "hidden_size": 2,
+        "intermediate_size": 1
+      }
+    }
+  }
+}

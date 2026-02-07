@@ -1,0 +1,4125 @@
+{
+  "trials": [
+    {
+      "number": 0,
+      "value": 0.8586,
+      "params": {
+        "bert.encoder.layer.0.attention.self.query_type_idx": "1",
+        "bert.encoder.layer.0.attention.self.query_data_in_width": "8",
+        "bert.encoder.layer.0.attention.self.query_weight_width": "8",
+        "bert.encoder.layer.0.attention.self.query_data_in_frac_width": "2",
+        "bert.encoder.layer.0.attention.self.query_weight_frac_width": "4",
+        "bert.encoder.layer.0.attention.self.key_type_idx": "0",
+        "bert.encoder.layer.0.attention.self.value_type_idx": "0",
+        "bert.encoder.layer.0.attention.output.dense_type_idx": "0",
+        "bert.encoder.layer.0.intermediate.dense_type_idx": "1",
+        "bert.encoder.layer.0.intermediate.dense_data_in_width": "8",
+        "bert.encoder.layer.0.intermediate.dense_weight_width": "8",
+        "bert.encoder.layer.0.intermediate.dense_data_in_frac_width": "8",
+        "bert.encoder.layer.0.intermediate.dense_weight_frac_width": "8",
+        "bert.encoder.layer.0.output.dense_type_idx": "0",
+        "bert.encoder.layer.1.attention.self.query_type_idx": "2",
+        "bert.encoder.layer.1.attention.self.query_mf_data_in_width": "32",
+        "bert.encoder.layer.1.attention.self.query_mf_data_in_exp_width": "3",
+        "bert.encoder.layer.1.attention.self.query_mf_weight_width": "16",
+        "bert.encoder.layer.1.attention.self.query_mf_weight_exp_width": "4",
+        "bert.encoder.layer.1.attention.self.key_type_idx": "3",
+        "bert.encoder.layer.1.attention.self.key_log_data_in_width": "16",
+        "bert.encoder.layer.1.attention.self.key_log_weight_width": "16",
+        "bert.encoder.layer.1.attention.self.value_type_idx": "3",
+        "bert.encoder.layer.1.attention.self.value_log_data_in_width": "16",
+        "bert.encoder.layer.1.attention.self.value_log_weight_width": "16",
+        "bert.encoder.layer.1.attention.output.dense_type_idx": "0",
+        "bert.encoder.layer.1.intermediate.dense_type_idx": "0",
+        "bert.encoder.layer.1.output.dense_type_idx": "1",
+        "bert.encoder.layer.1.output.dense_data_in_width": "32",
+        "bert.encoder.layer.1.output.dense_weight_width": "32",
+        "bert.encoder.layer.1.output.dense_data_in_frac_width": "4",
+        "bert.encoder.layer.1.output.dense_weight_frac_width": "2",
+        "bert.pooler.dense_type_idx": "0",
+        "classifier_type_idx": "3",
+        "classifier_log_data_in_width": "32",
+        "classifier_log_weight_width": "16"
+      },
+      "layer_configs": {
+        "bert.encoder.layer.0.attention.self.query": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 2,
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.attention.self.key": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.self.value": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.output.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.intermediate.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.output.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.attention.self.query": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.key": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.value": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.output.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.intermediate.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 4,
+            "weight_width": 32,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.pooler.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "classifier": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        }
+      }
+    },
+    {
+      "number": 1,
+      "value": 0.85096,
+      "params": {
+        "bert.encoder.layer.0.attention.self.query_type_idx": "3",
+        "bert.encoder.layer.0.attention.self.query_log_data_in_width": "8",
+        "bert.encoder.layer.0.attention.self.query_log_weight_width": "32",
+        "bert.encoder.layer.0.attention.self.key_type_idx": "2",
+        "bert.encoder.layer.0.attention.self.key_mf_data_in_width": "8",
+        "bert.encoder.layer.0.attention.self.key_mf_data_in_exp_width": "4",
+        "bert.encoder.layer.0.attention.self.key_mf_weight_width": "8",
+        "bert.encoder.layer.0.attention.self.key_mf_weight_exp_width": "3",
+        "bert.encoder.layer.0.attention.self.value_type_idx": "0",
+        "bert.encoder.layer.0.attention.output.dense_type_idx": "2",
+        "bert.encoder.layer.0.attention.output.dense_mf_data_in_width": "32",
+        "bert.encoder.layer.0.attention.output.dense_mf_data_in_exp_width": "5",
+        "bert.encoder.layer.0.attention.output.dense_mf_weight_width": "32",
+        "bert.encoder.layer.0.attention.output.dense_mf_weight_exp_width": "4",
+        "bert.encoder.layer.0.intermediate.dense_type_idx": "2",
+        "bert.encoder.layer.0.intermediate.dense_mf_data_in_width": "8",
+        "bert.encoder.layer.0.intermediate.dense_mf_data_in_exp_width": "3",
+        "bert.encoder.layer.0.intermediate.dense_mf_weight_width": "8",
+        "bert.encoder.layer.0.intermediate.dense_mf_weight_exp_width": "5",
+        "bert.encoder.layer.0.output.dense_type_idx": "3",
+        "bert.encoder.layer.0.output.dense_log_data_in_width": "16",
+        "bert.encoder.layer.0.output.dense_log_weight_width": "32",
+        "bert.encoder.layer.1.attention.self.query_type_idx": "3",
+        "bert.encoder.layer.1.attention.self.query_log_data_in_width": "32",
+        "bert.encoder.layer.1.attention.self.query_log_weight_width": "16",
+        "bert.encoder.layer.1.attention.self.key_type_idx": "1",
+        "bert.encoder.layer.1.attention.self.key_data_in_width": "8",
+        "bert.encoder.layer.1.attention.self.key_weight_width": "16",
+        "bert.encoder.layer.1.attention.self.key_data_in_frac_width": "8",
+        "bert.encoder.layer.1.attention.self.key_weight_frac_width": "8",
+        "bert.encoder.layer.1.attention.self.value_type_idx": "3",
+        "bert.encoder.layer.1.attention.self.value_log_data_in_width": "32",
+        "bert.encoder.layer.1.attention.self.value_log_weight_width": "16",
+        "bert.encoder.layer.1.attention.output.dense_type_idx": "2",
+        "bert.encoder.layer.1.attention.output.dense_mf_data_in_width": "8",
+        "bert.encoder.layer.1.attention.output.dense_mf_data_in_exp_width": "3",
+        "bert.encoder.layer.1.attention.output.dense_mf_weight_width": "32",
+        "bert.encoder.layer.1.attention.output.dense_mf_weight_exp_width": "4",
+        "bert.encoder.layer.1.intermediate.dense_type_idx": "2",
+        "bert.encoder.layer.1.intermediate.dense_mf_data_in_width": "16",
+        "bert.encoder.layer.1.intermediate.dense_mf_data_in_exp_width": "3",
+        "bert.encoder.layer.1.intermediate.dense_mf_weight_width": "16",
+        "bert.encoder.layer.1.intermediate.dense_mf_weight_exp_width": "5",
+        "bert.encoder.layer.1.output.dense_type_idx": "2",
+        "bert.encoder.layer.1.output.dense_mf_data_in_width": "8",
+        "bert.encoder.layer.1.output.dense_mf_data_in_exp_width": "4",
+        "bert.encoder.layer.1.output.dense_mf_weight_width": "32",
+        "bert.encoder.layer.1.output.dense_mf_weight_exp_width": "3",
+        "bert.pooler.dense_type_idx": "2",
+        "bert.pooler.dense_mf_data_in_width": "32",
+        "bert.pooler.dense_mf_data_in_exp_width": "3",
+        "bert.pooler.dense_mf_weight_width": "8",
+        "bert.pooler.dense_mf_weight_exp_width": "4",
+        "classifier_type_idx": "0"
+      },
+      "layer_configs": {
+        "bert.encoder.layer.0.attention.self.query": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.attention.self.key": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 4,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.attention.self.value": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.intermediate.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_width": 5,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.output.dense": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.query": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.key": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            "weight_width": 16,
+            "weight_frac_width": 8,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.attention.self.value": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.intermediate.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 5,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 4,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.pooler.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "classifier": {
+          "type": "Linear",
+          "type_idx": 0
+        }
+      }
+    },
+    {
+      "number": 2,
+      "value": 0.5,
+      "params": {
+        "bert.encoder.layer.0.attention.self.query_type_idx": "2",
+        "bert.encoder.layer.0.attention.self.query_mf_data_in_width": "32",
+        "bert.encoder.layer.0.attention.self.query_mf_data_in_exp_width": "4",
+        "bert.encoder.layer.0.attention.self.query_mf_weight_width": "8",
+        "bert.encoder.layer.0.attention.self.query_mf_weight_exp_width": "5",
+        "bert.encoder.layer.0.attention.self.key_type_idx": "1",
+        "bert.encoder.layer.0.attention.self.key_data_in_width": "8",
+        "bert.encoder.layer.0.attention.self.key_weight_width": "16",
+        "bert.encoder.layer.0.attention.self.key_data_in_frac_width": "4",
+        "bert.encoder.layer.0.attention.self.key_weight_frac_width": "4",
+        "bert.encoder.layer.0.attention.self.value_type_idx": "3",
+        "bert.encoder.layer.0.attention.self.value_log_data_in_width": "8",
+        "bert.encoder.layer.0.attention.self.value_log_weight_width": "16",
+        "bert.encoder.layer.0.attention.output.dense_type_idx": "3",
+        "bert.encoder.layer.0.attention.output.dense_log_data_in_width": "8",
+        "bert.encoder.layer.0.attention.output.dense_log_weight_width": "16",
+        "bert.encoder.layer.0.intermediate.dense_type_idx": "0",
+        "bert.encoder.layer.0.output.dense_type_idx": "2",
+        "bert.encoder.layer.0.output.dense_mf_data_in_width": "8",
+        "bert.encoder.layer.0.output.dense_mf_data_in_exp_width": "5",
+        "bert.encoder.layer.0.output.dense_mf_weight_width": "32",
+        "bert.encoder.layer.0.output.dense_mf_weight_exp_width": "3",
+        "bert.encoder.layer.1.attention.self.query_type_idx": "1",
+        "bert.encoder.layer.1.attention.self.query_data_in_width": "32",
+        "bert.encoder.layer.1.attention.self.query_weight_width": "16",
+        "bert.encoder.layer.1.attention.self.query_data_in_frac_width": "4",
+        "bert.encoder.layer.1.attention.self.query_weight_frac_width": "8",
+        "bert.encoder.layer.1.attention.self.key_type_idx": "1",
+        "bert.encoder.layer.1.attention.self.key_data_in_width": "32",
+        "bert.encoder.layer.1.attention.self.key_weight_width": "32",
+        "bert.encoder.layer.1.attention.self.key_data_in_frac_width": "4",
+        "bert.encoder.layer.1.attention.self.key_weight_frac_width": "4",
+        "bert.encoder.layer.1.attention.self.value_type_idx": "0",
+        "bert.encoder.layer.1.attention.output.dense_type_idx": "2",
+        "bert.encoder.layer.1.attention.output.dense_mf_data_in_width": "8",
+        "bert.encoder.layer.1.attention.output.dense_mf_data_in_exp_width": "5",
+        "bert.encoder.layer.1.attention.output.dense_mf_weight_width": "32",
+        "bert.encoder.layer.1.attention.output.dense_mf_weight_exp_width": "3",
+        "bert.encoder.layer.1.intermediate.dense_type_idx": "3",
+        "bert.encoder.layer.1.intermediate.dense_log_data_in_width": "16",
+        "bert.encoder.layer.1.intermediate.dense_log_weight_width": "16",
+        "bert.encoder.layer.1.output.dense_type_idx": "2",
+        "bert.encoder.layer.1.output.dense_mf_data_in_width": "8",
+        "bert.encoder.layer.1.output.dense_mf_data_in_exp_width": "5",
+        "bert.encoder.layer.1.output.dense_mf_weight_width": "32",
+        "bert.encoder.layer.1.output.dense_mf_weight_exp_width": "3",
+        "bert.pooler.dense_type_idx": "1",
+        "bert.pooler.dense_data_in_width": "32",
+        "bert.pooler.dense_weight_width": "16",
+        "bert.pooler.dense_data_in_frac_width": "4",
+        "bert.pooler.dense_weight_frac_width": "8",
+        "classifier_type_idx": "1",
+        "classifier_data_in_width": "16",
+        "classifier_weight_width": "16",
+        "classifier_data_in_frac_width": "4",
+        "classifier_weight_frac_width": "2"
+      },
+      "layer_configs": {
+        "bert.encoder.layer.0.attention.self.query": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_width": 4,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_width": 5,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.attention.self.key": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            "weight_width": 16,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.attention.self.value": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.attention.output.dense": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.intermediate.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.query": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 4,
+            "weight_width": 16,
+            "weight_frac_width": 8,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.attention.self.key": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 4,
+            "weight_width": 32,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.attention.self.value": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.attention.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.intermediate.dense": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.pooler.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 4,
+            "weight_width": 16,
+            "weight_frac_width": 8,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "classifier": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 16,
+            "data_in_frac_width": 4,
+            "weight_width": 16,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        }
+      }
+    },
+    {
+      "number": 3,
+      "value": 0.85476,
+      "params": {
+        "bert.encoder.layer.0.attention.self.query_type_idx": "0",
+        "bert.encoder.layer.0.attention.self.key_type_idx": "2",
+        "bert.encoder.layer.0.attention.self.key_mf_data_in_width": "32",
+        "bert.encoder.layer.0.attention.self.key_mf_data_in_exp_width": "5",
+        "bert.encoder.layer.0.attention.self.key_mf_weight_width": "32",
+        "bert.encoder.layer.0.attention.self.key_mf_weight_exp_width": "4",
+        "bert.encoder.layer.0.attention.self.value_type_idx": "0",
+        "bert.encoder.layer.0.attention.output.dense_type_idx": "0",
+        "bert.encoder.layer.0.intermediate.dense_type_idx": "0",
+        "bert.encoder.layer.0.output.dense_type_idx": "0",
+        "bert.encoder.layer.1.attention.self.query_type_idx": "0",
+        "bert.encoder.layer.1.attention.self.key_type_idx": "2",
+        "bert.encoder.layer.1.attention.self.key_mf_data_in_width": "32",
+        "bert.encoder.layer.1.attention.self.key_mf_data_in_exp_width": "4",
+        "bert.encoder.layer.1.attention.self.key_mf_weight_width": "16",
+        "bert.encoder.layer.1.attention.self.key_mf_weight_exp_width": "3",
+        "bert.encoder.layer.1.attention.self.value_type_idx": "1",
+        "bert.encoder.layer.1.attention.self.value_data_in_width": "32",
+        "bert.encoder.layer.1.attention.self.value_weight_width": "8",
+        "bert.encoder.layer.1.attention.self.value_data_in_frac_width": "8",
+        "bert.encoder.layer.1.attention.self.value_weight_frac_width": "2",
+        "bert.encoder.layer.1.attention.output.dense_type_idx": "3",
+        "bert.encoder.layer.1.attention.output.dense_log_data_in_width": "16",
+        "bert.encoder.layer.1.attention.output.dense_log_weight_width": "32",
+        "bert.encoder.layer.1.intermediate.dense_type_idx": "1",
+        "bert.encoder.layer.1.intermediate.dense_data_in_width": "16",
+        "bert.encoder.layer.1.intermediate.dense_weight_width": "32",
+        "bert.encoder.layer.1.intermediate.dense_data_in_frac_width": "4",
+        "bert.encoder.layer.1.intermediate.dense_weight_frac_width": "8",
+        "bert.encoder.layer.1.output.dense_type_idx": "3",
+        "bert.encoder.layer.1.output.dense_log_data_in_width": "8",
+        "bert.encoder.layer.1.output.dense_log_weight_width": "32",
+        "bert.pooler.dense_type_idx": "1",
+        "bert.pooler.dense_data_in_width": "8",
+        "bert.pooler.dense_weight_width": "16",
+        "bert.pooler.dense_data_in_frac_width": "8",
+        "bert.pooler.dense_weight_frac_width": "4",
+        "classifier_type_idx": "0"
+      },
+      "layer_configs": {
+        "bert.encoder.layer.0.attention.self.query": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.self.key": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.attention.self.value": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.output.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.intermediate.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.output.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.attention.self.query": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.attention.self.key": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_width": 4,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.value": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 8,
+            "weight_width": 8,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.attention.output.dense": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.intermediate.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 16,
+            "data_in_frac_width": 4,
+            "weight_width": 32,
+            "weight_frac_width": 8,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.output.dense": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.pooler.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            "weight_width": 16,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "classifier": {
+          "type": "Linear",
+          "type_idx": 0
+        }
+      }
+    },
+    {
+      "number": 4,
+      "value": 0.85432,
+      "params": {
+        "bert.encoder.layer.0.attention.self.query_type_idx": "0",
+        "bert.encoder.layer.0.attention.self.key_type_idx": "3",
+        "bert.encoder.layer.0.attention.self.key_log_data_in_width": "32",
+        "bert.encoder.layer.0.attention.self.key_log_weight_width": "16",
+        "bert.encoder.layer.0.attention.self.value_type_idx": "1",
+        "bert.encoder.layer.0.attention.self.value_data_in_width": "16",
+        "bert.encoder.layer.0.attention.self.value_weight_width": "16",
+        "bert.encoder.layer.0.attention.self.value_data_in_frac_width": "2",
+        "bert.encoder.layer.0.attention.self.value_weight_frac_width": "4",
+        "bert.encoder.layer.0.attention.output.dense_type_idx": "2",
+        "bert.encoder.layer.0.attention.output.dense_mf_data_in_width": "32",
+        "bert.encoder.layer.0.attention.output.dense_mf_data_in_exp_width": "5",
+        "bert.encoder.layer.0.attention.output.dense_mf_weight_width": "16",
+        "bert.encoder.layer.0.attention.output.dense_mf_weight_exp_width": "3",
+        "bert.encoder.layer.0.intermediate.dense_type_idx": "2",
+        "bert.encoder.layer.0.intermediate.dense_mf_data_in_width": "8",
+        "bert.encoder.layer.0.intermediate.dense_mf_data_in_exp_width": "3",
+        "bert.encoder.layer.0.intermediate.dense_mf_weight_width": "8",
+        "bert.encoder.layer.0.intermediate.dense_mf_weight_exp_width": "4",
+        "bert.encoder.layer.0.output.dense_type_idx": "1",
+        "bert.encoder.layer.0.output.dense_data_in_width": "8",
+        "bert.encoder.layer.0.output.dense_weight_width": "8",
+        "bert.encoder.layer.0.output.dense_data_in_frac_width": "8",
+        "bert.encoder.layer.0.output.dense_weight_frac_width": "8",
+        "bert.encoder.layer.1.attention.self.query_type_idx": "2",
+        "bert.encoder.layer.1.attention.self.query_mf_data_in_width": "32",
+        "bert.encoder.layer.1.attention.self.query_mf_data_in_exp_width": "5",
+        "bert.encoder.layer.1.attention.self.query_mf_weight_width": "16",
+        "bert.encoder.layer.1.attention.self.query_mf_weight_exp_width": "5",
+        "bert.encoder.layer.1.attention.self.key_type_idx": "3",
+        "bert.encoder.layer.1.attention.self.key_log_data_in_width": "32",
+        "bert.encoder.layer.1.attention.self.key_log_weight_width": "16",
+        "bert.encoder.layer.1.attention.self.value_type_idx": "2",
+        "bert.encoder.layer.1.attention.self.value_mf_data_in_width": "16",
+        "bert.encoder.layer.1.attention.self.value_mf_data_in_exp_width": "3",
+        "bert.encoder.layer.1.attention.self.value_mf_weight_width": "32",
+        "bert.encoder.layer.1.attention.self.value_mf_weight_exp_width": "4",
+        "bert.encoder.layer.1.attention.output.dense_type_idx": "2",
+        "bert.encoder.layer.1.attention.output.dense_mf_data_in_width": "16",
+        "bert.encoder.layer.1.attention.output.dense_mf_data_in_exp_width": "4",
+        "bert.encoder.layer.1.attention.output.dense_mf_weight_width": "8",
+        "bert.encoder.layer.1.attention.output.dense_mf_weight_exp_width": "3",
+        "bert.encoder.layer.1.intermediate.dense_type_idx": "0",
+        "bert.encoder.layer.1.output.dense_type_idx": "2",
+        "bert.encoder.layer.1.output.dense_mf_data_in_width": "16",
+        "bert.encoder.layer.1.output.dense_mf_data_in_exp_width": "3",
+        "bert.encoder.layer.1.output.dense_mf_weight_width": "8",
+        "bert.encoder.layer.1.output.dense_mf_weight_exp_width": "4",
+        "bert.pooler.dense_type_idx": "2",
+        "bert.pooler.dense_mf_data_in_width": "8",
+        "bert.pooler.dense_mf_data_in_exp_width": "4",
+        "bert.pooler.dense_mf_weight_width": "16",
+        "bert.pooler.dense_mf_weight_exp_width": "4",
+        "classifier_type_idx": "2",
+        "classifier_mf_data_in_width": "16",
+        "classifier_mf_data_in_exp_width": "3",
+        "classifier_mf_weight_width": "16",
+        "classifier_mf_weight_exp_width": "4"
+      },
+      "layer_configs": {
+        "bert.encoder.layer.0.attention.self.query": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.self.key": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.attention.self.value": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 16,
+            "data_in_frac_width": 2,
+            "weight_width": 16,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.attention.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.intermediate.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.attention.self.query": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 5,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.key": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.value": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_width": 4,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.intermediate.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.pooler.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 4,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "classifier": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        }
+      }
+    },
+    {
+      "number": 5,
+      "value": 0.8572,
+      "params": {
+        "bert.encoder.layer.0.attention.self.query_type_idx": "0",
+        "bert.encoder.layer.0.attention.self.key_type_idx": "0",
+        "bert.encoder.layer.0.attention.self.value_type_idx": "0",
+        "bert.encoder.layer.0.attention.output.dense_type_idx": "0",
+        "bert.encoder.layer.0.intermediate.dense_type_idx": "0",
+        "bert.encoder.layer.0.output.dense_type_idx": "2",
+        "bert.encoder.layer.0.output.dense_mf_data_in_width": "32",
+        "bert.encoder.layer.0.output.dense_mf_data_in_exp_width": "4",
+        "bert.encoder.layer.0.output.dense_mf_weight_width": "8",
+        "bert.encoder.layer.0.output.dense_mf_weight_exp_width": "3",
+        "bert.encoder.layer.1.attention.self.query_type_idx": "0",
+        "bert.encoder.layer.1.attention.self.key_type_idx": "1",
+        "bert.encoder.layer.1.attention.self.key_data_in_width": "32",
+        "bert.encoder.layer.1.attention.self.key_weight_width": "32",
+        "bert.encoder.layer.1.attention.self.key_data_in_frac_width": "8",
+        "bert.encoder.layer.1.attention.self.key_weight_frac_width": "2",
+        "bert.encoder.layer.1.attention.self.value_type_idx": "3",
+        "bert.encoder.layer.1.attention.self.value_log_data_in_width": "8",
+        "bert.encoder.layer.1.attention.self.value_log_weight_width": "32",
+        "bert.encoder.layer.1.attention.output.dense_type_idx": "1",
+        "bert.encoder.layer.1.attention.output.dense_data_in_width": "16",
+        "bert.encoder.layer.1.attention.output.dense_weight_width": "32",
+        "bert.encoder.layer.1.attention.output.dense_data_in_frac_width": "4",
+        "bert.encoder.layer.1.attention.output.dense_weight_frac_width": "4",
+        "bert.encoder.layer.1.intermediate.dense_type_idx": "1",
+        "bert.encoder.layer.1.intermediate.dense_data_in_width": "8",
+        "bert.encoder.layer.1.intermediate.dense_weight_width": "16",
+        "bert.encoder.layer.1.intermediate.dense_data_in_frac_width": "2",
+        "bert.encoder.layer.1.intermediate.dense_weight_frac_width": "2",
+        "bert.encoder.layer.1.output.dense_type_idx": "2",
+        "bert.encoder.layer.1.output.dense_mf_data_in_width": "16",
+        "bert.encoder.layer.1.output.dense_mf_data_in_exp_width": "5",
+        "bert.encoder.layer.1.output.dense_mf_weight_width": "8",
+        "bert.encoder.layer.1.output.dense_mf_weight_exp_width": "3",
+        "bert.pooler.dense_type_idx": "0",
+        "classifier_type_idx": "0"
+      },
+      "layer_configs": {
+        "bert.encoder.layer.0.attention.self.query": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.self.key": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.self.value": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.output.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.intermediate.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_width": 4,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.query": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.attention.self.key": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 8,
+            "weight_width": 32,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.attention.self.value": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 16,
+            "data_in_frac_width": 4,
+            "weight_width": 32,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.intermediate.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 2,
+            "weight_width": 16,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.pooler.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "classifier": {
+          "type": "Linear",
+          "type_idx": 0
+        }
+      }
+    },
+    {
+      "number": 6,
+      "value": 0.8598,
+      "params": {
+        "bert.encoder.layer.0.attention.self.query_type_idx": "0",
+        "bert.encoder.layer.0.attention.self.key_type_idx": "0",
+        "bert.encoder.layer.0.attention.self.value_type_idx": "0",
+        "bert.encoder.layer.0.attention.output.dense_type_idx": "1",
+        "bert.encoder.layer.0.attention.output.dense_data_in_width": "16",
+        "bert.encoder.layer.0.attention.output.dense_weight_width": "32",
+        "bert.encoder.layer.0.attention.output.dense_data_in_frac_width": "8",
+        "bert.encoder.layer.0.attention.output.dense_weight_frac_width": "2",
+        "bert.encoder.layer.0.intermediate.dense_type_idx": "0",
+        "bert.encoder.layer.0.output.dense_type_idx": "2",
+        "bert.encoder.layer.0.output.dense_mf_data_in_width": "8",
+        "bert.encoder.layer.0.output.dense_mf_data_in_exp_width": "4",
+        "bert.encoder.layer.0.output.dense_mf_weight_width": "32",
+        "bert.encoder.layer.0.output.dense_mf_weight_exp_width": "5",
+        "bert.encoder.layer.1.attention.self.query_type_idx": "1",
+        "bert.encoder.layer.1.attention.self.query_data_in_width": "8",
+        "bert.encoder.layer.1.attention.self.query_weight_width": "8",
+        "bert.encoder.layer.1.attention.self.query_data_in_frac_width": "8",
+        "bert.encoder.layer.1.attention.self.query_weight_frac_width": "4",
+        "bert.encoder.layer.1.attention.self.key_type_idx": "2",
+        "bert.encoder.layer.1.attention.self.key_mf_data_in_width": "8",
+        "bert.encoder.layer.1.attention.self.key_mf_data_in_exp_width": "5",
+        "bert.encoder.layer.1.attention.self.key_mf_weight_width": "16",
+        "bert.encoder.layer.1.attention.self.key_mf_weight_exp_width": "4",
+        "bert.encoder.layer.1.attention.self.value_type_idx": "0",
+        "bert.encoder.layer.1.attention.output.dense_type_idx": "2",
+        "bert.encoder.layer.1.attention.output.dense_mf_data_in_width": "16",
+        "bert.encoder.layer.1.attention.output.dense_mf_data_in_exp_width": "3",
+        "bert.encoder.layer.1.attention.output.dense_mf_weight_width": "16",
+        "bert.encoder.layer.1.attention.output.dense_mf_weight_exp_width": "5",
+        "bert.encoder.layer.1.intermediate.dense_type_idx": "1",
+        "bert.encoder.layer.1.intermediate.dense_data_in_width": "8",
+        "bert.encoder.layer.1.intermediate.dense_weight_width": "32",
+        "bert.encoder.layer.1.intermediate.dense_data_in_frac_width": "8",
+        "bert.encoder.layer.1.intermediate.dense_weight_frac_width": "8",
+        "bert.encoder.layer.1.output.dense_type_idx": "2",
+        "bert.encoder.layer.1.output.dense_mf_data_in_width": "16",
+        "bert.encoder.layer.1.output.dense_mf_data_in_exp_width": "5",
+        "bert.encoder.layer.1.output.dense_mf_weight_width": "32",
+        "bert.encoder.layer.1.output.dense_mf_weight_exp_width": "3",
+        "bert.pooler.dense_type_idx": "0",
+        "classifier_type_idx": "2",
+        "classifier_mf_data_in_width": "32",
+        "classifier_mf_data_in_exp_width": "3",
+        "classifier_mf_weight_width": "16",
+        "classifier_mf_weight_exp_width": "4"
+      },
+      "layer_configs": {
+        "bert.encoder.layer.0.attention.self.query": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.self.key": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.self.value": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 16,
+            "data_in_frac_width": 8,
+            "weight_width": 32,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.intermediate.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 4,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 5,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.query": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.attention.self.key": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.value": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.attention.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 5,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.intermediate.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            "weight_width": 32,
+            "weight_frac_width": 8,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.pooler.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "classifier": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        }
+      }
+    },
+    {
+      "number": 7,
+      "value": 0.85008,
+      "params": {
+        "bert.encoder.layer.0.attention.self.query_type_idx": "0",
+        "bert.encoder.layer.0.attention.self.key_type_idx": "2",
+        "bert.encoder.layer.0.attention.self.key_mf_data_in_width": "8",
+        "bert.encoder.layer.0.attention.self.key_mf_data_in_exp_width": "3",
+        "bert.encoder.layer.0.attention.self.key_mf_weight_width": "16",
+        "bert.encoder.layer.0.attention.self.key_mf_weight_exp_width": "5",
+        "bert.encoder.layer.0.attention.self.value_type_idx": "0",
+        "bert.encoder.layer.0.attention.output.dense_type_idx": "2",
+        "bert.encoder.layer.0.attention.output.dense_mf_data_in_width": "16",
+        "bert.encoder.layer.0.attention.output.dense_mf_data_in_exp_width": "4",
+        "bert.encoder.layer.0.attention.output.dense_mf_weight_width": "16",
+        "bert.encoder.layer.0.attention.output.dense_mf_weight_exp_width": "5",
+        "bert.encoder.layer.0.intermediate.dense_type_idx": "1",
+        "bert.encoder.layer.0.intermediate.dense_data_in_width": "16",
+        "bert.encoder.layer.0.intermediate.dense_weight_width": "32",
+        "bert.encoder.layer.0.intermediate.dense_data_in_frac_width": "8",
+        "bert.encoder.layer.0.intermediate.dense_weight_frac_width": "2",
+        "bert.encoder.layer.0.output.dense_type_idx": "1",
+        "bert.encoder.layer.0.output.dense_data_in_width": "32",
+        "bert.encoder.layer.0.output.dense_weight_width": "32",
+        "bert.encoder.layer.0.output.dense_data_in_frac_width": "4",
+        "bert.encoder.layer.0.output.dense_weight_frac_width": "4",
+        "bert.encoder.layer.1.attention.self.query_type_idx": "0",
+        "bert.encoder.layer.1.attention.self.key_type_idx": "1",
+        "bert.encoder.layer.1.attention.self.key_data_in_width": "32",
+        "bert.encoder.layer.1.attention.self.key_weight_width": "16",
+        "bert.encoder.layer.1.attention.self.key_data_in_frac_width": "4",
+        "bert.encoder.layer.1.attention.self.key_weight_frac_width": "8",
+        "bert.encoder.layer.1.attention.self.value_type_idx": "0",
+        "bert.encoder.layer.1.attention.output.dense_type_idx": "1",
+        "bert.encoder.layer.1.attention.output.dense_data_in_width": "16",
+        "bert.encoder.layer.1.attention.output.dense_weight_width": "32",
+        "bert.encoder.layer.1.attention.output.dense_data_in_frac_width": "4",
+        "bert.encoder.layer.1.attention.output.dense_weight_frac_width": "8",
+        "bert.encoder.layer.1.intermediate.dense_type_idx": "2",
+        "bert.encoder.layer.1.intermediate.dense_mf_data_in_width": "16",
+        "bert.encoder.layer.1.intermediate.dense_mf_data_in_exp_width": "3",
+        "bert.encoder.layer.1.intermediate.dense_mf_weight_width": "8",
+        "bert.encoder.layer.1.intermediate.dense_mf_weight_exp_width": "4",
+        "bert.encoder.layer.1.output.dense_type_idx": "1",
+        "bert.encoder.layer.1.output.dense_data_in_width": "8",
+        "bert.encoder.layer.1.output.dense_weight_width": "16",
+        "bert.encoder.layer.1.output.dense_data_in_frac_width": "8",
+        "bert.encoder.layer.1.output.dense_weight_frac_width": "2",
+        "bert.pooler.dense_type_idx": "3",
+        "bert.pooler.dense_log_data_in_width": "16",
+        "bert.pooler.dense_log_weight_width": "32",
+        "classifier_type_idx": "3",
+        "classifier_log_data_in_width": "8",
+        "classifier_log_weight_width": "32"
+      },
+      "layer_configs": {
+        "bert.encoder.layer.0.attention.self.query": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.self.key": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 5,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.attention.self.value": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_width": 4,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 5,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.intermediate.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 16,
+            "data_in_frac_width": 8,
+            "weight_width": 32,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 4,
+            "weight_width": 32,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.attention.self.query": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.attention.self.key": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 4,
+            "weight_width": 16,
+            "weight_frac_width": 8,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.attention.self.value": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.attention.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 16,
+            "data_in_frac_width": 4,
+            "weight_width": 32,
+            "weight_frac_width": 8,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.intermediate.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            "weight_width": 16,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.pooler.dense": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "classifier": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        }
+      }
+    },
+    {
+      "number": 8,
+      "value": 0.85732,
+      "params": {
+        "bert.encoder.layer.0.attention.self.query_type_idx": "0",
+        "bert.encoder.layer.0.attention.self.key_type_idx": "0",
+        "bert.encoder.layer.0.attention.self.value_type_idx": "0",
+        "bert.encoder.layer.0.attention.output.dense_type_idx": "0",
+        "bert.encoder.layer.0.intermediate.dense_type_idx": "0",
+        "bert.encoder.layer.0.output.dense_type_idx": "2",
+        "bert.encoder.layer.0.output.dense_mf_data_in_width": "16",
+        "bert.encoder.layer.0.output.dense_mf_data_in_exp_width": "5",
+        "bert.encoder.layer.0.output.dense_mf_weight_width": "32",
+        "bert.encoder.layer.0.output.dense_mf_weight_exp_width": "4",
+        "bert.encoder.layer.1.attention.self.query_type_idx": "1",
+        "bert.encoder.layer.1.attention.self.query_data_in_width": "8",
+        "bert.encoder.layer.1.attention.self.query_weight_width": "32",
+        "bert.encoder.layer.1.attention.self.query_data_in_frac_width": "2",
+        "bert.encoder.layer.1.attention.self.query_weight_frac_width": "8",
+        "bert.encoder.layer.1.attention.self.key_type_idx": "1",
+        "bert.encoder.layer.1.attention.self.key_data_in_width": "32",
+        "bert.encoder.layer.1.attention.self.key_weight_width": "8",
+        "bert.encoder.layer.1.attention.self.key_data_in_frac_width": "4",
+        "bert.encoder.layer.1.attention.self.key_weight_frac_width": "2",
+        "bert.encoder.layer.1.attention.self.value_type_idx": "2",
+        "bert.encoder.layer.1.attention.self.value_mf_data_in_width": "8",
+        "bert.encoder.layer.1.attention.self.value_mf_data_in_exp_width": "4",
+        "bert.encoder.layer.1.attention.self.value_mf_weight_width": "32",
+        "bert.encoder.layer.1.attention.self.value_mf_weight_exp_width": "4",
+        "bert.encoder.layer.1.attention.output.dense_type_idx": "1",
+        "bert.encoder.layer.1.attention.output.dense_data_in_width": "8",
+        "bert.encoder.layer.1.attention.output.dense_weight_width": "8",
+        "bert.encoder.layer.1.attention.output.dense_data_in_frac_width": "4",
+        "bert.encoder.layer.1.attention.output.dense_weight_frac_width": "4",
+        "bert.encoder.layer.1.intermediate.dense_type_idx": "2",
+        "bert.encoder.layer.1.intermediate.dense_mf_data_in_width": "32",
+        "bert.encoder.layer.1.intermediate.dense_mf_data_in_exp_width": "3",
+        "bert.encoder.layer.1.intermediate.dense_mf_weight_width": "16",
+        "bert.encoder.layer.1.intermediate.dense_mf_weight_exp_width": "4",
+        "bert.encoder.layer.1.output.dense_type_idx": "3",
+        "bert.encoder.layer.1.output.dense_log_data_in_width": "32",
+        "bert.encoder.layer.1.output.dense_log_weight_width": "16",
+        "bert.pooler.dense_type_idx": "0",
+        "classifier_type_idx": "3",
+        "classifier_log_data_in_width": "8",
+        "classifier_log_weight_width": "8"
+      },
+      "layer_configs": {
+        "bert.encoder.layer.0.attention.self.query": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.self.key": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.self.value": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.output.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.intermediate.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.query": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 2,
+            "weight_width": 32,
+            "weight_frac_width": 8,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.attention.self.key": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 4,
+            "weight_width": 8,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.attention.self.value": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 4,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.intermediate.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.output.dense": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.pooler.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "classifier": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        }
+      }
+    },
+    {
+      "number": 9,
+      "value": 0.85644,
+      "params": {
+        "bert.encoder.layer.0.attention.self.query_type_idx": "3",
+        "bert.encoder.layer.0.attention.self.query_log_data_in_width": "16",
+        "bert.encoder.layer.0.attention.self.query_log_weight_width": "32",
+        "bert.encoder.layer.0.attention.self.key_type_idx": "2",
+        "bert.encoder.layer.0.attention.self.key_mf_data_in_width": "8",
+        "bert.encoder.layer.0.attention.self.key_mf_data_in_exp_width": "3",
+        "bert.encoder.layer.0.attention.self.key_mf_weight_width": "16",
+        "bert.encoder.layer.0.attention.self.key_mf_weight_exp_width": "5",
+        "bert.encoder.layer.0.attention.self.value_type_idx": "0",
+        "bert.encoder.layer.0.attention.output.dense_type_idx": "2",
+        "bert.encoder.layer.0.attention.output.dense_mf_data_in_width": "8",
+        "bert.encoder.layer.0.attention.output.dense_mf_data_in_exp_width": "5",
+        "bert.encoder.layer.0.attention.output.dense_mf_weight_width": "8",
+        "bert.encoder.layer.0.attention.output.dense_mf_weight_exp_width": "3",
+        "bert.encoder.layer.0.intermediate.dense_type_idx": "0",
+        "bert.encoder.layer.0.output.dense_type_idx": "2",
+        "bert.encoder.layer.0.output.dense_mf_data_in_width": "8",
+        "bert.encoder.layer.0.output.dense_mf_data_in_exp_width": "5",
+        "bert.encoder.layer.0.output.dense_mf_weight_width": "32",
+        "bert.encoder.layer.0.output.dense_mf_weight_exp_width": "3",
+        "bert.encoder.layer.1.attention.self.query_type_idx": "3",
+        "bert.encoder.layer.1.attention.self.query_log_data_in_width": "8",
+        "bert.encoder.layer.1.attention.self.query_log_weight_width": "32",
+        "bert.encoder.layer.1.attention.self.key_type_idx": "2",
+        "bert.encoder.layer.1.attention.self.key_mf_data_in_width": "32",
+        "bert.encoder.layer.1.attention.self.key_mf_data_in_exp_width": "4",
+        "bert.encoder.layer.1.attention.self.key_mf_weight_width": "32",
+        "bert.encoder.layer.1.attention.self.key_mf_weight_exp_width": "3",
+        "bert.encoder.layer.1.attention.self.value_type_idx": "1",
+        "bert.encoder.layer.1.attention.self.value_data_in_width": "8",
+        "bert.encoder.layer.1.attention.self.value_weight_width": "8",
+        "bert.encoder.layer.1.attention.self.value_data_in_frac_width": "2",
+        "bert.encoder.layer.1.attention.self.value_weight_frac_width": "2",
+        "bert.encoder.layer.1.attention.output.dense_type_idx": "2",
+        "bert.encoder.layer.1.attention.output.dense_mf_data_in_width": "16",
+        "bert.encoder.layer.1.attention.output.dense_mf_data_in_exp_width": "5",
+        "bert.encoder.layer.1.attention.output.dense_mf_weight_width": "8",
+        "bert.encoder.layer.1.attention.output.dense_mf_weight_exp_width": "4",
+        "bert.encoder.layer.1.intermediate.dense_type_idx": "3",
+        "bert.encoder.layer.1.intermediate.dense_log_data_in_width": "8",
+        "bert.encoder.layer.1.intermediate.dense_log_weight_width": "8",
+        "bert.encoder.layer.1.output.dense_type_idx": "0",
+        "bert.pooler.dense_type_idx": "3",
+        "bert.pooler.dense_log_data_in_width": "32",
+        "bert.pooler.dense_log_weight_width": "32",
+        "classifier_type_idx": "0"
+      },
+      "layer_configs": {
+        "bert.encoder.layer.0.attention.self.query": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.attention.self.key": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 5,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.attention.self.value": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.intermediate.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.query": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.key": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_width": 4,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.value": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 2,
+            "weight_width": 8,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.attention.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.intermediate.dense": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.output.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.pooler.dense": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "classifier": {
+          "type": "Linear",
+          "type_idx": 0
+        }
+      }
+    },
+    {
+      "number": 10,
+      "value": 0.84184,
+      "params": {
+        "bert.encoder.layer.0.attention.self.query_type_idx": "1",
+        "bert.encoder.layer.0.attention.self.query_data_in_width": "32",
+        "bert.encoder.layer.0.attention.self.query_weight_width": "32",
+        "bert.encoder.layer.0.attention.self.query_data_in_frac_width": "4",
+        "bert.encoder.layer.0.attention.self.query_weight_frac_width": "2",
+        "bert.encoder.layer.0.attention.self.key_type_idx": "1",
+        "bert.encoder.layer.0.attention.self.key_data_in_width": "32",
+        "bert.encoder.layer.0.attention.self.key_weight_width": "32",
+        "bert.encoder.layer.0.attention.self.key_data_in_frac_width": "8",
+        "bert.encoder.layer.0.attention.self.key_weight_frac_width": "2",
+        "bert.encoder.layer.0.attention.self.value_type_idx": "2",
+        "bert.encoder.layer.0.attention.self.value_mf_data_in_width": "16",
+        "bert.encoder.layer.0.attention.self.value_mf_data_in_exp_width": "3",
+        "bert.encoder.layer.0.attention.self.value_mf_weight_width": "32",
+        "bert.encoder.layer.0.attention.self.value_mf_weight_exp_width": "3",
+        "bert.encoder.layer.0.attention.output.dense_type_idx": "1",
+        "bert.encoder.layer.0.attention.output.dense_data_in_width": "16",
+        "bert.encoder.layer.0.attention.output.dense_weight_width": "32",
+        "bert.encoder.layer.0.attention.output.dense_data_in_frac_width": "8",
+        "bert.encoder.layer.0.attention.output.dense_weight_frac_width": "2",
+        "bert.encoder.layer.0.intermediate.dense_type_idx": "3",
+        "bert.encoder.layer.0.intermediate.dense_log_data_in_width": "8",
+        "bert.encoder.layer.0.intermediate.dense_log_weight_width": "32",
+        "bert.encoder.layer.0.output.dense_type_idx": "3",
+        "bert.encoder.layer.0.output.dense_log_data_in_width": "32",
+        "bert.encoder.layer.0.output.dense_log_weight_width": "16",
+        "bert.encoder.layer.1.attention.self.query_type_idx": "1",
+        "bert.encoder.layer.1.attention.self.query_data_in_width": "8",
+        "bert.encoder.layer.1.attention.self.query_weight_width": "8",
+        "bert.encoder.layer.1.attention.self.query_data_in_frac_width": "8",
+        "bert.encoder.layer.1.attention.self.query_weight_frac_width": "4",
+        "bert.encoder.layer.1.attention.self.key_type_idx": "0",
+        "bert.encoder.layer.1.attention.self.value_type_idx": "0",
+        "bert.encoder.layer.1.attention.output.dense_type_idx": "3",
+        "bert.encoder.layer.1.attention.output.dense_log_data_in_width": "8",
+        "bert.encoder.layer.1.attention.output.dense_log_weight_width": "16",
+        "bert.encoder.layer.1.intermediate.dense_type_idx": "1",
+        "bert.encoder.layer.1.intermediate.dense_data_in_width": "32",
+        "bert.encoder.layer.1.intermediate.dense_weight_width": "32",
+        "bert.encoder.layer.1.intermediate.dense_data_in_frac_width": "8",
+        "bert.encoder.layer.1.intermediate.dense_weight_frac_width": "8",
+        "bert.encoder.layer.1.output.dense_type_idx": "0",
+        "bert.pooler.dense_type_idx": "1",
+        "bert.pooler.dense_data_in_width": "16",
+        "bert.pooler.dense_weight_width": "8",
+        "bert.pooler.dense_data_in_frac_width": "2",
+        "bert.pooler.dense_weight_frac_width": "2",
+        "classifier_type_idx": "2",
+        "classifier_mf_data_in_width": "32",
+        "classifier_mf_data_in_exp_width": "3",
+        "classifier_mf_weight_width": "16",
+        "classifier_mf_weight_exp_width": "5"
+      },
+      "layer_configs": {
+        "bert.encoder.layer.0.attention.self.query": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 4,
+            "weight_width": 32,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.attention.self.key": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 8,
+            "weight_width": 32,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.attention.self.value": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.attention.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 16,
+            "data_in_frac_width": 8,
+            "weight_width": 32,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.intermediate.dense": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.output.dense": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.query": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.attention.self.key": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.attention.self.value": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.attention.output.dense": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.intermediate.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 8,
+            "weight_width": 32,
+            "weight_frac_width": 8,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.output.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.pooler.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 16,
+            "data_in_frac_width": 2,
+            "weight_width": 8,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "classifier": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 5,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        }
+      }
+    },
+    {
+      "number": 11,
+      "value": 0.85844,
+      "params": {
+        "bert.encoder.layer.0.attention.self.query_type_idx": "1",
+        "bert.encoder.layer.0.attention.self.query_data_in_width": "8",
+        "bert.encoder.layer.0.attention.self.query_weight_width": "8",
+        "bert.encoder.layer.0.attention.self.query_data_in_frac_width": "2",
+        "bert.encoder.layer.0.attention.self.query_weight_frac_width": "4",
+        "bert.encoder.layer.0.attention.self.key_type_idx": "0",
+        "bert.encoder.layer.0.attention.self.value_type_idx": "1",
+        "bert.encoder.layer.0.attention.self.value_data_in_width": "8",
+        "bert.encoder.layer.0.attention.self.value_weight_width": "8",
+        "bert.encoder.layer.0.attention.self.value_data_in_frac_width": "8",
+        "bert.encoder.layer.0.attention.self.value_weight_frac_width": "8",
+        "bert.encoder.layer.0.attention.output.dense_type_idx": "1",
+        "bert.encoder.layer.0.attention.output.dense_data_in_width": "32",
+        "bert.encoder.layer.0.attention.output.dense_weight_width": "16",
+        "bert.encoder.layer.0.attention.output.dense_data_in_frac_width": "8",
+        "bert.encoder.layer.0.attention.output.dense_weight_frac_width": "2",
+        "bert.encoder.layer.0.intermediate.dense_type_idx": "1",
+        "bert.encoder.layer.0.intermediate.dense_data_in_width": "8",
+        "bert.encoder.layer.0.intermediate.dense_weight_width": "8",
+        "bert.encoder.layer.0.intermediate.dense_data_in_frac_width": "8",
+        "bert.encoder.layer.0.intermediate.dense_weight_frac_width": "8",
+        "bert.encoder.layer.0.output.dense_type_idx": "0",
+        "bert.encoder.layer.1.attention.self.query_type_idx": "2",
+        "bert.encoder.layer.1.attention.self.query_mf_data_in_width": "16",
+        "bert.encoder.layer.1.attention.self.query_mf_data_in_exp_width": "3",
+        "bert.encoder.layer.1.attention.self.query_mf_weight_width": "16",
+        "bert.encoder.layer.1.attention.self.query_mf_weight_exp_width": "4",
+        "bert.encoder.layer.1.attention.self.key_type_idx": "3",
+        "bert.encoder.layer.1.attention.self.key_log_data_in_width": "16",
+        "bert.encoder.layer.1.attention.self.key_log_weight_width": "8",
+        "bert.encoder.layer.1.attention.self.value_type_idx": "2",
+        "bert.encoder.layer.1.attention.self.value_mf_data_in_width": "32",
+        "bert.encoder.layer.1.attention.self.value_mf_data_in_exp_width": "5",
+        "bert.encoder.layer.1.attention.self.value_mf_weight_width": "8",
+        "bert.encoder.layer.1.attention.self.value_mf_weight_exp_width": "5",
+        "bert.encoder.layer.1.attention.output.dense_type_idx": "0",
+        "bert.encoder.layer.1.intermediate.dense_type_idx": "0",
+        "bert.encoder.layer.1.output.dense_type_idx": "1",
+        "bert.encoder.layer.1.output.dense_data_in_width": "32",
+        "bert.encoder.layer.1.output.dense_weight_width": "32",
+        "bert.encoder.layer.1.output.dense_data_in_frac_width": "4",
+        "bert.encoder.layer.1.output.dense_weight_frac_width": "8",
+        "bert.pooler.dense_type_idx": "0",
+        "classifier_type_idx": "3",
+        "classifier_log_data_in_width": "32",
+        "classifier_log_weight_width": "16"
+      },
+      "layer_configs": {
+        "bert.encoder.layer.0.attention.self.query": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 2,
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.attention.self.key": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.self.value": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.attention.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 8,
+            "weight_width": 16,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.intermediate.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.output.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.attention.self.query": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.key": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.value": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_width": 5,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.output.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.intermediate.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 4,
+            "weight_width": 32,
+            "weight_frac_width": 8,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.pooler.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "classifier": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        }
+      }
+    },
+    {
+      "number": 12,
+      "value": 0.85792,
+      "params": {
+        "bert.encoder.layer.0.attention.self.query_type_idx": "1",
+        "bert.encoder.layer.0.attention.self.query_data_in_width": "8",
+        "bert.encoder.layer.0.attention.self.query_weight_width": "8",
+        "bert.encoder.layer.0.attention.self.query_data_in_frac_width": "2",
+        "bert.encoder.layer.0.attention.self.query_weight_frac_width": "8",
+        "bert.encoder.layer.0.attention.self.key_type_idx": "0",
+        "bert.encoder.layer.0.attention.self.value_type_idx": "1",
+        "bert.encoder.layer.0.attention.self.value_data_in_width": "32",
+        "bert.encoder.layer.0.attention.self.value_weight_width": "32",
+        "bert.encoder.layer.0.attention.self.value_data_in_frac_width": "4",
+        "bert.encoder.layer.0.attention.self.value_weight_frac_width": "2",
+        "bert.encoder.layer.0.attention.output.dense_type_idx": "1",
+        "bert.encoder.layer.0.attention.output.dense_data_in_width": "16",
+        "bert.encoder.layer.0.attention.output.dense_weight_width": "32",
+        "bert.encoder.layer.0.attention.output.dense_data_in_frac_width": "2",
+        "bert.encoder.layer.0.attention.output.dense_weight_frac_width": "4",
+        "bert.encoder.layer.0.intermediate.dense_type_idx": "1",
+        "bert.encoder.layer.0.intermediate.dense_data_in_width": "8",
+        "bert.encoder.layer.0.intermediate.dense_weight_width": "8",
+        "bert.encoder.layer.0.intermediate.dense_data_in_frac_width": "4",
+        "bert.encoder.layer.0.intermediate.dense_weight_frac_width": "4",
+        "bert.encoder.layer.0.output.dense_type_idx": "1",
+        "bert.encoder.layer.0.output.dense_data_in_width": "16",
+        "bert.encoder.layer.0.output.dense_weight_width": "16",
+        "bert.encoder.layer.0.output.dense_data_in_frac_width": "2",
+        "bert.encoder.layer.0.output.dense_weight_frac_width": "2",
+        "bert.encoder.layer.1.attention.self.query_type_idx": "2",
+        "bert.encoder.layer.1.attention.self.query_mf_data_in_width": "8",
+        "bert.encoder.layer.1.attention.self.query_mf_data_in_exp_width": "3",
+        "bert.encoder.layer.1.attention.self.query_mf_weight_width": "8",
+        "bert.encoder.layer.1.attention.self.query_mf_weight_exp_width": "3",
+        "bert.encoder.layer.1.attention.self.key_type_idx": "3",
+        "bert.encoder.layer.1.attention.self.key_log_data_in_width": "16",
+        "bert.encoder.layer.1.attention.self.key_log_weight_width": "32",
+        "bert.encoder.layer.1.attention.self.value_type_idx": "1",
+        "bert.encoder.layer.1.attention.self.value_data_in_width": "16",
+        "bert.encoder.layer.1.attention.self.value_weight_width": "16",
+        "bert.encoder.layer.1.attention.self.value_data_in_frac_width": "4",
+        "bert.encoder.layer.1.attention.self.value_weight_frac_width": "4",
+        "bert.encoder.layer.1.attention.output.dense_type_idx": "0",
+        "bert.encoder.layer.1.intermediate.dense_type_idx": "0",
+        "bert.encoder.layer.1.output.dense_type_idx": "1",
+        "bert.encoder.layer.1.output.dense_data_in_width": "16",
+        "bert.encoder.layer.1.output.dense_weight_width": "32",
+        "bert.encoder.layer.1.output.dense_data_in_frac_width": "2",
+        "bert.encoder.layer.1.output.dense_weight_frac_width": "2",
+        "bert.pooler.dense_type_idx": "0",
+        "classifier_type_idx": "2",
+        "classifier_mf_data_in_width": "32",
+        "classifier_mf_data_in_exp_width": "4",
+        "classifier_mf_weight_width": "32",
+        "classifier_mf_weight_exp_width": "4"
+      },
+      "layer_configs": {
+        "bert.encoder.layer.0.attention.self.query": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 2,
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.attention.self.key": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.self.value": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 4,
+            "weight_width": 32,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.attention.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 16,
+            "data_in_frac_width": 2,
+            "weight_width": 32,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.intermediate.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 16,
+            "data_in_frac_width": 2,
+            "weight_width": 16,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.attention.self.query": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.key": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.value": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 16,
+            "data_in_frac_width": 4,
+            "weight_width": 16,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.attention.output.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.intermediate.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 16,
+            "data_in_frac_width": 2,
+            "weight_width": 32,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.pooler.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "classifier": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_width": 4,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        }
+      }
+    },
+    {
+      "number": 13,
+      "value": 0.85584,
+      "params": {
+        "bert.encoder.layer.0.attention.self.query_type_idx": "2",
+        "bert.encoder.layer.0.attention.self.query_mf_data_in_width": "16",
+        "bert.encoder.layer.0.attention.self.query_mf_data_in_exp_width": "3",
+        "bert.encoder.layer.0.attention.self.query_mf_weight_width": "32",
+        "bert.encoder.layer.0.attention.self.query_mf_weight_exp_width": "3",
+        "bert.encoder.layer.0.attention.self.key_type_idx": "1",
+        "bert.encoder.layer.0.attention.self.key_data_in_width": "16",
+        "bert.encoder.layer.0.attention.self.key_weight_width": "8",
+        "bert.encoder.layer.0.attention.self.key_data_in_frac_width": "2",
+        "bert.encoder.layer.0.attention.self.key_weight_frac_width": "8",
+        "bert.encoder.layer.0.attention.self.value_type_idx": "2",
+        "bert.encoder.layer.0.attention.self.value_mf_data_in_width": "8",
+        "bert.encoder.layer.0.attention.self.value_mf_data_in_exp_width": "5",
+        "bert.encoder.layer.0.attention.self.value_mf_weight_width": "8",
+        "bert.encoder.layer.0.attention.self.value_mf_weight_exp_width": "5",
+        "bert.encoder.layer.0.attention.output.dense_type_idx": "0",
+        "bert.encoder.layer.0.intermediate.dense_type_idx": "1",
+        "bert.encoder.layer.0.intermediate.dense_data_in_width": "32",
+        "bert.encoder.layer.0.intermediate.dense_weight_width": "16",
+        "bert.encoder.layer.0.intermediate.dense_data_in_frac_width": "2",
+        "bert.encoder.layer.0.intermediate.dense_weight_frac_width": "8",
+        "bert.encoder.layer.0.output.dense_type_idx": "0",
+        "bert.encoder.layer.1.attention.self.query_type_idx": "2",
+        "bert.encoder.layer.1.attention.self.query_mf_data_in_width": "32",
+        "bert.encoder.layer.1.attention.self.query_mf_data_in_exp_width": "4",
+        "bert.encoder.layer.1.attention.self.query_mf_weight_width": "32",
+        "bert.encoder.layer.1.attention.self.query_mf_weight_exp_width": "4",
+        "bert.encoder.layer.1.attention.self.key_type_idx": "2",
+        "bert.encoder.layer.1.attention.self.key_mf_data_in_width": "8",
+        "bert.encoder.layer.1.attention.self.key_mf_data_in_exp_width": "5",
+        "bert.encoder.layer.1.attention.self.key_mf_weight_width": "16",
+        "bert.encoder.layer.1.attention.self.key_mf_weight_exp_width": "4",
+        "bert.encoder.layer.1.attention.self.value_type_idx": "3",
+        "bert.encoder.layer.1.attention.self.value_log_data_in_width": "16",
+        "bert.encoder.layer.1.attention.self.value_log_weight_width": "8",
+        "bert.encoder.layer.1.attention.output.dense_type_idx": "0",
+        "bert.encoder.layer.1.intermediate.dense_type_idx": "0",
+        "bert.encoder.layer.1.output.dense_type_idx": "1",
+        "bert.encoder.layer.1.output.dense_data_in_width": "32",
+        "bert.encoder.layer.1.output.dense_weight_width": "8",
+        "bert.encoder.layer.1.output.dense_data_in_frac_width": "4",
+        "bert.encoder.layer.1.output.dense_weight_frac_width": "4",
+        "bert.pooler.dense_type_idx": "0",
+        "classifier_type_idx": "1",
+        "classifier_data_in_width": "32",
+        "classifier_weight_width": "32",
+        "classifier_data_in_frac_width": "8",
+        "classifier_weight_frac_width": "4"
+      },
+      "layer_configs": {
+        "bert.encoder.layer.0.attention.self.query": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.attention.self.key": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 16,
+            "data_in_frac_width": 2,
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.attention.self.value": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_width": 5,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.attention.output.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.intermediate.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 2,
+            "weight_width": 16,
+            "weight_frac_width": 8,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.output.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.attention.self.query": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_width": 4,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.key": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.value": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.output.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.intermediate.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 4,
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.pooler.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "classifier": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 8,
+            "weight_width": 32,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        }
+      }
+    },
+    {
+      "number": 14,
+      "value": 0.85856,
+      "params": {
+        "bert.encoder.layer.0.attention.self.query_type_idx": "1",
+        "bert.encoder.layer.0.attention.self.query_data_in_width": "16",
+        "bert.encoder.layer.0.attention.self.query_weight_width": "16",
+        "bert.encoder.layer.0.attention.self.query_data_in_frac_width": "8",
+        "bert.encoder.layer.0.attention.self.query_weight_frac_width": "4",
+        "bert.encoder.layer.0.attention.self.key_type_idx": "0",
+        "bert.encoder.layer.0.attention.self.value_type_idx": "1",
+        "bert.encoder.layer.0.attention.self.value_data_in_width": "32",
+        "bert.encoder.layer.0.attention.self.value_weight_width": "8",
+        "bert.encoder.layer.0.attention.self.value_data_in_frac_width": "4",
+        "bert.encoder.layer.0.attention.self.value_weight_frac_width": "8",
+        "bert.encoder.layer.0.attention.output.dense_type_idx": "1",
+        "bert.encoder.layer.0.attention.output.dense_data_in_width": "8",
+        "bert.encoder.layer.0.attention.output.dense_weight_width": "8",
+        "bert.encoder.layer.0.attention.output.dense_data_in_frac_width": "4",
+        "bert.encoder.layer.0.attention.output.dense_weight_frac_width": "8",
+        "bert.encoder.layer.0.intermediate.dense_type_idx": "2",
+        "bert.encoder.layer.0.intermediate.dense_mf_data_in_width": "32",
+        "bert.encoder.layer.0.intermediate.dense_mf_data_in_exp_width": "4",
+        "bert.encoder.layer.0.intermediate.dense_mf_weight_width": "32",
+        "bert.encoder.layer.0.intermediate.dense_mf_weight_exp_width": "3",
+        "bert.encoder.layer.0.output.dense_type_idx": "1",
+        "bert.encoder.layer.0.output.dense_data_in_width": "16",
+        "bert.encoder.layer.0.output.dense_weight_width": "8",
+        "bert.encoder.layer.0.output.dense_data_in_frac_width": "4",
+        "bert.encoder.layer.0.output.dense_weight_frac_width": "2",
+        "bert.encoder.layer.1.attention.self.query_type_idx": "1",
+        "bert.encoder.layer.1.attention.self.query_data_in_width": "16",
+        "bert.encoder.layer.1.attention.self.query_weight_width": "8",
+        "bert.encoder.layer.1.attention.self.query_data_in_frac_width": "8",
+        "bert.encoder.layer.1.attention.self.query_weight_frac_width": "4",
+        "bert.encoder.layer.1.attention.self.key_type_idx": "3",
+        "bert.encoder.layer.1.attention.self.key_log_data_in_width": "8",
+        "bert.encoder.layer.1.attention.self.key_log_weight_width": "16",
+        "bert.encoder.layer.1.attention.self.value_type_idx": "1",
+        "bert.encoder.layer.1.attention.self.value_data_in_width": "8",
+        "bert.encoder.layer.1.attention.self.value_weight_width": "32",
+        "bert.encoder.layer.1.attention.self.value_data_in_frac_width": "2",
+        "bert.encoder.layer.1.attention.self.value_weight_frac_width": "8",
+        "bert.encoder.layer.1.attention.output.dense_type_idx": "1",
+        "bert.encoder.layer.1.attention.output.dense_data_in_width": "32",
+        "bert.encoder.layer.1.attention.output.dense_weight_width": "16",
+        "bert.encoder.layer.1.attention.output.dense_data_in_frac_width": "8",
+        "bert.encoder.layer.1.attention.output.dense_weight_frac_width": "2",
+        "bert.encoder.layer.1.intermediate.dense_type_idx": "1",
+        "bert.encoder.layer.1.intermediate.dense_data_in_width": "8",
+        "bert.encoder.layer.1.intermediate.dense_weight_width": "8",
+        "bert.encoder.layer.1.intermediate.dense_data_in_frac_width": "8",
+        "bert.encoder.layer.1.intermediate.dense_weight_frac_width": "4",
+        "bert.encoder.layer.1.output.dense_type_idx": "3",
+        "bert.encoder.layer.1.output.dense_log_data_in_width": "16",
+        "bert.encoder.layer.1.output.dense_log_weight_width": "8",
+        "bert.pooler.dense_type_idx": "1",
+        "bert.pooler.dense_data_in_width": "8",
+        "bert.pooler.dense_weight_width": "32",
+        "bert.pooler.dense_data_in_frac_width": "4",
+        "bert.pooler.dense_weight_frac_width": "4",
+        "classifier_type_idx": "3",
+        "classifier_log_data_in_width": "16",
+        "classifier_log_weight_width": "16"
+      },
+      "layer_configs": {
+        "bert.encoder.layer.0.attention.self.query": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 16,
+            "data_in_frac_width": 8,
+            "weight_width": 16,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.attention.self.key": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.self.value": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 4,
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.attention.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.intermediate.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_width": 4,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 16,
+            "data_in_frac_width": 4,
+            "weight_width": 8,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.attention.self.query": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 16,
+            "data_in_frac_width": 8,
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.attention.self.key": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.value": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 2,
+            "weight_width": 32,
+            "weight_frac_width": 8,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.attention.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 8,
+            "weight_width": 16,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.intermediate.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.output.dense": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.pooler.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            "weight_width": 32,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "classifier": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        }
+      }
+    },
+    {
+      "number": 15,
+      "value": 0.85404,
+      "params": {
+        "bert.encoder.layer.0.attention.self.query_type_idx": "2",
+        "bert.encoder.layer.0.attention.self.query_mf_data_in_width": "8",
+        "bert.encoder.layer.0.attention.self.query_mf_data_in_exp_width": "5",
+        "bert.encoder.layer.0.attention.self.query_mf_weight_width": "16",
+        "bert.encoder.layer.0.attention.self.query_mf_weight_exp_width": "4",
+        "bert.encoder.layer.0.attention.self.key_type_idx": "1",
+        "bert.encoder.layer.0.attention.self.key_data_in_width": "8",
+        "bert.encoder.layer.0.attention.self.key_weight_width": "32",
+        "bert.encoder.layer.0.attention.self.key_data_in_frac_width": "8",
+        "bert.encoder.layer.0.attention.self.key_weight_frac_width": "8",
+        "bert.encoder.layer.0.attention.self.value_type_idx": "3",
+        "bert.encoder.layer.0.attention.self.value_log_data_in_width": "16",
+        "bert.encoder.layer.0.attention.self.value_log_weight_width": "32",
+        "bert.encoder.layer.0.attention.output.dense_type_idx": "0",
+        "bert.encoder.layer.0.intermediate.dense_type_idx": "1",
+        "bert.encoder.layer.0.intermediate.dense_data_in_width": "8",
+        "bert.encoder.layer.0.intermediate.dense_weight_width": "8",
+        "bert.encoder.layer.0.intermediate.dense_data_in_frac_width": "8",
+        "bert.encoder.layer.0.intermediate.dense_weight_frac_width": "8",
+        "bert.encoder.layer.0.output.dense_type_idx": "3",
+        "bert.encoder.layer.0.output.dense_log_data_in_width": "8",
+        "bert.encoder.layer.0.output.dense_log_weight_width": "8",
+        "bert.encoder.layer.1.attention.self.query_type_idx": "3",
+        "bert.encoder.layer.1.attention.self.query_log_data_in_width": "16",
+        "bert.encoder.layer.1.attention.self.query_log_weight_width": "8",
+        "bert.encoder.layer.1.attention.self.key_type_idx": "2",
+        "bert.encoder.layer.1.attention.self.key_mf_data_in_width": "8",
+        "bert.encoder.layer.1.attention.self.key_mf_data_in_exp_width": "3",
+        "bert.encoder.layer.1.attention.self.key_mf_weight_width": "8",
+        "bert.encoder.layer.1.attention.self.key_mf_weight_exp_width": "5",
+        "bert.encoder.layer.1.attention.self.value_type_idx": "2",
+        "bert.encoder.layer.1.attention.self.value_mf_data_in_width": "16",
+        "bert.encoder.layer.1.attention.self.value_mf_data_in_exp_width": "3",
+        "bert.encoder.layer.1.attention.self.value_mf_weight_width": "16",
+        "bert.encoder.layer.1.attention.self.value_mf_weight_exp_width": "3",
+        "bert.encoder.layer.1.attention.output.dense_type_idx": "3",
+        "bert.encoder.layer.1.attention.output.dense_log_data_in_width": "32",
+        "bert.encoder.layer.1.attention.output.dense_log_weight_width": "8",
+        "bert.encoder.layer.1.intermediate.dense_type_idx": "0",
+        "bert.encoder.layer.1.output.dense_type_idx": "0",
+        "bert.pooler.dense_type_idx": "0",
+        "classifier_type_idx": "2",
+        "classifier_mf_data_in_width": "8",
+        "classifier_mf_data_in_exp_width": "5",
+        "classifier_mf_weight_width": "8",
+        "classifier_mf_weight_exp_width": "3"
+      },
+      "layer_configs": {
+        "bert.encoder.layer.0.attention.self.query": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.attention.self.key": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            "weight_width": 32,
+            "weight_frac_width": 8,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.attention.self.value": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.attention.output.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.intermediate.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.output.dense": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.query": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.key": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_width": 5,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.value": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.output.dense": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.intermediate.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.output.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.pooler.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "classifier": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        }
+      }
+    },
+    {
+      "number": 16,
+      "value": 0.85136,
+      "params": {
+        "bert.encoder.layer.0.attention.self.query_type_idx": "1",
+        "bert.encoder.layer.0.attention.self.query_data_in_width": "8",
+        "bert.encoder.layer.0.attention.self.query_weight_width": "8",
+        "bert.encoder.layer.0.attention.self.query_data_in_frac_width": "2",
+        "bert.encoder.layer.0.attention.self.query_weight_frac_width": "4",
+        "bert.encoder.layer.0.attention.self.key_type_idx": "3",
+        "bert.encoder.layer.0.attention.self.key_log_data_in_width": "16",
+        "bert.encoder.layer.0.attention.self.key_log_weight_width": "32",
+        "bert.encoder.layer.0.attention.self.value_type_idx": "2",
+        "bert.encoder.layer.0.attention.self.value_mf_data_in_width": "32",
+        "bert.encoder.layer.0.attention.self.value_mf_data_in_exp_width": "4",
+        "bert.encoder.layer.0.attention.self.value_mf_weight_width": "16",
+        "bert.encoder.layer.0.attention.self.value_mf_weight_exp_width": "4",
+        "bert.encoder.layer.0.attention.output.dense_type_idx": "1",
+        "bert.encoder.layer.0.attention.output.dense_data_in_width": "16",
+        "bert.encoder.layer.0.attention.output.dense_weight_width": "32",
+        "bert.encoder.layer.0.attention.output.dense_data_in_frac_width": "8",
+        "bert.encoder.layer.0.attention.output.dense_weight_frac_width": "2",
+        "bert.encoder.layer.0.intermediate.dense_type_idx": "3",
+        "bert.encoder.layer.0.intermediate.dense_log_data_in_width": "16",
+        "bert.encoder.layer.0.intermediate.dense_log_weight_width": "16",
+        "bert.encoder.layer.0.output.dense_type_idx": "0",
+        "bert.encoder.layer.1.attention.self.query_type_idx": "1",
+        "bert.encoder.layer.1.attention.self.query_data_in_width": "8",
+        "bert.encoder.layer.1.attention.self.query_weight_width": "8",
+        "bert.encoder.layer.1.attention.self.query_data_in_frac_width": "8",
+        "bert.encoder.layer.1.attention.self.query_weight_frac_width": "2",
+        "bert.encoder.layer.1.attention.self.key_type_idx": "3",
+        "bert.encoder.layer.1.attention.self.key_log_data_in_width": "16",
+        "bert.encoder.layer.1.attention.self.key_log_weight_width": "16",
+        "bert.encoder.layer.1.attention.self.value_type_idx": "0",
+        "bert.encoder.layer.1.attention.output.dense_type_idx": "0",
+        "bert.encoder.layer.1.intermediate.dense_type_idx": "1",
+        "bert.encoder.layer.1.intermediate.dense_data_in_width": "8",
+        "bert.encoder.layer.1.intermediate.dense_weight_width": "32",
+        "bert.encoder.layer.1.intermediate.dense_data_in_frac_width": "8",
+        "bert.encoder.layer.1.intermediate.dense_weight_frac_width": "8",
+        "bert.encoder.layer.1.output.dense_type_idx": "2",
+        "bert.encoder.layer.1.output.dense_mf_data_in_width": "32",
+        "bert.encoder.layer.1.output.dense_mf_data_in_exp_width": "5",
+        "bert.encoder.layer.1.output.dense_mf_weight_width": "16",
+        "bert.encoder.layer.1.output.dense_mf_weight_exp_width": "5",
+        "bert.pooler.dense_type_idx": "2",
+        "bert.pooler.dense_mf_data_in_width": "16",
+        "bert.pooler.dense_mf_data_in_exp_width": "5",
+        "bert.pooler.dense_mf_weight_width": "32",
+        "bert.pooler.dense_mf_weight_exp_width": "3",
+        "classifier_type_idx": "1",
+        "classifier_data_in_width": "8",
+        "classifier_weight_width": "8",
+        "classifier_data_in_frac_width": "2",
+        "classifier_weight_frac_width": "8"
+      },
+      "layer_configs": {
+        "bert.encoder.layer.0.attention.self.query": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 2,
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.attention.self.key": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.attention.self.value": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_width": 4,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.attention.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 16,
+            "data_in_frac_width": 8,
+            "weight_width": 32,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.intermediate.dense": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.output.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.attention.self.query": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            "weight_width": 8,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.attention.self.key": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.value": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.attention.output.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.intermediate.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            "weight_width": 32,
+            "weight_frac_width": 8,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 5,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.pooler.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "classifier": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 2,
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        }
+      }
+    },
+    {
+      "number": 17,
+      "value": 0.8544,
+      "params": {
+        "bert.encoder.layer.0.attention.self.query_type_idx": "0",
+        "bert.encoder.layer.0.attention.self.key_type_idx": "0",
+        "bert.encoder.layer.0.attention.self.value_type_idx": "1",
+        "bert.encoder.layer.0.attention.self.value_data_in_width": "8",
+        "bert.encoder.layer.0.attention.self.value_weight_width": "32",
+        "bert.encoder.layer.0.attention.self.value_data_in_frac_width": "2",
+        "bert.encoder.layer.0.attention.self.value_weight_frac_width": "2",
+        "bert.encoder.layer.0.attention.output.dense_type_idx": "3",
+        "bert.encoder.layer.0.attention.output.dense_log_data_in_width": "16",
+        "bert.encoder.layer.0.attention.output.dense_log_weight_width": "32",
+        "bert.encoder.layer.0.intermediate.dense_type_idx": "0",
+        "bert.encoder.layer.0.output.dense_type_idx": "1",
+        "bert.encoder.layer.0.output.dense_data_in_width": "32",
+        "bert.encoder.layer.0.output.dense_weight_width": "32",
+        "bert.encoder.layer.0.output.dense_data_in_frac_width": "2",
+        "bert.encoder.layer.0.output.dense_weight_frac_width": "4",
+        "bert.encoder.layer.1.attention.self.query_type_idx": "2",
+        "bert.encoder.layer.1.attention.self.query_mf_data_in_width": "32",
+        "bert.encoder.layer.1.attention.self.query_mf_data_in_exp_width": "3",
+        "bert.encoder.layer.1.attention.self.query_mf_weight_width": "16",
+        "bert.encoder.layer.1.attention.self.query_mf_weight_exp_width": "4",
+        "bert.encoder.layer.1.attention.self.key_type_idx": "2",
+        "bert.encoder.layer.1.attention.self.key_mf_data_in_width": "16",
+        "bert.encoder.layer.1.attention.self.key_mf_data_in_exp_width": "5",
+        "bert.encoder.layer.1.attention.self.key_mf_weight_width": "16",
+        "bert.encoder.layer.1.attention.self.key_mf_weight_exp_width": "4",
+        "bert.encoder.layer.1.attention.self.value_type_idx": "3",
+        "bert.encoder.layer.1.attention.self.value_log_data_in_width": "16",
+        "bert.encoder.layer.1.attention.self.value_log_weight_width": "16",
+        "bert.encoder.layer.1.attention.output.dense_type_idx": "1",
+        "bert.encoder.layer.1.attention.output.dense_data_in_width": "32",
+        "bert.encoder.layer.1.attention.output.dense_weight_width": "16",
+        "bert.encoder.layer.1.attention.output.dense_data_in_frac_width": "2",
+        "bert.encoder.layer.1.attention.output.dense_weight_frac_width": "8",
+        "bert.encoder.layer.1.intermediate.dense_type_idx": "0",
+        "bert.encoder.layer.1.output.dense_type_idx": "1",
+        "bert.encoder.layer.1.output.dense_data_in_width": "32",
+        "bert.encoder.layer.1.output.dense_weight_width": "32",
+        "bert.encoder.layer.1.output.dense_data_in_frac_width": "4",
+        "bert.encoder.layer.1.output.dense_weight_frac_width": "2",
+        "bert.pooler.dense_type_idx": "1",
+        "bert.pooler.dense_data_in_width": "16",
+        "bert.pooler.dense_weight_width": "32",
+        "bert.pooler.dense_data_in_frac_width": "2",
+        "bert.pooler.dense_weight_frac_width": "2",
+        "classifier_type_idx": "3",
+        "classifier_log_data_in_width": "32",
+        "classifier_log_weight_width": "16"
+      },
+      "layer_configs": {
+        "bert.encoder.layer.0.attention.self.query": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.self.key": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.self.value": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 2,
+            "weight_width": 32,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.attention.output.dense": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.intermediate.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 2,
+            "weight_width": 32,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.attention.self.query": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.key": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.value": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 2,
+            "weight_width": 16,
+            "weight_frac_width": 8,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.intermediate.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 4,
+            "weight_width": 32,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.pooler.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 16,
+            "data_in_frac_width": 2,
+            "weight_width": 32,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "classifier": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        }
+      }
+    },
+    {
+      "number": 18,
+      "value": 0.85048,
+      "params": {
+        "bert.encoder.layer.0.attention.self.query_type_idx": "1",
+        "bert.encoder.layer.0.attention.self.query_data_in_width": "32",
+        "bert.encoder.layer.0.attention.self.query_weight_width": "32",
+        "bert.encoder.layer.0.attention.self.query_data_in_frac_width": "4",
+        "bert.encoder.layer.0.attention.self.query_weight_frac_width": "2",
+        "bert.encoder.layer.0.attention.self.key_type_idx": "1",
+        "bert.encoder.layer.0.attention.self.key_data_in_width": "32",
+        "bert.encoder.layer.0.attention.self.key_weight_width": "8",
+        "bert.encoder.layer.0.attention.self.key_data_in_frac_width": "2",
+        "bert.encoder.layer.0.attention.self.key_weight_frac_width": "2",
+        "bert.encoder.layer.0.attention.self.value_type_idx": "0",
+        "bert.encoder.layer.0.attention.output.dense_type_idx": "0",
+        "bert.encoder.layer.0.intermediate.dense_type_idx": "1",
+        "bert.encoder.layer.0.intermediate.dense_data_in_width": "16",
+        "bert.encoder.layer.0.intermediate.dense_weight_width": "32",
+        "bert.encoder.layer.0.intermediate.dense_data_in_frac_width": "4",
+        "bert.encoder.layer.0.intermediate.dense_weight_frac_width": "4",
+        "bert.encoder.layer.0.output.dense_type_idx": "2",
+        "bert.encoder.layer.0.output.dense_mf_data_in_width": "8",
+        "bert.encoder.layer.0.output.dense_mf_data_in_exp_width": "4",
+        "bert.encoder.layer.0.output.dense_mf_weight_width": "16",
+        "bert.encoder.layer.0.output.dense_mf_weight_exp_width": "5",
+        "bert.encoder.layer.1.attention.self.query_type_idx": "1",
+        "bert.encoder.layer.1.attention.self.query_data_in_width": "32",
+        "bert.encoder.layer.1.attention.self.query_weight_width": "16",
+        "bert.encoder.layer.1.attention.self.query_data_in_frac_width": "4",
+        "bert.encoder.layer.1.attention.self.query_weight_frac_width": "4",
+        "bert.encoder.layer.1.attention.self.key_type_idx": "0",
+        "bert.encoder.layer.1.attention.self.value_type_idx": "1",
+        "bert.encoder.layer.1.attention.self.value_data_in_width": "16",
+        "bert.encoder.layer.1.attention.self.value_weight_width": "16",
+        "bert.encoder.layer.1.attention.self.value_data_in_frac_width": "8",
+        "bert.encoder.layer.1.attention.self.value_weight_frac_width": "8",
+        "bert.encoder.layer.1.attention.output.dense_type_idx": "2",
+        "bert.encoder.layer.1.attention.output.dense_mf_data_in_width": "32",
+        "bert.encoder.layer.1.attention.output.dense_mf_data_in_exp_width": "3",
+        "bert.encoder.layer.1.attention.output.dense_mf_weight_width": "16",
+        "bert.encoder.layer.1.attention.output.dense_mf_weight_exp_width": "5",
+        "bert.encoder.layer.1.intermediate.dense_type_idx": "1",
+        "bert.encoder.layer.1.intermediate.dense_data_in_width": "32",
+        "bert.encoder.layer.1.intermediate.dense_weight_width": "16",
+        "bert.encoder.layer.1.intermediate.dense_data_in_frac_width": "4",
+        "bert.encoder.layer.1.intermediate.dense_weight_frac_width": "2",
+        "bert.encoder.layer.1.output.dense_type_idx": "1",
+        "bert.encoder.layer.1.output.dense_data_in_width": "8",
+        "bert.encoder.layer.1.output.dense_weight_width": "16",
+        "bert.encoder.layer.1.output.dense_data_in_frac_width": "2",
+        "bert.encoder.layer.1.output.dense_weight_frac_width": "8",
+        "bert.pooler.dense_type_idx": "0",
+        "classifier_type_idx": "2",
+        "classifier_mf_data_in_width": "32",
+        "classifier_mf_data_in_exp_width": "3",
+        "classifier_mf_weight_width": "16",
+        "classifier_mf_weight_exp_width": "4"
+      },
+      "layer_configs": {
+        "bert.encoder.layer.0.attention.self.query": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 4,
+            "weight_width": 32,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.attention.self.key": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 2,
+            "weight_width": 8,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.attention.self.value": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.output.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.intermediate.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 16,
+            "data_in_frac_width": 4,
+            "weight_width": 32,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 4,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 5,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.query": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 4,
+            "weight_width": 16,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.attention.self.key": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.1.attention.self.value": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 16,
+            "data_in_frac_width": 8,
+            "weight_width": 16,
+            "weight_frac_width": 8,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.attention.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 5,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.intermediate.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 4,
+            "weight_width": 16,
+            "weight_frac_width": 2,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.1.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 8,
+            "data_in_frac_width": 2,
+            "weight_width": 16,
+            "weight_frac_width": 8,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.pooler.dense": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "classifier": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        }
+      }
+    },
+    {
+      "number": 19,
+      "value": 0.85492,
+      "params": {
+        "bert.encoder.layer.0.attention.self.query_type_idx": "2",
+        "bert.encoder.layer.0.attention.self.query_mf_data_in_width": "8",
+        "bert.encoder.layer.0.attention.self.query_mf_data_in_exp_width": "3",
+        "bert.encoder.layer.0.attention.self.query_mf_weight_width": "32",
+        "bert.encoder.layer.0.attention.self.query_mf_weight_exp_width": "3",
+        "bert.encoder.layer.0.attention.self.key_type_idx": "0",
+        "bert.encoder.layer.0.attention.self.value_type_idx": "1",
+        "bert.encoder.layer.0.attention.self.value_data_in_width": "16",
+        "bert.encoder.layer.0.attention.self.value_weight_width": "16",
+        "bert.encoder.layer.0.attention.self.value_data_in_frac_width": "8",
+        "bert.encoder.layer.0.attention.self.value_weight_frac_width": "4",
+        "bert.encoder.layer.0.attention.output.dense_type_idx": "1",
+        "bert.encoder.layer.0.attention.output.dense_data_in_width": "32",
+        "bert.encoder.layer.0.attention.output.dense_weight_width": "16",
+        "bert.encoder.layer.0.attention.output.dense_data_in_frac_width": "2",
+        "bert.encoder.layer.0.attention.output.dense_weight_frac_width": "4",
+        "bert.encoder.layer.0.intermediate.dense_type_idx": "2",
+        "bert.encoder.layer.0.intermediate.dense_mf_data_in_width": "16",
+        "bert.encoder.layer.0.intermediate.dense_mf_data_in_exp_width": "5",
+        "bert.encoder.layer.0.intermediate.dense_mf_weight_width": "16",
+        "bert.encoder.layer.0.intermediate.dense_mf_weight_exp_width": "3",
+        "bert.encoder.layer.0.output.dense_type_idx": "3",
+        "bert.encoder.layer.0.output.dense_log_data_in_width": "8",
+        "bert.encoder.layer.0.output.dense_log_weight_width": "32",
+        "bert.encoder.layer.1.attention.self.query_type_idx": "2",
+        "bert.encoder.layer.1.attention.self.query_mf_data_in_width": "8",
+        "bert.encoder.layer.1.attention.self.query_mf_data_in_exp_width": "5",
+        "bert.encoder.layer.1.attention.self.query_mf_weight_width": "8",
+        "bert.encoder.layer.1.attention.self.query_mf_weight_exp_width": "3",
+        "bert.encoder.layer.1.attention.self.key_type_idx": "3",
+        "bert.encoder.layer.1.attention.self.key_log_data_in_width": "32",
+        "bert.encoder.layer.1.attention.self.key_log_weight_width": "32",
+        "bert.encoder.layer.1.attention.self.value_type_idx": "2",
+        "bert.encoder.layer.1.attention.self.value_mf_data_in_width": "8",
+        "bert.encoder.layer.1.attention.self.value_mf_data_in_exp_width": "4",
+        "bert.encoder.layer.1.attention.self.value_mf_weight_width": "8",
+        "bert.encoder.layer.1.attention.self.value_mf_weight_exp_width": "5",
+        "bert.encoder.layer.1.attention.output.dense_type_idx": "3",
+        "bert.encoder.layer.1.attention.output.dense_log_data_in_width": "16",
+        "bert.encoder.layer.1.attention.output.dense_log_weight_width": "16",
+        "bert.encoder.layer.1.intermediate.dense_type_idx": "2",
+        "bert.encoder.layer.1.intermediate.dense_mf_data_in_width": "8",
+        "bert.encoder.layer.1.intermediate.dense_mf_data_in_exp_width": "4",
+        "bert.encoder.layer.1.intermediate.dense_mf_weight_width": "32",
+        "bert.encoder.layer.1.intermediate.dense_mf_weight_exp_width": "3",
+        "bert.encoder.layer.1.output.dense_type_idx": "2",
+        "bert.encoder.layer.1.output.dense_mf_data_in_width": "16",
+        "bert.encoder.layer.1.output.dense_mf_data_in_exp_width": "3",
+        "bert.encoder.layer.1.output.dense_mf_weight_width": "32",
+        "bert.encoder.layer.1.output.dense_mf_weight_exp_width": "4",
+        "bert.pooler.dense_type_idx": "1",
+        "bert.pooler.dense_data_in_width": "32",
+        "bert.pooler.dense_weight_width": "8",
+        "bert.pooler.dense_data_in_frac_width": "8",
+        "bert.pooler.dense_weight_frac_width": "8",
+        "classifier_type_idx": "3",
+        "classifier_log_data_in_width": "32",
+        "classifier_log_weight_width": "8"
+      },
+      "layer_configs": {
+        "bert.encoder.layer.0.attention.self.query": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.attention.self.key": {
+          "type": "Linear",
+          "type_idx": 0
+        },
+        "bert.encoder.layer.0.attention.self.value": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 16,
+            "data_in_frac_width": 8,
+            "weight_width": 16,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.attention.output.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 2,
+            "weight_width": 16,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "bert.encoder.layer.0.intermediate.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.0.output.dense": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.query": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 5,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.key": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.self.value": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 4,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_width": 5,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.attention.output.dense": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_bias": 7,
+            "weight_width": 16,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.intermediate.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 8,
+            "data_in_exponent_width": 4,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 3,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.encoder.layer.1.output.dense": {
+          "type": "LinearMinifloatIEEE",
+          "type_idx": 2,
+          "config": {
+            "data_in_width": 16,
+            "data_in_exponent_width": 3,
+            "data_in_exponent_bias": 7,
+            "weight_width": 32,
+            "weight_exponent_width": 4,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_width": 5,
+            "bias_exponent_bias": 15
+          }
+        },
+        "bert.pooler.dense": {
+          "type": "LinearInteger",
+          "type_idx": 1,
+          "config": {
+            "data_in_width": 32,
+            "data_in_frac_width": 8,
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            "bias_width": 8,
+            "bias_frac_width": 4
+          }
+        },
+        "classifier": {
+          "type": "LinearLog",
+          "type_idx": 3,
+          "config": {
+            "data_in_width": 32,
+            "data_in_exponent_bias": 7,
+            "weight_width": 8,
+            "weight_exponent_bias": 7,
+            "bias_width": 16,
+            "bias_exponent_bias": 15
+          }
+        }
+      }
+    }
+  ],
+  "best_so_far": [
+    0.8586,
+    0.8586,
+    0.8586,
+    0.8586,
+    0.8586,
+    0.8586,
+    0.8598,
+    0.8598,
+    0.8598,
+    0.8598,
+    0.8598,
+    0.8598,
+    0.8598,
+    0.8598,
+    0.8598,
+    0.8598,
+    0.8598,
+    0.8598,
+    0.8598,
+    0.8598
+  ],
+  "best_accuracy": 0.8598,
+  "best_params": {
+    "bert.encoder.layer.0.attention.self.query_type_idx": "0",
+    "bert.encoder.layer.0.attention.self.key_type_idx": "0",
+    "bert.encoder.layer.0.attention.self.value_type_idx": "0",
+    "bert.encoder.layer.0.attention.output.dense_type_idx": "1",
+    "bert.encoder.layer.0.attention.output.dense_data_in_width": "16",
+    "bert.encoder.layer.0.attention.output.dense_weight_width": "32",
+    "bert.encoder.layer.0.attention.output.dense_data_in_frac_width": "8",
+    "bert.encoder.layer.0.attention.output.dense_weight_frac_width": "2",
+    "bert.encoder.layer.0.intermediate.dense_type_idx": "0",
+    "bert.encoder.layer.0.output.dense_type_idx": "2",
+    "bert.encoder.layer.0.output.dense_mf_data_in_width": "8",
+    "bert.encoder.layer.0.output.dense_mf_data_in_exp_width": "4",
+    "bert.encoder.layer.0.output.dense_mf_weight_width": "32",
+    "bert.encoder.layer.0.output.dense_mf_weight_exp_width": "5",
+    "bert.encoder.layer.1.attention.self.query_type_idx": "1",
+    "bert.encoder.layer.1.attention.self.query_data_in_width": "8",
+    "bert.encoder.layer.1.attention.self.query_weight_width": "8",
+    "bert.encoder.layer.1.attention.self.query_data_in_frac_width": "8",
+    "bert.encoder.layer.1.attention.self.query_weight_frac_width": "4",
+    "bert.encoder.layer.1.attention.self.key_type_idx": "2",
+    "bert.encoder.layer.1.attention.self.key_mf_data_in_width": "8",
+    "bert.encoder.layer.1.attention.self.key_mf_data_in_exp_width": "5",
+    "bert.encoder.layer.1.attention.self.key_mf_weight_width": "16",
+    "bert.encoder.layer.1.attention.self.key_mf_weight_exp_width": "4",
+    "bert.encoder.layer.1.attention.self.value_type_idx": "0",
+    "bert.encoder.layer.1.attention.output.dense_type_idx": "2",
+    "bert.encoder.layer.1.attention.output.dense_mf_data_in_width": "16",
+    "bert.encoder.layer.1.attention.output.dense_mf_data_in_exp_width": "3",
+    "bert.encoder.layer.1.attention.output.dense_mf_weight_width": "16",
+    "bert.encoder.layer.1.attention.output.dense_mf_weight_exp_width": "5",
+    "bert.encoder.layer.1.intermediate.dense_type_idx": "1",
+    "bert.encoder.layer.1.intermediate.dense_data_in_width": "8",
+    "bert.encoder.layer.1.intermediate.dense_weight_width": "32",
+    "bert.encoder.layer.1.intermediate.dense_data_in_frac_width": "8",
+    "bert.encoder.layer.1.intermediate.dense_weight_frac_width": "8",
+    "bert.encoder.layer.1.output.dense_type_idx": "2",
+    "bert.encoder.layer.1.output.dense_mf_data_in_width": "16",
+    "bert.encoder.layer.1.output.dense_mf_data_in_exp_width": "5",
+    "bert.encoder.layer.1.output.dense_mf_weight_width": "32",
+    "bert.encoder.layer.1.output.dense_mf_weight_exp_width": "3",
+    "bert.pooler.dense_type_idx": "0",
+    "classifier_type_idx": "2",
+    "classifier_mf_data_in_width": "32",
+    "classifier_mf_data_in_exp_width": "3",
+    "classifier_mf_weight_width": "16",
+    "classifier_mf_weight_exp_width": "4"
+  },
+  "best_trial_number": 6
+}
