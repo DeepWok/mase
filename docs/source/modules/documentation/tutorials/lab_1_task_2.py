@@ -64,9 +64,7 @@ print(f"Base checkpoint: {base_checkpoint}")
 print("=" * 60)
 
 # Sparsity levels to test (0.1 = 10% pruned, 0.9 = 90% pruned)
-# Reduced to 3 levels for faster experimentation (uncomment line below for full sweep)
-sparsity_levels = [0.3, 0.5, 0.7]
-# sparsity_levels = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]  # Full sweep
+sparsity_levels = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 
 # Pruning methods to compare
 pruning_methods = ["random", "l1-norm"]

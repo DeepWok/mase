@@ -1,12 +1,13 @@
 """
 Lab 1 Task 1: Quantization Precision Analysis
 
-Explore a range of fixed point widths from 4 to 32 bits and compare
-PTQ (Post-Training Quantization) vs QAT (Quantization-Aware Training)
-accuracy on the IMDb sentiment analysis dataset.
+Two experiments:
+1. Balanced sweep: Total bit widths from 4 to 32 (frac = width//2), PTQ vs QAT.
+2. Imbalanced sweep: For total widths {8, 12, 16}, vary frac_width independently
+   (e.g. Q4.8 = 4 integer bits, 8 fractional bits). Generates a heatmap.
 
 Features:
-- Automatically saves each trained model to ~/task_1_models/qat_{width}bit
+- Automatically saves each trained model to ~/task_1_models/
 - Caches results to skip already-trained models (enables resume on interrupt)
 - Saves the best QAT model to ~/task_1_best_model for use in Task 2
 
@@ -258,6 +259,218 @@ print(f"Best PTQ accuracy: {max(ptq_accuracies):.4f} at {bit_widths[ptq_accuraci
 print(f"Best QAT accuracy: {max(qat_accuracies):.4f} at {bit_widths[qat_accuracies.index(max(qat_accuracies))]} bits")
 print(f"Largest QAT improvement: {max(np.array(qat_accuracies) - np.array(ptq_accuracies)):.4f} at {bit_widths[np.argmax(np.array(qat_accuracies) - np.array(ptq_accuracies))]} bits")
 print("=" * 60)
+
+# ============================================================================
+# PHASE 2: IMBALANCED PRECISION SWEEP
+# ============================================================================
+# Vary integer and fractional widths independently to find optimal split.
+# Format: Q{integer}.{fractional} where total_width = integer + fractional
+
+print("\n" + "=" * 60)
+print("Phase 2: Imbalanced Precision Sweep")
+print("=" * 60)
+
+# Define imbalanced configs: (total_width, frac_width)
+# integer_bits = total_width - frac_width
+imbalanced_configs = [
+    # 8-bit total: vary frac from 2 to 6
+    (8, 2),   # Q6.2
+    (8, 4),   # Q4.4 (balanced)
+    (8, 6),   # Q2.6
+    # 12-bit total: vary frac from 2 to 10
+    (12, 2),  # Q10.2
+    (12, 4),  # Q8.4
+    (12, 6),  # Q6.6 (balanced)
+    (12, 8),  # Q4.8
+    (12, 10), # Q2.10
+    # 16-bit total: vary frac from 2 to 14
+    (16, 2),  # Q14.2
+    (16, 4),  # Q12.4
+    (16, 8),  # Q8.8 (balanced)
+    (16, 12), # Q4.12
+    (16, 14), # Q2.14
+]
+
+imbalanced_results = {}
+imbalanced_cache_file = models_dir / "imbalanced_cache.json"
+
+if imbalanced_cache_file.exists():
+    with open(imbalanced_cache_file, 'r') as f:
+        imbalanced_cache = json.load(f)
+    print(f"Loaded {len(imbalanced_cache)} cached imbalanced results")
+else:
+    imbalanced_cache = {}
+
+for total_w, frac_w in imbalanced_configs:
+    int_w = total_w - frac_w
+    label = f"Q{int_w}.{frac_w}"
+    cache_key = f"{total_w}_{frac_w}"
+
+    print(f"\n{'='*60}")
+    print(f"Testing {label} (total={total_w}, int={int_w}, frac={frac_w})")
+    print(f"{'='*60}")
+
+    if cache_key in imbalanced_cache:
+        print(f"  Using cached results...")
+        imbalanced_results[cache_key] = imbalanced_cache[cache_key]
+        print(f"  PTQ: {imbalanced_cache[cache_key]['ptq_accuracy']:.4f}")
+        print(f"  QAT: {imbalanced_cache[cache_key]['qat_accuracy']:.4f}")
+        continue
+
+    # Load fresh model
+    print(f"  Loading model...")
+    mg = MaseGraph.from_checkpoint(f"{Path.home()}/tutorial_2_lora")
+
+    # Quantization config with imbalanced widths
+    quantization_config = {
+        "by": "type",
+        "default": {
+            "config": {"name": None}
+        },
+        "linear": {
+            "config": {
+                "name": "integer",
+                "data_in_width": total_w,
+                "data_in_frac_width": frac_w,
+                "weight_width": total_w,
+                "weight_frac_width": frac_w,
+                "bias_width": total_w,
+                "bias_frac_width": frac_w,
+            }
+        },
+    }
+
+    # Apply quantization
+    print(f"  Applying quantization...")
+    mg, _ = passes.quantize_transform_pass(mg, pass_args=quantization_config)
+
+    # PTQ evaluation
+    print(f"  Evaluating PTQ...")
+    trainer = get_trainer(
+        model=mg.model,
+        tokenized_dataset=dataset,
+        tokenizer=tokenizer,
+        evaluate_metric="accuracy",
+        num_train_epochs=1,
+    )
+    ptq_results = trainer.evaluate()
+    ptq_acc = ptq_results['eval_accuracy']
+
+    # QAT
+    print(f"  Training QAT (1 epoch)...")
+    trainer.train()
+    qat_results = trainer.evaluate()
+    qat_acc = qat_results['eval_accuracy']
+
+    print(f"  PTQ: {ptq_acc:.4f}, QAT: {qat_acc:.4f}")
+
+    result = {
+        'total_width': total_w,
+        'frac_width': frac_w,
+        'int_width': int_w,
+        'label': label,
+        'ptq_accuracy': float(ptq_acc),
+        'qat_accuracy': float(qat_acc),
+    }
+    imbalanced_results[cache_key] = result
+    imbalanced_cache[cache_key] = result
+
+    with open(imbalanced_cache_file, 'w') as f:
+        json.dump(imbalanced_cache, f, indent=2)
+
+# Generate heatmap for QAT results
+print("\nGenerating imbalanced precision heatmap...")
+
+total_widths_set = sorted(set(tw for tw, _ in imbalanced_configs))
+frac_widths_set = sorted(set(fw for _, fw in imbalanced_configs))
+
+# Build heatmap matrices for PTQ and QAT
+ptq_matrix = np.full((len(total_widths_set), len(frac_widths_set)), np.nan)
+qat_matrix = np.full((len(total_widths_set), len(frac_widths_set)), np.nan)
+
+for cache_key, res in imbalanced_results.items():
+    tw, fw = res['total_width'], res['frac_width']
+    row = total_widths_set.index(tw)
+    col = frac_widths_set.index(fw)
+    ptq_matrix[row, col] = res['ptq_accuracy']
+    qat_matrix[row, col] = res['qat_accuracy']
+
+fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+
+for ax, matrix, title in [
+    (axes[0], ptq_matrix, 'PTQ Accuracy'),
+    (axes[1], qat_matrix, 'QAT Accuracy'),
+]:
+    im = ax.imshow(matrix, cmap='RdYlGn', aspect='auto', vmin=0.5, vmax=0.85)
+    ax.set_xticks(range(len(frac_widths_set)))
+    ax.set_xticklabels(frac_widths_set)
+    ax.set_yticks(range(len(total_widths_set)))
+    ax.set_yticklabels(total_widths_set)
+    ax.set_xlabel('Fractional Width (bits)', fontsize=11, fontweight='bold')
+    ax.set_ylabel('Total Width (bits)', fontsize=11, fontweight='bold')
+    ax.set_title(title, fontsize=13, fontweight='bold')
+
+    # Annotate cells
+    for i in range(len(total_widths_set)):
+        for j in range(len(frac_widths_set)):
+            val = matrix[i, j]
+            if not np.isnan(val):
+                int_w = total_widths_set[i] - frac_widths_set[j]
+                if int_w > 0:
+                    color = 'white' if val < 0.65 else 'black'
+                    ax.text(j, i, f'{val:.3f}\nQ{int_w}.{frac_widths_set[j]}',
+                            ha='center', va='center', fontsize=8, color=color)
+
+    fig.colorbar(im, ax=ax, shrink=0.8)
+
+plt.suptitle('Effect of Integer vs Fractional Bit Allocation on Accuracy',
+             fontsize=14, fontweight='bold', y=1.02)
+plt.tight_layout()
+
+imbalanced_plot = output_dir / 'imbalanced_precision_heatmap.png'
+plt.savefig(imbalanced_plot, dpi=300, bbox_inches='tight')
+print(f"Heatmap saved as '{imbalanced_plot}'")
+plt.show()
+
+# Print imbalanced summary
+print("\n" + "=" * 60)
+print("IMBALANCED PRECISION SUMMARY")
+print("=" * 60)
+print(f"{'Config':<10} {'Total':<8} {'Int':<6} {'Frac':<6} {'PTQ':<10} {'QAT':<10}")
+print("-" * 60)
+for cache_key, res in sorted(imbalanced_results.items()):
+    print(f"{res['label']:<10} {res['total_width']:<8} {res['int_width']:<6} "
+          f"{res['frac_width']:<6} {res['ptq_accuracy']:<10.4f} {res['qat_accuracy']:<10.4f}")
+print("=" * 60)
+
+# Find optimal split for each total width
+print("\nOptimal frac_width per total width (QAT):")
+for tw in total_widths_set:
+    best_acc = 0
+    best_fw = 0
+    for ck, res in imbalanced_results.items():
+        if res['total_width'] == tw and res['qat_accuracy'] > best_acc:
+            best_acc = res['qat_accuracy']
+            best_fw = res['frac_width']
+    print(f"  {tw}-bit: best frac_width={best_fw} (Q{tw-best_fw}.{best_fw}), QAT={best_acc:.4f}")
+
+# Save imbalanced results
+imbalanced_save = {
+    'configs': [
+        imbalanced_results[f"{tw}_{fw}"]
+        for tw, fw in imbalanced_configs
+        if f"{tw}_{fw}" in imbalanced_results
+    ],
+}
+imbalanced_file = output_dir / 'imbalanced_precision_results.json'
+with open(imbalanced_file, 'w') as f:
+    json.dump(imbalanced_save, f, indent=2)
+print(f"\nImbalanced results saved to '{imbalanced_file}'")
+
+# Update overall results with imbalanced data
+results['imbalanced'] = imbalanced_save['configs']
+with open(results_file, 'w') as f:
+    json.dump(results, f, indent=2)
 
 # 10. Save the best QAT model for Task 2
 print("\n" + "=" * 60)

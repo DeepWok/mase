@@ -47,6 +47,8 @@ QAT core idea: uses fake quantization - simulate lower precision numbers being r
 
 FP32 baseline: 0.8140
 
+![Quantization Comparison: PTQ vs QAT across bit widths](lab_1_task_1_results/quantization_comparison.png)
+
 **Analysis:**
 
 1. **QAT consistently outperforms PTQ** at every bit width. The gap is largest at low precision (6-bit: +13.4%) and narrows at higher widths (16+ bits: ~+2%). This is because PTQ simply rounds pre-trained weights, while QAT retrains the model to adapt to quantization noise.
@@ -74,6 +76,8 @@ FP32 baseline: 0.8140
 | 70% | 0.4990 | 0.7535 | +0.2546 |
 
 Baseline (pre-pruning): 0.8350
+
+![Pruning Comparison: Random vs L1-Norm across sparsity levels](lab_1_task_2_results/pruning_comparison.png)
 
 **Analysis:**
 
@@ -103,6 +107,8 @@ Baseline (pre-pruning): 0.8350
 | RandomSampler | 0.87232 | Trial 16 | Medium |
 | TPESampler | 0.87232 | Trial 2 | Fast (adaptive) |
 
+![NAS Sampler Comparison: Grid vs Random vs TPE](lab_2_task_1_results/sampler_comparison.png)
+
 **Analysis:**
 
 1. **All three samplers converge to the same best accuracy** (0.87232) given 100 trials. This is because the discrete search space has a finite number of configurations (3 x 4 x 5 x 5 = 300 combinations), and 100 trials is sufficient for all samplers to find the global optimum.
@@ -131,6 +137,8 @@ Quantization config: 8-bit fixed point with 4 fractional bits for data, weights,
 | Baseline | 0.86624 | 0.8530 | 0.010 |
 | Compress-Only | 0.86188 | 0.7848 | 0.080 |
 | Compress+Finetune | **0.87644** | 0.8723 | 0.002 |
+
+![Compression-Aware NAS: Baseline vs Compress-Only vs Compress+Finetune](lab_2_task_2_results/compression_nas_comparison.png)
 
 **Analysis:**
 
@@ -187,6 +195,8 @@ Best configuration (Trial 6):
 | bert.pooler.dense | Linear (FP32) |
 | classifier | LinearMinifloatIEEE |
 
+![Mixed Precision Search: Per-layer TPE search over 20 trials](lab_3_task_1_results/mixed_precision_search.png)
+
 **Analysis:**
 
 1. **Mixed precision achieves slightly lower accuracy than uniform quantization** from Lab 2 (0.860 vs 0.872). The per-layer search space is much larger (4 type choices x multiple width/frac options per layer, across 14 layers), making it harder for the TPE sampler to find the global optimum in 20 trials.
@@ -209,6 +219,8 @@ Best configuration (Trial 6):
 |---------|--------------|----------------|-----------------|
 | RandomSampler | 0.86036 | ~8 (8%) | Trial 7 |
 | TPESampler | 0.86052 | ~4 (4%) | Trial 37 |
+
+![Mixed Precision Sampler Comparison: Random vs TPE over 100 trials](lab_3_task_2_results/sampler_comparison_mixed_precision.png)
 
 **Analysis:**
 
