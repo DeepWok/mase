@@ -110,7 +110,7 @@ print("Running ReLU simulation...")
 try:
     from chop.actions import simulate
     relu_start = time.time()
-    simulate(skip_build=False, skip_test=False)
+    simulate(skip_build=False, skip_test=False, waves=True)
     relu_time = time.time() - relu_start
     relu_sim_success = True
     print(f"ReLU simulation completed in {relu_time:.2f}s")

@@ -89,6 +89,7 @@ def simulate(
             hdl_toplevel="top",
             build_args=build_args,
             parameters=[],  # use default parameters,
+            waves=waves,
         )
 
         build_end = time.time()

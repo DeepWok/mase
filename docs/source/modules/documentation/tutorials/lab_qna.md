@@ -284,9 +284,11 @@ Best configuration (Trial 6):
 
 > Task: Read about the hardware metadata pass.
 
-The hardware metadata pass (`add_hardware_metadata_analysis_pass`) exists because mapping a computational graph to hardware requires static, implementation-level information that is not present in the software or ML abstraction. Hardware generation and analysis require all constraints to be explicit at compile time. Specifically, the hardware metadata:
+The documentation describes: "The hardware metadata of a Mase node in a Mase graph describes the constraints of the node for any static analysis or possible transformation."
 
-- Encodes how a node is realised in hardware, not just what computation it performs.
+The hardware metadata pass (`add_hardware_metadata_analysis_pass`) exists because mapping a computational graph to hardware requires static, implementation-level information that must be explicit at compile time. The hardware metadata:
+
+- Encodes how a node is realised in hardware, not just what computation it performs. An example would be the type of storage used, such as "BRAM".
 - Provides the information needed for static analysis, transformation, and code generation.
 - Bridges the gap between tensor-level semantics and signal-level hardware interfaces.
 
@@ -296,15 +298,27 @@ The key difference from software metadata:
 
 > Task: Read through `top/hardware/rtl/top.sv` and make sure you understand how the MLP model maps to the hardware design.
 
-The generated `top` module implements the PyTorch forward pass as a streaming two-stage pipeline: a quantised `fixed_linear` block for `Linear(4,8)` followed by a `fixed_relu` block for ReLU. All tensors use an 8-bit fixed-point format with 3 fractional bits (q5.3). Tensor-size parameters encode the logical shapes (e.g. weights are 4x8, bias is length 8), while parallelism parameters specify spatial unrolling: the design accepts all 4 inputs in parallel and produces 4 of the 8 outputs per cycle (two output tiles). Valid/ready handshakes connect the stages and propagate backpressure end-to-end. The `fc1_weight_source` and `fc1_bias_source` modules provide constant model parameters to the linear block via a handshake interface, corresponding to `fc1.weight` and `fc1.bias` in the original model.
+The generated `top` module implements the PyTorch forward pass as a streaming two-stage pipeline: a quantised `fixed_linear` (`fc1_inst`) block for `Linear(4,8)` followed by a `fixed_relu` block for ReLU. All tensors use an 8-bit fixed-point format with 3 fractional bits (q5.3). Tensor-size parameters encode the logical shapes (e.g. weights are 4x8, bias is length 8), while parallelism parameters specify spatial unrolling: the design accepts all 4 inputs in parallel and produces 4 of the 8 outputs per cycle (two output tiles). Valid/ready handshakes connect the stages and propagate backpressure end-to-end. The `fc1_weight_source` and `fc1_bias_source` modules provide constant model parameters to the linear block via a handshake interface, corresponding to `fc1.weight` and `fc1.bias` in the original model.
 
 > Task: Launch the simulation and inspect the waveforms.
 
-TODO - simulation and GTKWave waveform inspection.
+Looking at the waveforms in GTKWave:
 
-> Main Task: Choose another layer type from the Pytorch list and write a SystemVerilog file to implement that layer in hardware.
+![GTKWave waveform of ReLU baseline simulation](lab_4_results/gtkwave_screenshot.png)
 
-**Implementation:** The script (`lab_4.py`) replaces the ReLU activation with Leaky ReLU in the generated hardware design. Rather than writing a new SystemVerilog module from scratch, we use the existing `fixed_leaky_relu.sv` from MASE's `mase_components` library. The script:
+The design uses valid/ready handshaking -- a data transfer occurs on the clock edge where both `valid` AND `ready` are high simultaneously. The waveform shows the full inference pipeline over approximately 280ns:
+
+1. **Input handshake:** `data_in_0_ready` is already high (fc1 ready), and the testbench asserts `data_in_0_valid` with input values `[0x01, 0x00, 0x06, 0x03]`. Both signals are high simultaneously, so the handshake completes and fc1 accepts the data. It then deasserts `data_in_0_ready` while it computes.
+
+2. **Weight/bias streaming:** `fc1_weight_ready/valid` and `fc1_bias_ready/valid` toggle as the linear layer streams in parameter data tile-by-tile. With `parallelism=4` and `output size=8`, fc1 computes two output tiles sequentially. This matrix multiplication dominates the total latency.
+
+3. **fc1-to-relu handshake:** When fc1 finishes, `data_out_0_valid` goes high. `relu_data_out_0_valid` rises on the **exact same clock edge** -- confirming ReLU is purely combinational (zero pipeline latency). There is no register between fc1 output and relu output; the relu function is resolved within the same clock cycle.
+
+4. **Backpressure:** `relu_data_out_0_ready` and `data_out_0_ready` control when the downstream monitor accepts output. If the consumer is not ready, the pipeline stalls -- backpressure propagates upstream through the valid/ready chain, preventing data loss.
+
+> Extension Task: Choose another layer type from the Pytorch list and write a SystemVerilog file to implement that layer in hardware. Then, change the generated top.sv file to inject that layer within the design. For example, you may replace the ReLU activations with Leaky ReLU. Re-build the simulation and observe the effect on latency and accuracy.
+
+**Implementation:** The script (`lab_4.py`) replaces the ReLU activation with Leaky ReLU in the generated hardware design. We use the existing `fixed_leaky_relu.sv` from MASE's `mase_components` library. The script:
 
 1. Emits the baseline ReLU design using the standard MASE hardware pipeline (quantize -> metadata -> emit Verilog)
 2. Copies `fixed_leaky_relu.sv` from the MASE components library into the project RTL directory
@@ -318,7 +332,6 @@ The negative slope is set to 0.125 (1/2^3 in Q8.3 fixed-point), meaning negative
 | Metric | ReLU | Leaky ReLU |
 |--------|------|------------|
 | Simulation time | 30.09s | 29.92s |
-| Overhead | baseline | -0.6% (within noise) |
 | Negative region output | 0 | 0.125 * input |
 | Hardware complexity | Comparator only | Comparator + multiplier |
 | Pipeline latency | Combinational (0 cycles) | Combinational (0 cycles) |
@@ -331,4 +344,4 @@ The cocotb test passed for both designs. Simulation times are identical within n
 
 2. **Minimal area cost.** Leaky ReLU adds a fixed-point multiplier and arithmetic right-shift for the negative slope computation (`output = (NEGATIVE_SLOPE_VALUE * input) >>> NEGATIVE_SLOPE_PRECISION_1`). For the small parallelism in this design (4 elements), this is a negligible area increase.
 
-3. **Functional difference.** ReLU clamps all negative values to zero, which can cause "dead neuron" problems during training. Leaky ReLU preserves a scaled gradient for negative inputs, potentially improving training convergence. For inference-only hardware, the practical difference is in how negative activations propagate through subsequent layers.
+3. **Functional difference.** ReLU clamps all negative values to zero, which can cause "dead neuron" (dying ReLU) problems during training. Leaky ReLU preserves a scaled gradient for negative inputs, potentially improving training convergence. For inference-only hardware, the practical difference is in how negative activations propagate through subsequent layers.
