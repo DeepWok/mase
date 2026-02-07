@@ -14,7 +14,7 @@ For each bit-width, we compared two quantization strategies:
 
 The goal was to determine the "sweet spot" where model size is minimized without significant degradation in accuracy, and to quantify the specific benefit of QAT at different precision levels.
 
-### 2. Implementation: ###
+### 2. Implementation ###
 
 We extended the `Tutorial 3` workflow to iterate through the target `widths [4, 8, 16, 32]`. For each width $w$, we configured the quantization parameters as follows:
 
@@ -48,7 +48,29 @@ Figure 1: Accuracy comparison between PTQ and QAT across different fixed-point w
 
 ## Task 2: Pruning
 
+Now, we take our best obtained model from Task 1 and rerun the pruning procedure, this time varying the sparsity from 0.1 to 0.9, to obtain and evaluate the effect of different pruning strategies.
 
+We obtain the following results:
+
+<img src="./plots/tut4_pruning_all.png" width="80%">
+
+x-axis is the sparsity and the y-axis is the highest achieved accuracy on the IMDb dataset.
+
+### Summary Table
+
+| Sparsity | Random  | L1-Norm | Difference |
+|---------:|--------:|--------:|-----------:|
+| 0.1 | 0.83820 | 0.85912 | 0.02092 |
+| 0.2 | 0.82308 | 0.85528 | 0.03220 |
+| 0.3 | 0.80660 | 0.84968 | 0.04308 |
+| 0.4 | 0.78532 | 0.84584 | 0.06052 |
+| 0.5 | 0.74032 | 0.83820 | 0.09788 |
+| 0.6 | 0.52340 | 0.82584 | 0.30244 |
+| 0.7 | 0.50160 | 0.81280 | 0.31120 |
+| 0.8 | 0.50000 | 0.73212 | 0.23212 |
+| 0.9 | 0.50452 | 0.54560 | 0.04108 |
+
+We notice a sharp elbow point for the random pruning method at sparsity = 0.5, validating our existing belief that random pruning would not perform well around the 0.5 mark, as important features start getting pruned. L1-Norm pruning, on the other hand, shows resistance to pruning and performs decently well until sparsity = 0.8. Overall, as expected, L1-Norm pruning outperforms Random pruning, specially for higher sparsity levels, where pruning becomes critical.
 
 # Lab 3: #
 
@@ -412,6 +434,343 @@ The mixed-precision search demonstrates that combining different quantization fo
 
 However, it's worth noting that we only trained for 1 epoch per trial to keep the search tractable. This limited training budget likely disadvantages the more exotic formats like `LinearBinary` and `LinearLog`, which require the model to learn fundamentally different weight representations. With more training epochs, these formats might adapt better and achieve competitive accuracy. Consequently, the high failure rate we observed may partly reflect insufficient training rather than inherent limitations of the formats themselves. Conversely, the formats that performed well (`LinearMinifloatIEEE`, `LinearBlockFP`) are closer to standard floating-point behaviour, making them easier for the model to adapt to quickly.
 
+# Lab 4: #
+
+## Task 1: torch.compile ##
+
+### In the first part of Lab 4 (torch.compile), we did not really observe real run-time speedups with torch.compile. ###
+
+**Question a: Modify the code and investigate why this is the case?**
+
+All experiments were conducted on Google Colab with NVIDIA L4 GPU runtime. The test model was ResNet18 (pretrained = False) from torchvision, evaluated in inference mode. Default test configuration used batch size 128 with 224×224×3 RGB inputs. For each device (CPU and GPU), we compared original PyTorch models against torch.compile optimized versions.
+
+To accurately measure performance, we implemented proper warmup procedures and measured 10 consecutive runs. We varied iteration counts (1, 5, 10, 20, 50) to determine the breakeven point where compilation overhead is amortized, and tested different batch sizes (1, 32, 128, 256) to examine scaling behaviour. We modified the code to separate compilation overhead from execution time by implementing proper warmup runs.
+
+The lab notebook’s timing methodology masks torch.compile's actual speedup by including compilation overhead in the measurements. The notebook runs only 5 iterations and averages all of them together, which includes the expensive first compilation/warmup run (our tests showed this takes 7.47s on CPU compared to ~0.89s for subsequent runs—an 8.4× overhead).
+
+**Question b: If you change the device to cuda, do you observe the same thing?**
+
+Most results follow a similar trend, albeit with different values. More results on changing the device to cuda (or, GPU PyTorch vs torch.compile comparison and CPU vs GPU comparison):
+
+**CPU Performance:**
+* First run (with compilation): 7.47s
+* Subsequent runs (actual performance): ~0.89s average
+* Original model average: 1.69s
+* Speedup after warmup: 1.91×
+
+**GPU (cuda) Performance:**
+* First run (with compilation): 1.29s
+* Subsequent runs: ~0.039s average
+* Original model average: 0.052s
+* Speedup after warmup: 1.33×
+
+<img src="./plots/adls_l4_p1_full.png" width="100%">
+
+Figure 1: Graphs from the experiments
+
+**Some conclusions from our code runs:**
+
+* CPU has better speedup from torch.compile (1.91×) than GPU from torch.compile (1.33×), because GPU is already highly optimised (less room for improvement).
+* Both showed positive speedup at 5 iterations:
+    * CPU: 2.00× speedup
+    * GPU: 1.30× speedup
+* Although iterations do not seem to impact speedup much.
+* GPU is 32.5× faster than CPU (original PyTorch version).
+* GPU is 22.76x faster than CPU (torch.compile version).
+* Compilation overhead is significant:
+    * CPU: 8.4× slower on first run
+    * GPU: 33.2× slower on first run
+* Warmup is clearly very important.
+
+## Task 2: Kernel Fusion (SDPA) ##
+
+### In the second part of Lab 4 (kernel fusion), we looked at a fused SDPA kernel. ###
+
+**Part A: CPU Profiling - Naive vs Fused SDPA**
+
+**Results:**
+Under default configuration (batch = 32, heads = 8, seq = 128, dim = 64), CPU profiling reveals:
+* Naive implementation: 0.4414s
+* Fused implementation: 0.0038s
+* Speedup: 117.29 times
+
+**Analysis:**
+The exceptional CPU speedup stems from multiple compounding factors:
+* **Memory Access Patterns:** Naive implementation performs four separate operations ($QK^T$, scaling, softmax, attention x V), each requiring memory writes to intermediate tensors. The fused kernel eliminates these intermediate writes, drastically reducing memory bandwidth requirements, critical on CPU where memory is a primary bottleneck.
+* **Cache Utilization:** Fused kernel keeps intermediate results in L1/L2 cache, while naive implementation repeatedly loads/stores from main memory. On CPU with limited cache (vs GPU's faster memory hierarchy), this creates dramatic performance degradation.
+
+<img src="./plots/adls_l4_p2_1.png" width="80%">
+
+Figure 2: PLOT (CPU): Shows divergence between naive (red) and fused (green) implementations as sequence length increases. Naive implementation exhibits near-quadratic scaling, reaching 6.7s at seq = 512, while fused kernel remains flat at ~0.1s across all lengths.
+
+**Part B: GPU Profiling - Naive vs Fused SDPA**
+
+**Results:**
+Under default configuration, GPU profiling shows:
+* Naive implementation: 0.000173s
+* Fused implementation: 0.000055s
+* Speedup: 3.14 times
+
+**Analysis:**
+The GPU speedup is more representative of pure kernel fusion benefits:
+* **Kernel Launch Overhead Elimination:** Naive implementation launches 4 separate CUDA kernels (matmul, scale, softmax, matmul), each with ~5-10μs overhead. Fused kernel performs all operations in a single launch (all operations fused into a single kernel).
+* **Memory Bandwidth Reduction:** GPU's primary bottleneck is memory bandwidth. Naive implementation writes intermediate tensors ($QK^T$ scores, attention weights) to global memory, then reads them back. Fused kernel keeps these in faster on-chip memory (shared memory/registers).
+* **Tiled Computation:** The fused kernel (using FlashAttention-style algorithms) processes attention in tiles, maximising data reuse within streaming multiprocessors. This is impossible with separate operations.
+
+<img src="./plots/adls_l4_p2_2.png" width="80%">
+
+Figure 3: PLOT (GPU): Both implementations scale well, but naive (red) shows clear quadratic growth (0.0001s to 0.0038s), while fused (green) maintains nearly constant time (~0.0003s). The fused kernel's flat profile indicates successful memory optimisation. Hence, both CPU and GPU plots reveal that sequence length is the critical parameter for fusion effectiveness. The fused kernel's $O(1)$-like scaling versus naive's $O(n^2)$ scaling demonstrates why kernel fusion is essential for long-context attention mechanisms.
+
+<img src="./plots/adls_l4_p2_3.png" width="80%">
+
+Figure 4: GPU Speedup Across All Configurations. This horizontal bar chart reveals sequence length as the dominant factor in fusion effectiveness. Speedup ranges from 2.41× (Dim = 128) to 12.23× (Seq = 512), with clear stratification. The red dashed line at 1.0× serves as baseline.
+
+**Final conclusions:**
+When the device is set to CUDA, the same qualitative behaviour is observed, but with the performance benefits of kernel fusion becoming clearly visible.
+* On CUDA-enabled hardware, PyTorch dispatches the SDPA operation to an optimised fused backend (FlashAttention), enabling execution as a single kernel.
+* In contrast, the naive SDPA implementation continues to execute as multiple independent kernels even on CUDA.
+* As confirmed by profiling, this results in higher runtime and increased global memory accesses.
+
+Therefore, yes when the device is changed to CUDA, the same behaviour is observed: the fused SDPA implementation consistently outperforms the naive implementation due to kernel fusion and improved memory efficiency.
+
+## Task 3: In the third part of lab4 (Custom kernel), we go through how to write MXINT8 dequantization kernel and bind it to Python. ##
+
+### 1. MXINT8 Benefits for Custom Hardware ###
+
+**Question a: How does MXINT8 benefit custom hardware if both the activation and weights in a linear layer are quantized to MXINT8?**
+
+**Answer:**
+Quantizing both activations and weights to MXINT8 enables custom hardware to achieve 50x throughput improvement and 133x energy efficiency gains through systematic optimization across the entire compute pipeline.
+
+1.  **Memory Bandwidth Reduction: 22.6%**
+    * FP32: 69.0 MB total data transfer
+    * MXINT8: 53.4 MB total data transfer
+    * **Impact:** Reduced memory bottleneck by 1.3x
+    * **Note:** Output remains FP32 for accuracy, limiting memory savings to inputs/weights only
+
+2.  **Compute Density: 12.5x Higher**
+    * Hardware difference: INT8 multipliers occupy 12.5x less silicon area than FP32
+    * Practical result: Same chip fits 1,250 INT8 units vs 100 FP32 units
+    * **Impact:** Massive parallelism increase enables higher throughput
+
+3.  **Throughput: 50x Improvement**
+    * FP32: 25 GOPS (100 units ÷ 4 cycles/op)
+    * MXINT8: 1,250 GOPS (1,250 units ÷ 1 cycle/op)
+    * **Impact:** Can process 50x more inference requests per second
+    * **Key insight:** Combines both density (12.5x) and latency (4x) advantages
+
+4.  **Energy Efficiency: 133x Better**
+    * FP32: 0.25 GOPS/Watt
+    * MXINT8: 33.33 GOPS/Watt
+    * **Impact:** 133x more operations per watt of power
+    * **Real-world benefit:**
+        * Edge devices: 133x longer battery life
+        * Data centers: 133x lower energy costs per inference
+
+5.  **End-to-End Latency: 49.6x Faster**
+    * Breakdown:
+        * Memory transfer: 1.29x faster (22.6% less data)
+        * Computation: 50x faster (dominant factor)
+    * Overall: 49.6x faster execution
+    * **Impact:** Near real-time inference for complex models
+
+<img src="./plots/adls_l4_p3_1.png" width="100%">
+<img src="./plots/adls_l4_p3_2.png" width="100%">
+
+Figure 5: Comparison of Memory, Hardware Units, Compute Density, Throughput, and Energy Efficiency between FP32 and MXINT8.
+
+### 2. Purpose of `dont_need_abs` and `bias` in the C++ For Loop ###
+
+**Question b: What is the purpose of the variable `dont_need_abs` and `bias` in the C++ for loop?**
+
+After the code line:
+```cpp
+auto out = cutlass::bfloat16_t::bitcast(sign | exp | frac)
+```
+
+We formed an `out` variable and the bits look like this (BF16 layout):
+
+`[ sign | exponent (8 bits) | fraction (7 bits) ]`
+
+During the conversion, an implicit/leading 1 is included.
+
+For example, if BF16 fraction bits are: `fraction bits = 0100000`
+
+Then the real mantissa value is: `1.0100000₂ = 1.125`
+
+But the challenge is that MXINT mantissas are not like floating-point mantissas. They can take values such as 0.25, 0.5, 1.25, 1.5, etc., with possible values under 1.
+
+Thus, the following line of code is required (and also why we need the `dont_need_abs` variable and the `bias` variable):
+```cpp
+auto dont_need_abs = bool(mantissa_abs & 0x40);
+```
+
+This allows the kernel to check if the implicit 1 should be removed or not.
+
+`0x40 = 0100 0000` which corresponds to the range bit in the mantissa.
+
+- `mantissa_abs & 0x40` → checks that bit
+- `bool(...)` → converts it to true or false
+
+Thus, we have the following:
+
+| Bit 6 | Mantissa Value |
+|-------|----------------|
+| 1     | ≥ 1.0          |
+| 0     | < 1.0          |
+```cpp
+auto bias = cutlass::bfloat16_t::bitcast(sign | exp | uint16_t(0));
+```
+
+This constructs: `bias = ± (1.0 × 2^exp)`, which is __exactly the "implicit leading 1"__ that BF16 always adds.
+```cpp
+y[i] = dont_need_abs ? out : out - bias;
+```
+
+This means that if the mantissa was ≥ 1, keep `out`. Otherwise, subtract 1 to correct `out` value.
+
+
+### 3. `cta_tiler` and `layout_sX` Partitioning (Challenge) ###
+
+**Question c: How does `cta_tiler` partition data for copying to shared memory in CUDA kernel? How does `layout_sX` partition threads in a threadblock for computation?**
+
+This part of the notebook explains the same dequantization logic on GPU that was earlier run on CPU.
+
+#### `cta_tiler`: Partitioning Global Memory into Thread Block Tiles ####
+
+__Concept:__ `cta_tiler` (CTA = Cooperative Thread Array, or Thread Block) defines the "window" of data that a single Block copies from the massive Global Memory into its local Shared Memory. It does *not* yet decide which individual thread copies what; rather, it divides the global input tensor into large puzzle pieces, assigning one piece to each Block.
+
+__Code Analysis:__ In `mase_cuda::mxint8::dequantize:dequantize1d_device`, the code defines this tile shape that one single Thread Block will work on:
+```cpp
+auto BLK_M = Int<8>{};    // Height of the tile
+auto BLK_K = Int<128>{};  // Width of the tile
+auto cta_tiler = make_shape(BLK_M, BLK_K);  // Shape: (8, 128)
+```
+
+__How partitioning works:__ The function `local_tile` uses this shape to slice the global tensor:
+```cpp
+Tensor gX = local_tile(mX, cta_tiler, cta_coord);
+```
+
+Here:
+
+1. __Input:__ `mX` is the huge global input array (viewed as a grid).
+2. __Tiler:__ `cta_tiler` provides the dimensions ($8 \times 128$).
+3. __Coordinate:__ `cta_coord` (based on `blockIdx.x`, `blockIdx.y`) tells the GPU *which* specific $8 \times 128$ chunk this particular block is responsible for.
+
+__Summary:__ `cta_tiler` partitions the __Global Memory__ data by defining a fixed grid size ($8 \times 128$). It ensures that every Thread Block works on a unique, non-overlapping rectangle of the input data.
+
+#### `layout_sX`: Mapping Threads to Shared Memory Elements ####
+
+__Concept:__ As clarified by the professor, in CuTe/CUTLASS, __'s'__ stands for __Shared Memory__ layout, and __'t'__ stands for __Thread__ layout.
+
+- `layout_sX` defines the logical shape and physical arrangement of data inside the Shared Memory (the "workbench").
+- To compute, we need to assign specific pieces of this data to specific threads. This is done by `local_partition`.
+
+__Code Analysis:__ In the code (specifically for `group_size <= 8`), we see:
+```cpp
+// 1. Define the layout of data in Shared Memory
+auto layout_sX = make_layout(make_shape(BLK_M, BLK_K));
+
+// 2. Partition the Shared Memory tile among threads
+Tensor tXsX = local_partition(sX, layout_sX, threadIdx.x);
+```
+
+__How partitioning works:__
+
+The function `local_partition` answers the question: *"Which element does Thread $i$ work on?"*
+
+1. __The "Map" (`layout_sX`):__ `layout_sX` is an $8 \times 128$ layout. It contains $8 \times 128 = 1024$ logical positions. Since the thread block also has 1024 threads (calculated as `size(layout_tX)`), there is a 1-to-1 match between threads and data elements.
+
+2. __The Assignment (`local_partition`):__ The line `local_partition(sX, layout_sX, threadIdx.x)` performs a mapping operation. It takes the linear __Thread ID__ (`threadIdx.x`, ranging from 0 to 1023) and maps it to a specific coordinate $(m, k)$ in the 2D shared memory tile, following the pattern defined by `layout_sX`.
+
+__Visualising the Result:__
+
+If `layout_sX` is column-major (standard in CuTe), the partitioning assigns threads to data like this:
+
+| Shared Memory Data (`sX`) | Thread Assigned (`threadIdx.x`) |
+|----------------------------|---------------------------------|
+| Element at (0,0)           | Thread 0                        |
+| Element at (1,0)           | Thread 1                        |
+| ...                        | ...                             |
+| Element at (7,0)           | Thread 7                        |
+| Element at (0,1)           | Thread 8                        |
+
+__Summary:__ `layout_sX` partitions the threads by serving as a __coordinate map__. When passed to `local_partition` along with `threadIdx.x`, it translates the linear thread index into a specific 2D coordinate on the shared memory tile. This ensures that every thread knows exactly which unique data element to load into its registers (`tXsX`) for the dequantization computation.
+
+
+### 4. GPU Memory Savings Analysis ###
+
+**Question d: Why the saved GPU memory is not exactly (32 - (8+8/32))/32 = 74.2% of the FP32 model?**
+
+This activity demonstrates __model quantization__ — converting a neural network from high-precision (FP32) to low-precision (MXINT8) to:
+
+1. __Reduce memory usage__ (from 2906 MB → 976 MB, a 3x reduction)
+2. __Speed up inference__ (faster matrix multiplication on GPU)
+3. __Maintain accuracy__ (the model still predicts correctly)
+
+We are comparing:
+
+- __FP32 DeBERTa__ (original, full precision)
+- __MXINT8 DeBERTa__ (quantized, compressed)
+
+__During Quantization (One-time, on model setup):__
+
+`FP32 Model → [Quantization] → MXINT8 Model`
+
+This involves grouping weights, finding scales, and converting to INT8. It happens once when: `layer_q = QLinearPacked.build_from_linear(layer)`.
+
+__This is slow__ (happens once):
+- CPU-based (not using GPU yet)
+- Iterates through all weight groups
+- Computes scale factors
+- Converts to INT8
+
+__Where:__ Python code in `mase_cuda/mxint8/quantize.py`
+
+__During Inference (Every forward pass):__
+
+`Input → [Dequantize Weights] → [Matrix Multiply] → Output`
+
+__This is fast__ (our custom CUDA kernel):
+- GPU-based parallelisation
+- Converts INT8 → FP32 on the fly
+- Thousands of threads working simultaneously
+
+__Where:__ CUDA kernel in `src/csrc/mxint/dequantize.cu`
+
+<img src="./plots/quantization_summary.png" width="100%">
+<img src="./plots/quantization_results.png" width="100%">
+
+Figure 6: Memory usage and inference comparison between FP32 and MXINT8 DeBERTa.
+
+#### Why Not 74.2%? ####
+
+The formula $(32 - (8 + 8/32))/32 = 74.2\%$ means:
+
+- __32__ = FP32 uses 32 bits per number
+- __8__ = INT8 uses 8 bits per number
+- $8/32 = 0.25$ = Scale factor overhead (8 bits shared across 32 values)
+- Total: $8 + 0.25 = 8.25$ bits per MXINT8 value
+- Theoretical savings: $(32 - 8.25) / 32 = 74.2\%$
+
+This assumes every layer and all weights, activations, etc. get quantized. But, the actual saving is only __66.4%__ because only ~80% of the model (Linear layer weights) gets quantized.
+
+What stays FP32 (uncompressed):
+
+1. Embedding layers (word vectors)
+2. Layer normalisation parameters
+3. Classifier output layer
+4. Bias terms
+5. Activations during inference
+
+__Calculation:__
+
+- 80% of model compressed by 75% = 60% baseline savings
+- 20% of model not compressed = 0% savings
+- Reduced activation memory = ~6% bonus
+- __Total: 66.4%__
+
 
 # References: #
 
@@ -419,3 +778,8 @@ However, it's worth noting that we only trained for 1 epoch per trial to keep th
 
 [2] T. Akiba, S. Sano, T. Yanase, T. Ohta, and M. Koyama, “Optuna: A Next-generation Hyperparameter Optimization Framework,” arXiv preprint arXiv:1907.10902, 2019.
 
+[3] B. Rouhani, R. Zhao, V. Elango, R. Shafipour, M. Hall, M. Mesmakhosroshahi, A. More, L. Melnick, M. Golub, G. Varatkar, L. Shao, G. Kolhe, D. Melts, J. Klar, R. L’Heureux, M. Perry, D. Burger, E. Chung and S. Naghshineh, “With Shared Microexponents, A Little Shifting Goes a Long Way,” arXiv preprint arXiv:2302.08007, Feb. 2023. DOI: 10.48550/arXiv.2302.08007.
+
+[4] T. Dao, D. Y. Fu, S. Ermon, A. Rudra and C. Ré, “FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness,” arXiv preprint arXiv:2205.14135, May 2022. DOI: 10.48550/arXiv.2205.14135.
+
+[5] NVIDIA, “CUDA Templates and Python DSLs for High-Performance Linear Algebra (CUTLASS) — GitHub Repository,” GitHub. [Online]. Available: https://github.com/NVIDIA/cutlass
