@@ -1,4 +1,4 @@
-# Lab 1: #
+# Lab 1: Model Compression (Quantisation & Pruning) #
 
 ## Task 1: QAT vs. PTQ
 
@@ -54,7 +54,7 @@ We obtain the following results:
 
 <img src="./plots/tut4_pruning_all.png" width="80%">
 
-x-axis is the sparsity and the y-axis is the highest achieved accuracy on the IMDb dataset.
+Figure 2: x-axis is the sparsity and the y-axis is the highest achieved accuracy on the IMDb dataset.
 
 ### Summary Table
 
@@ -72,7 +72,340 @@ x-axis is the sparsity and the y-axis is the highest achieved accuracy on the IM
 
 We notice a sharp elbow point for the random pruning method at sparsity = 0.5, validating our existing belief that random pruning would not perform well around the 0.5 mark, as important features start getting pruned. L1-Norm pruning, on the other hand, shows resistance to pruning and performs decently well until sparsity = 0.8. Overall, as expected, L1-Norm pruning outperforms Random pruning, specially for higher sparsity levels, where pruning becomes critical.
 
-# Lab 3: #
+
+
+
+# Lab 2: Neural Architecture Search
+
+## Lab Overview
+In this lab, the Optuna framework was used to conduct **Neural Architecture Search (NAS)** on the base Bert model, finding optimal hyperparameters for sequence classification on the IMDb dataset. 
+
+The **CompressionPipeline** is then ran in Mase to apply quantization and pruning over the searched model.
+
+## Optuna Sampler Experiments (Task 1a)
+After defining these structures, a series of experiments were ran using the Optuna GridSampler, RandomSampler, and TPESampler. Searches were launched for each sampler to evaluate their performance over 100 trials.
+
+### GridSampler
+The GridSampler is essentially an exhaustive search over all possible combinations of parameter values defined in the search space.
+
+ This is highly effective for small/medium search spaces, however, in the case of grid search for each parameter at each individual layer of the BERT model, unlimited grid search becomes computationally expensive and unfeasible.
+
+ In our NAS implementation, we limit the grid search space to **main architecture hyperparameters** only, omitting per-layer operators.
+
+``` 
+grid_search_space = {
+  "num_layers": [2, 4, 8],
+  "num_heads": [2, 4, 8, 16],
+  "hidden_size": [128, 192, 256, 384, 512],
+  "intermediate_size": [512, 768, 1024, 1536, 2048],
+}
+``` 
+With the grid search space defined for the following 4 architectural layers, the number of trials required to exhaust all possible parameter combinations can be calculated as the product of parameter options per layer:
+
+$$ 
+3*4*5*5 = 300 \space {trials}
+$$
+
+Layer-wise operators were not considered mainly due to **search space explosion**, assuming N layers each with 2 options, 2<sup>N</sup> combinations are introduced to the grid which makes the search impossible under time and computational constraints.
+
+The other main limitation was using **dynamic parameter naming**. As GridSampler expects a statically defined parameter set within the search space, dynamic parameter generation is not supported, hence why we explicitly skipped per layer choices as follows: 
+
+
+```
+if isinstance(trial.study.sampler, GridSampler):
+    return trial_model
+```
+
+In summary, our implementation provides a limited systematic sweep over 100 out of 300 possible architectural parameter values due to computational load, providing a deterministic reference for comparison with the other stochastic Optuna samplers.
+
+
+### RandomSampler
+In contrast to GridSampler, __RandomSampler__ carries out a random stochastic exploration over the defined search space, where each parameter combination is independent from the last.
+
+This unstructured sporadic behaviour of RandomSampler can make it more suited for sampling in large dynamic search spaces, where grid search methods would be computationally infeasible.
+
+In our implementation using RandomSampler, both global parameters and layer-wise decisions are explored. These layer-wise decisions are instantiated dynamically during model construction using parameter names from the module hierarchy. 
+
+The following is a code extract from our model constructor implementation which illustrates this:
+
+```
+# For Random/TPE: allow per-layer choices
+    for name, layer in trial_model.named_modules():
+        if isinstance(layer, nn.Linear) and layer.in_features == layer.out_features:
+            new_layer_cls = trial.suggest_categorical(
+                f"{name}_type",
+                search_space["linear_layer_choices"],
+            )
+            if new_layer_cls == Identity:
+                deepsetattr(trial_model, name, Identity())
+
+    return trial_model
+```
+
+For each eligible __nn.Linear layer__ with matching input/output dimensions, a decision is made between __nn.Linear__ (retain the original layer), and __Identity__ (remove the Linear transformation).
+
+These sampling behaviours enable true **mixed-granularity NAS**, combining coarse architectural features and fine-grained layer-wise structural simplification via Identity substitution of selected square Linear operators.
+
+Some limitations of RandomSampler include:
+* Not leveraging performance history from previous trials.
+* Stochastic behaviour leads to unrestricted sampling of less significant combinations in the search space, whilst failing to exploit dominant combinations.
+* Increasing reliance on the trial budget as search space dimensionality increases.
+
+
+
+### TPESampler
+
+Optuna's __Tree-structured Parzen Estimator (TPESampler)__ uses Bayesian optimisation principles to maximise accuracy based on past trial metrics. The TPESampler creates probabilistic density distributions over the hyperparameter space and classes previous trials as optimal or suboptimal based on a performance threshold. Using these historical metrics, new parameter configurations are sampled to maximise expected accuracy; biased towards high performing regions of the search space whilst maintaining some stochasticity.
+
+In our code implementation, TPESampler behaves identically to RandomSampler for the first 10 trials; sampling completely randomly without bias from the search space. This is only to record a baseline for historical accuracy metrics, which from after the 10th iteration will be exploited by sampling from search space regions correlating to higher expected performance.
+
+In our implementation, TPESampler is applied to the same mixed-granularity search space as RandomSampler (as mentioned in the previous codeblock):
+
+* __Global architectural hyperparameters__
+(num_hidden_layers, num_attention_heads, hidden_size, intermediate_size)
+
+* __Layer-wise operator choices__:
+Binary decisions for square nn.Linear layers between retaining the Linear transformation or replacing it with an Identity operator.
+
+TPESampler addresses the main limitation of RandomSampler: lack of guidance from previous trials. This allows implicit limiting of aggressive Identity substitutions that degrade accuracy, in addition to allocating more trials to more promising parameter configurations.
+
+Within our experimental framework, TPESampler provided a principled middleground between the structured coverge of GridSampler, and the flexibility of RandomSampler.
+
+
+
+
+## Sampler Performance Comparison (Task 1b)
+
+| Sampler | Best Accuracy | Trial of Best | num_layers | num_heads | hidden_size | intermediate_size | Search Space |
+|--------|---------------|---------------|------------|-----------|-------------|-------------------|--------------|
+| Grid   | 0.8730        | 17            | 2          | 8         | 512         | 1024              | Architecture-only |
+| Random | 0.8722        | 22            | 4          | 8         | 512         | 2048              | Architecture + layer-wise |
+| TPE    | **0.8750**    | 80            | 4          | 4         | 512         | 1024              | Architecture + layer-wise |
+
+__Table:__ Structural and performance comparison of the GridSampler, RandomSampler, and TPESampler Optuna samplers over 100 NAS trials (1 epoch each). 
+
+
+<img src="./plots/task1_max_accuracy.png" width="80%">
+
+Figure 3: Max accuracy for all three samplers (Random, TPE, Grid) over 100 trials (1 epoch per trial)
+
+<img src="./plots/task1_accuracy_variation.png" width="80%">
+
+Figure 4: Accuracy per trial for all three samplers (Random, TPE, Grid) over 100 trials (1 epoch per trial)
+
+### GridSampler Analysis
+
+As observed in the results, GridSampler's early convergence to its best accuracy of 87.3% at trial 17 stems from its structured coverage of the defined low-dimensional architectural parameter space. 
+
+By avoiding the additional complexity introduced by layer-wise decisions, each trial tests a distinct architecture without wasting trials on over-pruned models as a result of Identity substitutions.
+
+__GridSampler Best Model configuration:__
+
+* num_layers = 2
+* num_heads = 8
+* hidden_size = 512
+* intermediate_size = 1024
+
+GridSampler converges to a __shallow__ and __wide__ model architecture. A wider embedding space (hidden_size = 512) provides strong token-level representation earlier on during training, this is particularly effective for IMDb sentiment classification.
+
+The moderate number of attention heads (8) provides sufficient diversity without excessive fragmentation of the attention space, which can severely impact performance in such small/shallow models. 
+
+GridSampler carries out a deterministic exploration of macro-architectural trade-offs in a more limited search space, thus converging to the optimal model configuration at trial 17, much earlier than the other samplers. 
+
+### RandomSampler Underperformance
+
+Despite having a theoretical edge over GridSampler in larger search spaces, RandomSampler slightly underperformed in these experiments, reaching a best accuracy of 87.2%. Operating in a much larger mixed-granularity space significantly increased variance across trials, this can be inferred from the spiky nature of the accuracy variation plot. 
+
+This reduced sample efficiency is what hindered the ability of RandomSampler to discover a stronger configuration within the limited 100 trial budget.
+
+__RandomSampler Best Model configuration:__
+
+* num_layers = 4
+* num_heads = 8
+* hidden_size = 512
+* intermediate_size = 2048
+
+RandomSampler converges to a **deeper and wider** model architecture; reflecting compensation for random pruning effects. As Linear layers are frequently substituted for Identity operators, a higher depth (num_layers = 4) maintains the expressive power of the model even if some layers are made redundant.
+
+Additionally, a very wide feed-forward network (intermediate_size = 2048) counteracts information loss from Identity substitutions by increasing capacity in the transformations that remain. The consistent hidden layer size of 512 across all samplers makes it a sweet spot for this sentiment classification task.
+
+As RandomSampler samples many 'structurally-degraded' models, it is clear that the optimal model configurations from our experiments are those with excess capacity to tolerate stochastic operator removal.
+
+### TPESampler: Best-Performing Balance
+
+As discussed in the previous section, TPESampler performs similarly to RandomSampler in early trials, before learning from previous history and biasing sampling towards high-performing architectural regions. This suppression of poor layer-wise operator configurations materialises much later in the experiment at trial 80, finding the best-performing model configurations of all samplers, at 87.5% accuracy.
+
+__TPESampler Best Model configuration:__
+
+* num_layers = 4
+* num_heads = 4
+* hidden_size = 512
+* intermediate_size = 1024
+
+TPESampler observes that shallow models tend to converge faster but saturate, while deeper models underperform early on. Thus, a depth of 4 provides the balance between representational capacity and training suitability within the limited trial budget.
+
+In contrast to the GridSampler and RandomSampler optimal model configurations, TPESampler converges to only 4 attention heads. This increase in the dimensions of each attention head improves stability in the case of Identity substitution.
+
+Unlike RandomSampler, TPESampler converges to a moderate feed-forward network width of 1024, learning that 'over-parameterisation' does not consistently improve performance. Furthermore, the high similarity of parameter configurations sampled by TPESampler towards the 100 trial mark indicates convergence to a high-confidence region of search space.
+
+Overall, the choice sampler was found to influence the trade-off between model structure, convergence speed, and final accuracy. With GridSampler excelling in early trials, RandomSampler favouring high-capacity robust structures, and TPESampler achieving the best long-term optimisation with a balanced approach.
+
+### Key Observation
+
+The narrow performance gap between the different samplers is expected, as the pre-trained BERT backbone already has highly optimised representations. For this reason, the best accuracy over 100 trials is unlikely to vary by much in response to moderate changes in model architecture.
+
+Along with minimal fine-tuning of 1 epoch per trial, and a relatively low-complexity classification task, the different Optuna samplers end up converging to similar optima.
+
+
+## Compression-Aware Search (Task 2a)
+
+To address the limitation of compressing only after NAS, a compression-aware search is implemented, where quantisation and pruning are applied inside each trial. Thus, the resulting model architectures are evaluated based on their final compressed accuracy.
+
+After constructing and training the chosen model for a small number of epochs, we apply Mase's **CompressionPipeline**. After converting the model into a MaseGraph, quantisation and pruning passes are applied before evaluation. From this point onwards, the highest-accuracy model sampled by the TPESampler is used and referred to as a baseline. 
+
+The following is a code extract from our implementation:
+
+```
+mg = MaseGraph(
+    model_cpu,
+    hf_input_names=["input_ids", "attention_mask", "labels"],
+)
+pipe = CompressionPipeline()
+
+mg, _ = pipe(
+    mg,
+    pass_args={
+        "quantize_transform_pass": quant_cfg,
+        "prune_transform_pass": prune_cfg,
+    },
+)
+compressed_model = mg.model.to(original_device)
+```
+
+Integrating compression into the objective function ensures that the selected architectures remain accurate after compression, rather than architectures that only perform well in full-precision form.
+
+### Quantisation Configuration
+
+Quantisation is applied only to Linear layers using fixed-point integer arithmetic:
+
+```
+# Compression configs
+QUANTIZATION_CONFIG = {
+    "by": "type",
+    "default": {
+        "config": {
+            "name": None,
+        }
+    },
+    "linear": {
+        "config": {
+            "name": "integer",
+            # data
+            "data_in_width": 8,
+            "data_in_frac_width": 4,
+            # weight
+            "weight_width": 8,
+            "weight_frac_width": 4,
+            # bias
+            "bias_width": 8,
+            "bias_frac_width": 4,
+        }
+    },
+}
+```
+
+The configuration was constrained by fixing bit-widths (8-bit) rather than searching (Lab 3 Task), this significantly reduces NAS dimensionality. Additionally, fractional widths remain uniform across layers to avoid layer-wise callibration issues. Only Linear operators are quantised as they dominate in computational and memory requirements.
+
+### Pruning Configuration
+
+Unstructured pruning is applied to both weights and activations:
+```
+PRUNING_CONFIG = {
+    "weight": {
+        "sparsity": 0.5,
+        "method": "l1-norm",
+        "scope": "local",
+    },
+    "activation": {
+        "sparsity": 0.5,
+        "method": "l1-norm",
+        "scope": "local",
+    },
+}
+```
+A fixed sparsity level of 0.5 is used; negating 50% of weights and activations filtered by L1-norm pruning, this is maintained for simplicity and stability. No structured pruning is applied to ensure compatibility with the BERT model.
+
+These compression hyperparameters are kept constant to effectively investigate the sensitivity of different architectures to compression.
+
+### Post-Compression Training
+The objective function was defined as follows to support fine-tuning after compression:
+```
+Train (N epochs) → Compress → Train (M epochs) → Evaluate
+```
+
+This allows comparison between:
+
+* **Direct evaluation** after compression: measuring model robustness.
+* **Post-Compression Tuning:** measuring model adaptability.
+
+## Discussion of Results: Compression-Aware Search (Task 2b)
+
+Notation: X_Y = X epochs before compression, Y epochs after compression
+
+| Experiment Setting | Post-Compression Training | Epochs (Pre_Post) | # Trials | Best Accuracy | Trial of Best | Key Observation |
+|-------------------|---------------------------|------------------|----------|---------------|---------------|----------------|
+| Task 1 (Baseline) | No compression            | 1_0              | 100      | ~0.875        | ~80           | Upper bound (FP32) |
+| CA-NAS (No Post)  | No                        | 3_0              | 20       | ~0.86         | 18         | Accuracy drop after compression |
+| CA-NAS            | Yes                       | 1_5              | 20       | ~0.878        | 13           | Strong recovery with longer post-training |
+| CA-NAS            | Yes                       | 3_3              | 20       | ~0.877        | 19           | Balanced pre/post training |
+| CA-NAS            | Yes                       | 4_2              | 20       | **0.8782**    | 13            | Best overall trade-off |
+| CA-NAS            | Yes                       | 5_1              | 20       | ~0.8780      | 14            | Diminishing returns pre-compression |
+
+Table: Comparison between compression-aware (CA) NAS with and without post-compression training, in reference to the optimal uncompressed model from task 1.
+
+### CA-NAS vs Task-1 Baseline
+Despite aggressive quantisation and pruning, CA-NAS consistently achieved accuracies very close to the original full-precision task 1 baseline. This proves the robustness of the searched architectures to compression, justifying the integration of the **CompressionPipeline** into the objective function as opposed to post-hoc compression.
+
+### Effects of Post-Compression Training
+
+<img src="./plots/task2_accuracy_variation_3_3.png" width="80%">
+
+Figure 5: Accuracy comparison between Baseline (Task1 no compression), compression with no post-training (3 epochs), compression with post-training (3 epoch before, 3 epoch after)
+
+<img src="./plots/task2_max_accuracy_3_3.png" width="80%">
+
+Figure 6: Maximum acccuracy between Baseline (Task1 no compression), compression with no post-training (3 epochs), compression with post-training (3 epoch before, 3 epoch after)
+
+Runs without post-compression training (CA_NAS_3_0) exhibit unstable high variance accuracy development and a noticeable drop, 86% compared to the full-precision accuracy of 87.5%. This is expected as quantisation and pruning introduce parameter sparsity that the model had no opportunity to adapt to. 
+
+Conversely, post-compression fine-tuning proved to be highly effective, demonstrating that quantisation error is mostly recoverable, pruned models retain sufficient capacity, and even minimal post-compression training of 1 epoch yields a significant performance boost. The lowest accuracy achieved by any post-compression model being 87.8%, outperforming both the task 1 baseline and the compressed model without post-training. 
+
+### Variation of Pre and Post Compression Training Epochs  (Post-Training Compression Aware Search) ###
+
+<img src="./plots/task2b_max_accuracy_tpe.png" width="80%">
+
+Figure 7: Maximum accuracy achieved for different pre and post compression training epoch combinations.
+
+The different pre/post compression training splits show a clear pattern:
+* More pre-compression training (5_1) leads to higher stability before compression, but hinders recovery afterwards.
+* Insufficient pre-compression training leads to slower convergence and increased variance (spikes) and instability across trials.
+* Balanced training splits provide the __best trade-off__ between learning stability and adapting to compression noise.
+
+Overall, the __4_2 configuration__ of 4 epochs pre-compression and 2 epochs post-compression training achieved the highest observed accuracy of __87.8%__. Thus we can conclude that sufficient pre-training followed by targeted post-compression training is the most effective approach.
+
+__CA-NAS Best Model configuration:__
+* num_layers = 2
+* num_heads = 4
+* hidden_size = 128
+* intermediate_size = 512
+
+This configuration corresponds to a __shallow and narrow__ architecture reflecting the effects of compression, differing from uncompressed NAS results where wider architectures were preferred. 
+
+In conclusion, CA-NAS converges on lower capacity models that are inherently less sensitive to quantisation noise and pruning-induced sparsity, especially with limited post-compression fine-tuning.
+
+
+
+# Lab 3: Mixed Precision Search#
 
 ## Task 1: Mixed Integer Widths Search Analysis ##
 
@@ -130,14 +463,14 @@ trial.set_user_attr("frac_width_counts", frac_width_counts)
 
 <img src="./plots/mixed_linear_precision_(integer_widths)_summary.png" width="80%">
 
-Figure 2: Accuracy per trial for mixed integer widths (1 training epoch per trial)
+Figure 8: Accuracy per trial for mixed integer widths (1 training epoch per trial)
 
 
 <img src="./plots/mixed_linear_precision_cumulative_acc.png" width="80%">
 
-Figure 3: Maximum accuracy achieved for mixed integer widths (1 training epoch per trial)
+Figure 9: Maximum accuracy achieved for mixed integer widths (1 training epoch per trial)
 
-As illustrated in Figure 3, the search process identified a high-performing configuration almost immediately. Trial 1 achieved an initial accuracy of 87.52%, which quickly improved to 87.99% by Trial 3. Following this rapid early gain, the cumulative best performance entered a significant plateau for 80 iterations until Trial 83 yielded a marginal increase to `88.00%`.
+As illustrated in Figure 9, the search process identified a high-performing configuration almost immediately. Trial 1 achieved an initial accuracy of 87.52%, which quickly improved to 87.99% by Trial 3. Following this rapid early gain, the cumulative best performance entered a significant plateau for 80 iterations until Trial 83 yielded a marginal increase to `88.00%`.
 
 While this extended plateau was initially unexpected, it can likely be attributed to two key factors:
 
@@ -146,7 +479,7 @@ While this extended plateau was initially unexpected, it can likely be attribute
 - __Search Space:__ the search space appears to be characterized by a high density of near-optimal solutions rather than a sparse global maximum. This indicates that the objective function is relatively "flat", where diverse quantization configurations yield statistically insignificant differences in model performance.
 
 #### 50% Accuracy Drops: ####
-A notable phenomenon in Figure 2 is the presence of five specific iterations (Trials 6, 15, 27, 38, and 72) where performance regressed to exactly 50% accuracy. In the context of the binary IMDB sentiment task, this represents random guessing.
+A notable phenomenon in Figure 8 is the presence of five specific iterations (Trials 6, 15, 27, 38, and 72) where performance regressed to exactly 50% accuracy. In the context of the binary IMDB sentiment task, this represents random guessing.
 
 This behavior is likely a result of over-aggressive quantization on high-sensitivity layers. An analysis of the optimal configuration (in `section 5`) supports this hypothesis: the `attention.output.dense` layers and the `classification head` were consistently maintained in `full precision (FP32)`. This suggests these components are critical for maintaining numerical stability and information flow of the network's forward pass.
 
@@ -209,14 +542,14 @@ A crucial finding is the set of layers the search algorithm "chose" to keep in F
 
 <img src="./plots/fixed_precision_results_tpe_per_trial.png" width="80%">
 
-Figure 4:  Accuracy per trial for fixed integer widths (1 epoch per trial)
+Figure 10:  Accuracy per trial for fixed integer widths (1 epoch per trial)
 
 
 <img src="./plots/fixed_mixed_precision_comparison.png" width="80%">
 
-Figure 5: Max accuracy comparison between Fixed and Mixed Integer Widths (1 epoch per trial)
+Figure 11: Max accuracy comparison between Fixed and Mixed Integer Widths (1 epoch per trial)
 
-We compared the mixed-precision search against a simpler fixed-precision search (in `tutorial 6`). The mixed-precision approach yielded only a marginal improvement of +0.08% (88.00% vs 87.92%) despite operating over an exponentially larger search space. However, the stability between fixed (figure 4) and mixed (figure 2) precisions showed clear difference: while the fixed-precision search was robust with zero failures, the mixed-precision search was unstable, with several trials collapsing to random guessing (50%) when sensitive layers were aggressively quantized. This suggests that for BERT-tiny on IMDb, a well-chosen uniform precision (`8-bit`) captures nearly all the performance benefits without the optimization risk and complexity of per-layer search.
+We compared the mixed-precision search against a simpler fixed-precision search (in `tutorial 6`). The mixed-precision approach yielded only a marginal improvement of +0.08% (88.00% vs 87.92%) despite operating over an exponentially larger search space. However, the stability between fixed (figure 10) and mixed (figure 8) precisions showed clear difference: while the fixed-precision search was robust with zero failures, the mixed-precision search was unstable, with several trials collapsing to random guessing (50%) when sensitive layers were aggressively quantized. This suggests that for BERT-tiny on IMDb, a well-chosen uniform precision (`8-bit`) captures nearly all the performance benefits without the optimization risk and complexity of per-layer search.
 
 ## Task 2: Mixed Precision Analysis ##
 
@@ -358,11 +691,11 @@ def backward(ctx, grad_output): # Removed: width, exponent_width, etc.
 
 <img src="./plots/multi_precision_search_(mixed_layer_types)_summary.png" width="80%">
 
-Figure 6: Accuracy per trial for mixed precision search (1 training epoch per trial)
+Figure 12: Accuracy per trial for mixed precision search (1 training epoch per trial)
 
 <img src="./plots/multi_precision_tpe_cumulative_acc.png" width="80%">
 
-Figure 7: Maximum accuracy achieved for mixed precision search (1 training epoch per trial)
+Figure 13: Maximum accuracy achieved for mixed precision search (1 training epoch per trial)
 
 
 The progression shows a more turbulent search compared to Task 1. Trial 1 immediately failed (50.03%), likely due to aggressive mixed-precision assignment across all the new formats. The search recovered quickly, reaching 85.54% by Trial 2 and steady improvements through Trials 4 (87.53%), 6 (87.71%), 13 (87.75%), 14 (87.81%), 17 (87.84%), 42 (87.91%), until the best of 88.02% at Trial 53.
@@ -403,7 +736,7 @@ The best configuration used 7 different precision types:
 
 <img src="./plots/best_precision_distribution.png" width="80%">
 
-Figure 8: Precision distribution for the best performing model.
+Figure 14: Precision distribution for the best performing model.
 
 
 This is notably different from Task 1's best model, which used only LinearInteger for quantized layers. The diversity of formats suggests that different layers may indeed benefit from different quantization schemes. For instance, minifloat formats preserve dynamic range better for some layers, while block formats share exponents efficiently for others.
@@ -466,7 +799,7 @@ Most results follow a similar trend, albeit with different values. More results 
 
 <img src="./plots/adls_l4_p1_full.png" width="100%">
 
-Figure 1: Graphs from the experiments
+Figure 15: Graphs from the experiments
 
 **Some conclusions from our code runs:**
 
@@ -501,7 +834,7 @@ The exceptional CPU speedup stems from multiple compounding factors:
 
 <img src="./plots/adls_l4_p2_1.png" width="80%">
 
-Figure 2: PLOT (CPU): Shows divergence between naive (red) and fused (green) implementations as sequence length increases. Naive implementation exhibits near-quadratic scaling, reaching 6.7s at seq = 512, while fused kernel remains flat at ~0.1s across all lengths.
+Figure 16: PLOT (CPU): Shows divergence between naive (red) and fused (green) implementations as sequence length increases. Naive implementation exhibits near-quadratic scaling, reaching 6.7s at seq = 512, while fused kernel remains flat at ~0.1s across all lengths.
 
 **Part B: GPU Profiling - Naive vs Fused SDPA**
 
@@ -519,11 +852,11 @@ The GPU speedup is more representative of pure kernel fusion benefits:
 
 <img src="./plots/adls_l4_p2_2.png" width="80%">
 
-Figure 3: PLOT (GPU): Both implementations scale well, but naive (red) shows clear quadratic growth (0.0001s to 0.0038s), while fused (green) maintains nearly constant time (~0.0003s). The fused kernel's flat profile indicates successful memory optimisation. Hence, both CPU and GPU plots reveal that sequence length is the critical parameter for fusion effectiveness. The fused kernel's $O(1)$-like scaling versus naive's $O(n^2)$ scaling demonstrates why kernel fusion is essential for long-context attention mechanisms.
+Figure 17: PLOT (GPU): Both implementations scale well, but naive (red) shows clear quadratic growth (0.0001s to 0.0038s), while fused (green) maintains nearly constant time (~0.0003s). The fused kernel's flat profile indicates successful memory optimisation. Hence, both CPU and GPU plots reveal that sequence length is the critical parameter for fusion effectiveness. The fused kernel's $O(1)$-like scaling versus naive's $O(n^2)$ scaling demonstrates why kernel fusion is essential for long-context attention mechanisms.
 
 <img src="./plots/adls_l4_p2_3.png" width="80%">
 
-Figure 4: GPU Speedup Across All Configurations. This horizontal bar chart reveals sequence length as the dominant factor in fusion effectiveness. Speedup ranges from 2.41× (Dim = 128) to 12.23× (Seq = 512), with clear stratification. The red dashed line at 1.0× serves as baseline.
+Figure 18: GPU Speedup Across All Configurations. This horizontal bar chart reveals sequence length as the dominant factor in fusion effectiveness. Speedup ranges from 2.41× (Dim = 128) to 12.23× (Seq = 512), with clear stratification. The red dashed line at 1.0× serves as baseline.
 
 **Final conclusions:**
 When the device is set to CUDA, the same qualitative behaviour is observed, but with the performance benefits of kernel fusion becoming clearly visible.
@@ -577,7 +910,7 @@ Quantizing both activations and weights to MXINT8 enables custom hardware to ach
 <img src="./plots/adls_l4_p3_1.png" width="100%">
 <img src="./plots/adls_l4_p3_2.png" width="100%">
 
-Figure 5: Comparison of Memory, Hardware Units, Compute Density, Throughput, and Energy Efficiency between FP32 and MXINT8.
+Figure 19: Comparison of Memory, Hardware Units, Compute Density, Throughput, and Energy Efficiency between FP32 and MXINT8.
 
 ### 2. Purpose of `dont_need_abs` and `bias` in the C++ For Loop ###
 
@@ -742,7 +1075,7 @@ __Where:__ CUDA kernel in `src/csrc/mxint/dequantize.cu`
 <img src="./plots/quantization_summary.png" width="100%">
 <img src="./plots/quantization_results.png" width="100%">
 
-Figure 6: Memory usage and inference comparison between FP32 and MXINT8 DeBERTa.
+Figure 20: Memory usage and inference comparison between FP32 and MXINT8 DeBERTa.
 
 #### Why Not 74.2%? ####
 

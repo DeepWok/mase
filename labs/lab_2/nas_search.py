@@ -378,7 +378,7 @@ def get_sampler(sampler_type: str):
         return TPESampler(seed=SEED+1), "tpe"
 
     elif sampler_type == "grid":
-        # Fix B: grid over REAL values
+
         grid_search_space = {
             "num_layers": search_space["num_layers"],
             "num_heads": search_space["num_heads"],
