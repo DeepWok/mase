@@ -907,7 +907,7 @@ Quantizing both activations and weights to MXINT8 enables custom hardware to ach
     * Overall: 49.6x faster execution
     * **Impact:** Near real-time inference for complex models
 
-<img src="./plots/adls_l4_p3_1.png" width="100%">
+<img src="./plots/lab4_task1_corrected.png" width="100%">
 <img src="./plots/adls_l4_p3_2.png" width="100%">
 
 Figure 19: Comparison of Memory, Hardware Units, Compute Density, Throughput, and Energy Efficiency between FP32 and MXINT8.
@@ -1034,7 +1034,7 @@ __Summary:__ `layout_sX` partitions the threads by serving as a __coordinate map
 
 ### 4. GPU Memory Savings Analysis ###
 
-**Question d: Why the saved GPU memory is not exactly (32 - (8+8/32))/32 = 74.2% of the FP32 model?**
+**Question d: Why the saved GPU memory is not exactly (32 - (4+8/32))/32 = 86.7% of the FP32 model?**
 
 This activity demonstrates __model quantization__ — converting a neural network from high-precision (FP32) to low-precision (MXINT8) to:
 
@@ -1072,20 +1072,32 @@ __This is fast__ (our custom CUDA kernel):
 
 __Where:__ CUDA kernel in `src/csrc/mxint/dequantize.cu`
 
-<img src="./plots/quantization_summary.png" width="100%">
+| Metric              | FP32       | MXINT8     | Improvement            |
+|---------------------|------------|------------|------------------------|
+| Memory Usage        | 2906.20 MB | 976.16 MB  | 66.4% smaller          |
+| Compression Ratio   | 1.0x       | 2.98x      | 2.98x                  |
+| Prediction          | joy        | joy        | Same                   |
+| Joy Score           | 7.345      | 7.350      | 0.005 diff             |
+| Max Error           | -          | 0.57%      | < 1%                   |
+| Theoretical Savings | -          | -          | 86.7%                  |
+| Actual Savings      | -          | -          | 66.4%                  |
+| Gap Reason          | -          | -          | Selective quantization |
+
+Above is a table comparing results between FP32 and MXINT8.
+
 <img src="./plots/quantization_results.png" width="100%">
 
 Figure 20: Memory usage and inference comparison between FP32 and MXINT8 DeBERTa.
 
-#### Why Not 74.2%? ####
+#### Why Not 86.7%? ####
 
-The formula $(32 - (8 + 8/32))/32 = 74.2\%$ means:
+The formula $(32 - (4 + 8/32))/32 = 86.7\%$ means:
 
 - __32__ = FP32 uses 32 bits per number
-- __8__ = INT8 uses 8 bits per number
+- __4__ = INT8 uses 4 bits per number
 - $8/32 = 0.25$ = Scale factor overhead (8 bits shared across 32 values)
 - Total: $8 + 0.25 = 8.25$ bits per MXINT8 value
-- Theoretical savings: $(32 - 8.25) / 32 = 74.2\%$
+- Theoretical savings: $(32 - 8.25) / 32 = 86.7\%$
 
 This assumes every layer and all weights, activations, etc. get quantized. But, the actual saving is only __66.4%__ because only ~80% of the model (Linear layer weights) gets quantized.
 
