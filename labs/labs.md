@@ -27,7 +27,7 @@ We utilized the MaseGraph to apply the pass transform. For the QAT phase, we re-
 
 ### 3. Results ###
 
-![Plot](./plots/ptq_vs_qat_comparison.png)
+<img src="./plots/ptq_vs_qat_comparison.png" width="80%">
 Figure 1: Accuracy comparison between PTQ and QAT across different fixed-point widths.
 
 
@@ -51,18 +51,13 @@ Figure 1: Accuracy comparison between PTQ and QAT across different fixed-point w
 
 # Lab 3: #
 
-
-## Tutorial Result: Fixed Precision Search Analysis ##
-
-
-
 ## Task 1: Mixed Integer Widths Search Analysis ##
 
 ### 1. Experiment Overview ###
 
 - For this task, we conducted a `100 trials (1 epoch training)` mixed-precision NAS search on the BERT model for IMDB classification using the Optuna's TPE sampler, which exhibited the best performance in Lab 2 (NAS Search). 
 
-- Each of the 23 linear layers could independently be assigned full precision (FP32) or integer quantization with configurable bit-widths `[8, 16, 32]` and fractional widths `[2, 4, 8]`.
+- Each of the 23 linear layers could independently be assigned full precision (FP32) or integer quantization with configurable bit-widths `[8, 16, 32]` and fractional widths `[2, 4, 8]`. We have also included a comparison between fixed integer widths for all layers from `tutorial 6` and the mixed widths search of this task.
 
 - We initialised the search using the best model from Lab 2 (`tutorial_5_best_model.pkl`) achieved by the `TPE Sampler`.
 
@@ -110,8 +105,14 @@ trial.set_user_attr("frac_width_counts", frac_width_counts)
 
 ### 3. Accuracy Progression Analysis ###
 
-![Plot](./plots/mixed_linear_precision_(integer_widths)_summary.png)
-Figure 1: Accuracy per trial & cumulative max accuracy for mixed integer widths (1 training epoch per trial)
+<img src="./plots/mixed_linear_precision_(integer_widths)_summary.png" width="80%">
+
+Figure 2: Accuracy per trial for mixed integer widths (1 training epoch per trial)
+
+
+<img src="./plots/mixed_linear_precision_cumulative_acc.png" width="80%">
+
+Figure 3: Maximum accuracy achieved for mixed integer widths (1 training epoch per trial)
 
 As illustrated in Figure 1, the search process identified a high-performing configuration almost immediately. Trial 1 achieved an initial accuracy of 87.52%, which quickly improved to 87.99% by Trial 3. Following this rapid early gain, the cumulative best performance entered a significant plateau for 80 iterations until Trial 83 yielded a marginal increase to `88.00%`.
 
@@ -179,6 +180,20 @@ A crucial finding is the set of layers the search algorithm "chose" to keep in F
 | Output Dense             |     2 | layer.1, layer.3                                     |
 | Attention Projections    |     6 | layer.0 (Q, V), layer.1 (Q), layer.2 (K, V)          |
 
+
+### 4. Comparison between Fixed Widths (Tutorial 6) and Mixed Integer Widths (Task 1): ###
+
+
+<img src="./plots/fixed_precision_results_tpe_per_trial.png" width="80%">
+
+Figure 4:  Accuracy per trial for fixed integer widths (1 epoch per trial)
+
+
+<img src="./plots/fixed_mixed_precision_comparison.png" width="80%">
+
+Figure 5: Max accuracy comparison between Fixed and Mixed Integer Widths (1 epoch per trial)
+
+We compared the mixed-precision search against a simpler fixed-precision search (in `tutorial 6`). The mixed-precision approach yielded only a marginal improvement of +0.08% (88.00% vs 87.92%) despite operating over an exponentially larger search space. However, the stability between fixed (figure 4) and mixed (figure 2) precisions showed clear difference: while the fixed-precision search was robust with zero failures, the mixed-precision search was unstable, with several trials collapsing to random guessing (50%) when sensitive layers were aggressively quantized. This suggests that for BERT-tiny on IMDb, a well-chosen uniform precision (`8-bit`) captures nearly all the performance benefits without the optimization risk and complexity of per-layer search.
 
 ## Task 2: Mixed Precision Analysis ##
 
@@ -317,8 +332,15 @@ def backward(ctx, grad_output): # Removed: width, exponent_width, etc.
 ```
 ### 3. Accuracy Progression Analysis ###
 
-![Plot](./plots/multi_precision_search_(mixed_layer_types)_summary.png)
-Figure 2: Accuracy per trial & cumulative max accuracy for mixed precision search (1 training epoch per trial)
+
+<img src="./plots/multi_precision_search_(mixed_layer_types)_summary.png" width="80%">
+
+Figure 6: Accuracy per trial for mixed precision search (1 training epoch per trial)
+
+<img src="./plots/multi_precision_tpe_cumulative_acc.png" width="80%">
+
+Figure 7: Maximum accuracy achieved for mixed precision search (1 training epoch per trial)
+
 
 The progression shows a more turbulent search compared to Task 1. Trial 1 immediately failed (50.03%), likely due to aggressive mixed-precision assignment across all the new formats. The search recovered quickly, reaching 85.54% by Trial 2 and steady improvements through Trials 4 (87.53%), 6 (87.71%), 13 (87.75%), 14 (87.81%), 17 (87.84%), 42 (87.91%), until the best of 88.02% at Trial 53.
 
@@ -356,17 +378,18 @@ The winning configuration used 7 different precision types:
 | LinearLog            | 1      | 4.3%       |
 | **Total**            | **23** | **100%**   |
 
+<img src="./plots/best_precision_distribution.png" width="80%">
 
-![Plot](./plots/best_precision_distribution.png)
-Figure 3: Precision distribution for the best performing model.
+Figure 8: Precision distribution for the best performing model.
 
 
 This is notably different from Task 1's best model, which used only LinearInteger for quantized layers. The diversity of formats suggests that different layers may indeed benefit from different quantization schemes—minifloat formats preserve dynamic range better for some layers, while block formats share exponents efficiently for others.
 
 ### 6. Precision Performance Analysis ###
 
-![Plot](./plots/multi_precision_tpe_precision_scatter.png)
-Figure 4  Accuracy curves grouped by dominant precision type in each trial.
+<img src="./plots/multi_precision_tpe_precision_scatter.png" width="80%">
+
+Figure 9: Accuracy curves grouped by dominant precision type in each trial.
 
 1. __High-Performance Cluster (Stable):__ Trials dominated by Block Floating Point (`LinearBlockFP`) and IEEE Minifloats (`LinearMinifloatIEEE`) consistently clustered in the top accuracy band ($>87.8\%$). Their structural similarity to FP32 allows pre-trained weights to map with minimal distortion, ensuring reliable convergence even with limited 1-epoch fine-tuning.
 
