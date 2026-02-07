@@ -36,7 +36,7 @@ def simulate(
     skip_test: bool = False,
     trace_depth: int = 3,
     gui: bool = False,
-    waves: bool = False,
+    waves: bool = True,
     simulator: str = "verilator",
     build_jobs: int = 1,
     unroll_count: int = 1024,
@@ -89,6 +89,7 @@ def simulate(
             hdl_toplevel="top",
             build_args=build_args,
             parameters=[],  # use default parameters,
+            waves=waves,
         )
 
         build_end = time.time()

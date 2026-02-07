@@ -89,7 +89,8 @@ class BinaryBipolarScaled(InplaceFunction):
     @staticmethod
     def alpha(tensor):  # determine batch means
         absvalue = tensor.abs()
-        alpha = absvalue.mean(dim=(1, 2, 3), keepdims=True)
+        dims = tuple(range(1, tensor.ndim))
+        alpha = absvalue.mean(dim=dims, keepdims=True)
         return alpha.view(-1, 1)
 
     @staticmethod
@@ -100,9 +101,9 @@ class BinaryBipolarScaled(InplaceFunction):
         pos_one = torch.where(input > 0, 1.0, 0.0)
         neg_one = pos_one - 1
         out = torch.add(pos_one, neg_one)
-        output = out * alpha.view(-1, 1, 1, 1).expand(
-            -1, input.size()[1], input.size()[2], input.size()[3]
-        )
+        shape = [1] * input.ndim
+        shape[0] = -1
+        output = out * alpha.view(shape).expand_as(input)
 
         return output
 
@@ -155,7 +156,8 @@ class BinaryZeroScaled(InplaceFunction):
     @staticmethod
     def alpha(tensor):  # determine batch means
         absvalue = tensor.abs()
-        alpha = absvalue.mean(dim=(1, 2, 3), keepdims=True)
+        dims = tuple(range(1, tensor.ndim))
+        alpha = absvalue.mean(dim=dims, keepdims=True)
         return alpha.view(-1, 1)
 
     @staticmethod
@@ -163,9 +165,9 @@ class BinaryZeroScaled(InplaceFunction):
         alpha = BinaryZeroScaled.alpha(input)
 
         pos_one = torch.where(input > 0, 1.0, 0.0)
-        output = pos_one * alpha.view(-1, 1, 1, 1).expand(
-            -1, input.size()[1], input.size()[2], input.size()[3]
-        )
+        shape = [1] * input.ndim
+        shape[0] = -1
+        output = pos_one * alpha.view(shape).expand_as(input)
         return output
 
     @staticmethod

@@ -81,15 +81,7 @@ class BlockMinifloatQuantize(torch.autograd.Function):
         )
 
     @staticmethod
-    def backward(
-        ctx,
-        grad_output: Tensor,
-        width: int,
-        exponent_width: int,
-        exponent_bias_width: int,
-        block_size: list[int] | int = [16],
-        skip_first_dim: bool = False,
-    ):
+    def backward(ctx, grad_output: Tensor):
         return grad_output, None, None, None, None, None
 
 
