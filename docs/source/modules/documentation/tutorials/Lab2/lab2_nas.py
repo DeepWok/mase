@@ -491,88 +491,223 @@ def run_compression_aware_search(
     output_dir: Path = Path(".")
 ) -> Dict[str, List[float]]:
     """
-    Task 2: Run compression-aware NAS with and without post-compression training.
+    Task 2: Run compression-aware NAS comparing with/without post-compression training.
+    
+    METHODOLOGY: For fair comparison, we evaluate BOTH compression variants on the
+    SAME architectures. We first run NAS to sample architectures, then for each
+    sampled architecture, we evaluate:
+    1. Compression WITHOUT post-training
+    2. Compression WITH post-training
+    
+    This ensures we're comparing apples-to-apples.
     
     Args:
         dataset: Tokenized dataset
         tokenizer: Tokenizer instance
-        n_trials: Number of trials
+        n_trials: Number of architecture trials
         num_epochs_pre: Training epochs before compression
         num_epochs_post: Training epochs after compression
         best_baseline_accuracy: Best accuracy from Task 1 (for baseline curve)
         output_dir: Directory for saving results
         
     Returns:
-        Dictionary with curves for each variant
+        Dictionary with accuracy curves for each variant
     """
     logger.info("=" * 60)
-    logger.info("TASK 2: Compression-Aware NAS")
+    logger.info("TASK 2: Compression-Aware NAS (Fair Comparison)")
     logger.info("=" * 60)
+    logger.info("Each architecture will be evaluated with BOTH compression variants")
     
     full_search_space = copy.deepcopy(SEARCH_SPACE)
-    results = {}
     
-    # Use TPE sampler (typically best from Task 1)
-    sampler = TPESampler()
+    # Track accuracies for each variant
+    accuracies_no_post = []
+    accuracies_with_post = []
     
-    # Variant 1: Without post-compression training
+    # Compression setup
+    pipe = CompressionPipeline()
+    compression_config = {
+        "quantize_transform_pass": QUANTIZATION_CONFIG,
+        "prune_transform_pass": PRUNING_CONFIG,
+    }
+    
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    
+    for trial_idx in range(n_trials):
+        print(f"\n{'=' * 60}")
+        print(f"TRIAL {trial_idx + 1}/{n_trials}: Testing SAME architecture with both variants")
+        print("=" * 60)
+        
+        # Sample architecture hyperparameters ONCE (will be used for both variants)
+        arch_params = {}
+        for param in ["num_layers", "num_heads", "hidden_size", "intermediate_size"]:
+            arch_params[param] = np.random.choice(full_search_space[param])
+        
+        print(f"  Sampled architecture: {arch_params}")
+        
+        # Also sample linear layer choices
+        linear_choices = {}
+        config = AutoConfig.from_pretrained(CHECKPOINT)
+        for param, value in arch_params.items():
+            setattr(config, param, value)
+        temp_model = AutoModelForSequenceClassification.from_config(config)
+        for name, layer in temp_model.named_modules():
+            if isinstance(layer, nn.Linear) and layer.in_features == layer.out_features:
+                linear_choices[name] = np.random.choice(full_search_space["linear_layer_choices"])
+        del temp_model
+        
+        # Helper to build model with fixed architecture
+        def build_model_with_arch():
+            config = AutoConfig.from_pretrained(CHECKPOINT)
+            for param, value in arch_params.items():
+                setattr(config, param, value)
+            model = AutoModelForSequenceClassification.from_config(config)
+            
+            # Apply linear layer choices
+            identity_count = 0
+            for name, choice in linear_choices.items():
+                if choice == Identity:
+                    deepsetattr(model, name, Identity())
+                    identity_count += 1
+            
+            return model, identity_count
+        
+        # ============================================================
+        # VARIANT 1: Compression WITHOUT post-training
+        # ============================================================
+        print(f"\n  [Variant 1] Compression WITHOUT post-training")
+        
+        model_v1, identity_count = build_model_with_arch()
+        print(f"    Built model: {count_parameters(model_v1):,} params, {identity_count} Identity layers")
+        
+        # Pre-compression training
+        print(f"    Phase 1: Pre-compression training ({num_epochs_pre} epochs)...")
+        trainer_v1 = get_trainer(
+            model=model_v1,
+            tokenized_dataset=dataset,
+            tokenizer=tokenizer,
+            evaluate_metric="accuracy",
+            num_train_epochs=num_epochs_pre,
+        )
+        trainer_v1.train()
+        
+        # Apply compression
+        print(f"    Phase 2: Applying compression...")
+        model_v1.cpu()
+        try:
+            mg = MaseGraph(model_v1)
+            mg, _ = pipe(mg, copy.deepcopy(compression_config))
+        except Exception as e:
+            print(f"    [FAIL] Compression failed: {e}")
+            accuracies_no_post.append(0.0)
+            accuracies_with_post.append(0.0)
+            continue
+        
+        # Evaluate (no post-training)
+        if torch.cuda.is_available():
+            model_v1.cuda()
+        eval_trainer = get_trainer(
+            model=model_v1,
+            tokenized_dataset=dataset,
+            tokenizer=tokenizer,
+            evaluate_metric="accuracy",
+            num_train_epochs=0,
+        )
+        eval_results_v1 = eval_trainer.evaluate()
+        acc_no_post = eval_results_v1["eval_accuracy"]
+        print(f"    [OK] Accuracy (no post-training): {acc_no_post:.4f}")
+        accuracies_no_post.append(acc_no_post)
+        
+        # Clean up
+        del model_v1, trainer_v1, eval_trainer
+        torch.cuda.empty_cache() if torch.cuda.is_available() else None
+        
+        # ============================================================
+        # VARIANT 2: Compression WITH post-training (SAME architecture!)
+        # ============================================================
+        print(f"\n  [Variant 2] Compression WITH post-training")
+        
+        model_v2, _ = build_model_with_arch()
+        print(f"    Built model: {count_parameters(model_v2):,} params (same architecture)")
+        
+        # Pre-compression training (same as V1)
+        print(f"    Phase 1: Pre-compression training ({num_epochs_pre} epochs)...")
+        trainer_v2 = get_trainer(
+            model=model_v2,
+            tokenized_dataset=dataset,
+            tokenizer=tokenizer,
+            evaluate_metric="accuracy",
+            num_train_epochs=num_epochs_pre,
+        )
+        trainer_v2.train()
+        
+        # Apply compression
+        print(f"    Phase 2: Applying compression...")
+        model_v2.cpu()
+        try:
+            mg = MaseGraph(model_v2)
+            mg, _ = pipe(mg, copy.deepcopy(compression_config))
+        except Exception as e:
+            print(f"    [FAIL] Compression failed: {e}")
+            accuracies_with_post.append(0.0)
+            continue
+        
+        # Post-compression training (this is the difference!)
+        print(f"    Phase 3: Post-compression training ({num_epochs_post} epochs)...")
+        if torch.cuda.is_available():
+            model_v2.cuda()
+        trainer_post = get_trainer(
+            model=model_v2,
+            tokenized_dataset=dataset,
+            tokenizer=tokenizer,
+            evaluate_metric="accuracy",
+            num_train_epochs=num_epochs_post,
+        )
+        trainer_post.train()
+        
+        # Evaluate
+        eval_trainer = get_trainer(
+            model=model_v2,
+            tokenized_dataset=dataset,
+            tokenizer=tokenizer,
+            evaluate_metric="accuracy",
+            num_train_epochs=0,
+        )
+        eval_results_v2 = eval_trainer.evaluate()
+        acc_with_post = eval_results_v2["eval_accuracy"]
+        print(f"    [OK] Accuracy (with post-training): {acc_with_post:.4f}")
+        accuracies_with_post.append(acc_with_post)
+        
+        # Clean up
+        del model_v2, trainer_v2, trainer_post, eval_trainer
+        torch.cuda.empty_cache() if torch.cuda.is_available() else None
+        
+        # Progress summary
+        print(f"\n  Trial {trial_idx + 1} Summary:")
+        print(f"    No post-training:   {acc_no_post:.4f}")
+        print(f"    With post-training: {acc_with_post:.4f}")
+        print(f"    Improvement:        {acc_with_post - acc_no_post:+.4f}")
+    
+    # Compute max accuracy curves
+    def compute_max_curve(accuracies):
+        max_curve = []
+        current_max = 0.0
+        for acc in accuracies:
+            current_max = max(current_max, acc)
+            max_curve.append(current_max)
+        return max_curve
+    
+    results = {
+        "Compression (no post-training)": compute_max_curve(accuracies_no_post),
+        "Compression (with post-training)": compute_max_curve(accuracies_with_post),
+        "Baseline (no compression)": [best_baseline_accuracy] * n_trials,
+    }
+    
     logger.info(f"\n{'=' * 40}")
-    logger.info("Running compression-aware search WITHOUT post-training")
+    logger.info("TASK 2 COMPLETE - Summary")
     logger.info(f"{'=' * 40}")
-    
-    objective_no_post = create_compression_objective(
-        dataset, tokenizer, full_search_space,
-        num_epochs_pre=num_epochs_pre,
-        num_epochs_post=0,
-        with_post_training=False
-    )
-    
-    study_no_post = optuna.create_study(
-        direction="maximize",
-        study_name="bert-nas-compression-no-post",
-        sampler=TPESampler(),
-    )
-    
-    study_no_post.optimize(
-        objective_no_post,
-        n_trials=n_trials,
-        timeout=60 * 60 * 24,
-        show_progress_bar=True,
-    )
-    
-    results["Compression (no post-training)"] = compute_max_accuracy_curve(study_no_post)
-    logger.info(f"Without post-training: Best accuracy = {study_no_post.best_value:.4f}")
-    
-    # Variant 2: With post-compression training
-    logger.info(f"\n{'=' * 40}")
-    logger.info("Running compression-aware search WITH post-training")
-    logger.info(f"{'=' * 40}")
-    
-    objective_with_post = create_compression_objective(
-        dataset, tokenizer, full_search_space,
-        num_epochs_pre=num_epochs_pre,
-        num_epochs_post=num_epochs_post,
-        with_post_training=True
-    )
-    
-    study_with_post = optuna.create_study(
-        direction="maximize",
-        study_name="bert-nas-compression-with-post",
-        sampler=TPESampler(),
-    )
-    
-    study_with_post.optimize(
-        objective_with_post,
-        n_trials=n_trials,
-        timeout=60 * 60 * 24,
-        show_progress_bar=True,
-    )
-    
-    results["Compression (with post-training)"] = compute_max_accuracy_curve(study_with_post)
-    logger.info(f"With post-training: Best accuracy = {study_with_post.best_value:.4f}")
-    
-    # Add baseline curve (constant at best Task 1 accuracy)
-    results["Baseline (no compression)"] = [best_baseline_accuracy] * n_trials
+    logger.info(f"Without post-training: Best = {max(accuracies_no_post):.4f}")
+    logger.info(f"With post-training:    Best = {max(accuracies_with_post):.4f}")
     
     return results
 
