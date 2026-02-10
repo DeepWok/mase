@@ -90,11 +90,6 @@ test-all: test-sw
 
 build:
 	bash scripts/build-llvm.sh || exit 1
-	bash scripts/build-mase-hls.sh || exit 1
-
-build-aie:
-	bash scripts/build-aie.sh || exit 1
-	bash scripts/build-air.sh || exit 1
 
 clean:
 	rm -rf llvm
