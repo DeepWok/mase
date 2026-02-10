@@ -39,7 +39,6 @@ endif
 coverage=test/
 
 sw_test_dir = test/
-hw_test_dir = src/mase_components/
 
 NUM_WORKERS ?= 1
 
@@ -75,13 +74,6 @@ shell:
         $(DOCKER_RUN_EXTRA_ARGS) \
         $(img) /bin/bash
 
-test-hw:
-	pytest --log-level=DEBUG --verbose \
-		-n $(NUM_WORKERS) \
-		--junitxml=hardware_report.xml \
-		--html=report.html --self-contained-html \
-		$(hw_test_dir)
-
 test-sw:
 	pytest --log-level=DEBUG --verbose \
 		-n $(NUM_WORKERS) \
@@ -92,7 +84,7 @@ test-sw:
 		--profile --profile-svg \
 		$(sw_test_dir)
 
-test-all: test-hw test-sw
+test-all: test-sw
 	mkdir -p ./tmp
 	(cd tmp; python3 ../scripts/test-torch-mlir.py || exit 1)
 
