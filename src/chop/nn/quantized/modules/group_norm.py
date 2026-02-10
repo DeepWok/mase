@@ -12,7 +12,7 @@ from chop.nn.quantizers import (
 )
 
 
-from mase_components.scalar_operators.fixed.test.isqrt_sw import isqrt_sw2
+from ._isqrt_sw import isqrt_sw2
 
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.DEBUG)

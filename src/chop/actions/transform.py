@@ -410,15 +410,13 @@ def transform_graph(
             case "report_node_type":
                 graph, _ = PASSES[pass_name](graph, pass_args=None)
             case "report_node_meta_param":
-                # {"save_path": ..., "which": "all"|["common", "hardware", "software"]}
+                # {"save_path": ..., "which": "all"|["common", "software"]}
                 pass_save_path = pass_config.get("save_path", save_dir / "report")
                 pass_config["save_path"] = pass_save_path
                 graph, _ = PASSES[pass_name](graph, pass_args=pass_config)
             case "report_node_shape":
                 graph, _ = PASSES[pass_name](graph, pass_args=None)
             case "report_node_type":
-                graph, _ = PASSES[pass_name](graph, pass_args=None)
-            case "report_node_hardware_type":
                 graph, _ = PASSES[pass_name](graph, pass_args=None)
             case "report_node_shape":
                 graph, _ = PASSES[pass_name](graph, pass_args=None)

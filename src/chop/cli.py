@@ -50,7 +50,7 @@ from tabulate import tabulate
 import torch
 
 from . import models
-from .actions import test, train, transform, search, emit, simulate
+from .actions import test, train, transform, search
 from .dataset import MaseDataModule, AVAILABLE_DATASETS, get_dataset_info
 from .tools import post_parse_load_config, load_config
 
@@ -97,7 +97,7 @@ LOGO = f"""
         https://github.com/DeepWok/mase/wiki
 """
 TASKS = ["classification", "cls", "translation", "tran", "language_modeling", "lm"]
-ACTIONS = ["train", "test", "transform", "search", "emit", "simulate"]
+ACTIONS = ["train", "test", "transform", "search"]
 INFO_TYPE = ["all", "model", "dataset"]
 LOAD_TYPE = [
     "pt",  # PyTorch module state dictionary
@@ -159,9 +159,6 @@ CLI_DEFAULTS = {
     "is_to_auto_requeue": False,
     "github_ci": False,
     "disable_dataset_cache": False,
-    # Hardware generation options
-    "target": "xcu250-figd2104-2L-e",
-    "num_targets": 100,
     # Language model options
     "is_pretrained": False,
     "max_token_len": 512,
@@ -238,7 +235,7 @@ class ChopCLI:
             self.dataset_info,
             self.model_info,
         ) = self._setup_model_and_dataset()
-        self.output_dir, self.output_dir_sw, self.output_dir_hw = self._setup_folders()
+        self.output_dir, self.output_dir_sw = self._setup_folders()
         self.visualizer = self._setup_visualizer()
 
         if self.args.no_warnings:
@@ -256,10 +253,6 @@ class ChopCLI:
                 run_action_fn = self._run_test
             case "search":
                 run_action_fn = self._run_search
-            case "emit":
-                run_action_fn = self._run_emit
-            case "simulate":
-                run_action_fn = self._run_simulate
 
         if run_action_fn is None:
             raise ValueError(f"Unsupported action: {self.args.action}")
@@ -409,49 +402,6 @@ class ChopCLI:
 
         search(**search_params)
         self.logger.info("Searching is completed")
-
-    def _run_emit(self):
-        load_name = None
-        load_types = ["mz"]
-        if self.args.load_name is not None and self.args.load_type in load_types:
-            load_name = self.args.load_name
-
-        emit_params = {
-            "model": self.model,
-            "model_info": self.model_info,
-            "task": self.args.task,
-            "dataset_info": self.dataset_info,
-            "data_module": self.data_module,
-            "load_name": load_name,
-            "load_type": self.args.load_type,
-        }
-
-        emit(**emit_params)
-        self.logger.info("Verilog emit is completed")
-
-    def _run_simulate(self):
-        load_name = None
-        load_types = ["mz"]
-        if self.args.load_name is not None and self.args.load_type in load_types:
-            load_name = self.args.load_name
-
-        emit_params = {
-            "model": self.model,
-            "model_info": self.model_info,
-            "task": self.args.task,
-            "dataset_info": self.dataset_info,
-            "data_module": self.data_module,
-            "load_name": load_name,
-            "load_type": self.args.load_type,
-        }
-
-        simulate_params = {
-            "run_emit": self.args.run_emit,
-            "skip_build": self.args.skip_build,
-            "skip_test": self.args.skip_test,
-        }
-        simulate(**emit_params, **simulate_params)
-        self.logger.info("Verilog simulation is completed")
 
     # Helpers --------------------------------------------------------------------------
     def _setup_parser(self):
@@ -718,9 +668,8 @@ class ChopCLI:
             action="store_true",
             dest="github_ci",
             help="""
-                set the execution environment to GitHub's CI pipeline; it's used in the
-                MASE verilog emitter transform pass to skip simulations.
-                (default: %(default)s)
+                set the execution environment to GitHub's CI pipeline.
+                (default: %(default)s).
                 """,
         )
         runtime_group.add_argument(
@@ -730,40 +679,6 @@ class ChopCLI:
             help="""
                 disable caching of datasets. (default: %(default)s)
             """,
-        )
-
-        # Hardware generation options --------------------------------------------------
-        hardware_group = parser.add_argument_group("hardware generation options")
-        hardware_group.add_argument(
-            "--target",
-            dest="target",
-            help="target FPGA for hardware synthesis. (default: %(default)s)",
-            metavar="STR",
-        )
-        hardware_group.add_argument(
-            "--num-targets",
-            dest="num_targets",
-            type=int,
-            help="number of FPGA devices. (default: %(default)s)",
-            metavar="NUM",
-        )
-        hardware_group.add_argument(
-            "--run-emit",
-            dest="run_emit",
-            action="store_true",
-            help="",
-        )
-        hardware_group.add_argument(
-            "--skip-build",
-            dest="skip_build",
-            action="store_true",
-            help="",
-        )
-        hardware_group.add_argument(
-            "--skip-test",
-            dest="skip_test",
-            action="store_true",
-            help="",
         )
 
         # Language model options -------------------------------------------------------
@@ -903,13 +818,11 @@ class ChopCLI:
 
         output_dir = Path(self.args.project_dir) / project
         output_dir_sw = Path(output_dir) / "software"
-        output_dir_hw = Path(output_dir) / "hardware"
-        output_dir_hw.mkdir(parents=True, exist_ok=True)
         output_dir_sw.mkdir(parents=True, exist_ok=True)
 
         self.logger.info(f"Project will be created at {output_dir}")
 
-        return output_dir, output_dir_sw, output_dir_hw
+        return output_dir, output_dir_sw
 
     def _excepthook(self, etype, evalue, etb):
         from IPython.core import ultratb

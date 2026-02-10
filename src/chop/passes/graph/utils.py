@@ -149,15 +149,6 @@ def init_project(project_dir):
     Path(project_dir).mkdir(parents=True, exist_ok=True)
     Path(os.path.join(project_dir, "software")).mkdir(parents=True, exist_ok=True)
 
-    hardware_dir = Path(os.path.join(project_dir, "hardware"))
-    Path(hardware_dir).mkdir(parents=True, exist_ok=True)
-    Path(hardware_dir / "rtl").mkdir(parents=True, exist_ok=True)
-    Path(hardware_dir / "sim").mkdir(parents=True, exist_ok=True)
-    Path(hardware_dir / "test").mkdir(parents=True, exist_ok=True)
-    Path(hardware_dir / "test" / "mase_top_tb").mkdir(parents=True, exist_ok=True)
-    Path(hardware_dir / "test").mkdir(parents=True, exist_ok=True)
-    Path(hardware_dir / "hls").mkdir(parents=True, exist_ok=True)
-
 
 def sign_extend(value: int, bits: int):
     sign_bit = 1 << (bits - 1)
