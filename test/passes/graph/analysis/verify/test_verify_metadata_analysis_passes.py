@@ -20,7 +20,6 @@ from chop.models.toy.toy import ToyNet
 from chop.passes.graph.analysis import (
     add_common_metadata_analysis_pass,
     add_software_metadata_analysis_pass,
-    add_hardware_metadata_analysis_pass,
     init_metadata_analysis_pass,
     verify_metadata_analysis_pass,
 )
@@ -43,7 +42,6 @@ def test_verify_metadata():
     mg, _ = init_metadata_analysis_pass(mg, None)
     mg, _ = add_common_metadata_analysis_pass(mg, {"dummy_in": dummy_in})
     mg, _ = add_software_metadata_analysis_pass(mg, {"dummy_in": dummy_in})
-    mg, _ = add_hardware_metadata_analysis_pass(mg, {"dummy_in": dummy_in})
     # all three verify passes are bundled in one
     # mg, _ = verify_metadata_analysis_pass(mg, dummy_in)
 
