@@ -145,4 +145,3 @@ def is_seq_blocks_parameter(s):
 
     # If there's a match, return True; otherwise, return False
     return bool(match)
-

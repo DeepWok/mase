@@ -428,7 +428,7 @@ class MaseGraph:
     ):
         """
         Export the MaseGraph to a pair of files: {fname}.pt and {fname}.mz.
-        {fname}.pt contains the complete GraphModule (structure + weights), 
+        {fname}.pt contains the complete GraphModule (structure + weights),
         and {fname}.mz contains the MaseMetadata.
 
         Args:
