@@ -190,9 +190,7 @@ class SearchStrategyOptuna(SearchStrategyBase):
         df.to_json(save_path, orient="index", indent=4)
 
         txt = "Best trial(s):\n"
-        df_truncated = df.loc[
-            :, ["number", "software_metrics", "scaled_metrics"]
-        ]
+        df_truncated = df.loc[:, ["number", "software_metrics", "scaled_metrics"]]
 
         def beautify_metric(metric: dict):
             beautified = {}
@@ -208,13 +206,9 @@ class SearchStrategyOptuna(SearchStrategyBase):
                     beautified[k] = txt
             return beautified
 
-        df_truncated.loc[
+        df_truncated.loc[:, ["software_metrics", "scaled_metrics"]] = df_truncated.loc[
             :, ["software_metrics", "scaled_metrics"]
-        ] = df_truncated.loc[
-            :, ["software_metrics", "scaled_metrics"]
-        ].map(
-            beautify_metric
-        )
+        ].map(beautify_metric)
         txt += tabulate(
             df_truncated,
             headers="keys",

@@ -20,9 +20,7 @@ from chop.passes.graph import (
 # Base mixed precision environment class
 class BaseMixedPrecisionEnv(gym.Env, ABC):
     @abstractmethod
-    def __init__(
-        self, config, search_space, sw_runner, data_module, episode_max_len
-    ):
+    def __init__(self, config, search_space, sw_runner, data_module, episode_max_len):
         pass
 
     @abstractmethod
@@ -49,11 +47,10 @@ class BaseMixedPrecisionEnv(gym.Env, ABC):
                 metrics |= runner(self.data_module, model, sampled_config)
         return metrics
 
+
 # Mixed precision environment class
 class MixedPrecisionEnv(BaseMixedPrecisionEnv):
-    def __init__(
-        self, config, search_space, sw_runner, data_module, episode_max_len
-    ):
+    def __init__(self, config, search_space, sw_runner, data_module, episode_max_len):
         if search_space is None:
             raise ValueError("search_space cannot be None")
 
@@ -180,9 +177,7 @@ class MixedPrecisionEnv(BaseMixedPrecisionEnv):
 
 # Mixed precision environment with high and low actions
 class MixedPrecisionEnvHiLo(BaseMixedPrecisionEnv):
-    def __init__(
-        self, config, search_space, sw_runner, data_module, episode_max_len
-    ):
+    def __init__(self, config, search_space, sw_runner, data_module, episode_max_len):
         if search_space is None:
             raise ValueError("search_space cannot be None")
         self.config = config
@@ -317,9 +312,7 @@ class MixedPrecisionEnvHiLo(BaseMixedPrecisionEnv):
 
 # Mixed precision environment based on a research paper
 class MixedPrecisionPaper(BaseMixedPrecisionEnv):
-    def __init__(
-        self, config, search_space, sw_runner, data_module, episode_max_len
-    ):
+    def __init__(self, config, search_space, sw_runner, data_module, episode_max_len):
         self.search_space = search_space
         self.sw_runner = sw_runner
         self.data_module = data_module
