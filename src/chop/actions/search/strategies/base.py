@@ -65,14 +65,6 @@ class SearchStrategyBase:
                     )
                 )
 
-        # Keep an empty attribute for backwards compatibility with downstream
-        # strategy code paths that still reference `self.hw_runner`.
-        self.hw_runner = []
-        if "hw_runner" in config.keys():
-            raise ValueError(
-                "`hw_runner` is no longer supported. Remove hardware runner config."
-            )
-
         self._post_init_setup()
 
     @staticmethod

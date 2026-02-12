@@ -21,7 +21,7 @@ from chop.passes.graph import (
 class BaseMixedPrecisionEnv(gym.Env, ABC):
     @abstractmethod
     def __init__(
-        self, config, search_space, sw_runner, hw_runner, data_module, episode_max_len
+        self, config, search_space, sw_runner, data_module, episode_max_len
     ):
         pass
 
@@ -49,25 +49,10 @@ class BaseMixedPrecisionEnv(gym.Env, ABC):
                 metrics |= runner(self.data_module, model, sampled_config)
         return metrics
 
-    def compute_hardware_metrics(
-        self, model, sampled_config, is_eval_mode: bool = True
-    ):
-        """Compute hardware metrics for the current model and config."""
-        metrics = {}
-        if is_eval_mode:
-            with torch.no_grad():
-                for runner in self.hw_runner:
-                    metrics |= runner(self.data_module, model, sampled_config)
-        else:
-            for runner in self.hw_runner:
-                metrics |= runner(self.data_module, model, sampled_config)
-        return metrics
-
-
 # Mixed precision environment class
 class MixedPrecisionEnv(BaseMixedPrecisionEnv):
     def __init__(
-        self, config, search_space, sw_runner, hw_runner, data_module, episode_max_len
+        self, config, search_space, sw_runner, data_module, episode_max_len
     ):
         if search_space is None:
             raise ValueError("search_space cannot be None")
@@ -75,7 +60,6 @@ class MixedPrecisionEnv(BaseMixedPrecisionEnv):
         self.config = config
         self.search_space = search_space
         self.sw_runner = sw_runner
-        self.hw_runner = hw_runner
         self.data_module = data_module
         self.sum_scaled_metrics = self.config["setup"]["sum_scaled_metrics"]
         self.metric_names = list(sorted(self.config["metrics"].keys()))
@@ -139,16 +123,16 @@ class MixedPrecisionEnv(BaseMixedPrecisionEnv):
 
         # Compute the metrics
         software_metrics = self.compute_software_metrics(model, sampled_config)
-        hardware_metrics = self.compute_hardware_metrics(model, sampled_config)
-        self.metrics = software_metrics | hardware_metrics
+        self.metrics = software_metrics
 
         # Scale the metrics and compute the cost = -reward
         scaled_metrics = {}
         cost = 0
         for metric_name in self.metric_names:
+            metric_value = self.metrics.get(metric_name, 32.0)
             scaled_metric_value = (
                 self.config["metrics"][metric_name]["scale"]
-                * self.metrics[metric_name]
+                * metric_value
                 * self.direction_multipliers[metric_name]
             )
             scaled_metrics[metric_name] = scaled_metric_value
@@ -159,7 +143,7 @@ class MixedPrecisionEnv(BaseMixedPrecisionEnv):
             [software_metrics["accuracy"]], dtype=np.float32
         )
         self.cur_obs["average_bitwidth"] = np.array(
-            [hardware_metrics["average_bitwidth"]], dtype=np.float32
+            [self.metrics.get("average_bitwidth", 32.0)], dtype=np.float32
         )
         self.cur_obs["cost"] = np.array([cost], dtype=np.float32)
         self.cur_obs.update(flattened_sampled_indexes)
@@ -197,14 +181,13 @@ class MixedPrecisionEnv(BaseMixedPrecisionEnv):
 # Mixed precision environment with high and low actions
 class MixedPrecisionEnvHiLo(BaseMixedPrecisionEnv):
     def __init__(
-        self, config, search_space, sw_runner, hw_runner, data_module, episode_max_len
+        self, config, search_space, sw_runner, data_module, episode_max_len
     ):
         if search_space is None:
             raise ValueError("search_space cannot be None")
         self.config = config
         self.search_space = search_space
         self.sw_runner = sw_runner
-        self.hw_runner = hw_runner
         self.data_module = data_module
         self.sum_scaled_metrics = self.config["setup"]["sum_scaled_metrics"]
         self.metric_names = list(sorted(self.config["metrics"].keys()))
@@ -278,16 +261,16 @@ class MixedPrecisionEnvHiLo(BaseMixedPrecisionEnv):
         model = self.search_space.rebuild_model(sampled_config)
 
         software_metrics = self.compute_software_metrics(model, sampled_config)
-        hardware_metrics = self.compute_hardware_metrics(model, sampled_config)
-        self.metrics = software_metrics | hardware_metrics
+        self.metrics = software_metrics
 
         # Scale the metrics and compute the cost = -reward
         scaled_metrics = {}
         cost = 0
         for metric_name in self.metric_names:
+            metric_value = self.metrics.get(metric_name, 32.0)
             scaled_metric_value = (
                 self.config["metrics"][metric_name]["scale"]
-                * self.metrics[metric_name]
+                * metric_value
                 * self.direction_multipliers[metric_name]
             )
             scaled_metrics[metric_name] = scaled_metric_value
@@ -298,7 +281,7 @@ class MixedPrecisionEnvHiLo(BaseMixedPrecisionEnv):
             [software_metrics["accuracy"]], dtype=np.float32
         )
         self.cur_obs["average_bitwidth"] = np.array(
-            [hardware_metrics["average_bitwidth"]], dtype=np.float32
+            [self.metrics.get("average_bitwidth", 32.0)], dtype=np.float32
         )
         self.cur_obs["cost"] = np.array([cost], dtype=np.float32)
         self.cur_obs.update(self.model_config)
@@ -335,11 +318,10 @@ class MixedPrecisionEnvHiLo(BaseMixedPrecisionEnv):
 # Mixed precision environment based on a research paper
 class MixedPrecisionPaper(BaseMixedPrecisionEnv):
     def __init__(
-        self, config, search_space, sw_runner, hw_runner, data_module, episode_max_len
+        self, config, search_space, sw_runner, data_module, episode_max_len
     ):
         self.search_space = search_space
         self.sw_runner = sw_runner
-        self.hw_runner = hw_runner
         self.data_module = data_module
         self.config = config
         self.metric_names = list(sorted(self.config["metrics"].keys()))
@@ -412,23 +394,23 @@ class MixedPrecisionPaper(BaseMixedPrecisionEnv):
 
         # Compute the metrics
         software_metrics = self.compute_software_metrics(model, sampled_config)
-        hardware_metrics = self.compute_hardware_metrics(model, sampled_config)
-        metrics = software_metrics | hardware_metrics
+        metrics = software_metrics
 
         # Scale the metrics
         scaled_metrics = {}
         for metric_name in self.metric_names:
+            metric_value = metrics.get(metric_name, 32.0)
             lower_bound = self.config["metrics"][metric_name].get("lower_bound", 0)
             upper_bound = self.config["metrics"][metric_name].get("upper_bound", 1)
             delta = upper_bound - lower_bound
             direction = self.config["metrics"][metric_name].get("direction", "maximize")
             if direction == "maximize":
                 raw_metric = (
-                    max(max(lower_bound, metrics[metric_name]) - lower_bound, 0) / delta
+                    max(max(lower_bound, metric_value) - lower_bound, 0) / delta
                 )
             else:
                 raw_metric = (
-                    max(upper_bound - max(lower_bound, metrics[metric_name]), 0) / delta
+                    max(upper_bound - max(lower_bound, metric_value), 0) / delta
                 )
             scaled_metrics[metric_name] = (
                 raw_metric * self.config["metrics"][metric_name]["scale"]
