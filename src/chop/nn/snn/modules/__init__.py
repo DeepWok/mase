@@ -12,7 +12,7 @@ from .conv2d import Conv2d
 
 from .conv3d import Conv3d
 
-from .linear import Linear, LinearUnfoldBias
+from .linear import Linear, LinearUnfoldBias, LinearElasticBiSpiking
 
 from .pool1d import MaxPool1d, AvgPool1d, AdaptiveAvgPool1d
 
@@ -62,6 +62,7 @@ from .spiking_self_attention import (
 from .embedding import EmbeddingZIPTF
 from .roberta import (
     RobertaSelfAttentionZIPTF,
+    RobertaSelfAttentionSpikeLM,
 )
 
 spiking_basic_module_map = {
@@ -70,6 +71,7 @@ spiking_basic_module_map = {
     "conv3d": Conv3d,
     "linear": Linear,
     "linear_unfold_bias": LinearUnfoldBias,
+    "linear_elastic_bi_spiking": LinearElasticBiSpiking,
     "max_pool1d": MaxPool1d,
     "avg_pool1d": AvgPool1d,
     "adaptive_avg_pool1d": AdaptiveAvgPool1d,
@@ -105,6 +107,7 @@ spiking_neuron_module_map = {
 
 spiking_roberta_module_map = {
     "roberta_self_attention_zip_tf": RobertaSelfAttentionZIPTF,
+    "roberta_self_attention_spikeLM": RobertaSelfAttentionSpikeLM,
 }
 
 spiking_module_map = {
