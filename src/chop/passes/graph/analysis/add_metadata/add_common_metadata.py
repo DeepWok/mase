@@ -410,6 +410,7 @@ def add_common_metadata_analysis_pass(
                 },
             },
             "software": {},
+            "hardware": {},
         }
 
 
@@ -447,6 +448,7 @@ def add_common_metadata_analysis_pass(
                 },
             },
             "software": {},
+            "hardware": {},
         }
 
 
@@ -486,6 +488,7 @@ def add_common_metadata_analysis_pass(
                 },
             },
             "software": {},
+            "hardware": {},
         }
 
     """

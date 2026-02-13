@@ -1,0 +1,23 @@
+set(LLVM_LINK_COMPONENTS
+  Support
+)
+
+add_llvm_tool(mase-opt
+  mase-opt.cpp
+)
+llvm_update_compile_flags(mase-opt)
+target_link_libraries(mase-opt
+  PRIVATE
+  MLIRIR
+  MLIRLLVMDialect
+  MLIRMemRefDialect
+  MLIROptLib
+  MLIRParser
+  MLIRFuncDialect
+  MLIRSupport
+  MLIRTransforms
+  MLIRSCFDialect
+  MLIREmitCDialect
+  MLIRMLProgramDialect
+  MaseTransform
+)

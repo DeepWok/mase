@@ -10,6 +10,7 @@ from chop.passes import (
     export_fx_graph_analysis_pass,
     init_metadata_analysis_pass,
     add_common_metadata_analysis_pass,
+    add_hardware_metadata_analysis_pass,
     raise_granularity_transform_pass,
 )
 

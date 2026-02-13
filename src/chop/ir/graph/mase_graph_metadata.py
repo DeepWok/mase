@@ -4,6 +4,7 @@ class MaseGraphMetadata:
         self.parameters = {
             "common": {},
             "software": {},
+            "hardware": {},
         }
 
     def __getitem__(self, key):

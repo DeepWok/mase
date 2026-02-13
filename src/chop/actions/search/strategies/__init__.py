@@ -1,7 +1,9 @@
 from .optuna import SearchStrategyOptuna
 from .base import SearchStrategyBase
+from .rl import SearchStrategyRL
 
 SEARCH_STRATEGY_MAP = {
+    "rl": SearchStrategyRL,
     "optuna": SearchStrategyOptuna,
 }
 

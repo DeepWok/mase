@@ -64,13 +64,14 @@ def _get_next_call_node(node, nodes_in):
             if "_" in next_node.name
             else next_node.name
         )
-        # Skip implicit functions while collecting real graph inputs.
+        # No need to synthsize into hardware
         if (
             name in MASE_IMPLICIT_FUNCS
             or next_node.meta["mase"].parameters["common"]["mase_type"]
             == "implicit_func"
         ):
             nodes_in = _get_next_call_node(next_node, nodes_in)
+            next_node.meta["mase"].parameters["hardware"]["is_implicit"] = True
         elif next_node not in nodes_in:
             nodes_in.append(next_node)
     return nodes_in
@@ -78,6 +79,7 @@ def _get_next_call_node(node, nodes_in):
 
 def _get_prev_call_node(node, nodes_out):
     for prev_node in node.all_input_nodes:
+        # No need to synthsize into hardware
         name = (
             prev_node.name[0 : prev_node.name.find("_")]
             if "_" in prev_node.name
@@ -89,6 +91,7 @@ def _get_prev_call_node(node, nodes_out):
         )
         if implicit:
             nodes_out = _get_prev_call_node(prev_node, nodes_out)
+            prev_node.meta["mase"].parameters["hardware"]["is_implicit"] = True
         elif prev_node not in nodes_out:
             nodes_out.append(prev_node)
     return nodes_out
@@ -99,6 +102,7 @@ def get_input_nodes(fx_graph):
     for node in fx_graph.nodes:
         if node.op == "placeholder":
             nodes_in = _get_next_call_node(node, nodes_in)
+            node.meta["mase"].parameters["hardware"]["is_implicit"] = True
     return nodes_in
 
 
@@ -107,6 +111,7 @@ def get_output_nodes(fx_graph):
     for node in fx_graph.nodes:
         if node.op == "output":
             nodes_out = _get_prev_call_node(node, nodes_out)
+            node.meta["mase"].parameters["hardware"]["is_implicit"] = True
     return nodes_out
 
 
@@ -145,3 +150,12 @@ def is_seq_blocks_parameter(s):
 
     # If there's a match, return True; otherwise, return False
     return bool(match)
+
+
+def get_hardware_nodes(mg):
+    hw_nodes = []
+    for node in mg.fx_graph.nodes:
+        if node.meta["mase"].parameters["hardware"]["is_implicit"]:
+            continue
+        hw_nodes.append(node)
+    return hw_nodes

@@ -13,6 +13,7 @@ from chop.models.toy.toy import ToyNet
 from chop.passes.graph.analysis import (
     add_common_metadata_analysis_pass,
     add_software_metadata_analysis_pass,
+    add_hardware_metadata_analysis_pass,
     init_metadata_analysis_pass,
     report_node_type_analysis_pass,
 )
@@ -38,6 +39,7 @@ def test_report_node_type_analysis():
         mg, {"dummy_in": dummy_in, "add_value": False}
     )
     mg, _ = add_software_metadata_analysis_pass(mg, pass_args)
+    mg, _ = add_hardware_metadata_analysis_pass(mg, pass_args)
 
     mg, _ = report_node_type_analysis_pass(mg, pass_args)
 

@@ -220,8 +220,117 @@ jobs:
           if-no-files-found: error 
           overwrite: true 
 
+  hardware-test:
+    runs-on: ubuntu-latest
+    container:
+      image: bingleilou/mase-docker-cpu-triton:latest
+    steps:
+
+      # -----------
+      # Clone the MASE repo and its submodules.
+      # -----------
+
+      - name: Get MASE
+        uses: actions/checkout@v3
+        with:
+            submodules: "true"
+
+      - name: Set git safe
+        run: |
+          git config --global --add safe.directory $PWD
+
+      # Choose the git commit to diff against for the purposes of linting.
+      # Since this workflow is triggered on both pushes and pull requests, w
+      # have to determine if the pull request target branch is set (which it
+      # will only be on the PR triggered flow). If it's not, then compare
+      # against the last commit.
+
+      - name: choose-commit
+        if: ${{ always() }}
+        env:
+          # Base ref is the target branch, in text form (not hash)
+          PR_BASE: ${{ github.base_ref }}
+        run: |
+          # Run clang-format
+          if [ -z "$PR_BASE" ]; then
+            DIFF_COMMIT_NAME="HEAD^"
+          else
+            DIFF_COMMIT_NAME="$PR_BASE"
+          fi
+          echo "DIFF_COMMIT_NAME=$DIFF_COMMIT_NAME" >> $GITHUB_ENV
+
+      # Since we did a shallow fetch for this repo, we must fetch the commit
+      # upon which we be diff'ing. The last step set the ref name in the
+      # $DIFF_COMMIT_NAME environment variable. When running the fetch, resolve
+      # it to the commit hash and pass that hash along to subsequent steps.
+
+      - name: git fetch base commit
+        continue-on-error: true
+        run: |
+          if echo "$DIFF_COMMIT_NAME" | grep -q HEAD; then
+            DIFF_COMMIT_SHA=$( git rev-parse $DIFF_COMMIT_NAME )
+          else
+            git fetch --recurse-submodules=no origin $DIFF_COMMIT_NAME
+            DIFF_COMMIT_SHA=$( git rev-parse origin/$DIFF_COMMIT_NAME )
+          fi
+          echo "DIFF_COMMIT=$DIFF_COMMIT_SHA" >> $GITHUB_ENV
+      
+      # Run verible-verilog-format to check Verilog/SystemVerilog formatting.
+      - name: verilog-format
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.sv$' || echo -n)
+          if [[ ! -z $files ]]; then
+            for f in $files
+            do
+              if [[ -f $f ]]; then
+                echo $f
+                /srcPkgs/verible/bin/verible-verilog-format $f | diff - $f
+              fi
+            done
+          fi
+          files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.v$' || echo -n)
+          if [[ ! -z $files ]]; then
+            for f in $files
+            do
+              if [[ -f $f ]]; then
+                echo $f
+                /srcPkgs/verible/bin/verible-verilog-format $f | diff - $f
+              fi
+            done
+          fi
+
+      # -----------
+      # Hardware regression test 
+      # -----------
+      
+      - name: Hardware regression test 
+        run: |
+            pip3 --version 
+            python3 --version
+            echo "PYTHONPATH is ${PYTHONPATH}"
+            export PYTHONPATH=$PYTHONPATH:$PWD/src
+            just test-hw
+            # if [ ! -f hardware_report.xml ]; then
+            #   echo "hardware_report.xml not found!"
+            #   ls
+            #   exit 1
+            # fi
+
+      # -----------
+      # TODO: Upload hardware regression test artifacts 
+      # -----------
+      # - name: Upload hardware test report
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: hardware_report 
+      #     path: hardware_report.xml
+      #     if-no-files-found: error 
+      #     overwrite: true 
+
   build-doc:
-    needs: [software-test]
+    needs: [software-test, hardware-test]
     runs-on: ubuntu-latest
     container:
       image: bingleilou/mase-docker-cpu-triton:latest
@@ -278,3 +387,5 @@ jobs:
           else
             echo "Skipped MASE Doc deployment."
           fi
+
+

@@ -2,7 +2,6 @@ from chop.models.utils import register_mase_model, ModelSource, ModelTaskType
 from ultralytics.nn.tasks import DetectionModel, SegmentationModel
 from ultralytics import YOLO
 import ultralytics.nn.modules as unnmod
-
 try:
     from ultralytics.utils.nms import non_max_suppression
 except ImportError:

@@ -28,6 +28,7 @@ This module covers the introduction to modern ML systems and frameworks, ML mode
     labs_2023/lab1
     labs_2023/lab2
     labs_2023/lab3
+    labs_2023/lab4-hardware
     labs_2023/lab4-software
 
 .. toctree::

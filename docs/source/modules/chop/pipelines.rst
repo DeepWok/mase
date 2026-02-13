@@ -19,3 +19,11 @@ chop.pipelines.auto_pipeline
 ..    :undoc-members:
 ..    :show-inheritance:
 
+chop.pipelines.emit_verilog
+----------------------------
+
+.. automodule:: chop.pipelines.emit_verilog
+   :members:
+   :undoc-members:
+   :show-inheritance:
+

@@ -17,13 +17,19 @@ Summary of MaseGraph Analysis Passes
     - Initialize each node with the MaseMetadata, this needs to run first before adding any metadata
   * - :py:meth:`~chop.passes.graph.analysis.add_metadata.add_common_metadata.add_common_metadata_analysis_pass`
     - `test_add_common_metadata <https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/add_metadata/test_add_common_metadata.py>`_
-    - Add shared metadata required by downstream analysis and transform passes
+    - Add metadata used for both software and hardware, this needs to run first before calling to add_software_metadata or add_hardware_metadata
   * - :py:meth:`~chop.passes.graph.analysis.add_metadata.add_software_metadata.add_software_metadata_analysis_pass`
     - `test_add_software_metadata <https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/add_metadata/test_add_software_metadata.py>`_
+    - Add hardware-specific metadata, such as which hardware IPs to map and hardware parameters. Details see the pass page
+  * - :py:meth:`~chop.passes.graph.analysis.add_metadata.add_hardware_metadata.add_hardware_metadata_analysis_pass`
+    - `test_add_hardware_metadata <https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/add_metadata/test_add_hardware_metadata.py>`_
     - Add software-specific metadata, such as sparsity. Details see the pass page
   * - :py:meth:`~chop.passes.graph.analysis.report.report_graph.report_graph_analysis_pass`
     - `test_report_graph <https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/report/test_report_graph_analysis_pass.py>`_
     - Generates a report for the graph analysis and prints out an over the model in a table.
+  * - :py:meth:`~chop.passes.graph.analysis.report.report_node.report_node_hardware_type_analysis_pass`
+    - `test_report_node_hardware_type <https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/report/test_report_node_hardware_type_analysis_pass.py>`_
+    - Generate a report on the hardware type of the nodes in the graph.
   * - :py:meth:`~chop.passes.graph.analysis.report.report_node.report_node_meta_param_analysis_pass`
     - `test_report_node_meta_param <https://github.com/DeepWok/mase/blob/main/test/passes/graph/analysis/report/test_report_node_meta_param_analysis_pass.py>`_
     - Generate a report on the meta parameters of the nodes in the graph.
@@ -58,6 +64,9 @@ Summary of MaseGraph Analysis Passes
     - fill me
     - fill me
   * - :py:meth:`~chop.passes.graph.analysis.verify.verify.verify_software_metadata_analysis_pass`
+    - fill me
+    - fill me
+  * - :py:meth:`~chop.passes.graph.analysis.verify.verify.verify_hardware_metadata_analysis_pass`
     - fill me
     - fill me
 
@@ -107,6 +116,21 @@ Summary of MaseGraph Transform Passes
   * - :py:meth:`~chop.passes.graph.transforms.utils.onnx_annotate_transform_pass`
     - NA (DEV, Disabled) 
     - Convert MaseGraph to ONNX and annotate the relevant layers with sparsity information (DEV, Disabled) 
+  * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_verilog_top_transform_pass`
+    - `test_emit_verilog_linear <https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/verilog/test_test_emit_verilog_linear.py>`_
+    - Emit the top-level model design in Verilog.
+  * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_tb.emit_verilog_tb_transform_pass`
+    - Emit test bench and related files for simulation.
+    - `test_emit_verilog_linear <https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/verilog/test_test_emit_verilog_linear.py>`_
+  * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_bram.emit_bram_transform_pass`
+    - Enumerate input parameters of the node and emit a ROM block with handshake interface for each parameter
+    - `test_emit_verilog_linear <https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/verilog/test_test_emit_verilog_linear.py>`_
+  * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_mlir_hls_transform_pass`
+    - Emit the hardware components that generated from MLIR-HLS tools. 
+    - `test_emit_verilog_linear <https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/verilog/test_test_emit_verilog_linear.py>`_
+  * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_internal_rtl_transform_pass`
+    - Emit the hardware components that pre-defined in the mase internal library.
+    - `test_emit_verilog_linear <https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/verilog/test_test_emit_verilog_linear.py>`_
   * - :py:meth:`~chop.passes.graph.transforms.tensorrt.quantize.calibrate.tensorrt_fake_quantize_transform_pass`
     - Apply TensorRT fake quantization to the given graph for INT8 quantization calibration
     - fille me
@@ -124,6 +148,7 @@ Summary of MaseGraph Transform Passes
 
   transform/pruning
   transform/quantize
+  transform/verilog
   transform/utils
   transform/tensorrt
 

@@ -158,7 +158,7 @@ def _vgg(
     batch_norm: bool,
     weights: Optional[WeightsEnum],
     progress: bool,
-    **kwargs: Any,
+    **kwargs: Any
 ) -> VGG:
     if weights is not None:
         kwargs["init_weights"] = False

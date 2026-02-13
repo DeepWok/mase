@@ -2,6 +2,7 @@ from .quantization import (
     ManualHFModuleSearchSpaceMixedPrecisionPTQ,
     GraphSearchSpaceMixedPrecisionPTQ,
 )
+from .systolic import SystolicMappingSearchSpace
 from .base import SearchSpaceBase
 
 from chop.tools.check_dependency import check_deps_tensorRT_pass
@@ -11,6 +12,7 @@ from chop.tools.check_dependency import check_deps_tensorRT_pass
 SEARCH_SPACE_MAP = {
     "graph/quantize/mixed_precision_ptq": GraphSearchSpaceMixedPrecisionPTQ,
     "module/manual_hf/quantize/llm_mixed_precision_ptq": ManualHFModuleSearchSpaceMixedPrecisionPTQ,
+    "graph/hardware/systolic_mapping": SystolicMappingSearchSpace,
 }
 
 if check_deps_tensorRT_pass(silent=True):
