@@ -7,6 +7,9 @@ from .ternary import ternary_quantizer
 from .log import log_quantizer
 from .minifloat import minifloat_denorm_quantizer, minifloat_ieee_quantizer
 from .mxint_hardware import mxint_hardware
+from .mxfp import mxfp_quantizer
+from .mxint import mxint_quantizer
+
 
 quantizer_map = {
     "log": log_quantizer,
@@ -19,4 +22,6 @@ quantizer_map = {
     "binary": binary_quantizer,
     "ternary": ternary_quantizer,
     "mxint_hardware": mxint_hardware,
+    "mxfp": mxfp_quantizer,
+    "mxint": mxint_quantizer,
 }
