@@ -70,34 +70,9 @@ class MaseMetadata:
 
           - "stat": {"stat_name": { # stat_values } }
 
-    - hardware
-
-      - is_implicit -> bool : whether the node is mapped on hardware or software annotation only
-
-      - verilog_param -> {} : parameters need for customise the hardware module
-
-      - device_id -> int : the ID of the device where the node is mapped, default = -1
-
-      - toolchain -> str : tool chain for code generation, must be INTERNAL, EXTERNAL or HLS
-
-      - module -> str : the name of the used hardware module
-
-      - interface -> {}
-
-         - name : name of the parameters
-
-           - storage : the hardware interface implemented, must be BRAM
-
-           - transpose : whether the data needs to be transposed before emitting
-
-      - dependence_files -> [] : the dependent files for the generated module
-
     """
 
-    # Hardware dict
     known_types = ["fixed", "float", "NA"]
-    known_toolchain = ["INTERNAL", "EXTERNAL", "HLS"]
-    known_storage = ["BRAM"]
 
     def __init__(
         self,
@@ -114,7 +89,6 @@ class MaseMetadata:
         self.parameters = {
             "common": {},
             "software": {},
-            "hardware": {},
         }
 
     @property

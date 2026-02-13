@@ -35,9 +35,6 @@ Summary of Mase Module Transform Passes
   * - :py:meth:`~chop.passes.module.transforms.quantize.quantize_module_transform_pass`
     - `test_module_quantize <https://github.com/DeepWok/mase/blob/main/test/passes/module/transforms/quantize/test_quantize_module.py>`_
     - Apply quantization transformation to the given nn.Module
-  * - :py:meth:`~chop.passes.module.transforms.pim.pim_matmul_transform_pass`
-    - `test_cim_transform_module_roberta <https://github.com/DeepWok/mase/blob/main/test/passes/module/transforms/cim/test_cim_transform_module_roberta.py>`_
-    - Apply PIM transformation to the given nn.Module to simulate PIM hardware.
   * - :py:meth:`~chop.passes.module.transforms.onn.optical_transformer_module_transform_pass`
     - See :doc:`transform/onn`
     - Transform modules to Optical Neural Network (ONN) equivalents
@@ -47,5 +44,4 @@ Summary of Mase Module Transform Passes
   :caption: Full list of module-level transform passes
 
   module_transform/quantization
-  module_transform/pim
   transform/onn
