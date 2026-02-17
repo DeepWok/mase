@@ -1,0 +1,2350 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Index &#8212; MASE 0.0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-needs/common_css/need_style.css?v=92936fa5" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-needs/modern.css?v=803738c0" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="_static/jquery.js?v=5d32c60e"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="_static/documentation_options.js?v=e645c8fa"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+    <script src="_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+    <script src="_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+    <script src="_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+    <script src="_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
+    <link rel="index" title="Index" href="#" />
+    <link rel="search" title="Search" href="search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">MASE 0.0.1 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="modules/documentation/installation.html">Installation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/documentation/getting_started/Get-started-using-uv.html">Getting Started using uv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/documentation/getting_started/Get-started-using-Docker.html">Getting Started using Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/documentation/getting_started/Get-started-students.html">Additional Instructions for Imperial College Students</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/documentation/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="modules/documentation/tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/documentation/tutorials/tutorial_1_introduction_to_mase.html">Tutorial 1: Introduction to the Mase IR, MaseGraph and Torch FX passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/documentation/tutorials/tutorial_2_lora_finetune.html">Tutorial 2: Finetuning Bert for Sequence Classification using a LoRA adapter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/documentation/tutorials/tutorial_3_qat.html">Tutorial 3: Running Quantization-Aware Training (QAT) on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/documentation/tutorials/tutorial_4_pruning.html">Tutorial 4: Unstructured Pruning on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/documentation/tutorials/tutorial_5_nas_optuna.html">Tutorial 5: Neural Architecture Search (NAS) with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/documentation/tutorials/tutorial_6_mixed_precision_search.html">Tutorial 6: Mixed Precision Quantization Search with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/documentation/tutorials/tutorial_7_distributed_deployment.html">Tutorial 7: Deploying a Model for Inference on Distributed Clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/documentation/tutorials/tutorial_9_kernel_fusion.html">Tutorial 9: Running Kernel Fusion for Inference Acceleration on GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/documentation/tutorials/advanced/tensorRT_quantization_tutorial.html">Advanced: TensorRT Quantization Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/documentation/tutorials/advanced/onnxrt_quantization_tutorial.html">Advanced: ONNX Runtime Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/documentation/tutorials/advanced/cli.html">Advanced: Using Mase CLI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/documentation/tutorials/developer/Add-model-to-machop.html">Developer: Guide on how to add a new model into Machop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/documentation/tutorials/developer/doc_writing.html">Developer: How to write documentations in MASE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/documentation/tutorials/developer/how_to_extend_search.html">Developer: How to extend search</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/documentation/health.html">Repository Health</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="modules/documentation/specifications.html">Coding Style Specifications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/documentation/specifications/C-coding-style-specifications.html">C/C++ Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/documentation/specifications/Python-coding-style-specifications.html">Python Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/documentation/specifications/Verilog-coding-style-specifications.html">Verilog Coding Style Specifications</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="modules/machop.html">Machop Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/chop/actions.html">chop.actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/chop/datasets.html">chop.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/chop/distributed.html">chop.distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/chop/ir.html">chop.ir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/chop/models.html">chop.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/chop/nn.html">chop.nn</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="modules/chop/nn_quantized.html">chop.nn.quantized</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="modules/chop/nn_quantized_functional.html">chop.nn.quantized.functional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules/chop/nn_quantized_modules.html">chop.nn.quantized.modules</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="modules/chop/passes.html">chop.passes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="modules/chop/passes_module.html">chop.passes.module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules/chop/module_analysis/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/chop/module_transform/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/chop/transform/onn.html">chop.passes.module.transforms.onn</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="modules/chop/passes_graph.html">chop.passes.graph</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules/chop/analysis/add_metadata.html">chop.passes.graph.analysis.add_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/chop/analysis/autosharding.html">chop.passes.graph.analysis.autosharding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/chop/analysis/init_metadata.html">chop.passes.graph.analysis.init_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/chop/analysis/report.html">chop.passes.graph.analysis.report</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/chop/analysis/statistical_profiler.html">chop.passes.graph.analysis.statistical_profiler.profile_statistics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/chop/analysis/verify.html">chop.passes.graph.analysis.verify.verify</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/chop/analysis/quantization.html">chop.passes.graph.calculate_avg_bits_mg_analysis_pass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/chop/analysis/pruning.html">chop.passes.graph.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/chop/analysis/runtime.html">chop.passes.graph.analysis.runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/chop/transform/pruning.html">chop.passes.transform.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/chop/transform/quantize.html">chop.passes.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/chop/transform/utils.html">chop.passes.transform.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/chop/transform/tensorrt.html">chop.passes.transform.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/chop/interface/save_and_load.html">chop.passes.interface.save_and_load</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/chop/interface/tensorrt.html">chop.passes.interface.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/chop/interface/onnxrt.html">chop.passes.interface.onnxrt</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/chop/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/chop/tools.html">chop.tools</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Deep Learning Systems</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="modules/adls_2024.html">Advanced Deep Learning Systems: 2024/2025</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/labs_2024/lab_0_introduction.html">Lab 0: Introduction to Mase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/labs_2024/lab_1_compression.html">Lab 1: Model Compression (Quantization and Pruning)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/labs_2024/lab_2_nas.html">Lab 2: Neural Architecture Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/labs_2024/lab_3_mixed_precision_search.html">Lab 3: Mixed Precision Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/labs_2024/lab4-software.html">Lab 4 (Software Stream) Performance Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/labs_2024/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="modules/adls_2023.html">Advanced Deep Learning Systems: 2023/2024</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/labs_2023/lab1.html">Lab 1 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/labs_2023/lab2.html">Lab 2 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/labs_2023/lab3.html">Lab 3 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/labs_2023/lab4-software.html">Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/labs_2023/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+
+<h1 id="index">Index</h1>
+
+<div class="genindex-jumpbox">
+ <a href="#_"><strong>_</strong></a>
+ | <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
+ | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
+ | <a href="#I"><strong>I</strong></a>
+ | <a href="#K"><strong>K</strong></a>
+ | <a href="#L"><strong>L</strong></a>
+ | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
+ | <a href="#P"><strong>P</strong></a>
+ | <a href="#Q"><strong>Q</strong></a>
+ | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
+ | <a href="#V"><strong>V</strong></a>
+ 
+</div>
+<h2 id="_">_</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/ir.html#chop.ir.graph.mase_graph.MaseGraph.__init__">__init__() (chop.ir.graph.mase_graph.MaseGraph method)</a>
+
+      <ul>
+        <li><a href="modules/chop/ir.html#chop.ir.graph.mase_graph.MaseTracer.__init__">(chop.ir.graph.mase_graph.MaseTracer method)</a>
+</li>
+        <li><a href="modules/chop/ir.html#chop.ir.graph.mase_graph_metadata.MaseGraphMetadata.__init__">(chop.ir.graph.mase_graph_metadata.MaseGraphMetadata method)</a>
+</li>
+        <li><a href="modules/chop/ir.html#chop.ir.graph.mase_metadata.MaseMetadata.__init__">(chop.ir.graph.mase_metadata.MaseMetadata method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.attention.BertSelfAttentionInteger.__init__">(chop.nn.quantized.modules.attention.BertSelfAttentionInteger method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.attention_head.BertSelfAttentionHeadInteger.__init__">(chop.nn.quantized.modules.attention_head.BertSelfAttentionHeadInteger method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.batch_norm1d.BatchNorm1dInteger.__init__">(chop.nn.quantized.modules.batch_norm1d.BatchNorm1dInteger method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.batch_norm2d.BatchNorm2dBinary.__init__">(chop.nn.quantized.modules.batch_norm2d.BatchNorm2dBinary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.batch_norm2d.BatchNorm2dInteger.__init__">(chop.nn.quantized.modules.batch_norm2d.BatchNorm2dInteger method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv1d.Conv1dBinary.__init__">(chop.nn.quantized.modules.conv1d.Conv1dBinary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv1d.Conv1dBlockFP.__init__">(chop.nn.quantized.modules.conv1d.Conv1dBlockFP method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv1d.Conv1dBlockLog.__init__">(chop.nn.quantized.modules.conv1d.Conv1dBlockLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv1d.Conv1dBlockMinifloat.__init__">(chop.nn.quantized.modules.conv1d.Conv1dBlockMinifloat method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv1d.Conv1dInteger.__init__">(chop.nn.quantized.modules.conv1d.Conv1dInteger method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv1d.Conv1dLog.__init__">(chop.nn.quantized.modules.conv1d.Conv1dLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv1d.Conv1dMinifloatDenorm.__init__">(chop.nn.quantized.modules.conv1d.Conv1dMinifloatDenorm method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv1d.Conv1dMinifloatIEEE.__init__">(chop.nn.quantized.modules.conv1d.Conv1dMinifloatIEEE method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv1d.Conv1dTernary.__init__">(chop.nn.quantized.modules.conv1d.Conv1dTernary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dBinary.__init__">(chop.nn.quantized.modules.conv2d.Conv2dBinary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dBinaryResidualSign.__init__">(chop.nn.quantized.modules.conv2d.Conv2dBinaryResidualSign method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dBinaryScaling.__init__">(chop.nn.quantized.modules.conv2d.Conv2dBinaryScaling method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dBlockFP.__init__">(chop.nn.quantized.modules.conv2d.Conv2dBlockFP method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dBlockLog.__init__">(chop.nn.quantized.modules.conv2d.Conv2dBlockLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dBlockMinifloat.__init__">(chop.nn.quantized.modules.conv2d.Conv2dBlockMinifloat method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dInteger.__init__">(chop.nn.quantized.modules.conv2d.Conv2dInteger method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLog.__init__">(chop.nn.quantized.modules.conv2d.Conv2dLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2DLogicNets.__init__">(chop.nn.quantized.modules.conv2d.Conv2DLogicNets method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLUT.__init__">(chop.nn.quantized.modules.conv2d.Conv2dLUT method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dMinifloatDenorm.__init__">(chop.nn.quantized.modules.conv2d.Conv2dMinifloatDenorm method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dMinifloatIEEE.__init__">(chop.nn.quantized.modules.conv2d.Conv2dMinifloatIEEE method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dTernary.__init__">(chop.nn.quantized.modules.conv2d.Conv2dTernary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELUBinary.__init__">(chop.nn.quantized.modules.gelu.GELUBinary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELUBlockFP.__init__">(chop.nn.quantized.modules.gelu.GELUBlockFP method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELUBlockLog.__init__">(chop.nn.quantized.modules.gelu.GELUBlockLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELUBlockMinifloat.__init__">(chop.nn.quantized.modules.gelu.GELUBlockMinifloat method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELUInteger.__init__">(chop.nn.quantized.modules.gelu.GELUInteger method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELULog.__init__">(chop.nn.quantized.modules.gelu.GELULog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELUMinifloatDenorm.__init__">(chop.nn.quantized.modules.gelu.GELUMinifloatDenorm method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELUMinifloatIEEE.__init__">(chop.nn.quantized.modules.gelu.GELUMinifloatIEEE method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELUTernary.__init__">(chop.nn.quantized.modules.gelu.GELUTernary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.group_norm.GroupNormInteger.__init__">(chop.nn.quantized.modules.group_norm.GroupNormInteger method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.instance_norm2d.InstanceNorm2dInteger.__init__">(chop.nn.quantized.modules.instance_norm2d.InstanceNorm2dInteger method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.layer_norm.LayerNormInteger.__init__">(chop.nn.quantized.modules.layer_norm.LayerNormInteger method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBinary.__init__">(chop.nn.quantized.modules.linear.LinearBinary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBinaryResidualSign.__init__">(chop.nn.quantized.modules.linear.LinearBinaryResidualSign method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBinaryScaling.__init__">(chop.nn.quantized.modules.linear.LinearBinaryScaling method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBlockFP.__init__">(chop.nn.quantized.modules.linear.LinearBlockFP method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBlockLog.__init__">(chop.nn.quantized.modules.linear.LinearBlockLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBlockMinifloat.__init__">(chop.nn.quantized.modules.linear.LinearBlockMinifloat method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearInteger.__init__">(chop.nn.quantized.modules.linear.LinearInteger method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLog.__init__">(chop.nn.quantized.modules.linear.LinearLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets.__init__">(chop.nn.quantized.modules.linear.LinearLogicNets method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLUT.__init__">(chop.nn.quantized.modules.linear.LinearLUT method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearMinifloatDenorm.__init__">(chop.nn.quantized.modules.linear.LinearMinifloatDenorm method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearMinifloatIEEE.__init__">(chop.nn.quantized.modules.linear.LinearMinifloatIEEE method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearMXIntHardware.__init__">(chop.nn.quantized.modules.linear.LinearMXIntHardware method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearTernary.__init__">(chop.nn.quantized.modules.linear.LinearTernary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.pool2d.AdaptiveAvgPool2dInteger.__init__">(chop.nn.quantized.modules.pool2d.AdaptiveAvgPool2dInteger method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.pool2d.AvgPool2dBinary.__init__">(chop.nn.quantized.modules.pool2d.AvgPool2dBinary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.pool2d.AvgPool2dInteger.__init__">(chop.nn.quantized.modules.pool2d.AvgPool2dInteger method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.pool2d.AvgPool2dTernary.__init__">(chop.nn.quantized.modules.pool2d.AvgPool2dTernary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLUBinary.__init__">(chop.nn.quantized.modules.relu.ReLUBinary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLUBlockFP.__init__">(chop.nn.quantized.modules.relu.ReLUBlockFP method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLUBlockLog.__init__">(chop.nn.quantized.modules.relu.ReLUBlockLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLUBlockMinifloat.__init__">(chop.nn.quantized.modules.relu.ReLUBlockMinifloat method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLUInteger.__init__">(chop.nn.quantized.modules.relu.ReLUInteger method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLULog.__init__">(chop.nn.quantized.modules.relu.ReLULog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLUMinifloatDenorm.__init__">(chop.nn.quantized.modules.relu.ReLUMinifloatDenorm method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLUMinifloatIEEE.__init__">(chop.nn.quantized.modules.relu.ReLUMinifloatIEEE method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLUTernary.__init__">(chop.nn.quantized.modules.relu.ReLUTernary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.rms_norm.RMSNorm.__init__">(chop.nn.quantized.modules.rms_norm.RMSNorm method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.rms_norm.RMSNormInteger.__init__">(chop.nn.quantized.modules.rms_norm.RMSNormInteger method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELUBinary.__init__">(chop.nn.quantized.modules.selu.SELUBinary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELUBlockFP.__init__">(chop.nn.quantized.modules.selu.SELUBlockFP method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELUBlockLog.__init__">(chop.nn.quantized.modules.selu.SELUBlockLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELUBlockMinifloat.__init__">(chop.nn.quantized.modules.selu.SELUBlockMinifloat method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELUInteger.__init__">(chop.nn.quantized.modules.selu.SELUInteger method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELULog.__init__">(chop.nn.quantized.modules.selu.SELULog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELUMinifloatDenorm.__init__">(chop.nn.quantized.modules.selu.SELUMinifloatDenorm method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELUMinifloatIEEE.__init__">(chop.nn.quantized.modules.selu.SELUMinifloatIEEE method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELUTernary.__init__">(chop.nn.quantized.modules.selu.SELUTernary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLUBinary.__init__">(chop.nn.quantized.modules.silu.SiLUBinary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLUBlockFP.__init__">(chop.nn.quantized.modules.silu.SiLUBlockFP method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLUBlockLog.__init__">(chop.nn.quantized.modules.silu.SiLUBlockLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLUBlockMinifloat.__init__">(chop.nn.quantized.modules.silu.SiLUBlockMinifloat method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLUInteger.__init__">(chop.nn.quantized.modules.silu.SiLUInteger method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLULog.__init__">(chop.nn.quantized.modules.silu.SiLULog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLUMinifloatDenorm.__init__">(chop.nn.quantized.modules.silu.SiLUMinifloatDenorm method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLUMinifloatIEEE.__init__">(chop.nn.quantized.modules.silu.SiLUMinifloatIEEE method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLUTernary.__init__">(chop.nn.quantized.modules.silu.SiLUTernary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusBinary.__init__">(chop.nn.quantized.modules.softplus.SoftplusBinary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusBlockFP.__init__">(chop.nn.quantized.modules.softplus.SoftplusBlockFP method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusBlockLog.__init__">(chop.nn.quantized.modules.softplus.SoftplusBlockLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusBlockMinifloat.__init__">(chop.nn.quantized.modules.softplus.SoftplusBlockMinifloat method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusInteger.__init__">(chop.nn.quantized.modules.softplus.SoftplusInteger method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusLog.__init__">(chop.nn.quantized.modules.softplus.SoftplusLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusMinifloatDenorm.__init__">(chop.nn.quantized.modules.softplus.SoftplusMinifloatDenorm method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusMinifloatIEEE.__init__">(chop.nn.quantized.modules.softplus.SoftplusMinifloatIEEE method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusTernary.__init__">(chop.nn.quantized.modules.softplus.SoftplusTernary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignBinary.__init__">(chop.nn.quantized.modules.softsign.SoftsignBinary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignBlockFP.__init__">(chop.nn.quantized.modules.softsign.SoftsignBlockFP method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignBlockLog.__init__">(chop.nn.quantized.modules.softsign.SoftsignBlockLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignBlockMinifloat.__init__">(chop.nn.quantized.modules.softsign.SoftsignBlockMinifloat method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignInteger.__init__">(chop.nn.quantized.modules.softsign.SoftsignInteger method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignLog.__init__">(chop.nn.quantized.modules.softsign.SoftsignLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignMinifloatDenorm.__init__">(chop.nn.quantized.modules.softsign.SoftsignMinifloatDenorm method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignMinifloatIEEE.__init__">(chop.nn.quantized.modules.softsign.SoftsignMinifloatIEEE method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignTernary.__init__">(chop.nn.quantized.modules.softsign.SoftsignTernary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBinary.__init__">(chop.nn.quantized.modules.tanh.TanhBinary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBlockFP.__init__">(chop.nn.quantized.modules.tanh.TanhBlockFP method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBlockLog.__init__">(chop.nn.quantized.modules.tanh.TanhBlockLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBlockMinifloat.__init__">(chop.nn.quantized.modules.tanh.TanhBlockMinifloat method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhInteger.__init__">(chop.nn.quantized.modules.tanh.TanhInteger method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhLog.__init__">(chop.nn.quantized.modules.tanh.TanhLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhMinifloatDenorm.__init__">(chop.nn.quantized.modules.tanh.TanhMinifloatDenorm method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhMinifloatIEEE.__init__">(chop.nn.quantized.modules.tanh.TanhMinifloatIEEE method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhTernary.__init__">(chop.nn.quantized.modules.tanh.TanhTernary method)</a>
+</li>
+        <li><a href="modules/chop/transform/onn.html#chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention.__init__">(chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention method)</a>
+</li>
+        <li><a href="modules/chop/pipelines.html#chop.pipelines.auto_pipeline.AutoPipeline.__init__">(chop.pipelines.auto_pipeline.AutoPipeline method)</a>
+</li>
+        <li><a href="modules/chop/tools.html#chop.tools.get_input.InputGenerator.__init__">(chop.tools.get_input.InputGenerator method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="A">A</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.pool2d.AdaptiveAvgPool2dInteger">AdaptiveAvgPool2dInteger (class in chop.nn.quantized.modules.pool2d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.add.add_binary">add_binary() (in module chop.nn.quantized.functional.add)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.add.add_block_fp">add_block_fp() (in module chop.nn.quantized.functional.add)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.add.add_block_log">add_block_log() (in module chop.nn.quantized.functional.add)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.add.add_block_minifloat">add_block_minifloat() (in module chop.nn.quantized.functional.add)</a>
+</li>
+      <li><a href="modules/chop/analysis/add_metadata.html#chop.passes.graph.analysis.add_metadata.add_common_metadata.add_common_metadata_analysis_pass">add_common_metadata_analysis_pass() (in module chop.passes.graph.analysis.add_metadata.add_common_metadata)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.add.add_integer">add_integer() (in module chop.nn.quantized.functional.add)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.add.add_log">add_log() (in module chop.nn.quantized.functional.add)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.add.add_minifloat_denorm">add_minifloat_denorm() (in module chop.nn.quantized.functional.add)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.add.add_minifloat_ieee">add_minifloat_ieee() (in module chop.nn.quantized.functional.add)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/analysis/pruning.html#chop.passes.graph.analysis.pruning.calculate_natural_sparsity.add_natural_sparsity_metadata_analysis_pass">add_natural_sparsity_metadata_analysis_pass() (in module chop.passes.graph.analysis.pruning.calculate_natural_sparsity)</a>
+</li>
+      <li><a href="modules/chop/analysis/pruning.html#chop.passes.graph.analysis.pruning.calculate_sparsity.add_pruning_metadata_analysis_pass">add_pruning_metadata_analysis_pass() (in module chop.passes.graph.analysis.pruning.calculate_sparsity)</a>
+</li>
+      <li><a href="modules/chop/analysis/add_metadata.html#chop.passes.graph.analysis.add_metadata.add_software_metadata.add_software_metadata_analysis_pass">add_software_metadata_analysis_pass() (in module chop.passes.graph.analysis.add_metadata.add_software_metadata)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.add.add_ternary">add_ternary() (in module chop.nn.quantized.functional.add)</a>
+</li>
+      <li><a href="modules/chop/transform/onn.html#chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention.attn_min_max">attn_min_max (chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention attribute)</a>
+</li>
+      <li><a href="modules/chop/pipelines.html#chop.pipelines.auto_pipeline.AutoPipeline">AutoPipeline (class in chop.pipelines.auto_pipeline)</a>
+</li>
+      <li><a href="modules/chop/transform/onn.html#chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention.av_min_max">av_min_max (chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention attribute)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.pool2d.AvgPool2dBinary">AvgPool2dBinary (class in chop.nn.quantized.modules.pool2d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.pool2d.AvgPool2dInteger">AvgPool2dInteger (class in chop.nn.quantized.modules.pool2d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.pool2d.AvgPool2dTernary">AvgPool2dTernary (class in chop.nn.quantized.modules.pool2d)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.batch_norm1d.BatchNorm1dInteger">BatchNorm1dInteger (class in chop.nn.quantized.modules.batch_norm1d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.batch_norm2d.BatchNorm2dBinary">BatchNorm2dBinary (class in chop.nn.quantized.modules.batch_norm2d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.batch_norm2d.BatchNorm2dInteger">BatchNorm2dInteger (class in chop.nn.quantized.modules.batch_norm2d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.attention_head.BertSelfAttentionHeadInteger">BertSelfAttentionHeadInteger (class in chop.nn.quantized.modules.attention_head)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.attention.BertSelfAttentionInteger">BertSelfAttentionInteger (class in chop.nn.quantized.modules.attention)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLUT.bias">bias (chop.nn.quantized.modules.conv2d.Conv2dLUT attribute)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.bmm_binary">bmm_binary() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.bmm_block_fp">bmm_block_fp() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.bmm_block_log">bmm_block_log() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.bmm_block_minifloat">bmm_block_minifloat() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.bmm_integer">bmm_integer() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.bmm_log">bmm_log() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.bmm_minifloat_denorm">bmm_minifloat_denorm() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.bmm_minifloat_ieee">bmm_minifloat_ieee() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.bmm_ternary">bmm_ternary() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELUBinary.bypass">bypass (chop.nn.quantized.modules.gelu.GELUBinary attribute)</a>
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELUInteger.bypass">(chop.nn.quantized.modules.gelu.GELUInteger attribute)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELUTernary.bypass">(chop.nn.quantized.modules.gelu.GELUTernary attribute)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLUBinary.bypass">(chop.nn.quantized.modules.relu.ReLUBinary attribute)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLUInteger.bypass">(chop.nn.quantized.modules.relu.ReLUInteger attribute)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLUTernary.bypass">(chop.nn.quantized.modules.relu.ReLUTernary attribute)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELUBinary.bypass">(chop.nn.quantized.modules.selu.SELUBinary attribute)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELUInteger.bypass">(chop.nn.quantized.modules.selu.SELUInteger attribute)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELUTernary.bypass">(chop.nn.quantized.modules.selu.SELUTernary attribute)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLUBinary.bypass">(chop.nn.quantized.modules.silu.SiLUBinary attribute)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLUInteger.bypass">(chop.nn.quantized.modules.silu.SiLUInteger attribute)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLUTernary.bypass">(chop.nn.quantized.modules.silu.SiLUTernary attribute)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusBinary.bypass">(chop.nn.quantized.modules.softplus.SoftplusBinary attribute)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusInteger.bypass">(chop.nn.quantized.modules.softplus.SoftplusInteger attribute)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusTernary.bypass">(chop.nn.quantized.modules.softplus.SoftplusTernary attribute)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignBinary.bypass">(chop.nn.quantized.modules.softsign.SoftsignBinary attribute)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignInteger.bypass">(chop.nn.quantized.modules.softsign.SoftsignInteger attribute)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignTernary.bypass">(chop.nn.quantized.modules.softsign.SoftsignTernary attribute)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBinary.bypass">(chop.nn.quantized.modules.tanh.TanhBinary attribute)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhInteger.bypass">(chop.nn.quantized.modules.tanh.TanhInteger attribute)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhTernary.bypass">(chop.nn.quantized.modules.tanh.TanhTernary attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="C">C</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/analysis/quantization.html#chop.passes.graph.analysis.quantization.calculate_avg_bits.calculate_avg_bits_mg_analysis_pass">calculate_avg_bits_mg_analysis_pass() (in module chop.passes.graph.analysis.quantization.calculate_avg_bits)</a>
+</li>
+      <li><a href="modules/chop/module_analysis/quantization.html#chop.passes.module.analysis.quantize.calculate_avg_bits_module_analysis_pass">calculate_avg_bits_module_analysis_pass() (in module chop.passes.module.analysis.quantize)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2DLogicNets.calculate_truth_tables">calculate_truth_tables() (chop.nn.quantized.modules.conv2d.Conv2DLogicNets method)</a>
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets.calculate_truth_tables">(chop.nn.quantized.modules.linear.LinearLogicNets method)</a>
+</li>
+      </ul></li>
+      <li><a href="modules/chop/tools.html#chop.tools.check_dependency.check_dependencies">check_dependencies() (in module chop.tools.check_dependency)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.check_dependency.check_deps_tensorRT_pass">check_deps_tensorRT_pass() (in module chop.tools.check_dependency)</a>
+</li>
+      <li>
+    chop.actions.search.search
+
+      <ul>
+        <li><a href="modules/chop/actions.html#module-chop.actions.search.search">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.actions.test
+
+      <ul>
+        <li><a href="modules/chop/actions.html#module-chop.actions.test">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.actions.train
+
+      <ul>
+        <li><a href="modules/chop/actions.html#module-chop.actions.train">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.actions.transform
+
+      <ul>
+        <li><a href="modules/chop/actions.html#module-chop.actions.transform">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.dataset.nerf
+
+      <ul>
+        <li><a href="modules/chop/datasets.html#module-chop.dataset.nerf">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.dataset.nlp
+
+      <ul>
+        <li><a href="modules/chop/datasets.html#module-chop.dataset.nlp">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.dataset.physical
+
+      <ul>
+        <li><a href="modules/chop/datasets.html#module-chop.dataset.physical">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.dataset.vision
+
+      <ul>
+        <li><a href="modules/chop/datasets.html#module-chop.dataset.vision">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.ir.graph.mase_graph
+
+      <ul>
+        <li><a href="modules/chop/ir.html#module-chop.ir.graph.mase_graph">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.ir.graph.mase_graph_metadata
+
+      <ul>
+        <li><a href="modules/chop/ir.html#module-chop.ir.graph.mase_graph_metadata">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.ir.graph.mase_metadata
+
+      <ul>
+        <li><a href="modules/chop/ir.html#module-chop.ir.graph.mase_metadata">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.functional.softermax
+
+      <ul>
+        <li><a href="modules/chop/nn.html#module-chop.nn.functional.softermax">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.functional.splitter
+
+      <ul>
+        <li><a href="modules/chop/nn.html#module-chop.nn.functional.splitter">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.modules
+
+      <ul>
+        <li><a href="modules/chop/nn.html#module-chop.nn.modules">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.functional.add
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_functional.html#module-chop.nn.quantized.functional.add">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.functional.gelu
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_functional.html#module-chop.nn.quantized.functional.gelu">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.functional.matmul
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_functional.html#module-chop.nn.quantized.functional.matmul">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.functional.mult
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_functional.html#module-chop.nn.quantized.functional.mult">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.functional.relu
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_functional.html#module-chop.nn.quantized.functional.relu">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.functional.selu
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_functional.html#module-chop.nn.quantized.functional.selu">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.functional.softermax
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_functional.html#module-chop.nn.quantized.functional.softermax">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.functional.softplus
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_functional.html#module-chop.nn.quantized.functional.softplus">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.functional.softsign
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_functional.html#module-chop.nn.quantized.functional.softsign">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.functional.sub
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_functional.html#module-chop.nn.quantized.functional.sub">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.functional.tanh
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_functional.html#module-chop.nn.quantized.functional.tanh">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.modules.attention
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.attention">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.modules.attention_head
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.attention_head">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.modules.batch_norm1d
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.batch_norm1d">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.modules.batch_norm2d
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.batch_norm2d">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.modules.conv1d
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.conv1d">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.modules.conv2d
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.conv2d">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.modules.gelu
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.gelu">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.modules.group_norm
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.group_norm">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    chop.nn.quantized.modules.instance_norm2d
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.instance_norm2d">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.modules.layer_norm
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.layer_norm">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.modules.linear
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.linear">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.modules.pool2d
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.pool2d">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.modules.relu
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.relu">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.modules.rms_norm
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.rms_norm">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.modules.selu
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.selu">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.modules.silu
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.silu">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.modules.softplus
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.softplus">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.modules.softsign
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.softsign">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.modules.tanh
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.tanh">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.nn.quantized.utils
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.utils">module</a>
+</li>
+      </ul></li>
+      <li><a href="modules/chop/transform/onn.html#chop.passes.module.transforms.onn.layers.linear.OtLinear">chop.passes.module.transforms.onn.layers.linear.OtLinear (built-in variable)</a>
+</li>
+      <li>
+    chop.pipelines.auto_pipeline
+
+      <ul>
+        <li><a href="modules/chop/pipelines.html#module-chop.pipelines.auto_pipeline">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.tools.check_dependency
+
+      <ul>
+        <li><a href="modules/chop/tools.html#module-chop.tools.check_dependency">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.tools.checkpoint_load
+
+      <ul>
+        <li><a href="modules/chop/tools.html#module-chop.tools.checkpoint_load">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.tools.config_load
+
+      <ul>
+        <li><a href="modules/chop/tools.html#module-chop.tools.config_load">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.tools.get_input
+
+      <ul>
+        <li><a href="modules/chop/tools.html#module-chop.tools.get_input">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.tools.logger
+
+      <ul>
+        <li><a href="modules/chop/tools.html#module-chop.tools.logger">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.tools.onnx_operators
+
+      <ul>
+        <li><a href="modules/chop/tools.html#module-chop.tools.onnx_operators">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.tools.registry
+
+      <ul>
+        <li><a href="modules/chop/tools.html#module-chop.tools.registry">module</a>
+</li>
+      </ul></li>
+      <li>
+    chop.tools.utils
+
+      <ul>
+        <li><a href="modules/chop/tools.html#module-chop.tools.utils">module</a>
+</li>
+      </ul></li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2DLogicNets.construct_mask_index">construct_mask_index() (chop.nn.quantized.modules.conv2d.Conv2DLogicNets method)</a>
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets.construct_mask_index">(chop.nn.quantized.modules.linear.LinearLogicNets method)</a>
+</li>
+      </ul></li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv1d.Conv1dBinary">Conv1dBinary (class in chop.nn.quantized.modules.conv1d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv1d.Conv1dBlockFP">Conv1dBlockFP (class in chop.nn.quantized.modules.conv1d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv1d.Conv1dBlockLog">Conv1dBlockLog (class in chop.nn.quantized.modules.conv1d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv1d.Conv1dBlockMinifloat">Conv1dBlockMinifloat (class in chop.nn.quantized.modules.conv1d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv1d.Conv1dInteger">Conv1dInteger (class in chop.nn.quantized.modules.conv1d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv1d.Conv1dLog">Conv1dLog (class in chop.nn.quantized.modules.conv1d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv1d.Conv1dMinifloatDenorm">Conv1dMinifloatDenorm (class in chop.nn.quantized.modules.conv1d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv1d.Conv1dMinifloatIEEE">Conv1dMinifloatIEEE (class in chop.nn.quantized.modules.conv1d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv1d.Conv1dTernary">Conv1dTernary (class in chop.nn.quantized.modules.conv1d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dBinary">Conv2dBinary (class in chop.nn.quantized.modules.conv2d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dBinaryResidualSign">Conv2dBinaryResidualSign (class in chop.nn.quantized.modules.conv2d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dBinaryScaling">Conv2dBinaryScaling (class in chop.nn.quantized.modules.conv2d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dBlockFP">Conv2dBlockFP (class in chop.nn.quantized.modules.conv2d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dBlockLog">Conv2dBlockLog (class in chop.nn.quantized.modules.conv2d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dBlockMinifloat">Conv2dBlockMinifloat (class in chop.nn.quantized.modules.conv2d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dInteger">Conv2dInteger (class in chop.nn.quantized.modules.conv2d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLog">Conv2dLog (class in chop.nn.quantized.modules.conv2d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2DLogicNets">Conv2DLogicNets (class in chop.nn.quantized.modules.conv2d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLUT">Conv2dLUT (class in chop.nn.quantized.modules.conv2d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dMinifloatDenorm">Conv2dMinifloatDenorm (class in chop.nn.quantized.modules.conv2d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dMinifloatIEEE">Conv2dMinifloatIEEE (class in chop.nn.quantized.modules.conv2d)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dTernary">Conv2dTernary (class in chop.nn.quantized.modules.conv2d)</a>
+</li>
+      <li><a href="modules/chop/transform/utils.html#chop.passes.graph.transforms.utils.conv_bn_fusion_transform_pass">conv_bn_fusion_transform_pass() (in module chop.passes.graph.transforms.utils)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.config_load.convert_none_to_str_na">convert_none_to_str_na() (in module chop.tools.config_load)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.config_load.convert_str_na_to_none">convert_str_na_to_none() (in module chop.tools.config_load)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.utils.copy_weights">copy_weights() (in module chop.tools.utils)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2DLogicNets.decode">decode() (chop.nn.quantized.modules.conv2d.Conv2DLogicNets method)</a>
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets.decode">(chop.nn.quantized.modules.linear.LinearLogicNets method)</a>
+</li>
+      </ul></li>
+      <li><a href="modules/chop/tools.html#chop.tools.utils.deepgetattr">deepgetattr() (in module chop.tools.utils)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/tools.html#chop.tools.utils.deepsetattr">deepsetattr() (in module chop.tools.utils)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLUT.device">device (chop.nn.quantized.modules.conv2d.Conv2dLUT attribute)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLUT.dilation">dilation (chop.nn.quantized.modules.conv2d.Conv2dLUT attribute)</a>
+</li>
+      <li><a href="modules/chop/ir.html#chop.ir.graph.mase_graph.MaseGraph.draw">draw() (chop.ir.graph.mase_graph.MaseGraph method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2DLogicNets.encode">encode() (chop.nn.quantized.modules.conv2d.Conv2DLogicNets method)</a>
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets.encode">(chop.nn.quantized.modules.linear.LinearLogicNets method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/tools.html#chop.tools.utils.execute_cli">execute_cli() (in module chop.tools.utils)</a>
+</li>
+      <li><a href="modules/chop/ir.html#chop.ir.graph.mase_graph.MaseGraph.export">export() (chop.ir.graph.mase_graph.MaseGraph method)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.utils.extract_required_config">extract_required_config() (in module chop.nn.quantized.utils)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/tools.html#chop.tools.check_dependency.find_missing_dependencies">find_missing_dependencies() (in module chop.tools.check_dependency)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.softermax.fixed_softermax">fixed_softermax() (in module chop.nn.quantized.functional.softermax)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.attention_head.BertSelfAttentionHeadInteger.forward">forward() (chop.nn.quantized.modules.attention_head.BertSelfAttentionHeadInteger method)</a>
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dBinaryResidualSign.forward">(chop.nn.quantized.modules.conv2d.Conv2dBinaryResidualSign method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dBinaryScaling.forward">(chop.nn.quantized.modules.conv2d.Conv2dBinaryScaling method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dBlockFP.forward">(chop.nn.quantized.modules.conv2d.Conv2dBlockFP method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dBlockLog.forward">(chop.nn.quantized.modules.conv2d.Conv2dBlockLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dBlockMinifloat.forward">(chop.nn.quantized.modules.conv2d.Conv2dBlockMinifloat method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2DLogicNets.forward">(chop.nn.quantized.modules.conv2d.Conv2DLogicNets method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLUT.forward">(chop.nn.quantized.modules.conv2d.Conv2dLUT method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELUBlockFP.forward">(chop.nn.quantized.modules.gelu.GELUBlockFP method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELUBlockLog.forward">(chop.nn.quantized.modules.gelu.GELUBlockLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELUBlockMinifloat.forward">(chop.nn.quantized.modules.gelu.GELUBlockMinifloat method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBinary.forward">(chop.nn.quantized.modules.linear.LinearBinary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBinaryResidualSign.forward">(chop.nn.quantized.modules.linear.LinearBinaryResidualSign method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBinaryScaling.forward">(chop.nn.quantized.modules.linear.LinearBinaryScaling method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBlockFP.forward">(chop.nn.quantized.modules.linear.LinearBlockFP method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBlockLog.forward">(chop.nn.quantized.modules.linear.LinearBlockLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBlockMinifloat.forward">(chop.nn.quantized.modules.linear.LinearBlockMinifloat method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearInteger.forward">(chop.nn.quantized.modules.linear.LinearInteger method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLog.forward">(chop.nn.quantized.modules.linear.LinearLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets.forward">(chop.nn.quantized.modules.linear.LinearLogicNets method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLUT.forward">(chop.nn.quantized.modules.linear.LinearLUT method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearMinifloatDenorm.forward">(chop.nn.quantized.modules.linear.LinearMinifloatDenorm method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearMinifloatIEEE.forward">(chop.nn.quantized.modules.linear.LinearMinifloatIEEE method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearMXIntHardware.forward">(chop.nn.quantized.modules.linear.LinearMXIntHardware method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearTernary.forward">(chop.nn.quantized.modules.linear.LinearTernary method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLUBlockFP.forward">(chop.nn.quantized.modules.relu.ReLUBlockFP method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLUBlockLog.forward">(chop.nn.quantized.modules.relu.ReLUBlockLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLUBlockMinifloat.forward">(chop.nn.quantized.modules.relu.ReLUBlockMinifloat method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.rms_norm.RMSNorm.forward">(chop.nn.quantized.modules.rms_norm.RMSNorm method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELUBlockFP.forward">(chop.nn.quantized.modules.selu.SELUBlockFP method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELUBlockLog.forward">(chop.nn.quantized.modules.selu.SELUBlockLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELUBlockMinifloat.forward">(chop.nn.quantized.modules.selu.SELUBlockMinifloat method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLUBlockFP.forward">(chop.nn.quantized.modules.silu.SiLUBlockFP method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLUBlockLog.forward">(chop.nn.quantized.modules.silu.SiLUBlockLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLUBlockMinifloat.forward">(chop.nn.quantized.modules.silu.SiLUBlockMinifloat method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusBlockFP.forward">(chop.nn.quantized.modules.softplus.SoftplusBlockFP method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusBlockLog.forward">(chop.nn.quantized.modules.softplus.SoftplusBlockLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusBlockMinifloat.forward">(chop.nn.quantized.modules.softplus.SoftplusBlockMinifloat method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignBlockFP.forward">(chop.nn.quantized.modules.softsign.SoftsignBlockFP method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignBlockLog.forward">(chop.nn.quantized.modules.softsign.SoftsignBlockLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignBlockMinifloat.forward">(chop.nn.quantized.modules.softsign.SoftsignBlockMinifloat method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBlockFP.forward">(chop.nn.quantized.modules.tanh.TanhBlockFP method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBlockLog.forward">(chop.nn.quantized.modules.tanh.TanhBlockLog method)</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBlockMinifloat.forward">(chop.nn.quantized.modules.tanh.TanhBlockMinifloat method)</a>
+</li>
+        <li><a href="modules/chop/transform/onn.html#chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention.forward">(chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/ir.html#chop.ir.graph.mase_graph.MaseGraph.from_checkpoint">from_checkpoint() (chop.ir.graph.mase_graph.MaseGraph class method)</a>
+</li>
+      <li><a href="modules/chop/transform/onn.html#chop.passes.module.transforms.onn.layers.linear.from_linear">from_linear() (chop.passes.module.transforms.onn.layers.linear class method)</a>
+</li>
+      <li><a href="modules/chop/ir.html#chop.ir.graph.mase_graph.MaseGraph.from_module">from_module() (chop.ir.graph.mase_graph.MaseGraph class method)</a>
+</li>
+      <li><a href="modules/chop/transform/onn.html#chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention.from_pretrained">from_pretrained() (chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention class method)</a>
+</li>
+      <li><a href="modules/chop/ir.html#chop.ir.graph.mase_graph.MaseGraph.fx_graph">fx_graph (chop.ir.graph.mase_graph.MaseGraph property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.gelu.gelu_binary">gelu_binary() (in module chop.nn.quantized.functional.gelu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.gelu.gelu_block_fp">gelu_block_fp() (in module chop.nn.quantized.functional.gelu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.gelu.gelu_block_log">gelu_block_log() (in module chop.nn.quantized.functional.gelu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.gelu.gelu_block_minifloat">gelu_block_minifloat() (in module chop.nn.quantized.functional.gelu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.gelu.gelu_integer">gelu_integer() (in module chop.nn.quantized.functional.gelu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.gelu.gelu_log">gelu_log() (in module chop.nn.quantized.functional.gelu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.gelu.gelu_minifloat_denorm">gelu_minifloat_denorm() (in module chop.nn.quantized.functional.gelu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.gelu.gelu_minifloat_ieee">gelu_minifloat_ieee() (in module chop.nn.quantized.functional.gelu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.gelu.gelu_ternary">gelu_ternary() (in module chop.nn.quantized.functional.gelu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELUBinary">GELUBinary (class in chop.nn.quantized.modules.gelu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELUBlockFP">GELUBlockFP (class in chop.nn.quantized.modules.gelu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELUBlockLog">GELUBlockLog (class in chop.nn.quantized.modules.gelu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELUBlockMinifloat">GELUBlockMinifloat (class in chop.nn.quantized.modules.gelu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELUInteger">GELUInteger (class in chop.nn.quantized.modules.gelu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELULog">GELULog (class in chop.nn.quantized.modules.gelu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELUMinifloatDenorm">GELUMinifloatDenorm (class in chop.nn.quantized.modules.gelu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELUMinifloatIEEE">GELUMinifloatIEEE (class in chop.nn.quantized.modules.gelu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.gelu.GELUTernary">GELUTernary (class in chop.nn.quantized.modules.gelu)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.utils.generate_truth_table">generate_truth_table() (in module chop.tools.utils)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.generic_matmul_binary">generic_matmul_binary() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.generic_matmul_block_fp">generic_matmul_block_fp() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.generic_matmul_block_log">generic_matmul_block_log() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.generic_matmul_block_minifloat">generic_matmul_block_minifloat() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.generic_matmul_integer">generic_matmul_integer() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.generic_matmul_log">generic_matmul_log() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.generic_matmul_minifloat_denorm">generic_matmul_minifloat_denorm() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.generic_matmul_minifloat_ieee">generic_matmul_minifloat_ieee() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.generic_matmul_ternary">generic_matmul_ternary() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.get_input.get_cf_args">get_cf_args() (in module chop.tools.get_input)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.utils.get_checkpoint_file">get_checkpoint_file() (in module chop.tools.utils)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.get_input.get_dummy_input">get_dummy_input() (in module chop.tools.get_input)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.utils.get_factors">get_factors() (in module chop.tools.utils)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.logger.get_logger">get_logger() (in module chop.tools.logger)</a>
+</li>
+      <li><a href="modules/chop/ir.html#chop.ir.graph.mase_metadata.get_module_by_name">get_module_by_name() (in module chop.ir.graph.mase_metadata)</a>
+</li>
+      <li><a href="modules/chop/datasets.html#chop.dataset.nerf.get_nerf_dataset">get_nerf_dataset() (in module chop.dataset.nerf)</a>
+</li>
+      <li><a href="modules/chop/datasets.html#chop.dataset.nerf.get_nerf_dataset_cls">get_nerf_dataset_cls() (in module chop.dataset.nerf)</a>
+</li>
+      <li><a href="modules/chop/datasets.html#chop.dataset.nlp.get_nlp_dataset">get_nlp_dataset() (in module chop.dataset.nlp)</a>
+</li>
+      <li><a href="modules/chop/datasets.html#chop.dataset.nlp.get_nlp_dataset_cls">get_nlp_dataset_cls() (in module chop.dataset.nlp)</a>
+</li>
+      <li><a href="modules/chop/datasets.html#chop.dataset.physical.get_physical_dataset">get_physical_dataset() (in module chop.dataset.physical)</a>
+</li>
+      <li><a href="modules/chop/datasets.html#chop.dataset.physical.get_physical_dataset_cls">get_physical_dataset_cls() (in module chop.dataset.physical)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.utils.get_stats">get_stats() (in module chop.nn.quantized.utils)</a>
+</li>
+      <li><a href="modules/chop/datasets.html#chop.dataset.vision.get_vision_dataset">get_vision_dataset() (in module chop.dataset.vision)</a>
+</li>
+      <li><a href="modules/chop/datasets.html#chop.dataset.vision.get_vision_dataset_cls">get_vision_dataset_cls() (in module chop.dataset.vision)</a>
+</li>
+      <li><a href="modules/chop/ir.html#chop.ir.graph.mase_metadata.MaseMetadata.graph">graph (chop.ir.graph.mase_metadata.MaseMetadata property)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.group_norm.GroupNormInteger">GroupNormInteger (class in chop.nn.quantized.modules.group_norm)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLUT.groups">groups (chop.nn.quantized.modules.conv2d.Conv2dLUT attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/tools.html#chop.tools.get_input.ModelSource.HF_TRANSFORMERS">HF_TRANSFORMERS (chop.tools.get_input.ModelSource attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/analysis/pruning.html#chop.passes.graph.analysis.pruning.hook_inspector.hook_inspection_analysis_pass">hook_inspection_analysis_pass() (in module chop.passes.graph.analysis.pruning.hook_inspector)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/ir.html#chop.ir.graph.mase_graph.MaseGraph.implicit_nodes">implicit_nodes (chop.ir.graph.mase_graph.MaseGraph attribute)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLUT.in_channels">in_channels (chop.nn.quantized.modules.conv2d.Conv2dLUT attribute)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLUT.in_features">in_features (chop.nn.quantized.modules.linear.LinearLUT attribute)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.utils.init_Conv2dLUT_weight">init_Conv2dLUT_weight() (in module chop.tools.utils)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.utils.init_LinearLUT_weight">init_LinearLUT_weight() (in module chop.tools.utils)</a>
+</li>
+      <li><a href="modules/chop/analysis/init_metadata.html#chop.passes.graph.analysis.init_metadata.init_metadata_analysis_pass">init_metadata_analysis_pass() (in module chop.passes.graph.analysis.init_metadata)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLUT.input_dim">input_dim (chop.nn.quantized.modules.conv2d.Conv2dLUT attribute)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLUT.input_mask">input_mask (chop.nn.quantized.modules.conv2d.Conv2dLUT attribute)</a>
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLUT.input_mask">(chop.nn.quantized.modules.linear.LinearLUT attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="modules/chop/tools.html#chop.tools.get_input.InputGenerator">InputGenerator (class in chop.tools.get_input)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.instance_norm2d.InstanceNorm2dInteger">InstanceNorm2dInteger (class in chop.nn.quantized.modules.instance_norm2d)</a>
+</li>
+      <li><a href="modules/chop/ir.html#chop.ir.graph.mase_graph.MaseTracer.is_leaf_module">is_leaf_module() (chop.ir.graph.mase_graph.MaseTracer method)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.utils.is_tensor">is_tensor() (in module chop.tools.utils)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="K">K</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLUT.k">k (chop.nn.quantized.modules.conv2d.Conv2dLUT attribute)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLUT.kernel_size">kernel_size (chop.nn.quantized.modules.conv2d.Conv2dLUT attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/transform/onn.html#chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention.key_min_max">key_min_max (chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention attribute)</a>
+</li>
+      <li><a href="modules/chop/ir.html#chop.ir.graph.mase_metadata.MaseMetadata.known_types">known_types (chop.ir.graph.mase_metadata.MaseMetadata attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.layer_norm.LayerNormInteger">LayerNormInteger (class in chop.nn.quantized.modules.layer_norm)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBinary">LinearBinary (class in chop.nn.quantized.modules.linear)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBinaryResidualSign">LinearBinaryResidualSign (class in chop.nn.quantized.modules.linear)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBinaryScaling">LinearBinaryScaling (class in chop.nn.quantized.modules.linear)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBlockFP">LinearBlockFP (class in chop.nn.quantized.modules.linear)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBlockLog">LinearBlockLog (class in chop.nn.quantized.modules.linear)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBlockMinifloat">LinearBlockMinifloat (class in chop.nn.quantized.modules.linear)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearInteger">LinearInteger (class in chop.nn.quantized.modules.linear)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLog">LinearLog (class in chop.nn.quantized.modules.linear)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets">LinearLogicNets (class in chop.nn.quantized.modules.linear)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLUT">LinearLUT (class in chop.nn.quantized.modules.linear)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearMinifloatDenorm">LinearMinifloatDenorm (class in chop.nn.quantized.modules.linear)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearMinifloatIEEE">LinearMinifloatIEEE (class in chop.nn.quantized.modules.linear)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearMXIntHardware">LinearMXIntHardware (class in chop.nn.quantized.modules.linear)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearTernary">LinearTernary (class in chop.nn.quantized.modules.linear)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.config_load.load_config">load_config() (in module chop.tools.config_load)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.checkpoint_load.load_graph_module_ckpt">load_graph_module_ckpt() (in module chop.tools.checkpoint_load)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.checkpoint_load.load_lightning_ckpt_to_unwrapped_model">load_lightning_ckpt_to_unwrapped_model() (in module chop.tools.checkpoint_load)</a>
+</li>
+      <li><a href="modules/chop/interface/save_and_load.html#chop.passes.graph.interface.save_and_load.load_mase_graph_interface_pass">load_mase_graph_interface_pass() (in module chop.passes.graph.interface.save_and_load)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.checkpoint_load.load_model">load_model() (in module chop.tools.checkpoint_load)</a>
+</li>
+      <li><a href="modules/chop/interface/save_and_load.html#chop.passes.graph.interface.load_node_meta_param_interface_pass">load_node_meta_param_interface_pass() (in module chop.passes.graph.interface)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.checkpoint_load.load_unwrapped_ckpt">load_unwrapped_ckpt() (in module chop.tools.checkpoint_load)</a>
+</li>
+      <li><a href="modules/chop/transform/utils.html#chop.passes.graph.transforms.utils.logicnets_fusion_transform_pass">logicnets_fusion_transform_pass() (in module chop.passes.graph.transforms.utils)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2DLogicNets.lut_forward">lut_forward() (chop.nn.quantized.modules.conv2d.Conv2DLogicNets method)</a>
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets.lut_forward">(chop.nn.quantized.modules.linear.LinearLogicNets method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="M">M</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/tools.html#chop.tools.get_input.ModelSource.MANUAL">MANUAL (chop.tools.get_input.ModelSource attribute)</a>
+</li>
+      <li><a href="modules/chop/ir.html#chop.ir.graph.mase_graph.MaseGraph">MaseGraph (class in chop.ir.graph.mase_graph)</a>
+</li>
+      <li><a href="modules/chop/ir.html#chop.ir.graph.mase_graph_metadata.MaseGraphMetadata">MaseGraphMetadata (class in chop.ir.graph.mase_graph_metadata)</a>
+</li>
+      <li><a href="modules/chop/ir.html#chop.ir.graph.mase_metadata.MaseMetadata">MaseMetadata (class in chop.ir.graph.mase_metadata)</a>
+</li>
+      <li><a href="modules/chop/ir.html#chop.ir.graph.mase_graph.MaseTracer">MaseTracer (class in chop.ir.graph.mase_graph)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLUT.mask_builder">mask_builder (chop.nn.quantized.modules.conv2d.Conv2dLUT attribute)</a>
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLUT.mask_builder">(chop.nn.quantized.modules.linear.LinearLUT attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLUT.mask_builder_type">mask_builder_type (chop.nn.quantized.modules.conv2d.Conv2dLUT attribute)</a>
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLUT.mask_builder_type">(chop.nn.quantized.modules.linear.LinearLUT attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2DLogicNets.math_forward">math_forward() (chop.nn.quantized.modules.conv2d.Conv2DLogicNets method)</a>
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets.math_forward">(chop.nn.quantized.modules.linear.LinearLogicNets method)</a>
+</li>
+      </ul></li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.matmul_binary">matmul_binary() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.matmul_block_fp">matmul_block_fp() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.matmul_block_log">matmul_block_log() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.matmul_block_minifloat">matmul_block_minifloat() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.matmul_integer">matmul_integer() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.matmul_log">matmul_log() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.matmul_minifloat_denorm">matmul_minifloat_denorm() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.matmul_minifloat_ieee">matmul_minifloat_ieee() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.matmul.matmul_ternary">matmul_ternary() (in module chop.nn.quantized.functional.matmul)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.get_input.ModelSource">ModelSource (class in chop.tools.get_input)</a>
+</li>
+      <li>
+    module
+
+      <ul>
+        <li><a href="modules/chop/actions.html#module-chop.actions.search.search">chop.actions.search.search</a>
+</li>
+        <li><a href="modules/chop/actions.html#module-chop.actions.test">chop.actions.test</a>
+</li>
+        <li><a href="modules/chop/actions.html#module-chop.actions.train">chop.actions.train</a>
+</li>
+        <li><a href="modules/chop/actions.html#module-chop.actions.transform">chop.actions.transform</a>
+</li>
+        <li><a href="modules/chop/datasets.html#module-chop.dataset.nerf">chop.dataset.nerf</a>
+</li>
+        <li><a href="modules/chop/datasets.html#module-chop.dataset.nlp">chop.dataset.nlp</a>
+</li>
+        <li><a href="modules/chop/datasets.html#module-chop.dataset.physical">chop.dataset.physical</a>
+</li>
+        <li><a href="modules/chop/datasets.html#module-chop.dataset.vision">chop.dataset.vision</a>
+</li>
+        <li><a href="modules/chop/ir.html#module-chop.ir.graph.mase_graph">chop.ir.graph.mase_graph</a>
+</li>
+        <li><a href="modules/chop/ir.html#module-chop.ir.graph.mase_graph_metadata">chop.ir.graph.mase_graph_metadata</a>
+</li>
+        <li><a href="modules/chop/ir.html#module-chop.ir.graph.mase_metadata">chop.ir.graph.mase_metadata</a>
+</li>
+        <li><a href="modules/chop/nn.html#module-chop.nn.functional.softermax">chop.nn.functional.softermax</a>
+</li>
+        <li><a href="modules/chop/nn.html#module-chop.nn.functional.splitter">chop.nn.functional.splitter</a>
+</li>
+        <li><a href="modules/chop/nn.html#module-chop.nn.modules">chop.nn.modules</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_functional.html#module-chop.nn.quantized.functional.add">chop.nn.quantized.functional.add</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_functional.html#module-chop.nn.quantized.functional.gelu">chop.nn.quantized.functional.gelu</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_functional.html#module-chop.nn.quantized.functional.matmul">chop.nn.quantized.functional.matmul</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_functional.html#module-chop.nn.quantized.functional.mult">chop.nn.quantized.functional.mult</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_functional.html#module-chop.nn.quantized.functional.relu">chop.nn.quantized.functional.relu</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_functional.html#module-chop.nn.quantized.functional.selu">chop.nn.quantized.functional.selu</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_functional.html#module-chop.nn.quantized.functional.softermax">chop.nn.quantized.functional.softermax</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_functional.html#module-chop.nn.quantized.functional.softplus">chop.nn.quantized.functional.softplus</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_functional.html#module-chop.nn.quantized.functional.softsign">chop.nn.quantized.functional.softsign</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_functional.html#module-chop.nn.quantized.functional.sub">chop.nn.quantized.functional.sub</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_functional.html#module-chop.nn.quantized.functional.tanh">chop.nn.quantized.functional.tanh</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.attention">chop.nn.quantized.modules.attention</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.attention_head">chop.nn.quantized.modules.attention_head</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.batch_norm1d">chop.nn.quantized.modules.batch_norm1d</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.batch_norm2d">chop.nn.quantized.modules.batch_norm2d</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.conv1d">chop.nn.quantized.modules.conv1d</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.conv2d">chop.nn.quantized.modules.conv2d</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.gelu">chop.nn.quantized.modules.gelu</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.group_norm">chop.nn.quantized.modules.group_norm</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.instance_norm2d">chop.nn.quantized.modules.instance_norm2d</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.layer_norm">chop.nn.quantized.modules.layer_norm</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.linear">chop.nn.quantized.modules.linear</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.pool2d">chop.nn.quantized.modules.pool2d</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.relu">chop.nn.quantized.modules.relu</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.rms_norm">chop.nn.quantized.modules.rms_norm</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.selu">chop.nn.quantized.modules.selu</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.silu">chop.nn.quantized.modules.silu</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.softplus">chop.nn.quantized.modules.softplus</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.softsign">chop.nn.quantized.modules.softsign</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.modules.tanh">chop.nn.quantized.modules.tanh</a>
+</li>
+        <li><a href="modules/chop/nn_quantized_modules.html#module-chop.nn.quantized.utils">chop.nn.quantized.utils</a>
+</li>
+        <li><a href="modules/chop/pipelines.html#module-chop.pipelines.auto_pipeline">chop.pipelines.auto_pipeline</a>
+</li>
+        <li><a href="modules/chop/tools.html#module-chop.tools.check_dependency">chop.tools.check_dependency</a>
+</li>
+        <li><a href="modules/chop/tools.html#module-chop.tools.checkpoint_load">chop.tools.checkpoint_load</a>
+</li>
+        <li><a href="modules/chop/tools.html#module-chop.tools.config_load">chop.tools.config_load</a>
+</li>
+        <li><a href="modules/chop/tools.html#module-chop.tools.get_input">chop.tools.get_input</a>
+</li>
+        <li><a href="modules/chop/tools.html#module-chop.tools.logger">chop.tools.logger</a>
+</li>
+        <li><a href="modules/chop/tools.html#module-chop.tools.onnx_operators">chop.tools.onnx_operators</a>
+</li>
+        <li><a href="modules/chop/tools.html#module-chop.tools.registry">chop.tools.registry</a>
+</li>
+        <li><a href="modules/chop/tools.html#module-chop.tools.utils">chop.tools.utils</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/ir.html#chop.ir.graph.mase_metadata.MaseMetadata.module">module (chop.ir.graph.mase_metadata.MaseMetadata property)</a>
+</li>
+      <li><a href="modules/chop/ir.html#chop.ir.graph.mase_graph.MaseGraph.modules">modules (chop.ir.graph.mase_graph.MaseGraph property)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.mult.mult_binary">mult_binary() (in module chop.nn.quantized.functional.mult)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.mult.mult_block_fp">mult_block_fp() (in module chop.nn.quantized.functional.mult)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.mult.mult_block_log">mult_block_log() (in module chop.nn.quantized.functional.mult)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.mult.mult_block_minifloat">mult_block_minifloat() (in module chop.nn.quantized.functional.mult)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.mult.mult_integer">mult_integer() (in module chop.nn.quantized.functional.mult)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.mult.mult_log">mult_log() (in module chop.nn.quantized.functional.mult)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.mult.mult_minifloat_denorm">mult_minifloat_denorm() (in module chop.nn.quantized.functional.mult)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.mult.mult_minifloat_ieee">mult_minifloat_ieee() (in module chop.nn.quantized.functional.mult)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.mult.mult_ternary">mult_ternary() (in module chop.nn.quantized.functional.mult)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/tools.html#chop.tools.get_input.ModelSource.NERF">NERF (chop.tools.get_input.ModelSource attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/tools.html#chop.tools.utils.nested_dict_replacer">nested_dict_replacer() (in module chop.tools.utils)</a>
+</li>
+      <li><a href="modules/chop/ir.html#chop.ir.graph.mase_graph.MaseGraph.nodes">nodes (chop.ir.graph.mase_graph.MaseGraph property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/transform/utils.html#chop.passes.graph.transforms.utils.onnx_annotate_transform_pass">onnx_annotate_transform_pass() (in module chop.passes.graph.transforms.utils)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.onnx_operators.onnx_expand">onnx_expand() (in module chop.tools.onnx_operators)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.onnx_operators.onnx_full">onnx_full() (in module chop.tools.onnx_operators)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.onnx_operators.onnx_gather">onnx_gather() (in module chop.tools.onnx_operators)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.onnx_operators.onnx_gemm">onnx_gemm() (in module chop.tools.onnx_operators)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.onnx_operators.onnx_identity">onnx_identity() (in module chop.tools.onnx_operators)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.onnx_operators.onnx_min">onnx_min() (in module chop.tools.onnx_operators)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.onnx_operators.onnx_permute">onnx_permute() (in module chop.tools.onnx_operators)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.onnx_operators.onnx_reshape">onnx_reshape() (in module chop.tools.onnx_operators)</a>
+</li>
+      <li><a href="modules/chop/interface/onnxrt.html#chop.passes.graph.interface.onnxrt.onnx_runtime.onnx_runtime_interface_pass">onnx_runtime_interface_pass() (in module chop.passes.graph.interface.onnxrt.onnx_runtime)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/tools.html#chop.tools.onnx_operators.onnx_shape">onnx_shape() (in module chop.tools.onnx_operators)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.onnx_operators.onnx_slice">onnx_slice() (in module chop.tools.onnx_operators)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.onnx_operators.onnx_squeeze">onnx_squeeze() (in module chop.tools.onnx_operators)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.onnx_operators.onnx_unsqueeze">onnx_unsqueeze() (in module chop.tools.onnx_operators)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.onnx_operators.onnx_where">onnx_where() (in module chop.tools.onnx_operators)</a>
+</li>
+      <li><a href="modules/chop/transform/onn.html#chop.passes.module.transforms.onn.optical_transformer_module_transform_pass">optical_transformer_module_transform_pass() (in module chop.passes.module.transforms.onn)</a>
+</li>
+      <li><a href="modules/chop/transform/onn.html#chop.passes.module.transforms.onn.layers.attn.ot_eager_attention_forward">ot_eager_attention_forward() (in module chop.passes.module.transforms.onn.layers.attn)</a>
+</li>
+      <li><a href="modules/chop/transform/onn.html#chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention">OtLlamaAttention (class in chop.passes.module.transforms.onn.layers.attn)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLUT.out_channels">out_channels (chop.nn.quantized.modules.conv2d.Conv2dLUT attribute)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLUT.out_features">out_features (chop.nn.quantized.modules.linear.LinearLUT attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLUT.padding">padding (chop.nn.quantized.modules.conv2d.Conv2dLUT attribute)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLUT.padding_mode">padding_mode (chop.nn.quantized.modules.conv2d.Conv2dLUT attribute)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.utils.parse_accelerator">parse_accelerator() (in module chop.tools.utils)</a>
+</li>
+      <li><a href="modules/chop/actions.html#chop.actions.search.search.parse_search_config">parse_search_config() (in module chop.actions.search.search)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.get_input.ModelSource.PATCHED">PATCHED (chop.tools.get_input.ModelSource attribute)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.get_input.ModelSource.PHYSICAL">PHYSICAL (chop.tools.get_input.ModelSource attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/tools.html#chop.tools.config_load.post_parse_load_config">post_parse_load_config() (in module chop.tools.config_load)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLUT.pre_initialize">pre_initialize() (chop.nn.quantized.modules.conv2d.Conv2dLUT method)</a>
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLUT.pre_initialize">(chop.nn.quantized.modules.linear.LinearLUT method)</a>
+</li>
+      </ul></li>
+      <li><a href="modules/chop/actions.html#chop.actions.transform.pre_transform_load">pre_transform_load() (in module chop.actions.transform)</a>
+</li>
+      <li><a href="modules/chop/analysis/statistical_profiler.html#chop.passes.graph.analysis.statistical_profiler.profile_statistics.profile_statistics_analysis_pass">profile_statistics_analysis_pass() (in module chop.passes.graph.analysis.statistical_profiler.profile_statistics)</a>
+</li>
+      <li><a href="modules/chop/transform/pruning.html#chop.passes.graph.transforms.pruning.prune_detach_hook.prune_detach_hook_transform_pass">prune_detach_hook_transform_pass() (in module chop.passes.graph.transforms.pruning.prune_detach_hook)</a>
+</li>
+      <li><a href="modules/chop/transform/pruning.html#chop.passes.graph.transforms.pruning.prune.prune_transform_pass">prune_transform_pass() (in module chop.passes.graph.transforms.pruning.prune)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Q">Q</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/transform/onn.html#chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention.qk_min_max">qk_min_max (chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention attribute)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.utils.quantiser_passthrough">quantiser_passthrough() (in module chop.nn.quantized.utils)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/module_transform/quantization.html#chop.passes.module.transforms.quantize.quantize_module_transform_pass">quantize_module_transform_pass() (in module chop.passes.module.transforms.quantize)</a>
+</li>
+      <li><a href="modules/chop/transform/quantize.html#chop.passes.graph.transforms.quantize.quantize_transform_pass">quantize_transform_pass() (in module chop.passes.graph.transforms.quantize)</a>
+</li>
+      <li><a href="modules/chop/transform/onn.html#chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention.query_min_max">query_min_max (chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.relu.relu_binary">relu_binary() (in module chop.nn.quantized.functional.relu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.relu.relu_block_fp">relu_block_fp() (in module chop.nn.quantized.functional.relu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.relu.relu_block_log">relu_block_log() (in module chop.nn.quantized.functional.relu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.relu.relu_block_minifloat">relu_block_minifloat() (in module chop.nn.quantized.functional.relu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.relu.relu_integer">relu_integer() (in module chop.nn.quantized.functional.relu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.relu.relu_log">relu_log() (in module chop.nn.quantized.functional.relu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.relu.relu_minifloat_denorm">relu_minifloat_denorm() (in module chop.nn.quantized.functional.relu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.relu.relu_minifloat_ieee">relu_minifloat_ieee() (in module chop.nn.quantized.functional.relu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.relu.relu_ternary">relu_ternary() (in module chop.nn.quantized.functional.relu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLUBinary">ReLUBinary (class in chop.nn.quantized.modules.relu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLUBlockFP">ReLUBlockFP (class in chop.nn.quantized.modules.relu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLUBlockLog">ReLUBlockLog (class in chop.nn.quantized.modules.relu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLUBlockMinifloat">ReLUBlockMinifloat (class in chop.nn.quantized.modules.relu)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLUInteger">ReLUInteger (class in chop.nn.quantized.modules.relu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLULog">ReLULog (class in chop.nn.quantized.modules.relu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLUMinifloatDenorm">ReLUMinifloatDenorm (class in chop.nn.quantized.modules.relu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLUMinifloatIEEE">ReLUMinifloatIEEE (class in chop.nn.quantized.modules.relu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.relu.ReLUTernary">ReLUTernary (class in chop.nn.quantized.modules.relu)</a>
+</li>
+      <li><a href="modules/chop/analysis/report.html#chop.passes.graph.analysis.report.report_graph.report_graph_analysis_pass">report_graph_analysis_pass() (in module chop.passes.graph.analysis.report.report_graph)</a>
+</li>
+      <li><a href="modules/chop/analysis/report.html#chop.passes.graph.analysis.report.report_node.report_node_meta_param_analysis_pass">report_node_meta_param_analysis_pass() (in module chop.passes.graph.analysis.report.report_node)</a>
+</li>
+      <li><a href="modules/chop/analysis/report.html#chop.passes.graph.analysis.report.report_node.report_node_shape_analysis_pass">report_node_shape_analysis_pass() (in module chop.passes.graph.analysis.report.report_node)</a>
+</li>
+      <li><a href="modules/chop/analysis/report.html#chop.passes.graph.analysis.report.report_node.report_node_type_analysis_pass">report_node_type_analysis_pass() (in module chop.passes.graph.analysis.report.report_node)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.rms_norm.RMSNorm">RMSNorm (class in chop.nn.quantized.modules.rms_norm)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.rms_norm.RMSNormInteger">RMSNormInteger (class in chop.nn.quantized.modules.rms_norm)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets.run_layers">run_layers() (chop.nn.quantized.modules.linear.LinearLogicNets method)</a>
+</li>
+      <li><a href="modules/chop/analysis/runtime.html#chop.passes.graph.analysis.runtime.runtime_analysis_pass">runtime_analysis_pass() (in module chop.passes.graph.analysis.runtime)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/tools.html#chop.tools.config_load.save_config">save_config() (in module chop.tools.config_load)</a>
+</li>
+      <li><a href="modules/chop/interface/save_and_load.html#chop.passes.graph.interface.save_and_load.save_mase_graph_interface_pass">save_mase_graph_interface_pass() (in module chop.passes.graph.interface.save_and_load)</a>
+</li>
+      <li><a href="modules/chop/interface/save_and_load.html#chop.passes.graph.interface.save_node_meta_param_interface_pass">save_node_meta_param_interface_pass() (in module chop.passes.graph.interface)</a>
+</li>
+      <li><a href="modules/chop/actions.html#chop.actions.search.search.search">search() (in module chop.actions.search.search)</a>
+</li>
+      <li><a href="modules/chop/transform/onn.html#chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention.seed">seed (chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention attribute)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.selu.selu_binary">selu_binary() (in module chop.nn.quantized.functional.selu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.selu.selu_block_fp">selu_block_fp() (in module chop.nn.quantized.functional.selu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.selu.selu_block_log">selu_block_log() (in module chop.nn.quantized.functional.selu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.selu.selu_block_minifloat">selu_block_minifloat() (in module chop.nn.quantized.functional.selu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.selu.selu_integer">selu_integer() (in module chop.nn.quantized.functional.selu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.selu.selu_log">selu_log() (in module chop.nn.quantized.functional.selu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.selu.selu_minifloat_denorm">selu_minifloat_denorm() (in module chop.nn.quantized.functional.selu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.selu.selu_minifloat_ieee">selu_minifloat_ieee() (in module chop.nn.quantized.functional.selu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.selu.selu_ternary">selu_ternary() (in module chop.nn.quantized.functional.selu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELUBinary">SELUBinary (class in chop.nn.quantized.modules.selu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELUBlockFP">SELUBlockFP (class in chop.nn.quantized.modules.selu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELUBlockLog">SELUBlockLog (class in chop.nn.quantized.modules.selu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELUBlockMinifloat">SELUBlockMinifloat (class in chop.nn.quantized.modules.selu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELUInteger">SELUInteger (class in chop.nn.quantized.modules.selu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELULog">SELULog (class in chop.nn.quantized.modules.selu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELUMinifloatDenorm">SELUMinifloatDenorm (class in chop.nn.quantized.modules.selu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELUMinifloatIEEE">SELUMinifloatIEEE (class in chop.nn.quantized.modules.selu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.selu.SELUTernary">SELUTernary (class in chop.nn.quantized.modules.selu)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.utils.set_excepthook">set_excepthook() (in module chop.tools.utils)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets.set_fused">set_fused() (chop.nn.quantized.modules.linear.LinearLogicNets method)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.logger.set_logging_verbosity">set_logging_verbosity() (in module chop.tools.logger)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLUBinary">SiLUBinary (class in chop.nn.quantized.modules.silu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLUBlockFP">SiLUBlockFP (class in chop.nn.quantized.modules.silu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLUBlockLog">SiLUBlockLog (class in chop.nn.quantized.modules.silu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLUBlockMinifloat">SiLUBlockMinifloat (class in chop.nn.quantized.modules.silu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLUInteger">SiLUInteger (class in chop.nn.quantized.modules.silu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLULog">SiLULog (class in chop.nn.quantized.modules.silu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLUMinifloatDenorm">SiLUMinifloatDenorm (class in chop.nn.quantized.modules.silu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLUMinifloatIEEE">SiLUMinifloatIEEE (class in chop.nn.quantized.modules.silu)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.silu.SiLUTernary">SiLUTernary (class in chop.nn.quantized.modules.silu)</a>
+</li>
+      <li><a href="modules/chop/nn.html#chop.nn.functional.softermax.softermax">softermax() (in module chop.nn.functional.softermax)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.softplus.softplus_binary">softplus_binary() (in module chop.nn.quantized.functional.softplus)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.softplus.softplus_block_fp">softplus_block_fp() (in module chop.nn.quantized.functional.softplus)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.softplus.softplus_block_log">softplus_block_log() (in module chop.nn.quantized.functional.softplus)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.softplus.softplus_block_minifloat">softplus_block_minifloat() (in module chop.nn.quantized.functional.softplus)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.softplus.softplus_integer">softplus_integer() (in module chop.nn.quantized.functional.softplus)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.softplus.softplus_log">softplus_log() (in module chop.nn.quantized.functional.softplus)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.softplus.softplus_minifloat_denorm">softplus_minifloat_denorm() (in module chop.nn.quantized.functional.softplus)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.softplus.softplus_minifloat_ieee">softplus_minifloat_ieee() (in module chop.nn.quantized.functional.softplus)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.softplus.softplus_ternary">softplus_ternary() (in module chop.nn.quantized.functional.softplus)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusBinary">SoftplusBinary (class in chop.nn.quantized.modules.softplus)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusBlockFP">SoftplusBlockFP (class in chop.nn.quantized.modules.softplus)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusBlockLog">SoftplusBlockLog (class in chop.nn.quantized.modules.softplus)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusBlockMinifloat">SoftplusBlockMinifloat (class in chop.nn.quantized.modules.softplus)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusInteger">SoftplusInteger (class in chop.nn.quantized.modules.softplus)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusLog">SoftplusLog (class in chop.nn.quantized.modules.softplus)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusMinifloatDenorm">SoftplusMinifloatDenorm (class in chop.nn.quantized.modules.softplus)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusMinifloatIEEE">SoftplusMinifloatIEEE (class in chop.nn.quantized.modules.softplus)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softplus.SoftplusTernary">SoftplusTernary (class in chop.nn.quantized.modules.softplus)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.softsign.softsign_binary">softsign_binary() (in module chop.nn.quantized.functional.softsign)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.softsign.softsign_block_fp">softsign_block_fp() (in module chop.nn.quantized.functional.softsign)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.softsign.softsign_block_log">softsign_block_log() (in module chop.nn.quantized.functional.softsign)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.softsign.softsign_block_minifloat">softsign_block_minifloat() (in module chop.nn.quantized.functional.softsign)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.softsign.softsign_integer">softsign_integer() (in module chop.nn.quantized.functional.softsign)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.softsign.softsign_log">softsign_log() (in module chop.nn.quantized.functional.softsign)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.softsign.softsign_minifloat_denorm">softsign_minifloat_denorm() (in module chop.nn.quantized.functional.softsign)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.softsign.softsign_minifloat_ieee">softsign_minifloat_ieee() (in module chop.nn.quantized.functional.softsign)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.softsign.softsign_ternary">softsign_ternary() (in module chop.nn.quantized.functional.softsign)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignBinary">SoftsignBinary (class in chop.nn.quantized.modules.softsign)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignBlockFP">SoftsignBlockFP (class in chop.nn.quantized.modules.softsign)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignBlockLog">SoftsignBlockLog (class in chop.nn.quantized.modules.softsign)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignBlockMinifloat">SoftsignBlockMinifloat (class in chop.nn.quantized.modules.softsign)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignInteger">SoftsignInteger (class in chop.nn.quantized.modules.softsign)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignLog">SoftsignLog (class in chop.nn.quantized.modules.softsign)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignMinifloatDenorm">SoftsignMinifloatDenorm (class in chop.nn.quantized.modules.softsign)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignMinifloatIEEE">SoftsignMinifloatIEEE (class in chop.nn.quantized.modules.softsign)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.softsign.SoftsignTernary">SoftsignTernary (class in chop.nn.quantized.modules.softsign)</a>
+</li>
+      <li><a href="modules/chop/nn.html#chop.nn.functional.splitter.splitter">splitter() (in module chop.nn.functional.splitter)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLUT.stride">stride (chop.nn.quantized.modules.conv2d.Conv2dLUT attribute)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.sub.sub_binary">sub_binary() (in module chop.nn.quantized.functional.sub)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.sub.sub_block_fp">sub_block_fp() (in module chop.nn.quantized.functional.sub)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.sub.sub_block_log">sub_block_log() (in module chop.nn.quantized.functional.sub)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.sub.sub_block_minifloat">sub_block_minifloat() (in module chop.nn.quantized.functional.sub)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.sub.sub_integer">sub_integer() (in module chop.nn.quantized.functional.sub)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.sub.sub_log">sub_log() (in module chop.nn.quantized.functional.sub)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.sub.sub_minifloat_denorm">sub_minifloat_denorm() (in module chop.nn.quantized.functional.sub)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.sub.sub_minifloat_ieee">sub_minifloat_ieee() (in module chop.nn.quantized.functional.sub)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.sub.sub_ternary">sub_ternary() (in module chop.nn.quantized.functional.sub)</a>
+</li>
+      <li><a href="modules/chop/transform/quantize.html#chop.passes.graph.transforms.quantize.summarize_quantization_analysis_pass">summarize_quantization_analysis_pass() (in module chop.passes.graph.transforms.quantize)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2DLogicNets.table_lookup">table_lookup() (chop.nn.quantized.modules.conv2d.Conv2DLogicNets method)</a>
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets.table_lookup">(chop.nn.quantized.modules.linear.LinearLogicNets method)</a>
+</li>
+      </ul></li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLUT.tables_count">tables_count (chop.nn.quantized.modules.conv2d.Conv2dLUT attribute)</a>
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLUT.tables_count">(chop.nn.quantized.modules.linear.LinearLUT attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.tanh.tanh_binary">tanh_binary() (in module chop.nn.quantized.functional.tanh)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.tanh.tanh_block_fp">tanh_block_fp() (in module chop.nn.quantized.functional.tanh)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.tanh.tanh_block_log">tanh_block_log() (in module chop.nn.quantized.functional.tanh)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.tanh.tanh_block_minifloat">tanh_block_minifloat() (in module chop.nn.quantized.functional.tanh)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.tanh.tanh_integer">tanh_integer() (in module chop.nn.quantized.functional.tanh)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.tanh.tanh_log">tanh_log() (in module chop.nn.quantized.functional.tanh)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.tanh.tanh_minifloat_denorm">tanh_minifloat_denorm() (in module chop.nn.quantized.functional.tanh)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.tanh.tanh_minifloat_ieee">tanh_minifloat_ieee() (in module chop.nn.quantized.functional.tanh)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_functional.html#chop.nn.quantized.functional.tanh.tanh_ternary">tanh_ternary() (in module chop.nn.quantized.functional.tanh)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBinary">TanhBinary (class in chop.nn.quantized.modules.tanh)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBlockFP">TanhBlockFP (class in chop.nn.quantized.modules.tanh)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBlockLog">TanhBlockLog (class in chop.nn.quantized.modules.tanh)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBlockMinifloat">TanhBlockMinifloat (class in chop.nn.quantized.modules.tanh)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhInteger">TanhInteger (class in chop.nn.quantized.modules.tanh)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhLog">TanhLog (class in chop.nn.quantized.modules.tanh)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhMinifloatDenorm">TanhMinifloatDenorm (class in chop.nn.quantized.modules.tanh)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhMinifloatIEEE">TanhMinifloatIEEE (class in chop.nn.quantized.modules.tanh)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhTernary">TanhTernary (class in chop.nn.quantized.modules.tanh)</a>
+</li>
+      <li><a href="modules/chop/transform/tensorrt.html#chop.passes.graph.transforms.tensorrt.quantize.calibrate.tensorrt_calibrate_transform_pass">tensorrt_calibrate_transform_pass() (in module chop.passes.graph.transforms.tensorrt.quantize.calibrate)</a>
+</li>
+      <li><a href="modules/chop/interface/tensorrt.html#chop.passes.graph.interface.tensorrt.quantize.tensorrt_engine_interface_pass">tensorrt_engine_interface_pass() (in module chop.passes.graph.interface.tensorrt.quantize)</a>
+</li>
+      <li><a href="modules/chop/transform/tensorrt.html#chop.passes.graph.transforms.tensorrt.quantize.calibrate.tensorrt_fake_quantize_transform_pass">tensorrt_fake_quantize_transform_pass() (in module chop.passes.graph.transforms.tensorrt.quantize.calibrate)</a>
+</li>
+      <li><a href="modules/chop/transform/tensorrt.html#chop.passes.graph.transforms.tensorrt.quantize.fine_tune.tensorrt_fine_tune_transform_pass">tensorrt_fine_tune_transform_pass() (in module chop.passes.graph.transforms.tensorrt.quantize.fine_tune)</a>
+</li>
+      <li><a href="modules/chop/actions.html#chop.actions.test.test">test() (in module chop.actions.test)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.utils.to_numpy">to_numpy() (in module chop.tools.utils)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.utils.to_numpy_if_tensor">to_numpy_if_tensor() (in module chop.tools.utils)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.utils.to_tensor">to_tensor() (in module chop.tools.utils)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.utils.to_tensor_if_numpy">to_tensor_if_numpy() (in module chop.tools.utils)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.get_input.ModelSource.TORCHVISION">TORCHVISION (chop.tools.get_input.ModelSource attribute)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.get_input.ModelSource.TOY">TOY (chop.tools.get_input.ModelSource attribute)</a>
+</li>
+      <li><a href="modules/chop/ir.html#chop.ir.graph.mase_graph.trace_torch_module">trace_torch_module() (in module chop.ir.graph.mase_graph)</a>
+</li>
+      <li><a href="modules/chop/actions.html#chop.actions.train.train">train() (in module chop.actions.train)</a>
+</li>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLUT.trainer">trainer (chop.nn.quantized.modules.conv2d.Conv2dLUT attribute)</a>
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLUT.trainer">(chop.nn.quantized.modules.linear.LinearLUT attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="modules/chop/actions.html#chop.actions.transform.transform">transform() (in module chop.actions.transform)</a>
+</li>
+      <li><a href="modules/chop/actions.html#chop.actions.transform.transform_graph">transform_graph() (in module chop.actions.transform)</a>
+</li>
+      <li><a href="modules/chop/actions.html#chop.actions.transform.transform_module">transform_module() (in module chop.actions.transform)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.conv2d.Conv2dLUT.update_initialized_weights">update_initialized_weights() (chop.nn.quantized.modules.conv2d.Conv2dLUT method)</a>
+
+      <ul>
+        <li><a href="modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLUT.update_initialized_weights">(chop.nn.quantized.modules.linear.LinearLUT method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/transform/onn.html#chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention.value_min_max">value_min_max (chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention attribute)</a>
+</li>
+      <li><a href="modules/chop/analysis/verify.html#chop.passes.graph.analysis.verify.verify.verify_common_metadata_analysis_pass">verify_common_metadata_analysis_pass() (in module chop.passes.graph.analysis.verify.verify)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/chop/analysis/verify.html#chop.passes.graph.analysis.verify.verify.verify_metadata_analysis_pass">verify_metadata_analysis_pass() (in module chop.passes.graph.analysis.verify.verify)</a>
+</li>
+      <li><a href="modules/chop/analysis/verify.html#chop.passes.graph.analysis.verify.verify.verify_software_metadata_analysis_pass">verify_software_metadata_analysis_pass() (in module chop.passes.graph.analysis.verify.verify)</a>
+</li>
+      <li><a href="modules/chop/tools.html#chop.tools.get_input.ModelSource.VISION_OTHERS">VISION_OTHERS (chop.tools.get_input.ModelSource attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By DeepWok
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, DeepWok.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

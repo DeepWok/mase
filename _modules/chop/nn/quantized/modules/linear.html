@@ -1,0 +1,1409 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>chop.nn.quantized.modules.linear &#8212; MASE 0.0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/common_css/need_style.css?v=92936fa5" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/modern.css?v=803738c0" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+    <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="../../../../../_static/documentation_options.js?v=e645c8fa"></script>
+    <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../../../../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+    <script src="../../../../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+    <script src="../../../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+    <script src="../../../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+    <script src="../../../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/chop/nn/quantized/modules/linear';</script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">MASE 0.0.1 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../modules/documentation/installation.html">Installation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/getting_started/Get-started-using-uv.html">Getting Started using uv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/getting_started/Get-started-using-Docker.html">Getting Started using Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/getting_started/Get-started-students.html">Additional Instructions for Imperial College Students</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../modules/documentation/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../modules/documentation/tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/tutorial_1_introduction_to_mase.html">Tutorial 1: Introduction to the Mase IR, MaseGraph and Torch FX passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/tutorial_2_lora_finetune.html">Tutorial 2: Finetuning Bert for Sequence Classification using a LoRA adapter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/tutorial_3_qat.html">Tutorial 3: Running Quantization-Aware Training (QAT) on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/tutorial_4_pruning.html">Tutorial 4: Unstructured Pruning on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/tutorial_5_nas_optuna.html">Tutorial 5: Neural Architecture Search (NAS) with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/tutorial_6_mixed_precision_search.html">Tutorial 6: Mixed Precision Quantization Search with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/tutorial_7_distributed_deployment.html">Tutorial 7: Deploying a Model for Inference on Distributed Clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/tutorial_9_kernel_fusion.html">Tutorial 9: Running Kernel Fusion for Inference Acceleration on GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/advanced/tensorRT_quantization_tutorial.html">Advanced: TensorRT Quantization Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/advanced/onnxrt_quantization_tutorial.html">Advanced: ONNX Runtime Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/advanced/cli.html">Advanced: Using Mase CLI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/developer/Add-model-to-machop.html">Developer: Guide on how to add a new model into Machop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/developer/doc_writing.html">Developer: How to write documentations in MASE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/developer/how_to_extend_search.html">Developer: How to extend search</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../modules/documentation/health.html">Repository Health</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../modules/documentation/specifications.html">Coding Style Specifications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/specifications/C-coding-style-specifications.html">C/C++ Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/specifications/Python-coding-style-specifications.html">Python Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/specifications/Verilog-coding-style-specifications.html">Verilog Coding Style Specifications</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../modules/machop.html">Machop Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/chop/actions.html">chop.actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/chop/datasets.html">chop.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/chop/distributed.html">chop.distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/chop/ir.html">chop.ir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/chop/models.html">chop.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/chop/nn.html">chop.nn</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../modules/chop/nn_quantized.html">chop.nn.quantized</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../modules/chop/nn_quantized_functional.html">chop.nn.quantized.functional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../modules/chop/nn_quantized_modules.html">chop.nn.quantized.modules</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../modules/chop/passes.html">chop.passes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../../modules/chop/passes_module.html">chop.passes.module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/module_analysis/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/module_transform/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/transform/onn.html">chop.passes.module.transforms.onn</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../../modules/chop/passes_graph.html">chop.passes.graph</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/analysis/add_metadata.html">chop.passes.graph.analysis.add_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/analysis/autosharding.html">chop.passes.graph.analysis.autosharding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/analysis/init_metadata.html">chop.passes.graph.analysis.init_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/analysis/report.html">chop.passes.graph.analysis.report</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/analysis/statistical_profiler.html">chop.passes.graph.analysis.statistical_profiler.profile_statistics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/analysis/verify.html">chop.passes.graph.analysis.verify.verify</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/analysis/quantization.html">chop.passes.graph.calculate_avg_bits_mg_analysis_pass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/analysis/pruning.html">chop.passes.graph.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/analysis/runtime.html">chop.passes.graph.analysis.runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/transform/pruning.html">chop.passes.transform.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/transform/quantize.html">chop.passes.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/transform/utils.html">chop.passes.transform.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/transform/tensorrt.html">chop.passes.transform.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/interface/save_and_load.html">chop.passes.interface.save_and_load</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/interface/tensorrt.html">chop.passes.interface.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/interface/onnxrt.html">chop.passes.interface.onnxrt</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/chop/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/chop/tools.html">chop.tools</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Deep Learning Systems</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../modules/adls_2024.html">Advanced Deep Learning Systems: 2024/2025</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/labs_2024/lab_0_introduction.html">Lab 0: Introduction to Mase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/labs_2024/lab_1_compression.html">Lab 1: Model Compression (Quantization and Pruning)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/labs_2024/lab_2_nas.html">Lab 2: Neural Architecture Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/labs_2024/lab_3_mixed_precision_search.html">Lab 3: Mixed Precision Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/labs_2024/lab4-software.html">Lab 4 (Software Stream) Performance Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/labs_2024/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../modules/adls_2023.html">Advanced Deep Learning Systems: 2023/2024</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/labs_2023/lab1.html">Lab 1 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/labs_2023/lab2.html">Lab 2 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/labs_2023/lab3.html">Lab 3 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/labs_2023/lab4-software.html">Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/labs_2023/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for chop.nn.quantized.modules.linear</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.nn.quantized.functional.linear</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">linearBinary</span><span class="p">,</span>
+    <span class="n">linearBinaryScaling</span><span class="p">,</span>
+    <span class="n">linearBlockFP</span><span class="p">,</span>
+    <span class="n">linearBlockLog</span><span class="p">,</span>
+    <span class="n">linearBlockMinifloat</span><span class="p">,</span>
+    <span class="n">linearInteger</span><span class="p">,</span>
+    <span class="n">linearLog</span><span class="p">,</span>
+    <span class="n">linearMXIntHardware</span><span class="p">,</span>
+    <span class="n">linearMinifloatDenorm</span><span class="p">,</span>
+    <span class="n">linearMinifloatIEEE</span><span class="p">,</span>
+    <span class="n">linearTernary</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">functional</span> <span class="k">as</span> <span class="n">F</span>
+
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">..utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_stats</span><span class="p">,</span> <span class="n">quantiser_passthrough</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.nn.quantizers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">residual_sign_quantizer</span><span class="p">,</span>
+    <span class="n">block_fp_quantizer</span><span class="p">,</span>
+    <span class="n">block_log_quantizer</span><span class="p">,</span>
+    <span class="n">block_minifloat_quantizer</span><span class="p">,</span>
+    <span class="n">integer_quantizer</span><span class="p">,</span>
+    <span class="n">integer_floor_quantizer</span><span class="p">,</span>
+    <span class="n">log_quantizer</span><span class="p">,</span>
+    <span class="n">minifloat_denorm_quantizer</span><span class="p">,</span>
+    <span class="n">minifloat_ieee_quantizer</span><span class="p">,</span>
+    <span class="n">binary_quantizer</span><span class="p">,</span>
+    <span class="n">ternary_quantizer</span><span class="p">,</span>
+    <span class="n">mxint_hardware</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># LUTNet</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.nn.quantizers.LUTNet.BaseTrainer</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseTrainer</span><span class="p">,</span> <span class="n">LagrangeTrainer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.nn.quantizers.LUTNet.MaskBase</span><span class="w"> </span><span class="kn">import</span> <span class="n">MaskBase</span><span class="p">,</span> <span class="n">MaskExpanded</span>
+
+<span class="c1"># LogicNets</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.nn.quantizers.LogicNets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">generate_permutation_matrix</span><span class="p">,</span>
+    <span class="n">get_int_state_space</span><span class="p">,</span>
+    <span class="n">fetch_mask_indices</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># LogicNets</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.nn.quantizers.LogicNets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">generate_permutation_matrix</span><span class="p">,</span>
+    <span class="n">get_int_state_space</span><span class="p">,</span>
+    <span class="n">fetch_mask_indices</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_LinearBase</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">in_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">out_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">in_features</span><span class="p">,</span>
+            <span class="n">out_features</span><span class="p">,</span>
+            <span class="n">bias</span><span class="p">,</span>
+            <span class="n">device</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pruning_masks</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># NOTE: Quantizers properties are not needed for now</span>
+        <span class="c1"># self.x_quantizer = None</span>
+        <span class="c1"># self.w_quantizer = None</span>
+        <span class="c1"># self.b_quantizer = None</span>
+        <span class="c1"># self.out_quantizer = None</span>
+
+    <span class="c1"># NOTE: This is not needed for now</span>
+    <span class="c1"># def forward(self, x: Tensor) -&gt; Tensor:</span>
+    <span class="c1">#     if self.bypass:</span>
+    <span class="c1">#         # if bypass, there is no quantization</span>
+    <span class="c1">#         return F.linear(x, self.weight, self.bias)</span>
+    <span class="c1">#     else:</span>
+    <span class="c1">#         x = self.x_quantizer(x)</span>
+    <span class="c1">#         w = self.w_quantizer(self.weight)</span>
+    <span class="c1">#         bias = self.b_quantizer(self.bias) if self.bias is not None else None</span>
+    <span class="c1">#         out = F.linear(x, w, bias)</span>
+    <span class="c1">#         if self.out_quantizer is None:</span>
+    <span class="c1">#             return out</span>
+    <span class="c1">#         return self.out_quantizer(out)</span>
+
+
+<div class="viewcode-block" id="LinearInteger">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearInteger">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LinearInteger</span><span class="p">(</span><span class="n">_LinearBase</span><span class="p">):</span>
+<div class="viewcode-block" id="LinearInteger.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearInteger.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">in_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">out_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">out_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">floor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">in_features</span><span class="p">,</span> <span class="n">out_features</span><span class="p">,</span> <span class="n">bias</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="c1"># Add floor attribute to the config</span>
+        <span class="k">if</span> <span class="n">floor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;floor&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">floor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_config</span> <span class="o">=</span> <span class="n">out_config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="LinearInteger.forward">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearInteger.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">linearInteger</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_config</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LinearMinifloatDenorm">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearMinifloatDenorm">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LinearMinifloatDenorm</span><span class="p">(</span><span class="n">_LinearBase</span><span class="p">):</span>
+<div class="viewcode-block" id="LinearMinifloatDenorm.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearMinifloatDenorm.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">in_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">out_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">in_features</span><span class="p">,</span> <span class="n">out_features</span><span class="p">,</span> <span class="n">bias</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="LinearMinifloatDenorm.forward">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearMinifloatDenorm.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">linearMinifloatDenorm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LinearMinifloatIEEE">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearMinifloatIEEE">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LinearMinifloatIEEE</span><span class="p">(</span><span class="n">_LinearBase</span><span class="p">):</span>
+<div class="viewcode-block" id="LinearMinifloatIEEE.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearMinifloatIEEE.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">in_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">out_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">in_features</span><span class="p">,</span> <span class="n">out_features</span><span class="p">,</span> <span class="n">bias</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="LinearMinifloatIEEE.forward">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearMinifloatIEEE.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">linearMinifloatIEEE</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LinearLog">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLog">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LinearLog</span><span class="p">(</span><span class="n">_LinearBase</span><span class="p">):</span>
+<div class="viewcode-block" id="LinearLog.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLog.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">in_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">out_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">in_features</span><span class="p">,</span> <span class="n">out_features</span><span class="p">,</span> <span class="n">bias</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="LinearLog.forward">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLog.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">linearLog</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LinearBlockFP">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBlockFP">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LinearBlockFP</span><span class="p">(</span><span class="n">_LinearBase</span><span class="p">):</span>
+<div class="viewcode-block" id="LinearBlockFP.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBlockFP.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">in_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">out_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">in_features</span><span class="p">,</span> <span class="n">out_features</span><span class="p">,</span> <span class="n">bias</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="LinearBlockFP.forward">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBlockFP.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">linearBlockFP</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LinearBlockMinifloat">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBlockMinifloat">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LinearBlockMinifloat</span><span class="p">(</span><span class="n">_LinearBase</span><span class="p">):</span>
+<div class="viewcode-block" id="LinearBlockMinifloat.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBlockMinifloat.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">in_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">out_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">in_features</span><span class="p">,</span> <span class="n">out_features</span><span class="p">,</span> <span class="n">bias</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="LinearBlockMinifloat.forward">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBlockMinifloat.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">linearBlockMinifloat</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LinearBlockLog">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBlockLog">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LinearBlockLog</span><span class="p">(</span><span class="n">_LinearBase</span><span class="p">):</span>
+<div class="viewcode-block" id="LinearBlockLog.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBlockLog.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">in_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">out_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">in_features</span><span class="p">,</span> <span class="n">out_features</span><span class="p">,</span> <span class="n">bias</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="LinearBlockLog.forward">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBlockLog.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">linearBlockLog</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LinearBinary">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBinary">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LinearBinary</span><span class="p">(</span><span class="n">_LinearBase</span><span class="p">):</span>
+<div class="viewcode-block" id="LinearBinary.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBinary.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">in_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">out_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">in_features</span><span class="p">,</span> <span class="n">out_features</span><span class="p">,</span> <span class="n">bias</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="LinearBinary.forward">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBinary.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">linearBinary</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LinearBinaryScaling">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBinaryScaling">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LinearBinaryScaling</span><span class="p">(</span><span class="n">_LinearBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Binary scaling variant of the linear transformation layer.</span>
+
+<span class="sd">        - &quot;bypass&quot;: Bypass quantization for standard linear transformation.</span>
+<span class="sd">        - &quot;data_in_stochastic&quot;, &quot;bias_stochastic&quot;, &quot;weight_stochastic&quot;: Stochastic settings.</span>
+<span class="sd">        - &quot;data_in_bipolar&quot;, &quot;bias_bipolar&quot;, &quot;weight_bipolar&quot;: Bipolar settings.</span>
+<span class="sd">        - &quot;binary_training&quot;: Apply binary scaling during training.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="LinearBinaryScaling.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBinaryScaling.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">in_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">out_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">in_features</span><span class="p">,</span> <span class="n">out_features</span><span class="p">,</span> <span class="n">bias</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="c1"># self.gamma = torch.nn.Parameter(torch.tensor(1.0, requires_grad=True))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="LinearBinaryScaling.forward">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBinaryScaling.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">linearBinaryScaling</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LinearTernary">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearTernary">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LinearTernary</span><span class="p">(</span><span class="n">_LinearBase</span><span class="p">):</span>
+<div class="viewcode-block" id="LinearTernary.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearTernary.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">in_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">out_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">in_features</span><span class="p">,</span> <span class="n">out_features</span><span class="p">,</span> <span class="n">bias</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">w_scaling_factor</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;weight_scaling_factor&quot;</span><span class="p">]</span>
+        <span class="n">w_mean</span> <span class="o">=</span> <span class="n">get_stats</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;weight_mean&quot;</span><span class="p">)</span>
+        <span class="n">w_median</span> <span class="o">=</span> <span class="n">get_stats</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;weight_median&quot;</span><span class="p">)</span>
+        <span class="n">w_max</span> <span class="o">=</span> <span class="n">get_stats</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;weight_max&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w_quantizer</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
+            <span class="n">ternary_quantizer</span><span class="p">,</span>
+            <span class="n">scaling_factor</span><span class="o">=</span><span class="n">w_scaling_factor</span><span class="p">,</span>
+            <span class="n">maximum</span><span class="o">=</span><span class="n">w_max</span><span class="p">,</span>
+            <span class="n">median</span><span class="o">=</span><span class="n">w_median</span><span class="p">,</span>
+            <span class="n">mean</span><span class="o">=</span><span class="n">w_mean</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span> <span class="o">=</span> <span class="n">quantiser_passthrough</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_quantizer</span> <span class="o">=</span> <span class="n">quantiser_passthrough</span></div>
+
+        <span class="c1"># self.b_quantizer = partial(</span>
+        <span class="c1">#     ternary_quantizer,</span>
+        <span class="c1">#     scaling_factor=b_scaling_factor,</span>
+        <span class="c1">#     maximum=b_max,</span>
+        <span class="c1">#     median=b_median,</span>
+        <span class="c1">#     mean=b_mean,</span>
+        <span class="c1"># )</span>
+
+<div class="viewcode-block" id="LinearTernary.forward">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearTernary.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">linearTernary</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1"># LUT</span>
+<div class="viewcode-block" id="LinearBinaryResidualSign">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBinaryResidualSign">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LinearBinaryResidualSign</span><span class="p">(</span><span class="n">_LinearBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Binary Linear layer with redisual sign variant of the linear transformation layer.</span>
+
+<span class="sd">        - &quot;bypass&quot;: Bypass quantization for standard linear transformation.</span>
+<span class="sd">        - &quot;data_in_stochastic&quot;, &quot;bias_stochastic&quot;, &quot;weight_stochastic&quot;: Stochastic settings.</span>
+<span class="sd">        - &quot;data_in_bipolar&quot;, &quot;bias_bipolar&quot;, &quot;weight_bipolar&quot;: Bipolar settings.</span>
+<span class="sd">        - &quot;binary_training&quot;: Apply binary scaling during training.</span>
+<span class="sd">        - &quot;data_in_levels&quot;: The num of residual layers to use.</span>
+<span class="sd">        - &quot;data_in_residual_sign&quot; : Apply residual sign on input</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="LinearBinaryResidualSign.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBinaryResidualSign.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">in_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">out_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">in_features</span><span class="p">,</span> <span class="n">out_features</span><span class="p">,</span> <span class="n">bias</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">levels</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data_in_levels&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># NOTE: Hardcode 2 for now</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">requires_grad</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+        <span class="c1"># Initialized parameter</span>
+        <span class="n">ars</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1.0</span>
+        <span class="n">ars</span> <span class="o">=</span> <span class="n">ars</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">means</span> <span class="o">=</span> <span class="n">ars</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">ars</span><span class="p">)</span>
+        <span class="c1"># Create a torch.nn.Parameter from the means tensor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">means</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">means</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">requires_grad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data_in_residual_sign&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="c1"># prunning masks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pruning_masks</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">),</span> <span class="n">requires_grad</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">x_stochastic</span><span class="p">,</span> <span class="n">w_stochastic</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_stochastic&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;weight_stochastic&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">x_bipolar</span><span class="p">,</span> <span class="n">w_bipolar</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_bipolar&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;weight_bipolar&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">binary_training</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;binary_training&quot;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">w_quantizer</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
+            <span class="n">binary_quantizer</span><span class="p">,</span> <span class="n">stochastic</span><span class="o">=</span><span class="n">w_stochastic</span><span class="p">,</span> <span class="n">bipolar</span><span class="o">=</span><span class="n">w_bipolar</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
+            <span class="n">binary_quantizer</span><span class="p">,</span> <span class="n">stochastic</span><span class="o">=</span><span class="n">x_stochastic</span><span class="p">,</span> <span class="n">bipolar</span><span class="o">=</span><span class="n">x_bipolar</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LinearBinaryResidualSign.forward">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearBinaryResidualSign.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="c1"># if bypss, there is no quantization</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
+
+        <span class="n">x_expanded</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">means</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">out_bin</span> <span class="o">=</span> <span class="n">residual_sign_quantizer</span><span class="p">(</span>
+                <span class="n">levels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">,</span> <span class="n">x_quantizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span><span class="p">,</span> <span class="n">means</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">means</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">):</span>
+                <span class="n">x_expanded</span> <span class="o">=</span> <span class="n">x_expanded</span> <span class="o">+</span> <span class="n">out_bin</span><span class="p">[</span><span class="n">l</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x_expanded</span> <span class="o">=</span> <span class="n">x</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_training</span><span class="p">:</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_quantizer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span>
+                <span class="n">x_expanded</span><span class="p">,</span>
+                <span class="n">w</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pruning_masks</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weigh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">clamp_</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span>
+                <span class="n">x_expanded</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pruning_masks</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span>
+            <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LinearLUT">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLUT">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LinearLUT</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="n">input_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+    <span class="n">tables_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">in_features</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">out_features</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">trainer</span><span class="p">:</span> <span class="n">BaseTrainer</span>
+    <span class="n">mask_builder_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">MaskBase</span><span class="p">]</span>
+    <span class="n">mask_builder</span><span class="p">:</span> <span class="n">MaskBase</span>
+
+<div class="viewcode-block" id="LinearLUT.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLUT.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">in_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">out_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">mask_builder_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">MaskBase</span><span class="p">]</span> <span class="o">=</span> <span class="n">MaskExpanded</span><span class="p">,</span>
+        <span class="n">trainer_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">BaseTrainer</span><span class="p">]</span> <span class="o">=</span> <span class="n">LagrangeTrainer</span><span class="p">,</span>
+        <span class="n">bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LinearLUT</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_features</span> <span class="o">=</span> <span class="n">in_features</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_features</span> <span class="o">=</span> <span class="n">out_features</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">levels</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data_in_levels&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_expanded</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_input_expanded&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_k&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kk</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_k&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask_builder_type</span> <span class="o">=</span> <span class="n">mask_builder_type</span>
+        <span class="c1"># Initialize mask builder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_mask_builder</span><span class="p">()</span>
+        <span class="c1"># TODO: table * output feature map</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tables_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_builder</span><span class="o">.</span><span class="n">get_tables_count</span><span class="p">()</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_features</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trainer</span> <span class="o">=</span> <span class="n">trainer_type</span><span class="p">(</span>
+            <span class="n">levels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">,</span>
+            <span class="n">tables_count</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tables_count</span><span class="p">,</span>
+            <span class="n">k</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_k&quot;</span><span class="p">],</span>
+            <span class="n">binarization_level</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span> <span class="k">if</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_binarization_level&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="n">input_expanded</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_input_expanded&quot;</span><span class="p">],</span>
+            <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">weight</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pruning_masks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">pruning_masks</span>
+        <span class="c1"># TODO: we might need to this later on</span>
+        <span class="c1"># stdv = 1 / np.sqrt(self.in_features)</span>
+        <span class="c1"># w = np.random.normal(loc=0.0, scale=stdv, size=list(self.trainer.weight.shape)).astype(np.float32)</span>
+        <span class="c1"># self.trainer.weight = torch.nn.Parameter(</span>
+        <span class="c1">#    torch.tensor(w, requires_grad=True))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">out_features</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">bias</span> <span class="k">if</span> <span class="n">bias</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Residual sign code</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">binary_quantizer</span><span class="p">,</span> <span class="n">stochastic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bipolar</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">ars</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1.0</span>
+        <span class="n">ars</span> <span class="o">=</span> <span class="n">ars</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">means</span> <span class="o">=</span> <span class="n">ars</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">ars</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">means</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">means</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">requires_grad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_table_input_selections_builder</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+        <span class="n">_all_inputs_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">in_features</span><span class="p">))</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">in_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">in_features</span><span class="p">):</span>
+            <span class="n">_idx_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">in_idx</span><span class="p">])</span>
+            <span class="n">_selection</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">_all_inputs_set</span> <span class="o">-</span> <span class="n">_idx_set</span><span class="p">)</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">in_idx</span><span class="p">,</span> <span class="n">_selection</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_input_mask_builder</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializing table (using indices for the connections)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># TODO: elements can appear more than once in the feature-1 input?</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_features</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mask_builder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_builder_type</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_table_input_selections_builder</span><span class="p">(),</span> <span class="kc">True</span>
+            <span class="p">)</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_builder</span><span class="o">.</span><span class="n">build</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LinearLUT.forward">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLUT.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="nb">input</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">targets</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">initalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">out_bin</span> <span class="o">=</span> <span class="n">residual_sign_quantizer</span><span class="p">(</span>
+            <span class="n">levels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">,</span> <span class="n">x_quantizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span><span class="p">,</span> <span class="n">means</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">means</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="nb">input</span>
+        <span class="p">)</span>
+        <span class="n">expanded_input</span> <span class="o">=</span> <span class="n">out_bin</span><span class="p">[:,</span> <span class="p">:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_mask</span><span class="p">]</span>  <span class="c1"># [levels, batch_size, mask]</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trainer</span><span class="p">(</span><span class="n">expanded_input</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">initalize</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">output</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">tables_count</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">view</span><span class="p">(</span>
+            <span class="n">batch_size</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">out_features</span><span class="p">,</span>
+            <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tables_count</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_features</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">output</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span>
+        <span class="k">return</span> <span class="n">output</span></div>
+
+
+<div class="viewcode-block" id="LinearLUT.pre_initialize">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLUT.pre_initialize">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">pre_initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">clear_initializion</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="LinearLUT.update_initialized_weights">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLUT.update_initialized_weights">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_initialized_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">update_initialized_weights</span><span class="p">()</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LinearLogicNets">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LinearLogicNets</span><span class="p">(</span><span class="n">_LinearBase</span><span class="p">):</span>
+<div class="viewcode-block" id="LinearLogicNets.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">in_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">out_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">activation_module</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># To initialize a LogicNets, activation functions are needed</span>
+        <span class="n">input_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># A LogicNets layer may be merged with one or more inputs layers such as activations and batchnorm</span>
+        <span class="n">output_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># A LogicNets layer may be merged with one or more output layers such as activations and batchnorm</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">in_features</span><span class="p">,</span> <span class="n">out_features</span><span class="p">,</span> <span class="n">bias</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="c1"># establish quantizer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_frac_width</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_width&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_frac_width&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_frac_width</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_out_width&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_out_frac_width&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
+            <span class="n">integer_quantizer</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">x_width</span><span class="p">,</span> <span class="n">frac_width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">x_frac_width</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_quantizer</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
+            <span class="n">integer_quantizer</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">y_width</span><span class="p">,</span> <span class="n">frac_width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">y_frac_width</span>
+        <span class="p">)</span>
+
+        <span class="c1"># self.input_quant = input_quant</span>
+        <span class="c1"># self.output_quant = output_quant</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activation</span> <span class="o">=</span> <span class="n">activation_module</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_lut_inference</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">neuron_truth_tables</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># self.calculate_truth_tables()</span>
+        <span class="c1"># self.apply_input_quant = apply_input_quant</span>
+        <span class="c1"># self.apply_output_quant = apply_output_quant</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_layers</span> <span class="o">=</span> <span class="n">input_layers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_layers</span> <span class="o">=</span> <span class="n">output_layers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">apply_layers</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+    <span class="c1"># TODO: This function might be a useful utility outside of this class..</span>
+<div class="viewcode-block" id="LinearLogicNets.table_lookup">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets.table_lookup">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">table_lookup</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">connected_input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">input_perm_matrix</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">bin_output_states</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">fan_in_size</span> <span class="o">=</span> <span class="n">connected_input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">ci_bcast</span> <span class="o">=</span> <span class="n">connected_input</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># Reshape to B x Fan-in x 1</span>
+        <span class="n">pm_bcast</span> <span class="o">=</span> <span class="n">input_perm_matrix</span><span class="o">.</span><span class="n">t</span><span class="p">()</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span>
+            <span class="mi">0</span>
+        <span class="p">)</span>  <span class="c1"># Reshape to 1 x Fan-in x InputStates</span>
+        <span class="n">eq</span> <span class="o">=</span> <span class="p">(</span><span class="n">ci_bcast</span> <span class="o">==</span> <span class="n">pm_bcast</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+            <span class="n">dim</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span> <span class="o">==</span> <span class="n">fan_in_size</span>  <span class="c1"># Create a boolean matrix which matches input vectors to possible input states</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Count the number of perfect matches per input vector</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">matches</span> <span class="o">==</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">matches</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">matches</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;One or more vectors in the input is not in the possible input state space&quot;</span>
+            <span class="p">)</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">eq</span><span class="o">.</span><span class="n">type</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">bin_output_states</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="LinearLogicNets.lut_forward">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets.lut_forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">lut_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span> <span class="mi">1</span>
+        <span class="p">)</span>  <span class="c1"># N - added this; is 1 needed to flatten all dims except batch?</span>
+        <span class="c1"># if self.apply_input_quant:</span>
+        <span class="c1">#     x = self.input_quant(x) # Use this to fetch the bin output of the input, if the input isn&#39;t already in binary format</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_features</span><span class="p">))</span>
+        <span class="c1"># Perform table lookup for each neuron output</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_features</span><span class="p">):</span>
+            <span class="n">indices</span><span class="p">,</span> <span class="n">input_perm_matrix</span><span class="p">,</span> <span class="n">bin_output_states</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">neuron_truth_tables</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="c1"># Move logicnets tensor to GPU</span>
+            <span class="n">input_perm_matrix</span> <span class="o">=</span> <span class="n">input_perm_matrix</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">bin_output_states</span> <span class="o">=</span> <span class="n">bin_output_states</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">connected_input</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="n">indices</span><span class="p">]</span>
+            <span class="n">y</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_lookup</span><span class="p">(</span>
+                <span class="n">connected_input</span><span class="p">,</span> <span class="n">input_perm_matrix</span><span class="p">,</span> <span class="n">bin_output_states</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">y</span></div>
+
+
+<div class="viewcode-block" id="LinearLogicNets.construct_mask_index">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets.construct_mask_index">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">construct_mask_index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># contract a mask have the same shape as self.weight but with zero element being assign to zero and other assign to 1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="p">)</span>  <span class="c1"># pay attention to dimension (out_feature, in_feature)</span></div>
+
+
+    <span class="c1"># Consider using masked_select instead of fetching the indices</span>
+<div class="viewcode-block" id="LinearLogicNets.calculate_truth_tables">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets.calculate_truth_tables">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_truth_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># print(</span>
+        <span class="c1">#     &quot;weight&quot;, torch.where(self.weight != 0, torch.tensor(1), torch.tensor(0))</span>
+        <span class="c1"># )  # pay attention to dimension (out_feature, in_feature)</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="c1"># Precalculate all of the input value permutations</span>
+            <span class="n">input_state_space</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>  <span class="c1"># TODO: is a list the right data-structure here?</span>
+            <span class="n">bin_state_space</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="c1"># get a neuron_state</span>
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">in_features</span><span class="p">):</span>
+                <span class="n">neuron_state_space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span>
+                    <span class="n">get_int_state_space</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_width</span><span class="p">)</span>
+                <span class="p">)</span>  <span class="c1"># TODO: this call should include the index of the element of interest</span>
+                <span class="n">bin_space</span> <span class="o">=</span> <span class="n">get_int_state_space</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">x_width</span>
+                <span class="p">)</span>  <span class="c1"># TODO: this call should include the index of the element of interest</span>
+                <span class="n">input_state_space</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">neuron_state_space</span><span class="p">)</span>
+                <span class="n">bin_state_space</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bin_space</span><span class="p">)</span>
+
+            <span class="n">neuron_truth_tables</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">construct_mask_index</span><span class="p">()</span>  <span class="c1"># construct pruning mask</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_features</span><span class="p">):</span>
+                <span class="n">input_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">[</span>
+                    <span class="n">n</span><span class="p">,</span> <span class="p">:</span>
+                <span class="p">]</span>  <span class="c1"># N: select row of mask tensor that corresponds to the output feature on this iteration</span>
+                <span class="n">fan_in</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">input_mask</span><span class="p">)</span>
+                <span class="n">indices</span> <span class="o">=</span> <span class="n">fetch_mask_indices</span><span class="p">(</span><span class="n">input_mask</span><span class="p">)</span>
+                <span class="c1"># Generate a matrix containing all possible input states</span>
+                <span class="n">input_permutation_matrix</span> <span class="o">=</span> <span class="n">generate_permutation_matrix</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">input_state_space</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="n">bin_input_permutation_matrix</span> <span class="o">=</span> <span class="n">generate_permutation_matrix</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">bin_state_space</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="c1"># TODO: Update this block to just run inference on the fc layer, once BN has been moved to output_quant</span>
+                <span class="n">num_permutations</span> <span class="o">=</span> <span class="n">input_permutation_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">padded_perm_matrix</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_permutations</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_features</span><span class="p">))</span>
+                <span class="n">padded_perm_matrix</span><span class="p">[:,</span> <span class="n">indices</span><span class="p">]</span> <span class="o">=</span> <span class="n">input_permutation_matrix</span>
+
+                <span class="n">bin_output_states</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">math_forward</span><span class="p">(</span><span class="n">padded_perm_matrix</span><span class="p">))[</span>
+                    <span class="p">:,</span> <span class="n">n</span>
+                <span class="p">]</span>  <span class="c1"># Calculate bin for the current input</span>
+
+                <span class="c1"># Append the connectivity, input permutations and output permutations to the neuron truth tables</span>
+                <span class="n">neuron_truth_tables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">bin_input_permutation_matrix</span><span class="p">,</span> <span class="n">bin_output_states</span><span class="p">)</span>
+                <span class="p">)</span>  <span class="c1"># Change this to be the binary output states</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">neuron_truth_tables</span> <span class="o">=</span> <span class="n">neuron_truth_tables</span></div>
+
+
+<div class="viewcode-block" id="LinearLogicNets.math_forward">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets.math_forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">math_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation</span> <span class="o">==</span> <span class="s2">&quot;unittest&quot;</span><span class="p">:</span>
+            <span class="c1"># This is the for performing unittest on the layer</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_quantizer</span><span class="p">(</span>
+                <span class="n">F</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span><span class="p">(</span><span class="nb">input</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_layers</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="nb">input</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_layers</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_layers</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_layers</span><span class="p">)</span>
+
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_quantizer</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_layers</span><span class="p">:</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_layers</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_layers</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">y</span>
+
+        <span class="c1"># This is the case where the linear layer is the only module in the LogicNets module</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_quantizer</span><span class="p">(</span>
+            <span class="n">F</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span><span class="p">(</span><span class="nb">input</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LinearLogicNets.set_fused">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets.set_fused">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_fused</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fused</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">apply_layers</span> <span class="o">=</span> <span class="n">fused</span></div>
+
+
+<div class="viewcode-block" id="LinearLogicNets.run_layers">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets.run_layers">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">layers</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layers</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="nb">input</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
+            <span class="n">layer_name</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+            <span class="n">SUPPORTED_LAYERS</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;ReLU&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s2">&quot;Tanh&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s2">&quot;BatchNorm1d&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s2">&quot;str&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="p">}</span>  <span class="c1"># &quot;str&quot; type is short the &quot;output&quot;. Hence this logicnets will be a pure linear without activation.</span>
+            <span class="k">if</span> <span class="n">layer_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SUPPORTED_LAYERS</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Unsupported output layer </span><span class="si">{}</span><span class="s2">. Please choose from </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">layer_name</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">SUPPORTED_LAYERS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="n">SUPPORTED_LAYERS</span><span class="p">[</span><span class="n">layer_name</span><span class="p">]:</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">layer</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">y</span></div>
+
+
+<div class="viewcode-block" id="LinearLogicNets.encode">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets.encode">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">input</span> <span class="o">*</span> <span class="mi">2</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">x_frac_width</span></div>
+
+
+<div class="viewcode-block" id="LinearLogicNets.decode">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets.decode">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">input</span> <span class="o">/</span> <span class="mi">2</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">x_frac_width</span></div>
+
+
+<div class="viewcode-block" id="LinearLogicNets.forward">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearLogicNets.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_lut_inference</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lut_forward</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">math_forward</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LinearMXIntHardware">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearMXIntHardware">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LinearMXIntHardware</span><span class="p">(</span><span class="n">_LinearBase</span><span class="p">):</span>
+<div class="viewcode-block" id="LinearMXIntHardware.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearMXIntHardware.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">in_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">out_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">out_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">in_features</span><span class="p">,</span> <span class="n">out_features</span><span class="p">,</span> <span class="n">bias</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_config</span> <span class="o">=</span> <span class="n">out_config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="LinearMXIntHardware.forward">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.linear.LinearMXIntHardware.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">linearMXIntHardware</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_config</span>
+        <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By DeepWok
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, DeepWok.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

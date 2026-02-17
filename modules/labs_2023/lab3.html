@@ -1,0 +1,814 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Lab 3 for Advanced Deep Learning Systems (ADLS) &#8212; MASE 0.0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_style.css?v=92936fa5" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/modern.css?v=803738c0" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/jquery.js?v=5d32c60e"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="../../_static/documentation_options.js?v=e645c8fa"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+    <script src="../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+    <script src="../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+    <script src="../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+    <script src="../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'modules/labs_2023/lab3';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)" href="lab4-software.html" />
+    <link rel="prev" title="Lab 2 for Advanced Deep Learning Systems (ADLS)" href="lab2.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">MASE 0.0.1 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../documentation/installation.html">Installation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/getting_started/Get-started-using-uv.html">Getting Started using uv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/getting_started/Get-started-using-Docker.html">Getting Started using Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/getting_started/Get-started-students.html">Additional Instructions for Imperial College Students</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../documentation/tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_1_introduction_to_mase.html">Tutorial 1: Introduction to the Mase IR, MaseGraph and Torch FX passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_2_lora_finetune.html">Tutorial 2: Finetuning Bert for Sequence Classification using a LoRA adapter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_3_qat.html">Tutorial 3: Running Quantization-Aware Training (QAT) on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_4_pruning.html">Tutorial 4: Unstructured Pruning on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_5_nas_optuna.html">Tutorial 5: Neural Architecture Search (NAS) with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_6_mixed_precision_search.html">Tutorial 6: Mixed Precision Quantization Search with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_7_distributed_deployment.html">Tutorial 7: Deploying a Model for Inference on Distributed Clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_9_kernel_fusion.html">Tutorial 9: Running Kernel Fusion for Inference Acceleration on GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/advanced/tensorRT_quantization_tutorial.html">Advanced: TensorRT Quantization Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/advanced/onnxrt_quantization_tutorial.html">Advanced: ONNX Runtime Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/advanced/cli.html">Advanced: Using Mase CLI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/developer/Add-model-to-machop.html">Developer: Guide on how to add a new model into Machop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/developer/doc_writing.html">Developer: How to write documentations in MASE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/developer/how_to_extend_search.html">Developer: How to extend search</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/health.html">Repository Health</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../documentation/specifications.html">Coding Style Specifications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/specifications/C-coding-style-specifications.html">C/C++ Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/specifications/Python-coding-style-specifications.html">Python Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/specifications/Verilog-coding-style-specifications.html">Verilog Coding Style Specifications</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../machop.html">Machop Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../chop/actions.html">chop.actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../chop/datasets.html">chop.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../chop/distributed.html">chop.distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../chop/ir.html">chop.ir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../chop/models.html">chop.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../chop/nn.html">chop.nn</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../chop/nn_quantized.html">chop.nn.quantized</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../chop/nn_quantized_functional.html">chop.nn.quantized.functional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../chop/nn_quantized_modules.html">chop.nn.quantized.modules</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../chop/passes.html">chop.passes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../chop/passes_module.html">chop.passes.module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../chop/module_analysis/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/module_transform/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/transform/onn.html">chop.passes.module.transforms.onn</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../chop/passes_graph.html">chop.passes.graph</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/add_metadata.html">chop.passes.graph.analysis.add_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/autosharding.html">chop.passes.graph.analysis.autosharding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/init_metadata.html">chop.passes.graph.analysis.init_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/report.html">chop.passes.graph.analysis.report</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/statistical_profiler.html">chop.passes.graph.analysis.statistical_profiler.profile_statistics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/verify.html">chop.passes.graph.analysis.verify.verify</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/quantization.html">chop.passes.graph.calculate_avg_bits_mg_analysis_pass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/pruning.html">chop.passes.graph.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/runtime.html">chop.passes.graph.analysis.runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/transform/pruning.html">chop.passes.transform.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/transform/quantize.html">chop.passes.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/transform/utils.html">chop.passes.transform.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/transform/tensorrt.html">chop.passes.transform.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/interface/save_and_load.html">chop.passes.interface.save_and_load</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/interface/tensorrt.html">chop.passes.interface.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/interface/onnxrt.html">chop.passes.interface.onnxrt</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../chop/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../chop/tools.html">chop.tools</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Deep Learning Systems</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../adls_2024.html">Advanced Deep Learning Systems: 2024/2025</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/lab_0_introduction.html">Lab 0: Introduction to Mase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/lab_1_compression.html">Lab 1: Model Compression (Quantization and Pruning)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/lab_2_nas.html">Lab 2: Neural Architecture Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/lab_3_mixed_precision_search.html">Lab 3: Mixed Precision Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/lab4-software.html">Lab 4 (Software Stream) Performance Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../adls_2023.html">Advanced Deep Learning Systems: 2023/2024</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="lab1.html">Lab 1 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lab2.html">Lab 2 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Lab 3 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lab4-software.html">Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/modules/labs_2023/lab3.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Lab 3 for Advanced Deep Learning Systems (ADLS)</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#general-introduction">General introduction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-a-search-using-masegraph-transforms">Writing a search using MaseGraph Transforms</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#turning-you-network-to-a-graph">Turning you network to a graph</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-a-search-space">Defining a search space</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-a-search-strategy-and-a-runner">Defining a search strategy and a runner</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-search-command-in-the-mase-flow">The search command in the MASE flow</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <a class="reference internal image-reference" href="../../_images/deepwok.png"><img alt="logo" class="align-center" src="../../_images/deepwok.png" style="width: 160.0px; height: 160.0px;" />
+</a>
+<section id="lab-3-for-advanced-deep-learning-systems-adls">
+<h1>Lab 3 for Advanced Deep Learning Systems (ADLS)<a class="headerlink" href="#lab-3-for-advanced-deep-learning-systems-adls" title="Link to this heading">#</a></h1>
+<div align="center">
+<p align="center">
+   ELEC70109/EE9-AML3-10/EE9-AO25
+   <br />
+Written by
+   <a href="https://aaron-zhao123.github.io/">Aaron Zhao </a> ,
+   <a href="https://chengzhang-98.github.io/blog/">Cheng Zhang </a> ,
+   <a href="https://www.pedrogimenes.co.uk/">Pedro Gimenes </a>
+</p>
+</div><section id="general-introduction">
+<h2>General introduction<a class="headerlink" href="#general-introduction" title="Link to this heading">#</a></h2>
+<p>In this lab, you will learn how to use the search functionality in the
+software stack of MASE.</p>
+<p>There are in total 4 tasks you would need to finish.</p>
+</section>
+<section id="writing-a-search-using-masegraph-transforms">
+<h2>Writing a search using MaseGraph Transforms<a class="headerlink" href="#writing-a-search-using-masegraph-transforms" title="Link to this heading">#</a></h2>
+<p>In this section, our objective is to gain a comprehensive understanding
+of the construction of the current search function in Mase. To achieve
+this, we will require these essential components:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">MaseGraph</span></code>: This component should be already created in the preceding
+lab.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Search</span> <span class="pre">space</span></code>: This component encompasses and defines the various
+available search options.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Search</span> <span class="pre">strategy</span></code>: An implementation of a search algorithm.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Runner</span></code>: This vital component manages and executes training,
+evaluation, or both procedures while generating a quality metric.</p></li>
+</ul>
+<p>By analyzing these components, we can delve into the workings and
+effectiveness of the existing search function in Mase.</p>
+<section id="turning-you-network-to-a-graph">
+<h3>Turning you network to a graph<a class="headerlink" href="#turning-you-network-to-a-graph" title="Link to this heading">#</a></h3>
+<p>We follow a similar procedure of what you have tried in lab2 to now
+produce a <code class="docutils literal notranslate"><span class="pre">MaseGraph</span></code>, this is converted from your pre-trained JSC
+model:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pprint</span><span class="w"> </span><span class="kn">import</span> <span class="n">pprint</span> <span class="k">as</span> <span class="n">pp</span>
+
+<span class="c1"># figure out the correct path</span>
+<span class="n">machop_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span><span class="s2">&quot;machop&quot;</span>
+<span class="k">assert</span> <span class="n">machop_path</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span> <span class="s2">&quot;Failed to find machop at: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">machop_path</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">machop_path</span><span class="p">))</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">MaseDataModule</span><span class="p">,</span> <span class="n">get_dataset_info</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.tools.logger</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_logger</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.passes.graph.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">report_node_meta_param_analysis_pass</span><span class="p">,</span>
+    <span class="n">profile_statistics_analysis_pass</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.passes.graph</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">add_common_metadata_analysis_pass</span><span class="p">,</span>
+    <span class="n">init_metadata_analysis_pass</span><span class="p">,</span>
+    <span class="n">add_software_metadata_analysis_pass</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.tools.get_input</span><span class="w"> </span><span class="kn">import</span> <span class="n">InputGenerator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.ir.graph.mase_graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">MaseGraph</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_model_info</span><span class="p">,</span> <span class="n">get_model</span>
+
+
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;chop&quot;</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+
+<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">model_name</span> <span class="o">=</span> <span class="s2">&quot;jsc-tiny&quot;</span>
+<span class="n">dataset_name</span> <span class="o">=</span> <span class="s2">&quot;jsc&quot;</span>
+
+
+<span class="n">data_module</span> <span class="o">=</span> <span class="n">MaseDataModule</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="n">dataset_name</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+    <span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+    <span class="n">num_workers</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="c1"># custom_dataset_cache_path=&quot;../../chop/dataset&quot;</span>
+<span class="p">)</span>
+<span class="n">data_module</span><span class="o">.</span><span class="n">prepare_data</span><span class="p">()</span>
+<span class="n">data_module</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+
+<span class="n">model_info</span> <span class="o">=</span> <span class="n">get_model_info</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">get_model</span><span class="p">(</span>
+    <span class="n">model_name</span><span class="p">,</span>
+    <span class="n">task</span><span class="o">=</span><span class="s2">&quot;cls&quot;</span><span class="p">,</span>
+    <span class="n">dataset_info</span><span class="o">=</span><span class="n">data_module</span><span class="o">.</span><span class="n">dataset_info</span><span class="p">,</span>
+    <span class="n">pretrained</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">checkpoint</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+
+<span class="n">input_generator</span> <span class="o">=</span> <span class="n">InputGenerator</span><span class="p">(</span>
+    <span class="n">data_module</span><span class="o">=</span><span class="n">data_module</span><span class="p">,</span>
+    <span class="n">model_info</span><span class="o">=</span><span class="n">model_info</span><span class="p">,</span>
+    <span class="n">task</span><span class="o">=</span><span class="s2">&quot;cls&quot;</span><span class="p">,</span>
+    <span class="n">which_dataloader</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">dummy_in</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">input_generator</span><span class="p">))</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="o">**</span><span class="n">dummy_in</span><span class="p">)</span>
+
+<span class="c1"># generate the mase graph and initialize node metadata</span>
+<span class="n">mg</span> <span class="o">=</span> <span class="n">MaseGraph</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You may want to copy the code snippet and paste it to a file created in
+the current directory with a name of <code class="docutils literal notranslate"><span class="pre">lab3.py</span></code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>[Directory madness] The directory has to be correct because
+the line
+<code class="docutils literal notranslate"><span class="pre">machop_path</span> <span class="pre">=</span> <span class="pre">Path(&quot;.&quot;).resolve().parent.parent</span> <span class="pre">/&quot;machop&quot;</span></code> traces
+to the parent directory based on relative positions.</p>
+</div>
+</section>
+<section id="defining-a-search-space">
+<h3>Defining a search space<a class="headerlink" href="#defining-a-search-space" title="Link to this heading">#</a></h3>
+<p>Based on the previous <code class="docutils literal notranslate"><span class="pre">pass_args</span></code> template, the following code is
+utilized to generate a search space. The search space is constructed by
+combining different weight and data configurations in precision setups.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">pass_args</span> <span class="o">=</span> <span class="p">{</span>
+<span class="s2">&quot;by&quot;</span><span class="p">:</span> <span class="s2">&quot;type&quot;</span><span class="p">,</span>
+<span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}},</span>
+<span class="s2">&quot;linear&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span><span class="p">,</span>
+            <span class="c1"># data</span>
+            <span class="s2">&quot;data_in_width&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+            <span class="s2">&quot;data_in_frac_width&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="c1"># weight</span>
+            <span class="s2">&quot;weight_width&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+            <span class="s2">&quot;weight_frac_width&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="c1"># bias</span>
+            <span class="s2">&quot;bias_width&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+            <span class="s2">&quot;bias_frac_width&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="p">}</span>
+<span class="p">},}</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="c1"># build a search space</span>
+<span class="n">data_in_frac_widths</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]</span>
+<span class="n">w_in_frac_widths</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]</span>
+<span class="n">search_spaces</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">d_config</span> <span class="ow">in</span> <span class="n">data_in_frac_widths</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">w_config</span> <span class="ow">in</span> <span class="n">w_in_frac_widths</span><span class="p">:</span>
+        <span class="n">pass_args</span><span class="p">[</span><span class="s1">&#39;linear&#39;</span><span class="p">][</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;data_in_width&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">d_config</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">pass_args</span><span class="p">[</span><span class="s1">&#39;linear&#39;</span><span class="p">][</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;data_in_frac_width&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">d_config</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">pass_args</span><span class="p">[</span><span class="s1">&#39;linear&#39;</span><span class="p">][</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;weight_width&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">w_config</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">pass_args</span><span class="p">[</span><span class="s1">&#39;linear&#39;</span><span class="p">][</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;weight_frac_width&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">w_config</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># dict.copy() and dict(dict) only perform shallow copies</span>
+        <span class="c1"># in fact, only primitive data types in python are doing implicit copy when a = b happens</span>
+        <span class="n">search_spaces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">pass_args</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="defining-a-search-strategy-and-a-runner">
+<h3>Defining a search strategy and a runner<a class="headerlink" href="#defining-a-search-strategy-and-a-runner" title="Link to this heading">#</a></h3>
+<p>The code provided below consists of two main <code class="docutils literal notranslate"><span class="pre">for</span></code> loops. The first
+<code class="docutils literal notranslate"><span class="pre">for</span></code> loop executes a straightforward brute-force search, enabling the
+iteration through the previously defined search space.</p>
+<p>In contrast, the second <code class="docutils literal notranslate"><span class="pre">for</span></code> loop retrieves training samples from the
+train data loader. These samples are then utilized to generate accuracy
+and loss values, which serve as potential quality metrics for evaluating
+the system’s performance.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># grid search</span>
+
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchmetrics.classification</span><span class="w"> </span><span class="kn">import</span> <span class="n">MulticlassAccuracy</span>
+
+<span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">init_metadata_analysis_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">add_common_metadata_analysis_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;dummy_in&quot;</span><span class="p">:</span> <span class="n">dummy_in</span><span class="p">})</span>
+<span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">add_software_metadata_analysis_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+<span class="n">metric</span> <span class="o">=</span> <span class="n">MulticlassAccuracy</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">num_batchs</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="c1"># This first loop is basically our search strategy,</span>
+<span class="c1"># in this case, it is a simple brute force search</span>
+
+<span class="n">recorded_accs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">search_spaces</span><span class="p">):</span>
+    <span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">quantize_transform_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># this is the inner loop, where we also call it as a runner.</span>
+    <span class="n">acc_avg</span><span class="p">,</span> <span class="n">loss_avg</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="n">accs</span><span class="p">,</span> <span class="n">losses</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">inputs</span> <span class="ow">in</span> <span class="n">data_module</span><span class="o">.</span><span class="n">train_dataloader</span><span class="p">():</span>
+        <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span> <span class="o">=</span> <span class="n">inputs</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="n">mg</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">cross_entropy</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">ys</span><span class="p">)</span>
+        <span class="n">acc</span> <span class="o">=</span> <span class="n">metric</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">ys</span><span class="p">)</span>
+        <span class="n">accs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">acc</span><span class="p">)</span>
+        <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">j</span> <span class="o">&gt;</span> <span class="n">num_batchs</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">acc_avg</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">accs</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">accs</span><span class="p">)</span>
+    <span class="n">loss_avg</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">losses</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">losses</span><span class="p">)</span>
+    <span class="n">recorded_accs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">acc_avg</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now if you copy also this code snippet into <code class="docutils literal notranslate"><span class="pre">lab3.py</span></code>, you would have
+a complete search scripts.</p>
+<p>We now have the following task for you:</p>
+<ol class="arabic simple">
+<li><p>Explore additional metrics that can serve as quality metrics for the
+search process. For example, you can consider metrics such as
+latency, model size, or the number of FLOPs (floating-point
+operations) involved in the model.</p></li>
+<li><p>Implement some of these additional metrics and attempt to combine
+them with the accuracy or loss quality metric. It’s important to note
+that in this particular case, accuracy and loss actually serve as the
+same quality metric (do you know why?).</p></li>
+</ol>
+</section>
+</section>
+<section id="the-search-command-in-the-mase-flow">
+<h2>The search command in the MASE flow<a class="headerlink" href="#the-search-command-in-the-mase-flow" title="Link to this heading">#</a></h2>
+<p>The search flow implemented in MASE is very similar to the one that you
+have constructed manually, the overall flow is implemented in
+<a class="reference external" href="https://github.com/DeepWok/mase/blob/main/machop/chop/actions/search/search.py">search.py</a>, the
+following bullet points provide you pointers to the code base.</p>
+<ul class="simple">
+<li><p>MaseGraph: this is the
+<a class="reference external" href="https://github.com/DeepWok/mase/blob/main/machop/chop/ir/graph/mase_graph.py">MaseGraph</a> that you
+have used in lab2.</p></li>
+<li><p>Search space: The base class is implemented in
+<a class="reference external" href="https://github.com/DeepWok/mase/blob/main/machop/chop/actions/search/search_space/base.py">base.py</a> ,
+where in the same folder you can see a range of different supported
+search spaces.</p></li>
+<li><p>Search strategy: Similar to the search space, you can find a a base
+class
+<a class="reference external" href="https://github.com/DeepWok/mase/blob/main/machop/chop/actions/search/strategies/base.py">definition</a>,
+where different strategies are also defined in the same folder.</p></li>
+<li><p>Runner: Different
+<a class="reference external" href="https://github.com/DeepWok/mase/blob/main/machop/chop/actions/search/strategies/runners">runners</a> can
+produce different metrics, they may also use <code class="docutils literal notranslate"><span class="pre">transforms</span></code> to help
+compute certain search metrics.</p></li>
+</ul>
+<p>This enables one to execute the search through the MASE command line
+interface, remember to change the name after the <code class="docutils literal notranslate"><span class="pre">--load</span></code> option.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./ch<span class="w"> </span>search<span class="w"> </span>--config<span class="w"> </span>configs/examples/jsc_toy_by_type.toml<span class="w"> </span>--load<span class="w"> </span>your_pre_trained_ckpt
+</pre></div>
+</div>
+<p>In this scenario, the search functionality is specified in the <code class="docutils literal notranslate"><span class="pre">toml</span></code>
+configuration file rather than via command-line inputs. This approach is
+adopted due to the multitude of configuration parameters that need to be
+set; encapsulating them within a single, elegant configuration file
+enhances reproducibility.</p>
+<p>In <code class="docutils literal notranslate"><span class="pre">jsc_toy_by_type.toml</span></code>, the <code class="docutils literal notranslate"><span class="pre">search_space</span></code> configuration is set
+in <code class="docutils literal notranslate"><span class="pre">search.search_space</span></code>, the search strategy is configured via
+<code class="docutils literal notranslate"><span class="pre">search.strategy</span></code>. If you are not familiar with the <code class="docutils literal notranslate"><span class="pre">toml</span></code> syntax,
+you can read <a class="reference external" href="https://toml.io/en/v1.0.0">here</a>.</p>
+<p>With now an understanding of how the MASE flow work, consider the
+following tasks</p>
+<ol class="arabic simple" start="3">
+<li><p>Implement the brute-force search as an additional search method
+within the system, this would be a new search strategy in MASE.</p></li>
+<li><p>Compare the brute-force search with the TPE based search, in terms of
+sample efficiency. Comment on the performance difference between the
+two search methods.</p></li>
+</ol>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="lab2.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Lab 2 for Advanced Deep Learning Systems (ADLS)</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="lab4-software.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#general-introduction">General introduction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-a-search-using-masegraph-transforms">Writing a search using MaseGraph Transforms</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#turning-you-network-to-a-graph">Turning you network to a graph</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-a-search-space">Defining a search space</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-a-search-strategy-and-a-runner">Defining a search strategy and a runner</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-search-command-in-the-mase-flow">The search command in the MASE flow</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By DeepWok
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, DeepWok.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

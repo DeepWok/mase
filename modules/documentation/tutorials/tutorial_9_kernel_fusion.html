@@ -1,0 +1,692 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tutorial 9: Running Kernel Fusion for Inference Acceleration on GPUs &#8212; MASE 0.0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_style.css?v=92936fa5" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/modern.css?v=803738c0" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="../../../_static/documentation_options.js?v=e645c8fa"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+    <script src="../../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+    <script src="../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+    <script src="../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+    <script src="../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'modules/documentation/tutorials/tutorial_9_kernel_fusion';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Advanced: TensorRT Quantization Tutorial" href="advanced/tensorRT_quantization_tutorial.html" />
+    <link rel="prev" title="Tutorial 7: Deploying a Model for Inference on Distributed Clusters" href="tutorial_7_distributed_deployment.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">MASE 0.0.1 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../installation.html">Installation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started/Get-started-using-uv.html">Getting Started using uv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started/Get-started-using-Docker.html">Getting Started using Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started/Get-started-students.html">Additional Instructions for Imperial College Students</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../tutorials.html">Tutorials</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="tutorial_1_introduction_to_mase.html">Tutorial 1: Introduction to the Mase IR, MaseGraph and Torch FX passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_2_lora_finetune.html">Tutorial 2: Finetuning Bert for Sequence Classification using a LoRA adapter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_3_qat.html">Tutorial 3: Running Quantization-Aware Training (QAT) on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_4_pruning.html">Tutorial 4: Unstructured Pruning on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_5_nas_optuna.html">Tutorial 5: Neural Architecture Search (NAS) with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_6_mixed_precision_search.html">Tutorial 6: Mixed Precision Quantization Search with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_7_distributed_deployment.html">Tutorial 7: Deploying a Model for Inference on Distributed Clusters</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Tutorial 9: Running Kernel Fusion for Inference Acceleration on GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced/tensorRT_quantization_tutorial.html">Advanced: TensorRT Quantization Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced/onnxrt_quantization_tutorial.html">Advanced: ONNX Runtime Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced/cli.html">Advanced: Using Mase CLI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer/Add-model-to-machop.html">Developer: Guide on how to add a new model into Machop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer/doc_writing.html">Developer: How to write documentations in MASE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer/how_to_extend_search.html">Developer: How to extend search</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../health.html">Repository Health</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../specifications.html">Coding Style Specifications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../specifications/C-coding-style-specifications.html">C/C++ Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../specifications/Python-coding-style-specifications.html">Python Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../specifications/Verilog-coding-style-specifications.html">Verilog Coding Style Specifications</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../machop.html">Machop Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chop/actions.html">chop.actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../chop/datasets.html">chop.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../chop/distributed.html">chop.distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../chop/ir.html">chop.ir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../chop/models.html">chop.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../chop/nn.html">chop.nn</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../chop/nn_quantized.html">chop.nn.quantized</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../chop/nn_quantized_functional.html">chop.nn.quantized.functional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../chop/nn_quantized_modules.html">chop.nn.quantized.modules</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../chop/passes.html">chop.passes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../chop/passes_module.html">chop.passes.module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/module_analysis/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/module_transform/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/transform/onn.html">chop.passes.module.transforms.onn</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../chop/passes_graph.html">chop.passes.graph</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/analysis/add_metadata.html">chop.passes.graph.analysis.add_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/analysis/autosharding.html">chop.passes.graph.analysis.autosharding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/analysis/init_metadata.html">chop.passes.graph.analysis.init_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/analysis/report.html">chop.passes.graph.analysis.report</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/analysis/statistical_profiler.html">chop.passes.graph.analysis.statistical_profiler.profile_statistics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/analysis/verify.html">chop.passes.graph.analysis.verify.verify</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/analysis/quantization.html">chop.passes.graph.calculate_avg_bits_mg_analysis_pass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/analysis/pruning.html">chop.passes.graph.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/analysis/runtime.html">chop.passes.graph.analysis.runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/transform/pruning.html">chop.passes.transform.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/transform/quantize.html">chop.passes.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/transform/utils.html">chop.passes.transform.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/transform/tensorrt.html">chop.passes.transform.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/interface/save_and_load.html">chop.passes.interface.save_and_load</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/interface/tensorrt.html">chop.passes.interface.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/interface/onnxrt.html">chop.passes.interface.onnxrt</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../chop/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../chop/tools.html">chop.tools</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Deep Learning Systems</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../adls_2024.html">Advanced Deep Learning Systems: 2024/2025</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2024/lab_0_introduction.html">Lab 0: Introduction to Mase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2024/lab_1_compression.html">Lab 1: Model Compression (Quantization and Pruning)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2024/lab_2_nas.html">Lab 2: Neural Architecture Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2024/lab_3_mixed_precision_search.html">Lab 3: Mixed Precision Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2024/lab4-software.html">Lab 4 (Software Stream) Performance Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2024/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../adls_2023.html">Advanced Deep Learning Systems: 2023/2024</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2023/lab1.html">Lab 1 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2023/lab2.html">Lab 2 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2023/lab3.html">Lab 3 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2023/lab4-software.html">Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2023/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../_sources/modules/documentation/tutorials/tutorial_9_kernel_fusion.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Tutorial 9: Running Kernel Fusion for Inference Acceleration on GPUs</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-a-custom-kernel">What is a Custom Kernel?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-kernel-fusion">What is Kernel Fusion?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-triton">What is Triton?</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="tutorial-9-running-kernel-fusion-for-inference-acceleration-on-gpus">
+<h1>Tutorial 9: Running Kernel Fusion for Inference Acceleration on GPUs<a class="headerlink" href="#tutorial-9-running-kernel-fusion-for-inference-acceleration-on-gpus" title="Link to this heading">#</a></h1>
+<p>In this tutorial, we will look at how to perform kernel fusion using Triton.</p>
+<section id="what-is-a-custom-kernel">
+<h2>What is a Custom Kernel?<a class="headerlink" href="#what-is-a-custom-kernel" title="Link to this heading">#</a></h2>
+<p>The idea of a kernel in the GPU world is a function that is parallelized and running on the GPU fabric. This is slightly different from the kernel in the context of operating systems. A custom GPU kernel is a kernel that is not provided by the GPU vendor, such as Nvidia, but it is written by developers. We develop custom kernels to optimize the performance of our application.</p>
+</section>
+<section id="what-is-kernel-fusion">
+<h2>What is Kernel Fusion?<a class="headerlink" href="#what-is-kernel-fusion" title="Link to this heading">#</a></h2>
+<p>Kernel fusion refers to the idea of combining instructions from multiple kernels into a single kernel. This has multiple benefits:</p>
+<ol class="arabic simple">
+<li><p>Reducing the number of kernel launches, which can be expensive.</p></li>
+<li><p>If designed correctly, it can reduce the number of memory accesses.</p></li>
+<li><p>If designed correctly, it can reduce the number of intermediate results stored in memory, which can be expensive.</p></li>
+</ol>
+</section>
+<section id="what-is-triton">
+<h2>What is Triton?<a class="headerlink" href="#what-is-triton" title="Link to this heading">#</a></h2>
+<p>When prioritizing performance optimization on GPUs, programmability becomes a critical challenge, especially for managing HBM (High-bandwidth Memory) load and store operations and choosing the right level of parallelism. High-level languages or frameworks like PyTorch lack the constructs necessary for such control.</p>
+<p>Typically, the workaround involves delving into Nvidia’s lower-level programming languages like CUDA or utilizing libraries like CUTLASS for tensor operations. Triton is then standing on a unique middle ground, bridging the gap between Python’s accessibility and ease of programmability and CUDA’s fine-grained control.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="c1"># naive softmax</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">torch_naive_softmax</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">x_max</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c1"># read MN + M elements ; write MN elements</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">x_max</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="c1"># read  MN elements ; write MN elements</span>
+    <span class="n">numerator</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+    <span class="c1"># read  MN elements ; write M  elements</span>
+    <span class="n">denominator</span> <span class="o">=</span> <span class="n">numerator</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># read MN + M elements ; write MN elements</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">numerator</span> <span class="o">/</span> <span class="n">denominator</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="c1"># in total: read 5MN + 2M elements ; wrote 3MN + 2M elements</span>
+    <span class="k">return</span> <span class="n">ret</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">triton</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">triton.language</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tl</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">triton.runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">driver</span>
+
+<span class="nd">@triton</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">softmax_kernel</span><span class="p">(</span>
+        <span class="n">output_ptr</span><span class="p">,</span> <span class="n">input_ptr</span><span class="p">,</span> <span class="n">input_row_stride</span><span class="p">,</span> <span class="n">output_row_stride</span><span class="p">,</span> <span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">,</span> <span class="n">BLOCK_SIZE</span><span class="p">:</span> <span class="n">tl</span><span class="o">.</span><span class="n">constexpr</span><span class="p">,</span>
+        <span class="n">num_stages</span><span class="p">:</span> <span class="n">tl</span><span class="o">.</span><span class="n">constexpr</span><span class="p">):</span>
+    <span class="c1"># starting row of the program</span>
+    <span class="n">row_start</span> <span class="o">=</span> <span class="n">tl</span><span class="o">.</span><span class="n">program_id</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">row_step</span> <span class="o">=</span> <span class="n">tl</span><span class="o">.</span><span class="n">num_programs</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">row_idx</span> <span class="ow">in</span> <span class="n">tl</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="n">row_start</span><span class="p">,</span> <span class="n">n_rows</span><span class="p">,</span> <span class="n">row_step</span><span class="p">,</span> <span class="n">num_stages</span><span class="o">=</span><span class="n">num_stages</span><span class="p">):</span>
+        <span class="c1"># The stride represents how much we need to increase the pointer to advance 1 row</span>
+        <span class="n">row_start_ptr</span> <span class="o">=</span> <span class="n">input_ptr</span> <span class="o">+</span> <span class="n">row_idx</span> <span class="o">*</span> <span class="n">input_row_stride</span>
+        <span class="c1"># The block size is the next power of two greater than n_cols, so we can fit each</span>
+        <span class="c1"># row in a single block</span>
+        <span class="n">col_offsets</span> <span class="o">=</span> <span class="n">tl</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">BLOCK_SIZE</span><span class="p">)</span>
+        <span class="n">input_ptrs</span> <span class="o">=</span> <span class="n">row_start_ptr</span> <span class="o">+</span> <span class="n">col_offsets</span>
+        <span class="c1"># Load the row into SRAM, using a mask since BLOCK_SIZE may be &gt; than n_cols</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">col_offsets</span> <span class="o">&lt;</span> <span class="n">n_cols</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">tl</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">input_ptrs</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">other</span><span class="o">=-</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">))</span>
+        <span class="c1"># Subtract maximum for numerical stability</span>
+        <span class="n">row_minus_max</span> <span class="o">=</span> <span class="n">row</span> <span class="o">-</span> <span class="n">tl</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># Note that exponentiation in Triton is fast but approximate (i.e., think __expf in CUDA)</span>
+        <span class="n">numerator</span> <span class="o">=</span> <span class="n">tl</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">row_minus_max</span><span class="p">)</span>
+        <span class="n">denominator</span> <span class="o">=</span> <span class="n">tl</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">numerator</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">softmax_output</span> <span class="o">=</span> <span class="n">numerator</span> <span class="o">/</span> <span class="n">denominator</span>
+        <span class="c1"># Write back output to DRAM</span>
+        <span class="n">output_row_start_ptr</span> <span class="o">=</span> <span class="n">output_ptr</span> <span class="o">+</span> <span class="n">row_idx</span> <span class="o">*</span> <span class="n">output_row_stride</span>
+        <span class="n">output_ptrs</span> <span class="o">=</span> <span class="n">output_row_start_ptr</span> <span class="o">+</span> <span class="n">col_offsets</span>
+        <span class="n">tl</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">output_ptrs</span><span class="p">,</span> <span class="n">softmax_output</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">)</span>
+<span class="n">properties</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">active</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_device_properties</span><span class="p">(</span><span class="n">DEVICE</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+<span class="n">NUM_SM</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;multiprocessor_count&quot;</span><span class="p">]</span>
+<span class="n">NUM_REGS</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;max_num_regs&quot;</span><span class="p">]</span>
+<span class="n">SIZE_SMEM</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;max_shared_mem&quot;</span><span class="p">]</span>
+<span class="n">WARP_SIZE</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;warpSize&quot;</span><span class="p">]</span>
+<span class="n">target</span> <span class="o">=</span> <span class="n">triton</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">active</span><span class="o">.</span><span class="n">get_current_target</span><span class="p">()</span>
+<span class="n">kernels</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">softmax</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="c1"># The block size of each loop iteration is the smallest power of two greater than the number of columns in `x`</span>
+    <span class="n">BLOCK_SIZE</span> <span class="o">=</span> <span class="n">triton</span><span class="o">.</span><span class="n">next_power_of_2</span><span class="p">(</span><span class="n">n_cols</span><span class="p">)</span>
+
+    <span class="c1"># Another trick we can use is to ask the compiler to use more threads per row by</span>
+    <span class="c1"># increasing the number of warps (`num_warps`) over which each row is distributed.</span>
+    <span class="c1"># You will see in the next tutorial how to auto-tune this value in a more natural</span>
+    <span class="c1"># way so you don&#39;t have to come up with manual heuristics yourself.</span>
+    <span class="n">num_warps</span> <span class="o">=</span> <span class="mi">8</span>
+
+    <span class="c1"># Number of software pipelining stages.</span>
+    <span class="n">num_stages</span> <span class="o">=</span> <span class="mi">4</span> <span class="k">if</span> <span class="n">SIZE_SMEM</span> <span class="o">&gt;</span> <span class="mi">200000</span> <span class="k">else</span> <span class="mi">2</span>
+
+    <span class="c1"># Allocate output</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="c1"># pre-compile kernel to get register usage and compute thread occupancy.</span>
+    <span class="n">kernel</span> <span class="o">=</span> <span class="n">softmax_kernel</span><span class="o">.</span><span class="n">warmup</span><span class="p">(</span>
+        <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">stride</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">y</span><span class="o">.</span><span class="n">stride</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">,</span> <span class="n">BLOCK_SIZE</span><span class="o">=</span><span class="n">BLOCK_SIZE</span><span class="p">,</span>
+        <span class="n">num_stages</span><span class="o">=</span><span class="n">num_stages</span><span class="p">,</span> <span class="n">num_warps</span><span class="o">=</span><span class="n">num_warps</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">))</span>
+    <span class="n">kernel</span><span class="o">.</span><span class="n">_init_handles</span><span class="p">()</span>
+    <span class="n">n_regs</span> <span class="o">=</span> <span class="n">kernel</span><span class="o">.</span><span class="n">n_regs</span>
+    <span class="n">size_smem</span> <span class="o">=</span> <span class="n">kernel</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">shared</span>
+    <span class="k">if</span> <span class="n">is_hip</span><span class="p">():</span>
+        <span class="c1"># NUM_REGS represents the number of regular purpose registers. On CDNA architectures this is half of all registers available.</span>
+        <span class="c1"># However, this is not always the case. In most cases all registers can be used as regular purpose registers.</span>
+        <span class="c1"># ISA SECTION (3.6.4 for CDNA3)</span>
+        <span class="c1"># VGPRs are allocated out of two pools: regular VGPRs and accumulation VGPRs. Accumulation VGPRs are used</span>
+        <span class="c1"># with matrix VALU instructions, and can also be loaded directly from memory. A wave may have up to 512 total</span>
+        <span class="c1"># VGPRs, 256 of each type. When a wave has fewer than 512 total VGPRs, the number of each type is flexible - it is</span>
+        <span class="c1"># not required to be equal numbers of both types.</span>
+        <span class="k">if</span> <span class="n">is_cdna</span><span class="p">():</span>
+            <span class="n">NUM_GPRS</span> <span class="o">=</span> <span class="n">NUM_REGS</span> <span class="o">*</span> <span class="mi">2</span>
+
+        <span class="c1"># MAX_NUM_THREADS represents maximum number of resident threads per multi-processor.</span>
+        <span class="c1"># When we divide this number with WARP_SIZE we get maximum number of waves that can</span>
+        <span class="c1"># execute on a CU (multi-processor)  in parallel.</span>
+        <span class="n">MAX_NUM_THREADS</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;max_threads_per_sm&quot;</span><span class="p">]</span>
+        <span class="n">max_num_waves</span> <span class="o">=</span> <span class="n">MAX_NUM_THREADS</span> <span class="o">//</span> <span class="n">WARP_SIZE</span>
+        <span class="n">occupancy</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">NUM_GPRS</span> <span class="o">//</span> <span class="n">WARP_SIZE</span> <span class="o">//</span> <span class="n">n_regs</span><span class="p">,</span> <span class="n">max_num_waves</span><span class="p">)</span> <span class="o">//</span> <span class="n">num_warps</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">occupancy</span> <span class="o">=</span> <span class="n">NUM_REGS</span> <span class="o">//</span> <span class="p">(</span><span class="n">n_regs</span> <span class="o">*</span> <span class="n">WARP_SIZE</span> <span class="o">*</span> <span class="n">num_warps</span><span class="p">)</span>
+    <span class="n">occupancy</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">occupancy</span><span class="p">,</span> <span class="n">SIZE_SMEM</span> <span class="o">//</span> <span class="n">size_smem</span><span class="p">)</span>
+    <span class="n">num_programs</span> <span class="o">=</span> <span class="n">NUM_SM</span> <span class="o">*</span> <span class="n">occupancy</span>
+
+    <span class="n">num_programs</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">num_programs</span><span class="p">,</span> <span class="n">n_rows</span><span class="p">)</span>
+
+    <span class="c1"># Create a number of persistent programs.</span>
+    <span class="n">kernel</span><span class="p">[(</span><span class="n">num_programs</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)](</span>
+        <span class="n">y</span><span class="p">,</span>
+        <span class="n">x</span><span class="p">,</span>
+        <span class="n">x</span><span class="o">.</span><span class="n">stride</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+        <span class="n">y</span><span class="o">.</span><span class="n">stride</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+        <span class="n">n_rows</span><span class="p">,</span>
+        <span class="n">n_cols</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">y</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">ModuleNotFoundError</span><span class="g g-Whitespace">                       </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
+<span class="ne">----&gt; </span><span class="mi">1</span> <span class="kn">import</span><span class="w"> </span><span class="nn">triton</span>
+<span class="g g-Whitespace">      </span><span class="mi">2</span> <span class="kn">import</span><span class="w"> </span><span class="nn">triton.language</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tl</span>
+<span class="g g-Whitespace">      </span><span class="mi">3</span> <span class="kn">from</span><span class="w"> </span><span class="nn">triton.runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">driver</span>
+
+<span class="ne">ModuleNotFoundError</span>: No module named &#39;triton&#39;
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="tutorial_7_distributed_deployment.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tutorial 7: Deploying a Model for Inference on Distributed Clusters</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="advanced/tensorRT_quantization_tutorial.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Advanced: TensorRT Quantization Tutorial</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-a-custom-kernel">What is a Custom Kernel?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-kernel-fusion">What is Kernel Fusion?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-triton">What is Triton?</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By DeepWok
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, DeepWok.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,1115 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>chop.tools &#8212; MASE 0.0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_style.css?v=92936fa5" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/modern.css?v=803738c0" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/jquery.js?v=5d32c60e"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="../../_static/documentation_options.js?v=e645c8fa"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+    <script src="../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+    <script src="../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+    <script src="../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+    <script src="../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'modules/chop/tools';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Advanced Deep Learning Systems: 2024/2025" href="../adls_2024.html" />
+    <link rel="prev" title="chop.pipelines" href="pipelines.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">MASE 0.0.1 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../documentation/installation.html">Installation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/getting_started/Get-started-using-uv.html">Getting Started using uv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/getting_started/Get-started-using-Docker.html">Getting Started using Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/getting_started/Get-started-students.html">Additional Instructions for Imperial College Students</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../documentation/tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_1_introduction_to_mase.html">Tutorial 1: Introduction to the Mase IR, MaseGraph and Torch FX passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_2_lora_finetune.html">Tutorial 2: Finetuning Bert for Sequence Classification using a LoRA adapter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_3_qat.html">Tutorial 3: Running Quantization-Aware Training (QAT) on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_4_pruning.html">Tutorial 4: Unstructured Pruning on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_5_nas_optuna.html">Tutorial 5: Neural Architecture Search (NAS) with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_6_mixed_precision_search.html">Tutorial 6: Mixed Precision Quantization Search with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_7_distributed_deployment.html">Tutorial 7: Deploying a Model for Inference on Distributed Clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_9_kernel_fusion.html">Tutorial 9: Running Kernel Fusion for Inference Acceleration on GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/advanced/tensorRT_quantization_tutorial.html">Advanced: TensorRT Quantization Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/advanced/onnxrt_quantization_tutorial.html">Advanced: ONNX Runtime Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/advanced/cli.html">Advanced: Using Mase CLI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/developer/Add-model-to-machop.html">Developer: Guide on how to add a new model into Machop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/developer/doc_writing.html">Developer: How to write documentations in MASE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/developer/how_to_extend_search.html">Developer: How to extend search</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/health.html">Repository Health</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../documentation/specifications.html">Coding Style Specifications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/specifications/C-coding-style-specifications.html">C/C++ Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/specifications/Python-coding-style-specifications.html">Python Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/specifications/Verilog-coding-style-specifications.html">Verilog Coding Style Specifications</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../machop.html">Machop Documentation</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="actions.html">chop.actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html">chop.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distributed.html">chop.distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ir.html">chop.ir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">chop.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nn.html">chop.nn</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="nn_quantized.html">chop.nn.quantized</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="nn_quantized_functional.html">chop.nn.quantized.functional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nn_quantized_modules.html">chop.nn.quantized.modules</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="passes.html">chop.passes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="passes_module.html">chop.passes.module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="module_analysis/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="module_transform/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transform/onn.html">chop.passes.module.transforms.onn</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="passes_graph.html">chop.passes.graph</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="analysis/add_metadata.html">chop.passes.graph.analysis.add_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/autosharding.html">chop.passes.graph.analysis.autosharding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/init_metadata.html">chop.passes.graph.analysis.init_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/report.html">chop.passes.graph.analysis.report</a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/statistical_profiler.html">chop.passes.graph.analysis.statistical_profiler.profile_statistics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/verify.html">chop.passes.graph.analysis.verify.verify</a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/quantization.html">chop.passes.graph.calculate_avg_bits_mg_analysis_pass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/pruning.html">chop.passes.graph.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/runtime.html">chop.passes.graph.analysis.runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transform/pruning.html">chop.passes.transform.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transform/quantize.html">chop.passes.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transform/utils.html">chop.passes.transform.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transform/tensorrt.html">chop.passes.transform.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="interface/save_and_load.html">chop.passes.interface.save_and_load</a></li>
+<li class="toctree-l4"><a class="reference internal" href="interface/tensorrt.html">chop.passes.interface.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="interface/onnxrt.html">chop.passes.interface.onnxrt</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">chop.tools</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Deep Learning Systems</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../adls_2024.html">Advanced Deep Learning Systems: 2024/2025</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/lab_0_introduction.html">Lab 0: Introduction to Mase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/lab_1_compression.html">Lab 1: Model Compression (Quantization and Pruning)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/lab_2_nas.html">Lab 2: Neural Architecture Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/lab_3_mixed_precision_search.html">Lab 3: Mixed Precision Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/lab4-software.html">Lab 4 (Software Stream) Performance Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../adls_2023.html">Advanced Deep Learning Systems: 2023/2024</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2023/lab1.html">Lab 1 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2023/lab2.html">Lab 2 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2023/lab3.html">Lab 3 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2023/lab4-software.html">Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2023/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/modules/chop/tools.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>chop.tools</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-chop.tools.check_dependency">chop.tools.check_dependency</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.check_dependency.check_deps_tensorRT_pass"><code class="docutils literal notranslate"><span class="pre">check_deps_tensorRT_pass()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.check_dependency.find_missing_dependencies"><code class="docutils literal notranslate"><span class="pre">find_missing_dependencies()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.check_dependency.check_dependencies"><code class="docutils literal notranslate"><span class="pre">check_dependencies()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-chop.tools.checkpoint_load">chop.tools.checkpoint_load</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.checkpoint_load.load_lightning_ckpt_to_unwrapped_model"><code class="docutils literal notranslate"><span class="pre">load_lightning_ckpt_to_unwrapped_model()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.checkpoint_load.load_unwrapped_ckpt"><code class="docutils literal notranslate"><span class="pre">load_unwrapped_ckpt()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.checkpoint_load.load_graph_module_ckpt"><code class="docutils literal notranslate"><span class="pre">load_graph_module_ckpt()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.checkpoint_load.load_model"><code class="docutils literal notranslate"><span class="pre">load_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-chop.tools.config_load">chop.tools.config_load</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.config_load.convert_str_na_to_none"><code class="docutils literal notranslate"><span class="pre">convert_str_na_to_none()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.config_load.convert_none_to_str_na"><code class="docutils literal notranslate"><span class="pre">convert_none_to_str_na()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.config_load.load_config"><code class="docutils literal notranslate"><span class="pre">load_config()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.config_load.save_config"><code class="docutils literal notranslate"><span class="pre">save_config()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.config_load.post_parse_load_config"><code class="docutils literal notranslate"><span class="pre">post_parse_load_config()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-chop.tools.get_input">chop.tools.get_input</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.ModelSource"><code class="docutils literal notranslate"><span class="pre">ModelSource</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.ModelSource.HF_TRANSFORMERS"><code class="docutils literal notranslate"><span class="pre">ModelSource.HF_TRANSFORMERS</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.ModelSource.MANUAL"><code class="docutils literal notranslate"><span class="pre">ModelSource.MANUAL</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.ModelSource.PATCHED"><code class="docutils literal notranslate"><span class="pre">ModelSource.PATCHED</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.ModelSource.TOY"><code class="docutils literal notranslate"><span class="pre">ModelSource.TOY</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.ModelSource.TORCHVISION"><code class="docutils literal notranslate"><span class="pre">ModelSource.TORCHVISION</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.ModelSource.VISION_OTHERS"><code class="docutils literal notranslate"><span class="pre">ModelSource.VISION_OTHERS</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.ModelSource.PHYSICAL"><code class="docutils literal notranslate"><span class="pre">ModelSource.PHYSICAL</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.ModelSource.NERF"><code class="docutils literal notranslate"><span class="pre">ModelSource.NERF</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.get_cf_args"><code class="docutils literal notranslate"><span class="pre">get_cf_args()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.get_dummy_input"><code class="docutils literal notranslate"><span class="pre">get_dummy_input()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.InputGenerator"><code class="docutils literal notranslate"><span class="pre">InputGenerator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.InputGenerator.__init__"><code class="docutils literal notranslate"><span class="pre">InputGenerator.__init__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-chop.tools.logger">chop.tools.logger</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.logger.set_logging_verbosity"><code class="docutils literal notranslate"><span class="pre">set_logging_verbosity()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.logger.get_logger"><code class="docutils literal notranslate"><span class="pre">get_logger()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-chop.tools.onnx_operators">chop.tools.onnx_operators</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_gemm"><code class="docutils literal notranslate"><span class="pre">onnx_gemm()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_slice"><code class="docutils literal notranslate"><span class="pre">onnx_slice()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_squeeze"><code class="docutils literal notranslate"><span class="pre">onnx_squeeze()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_unsqueeze"><code class="docutils literal notranslate"><span class="pre">onnx_unsqueeze()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_gather"><code class="docutils literal notranslate"><span class="pre">onnx_gather()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_shape"><code class="docutils literal notranslate"><span class="pre">onnx_shape()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_reshape"><code class="docutils literal notranslate"><span class="pre">onnx_reshape()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_identity"><code class="docutils literal notranslate"><span class="pre">onnx_identity()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_expand"><code class="docutils literal notranslate"><span class="pre">onnx_expand()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_where"><code class="docutils literal notranslate"><span class="pre">onnx_where()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_full"><code class="docutils literal notranslate"><span class="pre">onnx_full()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_min"><code class="docutils literal notranslate"><span class="pre">onnx_min()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_permute"><code class="docutils literal notranslate"><span class="pre">onnx_permute()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-chop.tools.registry">chop.tools.registry</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-chop.tools.utils">chop.tools.utils</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.is_tensor"><code class="docutils literal notranslate"><span class="pre">is_tensor()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.to_numpy"><code class="docutils literal notranslate"><span class="pre">to_numpy()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.to_numpy_if_tensor"><code class="docutils literal notranslate"><span class="pre">to_numpy_if_tensor()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.to_tensor"><code class="docutils literal notranslate"><span class="pre">to_tensor()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.to_tensor_if_numpy"><code class="docutils literal notranslate"><span class="pre">to_tensor_if_numpy()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.copy_weights"><code class="docutils literal notranslate"><span class="pre">copy_weights()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.get_checkpoint_file"><code class="docutils literal notranslate"><span class="pre">get_checkpoint_file()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.execute_cli"><code class="docutils literal notranslate"><span class="pre">execute_cli()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.get_factors"><code class="docutils literal notranslate"><span class="pre">get_factors()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.generate_truth_table"><code class="docutils literal notranslate"><span class="pre">generate_truth_table()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.init_LinearLUT_weight"><code class="docutils literal notranslate"><span class="pre">init_LinearLUT_weight()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.init_Conv2dLUT_weight"><code class="docutils literal notranslate"><span class="pre">init_Conv2dLUT_weight()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.nested_dict_replacer"><code class="docutils literal notranslate"><span class="pre">nested_dict_replacer()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.parse_accelerator"><code class="docutils literal notranslate"><span class="pre">parse_accelerator()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.set_excepthook"><code class="docutils literal notranslate"><span class="pre">set_excepthook()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.deepsetattr"><code class="docutils literal notranslate"><span class="pre">deepsetattr()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.deepgetattr"><code class="docutils literal notranslate"><span class="pre">deepgetattr()</span></code></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="chop-tools">
+<h1>chop.tools<a class="headerlink" href="#chop-tools" title="Link to this heading">#</a></h1>
+<section id="module-chop.tools.check_dependency">
+<span id="chop-tools-check-dependency"></span><h2>chop.tools.check_dependency<a class="headerlink" href="#module-chop.tools.check_dependency" title="Link to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.check_dependency.check_deps_tensorRT_pass">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.check_dependency.</span></span><span class="sig-name descname"><span class="pre">check_deps_tensorRT_pass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">silent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/check_dependency.html#check_deps_tensorRT_pass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.check_dependency.check_deps_tensorRT_pass" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.check_dependency.find_missing_dependencies">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.check_dependency.</span></span><span class="sig-name descname"><span class="pre">find_missing_dependencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pass_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/check_dependency.html#find_missing_dependencies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.check_dependency.find_missing_dependencies" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.check_dependency.check_dependencies">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.check_dependency.</span></span><span class="sig-name descname"><span class="pre">check_dependencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pass_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">silent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/check_dependency.html#check_dependencies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.check_dependency.check_dependencies" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-chop.tools.checkpoint_load">
+<span id="chop-tools-checkpoint-load"></span><h2>chop.tools.checkpoint_load<a class="headerlink" href="#module-chop.tools.checkpoint_load" title="Link to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.checkpoint_load.load_lightning_ckpt_to_unwrapped_model">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.checkpoint_load.</span></span><span class="sig-name descname"><span class="pre">load_lightning_ckpt_to_unwrapped_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checkpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/checkpoint_load.html#load_lightning_ckpt_to_unwrapped_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.checkpoint_load.load_lightning_ckpt_to_unwrapped_model" title="Link to this definition">#</a></dt>
+<dd><p>Load a PyTorch Lightning checkpoint to a PyTorch model.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.checkpoint_load.load_unwrapped_ckpt">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.checkpoint_load.</span></span><span class="sig-name descname"><span class="pre">load_unwrapped_ckpt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checkpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/checkpoint_load.html#load_unwrapped_ckpt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.checkpoint_load.load_unwrapped_ckpt" title="Link to this definition">#</a></dt>
+<dd><p>Load a PyTorch state dict or checkpoint containing state dict to a PyTorch model.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.checkpoint_load.load_graph_module_ckpt">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.checkpoint_load.</span></span><span class="sig-name descname"><span class="pre">load_graph_module_ckpt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checkpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/checkpoint_load.html#load_graph_module_ckpt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.checkpoint_load.load_graph_module_ckpt" title="Link to this definition">#</a></dt>
+<dd><p>Load a serialized graph module.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.checkpoint_load.load_model">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.checkpoint_load.</span></span><span class="sig-name descname"><span class="pre">load_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mz'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Module</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">GraphModule</span></span></span><a class="reference internal" href="../../_modules/chop/tools/checkpoint_load.html#load_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.checkpoint_load.load_model" title="Link to this definition">#</a></dt>
+<dd><p>Load a pytorch/lightning/mase checkpoint to a model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>load_name</strong> (<em>str</em>) – path to the checkpoint</p></li>
+<li><p><strong>load_type</strong> (<em>str</em><em>, </em><em>optional</em>) – checkpoint type, must be one of [‘pt’, ‘pl’, ‘mz’],</p></li>
+<li><p><strong>extension.</strong> (<em>representing pytorch/lightning/mase. Defaults to &quot;auto&quot; inferred from the</em>)</p></li>
+<li><p><strong>model</strong> (<em>torch.nn.Module</em><em>, </em><em>optional</em>) – Model candidate to load checkpoint.</p></li>
+<li><p><strong>dict</strong> (<em>Note that 'ms' checkpoint loads the model as well as state</em>)</p></li>
+<li><p><strong>None.</strong> (<em>thus does not need this arg. Defaults to</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Unknown extension for ‘load_type’.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the model with the checkpoint loaded</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>nn.Module/fx.GraphModule</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-chop.tools.config_load">
+<span id="chop-tools-config-load"></span><h2>chop.tools.config_load<a class="headerlink" href="#module-chop.tools.config_load" title="Link to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.config_load.convert_str_na_to_none">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.config_load.</span></span><span class="sig-name descname"><span class="pre">convert_str_na_to_none</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/config_load.html#convert_str_na_to_none"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.config_load.convert_str_na_to_none" title="Link to this definition">#</a></dt>
+<dd><p>Since toml does not support None, we use “NA” to represent None.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.config_load.convert_none_to_str_na">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.config_load.</span></span><span class="sig-name descname"><span class="pre">convert_none_to_str_na</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/config_load.html#convert_none_to_str_na"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.config_load.convert_none_to_str_na" title="Link to this definition">#</a></dt>
+<dd><p>Since toml does not support None, we use “NA” to represent None.
+Otherwise the none-value key will be missing in the toml file.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.config_load.load_config">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.config_load.</span></span><span class="sig-name descname"><span class="pre">load_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/config_load.html#load_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.config_load.load_config" title="Link to this definition">#</a></dt>
+<dd><p>Load from a toml config file and convert “NA” to None.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.config_load.save_config">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.config_load.</span></span><span class="sig-name descname"><span class="pre">save_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/config_load.html#save_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.config_load.save_config" title="Link to this definition">#</a></dt>
+<dd><p>Convert None to “NA” and save to a toml config file.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.config_load.post_parse_load_config">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.config_load.</span></span><span class="sig-name descname"><span class="pre">post_parse_load_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaults</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/config_load.html#post_parse_load_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.config_load.post_parse_load_config" title="Link to this definition">#</a></dt>
+<dd><p>Load and merge arguments from a toml configuration file. If the configuration key
+matches the “dest” value of an existing CLI argument, we use precedence to determine
+which argument value to choose (i.e. default &lt; configuration &lt; manual overrides).
+These arguments are then visualised in a table. :)</p>
+</dd></dl>
+
+</section>
+<section id="module-chop.tools.get_input">
+<span id="chop-tools-get-input"></span><h2>chop.tools.get_input<a class="headerlink" href="#module-chop.tools.get_input" title="Link to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="chop.tools.get_input.ModelSource">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chop.tools.get_input.</span></span><span class="sig-name descname"><span class="pre">ModelSource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/get_input.html#ModelSource"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.get_input.ModelSource" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>The source of the model, must be one of the following:
+- HF: HuggingFace
+- MANUAL: manually implemented
+- PATCHED: patched HuggingFace
+- TOY: toy model for testing and debugging
+- PHYSICAL: model that perform classification using physical data point vectors
+- NERF: model that estimates neural radiance field (NeRF) of a 3D scene</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chop.tools.get_input.ModelSource.HF_TRANSFORMERS">
+<span class="sig-name descname"><span class="pre">HF_TRANSFORMERS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'hf_transformers'</span></em><a class="headerlink" href="#chop.tools.get_input.ModelSource.HF_TRANSFORMERS" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chop.tools.get_input.ModelSource.MANUAL">
+<span class="sig-name descname"><span class="pre">MANUAL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'manual'</span></em><a class="headerlink" href="#chop.tools.get_input.ModelSource.MANUAL" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chop.tools.get_input.ModelSource.PATCHED">
+<span class="sig-name descname"><span class="pre">PATCHED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'patched'</span></em><a class="headerlink" href="#chop.tools.get_input.ModelSource.PATCHED" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chop.tools.get_input.ModelSource.TOY">
+<span class="sig-name descname"><span class="pre">TOY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'toy'</span></em><a class="headerlink" href="#chop.tools.get_input.ModelSource.TOY" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chop.tools.get_input.ModelSource.TORCHVISION">
+<span class="sig-name descname"><span class="pre">TORCHVISION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'torchvision'</span></em><a class="headerlink" href="#chop.tools.get_input.ModelSource.TORCHVISION" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chop.tools.get_input.ModelSource.VISION_OTHERS">
+<span class="sig-name descname"><span class="pre">VISION_OTHERS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'vision_others'</span></em><a class="headerlink" href="#chop.tools.get_input.ModelSource.VISION_OTHERS" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chop.tools.get_input.ModelSource.PHYSICAL">
+<span class="sig-name descname"><span class="pre">PHYSICAL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'physical'</span></em><a class="headerlink" href="#chop.tools.get_input.ModelSource.PHYSICAL" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chop.tools.get_input.ModelSource.NERF">
+<span class="sig-name descname"><span class="pre">NERF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'nerf'</span></em><a class="headerlink" href="#chop.tools.get_input.ModelSource.NERF" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.get_input.get_cf_args">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.get_input.</span></span><span class="sig-name descname"><span class="pre">get_cf_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/get_input.html#get_cf_args"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.get_input.get_cf_args" title="Link to this definition">#</a></dt>
+<dd><p>Get concrete forward args for freezing dynamic control flow in forward pass</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.get_input.get_dummy_input">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.get_input.</span></span><span class="sig-name descname"><span class="pre">get_dummy_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'meta'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/chop/tools/get_input.html#get_dummy_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.get_input.get_dummy_input" title="Link to this definition">#</a></dt>
+<dd><p>Create a single dummy input for a model. The dummy input is a single sample from the training set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>datamodule</strong> (<em>MaseDataModule</em>) – a LightningDataModule instance (see machop/chop/dataset/__init__.py). Make sure the datamodule is prepared and setup.</p></li>
+<li><p><strong>task</strong> (<em>str</em>) – task name, one of [“cls”, “classification”, “lm”, “language_modeling”, “translation”, “tran”]</p></li>
+<li><p><strong>is_nlp_model</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether the task is NLP task or not. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a dummy input dict which can be passed to the wrapped lightning model’s forward method, like model(<a href="#id1"><span class="problematic" id="id2">**</span></a>dummy_input)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="chop.tools.get_input.InputGenerator">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chop.tools.get_input.</span></span><span class="sig-name descname"><span class="pre">InputGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">which_dataloader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'train'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'val'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'test'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batches</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/get_input.html#InputGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.get_input.InputGenerator" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="chop.tools.get_input.InputGenerator.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">which_dataloader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'train'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'val'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'test'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batches</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/chop/tools/get_input.html#InputGenerator.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.get_input.InputGenerator.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Input generator for feeding batches to models. This is used for software passes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>datamodule</strong> (<em>MyDataModule</em>) – a MyDataModule instance (see machop/chop/dataset/data_module.py). Make sure the datamodule is prepared and setup.</p></li>
+<li><p><strong>max_batches</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of batches to generate. Defaults to None will stop when reaching the last batch in dataloader.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a dummy input dict which can be passed to the wrapped lightning model’s forward method, like model(<a href="#id3"><span class="problematic" id="id4">**</span></a>dummy_input)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(dict)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-chop.tools.logger">
+<span id="chop-tools-logger"></span><h2>chop.tools.logger<a class="headerlink" href="#module-chop.tools.logger" title="Link to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.logger.set_logging_verbosity">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.logger.</span></span><span class="sig-name descname"><span class="pre">set_logging_verbosity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'info'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/logger.html#set_logging_verbosity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.logger.set_logging_verbosity" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.logger.get_logger">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.logger.</span></span><span class="sig-name descname"><span class="pre">get_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/logger.html#get_logger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.logger.get_logger" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-chop.tools.onnx_operators">
+<span id="chop-tools-onnx-operators"></span><h2>chop.tools.onnx_operators<a class="headerlink" href="#module-chop.tools.onnx_operators" title="Link to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.onnx_operators.onnx_gemm">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.onnx_operators.</span></span><span class="sig-name descname"><span class="pre">onnx_gemm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">B</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">C</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transA</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transB</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/onnx_operators.html#onnx_gemm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.onnx_operators.onnx_gemm" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.onnx_operators.onnx_slice">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.onnx_operators.</span></span><span class="sig-name descname"><span class="pre">onnx_slice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ends</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/onnx_operators.html#onnx_slice"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.onnx_operators.onnx_slice" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.onnx_operators.onnx_squeeze">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.onnx_operators.</span></span><span class="sig-name descname"><span class="pre">onnx_squeeze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/onnx_operators.html#onnx_squeeze"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.onnx_operators.onnx_squeeze" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.onnx_operators.onnx_unsqueeze">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.onnx_operators.</span></span><span class="sig-name descname"><span class="pre">onnx_unsqueeze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/onnx_operators.html#onnx_unsqueeze"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.onnx_operators.onnx_unsqueeze" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.onnx_operators.onnx_gather">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.onnx_operators.</span></span><span class="sig-name descname"><span class="pre">onnx_gather</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/onnx_operators.html#onnx_gather"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.onnx_operators.onnx_gather" title="Link to this definition">#</a></dt>
+<dd><p>Gather operator with support for broadcasting.
+See <a class="github reference external" href="https://github.com/pytorch/pytorch/issues/9407">pytorch/pytorch#9407</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input</strong> (<em>_type_</em>) – _description_</p></li>
+<li><p><strong>dim</strong> (<em>_type_</em>) – _description_</p></li>
+<li><p><strong>index</strong> (<em>_type_</em>) – _description_</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>_description_</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>_type_</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.onnx_operators.onnx_shape">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.onnx_operators.</span></span><span class="sig-name descname"><span class="pre">onnx_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/onnx_operators.html#onnx_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.onnx_operators.onnx_shape" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.onnx_operators.onnx_reshape">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.onnx_operators.</span></span><span class="sig-name descname"><span class="pre">onnx_reshape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/onnx_operators.html#onnx_reshape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.onnx_operators.onnx_reshape" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.onnx_operators.onnx_identity">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.onnx_operators.</span></span><span class="sig-name descname"><span class="pre">onnx_identity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/onnx_operators.html#onnx_identity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.onnx_operators.onnx_identity" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.onnx_operators.onnx_expand">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.onnx_operators.</span></span><span class="sig-name descname"><span class="pre">onnx_expand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/onnx_operators.html#onnx_expand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.onnx_operators.onnx_expand" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.onnx_operators.onnx_where">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.onnx_operators.</span></span><span class="sig-name descname"><span class="pre">onnx_where</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">condition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/onnx_operators.html#onnx_where"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.onnx_operators.onnx_where" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.onnx_operators.onnx_full">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.onnx_operators.</span></span><span class="sig-name descname"><span class="pre">onnx_full</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill_value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/onnx_operators.html#onnx_full"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.onnx_operators.onnx_full" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.onnx_operators.onnx_min">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.onnx_operators.</span></span><span class="sig-name descname"><span class="pre">onnx_min</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/onnx_operators.html#onnx_min"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.onnx_operators.onnx_min" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.onnx_operators.onnx_permute">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.onnx_operators.</span></span><span class="sig-name descname"><span class="pre">onnx_permute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dims</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/onnx_operators.html#onnx_permute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.onnx_operators.onnx_permute" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-chop.tools.registry">
+<span id="chop-tools-registry"></span><h2>chop.tools.registry<a class="headerlink" href="#module-chop.tools.registry" title="Link to this heading">#</a></h2>
+</section>
+<section id="module-chop.tools.utils">
+<span id="chop-tools-utils"></span><h2>chop.tools.utils<a class="headerlink" href="#module-chop.tools.utils" title="Link to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.utils.is_tensor">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.utils.</span></span><span class="sig-name descname"><span class="pre">is_tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/utils.html#is_tensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.utils.is_tensor" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.utils.to_numpy">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.utils.</span></span><span class="sig-name descname"><span class="pre">to_numpy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/utils.html#to_numpy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.utils.to_numpy" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.utils.to_numpy_if_tensor">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.utils.</span></span><span class="sig-name descname"><span class="pre">to_numpy_if_tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/utils.html#to_numpy_if_tensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.utils.to_numpy_if_tensor" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.utils.to_tensor">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.utils.</span></span><span class="sig-name descname"><span class="pre">to_tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/utils.html#to_tensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.utils.to_tensor" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.utils.to_tensor_if_numpy">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.utils.</span></span><span class="sig-name descname"><span class="pre">to_tensor_if_numpy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/utils.html#to_tensor_if_numpy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.utils.to_tensor_if_numpy" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.utils.copy_weights">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.utils.</span></span><span class="sig-name descname"><span class="pre">copy_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tgt_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/utils.html#copy_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.utils.copy_weights" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.utils.get_checkpoint_file">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.utils.</span></span><span class="sig-name descname"><span class="pre">get_checkpoint_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checkpoint_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/utils.html#get_checkpoint_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.utils.get_checkpoint_file" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.utils.execute_cli">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.utils.</span></span><span class="sig-name descname"><span class="pre">execute_cli</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cmd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cwd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/utils.html#execute_cli"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.utils.execute_cli" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.utils.get_factors">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.utils.</span></span><span class="sig-name descname"><span class="pre">get_factors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/utils.html#get_factors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.utils.get_factors" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.utils.generate_truth_table">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.utils.</span></span><span class="sig-name descname"><span class="pre">generate_truth_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tables_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="../../_modules/chop/tools/utils.html#generate_truth_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.utils.generate_truth_table" title="Link to this definition">#</a></dt>
+<dd><p>This function generate truth tables with size of k * (2**k) * tables_count</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>k</strong> (<em>int</em>) – truth table power</p></li>
+<li><p><strong>tables_count</strong> (<em>int</em>) – number of truth table repetition</p></li>
+<li><p><strong>device</strong> (<em>str</em>) – target device of the result</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>2d torch tensor with k*tables_count rows and (2**k) columns</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.utils.init_LinearLUT_weight">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.utils.</span></span><span class="sig-name descname"><span class="pre">init_LinearLUT_weight</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">levels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original_pruning_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original_weight</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/utils.html#init_LinearLUT_weight"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.utils.init_LinearLUT_weight" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.utils.init_Conv2dLUT_weight">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.utils.</span></span><span class="sig-name descname"><span class="pre">init_Conv2dLUT_weight</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">levels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original_pruning_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original_weight</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/utils.html#init_Conv2dLUT_weight"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.utils.init_Conv2dLUT_weight" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.utils.nested_dict_replacer">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.utils.</span></span><span class="sig-name descname"><span class="pre">nested_dict_replacer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">compound_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fn</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/utils.html#nested_dict_replacer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.utils.nested_dict_replacer" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.utils.parse_accelerator">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.utils.</span></span><span class="sig-name descname"><span class="pre">parse_accelerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">accelerator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/utils.html#parse_accelerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.utils.parse_accelerator" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.utils.set_excepthook">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.utils.</span></span><span class="sig-name descname"><span class="pre">set_excepthook</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/utils.html#set_excepthook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.utils.set_excepthook" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.utils.deepsetattr">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.utils.</span></span><span class="sig-name descname"><span class="pre">deepsetattr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/utils.html#deepsetattr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.utils.deepsetattr" title="Link to this definition">#</a></dt>
+<dd><p>Recurses through an attribute chain to set the ultimate value.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.tools.utils.deepgetattr">
+<span class="sig-prename descclassname"><span class="pre">chop.tools.utils.</span></span><span class="sig-name descname"><span class="pre">deepgetattr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/chop/tools/utils.html#deepgetattr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.tools.utils.deepgetattr" title="Link to this definition">#</a></dt>
+<dd><p>Recurses through an attribute chain to get the ultimate value.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="pipelines.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">chop.pipelines</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../adls_2024.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Advanced Deep Learning Systems: 2024/2025</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-chop.tools.check_dependency">chop.tools.check_dependency</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.check_dependency.check_deps_tensorRT_pass"><code class="docutils literal notranslate"><span class="pre">check_deps_tensorRT_pass()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.check_dependency.find_missing_dependencies"><code class="docutils literal notranslate"><span class="pre">find_missing_dependencies()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.check_dependency.check_dependencies"><code class="docutils literal notranslate"><span class="pre">check_dependencies()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-chop.tools.checkpoint_load">chop.tools.checkpoint_load</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.checkpoint_load.load_lightning_ckpt_to_unwrapped_model"><code class="docutils literal notranslate"><span class="pre">load_lightning_ckpt_to_unwrapped_model()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.checkpoint_load.load_unwrapped_ckpt"><code class="docutils literal notranslate"><span class="pre">load_unwrapped_ckpt()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.checkpoint_load.load_graph_module_ckpt"><code class="docutils literal notranslate"><span class="pre">load_graph_module_ckpt()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.checkpoint_load.load_model"><code class="docutils literal notranslate"><span class="pre">load_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-chop.tools.config_load">chop.tools.config_load</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.config_load.convert_str_na_to_none"><code class="docutils literal notranslate"><span class="pre">convert_str_na_to_none()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.config_load.convert_none_to_str_na"><code class="docutils literal notranslate"><span class="pre">convert_none_to_str_na()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.config_load.load_config"><code class="docutils literal notranslate"><span class="pre">load_config()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.config_load.save_config"><code class="docutils literal notranslate"><span class="pre">save_config()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.config_load.post_parse_load_config"><code class="docutils literal notranslate"><span class="pre">post_parse_load_config()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-chop.tools.get_input">chop.tools.get_input</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.ModelSource"><code class="docutils literal notranslate"><span class="pre">ModelSource</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.ModelSource.HF_TRANSFORMERS"><code class="docutils literal notranslate"><span class="pre">ModelSource.HF_TRANSFORMERS</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.ModelSource.MANUAL"><code class="docutils literal notranslate"><span class="pre">ModelSource.MANUAL</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.ModelSource.PATCHED"><code class="docutils literal notranslate"><span class="pre">ModelSource.PATCHED</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.ModelSource.TOY"><code class="docutils literal notranslate"><span class="pre">ModelSource.TOY</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.ModelSource.TORCHVISION"><code class="docutils literal notranslate"><span class="pre">ModelSource.TORCHVISION</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.ModelSource.VISION_OTHERS"><code class="docutils literal notranslate"><span class="pre">ModelSource.VISION_OTHERS</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.ModelSource.PHYSICAL"><code class="docutils literal notranslate"><span class="pre">ModelSource.PHYSICAL</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.ModelSource.NERF"><code class="docutils literal notranslate"><span class="pre">ModelSource.NERF</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.get_cf_args"><code class="docutils literal notranslate"><span class="pre">get_cf_args()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.get_dummy_input"><code class="docutils literal notranslate"><span class="pre">get_dummy_input()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.InputGenerator"><code class="docutils literal notranslate"><span class="pre">InputGenerator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.get_input.InputGenerator.__init__"><code class="docutils literal notranslate"><span class="pre">InputGenerator.__init__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-chop.tools.logger">chop.tools.logger</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.logger.set_logging_verbosity"><code class="docutils literal notranslate"><span class="pre">set_logging_verbosity()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.logger.get_logger"><code class="docutils literal notranslate"><span class="pre">get_logger()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-chop.tools.onnx_operators">chop.tools.onnx_operators</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_gemm"><code class="docutils literal notranslate"><span class="pre">onnx_gemm()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_slice"><code class="docutils literal notranslate"><span class="pre">onnx_slice()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_squeeze"><code class="docutils literal notranslate"><span class="pre">onnx_squeeze()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_unsqueeze"><code class="docutils literal notranslate"><span class="pre">onnx_unsqueeze()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_gather"><code class="docutils literal notranslate"><span class="pre">onnx_gather()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_shape"><code class="docutils literal notranslate"><span class="pre">onnx_shape()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_reshape"><code class="docutils literal notranslate"><span class="pre">onnx_reshape()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_identity"><code class="docutils literal notranslate"><span class="pre">onnx_identity()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_expand"><code class="docutils literal notranslate"><span class="pre">onnx_expand()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_where"><code class="docutils literal notranslate"><span class="pre">onnx_where()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_full"><code class="docutils literal notranslate"><span class="pre">onnx_full()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_min"><code class="docutils literal notranslate"><span class="pre">onnx_min()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.onnx_operators.onnx_permute"><code class="docutils literal notranslate"><span class="pre">onnx_permute()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-chop.tools.registry">chop.tools.registry</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-chop.tools.utils">chop.tools.utils</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.is_tensor"><code class="docutils literal notranslate"><span class="pre">is_tensor()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.to_numpy"><code class="docutils literal notranslate"><span class="pre">to_numpy()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.to_numpy_if_tensor"><code class="docutils literal notranslate"><span class="pre">to_numpy_if_tensor()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.to_tensor"><code class="docutils literal notranslate"><span class="pre">to_tensor()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.to_tensor_if_numpy"><code class="docutils literal notranslate"><span class="pre">to_tensor_if_numpy()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.copy_weights"><code class="docutils literal notranslate"><span class="pre">copy_weights()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.get_checkpoint_file"><code class="docutils literal notranslate"><span class="pre">get_checkpoint_file()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.execute_cli"><code class="docutils literal notranslate"><span class="pre">execute_cli()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.get_factors"><code class="docutils literal notranslate"><span class="pre">get_factors()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.generate_truth_table"><code class="docutils literal notranslate"><span class="pre">generate_truth_table()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.init_LinearLUT_weight"><code class="docutils literal notranslate"><span class="pre">init_LinearLUT_weight()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.init_Conv2dLUT_weight"><code class="docutils literal notranslate"><span class="pre">init_Conv2dLUT_weight()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.nested_dict_replacer"><code class="docutils literal notranslate"><span class="pre">nested_dict_replacer()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.parse_accelerator"><code class="docutils literal notranslate"><span class="pre">parse_accelerator()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.set_excepthook"><code class="docutils literal notranslate"><span class="pre">set_excepthook()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.deepsetattr"><code class="docutils literal notranslate"><span class="pre">deepsetattr()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chop.tools.utils.deepgetattr"><code class="docutils literal notranslate"><span class="pre">deepgetattr()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By DeepWok
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, DeepWok.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

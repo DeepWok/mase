@@ -1,0 +1,721 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Run the train action with the CLI &#8212; MASE 0.0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/common_css/need_style.css?v=92936fa5" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/modern.css?v=803738c0" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+    <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="../../../../_static/documentation_options.js?v=e645c8fa"></script>
+    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../../../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+    <script src="../../../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+    <script src="../../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+    <script src="../../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+    <script src="../../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'modules/documentation/tutorials/cli/simple_train_flow';</script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">MASE 0.0.1 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../installation.html">Installation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../getting_started/Get-started-using-uv.html">Getting Started using uv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../getting_started/Get-started-using-Docker.html">Getting Started using Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../getting_started/Get-started-students.html">Additional Instructions for Imperial College Students</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial_1_introduction_to_mase.html">Tutorial 1: Introduction to the Mase IR, MaseGraph and Torch FX passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial_2_lora_finetune.html">Tutorial 2: Finetuning Bert for Sequence Classification using a LoRA adapter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial_3_qat.html">Tutorial 3: Running Quantization-Aware Training (QAT) on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial_4_pruning.html">Tutorial 4: Unstructured Pruning on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial_5_nas_optuna.html">Tutorial 5: Neural Architecture Search (NAS) with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial_6_mixed_precision_search.html">Tutorial 6: Mixed Precision Quantization Search with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial_7_distributed_deployment.html">Tutorial 7: Deploying a Model for Inference on Distributed Clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial_9_kernel_fusion.html">Tutorial 9: Running Kernel Fusion for Inference Acceleration on GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced/tensorRT_quantization_tutorial.html">Advanced: TensorRT Quantization Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced/onnxrt_quantization_tutorial.html">Advanced: ONNX Runtime Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced/cli.html">Advanced: Using Mase CLI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../developer/Add-model-to-machop.html">Developer: Guide on how to add a new model into Machop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../developer/doc_writing.html">Developer: How to write documentations in MASE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../developer/how_to_extend_search.html">Developer: How to extend search</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../health.html">Repository Health</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../specifications.html">Coding Style Specifications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../specifications/C-coding-style-specifications.html">C/C++ Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../specifications/Python-coding-style-specifications.html">Python Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../specifications/Verilog-coding-style-specifications.html">Verilog Coding Style Specifications</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../machop.html">Machop Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../chop/actions.html">chop.actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../chop/datasets.html">chop.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../chop/distributed.html">chop.distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../chop/ir.html">chop.ir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../chop/models.html">chop.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../chop/nn.html">chop.nn</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../chop/nn_quantized.html">chop.nn.quantized</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../chop/nn_quantized_functional.html">chop.nn.quantized.functional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../chop/nn_quantized_modules.html">chop.nn.quantized.modules</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../chop/passes.html">chop.passes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../chop/passes_module.html">chop.passes.module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../chop/module_analysis/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../chop/module_transform/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../chop/transform/onn.html">chop.passes.module.transforms.onn</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../chop/passes_graph.html">chop.passes.graph</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../chop/analysis/add_metadata.html">chop.passes.graph.analysis.add_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../chop/analysis/autosharding.html">chop.passes.graph.analysis.autosharding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../chop/analysis/init_metadata.html">chop.passes.graph.analysis.init_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../chop/analysis/report.html">chop.passes.graph.analysis.report</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../chop/analysis/statistical_profiler.html">chop.passes.graph.analysis.statistical_profiler.profile_statistics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../chop/analysis/verify.html">chop.passes.graph.analysis.verify.verify</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../chop/analysis/quantization.html">chop.passes.graph.calculate_avg_bits_mg_analysis_pass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../chop/analysis/pruning.html">chop.passes.graph.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../chop/analysis/runtime.html">chop.passes.graph.analysis.runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../chop/transform/pruning.html">chop.passes.transform.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../chop/transform/quantize.html">chop.passes.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../chop/transform/utils.html">chop.passes.transform.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../chop/transform/tensorrt.html">chop.passes.transform.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../chop/interface/save_and_load.html">chop.passes.interface.save_and_load</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../chop/interface/tensorrt.html">chop.passes.interface.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../chop/interface/onnxrt.html">chop.passes.interface.onnxrt</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../chop/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../chop/tools.html">chop.tools</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Deep Learning Systems</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../adls_2024.html">Advanced Deep Learning Systems: 2024/2025</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../labs_2024/lab_0_introduction.html">Lab 0: Introduction to Mase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../labs_2024/lab_1_compression.html">Lab 1: Model Compression (Quantization and Pruning)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../labs_2024/lab_2_nas.html">Lab 2: Neural Architecture Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../labs_2024/lab_3_mixed_precision_search.html">Lab 3: Mixed Precision Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../labs_2024/lab4-software.html">Lab 4 (Software Stream) Performance Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../labs_2024/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../adls_2023.html">Advanced Deep Learning Systems: 2023/2024</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../labs_2023/lab1.html">Lab 1 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../labs_2023/lab2.html">Lab 2 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../labs_2023/lab3.html">Lab 3 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../labs_2023/lab4-software.html">Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../labs_2023/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../../_sources/modules/documentation/tutorials/cli/simple_train_flow.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Run the train action with the CLI</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-interface">Command line interface</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-implementation">Training implementation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#models">Models</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#output">Output</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-logs">Training Logs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-command">Test command</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="run-the-train-action-with-the-cli">
+<h1>Run the train action with the CLI<a class="headerlink" href="#run-the-train-action-with-the-cli" title="Link to this heading">#</a></h1>
+<p>MASE has several functionalities, and this document aims to introduce the simplest <code class="docutils literal notranslate"><span class="pre">train</span></code> and <code class="docutils literal notranslate"><span class="pre">eval</span></code> pipelines.</p>
+<section id="command-line-interface">
+<h2>Command line interface<a class="headerlink" href="#command-line-interface" title="Link to this heading">#</a></h2>
+<p>MASE actually supports usage in two modes:</p>
+<ul class="simple">
+<li><p>A direct <code class="docutils literal notranslate"><span class="pre">import</span></code> as a module (eg. <code class="docutils literal notranslate"><span class="pre">machop/examples/toy/main.py</span></code>).</p></li>
+<li><p>Through the command line interface (the focus of this document).</p></li>
+</ul>
+<p>In this case, we can try a toymodel, the command looks like the following</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># assuming you you are at the our-stuff/mase directory</span>
+<span class="nb">cd</span><span class="w"> </span>src
+./ch<span class="w"> </span>train<span class="w"> </span>toy<span class="w"> </span>toy_tiny<span class="w"> </span>--config<span class="w"> </span>../configs/archive/test/train.toml<span class="w"> </span>--max-epochs<span class="w"> </span><span class="m">3</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p><strong>Note:</strong> This is training is for demonstration purposes, we picked a very small model/dataset to make it runnable even on CPU-based devices. It does not mean to achieve a useful accuracy!</p>
+</div></blockquote>
+<p>You can fetch all command-line arguments:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[nix-shell:~/Projects/mase/src]$ ./ch -help
+INFO     Set logging level to debug
+WARNING  TensorRT pass is unavailable because the following dependencies are not installed: pytorch_quantization, tensorrt, pycuda, cuda.
+usage: ch [--config PATH] [--task TASK] [--load PATH] [--load-type] [--batch-size NUM] [--debug] [--log-level] [--report-to {wandb,tensorboard}] [--seed NUM] [--quant-config TOML]
+          [--training-optimizer TYPE] [--trainer-precision TYPE] [--learning-rate NUM] [--weight-decay NUM] [--max-epochs NUM] [--max-steps NUM] [--accumulate-grad-batches NUM]
+          [--log-every-n-steps NUM] [--cpu NUM] [--gpu NUM] [--nodes NUM] [--accelerator TYPE] [--strategy TYPE] [--auto-requeue] [--github-ci] [--disable-dataset-cache]
+          [--target STR] [--num-targets NUM] [--run-emit] [--skip-build] [--skip-test] [--pretrained] [--max-token-len NUM] [--project-dir DIR] [--project NAME] [--profile]
+          [--no-warnings] [-h] [-V] [--info [TYPE]]
+          action [model] [dataset]
+
+Chop is a simple utility, part of the MASE tookit, to train, test and transform (i.e. prune or quantise) a supported model.
+
+main arguments:
+  action                action to perform. One of (train|test|transform|search|emit|simulate)
+  model                 name of a supported model. Required if configuration NOT provided.
+  dataset               name of a supported dataset. Required if configuration NOT provided.
+
+general options:
+  --config PATH         path to a configuration file in the TOML format. Manual CLI overrides for arguments have a higher precedence. Required if the action is transform. (default:
+                        None)
+  --task TASK           task to perform. One of (classification|cls|translation|tran|language_modeling|lm) (default: classification)
+  --load PATH           path to load the model from. (default: None)
+  --load-type           the type of checkpoint to be loaded; it&#39;s disregarded if --load is NOT specified. It is designed to and must be used in tandem with --load. One of
+                        (pt|pl|mz|hf) (default: mz)
+  --batch-size NUM      batch size for training and evaluation. (default: 128)
+  --debug               run the action in debug mode, which enables verbose logging, custom exception hook that uses ipdb, and sets the PL trainer to run in &quot;fast_dev_run&quot; mode.
+                        (default: False)
+  --log-level           verbosity level of the logger; it&#39;s only effective when --debug flag is NOT passed in. One of (debug|info|warning|error|critical) (default: info)
+  --report-to {wandb,tensorboard}
+                        reporting tool for logging metrics. One of (wandb|tensorboard) (default: tensorboard)
+  --seed NUM            seed for random number generators set via Pytorch Lightning&#39;s seed_everything function. (default: 0)
+  --quant-config TOML   path to a configuration file in the TOML format. Manual CLI overrides for arguments have a higher precedence. (default: None)
+
+trainer options:
+  --training-optimizer TYPE
+                        name of supported optimiser for training. One of (adam|sgd|adamw) (default: adam)
+  --trainer-precision TYPE
+                        numeric precision for training. One of (16-mixed|32|64|bf16) (default: 16-mixed)
+  --learning-rate NUM   initial learning rate for training. (default: 1e-05)
+  --weight-decay NUM    weight decay for training. (default: 0)
+  --max-epochs NUM      maximum number of epochs for training. (default: 20)
+  --max-steps NUM       maximum number of steps for training. A negative value disables this option. (default: -1)
+  --accumulate-grad-batches NUM
+                        number of batches to accumulate gradients. (default: 1)
+  --log-every-n-steps NUM
+                        log every n steps. No logs if num_batches &lt; log_every_n_steps. (default: 50))
+
+runtime environment options:
+  --cpu NUM, --num-workers NUM
+                        number of CPU workers; the default varies across systems and is set to os.cpu_count(). (default: 12)
+  --gpu NUM, --num-devices NUM
+                        number of GPU devices. (default: 1)
+  --nodes NUM           number of nodes. (default: 1)
+  --accelerator TYPE    type of accelerator for training. One of (auto|cpu|gpu|mps) (default: auto)
+  --strategy TYPE       type of strategy for training. One of (auto|ddp|ddp_find_unused_parameters_true) (default: auto)
+  --auto-requeue        enable automatic job resubmission on SLURM managed cluster. (default: False)
+  --github-ci           set the execution environment to GitHub&#39;s CI pipeline; it&#39;s used in the MASE verilog emitter transform pass to skip simulations. (default: False)
+  --disable-dataset-cache
+                        disable caching of datasets. (default: False)
+
+hardware generation options:
+  --target STR          target FPGA for hardware synthesis. (default: xcu250-figd2104-2L-e)
+  --num-targets NUM     number of FPGA devices. (default: 100)
+  --run-emit
+  --skip-build
+  --skip-test
+
+language model options:
+  --pretrained          load pretrained checkpoint from HuggingFace/Torchvision when initialising models. (default: False)
+  --max-token-len NUM   maximum number of tokens. A negative value will use tokenizer.model_max_length. (default: 512)
+
+project options:
+  --project-dir DIR     directory to save the project to. (default: /Users/yz10513/Projects/mase/mase_output)
+  --project NAME        name of the project. (default: {MODEL-NAME}_{TASK-TYPE}_{DATASET-NAME}_{TIMESTAMP})
+  --profile
+  --no-warnings
+
+information:
+  -h, --help            show this help message and exit
+  -V, --version         show version and exit
+  --info [TYPE]         list information about supported models or/and datasets and exit. One of (all|model|dataset) (default: all)
+
+Maintained by the DeepWok Lab. Raise issues at https://github.com/JianyiCheng/mase-tools/issues
+(.venv)
+[nix-shell:~/Projects/mase/src]$
+</pre></div>
+</div>
+</section>
+<section id="training-implementation">
+<h2>Training implementation<a class="headerlink" href="#training-implementation" title="Link to this heading">#</a></h2>
+<p>The core train file is <code class="docutils literal notranslate"><span class="pre">mase/src/chop/actions/train.py</span></code>, and the model is wrapped using <code class="docutils literal notranslate"><span class="pre">torch_lightning</span></code>(<a class="reference external" href="https://www.pytorchlightning.ai/index.html">https://www.pytorchlightning.ai/index.html</a>). These wrappers are different for various tasks, as you can see in <code class="docutils literal notranslate"><span class="pre">src/chop/tools/plt_wrapper/__init__.py</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">get_model_wrapper</span><span class="p">(</span><span class="n">model_info</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">model_info</span><span class="o">.</span><span class="n">is_physical_model</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">JetSubstructureModelWrapper</span>
+    <span class="k">elif</span> <span class="n">model_info</span><span class="o">.</span><span class="n">is_nerf_model</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">NeRFModelWrapper</span>
+    <span class="k">elif</span> <span class="n">model_info</span><span class="o">.</span><span class="n">is_vision_model</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">VisionModelWrapper</span>
+    <span class="k">elif</span> <span class="n">model_info</span><span class="o">.</span><span class="n">is_nlp_model</span><span class="p">:</span>
+        <span class="k">match</span> <span class="n">task</span><span class="p">:</span>
+            <span class="k">case</span> <span class="s2">&quot;classification&quot;</span> <span class="o">|</span> <span class="s2">&quot;cls&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">NLPClassificationModelWrapper</span>
+            <span class="k">case</span> <span class="s2">&quot;language_modeling&quot;</span> <span class="o">|</span> <span class="s2">&quot;lm&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">NLPLanguageModelingModelWrapper</span>
+            <span class="k">case</span> <span class="s2">&quot;translation&quot;</span> <span class="o">|</span> <span class="s2">&quot;tran&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">NLPTranslationModelWrapper</span>
+            <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Task </span><span class="si">{</span><span class="n">task</span><span class="si">}</span><span class="s2"> is not supported for </span><span class="si">{</span><span class="n">model_info</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This is because different tasks may have a different <code class="docutils literal notranslate"><span class="pre">forward</span></code> pass and also might use different manipulations on data and also its evaluation metrics.
+These <code class="docutils literal notranslate"><span class="pre">Wrapper</span></code> also defines the detailed <code class="docutils literal notranslate"><span class="pre">training_flow</span></code>, if we use <code class="docutils literal notranslate"><span class="pre">src/chop/tools/splt_wrapper/base.py</span></code> as an example, <code class="docutils literal notranslate"><span class="pre">training_step</span></code> and <code class="docutils literal notranslate"><span class="pre">validation_step</span></code> are defined in this class.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>class<span class="w"> </span>WrapperBase<span class="o">(</span>pl.LightningModule<span class="o">)</span>:
+<span class="w">    </span>def<span class="w"> </span>forward<span class="o">(</span>self,<span class="w"> </span>x<span class="o">)</span>:
+<span class="w">        </span><span class="k">return</span><span class="w"> </span>self.model<span class="o">(</span>x<span class="o">)</span>
+
+<span class="w">    </span>def<span class="w"> </span>training_step<span class="o">(</span>self,<span class="w"> </span>batch,<span class="w"> </span>batch_idx<span class="o">)</span>:
+<span class="w">        </span>x,<span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>batch<span class="o">[</span><span class="m">0</span><span class="o">]</span>,<span class="w"> </span>batch<span class="o">[</span><span class="m">1</span><span class="o">]</span>
+<span class="w">        </span><span class="nv">y_hat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>self.forward<span class="o">(</span>x<span class="o">)</span>
+<span class="w">        </span><span class="nv">loss</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>self.loss_fn<span class="o">(</span>y_hat,<span class="w"> </span>y<span class="o">)</span>
+
+<span class="w">        </span>self.acc_train<span class="o">(</span>y_hat,<span class="w"> </span>y<span class="o">)</span>
+<span class="w">        </span>self.log<span class="o">(</span><span class="s2">&quot;train_acc_step&quot;</span>,<span class="w"> </span>self.acc_train,<span class="w"> </span><span class="nv">prog_bar</span><span class="o">=</span>True<span class="o">)</span>
+<span class="w">        </span>self.log<span class="o">(</span><span class="s2">&quot;train_loss_step&quot;</span>,<span class="w"> </span>loss<span class="o">)</span>
+
+<span class="w">        </span><span class="k">return</span><span class="w"> </span>loss
+
+<span class="w">    </span>def<span class="w"> </span>validation_step<span class="o">(</span>self,<span class="w"> </span>batch,<span class="w"> </span>batch_idx<span class="o">)</span>:
+<span class="w">        </span>...
+
+<span class="w">    </span>def<span class="w"> </span>test_step<span class="o">(</span>self,<span class="w"> </span>batch,<span class="w"> </span>batch_idx<span class="o">)</span>:
+<span class="w">				</span>...
+</pre></div>
+</div>
+</section>
+<section id="models">
+<h2>Models<a class="headerlink" href="#models" title="Link to this heading">#</a></h2>
+<p>Models are mainly implemented in <code class="docutils literal notranslate"><span class="pre">src/chop/models/__init__.py</span> </code>, and the <code class="docutils literal notranslate"><span class="pre">get_model_info</span></code> contains all currently supported models.
+One can also instantiate a custom model and add it to our flow like <code class="docutils literal notranslate"><span class="pre">src/chop/models/toys</span></code>.</p>
+</section>
+<section id="output">
+<h2>Output<a class="headerlink" href="#output" title="Link to this heading">#</a></h2>
+<p>MASE produces an output directory after running the training flow. The output directory is found at <code class="docutils literal notranslate"><span class="pre">../mase_output/&lt;model&gt;_&lt;task&gt;_&lt;dataset&gt;_&lt;current_date&gt;</span></code>.
+This directory includes</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">hardware</span></code> - a directory for Verilog hardware generated for the trained model</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">software</span></code> - a directory for any software generated for the trained model (PyTorch checkpoints or MASE models) as well as any generated logs</p></li>
+</ul>
+</section>
+<section id="training-logs">
+<h2>Training Logs<a class="headerlink" href="#training-logs" title="Link to this heading">#</a></h2>
+<p>MASE creates <a class="reference external" href="https://pytorch.org/tutorials/recipes/recipes/tensorboard_with_pytorch.html">Tensorboard</a> or <a class="reference external" href="https://wandb.ai/site">wandb</a> logs for the training flow - allowing tracking and visualizing metrics such as loss and accuracy. The log files are in <code class="docutils literal notranslate"><span class="pre">&lt;output_dir&gt;/software/tensorboard/lightning_logs/version_&lt;n&gt;</span></code>.</p>
+<p>Run Tensorboard to visualise the logs using:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tensorboard<span class="w"> </span>--logdir<span class="w"> </span>&lt;path_to_log_files&gt;
+</pre></div>
+</div>
+<p>If you are using VSCode, this will show up popup asking if you want to open Tensorboard in your browser. Select yes.</p>
+<p>If you look at the training printouts, you should have seen something like the following</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>INFO<span class="w">     </span>Initialising<span class="w"> </span>model<span class="w"> </span><span class="s1">&#39;toy&#39;</span>...
+INFO<span class="w">     </span>Initialising<span class="w"> </span>dataset<span class="w"> </span><span class="s1">&#39;toy_tiny&#39;</span>...
+INFO<span class="w">     </span>Project<span class="w"> </span>will<span class="w"> </span>be<span class="w"> </span>created<span class="w"> </span>at<span class="w"> </span>../mase_output/toy_classification_toy_tiny_2024-06-13
+INFO<span class="w">     </span>Training<span class="w"> </span>model<span class="w"> </span><span class="s1">&#39;toy&#39;</span>...
+</pre></div>
+</div>
+<p>This means the <code class="docutils literal notranslate"><span class="pre">path_to_log_files</span></code> is <code class="docutils literal notranslate"><span class="pre">../mase_output/toy_classification_toy_tiny_2024-06-13</span></code>.</p>
+<p>Full command should be something like</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tensorboard<span class="w"> </span>--logdir<span class="w"> </span>../mase_output/toy_classification_toy_tiny_2024-06-13/software/tensorboard/lightning_logs/version_2
+</pre></div>
+</div>
+</section>
+<section id="test-command">
+<h2>Test command<a class="headerlink" href="#test-command" title="Link to this heading">#</a></h2>
+<p>To test the model trained above you can use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># After training, you will have your checkpoint under mase-tools/mase_output</span>
+<span class="c1"># For example, the checkpoint is under ../mase_output/toy_classification_toy-tiny_2023-07-03/software/training_ckpts/best.ckpt</span>
+./ch<span class="w"> </span><span class="nb">test</span><span class="w"> </span>toy<span class="w"> </span>toy_tiny<span class="w"> </span>--config<span class="w"> </span>../configs/archive/test/train.toml<span class="w"> </span>--load<span class="w"> </span>../mase_output/toy_classification_toy_tiny_2024-06-13/software/training_ckpts/best.ckpt<span class="sb">```</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-interface">Command line interface</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-implementation">Training implementation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#models">Models</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#output">Output</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-logs">Training Logs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-command">Test command</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By DeepWok
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, DeepWok.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,803 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>chop.nn.quantized.modules.tanh &#8212; MASE 0.0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/common_css/need_style.css?v=92936fa5" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-needs/modern.css?v=803738c0" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+    <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="../../../../../_static/documentation_options.js?v=e645c8fa"></script>
+    <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../../../../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+    <script src="../../../../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+    <script src="../../../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+    <script src="../../../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+    <script src="../../../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/chop/nn/quantized/modules/tanh';</script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">MASE 0.0.1 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../modules/documentation/installation.html">Installation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/getting_started/Get-started-using-uv.html">Getting Started using uv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/getting_started/Get-started-using-Docker.html">Getting Started using Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/getting_started/Get-started-students.html">Additional Instructions for Imperial College Students</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../modules/documentation/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../modules/documentation/tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/tutorial_1_introduction_to_mase.html">Tutorial 1: Introduction to the Mase IR, MaseGraph and Torch FX passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/tutorial_2_lora_finetune.html">Tutorial 2: Finetuning Bert for Sequence Classification using a LoRA adapter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/tutorial_3_qat.html">Tutorial 3: Running Quantization-Aware Training (QAT) on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/tutorial_4_pruning.html">Tutorial 4: Unstructured Pruning on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/tutorial_5_nas_optuna.html">Tutorial 5: Neural Architecture Search (NAS) with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/tutorial_6_mixed_precision_search.html">Tutorial 6: Mixed Precision Quantization Search with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/tutorial_7_distributed_deployment.html">Tutorial 7: Deploying a Model for Inference on Distributed Clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/tutorial_9_kernel_fusion.html">Tutorial 9: Running Kernel Fusion for Inference Acceleration on GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/advanced/tensorRT_quantization_tutorial.html">Advanced: TensorRT Quantization Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/advanced/onnxrt_quantization_tutorial.html">Advanced: ONNX Runtime Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/advanced/cli.html">Advanced: Using Mase CLI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/developer/Add-model-to-machop.html">Developer: Guide on how to add a new model into Machop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/developer/doc_writing.html">Developer: How to write documentations in MASE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/tutorials/developer/how_to_extend_search.html">Developer: How to extend search</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../modules/documentation/health.html">Repository Health</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../modules/documentation/specifications.html">Coding Style Specifications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/specifications/C-coding-style-specifications.html">C/C++ Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/specifications/Python-coding-style-specifications.html">Python Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/documentation/specifications/Verilog-coding-style-specifications.html">Verilog Coding Style Specifications</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../modules/machop.html">Machop Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/chop/actions.html">chop.actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/chop/datasets.html">chop.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/chop/distributed.html">chop.distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/chop/ir.html">chop.ir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/chop/models.html">chop.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/chop/nn.html">chop.nn</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../modules/chop/nn_quantized.html">chop.nn.quantized</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../modules/chop/nn_quantized_functional.html">chop.nn.quantized.functional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../modules/chop/nn_quantized_modules.html">chop.nn.quantized.modules</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../modules/chop/passes.html">chop.passes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../../modules/chop/passes_module.html">chop.passes.module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/module_analysis/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/module_transform/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/transform/onn.html">chop.passes.module.transforms.onn</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../../modules/chop/passes_graph.html">chop.passes.graph</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/analysis/add_metadata.html">chop.passes.graph.analysis.add_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/analysis/autosharding.html">chop.passes.graph.analysis.autosharding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/analysis/init_metadata.html">chop.passes.graph.analysis.init_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/analysis/report.html">chop.passes.graph.analysis.report</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/analysis/statistical_profiler.html">chop.passes.graph.analysis.statistical_profiler.profile_statistics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/analysis/verify.html">chop.passes.graph.analysis.verify.verify</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/analysis/quantization.html">chop.passes.graph.calculate_avg_bits_mg_analysis_pass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/analysis/pruning.html">chop.passes.graph.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/analysis/runtime.html">chop.passes.graph.analysis.runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/transform/pruning.html">chop.passes.transform.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/transform/quantize.html">chop.passes.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/transform/utils.html">chop.passes.transform.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/transform/tensorrt.html">chop.passes.transform.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/interface/save_and_load.html">chop.passes.interface.save_and_load</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/interface/tensorrt.html">chop.passes.interface.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../modules/chop/interface/onnxrt.html">chop.passes.interface.onnxrt</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/chop/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/chop/tools.html">chop.tools</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Deep Learning Systems</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../modules/adls_2024.html">Advanced Deep Learning Systems: 2024/2025</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/labs_2024/lab_0_introduction.html">Lab 0: Introduction to Mase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/labs_2024/lab_1_compression.html">Lab 1: Model Compression (Quantization and Pruning)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/labs_2024/lab_2_nas.html">Lab 2: Neural Architecture Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/labs_2024/lab_3_mixed_precision_search.html">Lab 3: Mixed Precision Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/labs_2024/lab4-software.html">Lab 4 (Software Stream) Performance Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/labs_2024/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../modules/adls_2023.html">Advanced Deep Learning Systems: 2023/2024</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/labs_2023/lab1.html">Lab 1 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/labs_2023/lab2.html">Lab 2 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/labs_2023/lab3.html">Lab 3 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/labs_2023/lab4-software.html">Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../modules/labs_2023/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for chop.nn.quantized.modules.tanh</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">functional</span> <span class="k">as</span> <span class="n">F</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">..utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_stats</span><span class="p">,</span> <span class="n">quantiser_passthrough</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.nn.quantizers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">block_fp_quantizer</span><span class="p">,</span>
+    <span class="n">block_log_quantizer</span><span class="p">,</span>
+    <span class="n">block_minifloat_quantizer</span><span class="p">,</span>
+    <span class="n">integer_quantizer</span><span class="p">,</span>
+    <span class="n">log_quantizer</span><span class="p">,</span>
+    <span class="n">minifloat_denorm_quantizer</span><span class="p">,</span>
+    <span class="n">minifloat_ieee_quantizer</span><span class="p">,</span>
+    <span class="n">binary_quantizer</span><span class="p">,</span>
+    <span class="n">ternary_quantizer</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_TanhBase</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Tanh</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">inplace</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inplace</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_quantized_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">x</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="TanhInteger">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhInteger">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TanhInteger</span><span class="p">(</span><span class="n">_TanhBase</span><span class="p">):</span>
+    <span class="n">bypass</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="TanhInteger.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhInteger.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">inplace</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="c1"># establish quantizers</span>
+        <span class="n">x_width</span><span class="p">,</span> <span class="n">x_frac_width</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_width&quot;</span><span class="p">],</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_frac_width&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
+            <span class="n">integer_quantizer</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">x_width</span><span class="p">,</span> <span class="n">frac_width</span><span class="o">=</span><span class="n">x_frac_width</span><span class="p">,</span> <span class="n">is_signed</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_width</span> <span class="o">=</span> <span class="n">x_width</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_frac_width</span> <span class="o">=</span> <span class="n">x_frac_width</span></div>
+</div>
+
+
+    <span class="c1"># def get_output_bitwidth(self) -&gt; dict:</span>
+    <span class="c1">#     return {</span>
+    <span class="c1">#         &quot;data_out_width&quot;: self.config[&quot;data_in_width&quot;],</span>
+    <span class="c1">#         &quot;data_out_frac_width&quot;: self.config[&quot;data_in_frac_width&quot;],</span>
+    <span class="c1">#     }</span>
+
+
+<div class="viewcode-block" id="TanhMinifloatDenorm">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhMinifloatDenorm">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TanhMinifloatDenorm</span><span class="p">(</span><span class="n">_TanhBase</span><span class="p">):</span>
+<div class="viewcode-block" id="TanhMinifloatDenorm.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhMinifloatDenorm.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">inplace</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">x_width</span><span class="p">,</span> <span class="n">x_exponent_width</span><span class="p">,</span> <span class="n">x_exponent_bias</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_width&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_exponent_width&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_exponent_bias&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
+            <span class="n">minifloat_denorm_quantizer</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="n">x_width</span><span class="p">,</span>
+            <span class="n">exponent_width</span><span class="o">=</span><span class="n">x_exponent_width</span><span class="p">,</span>
+            <span class="n">exponent_bias</span><span class="o">=</span><span class="n">x_exponent_bias</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TanhMinifloatIEEE">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhMinifloatIEEE">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TanhMinifloatIEEE</span><span class="p">(</span><span class="n">_TanhBase</span><span class="p">):</span>
+<div class="viewcode-block" id="TanhMinifloatIEEE.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhMinifloatIEEE.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">inplace</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">x_width</span><span class="p">,</span> <span class="n">x_exponent_width</span><span class="p">,</span> <span class="n">x_exponent_bias</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_width&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_exponent_width&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_exponent_bias&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
+            <span class="n">minifloat_ieee_quantizer</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="n">x_width</span><span class="p">,</span>
+            <span class="n">exponent_width</span><span class="o">=</span><span class="n">x_exponent_width</span><span class="p">,</span>
+            <span class="n">exponent_bias</span><span class="o">=</span><span class="n">x_exponent_bias</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TanhLog</span><span class="p">(</span><span class="n">_TanhBase</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">inplace</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">x_width</span><span class="p">,</span> <span class="n">x_exponent_bias</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_width&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_exponent_bias&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
+            <span class="n">log_quantizer</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="n">x_width</span><span class="p">,</span>
+            <span class="n">exponent_bias</span><span class="o">=</span><span class="n">x_exponent_bias</span><span class="p">,</span>
+        <span class="p">)</span>
+
+
+<div class="viewcode-block" id="TanhLog">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhLog">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TanhLog</span><span class="p">(</span><span class="n">_TanhBase</span><span class="p">):</span>
+<div class="viewcode-block" id="TanhLog.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhLog.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">inplace</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">x_width</span><span class="p">,</span> <span class="n">x_exponent_bias</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_width&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_exponent_bias&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
+            <span class="n">log_quantizer</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="n">x_width</span><span class="p">,</span>
+            <span class="n">exponent_bias</span><span class="o">=</span><span class="n">x_exponent_bias</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TanhBlockFP">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBlockFP">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TanhBlockFP</span><span class="p">(</span><span class="n">_TanhBase</span><span class="p">):</span>
+<div class="viewcode-block" id="TanhBlockFP.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBlockFP.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">inplace</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">x_width</span><span class="p">,</span> <span class="n">x_exponent_width</span><span class="p">,</span> <span class="n">x_exponent_bias</span><span class="p">,</span> <span class="n">x_block_size</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_width&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_exponent_width&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_exponent_bias&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_block_size&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
+            <span class="n">block_fp_quantizer</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="n">x_width</span><span class="p">,</span>
+            <span class="n">exponent_width</span><span class="o">=</span><span class="n">x_exponent_width</span><span class="p">,</span>
+            <span class="n">exponent_bias</span><span class="o">=</span><span class="n">x_exponent_bias</span><span class="p">,</span>
+            <span class="n">block_size</span><span class="o">=</span><span class="n">x_block_size</span><span class="p">,</span>
+            <span class="n">skip_first_dim</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TanhBlockFP.forward">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBlockFP.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x_shape</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inplace</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TanhBlockMinifloat">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBlockMinifloat">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TanhBlockMinifloat</span><span class="p">(</span><span class="n">_TanhBase</span><span class="p">):</span>
+<div class="viewcode-block" id="TanhBlockMinifloat.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBlockMinifloat.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">inplace</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">x_width</span><span class="p">,</span> <span class="n">x_exponent_width</span><span class="p">,</span> <span class="n">x_exponent_bias_width</span><span class="p">,</span> <span class="n">x_block_size</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_width&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_exponent_width&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_exponent_bias_width&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_block_size&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
+            <span class="n">block_minifloat_quantizer</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="n">x_width</span><span class="p">,</span>
+            <span class="n">exponent_width</span><span class="o">=</span><span class="n">x_exponent_width</span><span class="p">,</span>
+            <span class="n">exponent_bias_width</span><span class="o">=</span><span class="n">x_exponent_bias_width</span><span class="p">,</span>
+            <span class="n">block_size</span><span class="o">=</span><span class="n">x_block_size</span><span class="p">,</span>
+            <span class="n">skip_first_dim</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TanhBlockMinifloat.forward">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBlockMinifloat.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x_shape</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inplace</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TanhBlockLog">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBlockLog">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TanhBlockLog</span><span class="p">(</span><span class="n">_TanhBase</span><span class="p">):</span>
+<div class="viewcode-block" id="TanhBlockLog.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBlockLog.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">inplace</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">x_width</span><span class="p">,</span> <span class="n">x_exponent_bias_width</span><span class="p">,</span> <span class="n">x_block_size</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_width&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_exponent_bias_width&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_block_size&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
+            <span class="n">block_log_quantizer</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="n">x_width</span><span class="p">,</span>
+            <span class="n">exponent_bias_width</span><span class="o">=</span><span class="n">x_exponent_bias_width</span><span class="p">,</span>
+            <span class="n">block_size</span><span class="o">=</span><span class="n">x_block_size</span><span class="p">,</span>
+            <span class="n">skip_first_dim</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TanhBlockLog.forward">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBlockLog.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x_shape</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inplace</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TanhBinary">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBinary">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TanhBinary</span><span class="p">(</span><span class="n">_TanhBase</span><span class="p">):</span>
+    <span class="n">bypass</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="TanhBinary.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhBinary.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">inplace</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="c1"># establish quantizers</span>
+        <span class="n">x_stochastic</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_stochastic&quot;</span><span class="p">]</span>
+        <span class="n">x_bipolar</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_bipolar&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span> <span class="o">=</span> <span class="n">quantiser_passthrough</span>
+        <span class="c1"># self.x_quantizer = partial(</span>
+        <span class="c1">#     binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar</span>
+        <span class="c1"># )</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span></div>
+</div>
+
+        <span class="c1"># self.x_width = x_width</span>
+        <span class="c1"># self.x_frac_width = x_frac_width</span>
+
+
+<div class="viewcode-block" id="TanhTernary">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhTernary">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TanhTernary</span><span class="p">(</span><span class="n">_TanhBase</span><span class="p">):</span>
+    <span class="n">bypass</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="TanhTernary.__init__">
+<a class="viewcode-back" href="../../../../../modules/chop/nn_quantized_modules.html#chop.nn.quantized.modules.tanh.TanhTernary.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">inplace</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;config is None!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bypass&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="c1"># establish quantisers</span>
+        <span class="n">x_scaling_factor</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_in_scaling_factor&quot;</span><span class="p">]</span>
+        <span class="n">x_mean</span> <span class="o">=</span> <span class="n">get_stats</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;data_in_mean&quot;</span><span class="p">)</span>
+        <span class="n">x_median</span> <span class="o">=</span> <span class="n">get_stats</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;data_in_median&quot;</span><span class="p">)</span>
+        <span class="n">x_max</span> <span class="o">=</span> <span class="n">get_stats</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;data_in_max&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_quantizer</span> <span class="o">=</span> <span class="n">quantiser_passthrough</span>
+        <span class="c1"># self.x_quantizer = partial(</span>
+        <span class="c1">#     ternary_quantizer,</span>
+        <span class="c1">#     scaling_factor=x_scaling_factor,</span>
+        <span class="c1">#     median=x_median,</span>
+        <span class="c1">#     maximum=x_max,</span>
+        <span class="c1">#     mean=x_mean,</span>
+        <span class="c1"># )</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By DeepWok
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, DeepWok.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

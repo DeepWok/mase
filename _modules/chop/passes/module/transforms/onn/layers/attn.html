@@ -1,0 +1,811 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>chop.passes.module.transforms.onn.layers.attn &#8212; MASE 0.0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../../../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sphinx-needs/common_css/need_style.css?v=92936fa5" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sphinx-needs/modern.css?v=803738c0" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../../../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+    <script src="../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="../../../../../../../_static/documentation_options.js?v=e645c8fa"></script>
+    <script src="../../../../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../../../../../../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+    <script src="../../../../../../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+    <script src="../../../../../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+    <script src="../../../../../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+    <script src="../../../../../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/chop/passes/module/transforms/onn/layers/attn';</script>
+    <link rel="index" title="Index" href="../../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">MASE 0.0.1 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../../../modules/documentation/installation.html">Installation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/documentation/getting_started/Get-started-using-uv.html">Getting Started using uv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/documentation/getting_started/Get-started-using-Docker.html">Getting Started using Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/documentation/getting_started/Get-started-students.html">Additional Instructions for Imperial College Students</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../modules/documentation/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../../../modules/documentation/tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/documentation/tutorials/tutorial_1_introduction_to_mase.html">Tutorial 1: Introduction to the Mase IR, MaseGraph and Torch FX passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/documentation/tutorials/tutorial_2_lora_finetune.html">Tutorial 2: Finetuning Bert for Sequence Classification using a LoRA adapter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/documentation/tutorials/tutorial_3_qat.html">Tutorial 3: Running Quantization-Aware Training (QAT) on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/documentation/tutorials/tutorial_4_pruning.html">Tutorial 4: Unstructured Pruning on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/documentation/tutorials/tutorial_5_nas_optuna.html">Tutorial 5: Neural Architecture Search (NAS) with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/documentation/tutorials/tutorial_6_mixed_precision_search.html">Tutorial 6: Mixed Precision Quantization Search with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/documentation/tutorials/tutorial_7_distributed_deployment.html">Tutorial 7: Deploying a Model for Inference on Distributed Clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/documentation/tutorials/tutorial_9_kernel_fusion.html">Tutorial 9: Running Kernel Fusion for Inference Acceleration on GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/documentation/tutorials/advanced/tensorRT_quantization_tutorial.html">Advanced: TensorRT Quantization Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/documentation/tutorials/advanced/onnxrt_quantization_tutorial.html">Advanced: ONNX Runtime Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/documentation/tutorials/advanced/cli.html">Advanced: Using Mase CLI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/documentation/tutorials/developer/Add-model-to-machop.html">Developer: Guide on how to add a new model into Machop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/documentation/tutorials/developer/doc_writing.html">Developer: How to write documentations in MASE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/documentation/tutorials/developer/how_to_extend_search.html">Developer: How to extend search</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../modules/documentation/health.html">Repository Health</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../../../modules/documentation/specifications.html">Coding Style Specifications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/documentation/specifications/C-coding-style-specifications.html">C/C++ Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/documentation/specifications/Python-coding-style-specifications.html">Python Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/documentation/specifications/Verilog-coding-style-specifications.html">Verilog Coding Style Specifications</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../../../modules/machop.html">Machop Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/chop/actions.html">chop.actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/chop/datasets.html">chop.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/chop/distributed.html">chop.distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/chop/ir.html">chop.ir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/chop/models.html">chop.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/chop/nn.html">chop.nn</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../../../modules/chop/nn_quantized.html">chop.nn.quantized</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../../../modules/chop/nn_quantized_functional.html">chop.nn.quantized.functional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../../../modules/chop/nn_quantized_modules.html">chop.nn.quantized.modules</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../../../modules/chop/passes.html">chop.passes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../../../../modules/chop/passes_module.html">chop.passes.module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../../modules/chop/module_analysis/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../../modules/chop/module_transform/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../../modules/chop/transform/onn.html">chop.passes.module.transforms.onn</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../../../../modules/chop/passes_graph.html">chop.passes.graph</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../../modules/chop/analysis/add_metadata.html">chop.passes.graph.analysis.add_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../../modules/chop/analysis/autosharding.html">chop.passes.graph.analysis.autosharding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../../modules/chop/analysis/init_metadata.html">chop.passes.graph.analysis.init_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../../modules/chop/analysis/report.html">chop.passes.graph.analysis.report</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../../modules/chop/analysis/statistical_profiler.html">chop.passes.graph.analysis.statistical_profiler.profile_statistics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../../modules/chop/analysis/verify.html">chop.passes.graph.analysis.verify.verify</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../../modules/chop/analysis/quantization.html">chop.passes.graph.calculate_avg_bits_mg_analysis_pass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../../modules/chop/analysis/pruning.html">chop.passes.graph.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../../modules/chop/analysis/runtime.html">chop.passes.graph.analysis.runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../../modules/chop/transform/pruning.html">chop.passes.transform.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../../modules/chop/transform/quantize.html">chop.passes.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../../modules/chop/transform/utils.html">chop.passes.transform.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../../modules/chop/transform/tensorrt.html">chop.passes.transform.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../../modules/chop/interface/save_and_load.html">chop.passes.interface.save_and_load</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../../modules/chop/interface/tensorrt.html">chop.passes.interface.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../../modules/chop/interface/onnxrt.html">chop.passes.interface.onnxrt</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/chop/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/chop/tools.html">chop.tools</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Deep Learning Systems</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../../../modules/adls_2024.html">Advanced Deep Learning Systems: 2024/2025</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/labs_2024/lab_0_introduction.html">Lab 0: Introduction to Mase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/labs_2024/lab_1_compression.html">Lab 1: Model Compression (Quantization and Pruning)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/labs_2024/lab_2_nas.html">Lab 2: Neural Architecture Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/labs_2024/lab_3_mixed_precision_search.html">Lab 3: Mixed Precision Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/labs_2024/lab4-software.html">Lab 4 (Software Stream) Performance Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/labs_2024/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../../../modules/adls_2023.html">Advanced Deep Learning Systems: 2023/2024</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/labs_2023/lab1.html">Lab 1 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/labs_2023/lab2.html">Lab 2 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/labs_2023/lab3.html">Lab 3 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/labs_2023/lab4-software.html">Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../../modules/labs_2023/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for chop.passes.module.transforms.onn.layers.attn</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mase_triton.optical_compute</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpticalTransformerFunctions</span> <span class="k">as</span> <span class="n">OTFunctions</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mase_triton.optical_compute.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpticalTransformerLinear</span> <span class="k">as</span> <span class="n">OTLinear</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mase_triton.optical_compute.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">optical_transformer_update_qstats</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mase_triton.utils.torch_module</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_layer_name</span><span class="p">,</span> <span class="n">set_layer_by_name</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">transformers.models.llama.modeling_llama</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">LlamaAttention</span><span class="p">,</span>
+    <span class="n">LlamaConfig</span><span class="p">,</span>
+    <span class="n">LlamaDecoderLayer</span><span class="p">,</span>
+    <span class="n">LlamaForCausalLM</span><span class="p">,</span>
+    <span class="n">apply_rotary_pos_emb</span><span class="p">,</span>
+    <span class="n">eager_attention_forward</span><span class="p">,</span>
+    <span class="n">repeat_kv</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="ot_eager_attention_forward">
+<a class="viewcode-back" href="../../../../../../../modules/chop/transform/onn.html#chop.passes.module.transforms.onn.layers.attn.ot_eager_attention_forward">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ot_eager_attention_forward</span><span class="p">(</span>
+    <span class="n">module</span><span class="p">:</span> <span class="s2">&quot;OtLlamaAttention&quot;</span><span class="p">,</span>
+    <span class="n">query</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">key</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">value</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">attention_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
+    <span class="n">scaling</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">dropout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Optical Transformer Scaled Dot-Product Attention.</span>
+
+<span class="sd">    Computes scaled dot-product attention with quantized matrix multiplications</span>
+<span class="sd">    to simulate optical neural network hardware constraints. This function applies</span>
+<span class="sd">    quantization to both the query-key and attention-value matrix products.</span>
+
+<span class="sd">    The quantization statistics (min/max values) are updated in-place during training</span>
+<span class="sd">    using an exponential moving average controlled by ``q_smooth_factor``.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        query (Tensor): Query tensor of shape ``(batch, heads, seq_len, head_dim)``.</span>
+<span class="sd">        key (Tensor): Key tensor of shape ``(batch, kv_heads, seq_len, head_dim)``.</span>
+<span class="sd">        value (Tensor): Value tensor of shape ``(batch, kv_heads, seq_len, head_dim)``.</span>
+<span class="sd">        attention_mask (Tensor, optional): Attention mask. Default: None.</span>
+<span class="sd">        dropout (float): Dropout probability. Default: 0.0.</span>
+<span class="sd">        scaling (float, optional): Scaling factor. If None, uses ``1/sqrt(head_dim)``.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tensor: Attention output of shape ``(batch, heads, seq_len, head_dim)``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+        <span class="n">query_min_max_</span> <span class="o">=</span> <span class="n">optical_transformer_update_qstats</span><span class="p">(</span>
+            <span class="n">query</span><span class="p">,</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">query_min_max</span><span class="p">,</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">q_min_max_quantiles</span><span class="p">,</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">stat_smooth_factor</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">query_min_max</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">query_min_max_</span><span class="p">)</span>
+        <span class="n">key_min_max_</span> <span class="o">=</span> <span class="n">optical_transformer_update_qstats</span><span class="p">(</span>
+            <span class="n">key</span><span class="p">,</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">key_min_max</span><span class="p">,</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">q_min_max_quantiles</span><span class="p">,</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">stat_smooth_factor</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">key_min_max</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">key_min_max_</span><span class="p">)</span>
+        <span class="n">key_states</span> <span class="o">=</span> <span class="n">repeat_kv</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">num_key_value_groups</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">module</span><span class="o">.</span><span class="n">qk_min_max</span><span class="o">.</span><span class="n">isfinite</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+            <span class="n">attn_weights</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">key_states</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">))</span> <span class="o">*</span> <span class="n">scaling</span>
+            <span class="n">qk_min_max_</span> <span class="o">=</span> <span class="n">optical_transformer_update_qstats</span><span class="p">(</span>
+                <span class="n">attn_weights</span><span class="p">,</span>
+                <span class="n">module</span><span class="o">.</span><span class="n">qk_min_max</span><span class="p">,</span>
+                <span class="n">module</span><span class="o">.</span><span class="n">q_min_max_quantiles</span><span class="p">,</span>
+                <span class="n">module</span><span class="o">.</span><span class="n">stat_smooth_factor</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">qk_min_max</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">qk_min_max_</span><span class="p">)</span>
+
+    <span class="n">key_states</span> <span class="o">=</span> <span class="n">repeat_kv</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">num_key_value_groups</span><span class="p">)</span>
+    <span class="n">value_states</span> <span class="o">=</span> <span class="n">repeat_kv</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">num_key_value_groups</span><span class="p">)</span>
+
+    <span class="c1"># attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling</span>
+    <span class="n">attn_weights</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">OTFunctions</span><span class="o">.</span><span class="n">quantized_matmul_fn</span><span class="p">(</span>
+        <span class="n">a</span><span class="o">=</span><span class="n">query</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span>
+        <span class="n">b</span><span class="o">=</span><span class="n">key_states</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span>
+        <span class="n">a_min</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">query_min_max</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">a_max</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">query_min_max</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">b_min</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">key_min_max</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">b_max</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">key_min_max</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">b_lut_min</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">q_lut_min</span><span class="p">,</span>
+        <span class="n">o_min</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">qk_min_max</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">o_max</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">qk_min_max</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">q_levels</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">q_levels</span><span class="p">,</span>
+        <span class="n">q_seed</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">seed</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span>
+        <span class="n">skip_quantize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">attn_weights</span> <span class="o">=</span> <span class="n">attn_weights</span> <span class="o">*</span> <span class="n">scaling</span>
+
+    <span class="k">if</span> <span class="n">attention_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">causal_mask</span> <span class="o">=</span> <span class="n">attention_mask</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:</span> <span class="n">key_states</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]]</span>
+        <span class="n">attn_weights</span> <span class="o">=</span> <span class="n">attn_weights</span> <span class="o">+</span> <span class="n">causal_mask</span>
+
+    <span class="n">attn_weights</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">attn_weights</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span>
+        <span class="n">query</span><span class="o">.</span><span class="n">dtype</span>
+    <span class="p">)</span>
+    <span class="n">attn_weights</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span>
+        <span class="n">attn_weights</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">training</span>
+    <span class="p">)</span>
+    <span class="c1"># attn_output = torch.matmul(attn_weights, value_states)</span>
+
+    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+        <span class="n">attn_min_max_</span> <span class="o">=</span> <span class="n">optical_transformer_update_qstats</span><span class="p">(</span>
+            <span class="n">attn_weights</span><span class="p">,</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">attn_min_max</span><span class="p">,</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">q_min_max_quantiles</span><span class="p">,</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">stat_smooth_factor</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">attn_min_max</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">attn_min_max_</span><span class="p">)</span>
+        <span class="n">value_min_max_</span> <span class="o">=</span> <span class="n">optical_transformer_update_qstats</span><span class="p">(</span>
+            <span class="n">value_states</span><span class="p">,</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">value_min_max</span><span class="p">,</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">q_min_max_quantiles</span><span class="p">,</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">stat_smooth_factor</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">value_min_max</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">value_min_max_</span><span class="p">)</span>
+        <span class="n">attn_</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">attn_weights</span><span class="p">,</span> <span class="n">value_states</span><span class="p">)</span>
+        <span class="n">av_min_max_</span> <span class="o">=</span> <span class="n">optical_transformer_update_qstats</span><span class="p">(</span>
+            <span class="n">attn_</span><span class="p">,</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">av_min_max</span><span class="p">,</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">q_min_max_quantiles</span><span class="p">,</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">stat_smooth_factor</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">av_min_max</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">av_min_max_</span><span class="p">)</span>
+
+    <span class="n">attn_output</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">OTFunctions</span><span class="o">.</span><span class="n">quantized_matmul_fn</span><span class="p">(</span>
+        <span class="n">a</span><span class="o">=</span><span class="n">attn_weights</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span>
+        <span class="n">b</span><span class="o">=</span><span class="n">value_states</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span>
+        <span class="n">a_min</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">attn_min_max</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">a_max</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">attn_min_max</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">b_min</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">value_min_max</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">b_max</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">value_min_max</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">b_lut_min</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">q_lut_min</span><span class="p">,</span>
+        <span class="n">o_min</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">av_min_max</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">o_max</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">av_min_max</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">q_levels</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">q_levels</span><span class="p">,</span>
+        <span class="n">q_seed</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">seed</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span>
+        <span class="n">skip_quantize</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">bypass</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">seed</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">attn_output</span> <span class="o">=</span> <span class="n">attn_output</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">attn_output</span><span class="p">,</span> <span class="n">attn_weights</span></div>
+
+
+
+<div class="viewcode-block" id="OtLlamaAttention">
+<a class="viewcode-back" href="../../../../../../../modules/chop/transform/onn.html#chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">OtLlamaAttention</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Optical Transformer attention module for LLaMA models.</span>
+
+<span class="sd">    This module replaces the standard HuggingFace LlamaAttention with an optical</span>
+<span class="sd">    transformer equivalent that simulates quantized matrix multiplications as would</span>
+<span class="sd">    occur in optical neural network hardware. The implementation is based on the</span>
+<span class="sd">    `Optical Transformers paper &lt;https://arxiv.org/abs/2302.10360&gt;`_.</span>
+
+<span class="sd">    The attention computation uses optical transformer scaled dot-product attention</span>
+<span class="sd">    (SDPA) which applies quantization to the query-key and attention-value matrix</span>
+<span class="sd">    multiplications to simulate optical compute constraints.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        config: HuggingFace LLaMA configuration object.</span>
+<span class="sd">        layer_idx (int): Index of this attention layer in the model.</span>
+<span class="sd">        q_levels (int): Number of quantization levels for optical simulation. Default: 256.</span>
+<span class="sd">        q_lut_min (float): Minimum value for the lookup table used in quantization. Default: 0.020040.</span>
+<span class="sd">        q_quantiles (tuple[float, float], optional): Quantile range for min/max statistics.</span>
+<span class="sd">            If None, uses absolute min/max. Default: None.</span>
+<span class="sd">        q_smooth_factor (float): Exponential moving average factor for updating</span>
+<span class="sd">            running min/max statistics during training. Default: 0.9.</span>
+<span class="sd">        q_init_seed (int): Random seed for quantization noise initialization. Default: 0.</span>
+<span class="sd">        q_bypass (bool): If True, bypasses optical quantization and uses standard</span>
+<span class="sd">            PyTorch attention. Useful for debugging or comparison. Default: False.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        query_min_max (Tensor): Running min/max statistics for query tensors.</span>
+<span class="sd">        key_min_max (Tensor): Running min/max statistics for key tensors.</span>
+<span class="sd">        value_min_max (Tensor): Running min/max statistics for value tensors.</span>
+<span class="sd">        qk_min_max (Tensor): Running min/max statistics for query-key products.</span>
+<span class="sd">        attn_min_max (Tensor): Min/max range for attention weights (fixed at [0, 1]).</span>
+<span class="sd">        av_min_max (Tensor): Running min/max statistics for attention-value products.</span>
+<span class="sd">        seed (Tensor): Current random seed state for quantization.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            from chop.passes.module.transforms.onn.layers.attn import OtLlamaAttention</span>
+
+<span class="sd">            # Create from existing HuggingFace attention layer</span>
+<span class="sd">            ot_attn = OtLlamaAttention.from_pretrained(</span>
+<span class="sd">                hf_attention_layer,</span>
+<span class="sd">                layer_idx=0,</span>
+<span class="sd">                q_levels=256,</span>
+<span class="sd">                q_bypass=False,</span>
+<span class="sd">            )</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="OtLlamaAttention.__init__">
+<a class="viewcode-back" href="../../../../../../../modules/chop/transform/onn.html#chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">LlamaConfig</span><span class="p">,</span>
+        <span class="n">layer_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">q_levels</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
+        <span class="n">q_lut_min</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.020040</span><span class="p">,</span>
+        <span class="n">q_quantiles</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">q_smooth_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9</span><span class="p">,</span>
+        <span class="n">q_init_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">q_bypass</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layer_idx</span> <span class="o">=</span> <span class="n">layer_idx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span>
+            <span class="n">config</span><span class="p">,</span> <span class="s2">&quot;head_dim&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span> <span class="o">//</span> <span class="n">config</span><span class="o">.</span><span class="n">num_attention_heads</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_key_value_groups</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">num_attention_heads</span> <span class="o">//</span> <span class="n">config</span><span class="o">.</span><span class="n">num_key_value_heads</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scaling</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span><span class="o">**-</span><span class="mf">0.5</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attention_dropout</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">attention_dropout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_causal</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">q_proj</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">num_attention_heads</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span><span class="p">,</span>
+            <span class="n">bias</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">attention_bias</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k_proj</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">num_key_value_heads</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span><span class="p">,</span>
+            <span class="n">bias</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">attention_bias</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">v_proj</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">num_key_value_heads</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span><span class="p">,</span>
+            <span class="n">bias</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">attention_bias</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">o_proj</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">num_attention_heads</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">,</span>
+            <span class="n">bias</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">attention_bias</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">q_levels</span> <span class="o">=</span> <span class="n">q_levels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">q_lut_min</span> <span class="o">=</span> <span class="n">q_lut_min</span>
+        <span class="k">if</span> <span class="n">q_quantiles</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">q_min_max_quantiles</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;q_min_max_quantiles&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">q_quantiles</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span>
+            <span class="s2">&quot;query_min_max&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;-inf&quot;</span><span class="p">)])</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;key_min_max&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;-inf&quot;</span><span class="p">)]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;qk_min_max&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;-inf&quot;</span><span class="p">)]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;attn_min_max&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="mi">1</span><span class="p">)]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span>
+            <span class="s2">&quot;value_min_max&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;-inf&quot;</span><span class="p">)])</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;av_min_max&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;-inf&quot;</span><span class="p">)]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;seed&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">q_init_seed</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int64</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stat_smooth_factor</span> <span class="o">=</span> <span class="n">q_smooth_factor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span> <span class="o">=</span> <span class="n">q_bypass</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">query_min_max</span><span class="p">:</span> <span class="n">Tensor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key_min_max</span><span class="p">:</span> <span class="n">Tensor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qk_min_max</span><span class="p">:</span> <span class="n">Tensor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attn_min_max</span><span class="p">:</span> <span class="n">Tensor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value_min_max</span><span class="p">:</span> <span class="n">Tensor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">av_min_max</span><span class="p">:</span> <span class="n">Tensor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">:</span> <span class="n">Tensor</span></div>
+
+
+<div class="viewcode-block" id="OtLlamaAttention.forward">
+<a class="viewcode-back" href="../../../../../../../modules/chop/transform/onn.html#chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">hidden_states</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">position_embeddings</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
+        <span class="n">attention_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
+        <span class="n">past_key_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">cache_position</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]]:</span>
+        <span class="n">input_shape</span> <span class="o">=</span> <span class="n">hidden_states</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">hidden_shape</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">input_shape</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span><span class="p">)</span>
+
+        <span class="n">query_states</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">q_proj</span><span class="p">(</span><span class="n">hidden_states</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">hidden_shape</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">key_states</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_proj</span><span class="p">(</span><span class="n">hidden_states</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">hidden_shape</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">value_states</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_proj</span><span class="p">(</span><span class="n">hidden_states</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">hidden_shape</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span> <span class="o">=</span> <span class="n">position_embeddings</span>
+        <span class="n">query_states</span><span class="p">,</span> <span class="n">key_states</span> <span class="o">=</span> <span class="n">apply_rotary_pos_emb</span><span class="p">(</span>
+            <span class="n">query_states</span><span class="p">,</span> <span class="n">key_states</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">past_key_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># sin and cos are specific to RoPE models; cache_position needed for the static cache</span>
+            <span class="n">cache_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;sin&quot;</span><span class="p">:</span> <span class="n">sin</span><span class="p">,</span> <span class="s2">&quot;cos&quot;</span><span class="p">:</span> <span class="n">cos</span><span class="p">,</span> <span class="s2">&quot;cache_position&quot;</span><span class="p">:</span> <span class="n">cache_position</span><span class="p">}</span>
+            <span class="n">key_states</span><span class="p">,</span> <span class="n">value_states</span> <span class="o">=</span> <span class="n">past_key_value</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="n">key_states</span><span class="p">,</span> <span class="n">value_states</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_idx</span><span class="p">,</span> <span class="n">cache_kwargs</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bypass</span><span class="p">:</span>
+            <span class="n">attn_output</span><span class="p">,</span> <span class="n">attn_weights</span> <span class="o">=</span> <span class="n">eager_attention_forward</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span>
+                <span class="n">query_states</span><span class="p">,</span>
+                <span class="n">key_states</span><span class="p">,</span>
+                <span class="n">value_states</span><span class="p">,</span>
+                <span class="n">attention_mask</span><span class="p">,</span>
+                <span class="n">dropout</span><span class="o">=</span><span class="mf">0.0</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">attention_dropout</span><span class="p">,</span>
+                <span class="n">scaling</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scaling</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">attn_output</span><span class="p">,</span> <span class="n">attn_weights</span> <span class="o">=</span> <span class="n">ot_eager_attention_forward</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span>
+                <span class="n">query_states</span><span class="p">,</span>
+                <span class="n">key_states</span><span class="p">,</span>
+                <span class="n">value_states</span><span class="p">,</span>
+                <span class="n">attention_mask</span><span class="p">,</span>
+                <span class="n">dropout</span><span class="o">=</span><span class="mf">0.0</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">attention_dropout</span><span class="p">,</span>
+                <span class="n">scaling</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scaling</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">attn_output</span> <span class="o">=</span> <span class="n">attn_output</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">*</span><span class="n">input_shape</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span>
+        <span class="n">attn_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">o_proj</span><span class="p">(</span><span class="n">attn_output</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">attn_output</span><span class="p">,</span> <span class="n">attn_weights</span></div>
+
+
+<div class="viewcode-block" id="OtLlamaAttention.from_pretrained">
+<a class="viewcode-back" href="../../../../../../../modules/chop/transform/onn.html#chop.passes.module.transforms.onn.layers.attn.OtLlamaAttention.from_pretrained">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_pretrained</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">attn</span><span class="p">:</span> <span class="n">LlamaAttention</span><span class="p">,</span>
+        <span class="n">layer_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">q_levels</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
+        <span class="n">q_lut_min</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.020040</span><span class="p">,</span>
+        <span class="n">q_quantiles</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">q_smooth_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9</span><span class="p">,</span>
+        <span class="n">q_init_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">q_bypass</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;OtLlamaAttention&quot;</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attn</span><span class="p">,</span> <span class="n">LlamaAttention</span><span class="p">)</span>
+        <span class="n">ot_attn</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">attn</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+            <span class="n">layer_idx</span><span class="p">,</span>
+            <span class="n">q_levels</span><span class="p">,</span>
+            <span class="n">q_lut_min</span><span class="p">,</span>
+            <span class="n">q_quantiles</span><span class="p">,</span>
+            <span class="n">q_smooth_factor</span><span class="p">,</span>
+            <span class="n">q_init_seed</span><span class="p">,</span>
+            <span class="n">q_bypass</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">ot_attn</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">attn</span><span class="o">.</span><span class="n">o_proj</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">ot_attn</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">attn</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ot_attn</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By DeepWok
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, DeepWok.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

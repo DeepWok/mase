@@ -1,0 +1,1013 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>chop.ir.graph.mase_graph &#8212; MASE 0.0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/common_css/need_style.css?v=92936fa5" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-needs/modern.css?v=803738c0" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+    <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="../../../../_static/documentation_options.js?v=e645c8fa"></script>
+    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../../../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+    <script src="../../../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+    <script src="../../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+    <script src="../../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+    <script src="../../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/chop/ir/graph/mase_graph';</script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">MASE 0.0.1 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../modules/documentation/installation.html">Installation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/documentation/getting_started/Get-started-using-uv.html">Getting Started using uv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/documentation/getting_started/Get-started-using-Docker.html">Getting Started using Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/documentation/getting_started/Get-started-students.html">Additional Instructions for Imperial College Students</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/documentation/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../modules/documentation/tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/documentation/tutorials/tutorial_1_introduction_to_mase.html">Tutorial 1: Introduction to the Mase IR, MaseGraph and Torch FX passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/documentation/tutorials/tutorial_2_lora_finetune.html">Tutorial 2: Finetuning Bert for Sequence Classification using a LoRA adapter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/documentation/tutorials/tutorial_3_qat.html">Tutorial 3: Running Quantization-Aware Training (QAT) on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/documentation/tutorials/tutorial_4_pruning.html">Tutorial 4: Unstructured Pruning on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/documentation/tutorials/tutorial_5_nas_optuna.html">Tutorial 5: Neural Architecture Search (NAS) with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/documentation/tutorials/tutorial_6_mixed_precision_search.html">Tutorial 6: Mixed Precision Quantization Search with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/documentation/tutorials/tutorial_7_distributed_deployment.html">Tutorial 7: Deploying a Model for Inference on Distributed Clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/documentation/tutorials/tutorial_9_kernel_fusion.html">Tutorial 9: Running Kernel Fusion for Inference Acceleration on GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/documentation/tutorials/advanced/tensorRT_quantization_tutorial.html">Advanced: TensorRT Quantization Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/documentation/tutorials/advanced/onnxrt_quantization_tutorial.html">Advanced: ONNX Runtime Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/documentation/tutorials/advanced/cli.html">Advanced: Using Mase CLI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/documentation/tutorials/developer/Add-model-to-machop.html">Developer: Guide on how to add a new model into Machop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/documentation/tutorials/developer/doc_writing.html">Developer: How to write documentations in MASE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/documentation/tutorials/developer/how_to_extend_search.html">Developer: How to extend search</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/documentation/health.html">Repository Health</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../modules/documentation/specifications.html">Coding Style Specifications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/documentation/specifications/C-coding-style-specifications.html">C/C++ Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/documentation/specifications/Python-coding-style-specifications.html">Python Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/documentation/specifications/Verilog-coding-style-specifications.html">Verilog Coding Style Specifications</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../modules/machop.html">Machop Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/chop/actions.html">chop.actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/chop/datasets.html">chop.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/chop/distributed.html">chop.distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/chop/ir.html">chop.ir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/chop/models.html">chop.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/chop/nn.html">chop.nn</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../modules/chop/nn_quantized.html">chop.nn.quantized</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../modules/chop/nn_quantized_functional.html">chop.nn.quantized.functional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../modules/chop/nn_quantized_modules.html">chop.nn.quantized.modules</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../modules/chop/passes.html">chop.passes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../modules/chop/passes_module.html">chop.passes.module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../modules/chop/module_analysis/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../modules/chop/module_transform/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../modules/chop/transform/onn.html">chop.passes.module.transforms.onn</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../modules/chop/passes_graph.html">chop.passes.graph</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../modules/chop/analysis/add_metadata.html">chop.passes.graph.analysis.add_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../modules/chop/analysis/autosharding.html">chop.passes.graph.analysis.autosharding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../modules/chop/analysis/init_metadata.html">chop.passes.graph.analysis.init_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../modules/chop/analysis/report.html">chop.passes.graph.analysis.report</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../modules/chop/analysis/statistical_profiler.html">chop.passes.graph.analysis.statistical_profiler.profile_statistics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../modules/chop/analysis/verify.html">chop.passes.graph.analysis.verify.verify</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../modules/chop/analysis/quantization.html">chop.passes.graph.calculate_avg_bits_mg_analysis_pass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../modules/chop/analysis/pruning.html">chop.passes.graph.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../modules/chop/analysis/runtime.html">chop.passes.graph.analysis.runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../modules/chop/transform/pruning.html">chop.passes.transform.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../modules/chop/transform/quantize.html">chop.passes.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../modules/chop/transform/utils.html">chop.passes.transform.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../modules/chop/transform/tensorrt.html">chop.passes.transform.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../modules/chop/interface/save_and_load.html">chop.passes.interface.save_and_load</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../modules/chop/interface/tensorrt.html">chop.passes.interface.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../modules/chop/interface/onnxrt.html">chop.passes.interface.onnxrt</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/chop/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/chop/tools.html">chop.tools</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Deep Learning Systems</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../modules/adls_2024.html">Advanced Deep Learning Systems: 2024/2025</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/labs_2024/lab_0_introduction.html">Lab 0: Introduction to Mase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/labs_2024/lab_1_compression.html">Lab 1: Model Compression (Quantization and Pruning)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/labs_2024/lab_2_nas.html">Lab 2: Neural Architecture Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/labs_2024/lab_3_mixed_precision_search.html">Lab 3: Mixed Precision Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/labs_2024/lab4-software.html">Lab 4 (Software Stream) Performance Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/labs_2024/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../modules/adls_2023.html">Advanced Deep Learning Systems: 2023/2024</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/labs_2023/lab1.html">Lab 1 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/labs_2023/lab2.html">Lab 2 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/labs_2023/lab3.html">Lab 3 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/labs_2023/lab4-software.html">Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../modules/labs_2023/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for chop.ir.graph.mase_graph</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">FunctionType</span><span class="p">,</span> <span class="n">ModuleType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dill</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">toml</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.fx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.fx.passes.graph_drawer</span><span class="w"> </span><span class="kn">import</span> <span class="n">FxGraphDrawer</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">PreTrainedModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">transformers.utils.fx</span><span class="w"> </span><span class="kn">import</span> <span class="n">symbolic_trace</span> <span class="k">as</span> <span class="n">hf_symbolic_trace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">transformers.utils.fx</span><span class="w"> </span><span class="kn">import</span> <span class="n">HFTracer</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.ir.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">MASE_IMPLICIT_FUNCS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">MASE_LEAF_LAYERS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.nn.quantized</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">quantized_func_map</span><span class="p">,</span>
+    <span class="n">quantized_module_map</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_logger</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.mase_metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">MaseMetadata</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="s2">&quot;INFO&quot;</span><span class="p">)</span>
+
+<span class="c1"># ----------------------------------------</span>
+<span class="c1">#   Mase Tracer</span>
+<span class="c1"># ----------------------------------------</span>
+
+
+<div class="viewcode-block" id="MaseTracer">
+<a class="viewcode-back" href="../../../../modules/chop/ir.html#chop.ir.graph.mase_graph.MaseTracer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MaseTracer</span><span class="p">(</span><span class="n">fx</span><span class="o">.</span><span class="n">Tracer</span><span class="p">):</span>
+<div class="viewcode-block" id="MaseTracer.__init__">
+<a class="viewcode-back" href="../../../../modules/chop/ir.html#chop.ir.graph.mase_graph.MaseTracer.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">custom_leaf_modules</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ModuleType</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">custom_leaf_layers</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">custom_leaf_functions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">param_shapes_constant</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Mase Tracer is an extended version of FX Tracer.</span>
+
+<span class="sd">        :param custom_leaf_modules: Python modules whose functions should be wrapped automatically</span>
+<span class="sd">            without needing to use fx.wrap(). Backward-compatibility for</span>
+<span class="sd">            this parameter is guaranteed, defaults to ()</span>
+<span class="sd">        :type custom_leaf_modules: tuple[ModuleType], optional</span>
+<span class="sd">        :param custom_leaf_layers: Python functions that should be wrapped automatically without</span>
+<span class="sd">            needing to use fx.wrap(). Backward compatibility for this</span>
+<span class="sd">            parameter is guaranteed, defaults to ()</span>
+<span class="sd">        :type custom_leaf_layers: tuple[torch.nn.Module], optional</span>
+<span class="sd">        :param custom_leaf_functions: _description_, defaults to ()</span>
+<span class="sd">        :type custom_leaf_functions: tuple[Callable], optional</span>
+<span class="sd">        :param param_shapes_constant: When this flag is set,  calls to shape,</span>
+<span class="sd">            size and a few other shape like attributes of a module&#39;s parameter</span>
+<span class="sd">            will be evaluated directly, rather than returning a new Proxy value</span>
+<span class="sd">            for an attribute access. Backward compatibility for this parameter</span>
+<span class="sd">            is guaranteed, defaults to False</span>
+<span class="sd">        :type param_shapes_constant: bool, optional</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">custom_leaf_layers</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">custom_leaf_layers</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">custom_leaf_modules</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">custom_leaf_modules</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">custom_leaf_functions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">custom_leaf_functions</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">param_shapes_constant</span> <span class="o">=</span> <span class="n">param_shapes_constant</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">custom_leaf_modules</span> <span class="o">+</span> <span class="p">(</span><span class="n">math</span><span class="p">,),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">custom_leaf_functions</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">param_shapes_constant</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MaseTracer.is_leaf_module">
+<a class="viewcode-back" href="../../../../modules/chop/ir.html#chop.ir.graph.mase_graph.MaseTracer.is_leaf_module">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_leaf_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">module_qualified_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">is_fx_built_in_leaf_module</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">is_leaf_module</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">module_qualified_name</span><span class="p">)</span>
+        <span class="n">is_mase_leaf_layers</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">MASE_LEAF_LAYERS</span><span class="p">)</span>
+        <span class="n">is_custom_layer</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom_leaf_layers</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">is_fx_built_in_leaf_module</span><span class="p">,</span>
+                <span class="n">is_mase_leaf_layers</span><span class="p">,</span>
+                <span class="n">is_custom_layer</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="trace_torch_module">
+<a class="viewcode-back" href="../../../../modules/chop/ir.html#chop.ir.graph.mase_graph.trace_torch_module">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">trace_torch_module</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
+    <span class="n">cf_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">custom_ops</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">hf_input_names</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Trace a torch.nn.Module using the MaseTracer. This function is a wrapper</span>
+<span class="sd">    around the HFTracer and MaseTracer, and is used to trace a torch.nn.Module</span>
+<span class="sd">    into a fx.GraphModule. The fx.GraphModule is a dataflow representation of</span>
+<span class="sd">    the model with software constraints and metadata. The MaseTracer is</span>
+<span class="sd">    used to trace the model, and the custom_ops are used to provide custom</span>
+<span class="sd">    operations to the tracer.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (torch.nn.Module): Input model to trace.</span>
+<span class="sd">        cf_args (Optional[Dict[str, Any]], optional): Concrete forward arguments to trace the model with. Defaults to None.</span>
+<span class="sd">        custom_ops (dict, optional): Custom operations to be used in the model. Defaults to None.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        fx.GraphModule: Traced model as a fx.GraphModule.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Forces contiguous memory layout for all parameters</span>
+    <span class="n">state_dict</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">state_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">state_dict</span><span class="p">)</span>
+
+    <span class="c1"># * HuggingFace model</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">PreTrainedModel</span><span class="p">):</span>
+        <span class="n">tracer_cls</span> <span class="o">=</span> <span class="n">HFTracer</span>
+
+        <span class="k">if</span> <span class="n">custom_ops</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">custom_modules</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">custom_ops</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;modules&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">custom_ops</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;modules&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;functions&quot;</span><span class="p">:</span> <span class="p">{}}</span>
+            <span class="n">custom_modules</span> <span class="o">=</span> <span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">wrap_is_leaf_module</span><span class="p">(</span><span class="n">hf_is_leaf_module</span><span class="p">):</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">is_leaf_module</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">module_qualified_name</span><span class="p">:</span> <span class="nb">str</span>
+            <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+                <span class="n">is_hf_built_in_leaf_module</span> <span class="o">=</span> <span class="n">hf_is_leaf_module</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="p">,</span>
+                    <span class="n">m</span><span class="p">,</span>
+                    <span class="n">module_qualified_name</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">is_custom_module</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">custom_modules</span><span class="p">)</span>
+                <span class="n">is_mase_leaf_layer</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">MASE_LEAF_LAYERS</span><span class="p">)</span>
+
+                <span class="k">return</span> <span class="nb">any</span><span class="p">(</span>
+                    <span class="p">(</span>
+                        <span class="n">is_hf_built_in_leaf_module</span><span class="p">,</span>
+                        <span class="n">is_custom_module</span><span class="p">,</span>
+                        <span class="n">is_mase_leaf_layer</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">is_leaf_module</span>
+
+        <span class="nb">setattr</span><span class="p">(</span>
+            <span class="n">tracer_cls</span><span class="p">,</span>
+            <span class="s2">&quot;is_leaf_module&quot;</span><span class="p">,</span>
+            <span class="n">wrap_is_leaf_module</span><span class="p">(</span><span class="n">tracer_cls</span><span class="o">.</span><span class="n">is_leaf_module</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="n">graph_module</span> <span class="o">=</span> <span class="n">hf_symbolic_trace</span><span class="p">(</span>
+            <span class="n">model</span><span class="p">,</span>
+            <span class="n">tracer_cls</span><span class="o">=</span><span class="n">tracer_cls</span><span class="p">,</span>
+            <span class="n">input_names</span><span class="o">=</span><span class="n">hf_input_names</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">graph_module</span><span class="o">.</span><span class="n">custom_ops</span> <span class="o">=</span> <span class="n">custom_ops</span>
+
+        <span class="c1"># ! TO DO: remove this legacy stuff</span>
+        <span class="n">graph_module</span><span class="o">.</span><span class="n">patched_op_names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">graph_module</span><span class="o">.</span><span class="n">patched_custom_layers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">graph_module</span><span class="o">.</span><span class="n">additional_inputs</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># * Other models</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># MASE internal auto-wrapped functions/layers</span>
+        <span class="n">custom_leaf_modules</span> <span class="o">=</span> <span class="p">()</span>
+        <span class="n">custom_leaf_functions</span> <span class="o">=</span> <span class="p">()</span>
+        <span class="n">custom_leaf_layers</span> <span class="o">=</span> <span class="p">()</span>
+        <span class="c1"># user defined custom layer:</span>
+        <span class="k">if</span> <span class="n">custom_ops</span><span class="p">:</span>
+            <span class="n">custom_leaf_functions</span> <span class="o">+=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">custom_ops</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;functions&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">custom_leaf_layers</span> <span class="o">+=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">custom_ops</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;modules&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="c1"># quantized functions/layers</span>
+        <span class="n">custom_leaf_functions</span> <span class="o">+=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">quantized_func_map</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="n">custom_leaf_layers</span> <span class="o">+=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">quantized_module_map</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="c1"># patched functions/layers</span>
+        <span class="n">patched_nodes</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;patched_nodes&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">patched_nodes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">custom_leaf_modules</span> <span class="o">+=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">patched_nodes</span><span class="p">[</span><span class="s2">&quot;modules&quot;</span><span class="p">])</span>
+            <span class="n">custom_leaf_functions</span> <span class="o">+=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">patched_nodes</span><span class="p">[</span><span class="s2">&quot;functions&quot;</span><span class="p">])</span>
+            <span class="n">custom_leaf_layers</span> <span class="o">+=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">patched_nodes</span><span class="p">[</span><span class="s2">&quot;layers&quot;</span><span class="p">])</span>
+
+        <span class="n">tracer</span> <span class="o">=</span> <span class="n">MaseTracer</span><span class="p">(</span>
+            <span class="n">custom_leaf_modules</span><span class="o">=</span><span class="n">custom_leaf_modules</span><span class="p">,</span>
+            <span class="n">custom_leaf_functions</span><span class="o">=</span><span class="n">custom_leaf_functions</span><span class="p">,</span>
+            <span class="n">custom_leaf_layers</span><span class="o">=</span><span class="n">custom_leaf_layers</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">graph_module</span> <span class="o">=</span> <span class="n">fx</span><span class="o">.</span><span class="n">GraphModule</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">tracer</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">cf_args</span><span class="p">))</span>
+        <span class="n">graph_module</span><span class="o">.</span><span class="n">custom_ops</span> <span class="o">=</span> <span class="n">custom_ops</span>
+
+        <span class="k">if</span> <span class="n">patched_nodes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">graph_module</span><span class="o">.</span><span class="n">patched_op_names</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">obj</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">patched_nodes</span><span class="p">[</span><span class="s2">&quot;layers&quot;</span><span class="p">]</span>
+                <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">patched_nodes</span><span class="p">[</span><span class="s2">&quot;functions&quot;</span><span class="p">]</span>
+            <span class="p">]</span>
+            <span class="c1"># these are layers where users may provide custom implementations</span>
+            <span class="n">graph_module</span><span class="o">.</span><span class="n">patched_custom_layers</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">patched_nodes</span><span class="p">[</span><span class="s2">&quot;layers&quot;</span><span class="p">]</span>
+            <span class="n">graph_module</span><span class="o">.</span><span class="n">additional_inputs</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">patched_nodes</span><span class="p">[</span><span class="s2">&quot;additional_inputs&quot;</span><span class="p">]</span>
+            <span class="n">graph_module</span><span class="o">.</span><span class="n">patched_nodes</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">patched_nodes</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">graph_module</span><span class="o">.</span><span class="n">patched_op_names</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">graph_module</span><span class="o">.</span><span class="n">patched_custom_layers</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">graph_module</span><span class="o">.</span><span class="n">additional_inputs</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">return</span> <span class="n">graph_module</span></div>
+
+
+
+<span class="c1"># ----------------------------------------</span>
+<span class="c1">#   Mase Graph IR</span>
+<span class="c1"># ----------------------------------------</span>
+
+
+<div class="viewcode-block" id="MaseGraph">
+<a class="viewcode-back" href="../../../../modules/chop/ir.html#chop.ir.graph.mase_graph.MaseGraph">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MaseGraph</span><span class="p">:</span>
+    <span class="n">implicit_nodes</span> <span class="o">=</span> <span class="n">MASE_IMPLICIT_FUNCS</span>
+
+<div class="viewcode-block" id="MaseGraph.__init__">
+<a class="viewcode-back" href="../../../../modules/chop/ir.html#chop.ir.graph.mase_graph.MaseGraph.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span> <span class="o">|</span> <span class="n">fx</span><span class="o">.</span><span class="n">GraphModule</span><span class="p">,</span>
+        <span class="n">cf_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">custom_ops</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">hf_input_names</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">skip_init_metadata</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">add_metadata_args</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;MaseGraph is a dataflow representation of a model with software constraints.</span>
+<span class="sd">        The MaseGraph can be constructed from a torch.nn.Module:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            from chop.ir.graph import MaseGraph</span>
+<span class="sd">            from transformers import BertModel</span>
+
+<span class="sd">            model = BertModel.from_pretrained(&quot;bert-base-uncased&quot;)</span>
+<span class="sd">            mase_graph = MaseGraph(model)</span>
+
+<span class="sd">            # Or, equivalently:</span>
+<span class="sd">            mase_graph = MaseGraph.from_module(model)</span>
+
+
+<span class="sd">        A MaseGraph can also be constructed from a pre-traced fx.GraphModule:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            from chop.ir.graph import MaseGraph</span>
+<span class="sd">            import torch</span>
+<span class="sd">            import torch.fx as fx</span>
+
+<span class="sd">            model = torch.nn.Linear(10, 10)</span>
+<span class="sd">            traced_model = fx.symbolic_trace(model)</span>
+<span class="sd">            mase_graph = MaseGraph(traced_model)</span>
+
+<span class="sd">        A MaseGraph can be exported as follows:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            from chop.ir.graph import MaseGraph</span>
+<span class="sd">            import torch</span>
+<span class="sd">            import torch.fx as fx</span>
+
+<span class="sd">            model = torch.nn.Linear(10, 10)</span>
+<span class="sd">            traced_model = fx.symbolic_trace(model)</span>
+<span class="sd">            mase_graph = MaseGraph(traced_model)</span>
+<span class="sd">            mase_graph.export(&quot;masegraph&quot;)</span>
+
+<span class="sd">        The MaseGraph can then be loaded from a checkpoint as follows:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            from chop.ir.graph import MaseGraph</span>
+
+<span class="sd">            mase_graph = MaseGraph.from_checkpoint(&quot;masegraph&quot;)</span>
+
+<span class="sd">        To visualize the MaseGraph, the `draw` method can be used:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            from chop.ir.graph import MaseGraph</span>
+
+<span class="sd">            mase_graph = MaseGraph.from_module(model)</span>
+<span class="sd">            mase_graph.draw(&quot;mase_graph.svg&quot;)</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            model (torch.nn.Module | fx.GraphModule): Input model to construct the MaseGraph.</span>
+<span class="sd">            cf_args (Optional[Dict[str, Any]], optional): Concrete forward arguments to trace the model with. Defaults to None.</span>
+<span class="sd">            custom_ops (dict, optional): Custom operations to be used in the model. Defaults to None.</span>
+<span class="sd">            hf_input_names (list, optional): Input names for HuggingFace models. Defaults to None.</span>
+<span class="sd">            skip_init_metadata (bool, optional): Skip initializing metadata for the nodes. Defaults to False.</span>
+<span class="sd">            add_metadata_args (dict, optional): Additional arguments for metadata initialization. Defaults to None.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the input model is not a torch.nn.Module or fx.Graph.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># is_huggingface flag is used in passes to automate dummy input generation etc</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">PreTrainedModel</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">is_huggingface</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">is_huggingface</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cf_args</span> <span class="o">=</span> <span class="n">cf_args</span>
+
+        <span class="c1"># Generate the GraphModule according to the model type</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">fx</span><span class="o">.</span><span class="n">GraphModule</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">patched_op_names</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">patched_custom_layers</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">additional_inputs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">trace_torch_module</span><span class="p">(</span>
+                <span class="n">model</span><span class="p">,</span>
+                <span class="n">cf_args</span><span class="p">,</span>
+                <span class="n">custom_ops</span><span class="p">,</span>
+                <span class="n">hf_input_names</span><span class="o">=</span><span class="n">hf_input_names</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Expected fx.GraphModule or nn.Module, but received model: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span></div>
+
+
+        <span class="c1"># Initialize metadata for each node</span>
+        <span class="c1"># todo: will need to move metadata analysis passes into chop.ir for this to work</span>
+        <span class="c1"># if not skip_init_metadata and add_metadata_args is not None:</span>
+        <span class="c1">#     mg, _ = passes.init_metadata_analysis_pass(self.fx_graph)</span>
+        <span class="c1">#     mg, _ = passes.add_common_metadata_analysis_pass(</span>
+        <span class="c1">#         mg,</span>
+        <span class="c1">#         pass_args=add_metadata_args,</span>
+        <span class="c1">#     )</span>
+
+<div class="viewcode-block" id="MaseGraph.from_module">
+<a class="viewcode-back" href="../../../../modules/chop/ir.html#chop.ir.graph.mase_graph.MaseGraph.from_module">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_module</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
+        <span class="n">cf_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">custom_ops</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{},</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct a MaseGraph from a torch.nn.Module.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            model (torch.nn.Module): Input model to construct the MaseGraph.</span>
+<span class="sd">            cf_args (Optional[Dict[str, Any]], optional): Concrete forward arguments to trace the model with. Defaults to None.</span>
+<span class="sd">            custom_ops (dict, optional): Custom operations to be used in the model. Defaults to {}.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MaseGraph: Constructed MaseGraph.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">model</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span>
+        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;model must be a torch.nn.Module. Received: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="n">graph_module</span> <span class="o">=</span> <span class="n">trace_torch_module</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">cf_args</span><span class="p">,</span> <span class="n">custom_ops</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">graph_module</span><span class="p">,</span>
+            <span class="n">cf_args</span><span class="o">=</span><span class="n">cf_args</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MaseGraph.from_checkpoint">
+<a class="viewcode-back" href="../../../../modules/chop/ir.html#chop.ir.graph.mase_graph.MaseGraph.from_checkpoint">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_checkpoint</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">checkpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">propagate_missing_metadata</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load a MaseGraph from a checkpoint. A MaseGraph checkpoint consists of two files:</span>
+<span class="sd">        {checkpoint}.pt and {checkpoint}.mz. {checkpoint}.pt contains the GraphModule,</span>
+<span class="sd">        and {checkpoint}.mz contains the MaseMetadata.</span>
+
+<span class="sd">        If propagate_missing_metadata is set to True, the MaseGraph will attempt to propagate</span>
+<span class="sd">        metadata for missing nodes. This is useful when the exported metadata is incomplete due</span>
+<span class="sd">        to serialization errors.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            checkpoint (str): Checkpoint to load the MaseGraph from.</span>
+<span class="sd">            propagate_missing_metadata (bool, optional): Propagate metadata for missing nodes. Defaults to True.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MaseGraph: Loaded MaseGraph.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">checkpoint</span><span class="si">}</span><span class="s2">.pt&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">loaded_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">weights_only</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">loaded_model</span><span class="p">,</span> <span class="n">fx</span><span class="o">.</span><span class="n">GraphModule</span>
+        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Expected fx.GraphModule, but received model: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">loaded_model</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="n">mg</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">loaded_model</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">checkpoint</span><span class="si">}</span><span class="s2">.mz&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">loaded_meta</span> <span class="o">=</span> <span class="n">dill</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="n">loaded_meta</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">dill</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">loaded_meta</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">mg</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">loaded_meta</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">parameters</span> <span class="o">=</span> <span class="n">loaded_meta</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">MaseMetadata</span><span class="p">(</span>
+                    <span class="n">node</span><span class="o">=</span><span class="n">node</span><span class="p">,</span>
+                    <span class="n">model</span><span class="o">=</span><span class="n">loaded_model</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">parameters</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># todo: propagate metadata for missing nodes</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Node </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> not found in loaded metadata.&quot;</span><span class="p">)</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">MaseMetadata</span><span class="p">(</span>
+                    <span class="n">node</span><span class="o">=</span><span class="n">node</span><span class="p">,</span>
+                    <span class="n">model</span><span class="o">=</span><span class="n">loaded_model</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="s2">&quot;class_for_deserialization&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;config&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;device&quot;</span><span class="p">,</span>
+        <span class="p">]:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mg</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mg</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">attr</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">mg</span></div>
+
+
+<div class="viewcode-block" id="MaseGraph.export">
+<a class="viewcode-back" href="../../../../modules/chop/ir.html#chop.ir.graph.mase_graph.MaseGraph.export">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">fname</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;masegraph&quot;</span><span class="p">,</span>
+        <span class="n">save_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;full_model&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Export the MaseGraph to a pair of files: {fname}.pt and {fname}.mz.</span>
+<span class="sd">        {fname}.pt contains the complete GraphModule (structure + weights),</span>
+<span class="sd">        and {fname}.mz contains the MaseMetadata.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            fname (str): Filename to save the MaseGraph to. Defaults to &quot;masegraph&quot;.</span>
+<span class="sd">            save_format (str): Format to save. &quot;full_model&quot; (default) or &quot;state_dict&quot;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">fname</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exporting MaseGraph to </span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">.pt, </span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">.mz&quot;</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Recompiling GraphModule to preserve any transforms...&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">recompile</span><span class="p">()</span>
+
+        <span class="c1"># The following parameters must be set as attributes in the GraphModule</span>
+        <span class="c1"># for tracing to work during deserialization. These get overwritten during</span>
+        <span class="c1"># transform passes so they are read from the MaseGraph attributes (which are</span>
+        <span class="c1"># set during the import process).</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Storing tracing parameters into mg.model for deserialization...&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="s2">&quot;class_for_deserialization&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;config&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;device&quot;</span><span class="p">,</span>
+        <span class="p">]:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting </span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">))</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exporting GraphModule to </span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">.pt&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">.pt&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">save_format</span> <span class="o">==</span> <span class="s2">&quot;state_dict&quot;</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Saving state_dict format&quot;</span><span class="p">)</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="n">f</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Saving full model format&quot;</span><span class="p">)</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exporting MaseMetadata to </span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">.mz&quot;</span><span class="p">)</span>
+
+        <span class="n">combined_meta</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+            <span class="n">parameters</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">pickled</span> <span class="o">=</span> <span class="n">dill</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
+                <span class="n">combined_meta</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">pickled</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to pickle </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="si">}</span><span class="s2"> node: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">.mz&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">dill</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">combined_meta</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MaseGraph.draw">
+<a class="viewcode-back" href="../../../../modules/chop/ir.html#chop.ir.graph.mase_graph.MaseGraph.draw">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="s2">&quot;mase_graph.svg&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Draw the MaseGraph using the FxGraphDrawer.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            file (str, optional): File to save the graph to. Defaults to &quot;mase_graph.svg&quot;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span><span class="w"> </span><span class="nn">pydot</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;pydot is required to draw the graph&quot;</span><span class="p">)</span>
+        <span class="n">drawer</span> <span class="o">=</span> <span class="n">FxGraphDrawer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;masegraph&quot;</span><span class="p">)</span>
+        <span class="n">dot_graph</span> <span class="o">=</span> <span class="n">drawer</span><span class="o">.</span><span class="n">get_dot_graph</span><span class="p">()</span>
+        <span class="c1"># some dot_graph contains .weight and .bias, this cause pydot to crash in plotting</span>
+        <span class="c1"># so we need to remove them</span>
+        <span class="c1"># for instance, in BERT, you have bert_embeddings_word_embeddings.weight as a node,</span>
+        <span class="c1"># this is not allowed in graphviz</span>
+
+        <span class="n">dot_string</span> <span class="o">=</span> <span class="n">dot_graph</span><span class="o">.</span><span class="n">to_string</span><span class="p">()</span>
+        <span class="n">dot_string</span> <span class="o">=</span> <span class="n">dot_string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.weight&quot;</span><span class="p">,</span> <span class="s2">&quot;_weight&quot;</span><span class="p">)</span>
+        <span class="n">dot_string</span> <span class="o">=</span> <span class="n">dot_string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.bias&quot;</span><span class="p">,</span> <span class="s2">&quot;_bias&quot;</span><span class="p">)</span>
+        <span class="c1"># the following code snippet is how to plot in networkx, but it does not look nice</span>
+        <span class="c1"># new_dot_graph = pydot.graph_from_dot_data(dot_string)</span>
+        <span class="c1"># new_dot_graph = new_dot_graph[0]</span>
+        <span class="c1"># graph = nx.drawing.nx_pydot.from_pydot(dot_graph)</span>
+        <span class="c1"># nx.draw(graph)</span>
+        <span class="c1"># plt.tight_layout()</span>
+        <span class="c1"># plt.savefig(&quot;test.png&quot;, format=&quot;PNG&quot;)</span>
+        <span class="n">dot_graph</span> <span class="o">=</span> <span class="n">pydot</span><span class="o">.</span><span class="n">graph_from_dot_data</span><span class="p">(</span><span class="n">dot_string</span><span class="p">)</span>
+        <span class="n">dot_graph</span> <span class="o">=</span> <span class="n">dot_graph</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">dot_graph</span><span class="o">.</span><span class="n">write_svg</span><span class="p">(</span><span class="n">file</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fx_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The fx.Graph representation of the MaseGraph.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            fx.Graph: fx.Graph representation of the MaseGraph.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">graph</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The nodes of the MaseGraph.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: List of nodes in the MaseGraph.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">modules</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get all the modules in the model.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: Dictionary of all the modules in the model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">named_modules</span><span class="p">())</span>
+
+    <span class="nd">@fx_graph</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fx_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">fx</span><span class="o">.</span><span class="n">Graph</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span></div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By DeepWok
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, DeepWok.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

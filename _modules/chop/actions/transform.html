@@ -1,0 +1,954 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>chop.actions.transform &#8212; MASE 0.0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_style.css?v=92936fa5" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/modern.css?v=803738c0" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="../../../_static/documentation_options.js?v=e645c8fa"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+    <script src="../../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+    <script src="../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+    <script src="../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+    <script src="../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/chop/actions/transform';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">MASE 0.0.1 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../modules/documentation/installation.html">Installation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/documentation/getting_started/Get-started-using-uv.html">Getting Started using uv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/documentation/getting_started/Get-started-using-Docker.html">Getting Started using Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/documentation/getting_started/Get-started-students.html">Additional Instructions for Imperial College Students</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/documentation/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../modules/documentation/tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/documentation/tutorials/tutorial_1_introduction_to_mase.html">Tutorial 1: Introduction to the Mase IR, MaseGraph and Torch FX passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/documentation/tutorials/tutorial_2_lora_finetune.html">Tutorial 2: Finetuning Bert for Sequence Classification using a LoRA adapter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/documentation/tutorials/tutorial_3_qat.html">Tutorial 3: Running Quantization-Aware Training (QAT) on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/documentation/tutorials/tutorial_4_pruning.html">Tutorial 4: Unstructured Pruning on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/documentation/tutorials/tutorial_5_nas_optuna.html">Tutorial 5: Neural Architecture Search (NAS) with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/documentation/tutorials/tutorial_6_mixed_precision_search.html">Tutorial 6: Mixed Precision Quantization Search with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/documentation/tutorials/tutorial_7_distributed_deployment.html">Tutorial 7: Deploying a Model for Inference on Distributed Clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/documentation/tutorials/tutorial_9_kernel_fusion.html">Tutorial 9: Running Kernel Fusion for Inference Acceleration on GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/documentation/tutorials/advanced/tensorRT_quantization_tutorial.html">Advanced: TensorRT Quantization Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/documentation/tutorials/advanced/onnxrt_quantization_tutorial.html">Advanced: ONNX Runtime Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/documentation/tutorials/advanced/cli.html">Advanced: Using Mase CLI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/documentation/tutorials/developer/Add-model-to-machop.html">Developer: Guide on how to add a new model into Machop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/documentation/tutorials/developer/doc_writing.html">Developer: How to write documentations in MASE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/documentation/tutorials/developer/how_to_extend_search.html">Developer: How to extend search</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/documentation/health.html">Repository Health</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../modules/documentation/specifications.html">Coding Style Specifications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/documentation/specifications/C-coding-style-specifications.html">C/C++ Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/documentation/specifications/Python-coding-style-specifications.html">Python Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/documentation/specifications/Verilog-coding-style-specifications.html">Verilog Coding Style Specifications</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../modules/machop.html">Machop Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/chop/actions.html">chop.actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/chop/datasets.html">chop.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/chop/distributed.html">chop.distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/chop/ir.html">chop.ir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/chop/models.html">chop.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/chop/nn.html">chop.nn</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../modules/chop/nn_quantized.html">chop.nn.quantized</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../modules/chop/nn_quantized_functional.html">chop.nn.quantized.functional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../modules/chop/nn_quantized_modules.html">chop.nn.quantized.modules</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../modules/chop/passes.html">chop.passes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../modules/chop/passes_module.html">chop.passes.module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../modules/chop/module_analysis/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../modules/chop/module_transform/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../modules/chop/transform/onn.html">chop.passes.module.transforms.onn</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../modules/chop/passes_graph.html">chop.passes.graph</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../modules/chop/analysis/add_metadata.html">chop.passes.graph.analysis.add_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../modules/chop/analysis/autosharding.html">chop.passes.graph.analysis.autosharding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../modules/chop/analysis/init_metadata.html">chop.passes.graph.analysis.init_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../modules/chop/analysis/report.html">chop.passes.graph.analysis.report</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../modules/chop/analysis/statistical_profiler.html">chop.passes.graph.analysis.statistical_profiler.profile_statistics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../modules/chop/analysis/verify.html">chop.passes.graph.analysis.verify.verify</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../modules/chop/analysis/quantization.html">chop.passes.graph.calculate_avg_bits_mg_analysis_pass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../modules/chop/analysis/pruning.html">chop.passes.graph.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../modules/chop/analysis/runtime.html">chop.passes.graph.analysis.runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../modules/chop/transform/pruning.html">chop.passes.transform.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../modules/chop/transform/quantize.html">chop.passes.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../modules/chop/transform/utils.html">chop.passes.transform.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../modules/chop/transform/tensorrt.html">chop.passes.transform.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../modules/chop/interface/save_and_load.html">chop.passes.interface.save_and_load</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../modules/chop/interface/tensorrt.html">chop.passes.interface.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../modules/chop/interface/onnxrt.html">chop.passes.interface.onnxrt</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/chop/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/chop/tools.html">chop.tools</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Deep Learning Systems</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../modules/adls_2024.html">Advanced Deep Learning Systems: 2024/2025</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/labs_2024/lab_0_introduction.html">Lab 0: Introduction to Mase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/labs_2024/lab_1_compression.html">Lab 1: Model Compression (Quantization and Pruning)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/labs_2024/lab_2_nas.html">Lab 2: Neural Architecture Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/labs_2024/lab_3_mixed_precision_search.html">Lab 3: Mixed Precision Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/labs_2024/lab4-software.html">Lab 4 (Software Stream) Performance Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/labs_2024/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../modules/adls_2023.html">Advanced Deep Learning Systems: 2023/2024</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/labs_2023/lab1.html">Lab 1 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/labs_2023/lab2.html">Lab 2 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/labs_2023/lab3.html">Lab 3 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/labs_2023/lab4-software.html">Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/labs_2023/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for chop.actions.transform</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.passes.graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">PASSES</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.passes.graph.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">add_common_metadata_analysis_pass</span><span class="p">,</span>
+    <span class="n">add_software_metadata_analysis_pass</span><span class="p">,</span>
+    <span class="n">init_metadata_analysis_pass</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.ir.graph.mase_graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">MaseGraph</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.passes.graph.interface</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">load_mase_graph_interface_pass</span><span class="p">,</span>
+    <span class="n">save_mase_graph_interface_pass</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.passes.graph.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy_mase_graph</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.tools.checkpoint_load</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.tools.config_load</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_config</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.tools.get_input</span><span class="w"> </span><span class="kn">import</span> <span class="n">InputGenerator</span><span class="p">,</span> <span class="n">get_cf_args</span><span class="p">,</span> <span class="n">get_dummy_input</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.tools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_accelerator</span><span class="p">,</span> <span class="n">to_numpy_if_tensor</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.passes.graph.transforms</span><span class="w"> </span><span class="kn">import</span> <span class="n">metadata_value_type_cast_transform_pass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.passes.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">PASSES</span> <span class="k">as</span> <span class="n">MODULE_PASSES</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="pre_transform_load">
+<a class="viewcode-back" href="../../../modules/chop/actions.html#chop.actions.transform.pre_transform_load">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pre_transform_load</span><span class="p">(</span>
+    <span class="n">load_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">load_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load the model if a checkpoint is provided.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        load_name (str): _description_</span>
+<span class="sd">        load_type (str): _description_</span>
+<span class="sd">        model (torch.nn.Module): _description_</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        _type_: _description_</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">load_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">load_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;pt&quot;</span><span class="p">,</span> <span class="s2">&quot;pl&quot;</span><span class="p">]:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">load_model</span><span class="p">(</span><span class="n">load_name</span><span class="o">=</span><span class="n">load_name</span><span class="p">,</span> <span class="n">load_type</span><span class="o">=</span><span class="n">load_type</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+
+<div class="viewcode-block" id="transform">
+<a class="viewcode-back" href="../../../modules/chop/actions.html#chop.actions.transform.transform">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
+    <span class="n">model_info</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+    <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">data_module</span><span class="p">,</span>
+    <span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">save_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">load_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">load_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">accelerator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Transform the model based on the configuration.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (torch.nn.Module): _description_</span>
+<span class="sd">        model_info (dict): _description_</span>
+<span class="sd">        model_name (str): _description_</span>
+<span class="sd">        data_module (_type_): _description_</span>
+<span class="sd">        task (str): _description_</span>
+<span class="sd">        config (str): _description_</span>
+<span class="sd">        save_dir (str, optional): _description_. Defaults to None.</span>
+<span class="sd">        load_name (str, optional): _description_. Defaults to None.</span>
+<span class="sd">        load_type (str, optional): _description_. Defaults to None.</span>
+<span class="sd">        accelerator (str, optional): _description_. Defaults to &quot;auto&quot;.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: _description_</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">accelerator</span> <span class="o">=</span> <span class="n">parse_accelerator</span><span class="p">(</span><span class="n">accelerator</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">pre_transform_load</span><span class="p">(</span><span class="n">load_name</span><span class="o">=</span><span class="n">load_name</span><span class="p">,</span> <span class="n">load_type</span><span class="o">=</span><span class="n">load_type</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">accelerator</span><span class="p">)</span>
+
+    <span class="n">config</span> <span class="o">=</span> <span class="n">load_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">transform_config</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;transform&quot;</span><span class="p">]</span>
+    <span class="n">style</span> <span class="o">=</span> <span class="n">transform_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;style&quot;</span><span class="p">,</span> <span class="s2">&quot;graph&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">style</span> <span class="o">==</span> <span class="s2">&quot;graph&quot;</span><span class="p">:</span>
+        <span class="n">transform_graph</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">model_info</span><span class="o">=</span><span class="n">model_info</span><span class="p">,</span>
+            <span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+            <span class="n">data_module</span><span class="o">=</span><span class="n">data_module</span><span class="p">,</span>
+            <span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+            <span class="n">save_dir</span><span class="o">=</span><span class="n">save_dir</span><span class="p">,</span>
+            <span class="n">load_name</span><span class="o">=</span><span class="n">load_name</span><span class="p">,</span>
+            <span class="n">load_type</span><span class="o">=</span><span class="n">load_type</span><span class="p">,</span>
+            <span class="n">accelerator</span><span class="o">=</span><span class="n">accelerator</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">style</span> <span class="o">==</span> <span class="s2">&quot;module&quot;</span><span class="p">:</span>
+        <span class="n">transform_module</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">model_info</span><span class="o">=</span><span class="n">model_info</span><span class="p">,</span>
+            <span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+            <span class="n">data_module</span><span class="o">=</span><span class="n">data_module</span><span class="p">,</span>
+            <span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+            <span class="n">save_dir</span><span class="o">=</span><span class="n">save_dir</span><span class="p">,</span>
+            <span class="n">load_name</span><span class="o">=</span><span class="n">load_name</span><span class="p">,</span>
+            <span class="n">load_type</span><span class="o">=</span><span class="n">load_type</span><span class="p">,</span>
+            <span class="n">accelerator</span><span class="o">=</span><span class="n">accelerator</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Style </span><span class="si">{</span><span class="n">style</span><span class="si">}</span><span class="s2"> is not supported!&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="transform_module">
+<a class="viewcode-back" href="../../../modules/chop/actions.html#chop.actions.transform.transform_module">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">transform_module</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
+    <span class="n">model_info</span><span class="p">,</span>
+    <span class="n">model_name</span><span class="p">,</span>
+    <span class="n">data_module</span><span class="p">,</span>
+    <span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">save_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">load_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">load_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">accelerator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Transform the model at Pytorch module level.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (torch.nn.Module): _description_</span>
+<span class="sd">        model_info (_type_): _description_</span>
+<span class="sd">        model_name (_type_): _description_</span>
+<span class="sd">        data_module (_type_): _description_</span>
+<span class="sd">        task (str): _description_</span>
+<span class="sd">        config (str): _description_</span>
+<span class="sd">        save_dir (str, optional): _description_. Defaults to None.</span>
+<span class="sd">        load_name (str, optional): _description_. Defaults to None.</span>
+<span class="sd">        load_type (str, optional): _description_. Defaults to None.</span>
+<span class="sd">        accelerator (str, optional): _description_. Defaults to &quot;auto&quot;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        _type_: _description_</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">accelerator</span> <span class="o">=</span> <span class="n">parse_accelerator</span><span class="p">(</span><span class="n">accelerator</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">pre_transform_load</span><span class="p">(</span><span class="n">load_name</span><span class="o">=</span><span class="n">load_name</span><span class="p">,</span> <span class="n">load_type</span><span class="o">=</span><span class="n">load_type</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">accelerator</span><span class="p">)</span>
+    <span class="n">save_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">save_dir</span><span class="p">)</span>
+    <span class="n">save_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">load_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">load_model</span><span class="p">(</span><span class="n">load_name</span><span class="p">,</span> <span class="n">load_type</span><span class="o">=</span><span class="n">load_type</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">load_type</span><span class="si">}</span><span class="s2">&#39; checkpoint loaded before training&quot;</span><span class="p">)</span>
+
+    <span class="n">pass_config</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;passes&quot;</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">pass_name</span><span class="p">,</span> <span class="n">pass_config</span> <span class="ow">in</span> <span class="n">pass_config</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">pass_name</span><span class="p">:</span> <span class="nb">str</span>
+        <span class="n">pass_config</span><span class="p">:</span> <span class="nb">dict</span>
+        <span class="k">match</span> <span class="n">pass_name</span><span class="p">:</span>
+            <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+                <span class="n">my_pass</span> <span class="o">=</span> <span class="n">MODULE_PASSES</span><span class="p">[</span><span class="n">pass_name</span><span class="p">]</span>
+                <span class="n">model</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">my_pass</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_config</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">save_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">transformed_ckpt</span> <span class="o">=</span> <span class="n">save_dir</span> <span class="o">/</span> <span class="s2">&quot;transformed_ckpt&quot;</span>
+        <span class="n">state_dict_ckpt</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">transformed_ckpt</span><span class="p">,</span> <span class="s2">&quot;state_dict.pt&quot;</span><span class="p">)</span>
+        <span class="n">transformed_ckpt</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">state_dict</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">state_dict</span><span class="p">,</span> <span class="n">state_dict_ckpt</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;model saved at </span><span class="si">{</span><span class="n">state_dict_ckpt</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+
+<div class="viewcode-block" id="transform_graph">
+<a class="viewcode-back" href="../../../modules/chop/actions.html#chop.actions.transform.transform_graph">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">transform_graph</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
+    <span class="n">model_info</span><span class="p">,</span>
+    <span class="n">model_name</span><span class="p">,</span>
+    <span class="n">data_module</span><span class="p">,</span>
+    <span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">save_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">load_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">load_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">accelerator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Transform the model at FX graph level.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (torch.nn.Module): _description_</span>
+<span class="sd">        model_info (_type_): _description_</span>
+<span class="sd">        model_name (_type_): _description_</span>
+<span class="sd">        data_module (_type_): _description_</span>
+<span class="sd">        task (str): _description_</span>
+<span class="sd">        config (str): _description_</span>
+<span class="sd">        save_dir (str, optional): _description_. Defaults to None.</span>
+<span class="sd">        load_name (str, optional): _description_. Defaults to None.</span>
+<span class="sd">        load_type (str, optional): _description_. Defaults to None.</span>
+<span class="sd">        accelerator (str, optional): _description_. Defaults to &quot;auto&quot;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        _type_: _description_</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">accelerator</span> <span class="o">=</span> <span class="n">parse_accelerator</span><span class="p">(</span><span class="n">accelerator</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">pre_transform_load</span><span class="p">(</span><span class="n">load_name</span><span class="o">=</span><span class="n">load_name</span><span class="p">,</span> <span class="n">load_type</span><span class="o">=</span><span class="n">load_type</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">accelerator</span><span class="p">)</span>
+    <span class="n">save_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">save_dir</span><span class="p">)</span>
+    <span class="n">save_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># concrete forward args for freezing dynamic control flow in forward pass</span>
+    <span class="k">if</span> <span class="s2">&quot;cf_args&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">cf_args</span> <span class="o">=</span> <span class="n">get_cf_args</span><span class="p">(</span><span class="n">model_info</span><span class="o">=</span><span class="n">model_info</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cf_args</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;cf_args&quot;</span><span class="p">]</span>
+
+    <span class="c1"># graph generation</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">MaseGraph</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">cf_args</span><span class="o">=</span><span class="n">cf_args</span><span class="p">)</span>
+    <span class="c1"># graph_metadata = Mase</span>
+    <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">init_metadata_analysis_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="c1"># create or load metadata.parameters and mase_graph.model</span>
+    <span class="k">if</span> <span class="n">load_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">load_type</span> <span class="o">==</span> <span class="s2">&quot;mz&quot;</span><span class="p">:</span>
+        <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">load_mase_graph_interface_pass</span><span class="p">(</span>
+            <span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;load_dir&quot;</span><span class="p">:</span> <span class="n">load_name</span><span class="p">}</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dummy_in</span> <span class="o">=</span> <span class="n">get_dummy_input</span><span class="p">(</span>
+            <span class="n">model_info</span><span class="o">=</span><span class="n">model_info</span><span class="p">,</span>
+            <span class="n">data_module</span><span class="o">=</span><span class="n">data_module</span><span class="p">,</span>
+            <span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="p">,</span>
+            <span class="n">device</span><span class="o">=</span><span class="n">accelerator</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">additional_inputs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">dummy_in</span> <span class="o">=</span> <span class="n">dummy_in</span> <span class="o">|</span> <span class="n">graph</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">additional_inputs</span>
+        <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">add_common_metadata_analysis_pass</span><span class="p">(</span>
+            <span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dummy_in&quot;</span><span class="p">:</span> <span class="n">dummy_in</span><span class="p">}</span>
+        <span class="p">)</span>
+        <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">add_software_metadata_analysis_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="n">passes_config</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;passes&quot;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">pass_name</span><span class="p">,</span> <span class="n">pass_config</span> <span class="ow">in</span> <span class="n">passes_config</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">pass_name</span><span class="p">:</span> <span class="nb">str</span>
+        <span class="n">pass_config</span><span class="p">:</span> <span class="nb">dict</span>
+        <span class="k">match</span> <span class="n">pass_name</span><span class="p">:</span>
+            <span class="k">case</span> <span class="s2">&quot;tensorrt&quot;</span><span class="p">:</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">metadata_value_type_cast_transform_pass</span><span class="p">(</span>
+                    <span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;fn&quot;</span><span class="p">:</span> <span class="n">to_numpy_if_tensor</span><span class="p">}</span>
+                <span class="p">)</span>
+                <span class="n">ori_graph</span> <span class="o">=</span> <span class="n">deepcopy_mase_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+                <span class="n">pass_save_dir</span> <span class="o">=</span> <span class="n">save_dir</span> <span class="o">/</span> <span class="s2">&quot;tensorrt&quot;</span>
+
+                <span class="n">pass_config</span><span class="p">[</span><span class="s2">&quot;task&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">task</span>
+                <span class="n">pass_config</span><span class="p">[</span><span class="s2">&quot;dataset&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;dataset&quot;</span><span class="p">]</span>
+                <span class="n">pass_config</span><span class="p">[</span><span class="s2">&quot;batch_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;batch_size&quot;</span><span class="p">]</span>
+                <span class="n">pass_config</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span>
+                <span class="n">pass_config</span><span class="p">[</span><span class="s2">&quot;data_module&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_module</span>
+                <span class="n">pass_config</span><span class="p">[</span><span class="s2">&quot;accelerator&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">accelerator</span><span class="o">.</span><span class="n">type</span>
+                <span class="k">if</span> <span class="n">accelerator</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span><span class="p">:</span>
+                    <span class="c1"># TODO this seems innefective - known issue - https://github.com/NVIDIA/TensorRT/issues/2468</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;CUDA_MODULE_LOADING&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;LAZY&quot;</span>
+
+                <span class="c1"># Firstly fake quantize the model for calibration (only if using int8 precision otherwise skipped)</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="s2">&quot;tensorrt_fake_quantize&quot;</span><span class="p">](</span>
+                    <span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_config</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Summarize to show what has been quantized</span>
+                <span class="n">PASSES</span><span class="p">[</span><span class="s2">&quot;summarize_quantization&quot;</span><span class="p">](</span>
+                    <span class="n">graph</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;save_dir&quot;</span><span class="p">:</span> <span class="n">pass_save_dir</span><span class="p">,</span> <span class="s2">&quot;original_graph&quot;</span><span class="p">:</span> <span class="n">ori_graph</span><span class="p">}</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Then calibrate the model using the fake quantization to set AMAXs</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="s2">&quot;tensorrt_calibrate&quot;</span><span class="p">](</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_config</span><span class="p">)</span>
+
+                <span class="c1"># Apply post-quantization fine tuning (Quantization Aware Training)</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="s2">&quot;tensorrt_fine_tune&quot;</span><span class="p">](</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_config</span><span class="p">)</span>
+
+                <span class="c1"># Apply fp16 or layer-wise mixed precision quantization if necessary and convert the model to TensorRT format</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">runtime_meta</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="s2">&quot;tensorrt&quot;</span><span class="p">](</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_config</span><span class="p">)</span>
+
+                <span class="c1"># Perform runtime analysis on original and new graph</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="s2">&quot;runtime_analysis&quot;</span><span class="p">](</span><span class="n">ori_graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_config</span><span class="p">)</span>
+
+                <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="s2">&quot;runtime_analysis&quot;</span><span class="p">](</span>
+                    <span class="n">runtime_meta</span><span class="p">[</span><span class="s2">&quot;trt_engine_path&quot;</span><span class="p">],</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_config</span>
+                <span class="p">)</span>
+
+            <span class="k">case</span> <span class="s2">&quot;onnxruntime&quot;</span><span class="p">:</span>
+                <span class="n">pass_save_dir</span> <span class="o">=</span> <span class="n">save_dir</span> <span class="o">/</span> <span class="s2">&quot;onnxruntime&quot;</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">metadata_value_type_cast_transform_pass</span><span class="p">(</span>
+                    <span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;fn&quot;</span><span class="p">:</span> <span class="n">to_numpy_if_tensor</span><span class="p">}</span>
+                <span class="p">)</span>
+                <span class="n">ori_graph</span> <span class="o">=</span> <span class="n">deepcopy_mase_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+                <span class="n">pass_config</span><span class="p">[</span><span class="s2">&quot;data_module&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_module</span>
+
+                <span class="c1"># crop the train dataloader to behave as the calibrated dataloader</span>
+                <span class="n">pass_config</span><span class="p">[</span><span class="s2">&quot;data_module&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">train_dataloader</span>
+
+                <span class="n">pass_config</span><span class="p">[</span><span class="s2">&quot;task&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">task</span>
+                <span class="n">pass_config</span><span class="p">[</span><span class="s2">&quot;accelerator&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">accelerator</span><span class="o">.</span><span class="n">type</span>
+                <span class="n">pass_config</span><span class="p">[</span><span class="s2">&quot;batch_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;batch_size&quot;</span><span class="p">]</span>
+                <span class="n">pass_config</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span>
+                <span class="n">pass_config</span><span class="p">[</span><span class="s2">&quot;dataset&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;dataset&quot;</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">accelerator</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span><span class="p">:</span>
+                    <span class="c1"># TODO this seems innefective - known issue - https://github.com/NVIDIA/TensorRT/issues/2468</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;CUDA_MODULE_LOADING&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;LAZY&quot;</span>
+
+                <span class="n">graph</span><span class="p">,</span> <span class="n">runtime_meta</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="s2">&quot;onnxruntime&quot;</span><span class="p">](</span>
+                    <span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_config</span>
+                <span class="p">)</span>
+
+                <span class="c1"># if user has set runtime_anaylsis, run the runtime analysis pass</span>
+                <span class="k">if</span> <span class="s2">&quot;runtime_analysis&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pass_config</span><span class="p">:</span>
+                    <span class="k">break</span>
+
+                <span class="c1"># Extract the &#39;runtime_analysis&#39; dictionary by stripping the config</span>
+                <span class="n">runtime_analysis</span> <span class="o">=</span> <span class="n">pass_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;runtime_analysis&quot;</span><span class="p">,</span> <span class="p">{})</span>
+                <span class="n">pass_config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">runtime_analysis</span><span class="p">)</span>
+
+                <span class="n">original_graph_analysis</span> <span class="o">=</span> <span class="n">pass_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                    <span class="s2">&quot;original_graph_analysis&quot;</span><span class="p">,</span> <span class="kc">True</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">original_graph_analysis</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Performing runtime analysis on original graph...&quot;</span><span class="p">)</span>
+                    <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="s2">&quot;runtime_analysis&quot;</span><span class="p">](</span><span class="n">ori_graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_config</span><span class="p">)</span>
+                <span class="n">optimized_graph_analysis</span> <span class="o">=</span> <span class="n">pass_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                    <span class="s2">&quot;optimized_graph_analysis&quot;</span><span class="p">,</span> <span class="kc">True</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">optimized_graph_analysis</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                        <span class="s2">&quot;Performing runtime analysis on onnx-optimized graph...&quot;</span>
+                    <span class="p">)</span>
+                    <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="s2">&quot;runtime_analysis&quot;</span><span class="p">](</span>
+                        <span class="n">runtime_meta</span><span class="p">[</span><span class="s2">&quot;onnx_path&quot;</span><span class="p">],</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_config</span>
+                    <span class="p">)</span>
+
+                <span class="c1"># Peform runtime analysis on quantized forms if appropriate</span>
+                <span class="n">quantized_graph_analysis</span> <span class="o">=</span> <span class="n">pass_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                    <span class="s2">&quot;quantized_graph_analysis&quot;</span><span class="p">,</span> <span class="kc">True</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">quantized_graph_analysis</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">quant_types</span> <span class="o">=</span> <span class="n">pass_config</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">][</span><span class="s2">&quot;config&quot;</span><span class="p">][</span><span class="s2">&quot;quantize_types&quot;</span><span class="p">]</span>
+                    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                        <span class="n">quant_types</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="n">quant_type</span> <span class="ow">in</span> <span class="n">quant_types</span><span class="p">:</span>
+                        <span class="k">match</span> <span class="n">quant_type</span><span class="p">:</span>
+                            <span class="k">case</span> <span class="s2">&quot;static&quot;</span><span class="p">:</span>
+                                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                                    <span class="s2">&quot;Performing runtime analysis on static quantized graph...&quot;</span>
+                                <span class="p">)</span>
+                                <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="s2">&quot;runtime_analysis&quot;</span><span class="p">](</span>
+                                    <span class="n">runtime_meta</span><span class="p">[</span><span class="s2">&quot;onnx_static_quantized_path&quot;</span><span class="p">],</span>
+                                    <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_config</span><span class="p">,</span>
+                                <span class="p">)</span>
+                            <span class="k">case</span> <span class="s2">&quot;dynamic&quot;</span><span class="p">:</span>
+                                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                                    <span class="s2">&quot;Performing runtime analysis on dynamic quantized graph...&quot;</span>
+                                <span class="p">)</span>
+                                <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="s2">&quot;runtime_analysis&quot;</span><span class="p">](</span>
+                                    <span class="n">runtime_meta</span><span class="p">[</span><span class="s2">&quot;onnx_dynamic_quantized_path&quot;</span><span class="p">],</span>
+                                    <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_config</span><span class="p">,</span>
+                                <span class="p">)</span>
+                            <span class="k">case</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
+                                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                                    <span class="s2">&quot;Performing runtime analysis on auto mixed precision quantized graph...&quot;</span>
+                                <span class="p">)</span>
+                                <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="s2">&quot;runtime_analysis&quot;</span><span class="p">](</span>
+                                    <span class="n">runtime_meta</span><span class="p">[</span><span class="s2">&quot;onnx_auto_mixed_precision_path&quot;</span><span class="p">],</span>
+                                    <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_config</span><span class="p">,</span>
+                                <span class="p">)</span>
+
+            <span class="k">case</span> <span class="s2">&quot;quantize&quot;</span><span class="p">:</span>
+                <span class="n">pass_save_dir</span> <span class="o">=</span> <span class="n">save_dir</span> <span class="o">/</span> <span class="s2">&quot;quantize&quot;</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">metadata_value_type_cast_transform_pass</span><span class="p">(</span>
+                    <span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;fn&quot;</span><span class="p">:</span> <span class="n">to_numpy_if_tensor</span><span class="p">}</span>
+                <span class="p">)</span>
+                <span class="n">ori_graph</span> <span class="o">=</span> <span class="n">deepcopy_mase_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="s2">&quot;quantize&quot;</span><span class="p">](</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_config</span><span class="p">)</span>
+                <span class="n">PASSES</span><span class="p">[</span><span class="s2">&quot;summarize_quantization&quot;</span><span class="p">](</span>
+                    <span class="n">graph</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;save_dir&quot;</span><span class="p">:</span> <span class="n">pass_save_dir</span><span class="p">,</span> <span class="s2">&quot;original_graph&quot;</span><span class="p">:</span> <span class="n">ori_graph</span><span class="p">}</span>
+                <span class="p">)</span>
+            <span class="k">case</span> <span class="s2">&quot;ann2snn&quot;</span><span class="p">:</span>
+                <span class="n">input_generator</span> <span class="o">=</span> <span class="n">InputGenerator</span><span class="p">(</span>
+                    <span class="n">model_info</span><span class="o">=</span><span class="n">model_info</span><span class="p">,</span>
+                    <span class="n">data_module</span><span class="o">=</span><span class="n">data_module</span><span class="p">,</span>
+                    <span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="p">,</span>
+                    <span class="n">which_dataloader</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">pass_config</span><span class="p">[</span><span class="s2">&quot;train_data_loader&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">input_generator</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="n">pass_name</span><span class="p">](</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_config</span><span class="p">)</span>
+            <span class="k">case</span> <span class="s2">&quot;profile_statistics&quot;</span><span class="p">:</span>
+                <span class="n">input_generator</span> <span class="o">=</span> <span class="n">InputGenerator</span><span class="p">(</span>
+                    <span class="n">model_info</span><span class="o">=</span><span class="n">model_info</span><span class="p">,</span>
+                    <span class="n">data_module</span><span class="o">=</span><span class="n">data_module</span><span class="p">,</span>
+                    <span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="p">,</span>
+                    <span class="n">which_dataloader</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">pass_config</span><span class="p">[</span><span class="s2">&quot;input_generator&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">input_generator</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="n">pass_name</span><span class="p">](</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_config</span><span class="p">)</span>
+            <span class="k">case</span> <span class="s2">&quot;report_graph&quot;</span><span class="p">:</span>
+                <span class="n">pass_file_name</span> <span class="o">=</span> <span class="n">pass_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                    <span class="s2">&quot;file_name&quot;</span><span class="p">,</span> <span class="n">save_dir</span> <span class="o">/</span> <span class="s2">&quot;report_graph.txt&quot;</span>
+                <span class="p">)</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="n">pass_name</span><span class="p">](</span><span class="n">graph</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="n">pass_file_name</span><span class="p">)</span>
+            <span class="k">case</span> <span class="s2">&quot;report_node_type&quot;</span><span class="p">:</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="n">pass_name</span><span class="p">](</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+            <span class="k">case</span> <span class="s2">&quot;report_node_meta_param&quot;</span><span class="p">:</span>
+                <span class="c1"># {&quot;save_path&quot;: ..., &quot;which&quot;: &quot;all&quot;|[&quot;common&quot;, &quot;software&quot;]}</span>
+                <span class="n">pass_save_path</span> <span class="o">=</span> <span class="n">pass_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;save_path&quot;</span><span class="p">,</span> <span class="n">save_dir</span> <span class="o">/</span> <span class="s2">&quot;report&quot;</span><span class="p">)</span>
+                <span class="n">pass_config</span><span class="p">[</span><span class="s2">&quot;save_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pass_save_path</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="n">pass_name</span><span class="p">](</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_config</span><span class="p">)</span>
+            <span class="k">case</span> <span class="s2">&quot;report_node_shape&quot;</span><span class="p">:</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="n">pass_name</span><span class="p">](</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+            <span class="k">case</span> <span class="s2">&quot;report_node_type&quot;</span><span class="p">:</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="n">pass_name</span><span class="p">](</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+            <span class="k">case</span> <span class="s2">&quot;report_node_shape&quot;</span><span class="p">:</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="n">pass_name</span><span class="p">](</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+            <span class="k">case</span> <span class="s2">&quot;report_node_type&quot;</span><span class="p">:</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="n">pass_name</span><span class="p">](</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+            <span class="k">case</span> <span class="s2">&quot;load_mase_graph&quot;</span><span class="p">:</span>
+                <span class="n">pass_load_dir</span> <span class="o">=</span> <span class="n">pass_config</span><span class="p">[</span><span class="s2">&quot;load_dir&quot;</span><span class="p">]</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="n">pass_name</span><span class="p">](</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_load_dir</span><span class="p">)</span>
+            <span class="k">case</span> <span class="s2">&quot;load_node_meta_param&quot;</span><span class="p">:</span>
+                <span class="n">pass_load_path</span> <span class="o">=</span> <span class="n">pass_config</span><span class="p">[</span><span class="s2">&quot;load_path&quot;</span><span class="p">]</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="n">pass_name</span><span class="p">](</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_load_path</span><span class="p">)</span>
+            <span class="k">case</span> <span class="s2">&quot;save_mase_graph&quot;</span><span class="p">:</span>
+                <span class="n">pass_save_dir</span> <span class="o">=</span> <span class="n">pass_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                    <span class="s2">&quot;save_dir&quot;</span><span class="p">,</span> <span class="n">save_dir</span> <span class="o">/</span> <span class="s2">&quot;saved_mase_graph&quot;</span>
+                <span class="p">)</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="n">pass_name</span><span class="p">](</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_save_dir</span><span class="p">)</span>
+            <span class="k">case</span> <span class="s2">&quot;save_node_meta_param&quot;</span><span class="p">:</span>
+                <span class="n">pass_save_path</span> <span class="o">=</span> <span class="n">pass_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                    <span class="s2">&quot;save_path&quot;</span><span class="p">,</span>
+                    <span class="n">save_dir</span> <span class="o">/</span> <span class="s2">&quot;save_node_meta_param&quot;</span> <span class="o">/</span> <span class="s2">&quot;node_meta_param.toml&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="c1"># TODO: fix me</span>
+                <span class="c1"># to save the meta parameters of the nodes,</span>
+                <span class="c1"># we have to run this cast,</span>
+                <span class="c1"># because current meta parameters contains tensors</span>
+                <span class="c1"># but this cast is not inveritble</span>
+                <span class="c1"># if there are other passes after &quot;save_node_meta_param&quot;</span>
+                <span class="c1"># relying on the tensor/numpy values in the meta parameters</span>
+                <span class="c1"># the transform/analysis will fail</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">metadata_value_type_cast_transform_pass</span><span class="p">(</span>
+                    <span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;fn&quot;</span><span class="p">:</span> <span class="n">to_numpy_if_tensor</span><span class="p">}</span>
+                <span class="p">)</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="n">pass_name</span><span class="p">](</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_save_path</span><span class="p">)</span>
+            <span class="k">case</span> <span class="s2">&quot;prune&quot;</span><span class="p">:</span>
+                <span class="c1"># NOTE: The input generator is only used for when the user wants to</span>
+                <span class="c1"># enforce or observe activation sparsity. Otherwise, it&#39;s ignored.</span>
+                <span class="c1"># We use the validation dataloader as that doesn&#39;t shuffle the input</span>
+                <span class="c1"># data. This determinism helps establish a fair ground in draw</span>
+                <span class="c1"># layer-wise comparisons between activation pruning strategies.</span>
+                <span class="n">input_generator</span> <span class="o">=</span> <span class="n">InputGenerator</span><span class="p">(</span>
+                    <span class="n">model_info</span><span class="o">=</span><span class="n">model_info</span><span class="p">,</span>
+                    <span class="n">data_module</span><span class="o">=</span><span class="n">data_module</span><span class="p">,</span>
+                    <span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="p">,</span>
+                    <span class="n">which_dataloader</span><span class="o">=</span><span class="s2">&quot;val&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">pass_config</span><span class="p">[</span><span class="s2">&quot;model_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">model_name</span>
+                <span class="n">pass_config</span><span class="p">[</span><span class="s2">&quot;input_generator&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">input_generator</span>
+                <span class="n">prune_save_dir</span> <span class="o">=</span> <span class="n">save_dir</span> <span class="o">/</span> <span class="s2">&quot;prune&quot;</span>
+                <span class="n">prune_save_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="n">pass_name</span><span class="p">](</span>
+                    <span class="n">graph</span><span class="p">,</span>
+                    <span class="n">save_dir</span><span class="o">=</span><span class="n">prune_save_dir</span><span class="p">,</span>
+                    <span class="n">config</span><span class="o">=</span><span class="n">pass_config</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">case</span> <span class="s2">&quot;remove_prune_wrappers&quot;</span><span class="p">:</span>
+                <span class="c1"># Removes the pruning-related hooks and makes pruning permanent</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="n">pass_name</span><span class="p">](</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+            <span class="k">case</span> <span class="s2">&quot;conv_bn_fusion&quot;</span><span class="p">:</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="n">pass_name</span><span class="p">](</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+            <span class="k">case</span> <span class="s2">&quot;logicnets_fusion&quot;</span><span class="p">:</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="n">pass_name</span><span class="p">](</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_config</span><span class="p">)</span>
+            <span class="k">case</span> <span class="s2">&quot;onnx_annotate&quot;</span><span class="p">:</span>
+                <span class="n">onnx_dir</span> <span class="o">=</span> <span class="n">save_dir</span> <span class="o">/</span> <span class="s2">&quot;onnx&quot;</span>
+                <span class="n">onnx_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;save_path&quot;</span><span class="p">:</span> <span class="n">onnx_dir</span><span class="p">,</span>
+                    <span class="s2">&quot;data_path&quot;</span><span class="p">:</span> <span class="n">pass_config</span><span class="p">[</span><span class="s2">&quot;data_path&quot;</span><span class="p">],</span>
+                <span class="p">}</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="n">pass_name</span><span class="p">](</span><span class="n">graph</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+                <span class="n">my_pass</span> <span class="o">=</span> <span class="n">PASSES</span><span class="p">[</span><span class="n">pass_name</span><span class="p">]</span>
+                <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">my_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">pass_config</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">graph</span><span class="p">,</span> <span class="n">MaseGraph</span>
+        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Return type of </span><span class="si">{</span><span class="n">pass_name</span><span class="si">}</span><span class="s2"> must be MaseGraph, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">if</span> <span class="n">save_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">transformed_ckpt</span> <span class="o">=</span> <span class="n">save_dir</span> <span class="o">/</span> <span class="s2">&quot;transformed_ckpt&quot;</span>
+        <span class="n">transformed_ckpt</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">graph</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">metadata_value_type_cast_transform_pass</span><span class="p">(</span>
+            <span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;fn&quot;</span><span class="p">:</span> <span class="n">to_numpy_if_tensor</span><span class="p">}</span>
+        <span class="p">)</span>
+        <span class="n">save_mase_graph_interface_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">transformed_ckpt</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">graph</span></div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By DeepWok
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, DeepWok.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

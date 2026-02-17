@@ -1,0 +1,901 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Lab 1 for Advanced Deep Learning Systems (ADLS) &#8212; MASE 0.0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_style.css?v=92936fa5" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/modern.css?v=803738c0" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/jquery.js?v=5d32c60e"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="../../_static/documentation_options.js?v=e645c8fa"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+    <script src="../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+    <script src="../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+    <script src="../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+    <script src="../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'modules/labs_2023/lab1';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Lab 2 for Advanced Deep Learning Systems (ADLS)" href="lab2.html" />
+    <link rel="prev" title="Advanced Deep Learning Systems: 2023/2024" href="../adls_2023.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">MASE 0.0.1 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../documentation/installation.html">Installation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/getting_started/Get-started-using-uv.html">Getting Started using uv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/getting_started/Get-started-using-Docker.html">Getting Started using Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/getting_started/Get-started-students.html">Additional Instructions for Imperial College Students</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../documentation/tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_1_introduction_to_mase.html">Tutorial 1: Introduction to the Mase IR, MaseGraph and Torch FX passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_2_lora_finetune.html">Tutorial 2: Finetuning Bert for Sequence Classification using a LoRA adapter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_3_qat.html">Tutorial 3: Running Quantization-Aware Training (QAT) on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_4_pruning.html">Tutorial 4: Unstructured Pruning on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_5_nas_optuna.html">Tutorial 5: Neural Architecture Search (NAS) with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_6_mixed_precision_search.html">Tutorial 6: Mixed Precision Quantization Search with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_7_distributed_deployment.html">Tutorial 7: Deploying a Model for Inference on Distributed Clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_9_kernel_fusion.html">Tutorial 9: Running Kernel Fusion for Inference Acceleration on GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/advanced/tensorRT_quantization_tutorial.html">Advanced: TensorRT Quantization Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/advanced/onnxrt_quantization_tutorial.html">Advanced: ONNX Runtime Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/advanced/cli.html">Advanced: Using Mase CLI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/developer/Add-model-to-machop.html">Developer: Guide on how to add a new model into Machop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/developer/doc_writing.html">Developer: How to write documentations in MASE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/developer/how_to_extend_search.html">Developer: How to extend search</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/health.html">Repository Health</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../documentation/specifications.html">Coding Style Specifications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/specifications/C-coding-style-specifications.html">C/C++ Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/specifications/Python-coding-style-specifications.html">Python Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/specifications/Verilog-coding-style-specifications.html">Verilog Coding Style Specifications</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../machop.html">Machop Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../chop/actions.html">chop.actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../chop/datasets.html">chop.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../chop/distributed.html">chop.distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../chop/ir.html">chop.ir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../chop/models.html">chop.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../chop/nn.html">chop.nn</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../chop/nn_quantized.html">chop.nn.quantized</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../chop/nn_quantized_functional.html">chop.nn.quantized.functional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../chop/nn_quantized_modules.html">chop.nn.quantized.modules</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../chop/passes.html">chop.passes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../chop/passes_module.html">chop.passes.module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../chop/module_analysis/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/module_transform/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/transform/onn.html">chop.passes.module.transforms.onn</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../chop/passes_graph.html">chop.passes.graph</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/add_metadata.html">chop.passes.graph.analysis.add_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/autosharding.html">chop.passes.graph.analysis.autosharding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/init_metadata.html">chop.passes.graph.analysis.init_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/report.html">chop.passes.graph.analysis.report</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/statistical_profiler.html">chop.passes.graph.analysis.statistical_profiler.profile_statistics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/verify.html">chop.passes.graph.analysis.verify.verify</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/quantization.html">chop.passes.graph.calculate_avg_bits_mg_analysis_pass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/pruning.html">chop.passes.graph.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/runtime.html">chop.passes.graph.analysis.runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/transform/pruning.html">chop.passes.transform.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/transform/quantize.html">chop.passes.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/transform/utils.html">chop.passes.transform.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/transform/tensorrt.html">chop.passes.transform.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/interface/save_and_load.html">chop.passes.interface.save_and_load</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/interface/tensorrt.html">chop.passes.interface.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/interface/onnxrt.html">chop.passes.interface.onnxrt</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../chop/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../chop/tools.html">chop.tools</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Deep Learning Systems</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../adls_2024.html">Advanced Deep Learning Systems: 2024/2025</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/lab_0_introduction.html">Lab 0: Introduction to Mase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/lab_1_compression.html">Lab 1: Model Compression (Quantization and Pruning)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/lab_2_nas.html">Lab 2: Neural Architecture Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/lab_3_mixed_precision_search.html">Lab 3: Mixed Precision Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/lab4-software.html">Lab 4 (Software Stream) Performance Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../adls_2023.html">Advanced Deep Learning Systems: 2023/2024</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Lab 1 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lab2.html">Lab 2 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lab3.html">Lab 3 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lab4-software.html">Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/modules/labs_2023/lab1.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Lab 1 for Advanced Deep Learning Systems (ADLS)</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#general-introduction">General introduction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#preparation-and-installations">Preparation and installations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-familiar-with-the-machop-command-line">Getting familiar with the Machop Command Line</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-your-first-network">Training your first network</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-train-command">The train command</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#logging-on-tensorboard">Logging on tensorboard</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-test-command">The test command</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-definition-of-the-jsc-dataset">The definition of the JSC dataset</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-definition-of-the-jsc-tiny-network">The definition of the JSC Tiny network</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#varying-the-parameters">Varying the parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-deeper-dive-into-the-framework">A deeper dive into the framework</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-entry-point-for-the-train-reset-action">The entry point for the train/reset action</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-entry-point-for-the-model">The entry point for the model</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-entry-point-for-the-dataset">The entry point for the dataset</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#train-your-own-network">Train your own network</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#google-colab-adaption">Google Colab Adaption</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <a class="reference internal image-reference" href="../../_images/deepwok.png"><img alt="logo" class="align-center" src="../../_images/deepwok.png" style="width: 160.0px; height: 160.0px;" />
+</a>
+<section id="lab-1-for-advanced-deep-learning-systems-adls">
+<h1>Lab 1 for Advanced Deep Learning Systems (ADLS)<a class="headerlink" href="#lab-1-for-advanced-deep-learning-systems-adls" title="Link to this heading">#</a></h1>
+<div align="center">
+<p align="center">
+   ELEC70109/EE9-AML3-10/EE9-AO25
+   <br />
+Written by
+   <a href="https://aaron-zhao123.github.io/">Aaron Zhao </a> ,
+   <a href="https://chengzhang-98.github.io/blog/">Cheng Zhang </a> ,
+   <a href="https://www.pedrogimenes.co.uk/">Pedro Gimenes </a>
+</p>
+</div><section id="general-introduction">
+<h2>General introduction<a class="headerlink" href="#general-introduction" title="Link to this heading">#</a></h2>
+<p>In this lab, you will learn how to use the basic functionalities of the
+software stack of MASE. There are in total 5 tasks you would need to finish.</p>
+</section>
+<section id="preparation-and-installations">
+<h2>Preparation and installations<a class="headerlink" href="#preparation-and-installations" title="Link to this heading">#</a></h2>
+<p>Make sure you have read and understood the installation of the framework, detailed <a class="reference external" href="https://deepwok.github.io/mase/modules/documentation/getting_started/Get-started-on-local-machines-software-only.html">here</a>.</p>
+<p>Both streams (software and hardware) would start from software first. We
+are starting with simple toy networks that can train on most laptops.</p>
+<p>The recommendation is to fork this repository to your own Github
+account. If you are not familiar with <code class="docutils literal notranslate"><span class="pre">git</span></code>, <code class="docutils literal notranslate"><span class="pre">github</span></code> and
+terminologies like <code class="docutils literal notranslate"><span class="pre">fork</span></code>. You might find this
+<a class="reference external" href="https://docs.github.com/en/get-started/quickstart/fork-a-repo">webpage</a>
+useful. You might also want to work on your own
+<a class="reference external" href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-branches">branch</a>.</p>
+<p>Please be aware that pushing to the <code class="docutils literal notranslate"><span class="pre">main</span></code> branch would be blocked,
+and your final project would be submitted as a <a class="reference external" href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests">pull
+request</a>.</p>
+</section>
+<section id="getting-familiar-with-the-machop-command-line">
+<h2>Getting familiar with the Machop Command Line<a class="headerlink" href="#getting-familiar-with-the-machop-command-line" title="Link to this heading">#</a></h2>
+<p>The software framework of MASE is called Machop, you can find a reason
+for the naming in the Machop <a class="reference external" href="https://github.com/DeepWok/mase/tree/main/machop">Readme</a>.</p>
+<p>After installation, you should be able to run</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./ch<span class="w"> </span>--help
+</pre></div>
+</div>
+<p>You should see a print out of a list of options and a usage guide, this
+is also a good test for your installation. If your installation is
+incorrect, this command will throw you an error.</p>
+<p>The print out has the following lines:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>main<span class="w"> </span>arguments:
+<span class="w">  </span>action<span class="w">                </span>action<span class="w"> </span>to<span class="w"> </span>perform.<span class="w"> </span>One<span class="w"> </span>of<span class="w"> </span><span class="o">(</span>train<span class="p">|</span>test<span class="p">|</span>transform<span class="p">|</span>search<span class="o">)</span>
+<span class="w">  </span>model<span class="w">                 </span>name<span class="w"> </span>of<span class="w"> </span>a<span class="w"> </span>supported<span class="w"> </span>model.<span class="w"> </span>Required<span class="w"> </span><span class="k">if</span><span class="w"> </span>configuration<span class="w"> </span>NOT<span class="w"> </span>provided.
+<span class="w">  </span>dataset<span class="w">               </span>name<span class="w"> </span>of<span class="w"> </span>a<span class="w"> </span>supported<span class="w"> </span>dataset.<span class="w"> </span>Required<span class="w"> </span><span class="k">if</span><span class="w"> </span>configuration<span class="w"> </span>NOT<span class="w"> </span>provided.
+</pre></div>
+</div>
+<p>This means the <code class="docutils literal notranslate"><span class="pre">ch</span></code> command line tool expects three compulsory inputs
+that are <code class="docutils literal notranslate"><span class="pre">action</span></code>, <code class="docutils literal notranslate"><span class="pre">model</span></code> and <code class="docutils literal notranslate"><span class="pre">dataset</span></code> respectively. These three
+components would have to be either defined in the command line interface
+or be defined in a configuration file.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># example</span>
+<span class="c1"># train is an action, mnist is the dataset and toynet is the model name.</span>
+<span class="c1"># you do not have to run the command for now.</span>
+./ch<span class="w"> </span>train<span class="w"> </span>toy<span class="w"> </span>mnist
+</pre></div>
+</div>
+<p>The command line interface also allows you to input additional arguments
+to control the training and testing flow.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># example</span>
+<span class="c1"># setting the maximum training epochs and batch size through the cmd line interface.</span>
+<span class="c1"># you do not have to run the command for now.</span>
+./ch<span class="w"> </span>train<span class="w"> </span>toy<span class="w"> </span>mnist<span class="w"> </span>--max-epochs<span class="w"> </span><span class="m">200</span><span class="w"> </span>--batch-size<span class="w"> </span><span class="m">256</span>
+</pre></div>
+</div>
+</section>
+<section id="training-your-first-network">
+<h2>Training your first network<a class="headerlink" href="#training-your-first-network" title="Link to this heading">#</a></h2>
+<p>In this section, we are interested in training a small network and
+evaluate the trained network through the command line flow.</p>
+<p>The dataset we look at is the Jet Substructure Classification (JSC)
+dataset.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>[A bit of physics] Jets are collimated showers of particles that
+result from the decay and hadronization of quarks q and gluons g. At
+the Large Hadron Collider (LHC), due to the high collision energy, a
+particularly interesting jet signature emerges from overlapping
+quark-initiated showers produced in decays of heavy standard model
+particles. It is the task of jet substructure to distinguish the
+various radiation profiles of these jets from backgrounds consisting
+mainly of quark (u, d, c, s, b) and gluon-initiated jets. The tools
+of jet substructure have been used to distinguish interesting jet
+signatures from backgrounds that have production rates hundreds of
+times larger than the signal.</p>
+</div>
+<p>In short, the dataset contains inputs with a feature size of 16 and 5
+output classes.</p>
+<section id="the-train-command">
+<h3>The train command<a class="headerlink" href="#the-train-command" title="Link to this heading">#</a></h3>
+<p>To train a network for the JSC dataset, you would need to run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># You will need to run this command</span>
+./ch<span class="w"> </span>train<span class="w"> </span>jsc-tiny<span class="w"> </span>jsc<span class="w"> </span>--max-epochs<span class="w"> </span><span class="m">10</span><span class="w"> </span>--batch-size<span class="w"> </span><span class="m">256</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">--max-epochs</span></code> states the maximum epochs allowed to train, and
+<code class="docutils literal notranslate"><span class="pre">--batch-size</span></code> defines the batch size for training.</p>
+<p>You should see a print out of the training configuration in a table</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>+-------------------------+--------------------------+-----------------+--------------------------+
+<span class="p">|</span><span class="w"> </span>Name<span class="w">                    </span><span class="p">|</span><span class="w">         </span>Default<span class="w">          </span><span class="p">|</span><span class="w"> </span>Manual<span class="w"> </span>Override<span class="w"> </span><span class="p">|</span><span class="w">        </span>Effective<span class="w">         </span><span class="p">|</span>
++-------------------------+--------------------------+-----------------+--------------------------+
+<span class="p">|</span><span class="w"> </span>task<span class="w">                    </span><span class="p">|</span><span class="w">      </span>classification<span class="w">      </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">      </span>classification<span class="w">      </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>load_name<span class="w">               </span><span class="p">|</span><span class="w">           </span>None<span class="w">           </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">           </span>None<span class="w">           </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>load_type<span class="w">               </span><span class="p">|</span><span class="w">            </span>mz<span class="w">            </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">            </span>mz<span class="w">            </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>batch_size<span class="w">              </span><span class="p">|</span><span class="w">           </span><span class="m">128</span><span class="w">            </span><span class="p">|</span><span class="w">       </span><span class="m">256</span><span class="w">       </span><span class="p">|</span><span class="w">           </span><span class="m">256</span><span class="w">            </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>to_debug<span class="w">                </span><span class="p">|</span><span class="w">          </span>False<span class="w">           </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">          </span>False<span class="w">           </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>log_level<span class="w">               </span><span class="p">|</span><span class="w">           </span>info<span class="w">           </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">           </span>info<span class="w">           </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>seed<span class="w">                    </span><span class="p">|</span><span class="w">            </span><span class="m">0</span><span class="w">             </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">            </span><span class="m">0</span><span class="w">             </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>training_optimizer<span class="w">      </span><span class="p">|</span><span class="w">           </span>adam<span class="w">           </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">           </span>adam<span class="w">           </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>trainer_precision<span class="w">       </span><span class="p">|</span><span class="w">            </span><span class="m">32</span><span class="w">            </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">            </span><span class="m">32</span><span class="w">            </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>learning_rate<span class="w">           </span><span class="p">|</span><span class="w">          </span>1e-05<span class="w">           </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">          </span>1e-05<span class="w">           </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>weight_decay<span class="w">            </span><span class="p">|</span><span class="w">            </span><span class="m">0</span><span class="w">             </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">            </span><span class="m">0</span><span class="w">             </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>max_epochs<span class="w">              </span><span class="p">|</span><span class="w">            </span><span class="m">20</span><span class="w">            </span><span class="p">|</span><span class="w">       </span><span class="m">10</span><span class="w">        </span><span class="p">|</span><span class="w">            </span><span class="m">10</span><span class="w">            </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>max_steps<span class="w">               </span><span class="p">|</span><span class="w">            </span>-1<span class="w">            </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">            </span>-1<span class="w">            </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>accumulate_grad_batches<span class="w"> </span><span class="p">|</span><span class="w">            </span><span class="m">1</span><span class="w">             </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">            </span><span class="m">1</span><span class="w">             </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>log_every_n_steps<span class="w">       </span><span class="p">|</span><span class="w">            </span><span class="m">50</span><span class="w">            </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">            </span><span class="m">50</span><span class="w">            </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>num_workers<span class="w">             </span><span class="p">|</span><span class="w">            </span><span class="m">16</span><span class="w">            </span><span class="p">|</span><span class="w">        </span><span class="m">0</span><span class="w">        </span><span class="p">|</span><span class="w">            </span><span class="m">0</span><span class="w">             </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>num_devices<span class="w">             </span><span class="p">|</span><span class="w">            </span><span class="m">1</span><span class="w">             </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">            </span><span class="m">1</span><span class="w">             </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>num_nodes<span class="w">               </span><span class="p">|</span><span class="w">            </span><span class="m">1</span><span class="w">             </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">            </span><span class="m">1</span><span class="w">             </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>accelerator<span class="w">             </span><span class="p">|</span><span class="w">           </span>auto<span class="w">           </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">           </span>auto<span class="w">           </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>strategy<span class="w">                </span><span class="p">|</span><span class="w">           </span>ddp<span class="w">            </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">           </span>ddp<span class="w">            </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>is_to_auto_requeue<span class="w">      </span><span class="p">|</span><span class="w">          </span>False<span class="w">           </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">          </span>False<span class="w">           </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>github_ci<span class="w">               </span><span class="p">|</span><span class="w">          </span>False<span class="w">           </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">          </span>False<span class="w">           </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>disable_dataset_cache<span class="w">   </span><span class="p">|</span><span class="w">          </span>False<span class="w">           </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">          </span>False<span class="w">           </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>target<span class="w">                  </span><span class="p">|</span><span class="w">   </span>xcu250-figd2104-2L-e<span class="w">   </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">   </span>xcu250-figd2104-2L-e<span class="w">   </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>num_targets<span class="w">             </span><span class="p">|</span><span class="w">           </span><span class="m">100</span><span class="w">            </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">           </span><span class="m">100</span><span class="w">            </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>is_pretrained<span class="w">           </span><span class="p">|</span><span class="w">          </span>False<span class="w">           </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">          </span>False<span class="w">           </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>max_token_len<span class="w">           </span><span class="p">|</span><span class="w">           </span><span class="m">512</span><span class="w">            </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">           </span><span class="m">512</span><span class="w">            </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>project_dir<span class="w">             </span><span class="p">|</span><span class="w"> </span>/Users/aaron/Projects/ma<span class="w"> </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w"> </span>/Users/aaron/Projects/ma<span class="w"> </span><span class="p">|</span>
+<span class="p">|</span><span class="w">                         </span><span class="p">|</span><span class="w">   </span>se-tools/mase_output<span class="w">   </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">   </span>se-tools/mase_output<span class="w">   </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>project<span class="w">                 </span><span class="p">|</span><span class="w">           </span>None<span class="w">           </span><span class="p">|</span><span class="w">                 </span><span class="p">|</span><span class="w">           </span>None<span class="w">           </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>model<span class="w">                   </span><span class="p">|</span><span class="w">           </span>None<span class="w">           </span><span class="p">|</span><span class="w">    </span>jsc-tiny<span class="w">     </span><span class="p">|</span><span class="w">         </span>jsc-tiny<span class="w">         </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>dataset<span class="w">                 </span><span class="p">|</span><span class="w">           </span>None<span class="w">           </span><span class="p">|</span><span class="w">       </span>jsc<span class="w">       </span><span class="p">|</span><span class="w">           </span>jsc<span class="w">            </span><span class="p">|</span>
++-------------------------+--------------------------+-----------------+--------------------------+
+</pre></div>
+</div>
+<p>There is also a summary on the model</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="p">|</span><span class="w"> </span>Name<span class="w">      </span><span class="p">|</span><span class="w"> </span>Type<span class="w">               </span><span class="p">|</span><span class="w"> </span>Params
+-------------------------------------------------
+<span class="m">0</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>model<span class="w">     </span><span class="p">|</span><span class="w"> </span>JSC_Tiny<span class="w">           </span><span class="p">|</span><span class="w"> </span><span class="m">127</span>
+<span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>loss_fn<span class="w">   </span><span class="p">|</span><span class="w"> </span>CrossEntropyLoss<span class="w">   </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>
+<span class="m">2</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>acc_train<span class="w"> </span><span class="p">|</span><span class="w"> </span>MulticlassAccuracy<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>
+<span class="m">3</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>acc_val<span class="w">   </span><span class="p">|</span><span class="w"> </span>MulticlassAccuracy<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>
+<span class="m">4</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>acc_test<span class="w">  </span><span class="p">|</span><span class="w"> </span>MulticlassAccuracy<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>
+<span class="m">5</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>loss_val<span class="w">  </span><span class="p">|</span><span class="w"> </span>MeanMetric<span class="w">         </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>
+<span class="m">6</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>loss_test<span class="w"> </span><span class="p">|</span><span class="w"> </span>MeanMetric<span class="w">         </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>
+-------------------------------------------------
+<span class="m">127</span><span class="w">       </span>Trainable<span class="w"> </span>params
+<span class="m">0</span><span class="w">         </span>Non-trainable<span class="w"> </span>params
+<span class="m">127</span><span class="w">       </span>Total<span class="w"> </span>params
+<span class="m">0</span>.001<span class="w">     </span>Total<span class="w"> </span>estimated<span class="w"> </span>model<span class="w"> </span>params<span class="w"> </span>size<span class="w"> </span><span class="o">(</span>MB<span class="o">)</span>
+</pre></div>
+</div>
+</section>
+<section id="logging-on-tensorboard">
+<h3>Logging on tensorboard<a class="headerlink" href="#logging-on-tensorboard" title="Link to this heading">#</a></h3>
+<p>As you can see, this is a toy model and it is very small. There is
+another print out line that is also very useful:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Project<span class="w"> </span>will<span class="w"> </span>be<span class="w"> </span>created<span class="w"> </span>at<span class="w"> </span>/home/cheng/GTA/adls/mase-tools/mase_output/jsc-tiny_classification_jsc_2023-10-30
+Missing<span class="w"> </span>logger<span class="w"> </span>folder:<span class="w"> </span>/Users/aaron/Projects/mase-tools/mase_output/jsc-tiny_classification_jsc_2023-10-19/software/training_ckpts/logs
+</pre></div>
+</div>
+<p>For any training commands executed, a logging directory would be created
+and one can use <a class="reference external" href="https://www.tensorflow.org/tensorboard">tensorboard</a>
+to check the training trajectory.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># You need to run the following command with your own edits</span>
+
+<span class="c1"># the actual name of the log file created for you would be different from the example showing here, because the name contains a time-stamp.</span>
+
+<span class="c1"># --port 16006 is declaring the port on localhost</span>
+tensorboard<span class="w"> </span>--logdir<span class="w"> </span>../mase_output/jsc-tiny_classification_jsc_2023-10-19/software<span class="w"> </span>--port<span class="w"> </span><span class="m">16006</span>
+</pre></div>
+</div>
+<p>Open <code class="docutils literal notranslate"><span class="pre">http://localhost:16006/</span></code> in your preferred browser, explore on
+the entries that have been logged.</p>
+</section>
+<section id="the-test-command">
+<h3>The test command<a class="headerlink" href="#the-test-command" title="Link to this heading">#</a></h3>
+<p>Under the same folder
+<code class="docutils literal notranslate"><span class="pre">../mase_output/jsc-tiny_classification_jsc_2023-10-19/software</span></code>,
+there are also saved checkpoint files for the trained models. These are
+basically the trained parameters of the model, one can find more detail
+on Pytorch model checkpointing
+<a class="reference external" href="https://pytorch.org/tutorials/recipes/recipes/saving_and_loading_a_general_checkpoint.html">here</a>
+and Lightning checkpointing
+<a class="reference external" href="https://lightning.ai/docs/pytorch/stable/common/checkpointing.html">here</a>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./ch<span class="w"> </span><span class="nb">test</span><span class="w"> </span>jsc-tiny<span class="w"> </span>jsc<span class="w"> </span>--load<span class="w"> </span>../mase_output/jsc-tiny_classification_jsc_2023-10-19/software/training_ckpts/best.ckpt<span class="w"> </span>--load-type<span class="w"> </span>pl
+</pre></div>
+</div>
+<p>The above command would return you the performance of the trained model
+on the test set. <code class="docutils literal notranslate"><span class="pre">--load-type</span> <span class="pre">pl</span></code> tells Machop that the checkpoint is
+saved by PyTorch Lightning. For PyTorch Lightning, see <a class="reference external" href="#the-entry-point-for-the-train-reset-action">this
+section</a></p>
+<p>The saved checkpoint can also be used to resume training.</p>
+</section>
+<section id="the-definition-of-the-jsc-dataset">
+<h3>The definition of the JSC dataset<a class="headerlink" href="#the-definition-of-the-jsc-dataset" title="Link to this heading">#</a></h3>
+<p>Datasets are defined in under the
+<a class="reference external" href="https://github.com/DeepWok/mase/tree/main/machop/chop/dataset">dataset</a> folder in <code class="docutils literal notranslate"><span class="pre">chop</span></code>, one should
+take a look at the
+<a class="reference external" href="https://github.com/DeepWok/mase/blob/main/machop/chop/dataset/__init__.py">__init__.py</a> to understand
+how different datasets are declared. The JSC dataset is defined and
+detailed in <a class="reference external" href="https://github.com/DeepWok/mase/blob/main/machop/chop/dataset/physical/jsc.py">this
+file</a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@add_dataset_info</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;jsc&quot;</span><span class="p">,</span>
+    <span class="n">dataset_source</span><span class="o">=</span><span class="s2">&quot;manual&quot;</span><span class="p">,</span>
+    <span class="n">available_splits</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;validation&quot;</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">),</span>
+    <span class="n">physical_data_point_classification</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">num_classes</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">num_features</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">JetSubstructureDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file</span><span class="p">,</span> <span class="n">config_file</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+  <span class="o">...</span>
+</pre></div>
+</div>
+<p>The
+<a class="reference external" href="https://book.pythontips.com/en/latest/decorators.html">decorator</a>
+(if you do not know what is a python decorator, click the link and
+learn) defines the dataset information required. The class object
+<code class="docutils literal notranslate"><span class="pre">JetSubstructureDataset</span></code> has <code class="docutils literal notranslate"><span class="pre">Dataset</span></code> being its parent class. If
+you are still concerned with your proficiency in OOP (object orientated
+programming), you should check this
+<a class="reference external" href="https://book.pythontips.com/en/latest/classes.html">link</a>.</p>
+</section>
+<section id="the-definition-of-the-jsc-tiny-network">
+<h3>The definition of the JSC Tiny network<a class="headerlink" href="#the-definition-of-the-jsc-tiny-network" title="Link to this heading">#</a></h3>
+<p>The network definition can also be found in the
+<a class="reference external" href="https://github.com/DeepWok/mase/blob/main/machop/chop/models/physical/jet_substructure/__init__.py">__init__.py</a></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">JSC_Tiny</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">JSC_Tiny</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq_blocks</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="c1"># 1st LogicNets Layer</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm1d</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span>  <span class="c1">#  batch norm layer</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>  <span class="c1"># linear layer</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_blocks</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Network definitions in Pytorch normally contains two components: an
+<code class="docutils literal notranslate"><span class="pre">__init__</span></code> method and a <code class="docutils literal notranslate"><span class="pre">forward</span></code> method. Also all networks and
+custom layers in Pytorch has to be a subclass of <code class="docutils literal notranslate"><span class="pre">nn.Module</span></code>. The
+neural network layers are initialised in <code class="docutils literal notranslate"><span class="pre">__init__</span></code>. Every
+<code class="docutils literal notranslate"><span class="pre">nn.Module</span></code> subclass implements the operations on input data in the
+<code class="docutils literal notranslate"><span class="pre">forward</span></code> method.</p>
+<p><code class="docutils literal notranslate"><span class="pre">nn.Sequential</span></code> is a container used for wrapping a number of layers
+together, more information on this container can be found in this
+<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Sequential.html">link</a>.</p>
+</section>
+</section>
+<section id="varying-the-parameters">
+<h2>Varying the parameters<a class="headerlink" href="#varying-the-parameters" title="Link to this heading">#</a></h2>
+<p>We have executed the following training command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./ch<span class="w"> </span>train<span class="w"> </span>jsc-tiny<span class="w"> </span>jsc<span class="w"> </span>--max-epochs<span class="w"> </span><span class="m">10</span><span class="w"> </span>--batch-size<span class="w"> </span><span class="m">256</span>
+</pre></div>
+</div>
+<p>We can, apparently, tune a bunch of parameters, and the obvious ones to
+tune are</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">batch-size</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max-epochs</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">learning-rate</span></code></p></li>
+</ul>
+<p>Tune these parameters by hand and answer the following questions:</p>
+<ol class="arabic simple">
+<li><p>What is the impact of varying batch sizes and why?</p></li>
+<li><p>What is the impact of varying maximum epoch number?</p></li>
+<li><p>What is happening with a large learning and what is happening with a
+small learning rate and why? What is the relationship between
+learning rates and batch sizes?</p></li>
+</ol>
+</section>
+<section id="a-deeper-dive-into-the-framework">
+<h2>A deeper dive into the framework<a class="headerlink" href="#a-deeper-dive-into-the-framework" title="Link to this heading">#</a></h2>
+<p>When you execute <code class="docutils literal notranslate"><span class="pre">./ch</span></code>, what really happens is the
+<a class="reference external" href="https://github.com/DeepWok/mase/blob/main/machop/ch">ch</a> file got executed and from the <code class="docutils literal notranslate"><span class="pre">import</span></code> you
+can tell it is calling into <a class="reference external" href="https://github.com/DeepWok/mase/blob/main/machop/chop/cli.py">cli.py</a>.</p>
+<section id="the-entry-point-for-the-train-reset-action">
+<h3>The entry point for the train/reset action<a class="headerlink" href="#the-entry-point-for-the-train-reset-action" title="Link to this heading">#</a></h3>
+<p>When you choose to execute <code class="docutils literal notranslate"><span class="pre">./ch</span> <span class="pre">train</span></code>, we are executing the train
+action, and invoking <a class="reference external" href="https://github.com/DeepWok/mase/blob/main/machop/chop/actions/train.py">train.py</a>.
+The entire training flow is orchestrated using <a class="reference external" href="https://lightning.ai/">PyTorch
+Lightning</a>, so that the detailed lightning
+related wrapping occurs in
+<a class="reference external" href="https://github.com/DeepWok/mase/blob/main/machop/chop/plt_wrapper/physical/jet_substructure.py">jet_substructure.py</a>.
+PyTorch Lightning’s checkpointing callbacks saves the model parameters
+(<code class="docutils literal notranslate"><span class="pre">torch.nn.Module.state_dict()</span></code>), the optimizer states, and other
+hyper-parameters specified in <code class="docutils literal notranslate"><span class="pre">lightning.pl.LightningModule</span></code>, so that
+the training can be resumed from the last checkpoint. The saved
+checkpoint has extension <code class="docutils literal notranslate"><span class="pre">.ckpt</span></code>, this is why we have
+<code class="docutils literal notranslate"><span class="pre">--load-type</span> <span class="pre">pl</span></code> in the <code class="docutils literal notranslate"><span class="pre">./ch</span> <span class="pre">test</span></code> command.</p>
+<p>Test action has similar implementation based on PyTorch Lightning
+(<a class="reference external" href="https://github.com/DeepWok/mase/blob/main/machop/chop/actions/test.py">test.py</a>)</p>
+</section>
+<section id="the-entry-point-for-the-model">
+<h3>The entry point for the model<a class="headerlink" href="#the-entry-point-for-the-model" title="Link to this heading">#</a></h3>
+<p>All models are defined in the
+<a class="reference external" href="https://github.com/DeepWok/mase/blob/main/machop/chop/models/__init__.py">__init__.py</a> under the model
+folder. The <code class="docutils literal notranslate"><span class="pre">get_model</span></code> function is called inside <code class="docutils literal notranslate"><span class="pre">actions</span></code> (such as
+<code class="docutils literal notranslate"><span class="pre">train</span></code>) to ping down different models.</p>
+</section>
+<section id="the-entry-point-for-the-dataset">
+<h3>The entry point for the dataset<a class="headerlink" href="#the-entry-point-for-the-dataset" title="Link to this heading">#</a></h3>
+<p>Similar to the model definitions, all datasets are defined in the
+<a class="reference external" href="https://github.com/DeepWok/mase/blob/main/machop/chop/dataset/__init__.py">__init__.py</a> under the
+dataset folder.</p>
+</section>
+</section>
+<section id="train-your-own-network">
+<h2>Train your own network<a class="headerlink" href="#train-your-own-network" title="Link to this heading">#</a></h2>
+<p>Now you are familiar with different components in the tool.</p>
+<ol class="arabic simple" start="4">
+<li><p>Implement a network that has in total around 10x more parameters than
+the toy network.</p></li>
+<li><p>Test your implementation and evaluate its performance.</p></li>
+</ol>
+</section>
+<section id="google-colab-adaption">
+<h2>Google Colab Adaption<a class="headerlink" href="#google-colab-adaption" title="Link to this heading">#</a></h2>
+<p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/docs/labs/lab1.ipynb">lab1.ipynb</a> contains an adaption of setting up the
+same thing on Google Colab. You would need to repeat the exercise on
+that because you would definitely need a powerful GPU for later labs and
+your Team Projects.</p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../adls_2023.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Advanced Deep Learning Systems: 2023/2024</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="lab2.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Lab 2 for Advanced Deep Learning Systems (ADLS)</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#general-introduction">General introduction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#preparation-and-installations">Preparation and installations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-familiar-with-the-machop-command-line">Getting familiar with the Machop Command Line</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-your-first-network">Training your first network</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-train-command">The train command</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#logging-on-tensorboard">Logging on tensorboard</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-test-command">The test command</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-definition-of-the-jsc-dataset">The definition of the JSC dataset</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-definition-of-the-jsc-tiny-network">The definition of the JSC Tiny network</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#varying-the-parameters">Varying the parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-deeper-dive-into-the-framework">A deeper dive into the framework</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-entry-point-for-the-train-reset-action">The entry point for the train/reset action</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-entry-point-for-the-model">The entry point for the model</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-entry-point-for-the-dataset">The entry point for the dataset</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#train-your-own-network">Train your own network</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#google-colab-adaption">Google Colab Adaption</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By DeepWok
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, DeepWok.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

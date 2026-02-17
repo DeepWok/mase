@@ -1,0 +1,826 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS) &#8212; MASE 0.0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_style.css?v=92936fa5" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/modern.css?v=803738c0" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/jquery.js?v=5d32c60e"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="../../_static/documentation_options.js?v=e645c8fa"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+    <script src="../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+    <script src="../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+    <script src="../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+    <script src="../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'modules/labs_2023/lab4-software';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="ADLS Docker Environment Setup" href="setup_docker_env.html" />
+    <link rel="prev" title="Lab 3 for Advanced Deep Learning Systems (ADLS)" href="lab3.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">MASE 0.0.1 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../documentation/installation.html">Installation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/getting_started/Get-started-using-uv.html">Getting Started using uv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/getting_started/Get-started-using-Docker.html">Getting Started using Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/getting_started/Get-started-students.html">Additional Instructions for Imperial College Students</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../documentation/tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_1_introduction_to_mase.html">Tutorial 1: Introduction to the Mase IR, MaseGraph and Torch FX passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_2_lora_finetune.html">Tutorial 2: Finetuning Bert for Sequence Classification using a LoRA adapter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_3_qat.html">Tutorial 3: Running Quantization-Aware Training (QAT) on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_4_pruning.html">Tutorial 4: Unstructured Pruning on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_5_nas_optuna.html">Tutorial 5: Neural Architecture Search (NAS) with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_6_mixed_precision_search.html">Tutorial 6: Mixed Precision Quantization Search with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_7_distributed_deployment.html">Tutorial 7: Deploying a Model for Inference on Distributed Clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/tutorial_9_kernel_fusion.html">Tutorial 9: Running Kernel Fusion for Inference Acceleration on GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/advanced/tensorRT_quantization_tutorial.html">Advanced: TensorRT Quantization Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/advanced/onnxrt_quantization_tutorial.html">Advanced: ONNX Runtime Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/advanced/cli.html">Advanced: Using Mase CLI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/developer/Add-model-to-machop.html">Developer: Guide on how to add a new model into Machop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/developer/doc_writing.html">Developer: How to write documentations in MASE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/tutorials/developer/how_to_extend_search.html">Developer: How to extend search</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/health.html">Repository Health</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../documentation/specifications.html">Coding Style Specifications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/specifications/C-coding-style-specifications.html">C/C++ Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/specifications/Python-coding-style-specifications.html">Python Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/specifications/Verilog-coding-style-specifications.html">Verilog Coding Style Specifications</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../machop.html">Machop Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../chop/actions.html">chop.actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../chop/datasets.html">chop.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../chop/distributed.html">chop.distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../chop/ir.html">chop.ir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../chop/models.html">chop.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../chop/nn.html">chop.nn</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../chop/nn_quantized.html">chop.nn.quantized</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../chop/nn_quantized_functional.html">chop.nn.quantized.functional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../chop/nn_quantized_modules.html">chop.nn.quantized.modules</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../chop/passes.html">chop.passes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../chop/passes_module.html">chop.passes.module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../chop/module_analysis/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/module_transform/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/transform/onn.html">chop.passes.module.transforms.onn</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../chop/passes_graph.html">chop.passes.graph</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/add_metadata.html">chop.passes.graph.analysis.add_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/autosharding.html">chop.passes.graph.analysis.autosharding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/init_metadata.html">chop.passes.graph.analysis.init_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/report.html">chop.passes.graph.analysis.report</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/statistical_profiler.html">chop.passes.graph.analysis.statistical_profiler.profile_statistics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/verify.html">chop.passes.graph.analysis.verify.verify</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/quantization.html">chop.passes.graph.calculate_avg_bits_mg_analysis_pass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/pruning.html">chop.passes.graph.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/analysis/runtime.html">chop.passes.graph.analysis.runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/transform/pruning.html">chop.passes.transform.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/transform/quantize.html">chop.passes.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/transform/utils.html">chop.passes.transform.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/transform/tensorrt.html">chop.passes.transform.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/interface/save_and_load.html">chop.passes.interface.save_and_load</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/interface/tensorrt.html">chop.passes.interface.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../chop/interface/onnxrt.html">chop.passes.interface.onnxrt</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../chop/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../chop/tools.html">chop.tools</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Deep Learning Systems</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../adls_2024.html">Advanced Deep Learning Systems: 2024/2025</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/lab_0_introduction.html">Lab 0: Introduction to Mase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/lab_1_compression.html">Lab 1: Model Compression (Quantization and Pruning)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/lab_2_nas.html">Lab 2: Neural Architecture Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/lab_3_mixed_precision_search.html">Lab 3: Mixed Precision Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/lab4-software.html">Lab 4 (Software Stream) Performance Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../labs_2024/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../adls_2023.html">Advanced Deep Learning Systems: 2023/2024</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="lab1.html">Lab 1 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lab2.html">Lab 2 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lab3.html">Lab 3 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/modules/labs_2023/lab4-software.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#general-introduction">General introduction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-network-architecture-search">What is Network Architecture Search?</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#a-handwritten-jsc-network">A Handwritten JSC Network</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-architecture-modification-as-a-transformation-pass">Model Architecture Modification as a Transformation Pass</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#optional-task-scaling-the-search-to-real-networks">Optional task (scaling the search to real networks)</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <a class="reference internal image-reference" href="../../_images/deepwok.png"><img alt="logo" class="align-center" src="../../_images/deepwok.png" style="width: 160.0px; height: 160.0px;" />
+</a>
+<section id="lab-4-software-stream-for-advanced-deep-learning-systems-adls">
+<h1>Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)<a class="headerlink" href="#lab-4-software-stream-for-advanced-deep-learning-systems-adls" title="Link to this heading">#</a></h1>
+<div align="center">
+<p align="center">
+   ELEC70109/EE9-AML3-10/EE9-AO25
+   <br />
+Written by
+   <a href="https://aaron-zhao123.github.io/">Aaron Zhao </a> ,
+   <a href="https://chengzhang-98.github.io/blog/">Cheng Zhang </a> ,
+   <a href="https://www.pedrogimenes.co.uk/">Pedro Gimenes </a>
+</p>
+</div><section id="general-introduction">
+<h2>General introduction<a class="headerlink" href="#general-introduction" title="Link to this heading">#</a></h2>
+<p>In this lab, you will learn how to use the search functionality in the
+software stack of MASE to implement a Network Architecture Search.</p>
+<p>There are in total 4 tasks you would need to finish, there is also 1
+optional task.</p>
+</section>
+<section id="what-is-network-architecture-search">
+<h2>What is Network Architecture Search?<a class="headerlink" href="#what-is-network-architecture-search" title="Link to this heading">#</a></h2>
+<p>The design of a network architecture can greatly impact the performance
+of the model. Consider the following optimization problem:</p>
+<p><span class="math notranslate nohighlight">\(\min_{a \in \mathcal{A}} \mathcal{L}_{val}(w^*(a), a)\)</span></p>
+<p><span class="math notranslate nohighlight">\(s.t.~w^*(a) = \argmin_{w}(\mathcal{L}_{train}(w, a))\)</span></p>
+<p>For an architecture <span class="math notranslate nohighlight">\(a\)</span> sampled from a set of architectures
+<span class="math notranslate nohighlight">\(\mathcal{A}\)</span>, we are minimizing the loss value when the
+architecture <span class="math notranslate nohighlight">\(a\)</span> is parameterized by <span class="math notranslate nohighlight">\(w^*(a)\)</span>.</p>
+<p>Meanwhile, the parameters <span class="math notranslate nohighlight">\(w^*(a)\)</span> is the particular
+parameterization that provides the lowest <span class="math notranslate nohighlight">\(\mathcal{L}_{train}\)</span>
+given the architecture <span class="math notranslate nohighlight">\(a\)</span>.</p>
+<p>This is the core optimization problem involved in Network Architecture
+Search, where several approximations can happen. For instance, we can
+approximate <span class="math notranslate nohighlight">\(\mathcal{L}_{train}\)</span> or <span class="math notranslate nohighlight">\(\mathcal{L}_{val}\)</span>, or
+the <span class="math notranslate nohighlight">\(\min_{a \in \mathcal{A}}\)</span> can be formulated as a
+reinforcement learning process and so on.</p>
+<section id="a-handwritten-jsc-network">
+<h3>A Handwritten JSC Network<a class="headerlink" href="#a-handwritten-jsc-network" title="Link to this heading">#</a></h3>
+<p>We follow a similar procedure of what you have tried in lab3 to setup
+the dataset, copy and paste the following code snippet to a file, and
+name it <code class="docutils literal notranslate"><span class="pre">lab4.py</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pprint</span><span class="w"> </span><span class="kn">import</span> <span class="n">pprint</span> <span class="k">as</span> <span class="n">pp</span>
+
+<span class="c1"># figure out the correct path</span>
+<span class="n">machop_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span><span class="s2">&quot;machop&quot;</span>
+<span class="k">assert</span> <span class="n">machop_path</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span> <span class="s2">&quot;Failed to find machop at: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">machop_path</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">machop_path</span><span class="p">))</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">MaseDataModule</span><span class="p">,</span> <span class="n">get_dataset_info</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.tools.logger</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_logging_verbosity</span><span class="p">,</span> <span class="n">get_logger</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.passes.graph.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">report_node_meta_param_analysis_pass</span><span class="p">,</span>
+    <span class="n">profile_statistics_analysis_pass</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.passes.graph</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">add_common_metadata_analysis_pass</span><span class="p">,</span>
+    <span class="n">init_metadata_analysis_pass</span><span class="p">,</span>
+    <span class="n">add_software_metadata_analysis_pass</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.tools.get_input</span><span class="w"> </span><span class="kn">import</span> <span class="n">InputGenerator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.ir.graph.mase_graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">MaseGraph</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_model_info</span><span class="p">,</span> <span class="n">get_model</span>
+
+<span class="n">set_logging_verbosity</span><span class="p">(</span><span class="s2">&quot;info&quot;</span><span class="p">)</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">(</span><span class="s2">&quot;chop&quot;</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+
+<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">model_name</span> <span class="o">=</span> <span class="s2">&quot;jsc-tiny&quot;</span>
+<span class="n">dataset_name</span> <span class="o">=</span> <span class="s2">&quot;jsc&quot;</span>
+
+
+<span class="n">data_module</span> <span class="o">=</span> <span class="n">MaseDataModule</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="n">dataset_name</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+    <span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+    <span class="n">num_workers</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">data_module</span><span class="o">.</span><span class="n">prepare_data</span><span class="p">()</span>
+<span class="n">data_module</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+
+<span class="n">model_info</span> <span class="o">=</span> <span class="n">get_model_info</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span>
+
+<span class="n">input_generator</span> <span class="o">=</span> <span class="n">InputGenerator</span><span class="p">(</span>
+    <span class="n">data_module</span><span class="o">=</span><span class="n">data_module</span><span class="p">,</span>
+    <span class="n">model_info</span><span class="o">=</span><span class="n">model_info</span><span class="p">,</span>
+    <span class="n">task</span><span class="o">=</span><span class="s2">&quot;cls&quot;</span><span class="p">,</span>
+    <span class="n">which_dataloader</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">dummy_in</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">data_module</span><span class="o">.</span><span class="n">train_dataloader</span><span class="p">()))[</span><span class="mi">0</span><span class="p">]}</span>
+</pre></div>
+</div>
+<p>This time we are going to use a slightly different network, so we define
+it as a Pytorch model, copy and paste this snippet also to <code class="docutils literal notranslate"><span class="pre">lab4.py</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>MASE integrates seamlessly with native Pytorch models.</p>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.passes.graph.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_parent_name</span>
+
+<span class="c1"># define a new model</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">JSC_Three_Linear_Layers</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">JSC_Three_Linear_Layers</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq_blocks</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm1d</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span>  <span class="c1"># 0</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span>  <span class="c1"># 1</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>  <span class="c1"># linear  2</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>  <span class="c1"># linear  3</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>   <span class="c1"># linear  4</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span>  <span class="c1"># 5</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_blocks</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">JSC_Three_Linear_Layers</span><span class="p">()</span>
+
+<span class="c1"># generate the mase graph and initialize node metadata</span>
+<span class="n">mg</span> <span class="o">=</span> <span class="n">MaseGraph</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+<span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">init_metadata_analysis_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="model-architecture-modification-as-a-transformation-pass">
+<h2>Model Architecture Modification as a Transformation Pass<a class="headerlink" href="#model-architecture-modification-as-a-transformation-pass" title="Link to this heading">#</a></h2>
+<p>Similar to what you have done in <code class="docutils literal notranslate"><span class="pre">lab2</span></code>, one can also implement a
+change in model architecture as a transformation pass:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">instantiate_linear</span><span class="p">(</span><span class="n">in_features</span><span class="p">,</span> <span class="n">out_features</span><span class="p">,</span> <span class="n">bias</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">bias</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">bias</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span>
+        <span class="n">in_features</span><span class="o">=</span><span class="n">in_features</span><span class="p">,</span>
+        <span class="n">out_features</span><span class="o">=</span><span class="n">out_features</span><span class="p">,</span>
+        <span class="n">bias</span><span class="o">=</span><span class="n">bias</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">redefine_linear_transform_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">main_config</span> <span class="o">=</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;config&#39;</span><span class="p">)</span>
+    <span class="n">default</span> <span class="o">=</span> <span class="n">main_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;default value must be provided.&quot;</span><span class="p">)</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="c1"># if node name is not matched, it won&#39;t be tracked</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">main_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">default</span><span class="p">)[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ori_module</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">]</span>
+            <span class="n">in_features</span> <span class="o">=</span> <span class="n">ori_module</span><span class="o">.</span><span class="n">in_features</span>
+            <span class="n">out_features</span> <span class="o">=</span> <span class="n">ori_module</span><span class="o">.</span><span class="n">out_features</span>
+            <span class="n">bias</span> <span class="o">=</span> <span class="n">ori_module</span><span class="o">.</span><span class="n">bias</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;output_only&quot;</span><span class="p">:</span>
+                <span class="n">out_features</span> <span class="o">=</span> <span class="n">out_features</span> <span class="o">*</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;channel_multiplier&quot;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;both&quot;</span><span class="p">:</span>
+                <span class="n">in_features</span> <span class="o">=</span> <span class="n">in_features</span> <span class="o">*</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;channel_multiplier&quot;</span><span class="p">]</span>
+                <span class="n">out_features</span> <span class="o">=</span> <span class="n">out_features</span> <span class="o">*</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;channel_multiplier&quot;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;input_only&quot;</span><span class="p">:</span>
+                <span class="n">in_features</span> <span class="o">=</span> <span class="n">in_features</span> <span class="o">*</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;channel_multiplier&quot;</span><span class="p">]</span>
+            <span class="n">new_module</span> <span class="o">=</span> <span class="n">instantiate_linear</span><span class="p">(</span><span class="n">in_features</span><span class="p">,</span> <span class="n">out_features</span><span class="p">,</span> <span class="n">bias</span><span class="p">)</span>
+            <span class="n">parent_name</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">get_parent_name</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">parent_name</span><span class="p">],</span> <span class="n">name</span><span class="p">,</span> <span class="n">new_module</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">graph</span><span class="p">,</span> <span class="p">{}</span>
+
+
+
+<span class="n">pass_config</span> <span class="o">=</span> <span class="p">{</span>
+<span class="s2">&quot;by&quot;</span><span class="p">:</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span>
+<span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}},</span>
+<span class="s2">&quot;seq_blocks_2&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;output_only&quot;</span><span class="p">,</span>
+        <span class="c1"># weight</span>
+        <span class="s2">&quot;channel_multiplier&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+<span class="s2">&quot;seq_blocks_3&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;both&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;channel_multiplier&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+<span class="s2">&quot;seq_blocks_4&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;input_only&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;channel_multiplier&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="c1"># this performs the architecture transformation based on the config</span>
+<span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">redefine_linear_transform_pass</span><span class="p">(</span>
+    <span class="n">graph</span><span class="o">=</span><span class="n">mg</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="n">pass_config</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>Copy and paste the above coding snippet and run your code. The modified
+network features linear layers expanded to double their size, yet it’s
+unusual to sequence three linear layers consecutively without
+interposing any non-linear activations (do you know why?).</p>
+<p>So we are interested in a modified network:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define a new model</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">JSC_Three_Linear_Layers</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">JSC_Three_Linear_Layers</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq_blocks</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm1d</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span>  <span class="c1"># 0</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span>  <span class="c1"># 1</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>  <span class="c1"># linear seq_2</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span>  <span class="c1"># 3</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>  <span class="c1"># linear seq_4</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span>  <span class="c1"># 5</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>  <span class="c1"># linear seq_6</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span>  <span class="c1"># 7</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_blocks</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<ol class="arabic simple">
+<li><p>Can you edit your code, so that we can modify the above network to
+have layers expanded to double their sizes? Note: you will have to
+change the <code class="docutils literal notranslate"><span class="pre">ReLU</span></code> also.</p></li>
+<li><p>In <code class="docutils literal notranslate"><span class="pre">lab3</span></code>, we have implemented a grid search, can we use the grid
+search to search for the best channel multiplier value?</p></li>
+<li><p>You may have noticed, one problem with the channel multiplier is that it scales all layers uniformly, ideally, we would like to be able to construct networks like the following:</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define a new model</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">JSC_Three_Linear_Layers</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">JSC_Three_Linear_Layers</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq_blocks</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm1d</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">),</span>  <span class="c1"># output scaled by 2</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span>  <span class="c1"># scaled by 2</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span>  <span class="c1"># input scaled by 2 but output scaled by 4</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="mi">64</span><span class="p">),</span>  <span class="c1"># scaled by 4</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>  <span class="c1"># scaled by 4</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_blocks</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Can you then design a search so that it can reach a network
+that can have this kind of structure?</p>
+<ol class="arabic simple" start="4">
+<li><p>Integrate the search to the <code class="docutils literal notranslate"><span class="pre">chop</span></code> flow, so we can run it from the
+command line.</p></li>
+</ol>
+</section>
+<section id="optional-task-scaling-the-search-to-real-networks">
+<h2>Optional task (scaling the search to real networks)<a class="headerlink" href="#optional-task-scaling-the-search-to-real-networks" title="Link to this heading">#</a></h2>
+<p>We have looked at how to search, on the architecture level, for a simple
+linear layer based network. MASE has the following components that you
+can have a look:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/machop/chop/dataset/vision/cifar.py">Cifar10 dataset</a></p></li>
+<li><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/machop/chop/models/vision/vgg_cifar/vgg_cifar.py">VGG</a>,
+this is a variant used for CIFAR</p></li>
+<li><p><a class="reference external" href="https://github.com/DeepWok/mase/blob/main/machop/chop/actions/search/strategies/optuna.py">TPE-based
+Search</a>,
+implementd using
+<a class="reference external" href="https://optuna.readthedocs.io/en/stable/reference/index.html">Optuna</a></p></li>
+</ul>
+<p>Can you define a search space (maybe channel dimension) for the VGG
+network, and use the TPE-search to tune it?</p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="lab3.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Lab 3 for Advanced Deep Learning Systems (ADLS)</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="setup_docker_env.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">ADLS Docker Environment Setup</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#general-introduction">General introduction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-network-architecture-search">What is Network Architecture Search?</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#a-handwritten-jsc-network">A Handwritten JSC Network</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-architecture-modification-as-a-transformation-pass">Model Architecture Modification as a Transformation Pass</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#optional-task-scaling-the-search-to-real-networks">Optional task (scaling the search to real networks)</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By DeepWok
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, DeepWok.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

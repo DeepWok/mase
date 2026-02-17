@@ -1,0 +1,948 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>chop.passes.graph.analysis.add_metadata.add_common_metadata &#8212; MASE 0.0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common_css/need_style.css?v=92936fa5" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-needs/modern.css?v=803738c0" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../../../../_static/jquery.js?v=5d32c60e"></script>
+    <script src="../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="../../../../../../_static/documentation_options.js?v=e645c8fa"></script>
+    <script src="../../../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../../../../../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+    <script src="../../../../../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+    <script src="../../../../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+    <script src="../../../../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+    <script src="../../../../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/chop/passes/graph/analysis/add_metadata/add_common_metadata';</script>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">MASE 0.0.1 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../../modules/documentation/installation.html">Installation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/getting_started/Get-started-using-uv.html">Getting Started using uv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/getting_started/Get-started-using-Docker.html">Getting Started using Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/getting_started/Get-started-students.html">Additional Instructions for Imperial College Students</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../../modules/documentation/tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/tutorial_1_introduction_to_mase.html">Tutorial 1: Introduction to the Mase IR, MaseGraph and Torch FX passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/tutorial_2_lora_finetune.html">Tutorial 2: Finetuning Bert for Sequence Classification using a LoRA adapter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/tutorial_3_qat.html">Tutorial 3: Running Quantization-Aware Training (QAT) on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/tutorial_4_pruning.html">Tutorial 4: Unstructured Pruning on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/tutorial_5_nas_optuna.html">Tutorial 5: Neural Architecture Search (NAS) with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/tutorial_6_mixed_precision_search.html">Tutorial 6: Mixed Precision Quantization Search with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/tutorial_7_distributed_deployment.html">Tutorial 7: Deploying a Model for Inference on Distributed Clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/tutorial_9_kernel_fusion.html">Tutorial 9: Running Kernel Fusion for Inference Acceleration on GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/advanced/tensorRT_quantization_tutorial.html">Advanced: TensorRT Quantization Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/advanced/onnxrt_quantization_tutorial.html">Advanced: ONNX Runtime Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/advanced/cli.html">Advanced: Using Mase CLI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/developer/Add-model-to-machop.html">Developer: Guide on how to add a new model into Machop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/developer/doc_writing.html">Developer: How to write documentations in MASE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/tutorials/developer/how_to_extend_search.html">Developer: How to extend search</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/health.html">Repository Health</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../../modules/documentation/specifications.html">Coding Style Specifications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/specifications/C-coding-style-specifications.html">C/C++ Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/specifications/Python-coding-style-specifications.html">Python Coding Style Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/documentation/specifications/Verilog-coding-style-specifications.html">Verilog Coding Style Specifications</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../../modules/machop.html">Machop Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/chop/actions.html">chop.actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/chop/datasets.html">chop.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/chop/distributed.html">chop.distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/chop/ir.html">chop.ir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/chop/models.html">chop.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/chop/nn.html">chop.nn</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../../modules/chop/nn_quantized.html">chop.nn.quantized</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../../modules/chop/nn_quantized_functional.html">chop.nn.quantized.functional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../../modules/chop/nn_quantized_modules.html">chop.nn.quantized.modules</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../../modules/chop/passes.html">chop.passes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../../../modules/chop/passes_module.html">chop.passes.module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/module_analysis/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/module_transform/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/transform/onn.html">chop.passes.module.transforms.onn</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../../../modules/chop/passes_graph.html">chop.passes.graph</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/analysis/add_metadata.html">chop.passes.graph.analysis.add_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/analysis/autosharding.html">chop.passes.graph.analysis.autosharding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/analysis/init_metadata.html">chop.passes.graph.analysis.init_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/analysis/report.html">chop.passes.graph.analysis.report</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/analysis/statistical_profiler.html">chop.passes.graph.analysis.statistical_profiler.profile_statistics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/analysis/verify.html">chop.passes.graph.analysis.verify.verify</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/analysis/quantization.html">chop.passes.graph.calculate_avg_bits_mg_analysis_pass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/analysis/pruning.html">chop.passes.graph.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/analysis/runtime.html">chop.passes.graph.analysis.runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/transform/pruning.html">chop.passes.transform.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/transform/quantize.html">chop.passes.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/transform/utils.html">chop.passes.transform.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/transform/tensorrt.html">chop.passes.transform.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/interface/save_and_load.html">chop.passes.interface.save_and_load</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/interface/tensorrt.html">chop.passes.interface.tensorrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../../modules/chop/interface/onnxrt.html">chop.passes.interface.onnxrt</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/chop/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/chop/tools.html">chop.tools</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Deep Learning Systems</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../../modules/adls_2024.html">Advanced Deep Learning Systems: 2024/2025</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2024/lab_0_introduction.html">Lab 0: Introduction to Mase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2024/lab_1_compression.html">Lab 1: Model Compression (Quantization and Pruning)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2024/lab_2_nas.html">Lab 2: Neural Architecture Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2024/lab_3_mixed_precision_search.html">Lab 3: Mixed Precision Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2024/lab4-software.html">Lab 4 (Software Stream) Performance Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2024/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../../modules/adls_2023.html">Advanced Deep Learning Systems: 2023/2024</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2023/lab1.html">Lab 1 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2023/lab2.html">Lab 2 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2023/lab3.html">Lab 3 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2023/lab4-software.html">Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../modules/labs_2023/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for chop.passes.graph.analysis.add_metadata.add_common_metadata</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.fx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.passes.graph.analysis.utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">is_tensor_constant</span><span class="p">,</span>
+    <span class="n">match_and_filter</span><span class="p">,</span>
+    <span class="n">is_seq_blocks_parameter</span><span class="p">,</span>
+    <span class="n">get_input_nodes</span><span class="p">,</span>
+    <span class="n">get_output_nodes</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.nn.modules</span><span class="w"> </span><span class="kn">import</span> <span class="n">GroupedQueryAttention</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.ir.common</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">MASE_BUILTIN_FUNCS</span><span class="p">,</span>
+    <span class="n">MASE_IMPLICIT_FUNCS</span><span class="p">,</span>
+    <span class="n">MASE_MODULE_RELATED_FUNCS</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.passes.graph.analysis.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_attr</span><span class="p">,</span> <span class="n">load_arg</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_hf_dummy_in</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.common_metadata_layers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">analyse_common_parameters_attr</span><span class="p">,</span>
+    <span class="n">analyse_common_parameters_function</span><span class="p">,</span>
+    <span class="n">analyse_common_parameters_method</span><span class="p">,</span>
+    <span class="n">analyse_common_parameters_module</span><span class="p">,</span>
+    <span class="n">analyse_common_parameters_output</span><span class="p">,</span>
+    <span class="n">analyse_common_parameters_placeholder</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">graph_iterator_for_mase_ops</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="n">node</span><span class="p">:</span> <span class="n">fx</span><span class="o">.</span><span class="n">Node</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;call_module&quot;</span><span class="p">:</span>
+            <span class="n">module_name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">target</span>
+            <span class="n">module</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">module_name</span><span class="p">]</span>
+            <span class="n">mase_type</span> <span class="o">=</span> <span class="s2">&quot;module_related_func&quot;</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">AdaptiveAvgPool1d</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;adaptive_avg_pool1d&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">AdaptiveAvgPool2d</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;adaptive_avg_pool2d&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">AdaptiveMaxPool1d</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;adaptive_max_pool1d&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">AdaptiveMaxPool2d</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;adaptive_max_pool2d&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">AvgPool1d</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;avg_pool1d&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">AvgPool2d</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;avg_pool2d&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">MaxPool1d</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;max_pool1d&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">MaxPool2d</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;max_pool2d&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm1d</span><span class="p">):</span>
+                <span class="n">mase_type</span> <span class="o">=</span> <span class="s2">&quot;module&quot;</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;batch_norm1d&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">):</span>
+                <span class="n">mase_type</span> <span class="o">=</span> <span class="s2">&quot;module&quot;</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;batch_norm2d&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;conv2d&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv1d</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;conv1d&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">ConvTranspose2d</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;convtranspose2d&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;layer_norm&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">GroupNorm</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;group_norm&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">InstanceNorm2d</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;instance_norm2d&quot;</span>
+            <span class="c1"># elif isinstance(module, rms.RMSNorm):</span>
+            <span class="c1">#     mase_op = &quot;rms_norm&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;linear&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;relu&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">SELU</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;selu&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Tanh</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;tanh&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">GELU</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;gelu&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Softsign</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;softsign&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Softplus</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;softplus&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Hardtanh</span><span class="p">):</span>  <span class="c1"># TODO: This is not implemented yet</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;hardtanh&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Embedding</span><span class="p">):</span>
+                <span class="n">mase_type</span> <span class="o">=</span> <span class="s2">&quot;implicit_func&quot;</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;embedding&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">patched_custom_layers</span><span class="p">)):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;patched_custom_layers&quot;</span>
+            <span class="c1"># NOTE: The ones below were added to support MobileNetV2 and MobileNetV3.</span>
+            <span class="c1"># These don&#39;t show up when printing the fx.graph.</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU6</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;relu6&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;dropout&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Hardswish</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;hardswish&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Hardsigmoid</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;hardsigmoid&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;sigmoid&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Softmax</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;softmax&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Hardshrink</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;hardshrink&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">SiLU</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;silu&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">ELU</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;elu&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Softshrink</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;softshrink&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">LogSigmoid</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;logsigmoid&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;crossentropyloss&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">GroupedQueryAttention</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;grouped_query_attention&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Flatten</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;flatten&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Identity</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;identity&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">upsampling</span><span class="o">.</span><span class="n">Upsample</span><span class="p">):</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;upsample&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mase_op</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">for</span> <span class="n">module_cls</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">custom_ops</span><span class="p">[</span><span class="s2">&quot;modules&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">module_cls</span><span class="p">):</span>
+                        <span class="n">mase_op</span> <span class="o">=</span> <span class="s2">&quot;user_defined_module&quot;</span>
+                        <span class="k">break</span>
+                <span class="k">if</span> <span class="n">mase_op</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Unknown module: </span><span class="si">{</span><span class="n">module_name</span><span class="si">}</span><span class="s2">, which is class </span><span class="si">{</span><span class="n">module_cls</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mase_type</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mase_op</span>
+
+        <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;call_function&quot;</span><span class="p">:</span>
+            <span class="c1"># we might have things like mult_1, add_2, so we need to match the pattern</span>
+            <span class="n">matching</span><span class="p">,</span> <span class="n">matched_name</span> <span class="o">=</span> <span class="n">match_and_filter</span><span class="p">(</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                <span class="n">MASE_BUILTIN_FUNCS</span>
+                <span class="o">+</span> <span class="n">MASE_MODULE_RELATED_FUNCS</span>
+                <span class="o">+</span> <span class="n">MASE_IMPLICIT_FUNCS</span>
+                <span class="o">+</span> <span class="n">graph</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">patched_op_names</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">matching</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Unknown call_function node: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="si">}</span><span class="s2"> with name </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="n">matched_name</span> <span class="ow">in</span> <span class="n">MASE_BUILTIN_FUNCS</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;builtin_func&quot;</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">matched_name</span>
+            <span class="c1"># ! TODO: we might need to add more functions here</span>
+            <span class="k">elif</span> <span class="n">matched_name</span> <span class="ow">in</span> <span class="n">MASE_MODULE_RELATED_FUNCS</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span>
+                    <span class="s2">&quot;mase_type&quot;</span>
+                <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;module_related_func&quot;</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">matched_name</span>
+            <span class="k">elif</span> <span class="n">matched_name</span> <span class="ow">in</span> <span class="n">MASE_IMPLICIT_FUNCS</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;implicit_func&quot;</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">matched_name</span>
+            <span class="k">elif</span> <span class="n">matched_name</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">patched_op_names</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;patched_func&quot;</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">matched_name</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown node type: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;call_method&quot;</span><span class="p">:</span>
+            <span class="c1"># we might have things like size_1, size_2, so we need to match the pattern</span>
+            <span class="c1"># ! TODO: might need to add this for others as well.</span>
+            <span class="n">matching</span><span class="p">,</span> <span class="n">matched_name</span> <span class="o">=</span> <span class="n">match_and_filter</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">MASE_IMPLICIT_FUNCS</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">matching</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown node type: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">matched_name</span> <span class="ow">in</span> <span class="n">MASE_IMPLICIT_FUNCS</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;implicit_func&quot;</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">target</span>
+
+        <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;placeholder&quot;</span><span class="p">:</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;placeholder&quot;</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;placeholder&quot;</span>
+
+        <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;get_attr&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;_tensor_constant0&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="n">is_tensor_constant</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">):</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;implicit_func&quot;</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;constant&quot;</span>
+            <span class="k">elif</span> <span class="n">is_seq_blocks_parameter</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">):</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;implicit_func&quot;</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span>
+                    <span class="s2">&quot;mase_op&quot;</span>
+                <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;constant&quot;</span>  <span class="c1"># ! TODO: ??? what to assign here</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;get_attr&quot;</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;constant&quot;</span>
+                <span class="c1"># raise NotImplementedError(f&quot;Unknown node type: {node.target}&quot;)</span>
+
+        <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;output&quot;</span><span class="p">:</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;output&quot;</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;output&quot;</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown node type: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">graph</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">graph_iterator_for_metadata</span><span class="p">(</span>
+    <span class="n">graph</span><span class="p">,</span>
+    <span class="n">dummy_in</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">add_value</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">force_device_meta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    largely adapted from https://pytorch.org/docs/stable/fx.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">model</span><span class="p">,</span> <span class="n">fx_graph</span><span class="p">,</span> <span class="n">modules</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">modules</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># force everything to be on device=&quot;meta&quot;</span>
+    <span class="k">if</span> <span class="n">force_device_meta</span><span class="p">:</span>
+        <span class="n">dummy_in</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;meta&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">dummy_in</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;meta&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;placeholder&quot;</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">dummy_in</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+            <span class="n">analyse_fn</span> <span class="o">=</span> <span class="n">analyse_common_parameters_placeholder</span>
+        <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;get_attr&quot;</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">fetch_attr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+            <span class="n">analyse_fn</span> <span class="o">=</span> <span class="n">analyse_common_parameters_attr</span>
+        <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;call_function&quot;</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">load_arg</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
+            <span class="n">kwargs</span> <span class="o">=</span> <span class="n">load_arg</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">analyse_fn</span> <span class="o">=</span> <span class="n">analyse_common_parameters_function</span>
+        <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;call_method&quot;</span><span class="p">:</span>
+            <span class="n">self_obj</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span> <span class="o">=</span> <span class="n">load_arg</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">self_obj</span><span class="p">)</span>
+            <span class="n">kwargs</span> <span class="o">=</span> <span class="n">load_arg</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">self_obj</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">)(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">analyse_fn</span> <span class="o">=</span> <span class="n">analyse_common_parameters_method</span>
+        <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;call_module&quot;</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">load_arg</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
+            <span class="n">kwargs</span> <span class="o">=</span> <span class="n">load_arg</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">modules</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">](</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">analyse_fn</span> <span class="o">=</span> <span class="n">analyse_common_parameters_module</span>
+        <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;output&quot;</span><span class="p">:</span>
+            <span class="n">analyse_fn</span> <span class="o">=</span> <span class="n">analyse_common_parameters_output</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown node type: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">analyse_fn</span><span class="p">(</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">],</span> <span class="n">result</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">add_value</span><span class="o">=</span><span class="n">add_value</span>
+        <span class="p">)</span>
+        <span class="n">env</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+
+        <span class="c1"># For call_method nodes, the input tensor is not kept in meta[&quot;common&quot;][&quot;args&quot;]</span>
+        <span class="c1"># so we keep a copy under the &quot;self&quot; key. This is used in autosharding spec propagation.</span>
+        <span class="k">if</span> <span class="n">add_value</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;call_method&quot;</span><span class="p">:</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;self&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">self_obj</span>
+
+    <span class="k">return</span> <span class="n">graph</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_graph_metadata</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Register graph-level metadata</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">graph</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;nodes_in&quot;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s2">&quot;nodes_out&quot;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s2">&quot;args&quot;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s2">&quot;results&quot;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="p">}</span>
+    <span class="n">graph</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;nodes_in&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_input_nodes</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="p">)</span>
+    <span class="n">graph</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;nodes_out&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_output_nodes</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="p">)</span>
+
+    <span class="n">graph</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;nodes_in&quot;</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">arg</span><span class="p">,</span> <span class="n">arg_info</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="s2">&quot;data&quot;</span> <span class="ow">in</span> <span class="n">arg</span><span class="p">:</span>
+                <span class="n">graph</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="n">arg</span><span class="p">]</span> <span class="o">=</span> <span class="n">arg_info</span>
+
+    <span class="n">graph</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;results&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;nodes_out&quot;</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">result</span><span class="p">,</span> <span class="n">result_info</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;results&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="s2">&quot;data&quot;</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+                <span class="n">graph</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">][</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;results&quot;</span><span class="p">][</span><span class="n">result</span><span class="p">]</span> <span class="o">=</span> <span class="n">result_info</span>
+
+    <span class="k">return</span> <span class="n">graph</span>
+
+
+<div class="viewcode-block" id="add_common_metadata_analysis_pass">
+<a class="viewcode-back" href="../../../../../../modules/chop/analysis/add_metadata.html#chop.passes.graph.analysis.add_metadata.add_common_metadata.add_common_metadata_analysis_pass">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_common_metadata_analysis_pass</span><span class="p">(</span>
+    <span class="n">graph</span><span class="p">,</span>
+    <span class="n">pass_args</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;dummy_in&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;add_value&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;force_device_meta&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;add common metadata</span>
+
+<span class="sd">    :param graph: a MaseGraph</span>
+<span class="sd">    :type graph: MaseGraph</span>
+
+<span class="sd">    :param pass_args: this pass does not need any arguments, defaults to None</span>
+<span class="sd">    :type pass_args: _type_, optional, &quot;add_value&quot; controls whether tensor values would be added to the meta data, defaults to True</span>
+
+<span class="sd">    pass_args can take</span>
+
+<span class="sd">    - dummy_in: a dictionary of dummy inputs to the graph</span>
+
+<span class="sd">    - add_value: a boolean to control whether tensor values would be added to the meta data in the &quot;value&quot; field</span>
+
+<span class="sd">    - force_device_meta: a boolean to force everything to be on device=&quot;meta&quot;</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        {</span>
+<span class="sd">            &quot;dummy_in&quot;: dummy_in, # this would be a dictionary of dummy inputs (actual tensors)</span>
+<span class="sd">            &quot;add_value&quot;: True, # if True, real values of tensors would be added to the metadata &quot;value&quot; field</span>
+<span class="sd">            &quot;force_device_meta&quot;: False # if True, everything would be forced to be on device=&quot;meta&quot; for a symbolic run</span>
+<span class="sd">        }</span>
+
+<span class="sd">    :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)</span>
+<span class="sd">    :rtype: tuple(MaseGraph, Dict)</span>
+
+
+<span class="sd">    The common metadata of a Mase node in a Mase graph describes the constraints of the</span>
+<span class="sd">    node for any static analysis or possible transformation. The metadata has a</span>
+<span class="sd">    tree structure, e.g.</span>
+
+<span class="sd">    - common</span>
+<span class="sd">        - mase_op -&gt; str : the mase op of the node, e.g. placeholder, linear, relu</span>
+
+<span class="sd">        - mase_type -&gt; str : the mase type of the node, e.g. module, builtin_func, module_related_func</span>
+
+<span class="sd">        - args -&gt; {}</span>
+<span class="sd">            - $name : name of the arg</span>
+
+<span class="sd">                (if the arg is a tensor)</span>
+
+<span class="sd">                - type -&gt; type of the arg, e.g. fixed point or float</span>
+
+<span class="sd">                - precision -&gt; format of the type, e.g. (10, 5)</span>
+
+<span class="sd">                - shape -&gt; shape of the arg</span>
+
+<span class="sd">                (if the arg is not a tensor)</span>
+
+<span class="sd">                - value of the arg</span>
+
+<span class="sd">        - results -&gt; {}</span>
+<span class="sd">            - $name : name of the result</span>
+
+<span class="sd">                (if the result is a tensor)</span>
+
+<span class="sd">                - type -&gt; type of the result, e.g. fixed point or float</span>
+
+<span class="sd">                - precision -&gt; format of the type, e.g. (10, 5)</span>
+
+<span class="sd">                - shape -&gt; shape of the result</span>
+
+<span class="sd">                (if the result is not a tensor)</span>
+
+<span class="sd">                - value of the result</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    A linear layer in a mase graph:</span>
+
+<span class="sd">    .. code-block:: shell</span>
+
+<span class="sd">        %fc1 : [num_users=1] = call_module[target=fc1](args = (%flatten,), kwargs = {})</span>
+
+
+<span class="sd">    A linear layer after this pass:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        {</span>
+<span class="sd">            &quot;common&quot;: {</span>
+<span class="sd">                &quot;mase_type&quot;: &quot;module_related_func&quot;,</span>
+<span class="sd">                &quot;mase_op&quot;: &quot;linear&quot;,</span>
+<span class="sd">                &quot;args&quot;: {</span>
+<span class="sd">                    &quot;data_in_0&quot;: {</span>
+<span class="sd">                        &quot;shape&quot;: [1, 784],</span>
+<span class="sd">                        &quot;torch_dtype&quot;: torch.float32,</span>
+<span class="sd">                        &quot;type&quot;: &quot;float&quot;,</span>
+<span class="sd">                        &quot;precision&quot;: [32],</span>
+<span class="sd">                    },</span>
+<span class="sd">                    &quot;weight&quot;: {&quot;type&quot;: &quot;float&quot;, &quot;precision&quot;: [32], &quot;shape&quot;: [784, 784]},</span>
+<span class="sd">                    &quot;bias&quot;: {&quot;type&quot;: &quot;float&quot;, &quot;precision&quot;: [32], &quot;shape&quot;: [784]},</span>
+<span class="sd">                },</span>
+<span class="sd">                &quot;results&quot;: {</span>
+<span class="sd">                    &quot;data_out_0&quot;: {</span>
+<span class="sd">                        &quot;type&quot;: &quot;float&quot;,</span>
+<span class="sd">                        &quot;precision&quot;: [32],</span>
+<span class="sd">                        &quot;shape&quot;: [1, 784],</span>
+<span class="sd">                        &quot;torch_dtype&quot;: torch.float32,</span>
+<span class="sd">                    }</span>
+<span class="sd">                },</span>
+<span class="sd">            },</span>
+<span class="sd">            &quot;software&quot;: {},</span>
+<span class="sd">        }</span>
+
+
+<span class="sd">    A relu layer in a mase graph:</span>
+
+<span class="sd">    .. code-block:: shell</span>
+
+<span class="sd">        %relu : [num_users=1] = call_function[target=torch.nn.functional.relu](args = (%fc1,), kwargs = {inplace: False})</span>
+
+
+<span class="sd">    A relu layer after this pass:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        {</span>
+<span class="sd">            &quot;common&quot;: {</span>
+<span class="sd">                &quot;mase_type&quot;: &quot;module_related_func&quot;,</span>
+<span class="sd">                &quot;mase_op&quot;: &quot;relu&quot;,</span>
+<span class="sd">                &quot;results&quot;: {</span>
+<span class="sd">                    &quot;data_out_0&quot;: {</span>
+<span class="sd">                        &quot;type&quot;: &quot;float&quot;,</span>
+<span class="sd">                        &quot;precision&quot;: [32],</span>
+<span class="sd">                        &quot;shape&quot;: [1, 784],</span>
+<span class="sd">                        &quot;torch_dtype&quot;: torch.float32,</span>
+<span class="sd">                    }</span>
+<span class="sd">                },</span>
+<span class="sd">                &quot;args&quot;: {</span>
+<span class="sd">                    &quot;data_in_0&quot;: {</span>
+<span class="sd">                        &quot;shape&quot;: [1, 784],</span>
+<span class="sd">                        &quot;torch_dtype&quot;: torch.float32,</span>
+<span class="sd">                        &quot;type&quot;: &quot;float&quot;,</span>
+<span class="sd">                        &quot;precision&quot;: [32],</span>
+<span class="sd">                    },</span>
+<span class="sd">                    &quot;inplace&quot;: False,</span>
+<span class="sd">                },</span>
+<span class="sd">            },</span>
+<span class="sd">            &quot;software&quot;: {},</span>
+<span class="sd">        }</span>
+
+
+<span class="sd">    A flatten op in a mase graph:</span>
+
+<span class="sd">    .. code-block:: shell</span>
+
+<span class="sd">        %flatten : [num_users=1] = call_function[target=torch.flatten](args = (%x,), kwargs = {start_dim: 1, end_dim: -1})</span>
+
+
+<span class="sd">    A flatten op after this pass:</span>
+
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        {</span>
+<span class="sd">            &quot;common&quot;: {</span>
+<span class="sd">                &quot;mase_type&quot;: &quot;implicit_func&quot;,</span>
+<span class="sd">                &quot;mase_op&quot;: &quot;flatten&quot;,</span>
+<span class="sd">                &quot;results&quot;: {</span>
+<span class="sd">                    &quot;data_out_0&quot;: {</span>
+<span class="sd">                        &quot;type&quot;: &quot;float&quot;,</span>
+<span class="sd">                        &quot;precision&quot;: [32],</span>
+<span class="sd">                        &quot;shape&quot;: [1, 784],</span>
+<span class="sd">                        &quot;torch_dtype&quot;: torch.float32,</span>
+<span class="sd">                    }</span>
+<span class="sd">                },</span>
+<span class="sd">                &quot;args&quot;: {</span>
+<span class="sd">                    &quot;data_in_0&quot;: {</span>
+<span class="sd">                        &quot;shape&quot;: [1, 28, 28],</span>
+<span class="sd">                        &quot;torch_dtype&quot;: torch.float32,</span>
+<span class="sd">                        &quot;type&quot;: &quot;float&quot;,</span>
+<span class="sd">                        &quot;precision&quot;: [32],</span>
+<span class="sd">                    },</span>
+<span class="sd">                    &quot;start_dim&quot;: 1,</span>
+<span class="sd">                    &quot;end_dim&quot;: -1,</span>
+<span class="sd">                },</span>
+<span class="sd">            },</span>
+<span class="sd">            &quot;software&quot;: {},</span>
+<span class="sd">        }</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dummy_in&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">graph</span><span class="o">.</span><span class="n">is_huggingface</span><span class="p">:</span>
+        <span class="n">dummy_in</span> <span class="o">=</span> <span class="n">get_hf_dummy_in</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+        <span class="n">pass_args</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">&quot;dummy_in&quot;</span><span class="p">}</span>
+        <span class="n">pass_args</span><span class="p">[</span><span class="s2">&quot;dummy_in&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dummy_in</span>
+    <span class="k">elif</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dummy_in&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">model</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;dummy_in must be provided for add_common_metadata_analysis_pass.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="p">)</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">graph_iterator_for_mase_ops</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">graph_iterator_for_metadata</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="o">**</span><span class="n">pass_args</span><span class="p">)</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">_add_graph_metadata</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">graph</span><span class="p">,</span> <span class="p">{}</span></div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By DeepWok
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, DeepWok.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
