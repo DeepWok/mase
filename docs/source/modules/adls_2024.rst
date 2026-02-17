@@ -33,7 +33,6 @@ This module covers the following topics:
     labs_2024/lab_1_compression
     labs_2024/lab_2_nas
     labs_2024/lab_3_mixed_precision_search
-    labs_2024/lab4-hardware
     labs_2024/lab4-software
 
 .. toctree::

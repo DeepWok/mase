@@ -1,7 +1,6 @@
-import math
 import joblib
 
-from .runners import get_sw_runner, get_hw_runner
+from .runners import get_sw_runner
 
 
 class SearchStrategyBase:
@@ -17,7 +16,7 @@ class SearchStrategyBase:
     - perform search, which includes:
         - sample the search_space.choice_lengths_flattened to get the indexes
         - call search_space.rebuild_model to build a new model with the sampled indexes
-        - calculate the software & hardware metrics through the sw_runners and hw_runners
+        - calculate the software metrics through the configured runners
     - save the results
 
     ---
@@ -51,27 +50,12 @@ class SearchStrategyBase:
         self.visualizer = visualizer
 
         self.sw_runner = []
-        self.hw_runner = []
         # the software runner's __call__ will use the rebuilt model to calculate the software metrics like accuracy, loss, ...
 
         if "sw_runner" in config.keys():
             for runner_name, runner_cfg in config["sw_runner"].items():
                 self.sw_runner.append(
                     get_sw_runner(
-                        runner_name,
-                        model_info,
-                        task,
-                        dataset_info,
-                        accelerator,
-                        runner_cfg,
-                    )
-                )
-
-        if "hw_runner" in config.keys():
-            # the hardware runner's __call__ will use the rebuilt model to calculate the hardware metrics like average bitwidth, latency, ...
-            for runner_name, runner_cfg in config["hw_runner"].items():
-                self.hw_runner.append(
-                    get_hw_runner(
                         runner_name,
                         model_info,
                         task,
