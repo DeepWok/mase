@@ -2,7 +2,6 @@ import logging
 from pprint import pformat
 from tabulate import tabulate
 from pathlib import Path
-import copy
 
 
 logger = logging.getLogger(__name__)
@@ -91,45 +90,6 @@ def report_node_shape_analysis_pass(graph, pass_args: dict = {}):
     return graph, {}
 
 
-def graph_iterator_inspect_node_hardware_type(graph):
-    headers = ["Node name", "Fx Node op", "Type", "Tool Chain", "Device ID"]
-    rows = []
-    for node in graph.fx_graph.nodes:
-        if node.meta["mase"].parameters["hardware"]["is_implicit"]:
-            continue
-        rows.append(
-            [
-                node.name,
-                node.op,
-                node.meta["mase"].parameters["common"]["results"]["data_out_0"]["type"],
-                node.meta["mase"].parameters["hardware"]["toolchain"],
-                node.meta["mase"].parameters["hardware"]["device_id"],
-            ]
-        )
-    logger.info("Inspecting graph [add_common_node_hardware_type_analysis_pass]")
-    logger.info("\n" + tabulate(rows, headers=headers))
-    return graph
-
-
-def report_node_hardware_type_analysis_pass(graph, pass_args: dict = {}):
-    """
-    Perform hardware type analysis on the given graph.
-
-    :param graph: The graph to perform the analysis on.
-    :type graph: MaseGraph
-
-    :param pass_args: Optional arguments for the analysis pass.
-    :type pass_args: dict, optional
-
-    pass_args should be None for this pass.
-
-    :return: The analyzed graph and an empty dictionary.
-    :rtype: tuple(MaseGraph, dict)
-    """
-    graph = graph_iterator_inspect_node_hardware_type(graph)
-    return graph, {}
-
-
 def report_node_meta_param_analysis_pass(graph, pass_args: dict = {}):
     """
     Perform meta parameter analysis on the nodes in the graph and generate a report.
@@ -138,13 +98,13 @@ def report_node_meta_param_analysis_pass(graph, pass_args: dict = {}):
     :type graph: MaseGraph
 
     :param pass_args: Optional arguments for the analysis pass, a dict of arguments for this pass, including
-        - "which": str, and a list of options in ["all", "common", "hardware", "software"], default ["all"]
+        - "which": str, and a list of options in ["all", "common", "software"], default ["all"]
         - "save_path": str, a str of path to save the table, default None
 
     .. code-block:: python
 
         pass_args = {
-            "which": "all", # pick from ["all", "common", "hardware", "software"],
+            "which": "all", # pick from ["all", "common", "software"],
             "save_path": "path/to/save/table.txt" # default None, a str of path to save the table
         }
 
@@ -158,9 +118,8 @@ def report_node_meta_param_analysis_pass(graph, pass_args: dict = {}):
         assert param in [
             "all",
             "common",
-            "hardware",
             "software",
-        ], f"Invalid which_param {param}, must be a list of options in ['all', 'common', 'hardware', 'software'], got {param}"
+        ], f"Invalid which_param {param}, must be a list of options in ['all', 'common', 'software'], got {param}"
     save_path = pass_args.get("save_path", None)
 
     headers = [
@@ -172,8 +131,6 @@ def report_node_meta_param_analysis_pass(graph, pass_args: dict = {}):
 
     if "common" in which_param or "all" in which_param:
         headers.append("Common Param")
-    if "hardware" in which_param or "all" in which_param:
-        headers.append("Hardware Param")
     if "software" in which_param or "all" in which_param:
         headers.append("Software Param")
 
@@ -188,8 +145,6 @@ def report_node_meta_param_analysis_pass(graph, pass_args: dict = {}):
 
         if "common" in which_param or "all" in which_param:
             new_row.append(pformat(node.meta["mase"].parameters["common"]))
-        if "hardware" in which_param or "all" in which_param:
-            new_row.append(pformat(node.meta["mase"].parameters["hardware"]))
         if "software" in which_param or "all" in which_param:
             new_row.append(pformat(node.meta["mase"].parameters["software"]))
 

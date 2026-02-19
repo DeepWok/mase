@@ -207,7 +207,7 @@ class Conv1dFlexRound(nn.Conv1d):
         groups=1,
         bias=True,
         config=None,
-        **kwargs
+        **kwargs,
     ):
         """
         A Conv1d layer wrapped with FlexRound quantization.
@@ -230,7 +230,7 @@ class Conv1dFlexRound(nn.Conv1d):
             dilation,
             groups,
             bias,
-            **kwargs
+            **kwargs,
         )
         config = config or {}
         s1_init = config.get("s1_init", 1.0)

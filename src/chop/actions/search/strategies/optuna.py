@@ -8,8 +8,6 @@ import joblib
 from functools import partial
 from .base import SearchStrategyBase
 
-from chop.passes.module.analysis import calculate_avg_bits_module_analysis_pass
-
 logger = logging.getLogger(__name__)
 
 
@@ -69,17 +67,6 @@ class SearchStrategyOptuna(SearchStrategyBase):
                 metrics |= runner(self.data_module, model, sampled_config)
         return metrics
 
-    def compute_hardware_metrics(self, model, sampled_config, is_eval_mode: bool):
-        metrics = {}
-        if is_eval_mode:
-            with torch.no_grad():
-                for runner in self.hw_runner:
-                    metrics |= runner(self.data_module, model, sampled_config)
-        else:
-            for runner in self.hw_runner:
-                metrics |= runner(self.data_module, model, sampled_config)
-        return metrics
-
     def objective(self, trial: optuna.trial.Trial, search_space):
         sampled_indexes = {}
         if hasattr(search_space, "optuna_sampler"):
@@ -95,18 +82,15 @@ class SearchStrategyOptuna(SearchStrategyBase):
         software_metrics = self.compute_software_metrics(
             model, sampled_config, is_eval_mode
         )
-        hardware_metrics = self.compute_hardware_metrics(
-            model, sampled_config, is_eval_mode
-        )
-        metrics = software_metrics | hardware_metrics
+        metrics = software_metrics
         scaled_metrics = {}
         for metric_name in self.metric_names:
+            metric_value = metrics.get(metric_name, 32.0)
             scaled_metrics[metric_name] = (
-                self.config["metrics"][metric_name]["scale"] * metrics[metric_name]
+                self.config["metrics"][metric_name]["scale"] * metric_value
             )
 
         trial.set_user_attr("software_metrics", software_metrics)
-        trial.set_user_attr("hardware_metrics", hardware_metrics)
         trial.set_user_attr("scaled_metrics", scaled_metrics)
         trial.set_user_attr("sampled_config", sampled_config)
 
@@ -178,7 +162,6 @@ class SearchStrategyOptuna(SearchStrategyBase):
                 "number",
                 "value",
                 "software_metrics",
-                "hardware_metrics",
                 "scaled_metrics",
                 "sampled_config",
             ]
@@ -190,7 +173,6 @@ class SearchStrategyOptuna(SearchStrategyBase):
                     trial.number,
                     trial.values,
                     trial.user_attrs["software_metrics"],
-                    trial.user_attrs["hardware_metrics"],
                     trial.user_attrs["scaled_metrics"],
                     trial.user_attrs["sampled_config"],
                 ]
@@ -201,7 +183,6 @@ class SearchStrategyOptuna(SearchStrategyBase):
                 best_trial.number,
                 best_trial.value,
                 best_trial.user_attrs["software_metrics"],
-                best_trial.user_attrs["hardware_metrics"],
                 best_trial.user_attrs["scaled_metrics"],
                 best_trial.user_attrs["sampled_config"],
             ]
@@ -209,9 +190,7 @@ class SearchStrategyOptuna(SearchStrategyBase):
         df.to_json(save_path, orient="index", indent=4)
 
         txt = "Best trial(s):\n"
-        df_truncated = df.loc[
-            :, ["number", "software_metrics", "hardware_metrics", "scaled_metrics"]
-        ]
+        df_truncated = df.loc[:, ["number", "software_metrics", "scaled_metrics"]]
 
         def beautify_metric(metric: dict):
             beautified = {}
@@ -227,13 +206,9 @@ class SearchStrategyOptuna(SearchStrategyBase):
                     beautified[k] = txt
             return beautified
 
-        df_truncated.loc[
-            :, ["software_metrics", "hardware_metrics", "scaled_metrics"]
-        ] = df_truncated.loc[
-            :, ["software_metrics", "hardware_metrics", "scaled_metrics"]
-        ].map(
-            beautify_metric
-        )
+        df_truncated.loc[:, ["software_metrics", "scaled_metrics"]] = df_truncated.loc[
+            :, ["software_metrics", "scaled_metrics"]
+        ].map(beautify_metric)
         txt += tabulate(
             df_truncated,
             headers="keys",

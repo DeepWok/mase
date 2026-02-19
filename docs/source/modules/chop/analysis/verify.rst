@@ -16,8 +16,3 @@ verify\_software\_metadata\_analysis\_pass
 -----------------------------------------------------------
 
 .. autofunction:: chop.passes.graph.analysis.verify.verify.verify_software_metadata_analysis_pass
-
-verify\_metadata\_analysis\_pass
------------------------------------------------------------
-
-.. autofunction:: chop.passes.graph.analysis.verify.verify.verify_hardware_metadata_analysis_pass

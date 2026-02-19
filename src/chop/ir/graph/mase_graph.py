@@ -95,7 +95,7 @@ def trace_torch_module(
     Trace a torch.nn.Module using the MaseTracer. This function is a wrapper
     around the HFTracer and MaseTracer, and is used to trace a torch.nn.Module
     into a fx.GraphModule. The fx.GraphModule is a dataflow representation of
-    the model with both software and hardware constraints. The MaseTracer is
+    the model with software constraints and metadata. The MaseTracer is
     used to trace the model, and the custom_ops are used to provide custom
     operations to the tracer.
 
@@ -198,7 +198,7 @@ def trace_torch_module(
                 for obj in model.patched_nodes["layers"]
                 + model.patched_nodes["functions"]
             ]
-            # these are layers we believe the user will provide system verilog for
+            # these are layers where users may provide custom implementations
             graph_module.patched_custom_layers = model.patched_nodes["layers"]
             graph_module.additional_inputs = model.patched_nodes["additional_inputs"]
             graph_module.patched_nodes = model.patched_nodes
@@ -227,7 +227,7 @@ class MaseGraph:
         skip_init_metadata: bool = False,
         add_metadata_args: dict = None,
     ) -> None:
-        """MaseGraph is a dataflow representation of a model with both software and hardware constraints.
+        """MaseGraph is a dataflow representation of a model with software constraints.
         The MaseGraph can be constructed from a torch.nn.Module:
 
         .. code-block:: python
@@ -428,7 +428,7 @@ class MaseGraph:
     ):
         """
         Export the MaseGraph to a pair of files: {fname}.pt and {fname}.mz.
-        {fname}.pt contains the complete GraphModule (structure + weights), 
+        {fname}.pt contains the complete GraphModule (structure + weights),
         and {fname}.mz contains the MaseMetadata.
 
         Args:

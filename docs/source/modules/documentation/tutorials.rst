@@ -42,13 +42,12 @@ The following show how to effectively run Neural Architecture Search (NAS) and m
 Inference Deployment
 ---------------------
 
-The following tutorials show how to deploy an optimized model to a range of platforms, including FPGA and GPU clusters.
+The following tutorials show how to deploy an optimized model to software platforms.
 
 .. toctree::
    :maxdepth: 1
 
    tutorials/tutorial_7_distributed_deployment
-   tutorials/tutorial_8_emit_verilog
    tutorials/tutorial_9_kernel_fusion
 
 Advanced Topics
@@ -59,7 +58,6 @@ Advanced Topics
 
    tutorials/advanced/tensorRT_quantization_tutorial
    tutorials/advanced/onnxrt_quantization_tutorial
-   tutorials/advanced/pim_transform_tutorial
    tutorials/advanced/cli
 
 
