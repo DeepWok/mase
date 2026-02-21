@@ -1,3 +1,3 @@
-from .attention import LlamaAttentionLSQInteger
-from .rms_norm import LlamaRMSNormLSQInteger
-from .mlp import LlamaMLPLSQInteger
+from .attention import LlamaAttentionLSQInteger, LlamaAttentionMXFP, LlamaAttentionMXInt
+from .rms_norm import LlamaRMSNormLSQInteger, LlamaRMSNormMinifloat
+from .mlp import LlamaMLPLSQInteger, LlamaMLPMXFP, LlamaMLPMXInt

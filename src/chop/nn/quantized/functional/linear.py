@@ -608,7 +608,7 @@ def linearMXFP(
         block_size=w_block_size,
         element_exp_bits=w_exp_bits,
         element_frac_bits=w_frac_bits,
-        block_dim=-1,
+        block_dim=1,
     )
     x_quantizer = partial(
         mxfp_quantizer,
@@ -622,7 +622,7 @@ def linearMXFP(
         block_size=b_block_size,
         element_exp_bits=b_exp_bits,
         element_frac_bits=b_frac_bits,
-        block_dim=-1,
+        block_dim=0,
     )
 
     x = x_quantizer(x)
@@ -650,7 +650,7 @@ def linearMXInt(
         mxint_quantizer,
         block_size=w_block_size,
         element_bits=w_element_bits,
-        block_dim=-1,
+        block_dim=1,
     )
     x_quantizer = partial(
         mxint_quantizer,
@@ -662,7 +662,7 @@ def linearMXInt(
         mxint_quantizer,
         block_size=b_block_size,
         element_bits=b_element_bits,
-        block_dim=-1,
+        block_dim=0,
     )
 
     x = x_quantizer(x)

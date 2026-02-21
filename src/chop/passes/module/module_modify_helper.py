@@ -176,16 +176,28 @@ def instantiate_conv2d(module, postfix, module_map, additional_module_args):
 
 def instantiate_embedding(module, postfix, module_map, additional_module_args):
     embedding_cls = module_map[f"embedding_{postfix}"]
-    embedding = embedding_cls(
-        num_embeddings=module.num_embeddings,
-        embedding_dim=module.embedding_dim,
-        padding_idx=module.padding_idx,
-        max_norm=module.max_norm,
-        norm_type=module.norm_type,
-        scale_grad_by_freq=module.scale_grad_by_freq,
-        sparse=module.sparse,
-        **additional_module_args,
-    )
+    if "config" in inspect.signature(embedding_cls.__init__).parameters:
+        embedding = embedding_cls(
+            num_embeddings=module.num_embeddings,
+            embedding_dim=module.embedding_dim,
+            padding_idx=module.padding_idx,
+            max_norm=module.max_norm,
+            norm_type=module.norm_type,
+            scale_grad_by_freq=module.scale_grad_by_freq,
+            sparse=module.sparse,
+            config=additional_module_args,
+        )
+    else:
+        embedding = embedding_cls(
+            num_embeddings=module.num_embeddings,
+            embedding_dim=module.embedding_dim,
+            padding_idx=module.padding_idx,
+            max_norm=module.max_norm,
+            norm_type=module.norm_type,
+            scale_grad_by_freq=module.scale_grad_by_freq,
+            sparse=module.sparse,
+            **additional_module_args,
+        )
     return embedding
 
 

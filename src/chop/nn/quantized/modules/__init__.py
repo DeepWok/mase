@@ -9,7 +9,18 @@ from .roberta import (
     RobertaSelfOutputLSQInteger,
 )
 
-from .llama import LlamaAttentionLSQInteger, LlamaRMSNormLSQInteger, LlamaMLPLSQInteger
+from .embedding import EmbeddingMXFP, EmbeddingMXInt
+
+from .llama import (
+    LlamaAttentionLSQInteger,
+    LlamaRMSNormLSQInteger,
+    LlamaMLPLSQInteger,
+    LlamaAttentionMXFP,
+    LlamaAttentionMXInt,
+    LlamaMLPMXFP,
+    LlamaMLPMXInt,
+    LlamaRMSNormMinifloat,
+)
 
 # from .add import AddInteger
 from .conv1d import (
@@ -60,6 +71,8 @@ from .linear import (
     LinearLUT,
     LinearLogicNets,
     LinearMXIntHardware,
+    LinearMXFP,
+    LinearMXInt,
 )
 from .pool2d import (
     AdaptiveAvgPool2dInteger,
@@ -200,6 +213,8 @@ quantized_basic_module_map = {
     "linear_fixed": LinearInteger,
     "linear_log": LinearLog,
     "linear_mxint_hardware": LinearMXIntHardware,
+    "linear_mxfp": LinearMXFP,
+    "linear_mxint": LinearMXInt,
     "linear_block_log": LinearBlockLog,
     "linear_minifloat_ieee": LinearMinifloatIEEE,
     "linear_minifloat_denorm": LinearMinifloatDenorm,
@@ -291,6 +306,8 @@ quantized_basic_module_map = {
     "softplus_ternary": SoftplusTernary,
     "batch_norm1d_fixed": BatchNorm1dInteger,
     "batch_norm1d_linear": BatchNorm1dInteger,
+    "embedding_mxfp": EmbeddingMXFP,
+    "embedding_mxint": EmbeddingMXInt,
 }
 
 quantized_bert_module_map = {
@@ -309,8 +326,13 @@ quantized_roberta_module_map = {
 
 quantized_llama_module_map = {
     "llama_self_attention_lsqinteger": LlamaAttentionLSQInteger,
+    "llama_self_attention_mxfp": LlamaAttentionMXFP,
+    "llama_self_attention_mxint": LlamaAttentionMXInt,
     "llama_rms_norm_lsqinteger": LlamaRMSNormLSQInteger,
+    "llama_rms_norm_minifloat": LlamaRMSNormMinifloat,
     "llama_mlp_lsqinteger": LlamaMLPLSQInteger,
+    "llama_mlp_mxfp": LlamaMLPMXFP,
+    "llama_mlp_mxint": LlamaMLPMXInt,
 }
 
 quantized_module_map = (
