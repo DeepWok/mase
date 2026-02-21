@@ -15,6 +15,8 @@ from chop.nn.quantizers import (
     minifloat_ieee_quantizer,
     binary_quantizer,
     ternary_quantizer,
+    mxfp_quantizer,
+    mxint_quantizer,
 )
 
 # PyTorch has torch.matmul and torch.bmm for matrix multiplication
@@ -430,3 +432,81 @@ def bmm_block_minifloat(x, y, config):
 
 def bmm_block_log(x, y, config):
     return generic_matmul_block_log(x, y, config, style="bmm")
+
+
+def generic_matmul_mxfp(x, y, config, style="matmul"):
+    bypass = config.get("bypass", False)
+    matmul = matmul_mapping[style]
+    if bypass:
+        return matmul(x, y)
+
+    x_block_size = config["data_in_block_size"]
+    x_exp_bits = config["data_in_exponent_width"]
+    x_frac_bits = config["data_in_frac_width"]
+    y_block_size = config["weight_block_size"]
+    y_exp_bits = config["weight_exponent_width"]
+    y_frac_bits = config["weight_frac_width"]
+
+    x_quantizer = partial(
+        mxfp_quantizer,
+        block_size=x_block_size,
+        element_exp_bits=x_exp_bits,
+        element_frac_bits=x_frac_bits,
+        block_dim=-1,
+    )
+    y_quantizer = partial(
+        mxfp_quantizer,
+        block_size=y_block_size,
+        element_exp_bits=y_exp_bits,
+        element_frac_bits=y_frac_bits,
+        block_dim=-1,
+    )
+
+    x = x_quantizer(x)
+    y = y_quantizer(y)
+    return matmul(x, y)
+
+
+def generic_matmul_mxint(x, y, config, style="matmul"):
+    bypass = config.get("bypass", False)
+    matmul = matmul_mapping[style]
+    if bypass:
+        return matmul(x, y)
+
+    x_block_size = config["data_in_block_size"]
+    x_element_bits = config["data_in_width"]
+    y_block_size = config["weight_block_size"]
+    y_element_bits = config["weight_width"]
+
+    x_quantizer = partial(
+        mxint_quantizer,
+        block_size=x_block_size,
+        element_bits=x_element_bits,
+        block_dim=-1,
+    )
+    y_quantizer = partial(
+        mxint_quantizer,
+        block_size=y_block_size,
+        element_bits=y_element_bits,
+        block_dim=-1,
+    )
+
+    x = x_quantizer(x)
+    y = y_quantizer(y)
+    return matmul(x, y)
+
+
+def matmul_mxfp(x, y, config):
+    return generic_matmul_mxfp(x, y, config, "matmul")
+
+
+def matmul_mxint(x, y, config):
+    return generic_matmul_mxint(x, y, config, "matmul")
+
+
+def bmm_mxfp(x, y, config):
+    return generic_matmul_mxfp(x, y, config, "bmm")
+
+
+def bmm_mxint(x, y, config):
+    return generic_matmul_mxint(x, y, config, "bmm")

@@ -12,6 +12,8 @@ from chop.nn.quantized.functional.linear import (
     linearMinifloatDenorm,
     linearMinifloatIEEE,
     linearTernary,
+    linearMXFP,
+    linearMXInt,
 )
 import torch
 from torch import Tensor
@@ -810,3 +812,49 @@ class LinearMXIntHardware(_LinearBase):
         return linearMXIntHardware(
             x, self.weight, self.bias, self.config, self.out_config
         )
+
+
+class LinearMXFP(_LinearBase):
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        bias: bool = True,
+        device=None,
+        dtype=None,
+        config=None,
+    ) -> None:
+        super().__init__(in_features, out_features, bias, device, dtype)
+        assert config is not None, "config is None!"
+        self.config = config
+        self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
+
+    def forward(self, x):
+        if self.bypass:
+            return F.linear(x, self.weight, self.bias)
+        return linearMXFP(x, self.weight, self.bias, self.config)
+
+
+class LinearMXInt(_LinearBase):
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        bias: bool = True,
+        device=None,
+        dtype=None,
+        config=None,
+    ) -> None:
+        super().__init__(in_features, out_features, bias, device, dtype)
+        assert config is not None, "config is None!"
+        self.config = config
+        self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
+
+    def forward(self, x):
+        if self.bypass:
+            return F.linear(x, self.weight, self.bias)
+        return linearMXInt(x, self.weight, self.bias, self.config)

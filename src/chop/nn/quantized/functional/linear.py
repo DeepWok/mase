@@ -16,6 +16,8 @@ from chop.nn.quantizers import (
     binary_quantizer,
     ternary_quantizer,
     mxint_hardware,
+    mxfp_quantizer,
+    mxint_quantizer,
 )
 
 
@@ -581,3 +583,89 @@ def linearMXIntHardware(
     if out_config is not None:
         out = out_quantizer(out)
     return out
+
+
+def linearMXFP(
+    x: Tensor,
+    weight: Tensor,
+    bias: Tensor = None,
+    config: dict = None,
+):
+    w_block_size = config["weight_block_size"]
+    w_exp_bits = config["weight_exponent_width"]
+    w_frac_bits = config["weight_frac_width"]
+
+    x_block_size = config["data_in_block_size"]
+    x_exp_bits = config["data_in_exponent_width"]
+    x_frac_bits = config["data_in_frac_width"]
+
+    b_block_size = config["bias_block_size"]
+    b_exp_bits = config["bias_exponent_width"]
+    b_frac_bits = config["bias_frac_width"]
+
+    w_quantizer = partial(
+        mxfp_quantizer,
+        block_size=w_block_size,
+        element_exp_bits=w_exp_bits,
+        element_frac_bits=w_frac_bits,
+        block_dim=1,
+    )
+    x_quantizer = partial(
+        mxfp_quantizer,
+        block_size=x_block_size,
+        element_exp_bits=x_exp_bits,
+        element_frac_bits=x_frac_bits,
+        block_dim=-1,
+    )
+    b_quantizer = partial(
+        mxfp_quantizer,
+        block_size=b_block_size,
+        element_exp_bits=b_exp_bits,
+        element_frac_bits=b_frac_bits,
+        block_dim=0,
+    )
+
+    x = x_quantizer(x)
+    weight = w_quantizer(weight)
+    bias = b_quantizer(bias) if bias is not None else None
+    return F.linear(x, weight, bias)
+
+
+def linearMXInt(
+    x: Tensor,
+    weight: Tensor,
+    bias: Tensor = None,
+    config: dict = None,
+):
+    w_block_size = config["weight_block_size"]
+    w_element_bits = config["weight_width"]
+
+    x_block_size = config["data_in_block_size"]
+    x_element_bits = config["data_in_width"]
+
+    b_block_size = config["bias_block_size"]
+    b_element_bits = config["bias_width"]
+
+    w_quantizer = partial(
+        mxint_quantizer,
+        block_size=w_block_size,
+        element_bits=w_element_bits,
+        block_dim=1,
+    )
+    x_quantizer = partial(
+        mxint_quantizer,
+        block_size=x_block_size,
+        element_bits=x_element_bits,
+        block_dim=-1,
+    )
+    b_quantizer = partial(
+        mxint_quantizer,
+        block_size=b_block_size,
+        element_bits=b_element_bits,
+        block_dim=0,
+    )
+
+    x = x_quantizer(x)
+    weight = w_quantizer(weight)
+    bias = b_quantizer(bias) if bias is not None else None
+    return F.linear(x, weight, bias)
