@@ -130,6 +130,12 @@ def quantize_module_transform_pass(network, pass_args):
     :raises ValueError: If the quantize "by" argument is unsupported.
 
     """
+    # GPTQ pre-pass: quantize linear weights before module replacement
+    gptq_config = pass_args.pop("gptq", None)
+    if gptq_config is not None:
+        from ..gptq import run_gptq
+        network = run_gptq(network, gptq_config)
+
     by = pass_args.pop("by")
     match by:
         case "type":
@@ -140,4 +146,5 @@ def quantize_module_transform_pass(network, pass_args):
             network = quantize_by_regex_name(network, pass_args)
         case _:
             raise ValueError(f'Unsupported quantize "by": {by}')
+
     return network, {}
