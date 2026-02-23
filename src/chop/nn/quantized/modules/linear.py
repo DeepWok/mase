@@ -12,8 +12,6 @@ from chop.nn.quantized.functional.linear import (
     linearMinifloatDenorm,
     linearMinifloatIEEE,
     linearTernary,
-    linearMXFP,
-    linearMXInt,
 )
 import torch
 from torch import Tensor
@@ -35,6 +33,8 @@ from chop.nn.quantizers import (
     binary_quantizer,
     ternary_quantizer,
     mxint_hardware,
+    mxint_quantizer,
+    mxfp_quantizer,
 )
 
 # LUTNet
@@ -815,6 +815,7 @@ class LinearMXIntHardware(_LinearBase):
 
 
 class LinearMXFP(_LinearBase):
+    # NOTE: backward is not supported — inference only (PTQ)
     def __init__(
         self,
         in_features: int,
@@ -828,16 +829,68 @@ class LinearMXFP(_LinearBase):
         assert config is not None, "config is None!"
         self.config = config
         self.bypass = config.get("bypass", False)
-        if self.bypass:
-            return
+        self.gptq = config.get("gptq", False)
+        self.clip_search = config.get("clip_search", False)
 
+    def load_state_dict(self, state_dict, strict=True, assign=False):
+        """Load pretrained weights, then quantize them in place."""
+        result = super().load_state_dict(state_dict, strict=strict, assign=assign)
+
+        if self.bypass or self.gptq:
+            return result
+
+        # Quantize weight
+        w_block_size = self.config["weight_block_size"]
+        w_exp_bits = self.config["weight_exponent_width"]
+        w_frac_bits = self.config["weight_frac_width"]
+        self.weight.data.copy_(
+            mxfp_quantizer(
+                self.weight.data,
+                block_size=w_block_size,
+                element_exp_bits=w_exp_bits,
+                element_frac_bits=w_frac_bits,
+                block_dim=1,
+            )
+        )
+
+        # Quantize bias
+        b_block_size = self.config.get("bias_block_size")
+        b_exp_bits = self.config.get("bias_exponent_width")
+        b_frac_bits = self.config.get("bias_frac_width")
+        if self.bias is not None and b_block_size is not None and b_exp_bits is not None:
+            self.bias.data.copy_(
+                mxfp_quantizer(
+                    self.bias.data,
+                    block_size=b_block_size,
+                    element_exp_bits=b_exp_bits,
+                    element_frac_bits=b_frac_bits,
+                    block_dim=0,
+                )
+            )
+
+        return result
+
+    @torch.no_grad()
     def forward(self, x):
         if self.bypass:
             return F.linear(x, self.weight, self.bias)
-        return linearMXFP(x, self.weight, self.bias, self.config)
+
+        # Only quantize activations; weights/bias already quantized in load_state_dict
+        x_block_size = self.config.get("data_in_block_size")
+        x_exp_bits = self.config.get("data_in_exponent_width")
+        x_frac_bits = self.config.get("data_in_frac_width")
+        if x_block_size is not None and x_exp_bits is not None:
+            x = mxfp_quantizer(
+                x, block_size=x_block_size,
+                element_exp_bits=x_exp_bits, element_frac_bits=x_frac_bits,
+                block_dim=-1,
+            )
+
+        return F.linear(x, self.weight, self.bias)
 
 
 class LinearMXInt(_LinearBase):
+    # NOTE: backward is not supported — inference only (PTQ)
     def __init__(
         self,
         in_features: int,
@@ -851,10 +904,54 @@ class LinearMXInt(_LinearBase):
         assert config is not None, "config is None!"
         self.config = config
         self.bypass = config.get("bypass", False)
-        if self.bypass:
-            return
+        self.gptq = config.get("gptq", False)
+        self.clip_search = config.get("clip_search", False)
 
+    def load_state_dict(self, state_dict, strict=True, assign=False):
+        """Load pretrained weights, then quantize them in place."""
+        result = super().load_state_dict(state_dict, strict=strict, assign=assign)
+
+        if self.bypass or self.gptq:
+            return result
+
+        # Quantize weight
+        w_block_size = self.config["weight_block_size"]
+        w_element_bits = self.config["weight_width"]
+        self.weight.data.copy_(
+            mxint_quantizer(
+                self.weight.data,
+                block_size=w_block_size,
+                element_bits=w_element_bits,
+                block_dim=1,
+                quantile_search=self.clip_search,
+            )
+        )
+
+        # Quantize bias
+        b_block_size = self.config.get("bias_block_size")
+        b_element_bits = self.config.get("bias_width")
+        if self.bias is not None and b_block_size is not None and b_element_bits is not None:
+            self.bias.data.copy_(
+                mxint_quantizer(
+                    self.bias.data,
+                    block_size=b_block_size,
+                    element_bits=b_element_bits,
+                    block_dim=0,
+                    quantile_search=self.clip_search,
+                )
+            )
+
+        return result
+
+    @torch.no_grad()
     def forward(self, x):
         if self.bypass:
             return F.linear(x, self.weight, self.bias)
-        return linearMXInt(x, self.weight, self.bias, self.config)
+
+        # Only quantize activations; weights/bias already quantized in load_state_dict
+        x_block_size = self.config.get("data_in_block_size")
+        x_element_bits = self.config.get("data_in_width")
+        if x_block_size is not None and x_element_bits is not None:
+            x = mxint_quantizer(x, block_size=x_block_size, element_bits=x_element_bits, block_dim=-1)
+
+        return F.linear(x, self.weight, self.bias)
