@@ -49,7 +49,7 @@ In the `uv` workflow, the standard way to execute commands is via `uv run`. This
 2. **Running tests**:
    You can run the test suite while ignoring tests that require heavy hardware dependencies (like Verilator) or platform-specific packages (like `mase-triton`):
    ```bash
-   uv run pytest test/ --ignore=test/passes/graph/transforms/verilog --ignore=test/passes/module/transforms/onn/test_optical_transformer.py
+   uv run pytest test/ --ignore=test/passes/graph/transforms/verilog
    ```
 
 ## Test your installation
