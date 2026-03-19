@@ -1,4 +1,3 @@
-from chop.passes.module.state_dict_map import SPECIAL_CONVERT_PATTERNS
 import torch
 
 from functools import reduce, partial
@@ -99,14 +98,7 @@ def set_module_by_name(
 
 def replace_by_name(network, name, module):
     original = get_module_by_name(network, name)
-
-    # state_dict replacement
-    special_replacement = (type(original), type(module)) in SPECIAL_CONVERT_PATTERNS
-    if special_replacement:
-        new = SPECIAL_CONVERT_PATTERNS[(type(original), type(module))](original, module)
-    else:
-        new = weight_replacement(original, module)
-
+    new = weight_replacement(original, module)
     network = set_module_by_name(network, name, new)
     return network
 
