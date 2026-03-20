@@ -21,6 +21,12 @@ from transformers.models.llama.modeling_llama import (
     LlamaRMSNorm,
 )
 
+from transformers.models.qwen3.modeling_qwen3 import (
+    Qwen3Attention,
+    Qwen3MLP,
+    Qwen3RMSNorm,
+)
+
 from transformers.models.bert.modeling_bert import (
     BertSelfAttention,
     BertSdpaSelfAttention,
@@ -39,6 +45,12 @@ llama_prefix_map = {
     LlamaAttention: "llama_self_attention",
     LlamaMLP: "llama_mlp",
     LlamaRMSNorm: "llama_rms_norm",
+}
+
+qwen3_prefix_map = {
+    Qwen3Attention: "qwen3_self_attention",
+    Qwen3MLP: "qwen3_mlp",
+    Qwen3RMSNorm: "qwen3_rms_norm",
 }
 
 bert_prefix_map = {
@@ -119,6 +131,8 @@ instantiation of different supported modules
 def instantiate_linear(module, postfix, module_map, additional_module_args):
     linear_cls = module_map[f"linear_{postfix}"]
     has_bias = not (module.bias is None)
+    orig_dtype = module.weight.dtype
+    orig_device = module.weight.device
 
     # TODO: some transformed modules have "config" as an argument then extract the additional_module_args from it. Some directly take the additional_module_args.
     # Need to handle this better
@@ -127,6 +141,8 @@ def instantiate_linear(module, postfix, module_map, additional_module_args):
             in_features=module.in_features,
             out_features=module.out_features,
             bias=has_bias,
+            device=orig_device,
+            dtype=orig_dtype,
             config=additional_module_args,
         )
     else:
@@ -134,6 +150,8 @@ def instantiate_linear(module, postfix, module_map, additional_module_args):
             in_features=module.in_features,
             out_features=module.out_features,
             bias=has_bias,
+            device=orig_device,
+            dtype=orig_dtype,
             **additional_module_args,
         )
 
@@ -239,6 +257,19 @@ def instantiate_llama_module(
     return llama_module
 
 
+def instantiate_qwen3_module(
+    module, postfix, prefix, module_map, module_args, network_args
+):
+    qwen3_cls = module_map[f"{prefix}_{postfix}"]
+
+    qwen3_module = qwen3_cls(
+        config=network_args,
+        layer_idx=module.layer_idx if hasattr(module, "layer_idx") else None,
+        q_config=module_args,
+    )
+    return qwen3_module
+
+
 def instantiate_bert_module(
     module, postfix, prefix, module_map, module_args, network_args
 ):
@@ -255,6 +286,7 @@ def instantiate_bert_module(
 def instantiate_module(module, postfix, module_map, additional_module_args):
     is_roberta, roberta_layer_name = check_module_instance(module, roberta_prefix_map)
     is_llama, llama_layer_name = check_module_instance(module, llama_prefix_map)
+    is_qwen3, qwen3_layer_name = check_module_instance(module, qwen3_prefix_map)
     is_bert, bert_layer_name = check_module_instance(module, bert_prefix_map)
 
     module_args = additional_module_args["config"]
@@ -275,6 +307,10 @@ def instantiate_module(module, postfix, module_map, additional_module_args):
     elif is_llama:
         module = instantiate_llama_module(
             module, postfix, llama_layer_name, module_map, module_args, network_args
+        )
+    elif is_qwen3:
+        module = instantiate_qwen3_module(
+            module, postfix, qwen3_layer_name, module_map, module_args, network_args
         )
     elif is_bert:
         module = instantiate_bert_module(

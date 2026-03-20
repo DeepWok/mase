@@ -857,7 +857,11 @@ class LinearMXFP(_LinearBase):
         b_block_size = self.config.get("bias_block_size")
         b_exp_bits = self.config.get("bias_exponent_width")
         b_frac_bits = self.config.get("bias_frac_width")
-        if self.bias is not None and b_block_size is not None and b_exp_bits is not None:
+        if (
+            self.bias is not None
+            and b_block_size is not None
+            and b_exp_bits is not None
+        ):
             self.bias.data.copy_(
                 mxfp_quantizer(
                     self.bias.data,
@@ -881,8 +885,10 @@ class LinearMXFP(_LinearBase):
         x_frac_bits = self.config.get("data_in_frac_width")
         if x_block_size is not None and x_exp_bits is not None:
             x = mxfp_quantizer(
-                x, block_size=x_block_size,
-                element_exp_bits=x_exp_bits, element_frac_bits=x_frac_bits,
+                x,
+                block_size=x_block_size,
+                element_exp_bits=x_exp_bits,
+                element_frac_bits=x_frac_bits,
                 block_dim=-1,
             )
 
@@ -930,7 +936,11 @@ class LinearMXInt(_LinearBase):
         # Quantize bias
         b_block_size = self.config.get("bias_block_size")
         b_element_bits = self.config.get("bias_width")
-        if self.bias is not None and b_block_size is not None and b_element_bits is not None:
+        if (
+            self.bias is not None
+            and b_block_size is not None
+            and b_element_bits is not None
+        ):
             self.bias.data.copy_(
                 mxint_quantizer(
                     self.bias.data,
@@ -952,6 +962,11 @@ class LinearMXInt(_LinearBase):
         x_block_size = self.config.get("data_in_block_size")
         x_element_bits = self.config.get("data_in_width")
         if x_block_size is not None and x_element_bits is not None:
-            x = mxint_quantizer(x, block_size=x_block_size, element_bits=x_element_bits, block_dim=-1)
+            x = mxint_quantizer(
+                x,
+                block_size=x_block_size,
+                element_bits=x_element_bits,
+                block_dim=-1,
+            )
 
         return F.linear(x, self.weight, self.bias)

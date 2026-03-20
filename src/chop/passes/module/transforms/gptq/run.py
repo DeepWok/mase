@@ -45,7 +45,7 @@ def run_gptq(network, gptq_config):
     Returns:
         network with GPTQ-optimized weights (still nn.Linear modules).
     """
-    logging.info('-----GPTQ Quantization-----')
+    logging.info("-----GPTQ Quantization-----")
 
     model_name = gptq_config["model_name"]
     dev = gptq_config.get("device", "cuda:0")
@@ -75,8 +75,12 @@ def run_gptq(network, gptq_config):
 
     # Load calibration data
     dataloader = get_loaders(
-        dataset, nsamples=nsamples, seed=0, seqlen=seqlen,
-        model=model_name, hf_token=hf_token,
+        dataset,
+        nsamples=nsamples,
+        seed=0,
+        seqlen=seqlen,
+        model=model_name,
+        hf_token=hf_token,
     )
 
     # Disable kv cache
@@ -96,7 +100,7 @@ def run_gptq(network, gptq_config):
     inps = torch.zeros(
         (nsamples, seqlen, network.config.hidden_size), dtype=dtype, device=dev
     )
-    cache = {'i': 0, 'attention_mask': None}
+    cache = {"i": 0, "attention_mask": None}
 
     class Catcher(nn.Module):
         def __init__(self, module):
@@ -104,10 +108,10 @@ def run_gptq(network, gptq_config):
             self.module = module
 
         def forward(self, inp, **kwargs):
-            inps[cache['i']] = inp
-            cache['i'] += 1
-            cache['attention_mask'] = kwargs['attention_mask']
-            cache['position_ids'] = kwargs['position_ids']
+            inps[cache["i"]] = inp
+            cache["i"] += 1
+            cache["attention_mask"] = kwargs["attention_mask"]
+            cache["position_ids"] = kwargs["position_ids"]
             raise ValueError
 
     layers[0] = Catcher(layers[0])
@@ -120,21 +124,27 @@ def run_gptq(network, gptq_config):
     torch.cuda.empty_cache()
 
     outs = torch.zeros_like(inps)
-    attention_mask = cache['attention_mask']
-    position_ids = cache['position_ids']
+    attention_mask = cache["attention_mask"]
+    position_ids = cache["position_ids"]
 
     sequential = [
-        ['self_attn.k_proj', 'self_attn.v_proj', 'self_attn.q_proj'],
-        ['self_attn.o_proj'],
-        ['mlp.up_proj', 'mlp.gate_proj'],
-        ['mlp.down_proj'],
+        ["self_attn.k_proj", "self_attn.v_proj", "self_attn.q_proj"],
+        ["self_attn.o_proj"],
+        ["mlp.up_proj", "mlp.gate_proj"],
+        ["mlp.down_proj"],
     ]
 
-    end_layer = len(layers) if max_layers is None else min(start_layer + max_layers, len(layers))
-    logging.info(f"GPTQ: quantizing layers {start_layer} to {end_layer - 1} (of {len(layers)} total)")
+    end_layer = (
+        len(layers)
+        if max_layers is None
+        else min(start_layer + max_layers, len(layers))
+    )
+    logging.info(
+        f"GPTQ: quantizing layers {start_layer} to {end_layer - 1} (of {len(layers)} total)"
+    )
 
     for i in range(start_layer, end_layer):
-        print(f'\nLayer {i}:', flush=True, end=' ')
+        print(f"\nLayer {i}:", flush=True, end=" ")
         layer = layers[i].to(dev)
         full = find_qlayers(layer, layers=[torch.nn.Linear])
 
@@ -143,7 +153,7 @@ def run_gptq(network, gptq_config):
 
             gptq = {}
             for name in subset:
-                print(f'{name}', end='  ', flush=True)
+                print(f"{name}", end="  ", flush=True)
                 gptq[name] = GPTQ(subset[name])
 
             pre_act = []
@@ -151,11 +161,13 @@ def run_gptq(network, gptq_config):
             def make_pre_hook():
                 def pre_hook(_, inp):
                     pre_act.append(inp[0])
+
                 return pre_hook
 
             def add_batch(name):
                 def tmp(_, inp, out):
                     gptq[name].add_batch(inp[0].data, out.data)
+
                 return tmp
 
             handles = []
@@ -215,6 +227,6 @@ def run_gptq(network, gptq_config):
 
     network.config.use_cache = use_cache
     cleanup_memory(verbos=True)
-    logging.info('-----GPTQ Quantization Done-----\n')
+    logging.info("-----GPTQ Quantization Done-----\n")
 
     return network

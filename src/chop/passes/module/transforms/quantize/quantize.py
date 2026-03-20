@@ -134,6 +134,7 @@ def quantize_module_transform_pass(network, pass_args):
     gptq_config = pass_args.pop("gptq", None)
     if gptq_config is not None:
         from ..gptq import run_gptq
+
         network = run_gptq(network, gptq_config)
 
     by = pass_args.pop("by")

@@ -64,20 +64,29 @@ def mxint_quantizer_sim(
         x = x.reshape(n_blocks, B)
 
         tem_dtype = x.dtype
-        x_max = x.abs().to(torch.float32).quantile(percentiles, dim=1, keepdim=True).to(tem_dtype)
-
-        scale = x_max.log2().ceil()
-        scale_bias = 2 ** (mxint_meta.scale_bits - 1) - 1
-        x = x / 2 ** scale
-        x_mant = x * 2 ** (mxint_meta.element_bits - 1)
-        scale = scale + scale_bias
-        scale = scale.clamp(min=0, max=2 ** mxint_meta.scale_bits - 1)
-        x_mant = x_mant.round().clamp(
-            min=-2 ** (mxint_meta.element_bits - 1),
-            max=2 ** (mxint_meta.element_bits - 1) - 1
+        x_max = (
+            x.abs()
+            .to(torch.float32)
+            .quantile(percentiles, dim=1, keepdim=True)
+            .to(tem_dtype)
         )
 
-        quant_tensor = x_mant / 2 ** (mxint_meta.element_bits - 1) * 2 ** (scale - scale_bias)
+        # Clamp to avoid log2(0) = -inf for all-zero blocks
+        x_max = x_max.clamp(min=torch.finfo(x_max.dtype).tiny)
+        scale = x_max.log2().ceil()
+        scale_bias = 2 ** (mxint_meta.scale_bits - 1) - 1
+        x = x / 2**scale
+        x_mant = x * 2 ** (mxint_meta.element_bits - 1)
+        scale = scale + scale_bias
+        scale = scale.clamp(min=0, max=2**mxint_meta.scale_bits - 1)
+        x_mant = x_mant.round().clamp(
+            min=-(2 ** (mxint_meta.element_bits - 1)),
+            max=2 ** (mxint_meta.element_bits - 1) - 1,
+        )
+
+        quant_tensor = (
+            x_mant / 2 ** (mxint_meta.element_bits - 1) * 2 ** (scale - scale_bias)
+        )
 
         del x, x_max, scale, x_mant
         torch.cuda.empty_cache()
@@ -101,10 +110,16 @@ def mxint_quantizer_sim(
             )
 
             with torch.no_grad():
-                for b in tqdm(range(0, total_batches, BATCH_SIZE), desc="Batching quant output", disable=True):
-                    act_b = act_tensor[b:b + BATCH_SIZE]
+                for b in tqdm(
+                    range(0, total_batches, BATCH_SIZE),
+                    desc="Batching quant output",
+                    disable=True,
+                ):
+                    act_b = act_tensor[b : b + BATCH_SIZE]
                     out_orig = torch.matmul(act_b, qtensor.T)
-                    out_q = torch.einsum('asb,phb->pash', act_b, quant_tensor.to(act_tensor.dtype))
+                    out_q = torch.einsum(
+                        "asb,phb->pash", act_b, quant_tensor.to(act_tensor.dtype)
+                    )
                     err += torch.norm(out_q - out_orig, p=2, dim=(1, 2))
 
                     del act_b, out_q, out_orig
@@ -135,7 +150,9 @@ def mxint_quantizer_sim(
         assert block_dim < ndim and block_dim >= -ndim
 
         tensor_flat = flatten_for_quantize(tensor, block_dim)
-        scales, elements = extract_mxint_components(tensor_flat, mxint_meta, percentile=1.0)
+        scales, elements = extract_mxint_components(
+            tensor_flat, mxint_meta, percentile=1.0
+        )
 
         tensor_meta = MXIntTensorMeta(
             device=device,
@@ -146,7 +163,9 @@ def mxint_quantizer_sim(
         )
 
         dequant = compose_mxint_tensor(scales, elements, mxint_meta)
-        out_dq = permute_for_dequantize(dequant, tensor_meta.shape, tensor_meta.block_dim)
+        out_dq = permute_for_dequantize(
+            dequant, tensor_meta.shape, tensor_meta.block_dim
+        )
         out_dq = out_dq.to(dtype or tensor_dtype)
 
     return out_dq

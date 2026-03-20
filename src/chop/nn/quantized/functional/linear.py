@@ -583,4 +583,3 @@ def linearMXIntHardware(
     if out_config is not None:
         out = out_quantizer(out)
     return out
-

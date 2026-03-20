@@ -22,6 +22,14 @@ from .llama import (
     LlamaRMSNormMinifloat,
 )
 
+from .qwen3 import (
+    Qwen3AttentionMXFP,
+    Qwen3AttentionMXInt,
+    Qwen3MLPMXFP,
+    Qwen3MLPMXInt,
+    Qwen3RMSNormMinifloat,
+)
+
 # from .add import AddInteger
 from .conv1d import (
     Conv1dBlockFP,
@@ -335,11 +343,20 @@ quantized_llama_module_map = {
     "llama_mlp_mxint": LlamaMLPMXInt,
 }
 
+quantized_qwen3_module_map = {
+    "qwen3_self_attention_mxfp": Qwen3AttentionMXFP,
+    "qwen3_self_attention_mxint": Qwen3AttentionMXInt,
+    "qwen3_rms_norm_minifloat": Qwen3RMSNormMinifloat,
+    "qwen3_mlp_mxfp": Qwen3MLPMXFP,
+    "qwen3_mlp_mxint": Qwen3MLPMXInt,
+}
+
 quantized_module_map = (
     quantized_basic_module_map
     | quantized_bert_module_map
     | quantized_roberta_module_map
     | quantized_llama_module_map
+    | quantized_qwen3_module_map
 )
 
 

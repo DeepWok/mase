@@ -38,8 +38,14 @@ class GPTQ:
         self.H += inp.matmul(inp.t())
 
     def fasterquant(
-        self, activation, fmt, weight_config, percdamp=.01,
-        cali_batch_size=32, layer_name=None, quant_search=True,
+        self,
+        activation,
+        fmt,
+        weight_config,
+        percdamp=0.01,
+        cali_batch_size=32,
+        layer_name=None,
+        quant_search=True,
     ):
         """
         Run GPTQ block-wise quantization.
@@ -85,13 +91,20 @@ class GPTQ:
             if activation is not None:
                 Act1 = activation[:, :, i1:i2].clone()
                 Q1 = quantize_tensor(
-                    W1, block_dim=1, fmt=fmt, config=weight_config,
-                    quantile_search=quant_search, act_tensor=Act1,
+                    W1,
+                    block_dim=1,
+                    fmt=fmt,
+                    config=weight_config,
+                    quantile_search=quant_search,
+                    act_tensor=Act1,
                     cali_batch_size=cali_batch_size,
                 )
             else:
                 Q1 = quantize_tensor(
-                    W1, block_dim=1, fmt=fmt, config=weight_config,
+                    W1,
+                    block_dim=1,
+                    fmt=fmt,
+                    config=weight_config,
                     quantile_search=quant_search,
                 )
 

@@ -29,8 +29,13 @@ class EmbeddingMXFP(nn.Embedding):
             return super().forward(input)
         weight = self.w_quantizer(self.weight)
         return torch.nn.functional.embedding(
-            input, weight, self.padding_idx, self.max_norm,
-            self.norm_type, self.scale_grad_by_freq, self.sparse,
+            input,
+            weight,
+            self.padding_idx,
+            self.max_norm,
+            self.norm_type,
+            self.scale_grad_by_freq,
+            self.sparse,
         )
 
 
@@ -56,6 +61,11 @@ class EmbeddingMXInt(nn.Embedding):
             return super().forward(input)
         weight = self.w_quantizer(self.weight)
         return torch.nn.functional.embedding(
-            input, weight, self.padding_idx, self.max_norm,
-            self.norm_type, self.scale_grad_by_freq, self.sparse,
+            input,
+            weight,
+            self.padding_idx,
+            self.max_norm,
+            self.norm_type,
+            self.scale_grad_by_freq,
+            self.sparse,
         )

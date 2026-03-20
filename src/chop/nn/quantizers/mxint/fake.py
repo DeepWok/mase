@@ -23,9 +23,9 @@ def extract_mxint_components(
         Tuple of (scale, quantized_mantissa)
     """
     B = mxint_meta.block_size
-    assert x.numel() % B == 0, (
-        f"Input tensor size {x.numel()} is not divisible by block size {B}."
-    )
+    assert (
+        x.numel() % B == 0
+    ), f"Input tensor size {x.numel()} is not divisible by block size {B}."
     n_blocks = x.numel() // B
 
     x = x.flatten()
@@ -33,17 +33,24 @@ def extract_mxint_components(
 
     ori_dtype = x.dtype
     # quantile needs fp32
-    x_max = x.abs().to(torch.float32).quantile(percentile, dim=1, keepdim=True).to(ori_dtype)
+    x_max = (
+        x.abs()
+        .to(torch.float32)
+        .quantile(percentile, dim=1, keepdim=True)
+        .to(ori_dtype)
+    )
 
+    # Clamp to avoid log2(0) = -inf for all-zero blocks
+    x_max = x_max.clamp(min=torch.finfo(x_max.dtype).tiny)
     scale = x_max.log2().ceil()
     scale_bias = 2 ** (mxint_meta.scale_bits - 1) - 1
-    x = x / 2 ** scale
+    x = x / 2**scale
     x_mant = x * 2 ** (mxint_meta.element_bits - 1)
     scale = scale + scale_bias
-    scale = scale.clamp(min=0, max=2 ** mxint_meta.scale_bits - 1)
+    scale = scale.clamp(min=0, max=2**mxint_meta.scale_bits - 1)
     x_mant = x_mant.round().clamp(
-        min=-2 ** (mxint_meta.element_bits - 1),
-        max=2 ** (mxint_meta.element_bits - 1) - 1
+        min=-(2 ** (mxint_meta.element_bits - 1)),
+        max=2 ** (mxint_meta.element_bits - 1) - 1,
     )
 
     return scale, x_mant
@@ -66,4 +73,8 @@ def compose_mxint_tensor(
         Dequantized tensor
     """
     scale_bias = 2 ** (mxint_meta.scale_bits - 1) - 1
-    return elements / 2 ** (mxint_meta.element_bits - 1) * 2 ** (shared_scales - scale_bias)
+    return (
+        elements
+        / 2 ** (mxint_meta.element_bits - 1)
+        * 2 ** (shared_scales - scale_bias)
+    )
