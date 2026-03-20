@@ -10,7 +10,6 @@ from .mxint_hardware import mxint_hardware
 from .mxfp import mxfp_quantizer
 from .mxint import mxint_quantizer
 
-
 quantizer_map = {
     "log": log_quantizer,
     "block_log": block_log_quantizer,

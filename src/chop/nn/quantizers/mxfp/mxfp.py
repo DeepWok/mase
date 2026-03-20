@@ -42,7 +42,9 @@ def mxfp_quantizer_sim(
         B = mxfp_meta.block_size
 
         qtensor = qtensor.reshape(-1, B)
-        best = torch.full([qtensor.shape[0]], float('inf'), device=tensor.device, dtype=tensor.dtype)
+        best = torch.full(
+            [qtensor.shape[0]], float("inf"), device=tensor.device, dtype=tensor.dtype
+        )
         best_scales, best_elements, tensor_meta = _extract_with_meta(
             tensor, block_dim, mxfp_meta, percentile=1.0
         )
@@ -53,7 +55,11 @@ def mxfp_quantizer_sim(
                 tensor, block_dim, mxfp_meta, percentile=percentile
             )
             scale_bias = 2 ** (mxfp_meta.scale_exp_bits - 1) - 1
-            q = elements / 2 ** (mxfp_meta.element_frac_bits - 1) * 2 ** (scales - scale_bias)
+            q = (
+                elements
+                / 2 ** (mxfp_meta.element_frac_bits - 1)
+                * 2 ** (scales - scale_bias)
+            )
             q = q.to(dtype=qtensor.dtype)
 
             if act_tensor is not None:
@@ -61,14 +67,22 @@ def mxfp_quantizer_sim(
                 last_dim = act_tensor.shape[-1]
                 if last_dim != B:
                     assert last_dim % B == 0
-                    act_tensor = act_tensor.view(*act_tensor.shape[:-1], last_dim // B, B)
+                    act_tensor = act_tensor.view(
+                        *act_tensor.shape[:-1], last_dim // B, B
+                    )
 
                 total_batches = act_tensor.shape[0]
-                err = torch.zeros(qtensor.shape[0], device=tensor.device, dtype=tensor.dtype)
+                err = torch.zeros(
+                    qtensor.shape[0], device=tensor.device, dtype=tensor.dtype
+                )
 
                 with torch.no_grad():
-                    for b in tqdm(range(0, total_batches, BATCH_SIZE), desc="Batching quant output", disable=True):
-                        act_b = act_tensor[b:b + BATCH_SIZE]
+                    for b in tqdm(
+                        range(0, total_batches, BATCH_SIZE),
+                        desc="Batching quant output",
+                        disable=True,
+                    ):
+                        act_b = act_tensor[b : b + BATCH_SIZE]
                         out_q = torch.matmul(act_b, q.T)
                         out_orig = torch.matmul(act_b, qtensor.T)
                         err += torch.norm(out_q - out_orig, p=2, dim=(0, 1))
@@ -94,7 +108,9 @@ def mxfp_quantizer_sim(
             tensor, block_dim, mxfp_meta, percentile=1.0
         )
 
-    out_dq = compose_mxfp_tensor(best_scales, best_elements, tensor_meta.meta, output_dtype=dtype or tensor.dtype)
+    out_dq = compose_mxfp_tensor(
+        best_scales, best_elements, tensor_meta.meta, output_dtype=dtype or tensor.dtype
+    )
     out_dq = permute_for_dequantize(out_dq, tensor_meta.shape, tensor_meta.block_dim)
     return out_dq
 
@@ -113,7 +129,9 @@ def _extract_with_meta(
     assert block_dim < ndim and block_dim >= -ndim
 
     tensor_flat = flatten_for_quantize(tensor, block_dim)
-    scales, elements = extract_mxfp_components(tensor_flat, mxfp_meta, percentile=percentile)
+    scales, elements = extract_mxfp_components(
+        tensor_flat, mxfp_meta, percentile=percentile
+    )
 
     tensor_meta = MXFPTensorMeta(
         device=device,
