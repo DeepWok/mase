@@ -2,6 +2,7 @@ from .block_fp import block_fp_quantizer
 from .block_log import block_log_quantizer
 from .block_minifloat import block_minifloat_quantizer
 from .integer import integer_quantizer, integer_floor_quantizer
+from .scale_integer import scale_integer_quantizer
 from .binary import binary_quantizer, residual_sign_quantizer
 from .ternary import ternary_quantizer
 from .log import log_quantizer
@@ -16,6 +17,7 @@ quantizer_map = {
     "block_minifloat": block_minifloat_quantizer,
     "block_fp": block_fp_quantizer,
     "integer": integer_quantizer,
+    "scale_integer": scale_integer_quantizer,
     "binary": binary_quantizer,
     "ternary": ternary_quantizer,
     "mxint_hardware": mxint_hardware,
