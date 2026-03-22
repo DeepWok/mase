@@ -1,0 +1,48 @@
+#!/bin/bash
+#PBS -l walltime=01:00:00
+#PBS -l select=1:ncpus=4:mem=32gb:ngpus=1:gpu_type=L40S
+#PBS -N flex_latency
+#PBS -o experiments/flex_attention/results/latency_benchmark_output.log
+#PBS -e experiments/flex_attention/results/latency_benchmark_error.log
+# ============================================================================
+# FlexAttention vs SDPA Latency Benchmark
+#
+# Measures inference latency across sequence lengths (128-2048) for:
+#   - SDPA baseline
+#   - FlexAttention: causal, sliding_window(128), sliding_window(256)
+#
+# Usage:
+#     mkdir -p experiments/flex_attention/results
+#     qsub experiments/flex_attention/run_latency_benchmark.pbs
+# ============================================================================
+
+cd $HOME/mase
+source .venv/bin/activate
+
+mkdir -p experiments/flex_attention/results
+
+echo "=============================================="
+echo "FlexAttention vs SDPA Latency Benchmark"
+echo "=============================================="
+echo "Job ID: ${PBS_JOBID}"
+echo "Running on node: $(hostname)"
+echo "Started at: $(date)"
+echo "=============================================="
+
+nvidia-smi
+
+echo ""
+echo "PyTorch / CUDA info:"
+python -c "import torch; print(f'PyTorch {torch.__version__}, CUDA: {torch.cuda.is_available()}, Device: {torch.cuda.get_device_name() if torch.cuda.is_available() else \"N/A\"}')"
+echo ""
+
+python experiments/flex_attention/benchmark_latency.py
+
+EXIT_CODE=$?
+
+echo "=============================================="
+echo "Completed with exit code: ${EXIT_CODE}"
+echo "Finished at: $(date)"
+echo "=============================================="
+
+exit $EXIT_CODE

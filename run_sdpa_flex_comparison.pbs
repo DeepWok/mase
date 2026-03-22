@@ -1,0 +1,49 @@
+#!/bin/bash
+#PBS -l walltime=01:00:00
+#PBS -l select=1:ncpus=4:mem=32gb:ngpus=1:gpu_type=L40S
+#PBS -N flex_train_cmp
+#PBS -o experiments/flex_attention/results/train_comparison_output.log
+#PBS -e experiments/flex_attention/results/train_comparison_error.log
+# ============================================================================
+# FlexAttention vs SDPA Training Comparison
+#
+# Trains a tiny Llama model for 1 epoch with both SDPA and FlexAttention,
+# comparing loss curves to verify FlexAttention produces equivalent training.
+#
+# Usage:
+#     mkdir -p experiments/flex_attention/results
+#     qsub experiments/flex_attention/run_train_comparison.pbs
+# ============================================================================
+
+cd $HOME/mase
+source .venv/bin/activate
+
+# Create results dir
+mkdir -p experiments/flex_attention/results
+
+echo "=============================================="
+echo "FlexAttention vs SDPA Training Comparison"
+echo "=============================================="
+echo "Job ID: ${PBS_JOBID}"
+echo "Running on node: $(hostname)"
+echo "Started at: $(date)"
+echo "=============================================="
+
+nvidia-smi
+
+echo ""
+echo "PyTorch / CUDA info:"
+python -c "import torch; print(f'PyTorch {torch.__version__}, CUDA: {torch.cuda.is_available()}, Device: {torch.cuda.get_device_name() if torch.cuda.is_available() else \"N/A\"}')"
+echo ""
+
+# Run the experiment
+python experiments/flex_attention/train_sdpa_vs_flex.py
+
+EXIT_CODE=$?
+
+echo "=============================================="
+echo "Completed with exit code: ${EXIT_CODE}"
+echo "Finished at: $(date)"
+echo "=============================================="
+
+exit $EXIT_CODE
