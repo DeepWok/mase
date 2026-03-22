@@ -22,6 +22,37 @@ These implemntations are for the pruning functional we assume info always have t
 """
 
 
+def _under_fake_or_export_trace(tensor: torch.Tensor) -> bool:
+    """Avoid data-dependent ops (quantile, rand) when PT2 fake mode is active so they are
+    not embedded in the graph; export may succeed while to_edge decomps would raise."""
+    try:
+        if torch._guards.detect_fake_mode() is not None:
+            return True
+    except Exception:
+        pass
+    try:
+        from torch._subclasses.fake_tensor import FakeTensor
+
+        if isinstance(tensor, FakeTensor):
+            return True
+    except Exception:
+        pass
+    try:
+        from torch.fx.experimental.proxy_tensor import _ProxyTensor
+
+        if isinstance(tensor, _ProxyTensor):
+            return True
+    except Exception:
+        pass
+    if type(tensor).__name__ == "FunctionalTensor":
+        return True
+    return False
+
+
+def _dense_bool_mask_like(tensor: torch.Tensor) -> torch.Tensor:
+    return torch.ones(tensor.shape, dtype=torch.bool, device=tensor.device)
+
+
 def random(tensor: torch.Tensor, info: dict, sparsity: float) -> torch.Tensor:
     """set sparsity percentage of values
     in the mask to False (i.e. 0) randomly
@@ -34,6 +65,8 @@ def random(tensor: torch.Tensor, info: dict, sparsity: float) -> torch.Tensor:
     :return: a random sparsity mask generated based on the sparsity value
     :rtype: torch.Tensor
     """
+    if _under_fake_or_export_trace(tensor):
+        return _dense_bool_mask_like(tensor)
     mask = torch.ones(tensor.size(), dtype=torch.bool, device=tensor.device)
     mask[torch.rand(tensor.size()) < sparsity] = False
     return mask
@@ -52,12 +85,16 @@ def l1(tensor: torch.Tensor, info: dict, sparsity: float) -> torch.Tensor:
     :return: a sparsity mask
     :rtype: torch.Tensor
     """
+    if _under_fake_or_export_trace(tensor):
+        return _dense_bool_mask_like(tensor)
     threshold = torch.quantile(tensor.abs().flatten(), sparsity)
     mask = (tensor.abs() > threshold).to(torch.bool).to(tensor.device)
     return mask
 
 
 def global_weight_l1(tensor: torch.Tensor, info: dict, sparsity: float):
+    if _under_fake_or_export_trace(tensor):
+        return _dense_bool_mask_like(tensor)
     tensors = [v["weight_value"] for _, v in info.items() if v is not None]
     flattened_tensors = [t.abs().flatten() for t in tensors]
     threshold = torch.quantile(torch.cat(flattened_tensors, dim=0), sparsity)
@@ -66,6 +103,8 @@ def global_weight_l1(tensor: torch.Tensor, info: dict, sparsity: float):
 
 
 def global_activation_l1(tensor: torch.Tensor, info: dict, sparsity: float):
+    if _under_fake_or_export_trace(tensor):
+        return _dense_bool_mask_like(tensor)
     tensors = [v["activation_value"] for _, v in info.items() if v is not None]
     flattened_tensors = [t.abs().flatten() for t in tensors]
     threshold = torch.quantile(torch.cat(flattened_tensors, dim=0), sparsity)

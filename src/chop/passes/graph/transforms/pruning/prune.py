@@ -1,4 +1,5 @@
 import torch
+from torch._subclasses.fake_tensor import DataDependentOutputException
 
 from chop.tools import get_logger
 
@@ -43,7 +44,14 @@ def get_activation_hook(name, info, named_info, a_config: dict):
                 f"{module.__class__.__name__} takes more than 1 argument at inference, the current sparsiy_input pre forward hook only allows one!"
             )
         x = args[0]
-        mask = a_rank_fn(x, info, a_sparsity)
+        # torch.export / fake-tensor tracing: L1/random activation masks use ops like
+        # torch.quantile that are data-dependent and cannot appear in an ExportedProgram.
+        # Weight pruning (parametrization) stays in the graph; dynamic activation sparsity
+        # is skipped for export only — the deployed .pte has dense activations.
+        try:
+            mask = a_rank_fn(x, info, a_sparsity)
+        except DataDependentOutputException:
+            return x
         module.activation_mask = mask
         # it seems like the output of this can be a non-tuple thing??
         return x * mask
