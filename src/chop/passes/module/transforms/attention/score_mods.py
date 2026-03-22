@@ -30,9 +30,7 @@ def noop_score_mod(score, b, h, q_idx, kv_idx):
 
 def causal_score_mod(score, b, h, q_idx, kv_idx):
     """Standard causal (autoregressive) mask: attend only to past + current."""
-    return torch.where(
-        torch.as_tensor(q_idx >= kv_idx), score, torch.tensor(float("-inf"))
-    )
+    return torch.where(torch.tensor(q_idx >= kv_idx), score, -float("inf"))
 
 
 def generate_sliding_window_score_mod(window_size: int):
@@ -47,9 +45,9 @@ def generate_sliding_window_score_mod(window_size: int):
     """
 
     def sliding_window_score_mod(score, b, h, q_idx, kv_idx):
-        causal_mask = torch.as_tensor(q_idx >= kv_idx)
-        window_mask = torch.as_tensor((q_idx - kv_idx) < window_size)
-        return torch.where(causal_mask & window_mask, score, torch.tensor(float("-inf")))
+        causal_mask = q_idx >= kv_idx
+        window_mask = (q_idx - kv_idx) < window_size
+        return torch.where(torch.tensor(causal_mask & window_mask), score, -float("inf"))
 
     return sliding_window_score_mod
 

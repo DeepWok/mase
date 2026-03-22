@@ -400,8 +400,206 @@ class TestBertFlexForward:
         pass_args = {"score_mod": "none"}
         model, _ = flex_attention_transform_pass(model, pass_args)
 
+        # MASE BertModel uses a passthrough embedding (no actual embedding
+        # layer), so we feed float hidden states directly, not integer IDs.
+        hidden_states = torch.randn(2, 16, 64, device="cuda", dtype=torch.float32)
+        with torch.no_grad():
+            output = model(hidden_states)
+
+        assert output.shape == (2, 16, 64)
+
+
+# ===================================================================
+# Extended CUDA validation tests
+# ===================================================================
+
+
+@requires_cuda
+class TestFlexTrainingStep:
+    """Verify that gradients flow through compiled flex_attention (1 training step)."""
+
+    def _make_tiny_llama(self):
+        from transformers import LlamaConfig, LlamaForCausalLM
+
+        config = LlamaConfig(
+            hidden_size=64,
+            intermediate_size=128,
+            num_hidden_layers=2,
+            num_attention_heads=4,
+            num_key_value_heads=2,
+            max_position_embeddings=64,
+            vocab_size=256,
+            _attn_implementation="eager",
+        )
+        return LlamaForCausalLM(config).to("cuda").to(torch.float32)
+
+    def test_llama_backward_pass(self):
+        """One forward + backward step to confirm gradients propagate."""
+        from chop.passes.module.transforms.attention.flex_attention_transform import (
+            flex_attention_transform_pass,
+        )
+
+        model = self._make_tiny_llama()
+        pass_args = {"score_mod": "causal"}
+        model, _ = flex_attention_transform_pass(model, pass_args)
+        model.train()
+
+        optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
+
+        input_ids = torch.randint(0, 256, (2, 16), device="cuda")
+        labels = input_ids.clone()
+
+        # Forward
+        output = model(input_ids, labels=labels)
+        loss = output.loss
+        assert loss is not None and loss.requires_grad
+
+        # Backward
+        loss.backward()
+
+        # Verify gradients exist on attention projection weights
+        for name, param in model.named_parameters():
+            if "q_proj" in name and param.grad is not None:
+                assert param.grad.abs().sum() > 0, f"Zero gradient on {name}"
+                break
+
+        # Optimizer step (no crash = success)
+        optimizer.step()
+        optimizer.zero_grad()
+
+    def test_mistral_backward_pass(self):
+        """One forward + backward step for Mistral with sliding_window score_mod."""
+        from transformers import MistralConfig, MistralForCausalLM
+        from chop.passes.module.transforms.attention.flex_attention_transform import (
+            flex_attention_transform_pass,
+        )
+
+        config = MistralConfig(
+            hidden_size=64,
+            intermediate_size=128,
+            num_hidden_layers=2,
+            num_attention_heads=4,
+            num_key_value_heads=2,
+            max_position_embeddings=64,
+            vocab_size=256,
+            sliding_window=32,
+            _attn_implementation="eager",
+        )
+        model = MistralForCausalLM(config).to("cuda").to(torch.float32)
+        pass_args = {
+            "score_mod": "sliding_window",
+            "score_mod_kwargs": {"window_size": 32},
+        }
+        model, _ = flex_attention_transform_pass(model, pass_args)
+        model.train()
+
+        input_ids = torch.randint(0, 256, (2, 16), device="cuda")
+        labels = input_ids.clone()
+
+        output = model(input_ids, labels=labels)
+        loss = output.loss
+        assert loss is not None and loss.requires_grad
+        loss.backward()
+
+        for name, param in model.named_parameters():
+            if "q_proj" in name and param.grad is not None:
+                assert param.grad.abs().sum() > 0, f"Zero gradient on {name}"
+                break
+
+
+@requires_cuda
+class TestFlexLongerSequence:
+    """Test with longer sequence lengths (closer to real usage)."""
+
+    def test_llama_seq512(self):
+        from transformers import LlamaConfig, LlamaForCausalLM
+        from chop.passes.module.transforms.attention.flex_attention_transform import (
+            flex_attention_transform_pass,
+        )
+
+        config = LlamaConfig(
+            hidden_size=64,
+            intermediate_size=128,
+            num_hidden_layers=2,
+            num_attention_heads=4,
+            num_key_value_heads=2,
+            max_position_embeddings=512,
+            vocab_size=256,
+            _attn_implementation="eager",
+        )
+        model = LlamaForCausalLM(config).to("cuda").to(torch.float32)
+        pass_args = {"score_mod": "causal"}
+        model, _ = flex_attention_transform_pass(model, pass_args)
+
+        input_ids = torch.randint(0, 256, (1, 512), device="cuda")
+        with torch.no_grad():
+            output = model(input_ids)
+
+        assert output.logits.shape == (1, 512, 256)
+
+
+@requires_cuda
+class TestFlexBFloat16:
+    """Test with bf16 precision (common for training on modern GPUs)."""
+
+    def test_llama_bf16_forward(self):
+        from transformers import LlamaConfig, LlamaForCausalLM
+        from chop.passes.module.transforms.attention.flex_attention_transform import (
+            flex_attention_transform_pass,
+        )
+
+        config = LlamaConfig(
+            hidden_size=64,
+            intermediate_size=128,
+            num_hidden_layers=2,
+            num_attention_heads=4,
+            num_key_value_heads=2,
+            max_position_embeddings=64,
+            vocab_size=256,
+            _attn_implementation="eager",
+        )
+        model = LlamaForCausalLM(config).to("cuda").to(torch.bfloat16)
+        pass_args = {"score_mod": "causal"}
+        model, _ = flex_attention_transform_pass(model, pass_args)
+
         input_ids = torch.randint(0, 256, (2, 16), device="cuda")
         with torch.no_grad():
             output = model(input_ids)
 
-        assert output.last_hidden_state.shape == (2, 16, 64)
+        assert output.logits.shape == (2, 16, 256)
+        assert output.logits.dtype == torch.bfloat16
+
+    def test_llama_bf16_training_step(self):
+        from transformers import LlamaConfig, LlamaForCausalLM
+        from chop.passes.module.transforms.attention.flex_attention_transform import (
+            flex_attention_transform_pass,
+        )
+
+        config = LlamaConfig(
+            hidden_size=64,
+            intermediate_size=128,
+            num_hidden_layers=2,
+            num_attention_heads=4,
+            num_key_value_heads=2,
+            max_position_embeddings=64,
+            vocab_size=256,
+            _attn_implementation="eager",
+        )
+        model = LlamaForCausalLM(config).to("cuda").to(torch.bfloat16)
+        pass_args = {"score_mod": "causal"}
+        model, _ = flex_attention_transform_pass(model, pass_args)
+        model.train()
+
+        input_ids = torch.randint(0, 256, (2, 16), device="cuda")
+        labels = input_ids.clone()
+
+        output = model(input_ids, labels=labels)
+        loss = output.loss
+        loss.backward()
+
+        # Confirm gradients exist and are bf16
+        for name, param in model.named_parameters():
+            if "q_proj" in name and param.grad is not None:
+                assert param.grad.dtype == torch.bfloat16
+                assert param.grad.abs().sum() > 0
+                break

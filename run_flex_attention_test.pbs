@@ -1,0 +1,55 @@
+#!/bin/bash
+#PBS -l walltime=00:30:00
+#PBS -l select=1:ncpus=4:mem=16gb:ngpus=1:gpu_type=L40S
+#PBS -N flex_attn_test
+#PBS -o logs/flex_attn_test_output.log
+#PBS -e logs/flex_attn_test_error.log
+# ============================================================================
+# FlexAttention CUDA Tests - PBS Job for Imperial HPC
+#
+# Runs the 3 CUDA-only forward pass tests:
+#   - TestLlamaFlexForward
+#   - TestMistralFlexForward
+#   - TestBertFlexForward
+#
+# Usage:
+#     mkdir -p logs
+#     qsub run_flex_attention_test.pbs
+#
+# Monitor:
+#     qstat -u $USER
+# ============================================================================
+
+cd $HOME/mase
+
+source .venv/bin/activate
+
+echo "=============================================="
+echo "FlexAttention CUDA Forward Pass Tests"
+echo "=============================================="
+echo "Job ID: ${PBS_JOBID}"
+echo "Running on node: $(hostname)"
+echo "Started at: $(date)"
+echo "=============================================="
+
+nvidia-smi
+
+echo ""
+echo "PyTorch / CUDA info:"
+python -c "import torch; print(f'PyTorch {torch.__version__}, CUDA: {torch.cuda.is_available()}, Device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"N/A\"}')"
+
+echo ""
+echo "----------------------------------------------"
+echo "Running all FlexAttention tests (CPU + CUDA)..."
+echo "----------------------------------------------"
+
+python -m pytest test/passes/module/transforms/attention/test_flex_attention.py -v
+
+EXIT_CODE=$?
+
+echo "=============================================="
+echo "Tests completed with exit code: ${EXIT_CODE}"
+echo "Finished at: $(date)"
+echo "=============================================="
+
+exit $EXIT_CODE

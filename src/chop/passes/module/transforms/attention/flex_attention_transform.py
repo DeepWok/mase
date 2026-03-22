@@ -42,10 +42,14 @@ _compiled_flex_attention = None
 
 
 def _get_compiled_flex_attention():
-    """Return the compiled flex_attention kernel, compiling on first use."""
+    """Return the compiled flex_attention kernel, compiling on first use.
+
+    Uses ``dynamic=False`` to avoid symbolic-shape issues in the inductor's
+    flex_decoding kernel (PyTorch 2.6 bug with ``get_split_k``).
+    """
     global _compiled_flex_attention
     if _compiled_flex_attention is None:
-        _compiled_flex_attention = torch.compile(flex_attention)
+        _compiled_flex_attention = torch.compile(flex_attention, dynamic=False)
     return _compiled_flex_attention
 
 
@@ -108,6 +112,8 @@ def _build_llama_flex_attention_cls():
             output_attentions: bool = False,
             use_cache: bool = False,
             cache_position: Optional[torch.LongTensor] = None,
+            position_embeddings: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
+            **kwargs,
         ) -> torch.Tensor:
             # Fall back to eager if attention weights are requested
             if output_attentions:
@@ -123,6 +129,8 @@ def _build_llama_flex_attention_cls():
                     output_attentions=output_attentions,
                     use_cache=use_cache,
                     cache_position=cache_position,
+                    position_embeddings=position_embeddings,
+                    **kwargs,
                 )
 
             # ---- cache_position / position_ids defaults (from SdpaAttention) ----
@@ -156,7 +164,12 @@ def _build_llama_flex_attention_cls():
             ).transpose(1, 2)
 
             # ---- RoPE ----
-            cos, sin = self.rotary_emb(value_states, position_ids)
+            # Use pre-computed position_embeddings from newer HF transformers
+            # when available; otherwise compute internally (MASE models).
+            if position_embeddings is not None:
+                cos, sin = position_embeddings
+            else:
+                cos, sin = self.rotary_emb(value_states, position_ids)
             query_states, key_states = apply_rotary_pos_emb(
                 query_states, key_states, cos, sin
             )
@@ -194,7 +207,7 @@ def _build_llama_flex_attention_cls():
             attn_output = attn_output.view(bsz, q_len, -1)
             attn_output = self.o_proj(attn_output)
 
-            return attn_output
+            return attn_output, None
 
     return LlamaFlexAttention, LlamaAttention, target_classes
 
@@ -251,6 +264,8 @@ def _build_mistral_flex_attention_cls():
             output_attentions: bool = False,
             use_cache: bool = False,
             cache_position: Optional[torch.LongTensor] = None,
+            position_embeddings: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
+            **kwargs,
         ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
             if output_attentions:
                 logger.warning_once(
@@ -265,6 +280,8 @@ def _build_mistral_flex_attention_cls():
                     output_attentions=output_attentions,
                     use_cache=use_cache,
                     cache_position=cache_position,
+                    position_embeddings=position_embeddings,
+                    **kwargs,
                 )
 
             bsz, q_len, _ = hidden_states.size()
@@ -285,7 +302,12 @@ def _build_mistral_flex_attention_cls():
             ).transpose(1, 2)
 
             # ---- RoPE ----
-            cos, sin = self.rotary_emb(value_states, position_ids)
+            # Use pre-computed position_embeddings from newer HF transformers
+            # when available; otherwise compute internally (MASE models).
+            if position_embeddings is not None:
+                cos, sin = position_embeddings
+            else:
+                cos, sin = self.rotary_emb(value_states, position_ids)
             query_states, key_states = apply_rotary_pos_emb(
                 query_states, key_states, cos, sin
             )
@@ -323,7 +345,7 @@ def _build_mistral_flex_attention_cls():
             attn_output = attn_output.view(bsz, q_len, -1)
             attn_output = self.o_proj(attn_output)
 
-            return attn_output, None, past_key_value
+            return attn_output, None
 
     return MistralFlexAttention, MistralAttention, target_classes
 
