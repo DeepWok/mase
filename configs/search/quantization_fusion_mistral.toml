@@ -1,0 +1,68 @@
+# =============================================================================
+# Part 3: Quantisation + Fusion Search — Mistral-7B on Wikitext-2
+# =============================================================================
+# Model  : mistralai/Mistral-7B-v0.1 (decoder, GQA, RMSNorm, sliding-window attn)
+# Task   : Language modelling (perplexity on wikitext2)
+# Fusion : sliding_window score_mod for FlexAttention — showcases block sparsity speedup
+# Trials : 100 NSGA-II trials, 3 objectives: perplexity ↓ + latency ↓ + avg_bitwidth ↓
+# HPC    : ~8h on L40S (7B params — increase walltime if needed)
+# NOTE   : Reduce batch_size to 1 and max_token_len to 256 if GPU OOM on 40GB card
+# =============================================================================
+
+model          = "mistralai/Mistral-7B-v0.1"
+dataset        = "wikitext2"
+task           = "lm"
+is_pretrained  = true
+load_name      = "mistralai/Mistral-7B-v0.1"
+load_type      = "hf"
+accelerator    = "gpu"
+batch_size     = 1
+max_token_len  = 512
+project        = "mistral_quantize_fusion"
+seed           = 42
+
+# ---------- Search Space ----------
+[search.search_space]
+name = "module/quantize_fusion"
+
+[search.search_space.setup]
+score_mod = "sliding_window"
+# Mistral's default sliding window is 4096; use 512 here to match max_token_len
+[search.search_space.setup.score_mod_kwargs]
+window_size = 512
+
+[search.search_space.seed.default]
+data_in_width   = [4, 8, 16, 32]
+weight_width    = [4, 8, 16, 32]
+fusion_strategy = ["none", "flex_attention", "fused_rmsnorm", "both"]
+
+# ---------- Search Strategy ----------
+[search.strategy]
+name      = "optuna"
+eval_mode = true
+
+[search.strategy.sw_runner.basic_evaluation]
+data_loader = "val_dataloader"
+num_samples = 128           # fewer samples due to larger model
+
+[search.strategy.hw_runner.latency]
+num_batches        = 20     # fewer batches — 7B forward pass is expensive
+num_warmup_batches = 5
+
+[search.strategy.hw_runner.average_bitwidth]
+compare_to = 32
+
+[search.strategy.setup]
+n_jobs             = 1
+n_trials           = 100
+timeout            = 28800      # 8h ceiling
+sampler            = "nsgaii"
+sum_scaled_metrics = false
+
+[search.strategy.metrics]
+perplexity.scale       = 1.0
+perplexity.direction   = "minimize"
+latency.scale          = 1.0
+latency.direction      = "minimize"
+average_bitwidth.scale     = 1.0
+average_bitwidth.direction = "minimize"

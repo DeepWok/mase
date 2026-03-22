@@ -1,6 +1,7 @@
 from .quantization import (
     ManualHFModuleSearchSpaceMixedPrecisionPTQ,
     GraphSearchSpaceMixedPrecisionPTQ,
+    ModuleSearchSpaceQuantizationFusion,
 )
 from .systolic import SystolicMappingSearchSpace
 from .base import SearchSpaceBase
@@ -13,6 +14,7 @@ SEARCH_SPACE_MAP = {
     "graph/quantize/mixed_precision_ptq": GraphSearchSpaceMixedPrecisionPTQ,
     "module/manual_hf/quantize/llm_mixed_precision_ptq": ManualHFModuleSearchSpaceMixedPrecisionPTQ,
     "graph/hardware/systolic_mapping": SystolicMappingSearchSpace,
+    "module/quantize_fusion": ModuleSearchSpaceQuantizationFusion,
 }
 
 if check_deps_tensorRT_pass(silent=True):

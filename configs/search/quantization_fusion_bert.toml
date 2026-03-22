@@ -1,0 +1,65 @@
+# =============================================================================
+# Part 3: Quantisation + Fusion Search — BERT-base-uncased on SST-2
+# =============================================================================
+# Model  : BERT-base-uncased (encoder, MHA, LayerNorm)
+# Task   : Sentence classification (SST-2 sentiment)
+# Fusion : FlexAttention only (BERT uses LayerNorm, not RMSNorm → skip fused_rmsnorm)
+# Trials : 80 NSGA-II trials, 3 objectives: accuracy ↑ + latency ↓ + avg_bitwidth ↓
+# HPC    : ~2h on L40S with num_samples=256 per trial
+# =============================================================================
+
+model          = "bert-base-uncased"
+dataset        = "sst2"
+task           = "cls"
+is_pretrained  = true
+load_name      = "bert-base-uncased"
+load_type      = "hf"
+accelerator    = "gpu"
+batch_size     = 16
+max_token_len  = 128
+project        = "bert_quantize_fusion"
+seed           = 42
+
+# ---------- Search Space ----------
+[search.search_space]
+name = "module/quantize_fusion"
+
+[search.search_space.setup]
+score_mod = "none"          # BERT is bidirectional; no causal mask
+
+[search.search_space.seed.default]
+data_in_width   = [4, 8, 16, 32]
+weight_width    = [4, 8, 16, 32]
+# BERT uses LayerNorm so fused_rmsnorm has no effect — keep search space clean
+fusion_strategy = ["none", "flex_attention"]
+
+# ---------- Search Strategy ----------
+[search.strategy]
+name      = "optuna"
+eval_mode = true
+
+[search.strategy.sw_runner.basic_evaluation]
+data_loader = "val_dataloader"
+num_samples = 256
+
+[search.strategy.hw_runner.latency]
+num_batches        = 50
+num_warmup_batches = 10
+
+[search.strategy.hw_runner.average_bitwidth]
+compare_to = 32
+
+[search.strategy.setup]
+n_jobs             = 1
+n_trials           = 80
+timeout            = 14400      # 4h ceiling — should finish well within walltime
+sampler            = "nsgaii"
+sum_scaled_metrics = false
+
+[search.strategy.metrics]
+accuracy.scale         = 1.0
+accuracy.direction     = "maximize"
+latency.scale          = 1.0
+latency.direction      = "minimize"
+average_bitwidth.scale     = 1.0
+average_bitwidth.direction = "minimize"
