@@ -964,15 +964,10 @@ class BertModel(BertPreTrainedModel):
         super().__init__(config)
         self.config = config
 
-        # self.embeddings = BertEmbeddings(config)
-        def passthrough_function(input_ids):
-            return input_ids
-
-        self.embeddings = passthrough_function
+        self.embeddings = BertEmbeddings(config)
         self.encoder = BertEncoder(config)
 
-        # self.pooler = BertPooler(config) if add_pooling_layer else None
-        self.pooler = None
+        self.pooler = BertPooler(config) if add_pooling_layer else None
 
         # Initialize weights and apply final processing
         self.post_init()
@@ -1121,13 +1116,12 @@ class BertModel(BertPreTrainedModel):
             # output_hidden_states=output_hidden_states,
             # return_dict=return_dict,
         )
-        # sequence_output = encoder_outputs[0]
         sequence_output = encoder_outputs
         pooled_output = (
-            self.pooler(sequence_output) if self.pooler is not None else sequence_output
+            self.pooler(sequence_output) if self.pooler is not None else None
         )
 
-        return pooled_output
+        return (sequence_output, pooled_output)
         # if not return_dict:
         #     return (sequence_output, pooled_output) + encoder_outputs[1:]
 
