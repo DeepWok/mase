@@ -88,7 +88,7 @@ class RunnerBasicEval(SWRunnerBase):
         outputs = model(**model_inputs)
         loss = outputs["loss"]
         logits = outputs["logits"]
-        acc = self.metric(logits, batch["labels"])
+        acc = self.metric(logits, batch["labels"].view(-1))
         self.loss(loss)
         return {"loss": loss, "accuracy": acc}
 
