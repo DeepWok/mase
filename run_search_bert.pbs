@@ -20,6 +20,7 @@
 
 cd $HOME/mase
 
+module load Python/3.12.3-GCCcore-13.3.0
 source .venv/bin/activate
 
 SAVE_DIR="outputs/search/bert_$(date +%Y%m%d_%H%M)"
@@ -42,7 +43,7 @@ echo "----------------------------------------------"
 echo "Running search..."
 echo "----------------------------------------------"
 
-python -m chop search \
+python src/ch search \
     --config configs/search/quantization_fusion_bert.toml \
     --save-dir "$SAVE_DIR"
 
