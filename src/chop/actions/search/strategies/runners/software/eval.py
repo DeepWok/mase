@@ -84,7 +84,8 @@ class RunnerBasicEval(SWRunnerBase):
             k: v.to(self.accelerator) if isinstance(v, torch.Tensor) else v
             for k, v in batch.items()
         }
-        outputs = model(**batch)
+        model_inputs = {k: v for k, v in batch.items() if isinstance(v, torch.Tensor)}
+        outputs = model(**model_inputs)
         loss = outputs["loss"]
         logits = outputs["logits"]
         acc = self.metric(logits, batch["labels"])
