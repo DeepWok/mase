@@ -30,6 +30,18 @@ from .qwen3 import (
     Qwen3RMSNormMinifloat,
 )
 
+from .qwen3_moe import (
+    Qwen3MoeAttentionMXFP,
+    Qwen3MoeAttentionMXInt,
+    Qwen3MoeMLPMXFP,
+    Qwen3MoeMLPMXInt,
+)
+
+from .gpt_oss import (
+    GptOssAttentionMXFP,
+    GptOssAttentionMXInt,
+)
+
 # from .add import AddInteger
 from .conv1d import (
     Conv1dBlockFP,
@@ -351,12 +363,26 @@ quantized_qwen3_module_map = {
     "qwen3_mlp_mxint": Qwen3MLPMXInt,
 }
 
+quantized_qwen3_moe_module_map = {
+    "qwen3_moe_self_attention_mxfp": Qwen3MoeAttentionMXFP,
+    "qwen3_moe_self_attention_mxint": Qwen3MoeAttentionMXInt,
+    "qwen3_moe_mlp_mxfp": Qwen3MoeMLPMXFP,
+    "qwen3_moe_mlp_mxint": Qwen3MoeMLPMXInt,
+}
+
+quantized_gpt_oss_module_map = {
+    "gpt_oss_self_attention_mxfp": GptOssAttentionMXFP,
+    "gpt_oss_self_attention_mxint": GptOssAttentionMXInt,
+}
+
 quantized_module_map = (
     quantized_basic_module_map
     | quantized_bert_module_map
     | quantized_roberta_module_map
     | quantized_llama_module_map
     | quantized_qwen3_module_map
+    | quantized_qwen3_moe_module_map
+    | quantized_gpt_oss_module_map
 )
 
 

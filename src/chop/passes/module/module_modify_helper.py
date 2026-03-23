@@ -27,6 +27,15 @@ from transformers.models.qwen3.modeling_qwen3 import (
     Qwen3RMSNorm,
 )
 
+from transformers.models.qwen3_moe.modeling_qwen3_moe import (
+    Qwen3MoeAttention,
+    Qwen3MoeMLP,
+)
+
+from transformers.models.gpt_oss.modeling_gpt_oss import (
+    GptOssAttention,
+)
+
 from transformers.models.bert.modeling_bert import (
     BertSelfAttention,
     BertSdpaSelfAttention,
@@ -51,6 +60,15 @@ qwen3_prefix_map = {
     Qwen3Attention: "qwen3_self_attention",
     Qwen3MLP: "qwen3_mlp",
     Qwen3RMSNorm: "qwen3_rms_norm",
+}
+
+qwen3_moe_prefix_map = {
+    Qwen3MoeAttention: "qwen3_moe_self_attention",
+    Qwen3MoeMLP: "qwen3_moe_mlp",
+}
+
+gpt_oss_prefix_map = {
+    GptOssAttention: "gpt_oss_self_attention",
 }
 
 bert_prefix_map = {
@@ -261,13 +279,39 @@ def instantiate_qwen3_module(
     module, postfix, prefix, module_map, module_args, network_args
 ):
     qwen3_cls = module_map[f"{prefix}_{postfix}"]
-
     qwen3_module = qwen3_cls(
         config=network_args,
         layer_idx=module.layer_idx if hasattr(module, "layer_idx") else None,
         q_config=module_args,
     )
     return qwen3_module
+
+
+def instantiate_qwen3_moe_module(
+    module, postfix, prefix, module_map, module_args, network_args
+):
+    cls = module_map[f"{prefix}_{postfix}"]
+    kwargs = {
+        "config": network_args,
+        "q_config": module_args,
+    }
+    if hasattr(module, "layer_idx"):
+        kwargs["layer_idx"] = module.layer_idx
+    # Qwen3MoeMLP uses a custom intermediate_size per expert
+    if hasattr(module, "intermediate_size"):
+        kwargs["intermediate_size"] = module.intermediate_size
+    return cls(**kwargs)
+
+
+def instantiate_gpt_oss_module(
+    module, postfix, prefix, module_map, module_args, network_args
+):
+    cls = module_map[f"{prefix}_{postfix}"]
+    return cls(
+        config=network_args,
+        layer_idx=module.layer_idx if hasattr(module, "layer_idx") else None,
+        q_config=module_args,
+    )
 
 
 def instantiate_bert_module(
@@ -286,7 +330,11 @@ def instantiate_bert_module(
 def instantiate_module(module, postfix, module_map, additional_module_args):
     is_roberta, roberta_layer_name = check_module_instance(module, roberta_prefix_map)
     is_llama, llama_layer_name = check_module_instance(module, llama_prefix_map)
+    is_qwen3_moe, qwen3_moe_layer_name = check_module_instance(
+        module, qwen3_moe_prefix_map
+    )
     is_qwen3, qwen3_layer_name = check_module_instance(module, qwen3_prefix_map)
+    is_gpt_oss, gpt_oss_layer_name = check_module_instance(module, gpt_oss_prefix_map)
     is_bert, bert_layer_name = check_module_instance(module, bert_prefix_map)
 
     module_args = additional_module_args["config"]
@@ -308,9 +356,17 @@ def instantiate_module(module, postfix, module_map, additional_module_args):
         module = instantiate_llama_module(
             module, postfix, llama_layer_name, module_map, module_args, network_args
         )
+    elif is_qwen3_moe:
+        module = instantiate_qwen3_moe_module(
+            module, postfix, qwen3_moe_layer_name, module_map, module_args, network_args
+        )
     elif is_qwen3:
         module = instantiate_qwen3_module(
             module, postfix, qwen3_layer_name, module_map, module_args, network_args
+        )
+    elif is_gpt_oss:
+        module = instantiate_gpt_oss_module(
+            module, postfix, gpt_oss_layer_name, module_map, module_args, network_args
         )
     elif is_bert:
         module = instantiate_bert_module(
