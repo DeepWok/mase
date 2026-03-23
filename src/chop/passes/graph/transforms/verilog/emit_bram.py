@@ -365,8 +365,20 @@ def emit_bram_handshake(node, rtl_dir):
             )
             emit_parameters_in_mem_internal(node, param_name, verilog_name, data_name)
             emit_parameters_in_dat_internal(node, param_name, data_name)
+        elif (
+            node.meta["mase"].parameters["hardware"]["interface"][param_verilog_name][
+                "storage"
+            ]
+            == "DRAM"
+        ):
+            logger.debug(
+                f"Skipping DAT emission for node: {node_name}, parameter: {param_verilog_name} (DRAM)"
+            )
+            # emit_parameters_in_mem_internal_dram(node, param_name, verilog_name, data_name)
+            # emit_parameters_in_dat_internal_dram(node, param_name, data_name)
+            
         else:
-            assert False, "Emtting parameters in non-BRAM hardware is not supported."
+            assert False, "Emitting parameters in non-BRAM/DRAM hardware is not supported."
 
 
 def emit_parameters_in_mem_hls(node, param_name, file_name, data_name):
