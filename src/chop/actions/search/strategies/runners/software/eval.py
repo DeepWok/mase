@@ -120,14 +120,16 @@ class RunnerBasicEval(SWRunnerBase):
         else:
             forward_model = model
 
+        self.loss.reset()
+        self.metric.reset()
+
         num_batches = math.ceil(self.config["num_samples"] / data_module.batch_size)
         data_loader = getattr(
             data_module, self.config.get("dataloader", "val_dataloader")
         )()
 
         for i, batch in enumerate(data_loader):
-            outputs = self.forward(batch, forward_model)
-            self.loss(outputs["loss"])
+            self.forward(batch, forward_model)
             if i >= num_batches - 1:
                 break
         return self.compute()

@@ -18,8 +18,9 @@ class LatencyRunner(HWRunnerBase):
             return model(x)
         elif isinstance(batch, dict):
             batch = {
-                k: v.to(self.accelerator) if isinstance(v, torch.Tensor) else v
+                k: v.to(self.accelerator)
                 for k, v in batch.items()
+                if isinstance(v, torch.Tensor)
             }
             return model(**batch)
         else:
