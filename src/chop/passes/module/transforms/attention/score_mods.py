@@ -106,7 +106,7 @@ def generate_alibi_score_mod(num_heads: int):
 
 def noop_mask_mod(b, h, q_idx, kv_idx):
     """Full attention -- all blocks computed."""
-    return True
+    return q_idx >= 0
 
 
 def causal_mask_mod(b, h, q_idx, kv_idx):
@@ -193,8 +193,9 @@ _SCORE_MOD_FACTORY = {
 
 
 # Direct (non-parameterised) mask mods
+# "none" is intentionally excluded — full attention has no sparsity pattern,
+# so no block_mask should be created (mask_mod_fn stays None).
 _MASK_MOD_REGISTRY = {
-    "none": noop_mask_mod,
     "causal": causal_mask_mod,
 }
 
