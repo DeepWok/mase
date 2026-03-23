@@ -88,7 +88,6 @@ class OptimizationPipeline:
         quant_cfg = config["quantization"]
         quant_pass_args = {
             "by": "type",
-            "default": {"config": {"name": None}},
             "linear": {
                 "config": {
                     "name": "integer",
