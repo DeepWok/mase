@@ -3,13 +3,14 @@ Latency benchmark: FlexAttention vs SDPA at various sequence lengths and score_m
 
 Measures inference latency (ms) for:
   - SDPA baseline (eager attention)
-  - FlexAttention with causal score_mod
-  - FlexAttention with sliding_window score_mods
+  - FlexAttention with causal score_mod (with block_mask)
+  - FlexAttention with causal score_mod (without block_mask, for comparison)
+  - FlexAttention with sliding_window score_mods (with block_mask)
 
 Varies sequence length: 128, 256, 512, 1024, 2048
 
 Usage:
-    python experiments/flex_attention/benchmark_latency.py
+    python experiments/flex_attention/latency_benchmark.py
 
 Output:
     - Printed latency table
@@ -32,9 +33,11 @@ from chop.passes.module.transforms.attention.flex_attention_transform import (
 )
 import chop.passes.module.transforms.attention.flex_attention_transform as fat
 
+
 # ============================================================================
 # Config
 # ============================================================================
+
 HIDDEN_SIZE = 128
 INTERMEDIATE_SIZE = 256
 NUM_LAYERS = 2
@@ -54,6 +57,7 @@ SEQ_LENGTHS = [128, 256, 512, 1024, 2048]
 CONFIGS = [
     ("SDPA (eager)", "sdpa", None),
     ("Flex causal", "flex", {"score_mod": "causal"}),
+    ("Flex causal (no block_mask)", "flex", {"score_mod": "causal", "use_block_mask": False}),
     ("Flex sliding_window(128)", "flex", {
         "score_mod": "sliding_window",
         "score_mod_kwargs": {"window_size": 128},
@@ -70,6 +74,7 @@ RESULTS_DIR = Path(__file__).parent / "results"
 # ============================================================================
 # Helpers
 # ============================================================================
+
 def make_model(max_seq_len, pass_args=None):
     """Create a tiny Llama model, optionally with FlexAttention."""
     # Reset compiled flex_attention cache for each new config
@@ -102,7 +107,6 @@ def benchmark_latency(model, seq_len, warmup_iters, bench_iters):
     with torch.no_grad():
         for _ in range(warmup_iters):
             _ = model(input_ids)
-
     torch.cuda.synchronize()
 
     # Timed runs
@@ -135,6 +139,7 @@ def benchmark_latency(model, seq_len, warmup_iters, bench_iters):
 # ============================================================================
 # Main
 # ============================================================================
+
 def main():
     print("=" * 70)
     print("FlexAttention vs SDPA Latency Benchmark")
@@ -176,8 +181,8 @@ def main():
             model = make_model(seq_len, pass_args if attn_type == "flex" else None)
 
             print(f"  seq_len={seq_len:5d} ... ", end="", flush=True)
-
             timing = benchmark_latency(model, seq_len, WARMUP_ITERS, BENCH_ITERS)
+
             print(f"mean={timing['mean_ms']:8.2f}ms  "
                   f"std={timing['std_ms']:6.2f}ms  "
                   f"min={timing['min_ms']:8.2f}ms")
@@ -201,18 +206,18 @@ def main():
     print("=" * 70)
 
     # Header
-    header = f"{'Config':<30}"
+    header = f"{'Config':<35}"
     for sl in SEQ_LENGTHS:
         header += f" {sl:>8}"
     print(header)
-    print("-" * (30 + 9 * len(SEQ_LENGTHS)))
+    print("-" * (35 + 9 * len(SEQ_LENGTHS)))
 
     # Get SDPA baseline for speedup calculation
     sdpa_key = CONFIGS[0][0]
     sdpa_data = results["benchmarks"][sdpa_key]
 
     for label, _, _ in CONFIGS:
-        row = f"{label:<30}"
+        row = f"{label:<35}"
         for sl in SEQ_LENGTHS:
             val = results["benchmarks"][label][str(sl)]["mean_ms"]
             row += f" {val:>8.2f}"
@@ -221,11 +226,12 @@ def main():
     # Speedup rows
     print()
     print("Speedup vs SDPA:")
-    print("-" * (30 + 9 * len(SEQ_LENGTHS)))
+    print("-" * (35 + 9 * len(SEQ_LENGTHS)))
+
     for label, attn_type, _ in CONFIGS:
         if attn_type == "sdpa":
             continue
-        row = f"{label:<30}"
+        row = f"{label:<35}"
         for sl in SEQ_LENGTHS:
             sdpa_val = sdpa_data[str(sl)]["mean_ms"]
             flex_val = results["benchmarks"][label][str(sl)]["mean_ms"]

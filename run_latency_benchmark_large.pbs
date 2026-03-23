@@ -1,13 +1,9 @@
 #!/bin/bash
-#PBS -l walltime=01:00:00
-#PBS -l select=1:ncpus=4:mem=32gb:ngpus=1:gpu_type=L40S
-#PBS -N flex_latency
-#PBS -o experiments/flex_attention/results/latency_benchmark_output.log
-#PBS -e experiments/flex_attention/results/latency_benchmark_error.log
-
-# ============================================================================
-# FlexAttention vs SDPA Latency Benchmark (with block_mask)
-# ============================================================================
+#PBS -l walltime=02:00:00
+#PBS -l select=1:ncpus=4:mem=64gb:ngpus=1:gpu_type=L40S
+#PBS -N flex_latency_large
+#PBS -o experiments/flex_attention/results/latency_benchmark_large_output.log
+#PBS -e experiments/flex_attention/results/latency_benchmark_large_error.log
 
 cd $HOME/mase
 source .venv/bin/activate
@@ -15,7 +11,7 @@ source .venv/bin/activate
 mkdir -p experiments/flex_attention/results
 
 echo "=============================================="
-echo "FlexAttention vs SDPA Latency Benchmark"
+echo "FlexAttention vs SDPA — Large Model Benchmark"
 echo "=============================================="
 echo "Job ID: ${PBS_JOBID}"
 echo "Running on node: $(hostname)"
@@ -29,7 +25,7 @@ echo "PyTorch / CUDA info:"
 python -c "import torch; print(f'PyTorch {torch.__version__}, CUDA: {torch.cuda.is_available()}, Device: {torch.cuda.get_device_name() if torch.cuda.is_available() else \"N/A\"}')"
 echo ""
 
-python -u experiments/flex_attention/latency_benchmark.py
+python -u experiments/flex_attention/latency_benchmark_large.py
 
 EXIT_CODE=$?
 

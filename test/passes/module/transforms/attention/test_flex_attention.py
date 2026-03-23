@@ -2,8 +2,12 @@
 Tests for the FlexAttention transform pass.
 
 - Score-mod unit tests: CPU (pure logic, no compilation).
+- Mask-mod unit tests: CPU (pure logic for block_mask patterns).
 - Module replacement tests: CPU (verify pass swaps modules and preserves weights).
 - Forward pass tests: CUDA only (torch.compile(flex_attention) requires GPU).
+- Training step tests: CUDA only (backward pass through compiled flex_attention).
+- Longer sequence tests: CUDA only (seq_len=512).
+- BFloat16 tests: CUDA only (bf16 inference and training).
 """
 
 import sys
@@ -23,6 +27,10 @@ from chop.passes.module.transforms.attention.score_mods import (
     generate_sliding_window_score_mod,
     generate_alibi_score_mod,
     get_score_mod,
+    noop_mask_mod,
+    causal_mask_mod,
+    generate_sliding_window_mask_mod,
+    get_mask_mod,
 )
 
 requires_cuda = pytest.mark.skipif(
@@ -44,9 +52,9 @@ class TestScoreMods:
 
     def test_causal_allows_past(self):
         score = torch.tensor(1.0)
-        # q_idx >= kv_idx  →  score unchanged
+        # q_idx >= kv_idx  ->  score unchanged
         assert causal_score_mod(score, 0, 0, 5, 3) == score
-        # q_idx == kv_idx  →  score unchanged
+        # q_idx == kv_idx  ->  score unchanged
         assert causal_score_mod(score, 0, 0, 3, 3) == score
 
     def test_causal_blocks_future(self):
@@ -57,13 +65,13 @@ class TestScoreMods:
     def test_sliding_window_within_window(self):
         mod = generate_sliding_window_score_mod(window_size=4)
         score = torch.tensor(2.0)
-        # q=5, kv=3 → distance=2 < 4, and causal → pass
+        # q=5, kv=3 -> distance=2 < 4, and causal -> pass
         assert mod(score, 0, 0, 5, 3) == score
 
     def test_sliding_window_outside_window(self):
         mod = generate_sliding_window_score_mod(window_size=4)
         score = torch.tensor(2.0)
-        # q=10, kv=2 → distance=8 >= 4 → blocked
+        # q=10, kv=2 -> distance=8 >= 4 -> blocked
         result = mod(score, 0, 0, 10, 2)
         assert result == float("-inf")
 
@@ -77,10 +85,10 @@ class TestScoreMods:
         num_heads = 8
         mod = generate_alibi_score_mod(num_heads)
         score = torch.tensor(0.0)
-        # Head 0, q=5, kv=3 → distance = 2, slope > 0 → positive bias
+        # Head 0, q=5, kv=3 -> distance = 2, slope > 0 -> positive bias
         result = mod(score, 0, 0, 5, 3)
         assert result > 0.0
-        # Head 0, q=3, kv=5 → distance = -2 → negative bias
+        # Head 0, q=3, kv=5 -> distance = -2 -> negative bias
         result_neg = mod(score, 0, 0, 3, 5)
         assert result_neg < 0.0
 
@@ -98,7 +106,53 @@ class TestScoreMods:
 
 
 # ===================================================================
-# Module replacement tests (CPU — no forward pass, no torch.compile)
+# Mask-mod unit tests (CPU)
+# ===================================================================
+
+
+class TestMaskMods:
+    """Verify that each mask_mod produces correct boolean patterns."""
+
+    def test_noop_always_true(self):
+        assert noop_mask_mod(0, 0, 3, 5) is True
+        assert noop_mask_mod(0, 0, 5, 3) is True
+
+    def test_causal_allows_past(self):
+        assert causal_mask_mod(0, 0, 5, 3) is True
+        assert causal_mask_mod(0, 0, 3, 3) is True
+
+    def test_causal_blocks_future(self):
+        assert causal_mask_mod(0, 0, 2, 5) is False
+
+    def test_sliding_window_within_window(self):
+        mod = generate_sliding_window_mask_mod(window_size=4)
+        # q=5, kv=3 -> distance=2 < 4, and causal -> True
+        assert mod(0, 0, 5, 3) is True
+
+    def test_sliding_window_outside_window(self):
+        mod = generate_sliding_window_mask_mod(window_size=4)
+        # q=10, kv=2 -> distance=8 >= 4 -> False
+        assert mod(0, 0, 10, 2) is False
+
+    def test_sliding_window_blocks_future(self):
+        mod = generate_sliding_window_mask_mod(window_size=4)
+        assert mod(0, 0, 2, 5) is False
+
+    def test_get_mask_mod_registry(self):
+        assert get_mask_mod("none") is noop_mask_mod
+        assert get_mask_mod("causal") is causal_mask_mod
+
+    def test_get_mask_mod_factory(self):
+        mod = get_mask_mod("sliding_window", window_size=8)
+        assert callable(mod)
+
+    def test_get_mask_mod_invalid(self):
+        with pytest.raises(ValueError, match="Unknown mask_mod"):
+            get_mask_mod("nonexistent")
+
+
+# ===================================================================
+# Module replacement tests (CPU -- no forward pass, no torch.compile)
 # ===================================================================
 
 
@@ -183,6 +237,32 @@ class TestLlamaModuleReplacement:
         for name, module in model.named_modules():
             if hasattr(module, "score_mod_fn") and module.score_mod_fn is not None:
                 assert module.score_mod_fn is causal_score_mod
+
+    def test_mask_mod_attached(self):
+        from chop.passes.module.transforms.attention.flex_attention_transform import (
+            flex_attention_transform_pass,
+        )
+
+        model = self._make_tiny_llama()
+        pass_args = {"score_mod": "causal"}
+        model, _ = flex_attention_transform_pass(model, pass_args)
+
+        for name, module in model.named_modules():
+            if hasattr(module, "mask_mod_fn") and module.mask_mod_fn is not None:
+                assert module.mask_mod_fn is causal_mask_mod
+
+    def test_block_mask_disabled(self):
+        from chop.passes.module.transforms.attention.flex_attention_transform import (
+            flex_attention_transform_pass,
+        )
+
+        model = self._make_tiny_llama()
+        pass_args = {"score_mod": "causal", "use_block_mask": False}
+        model, _ = flex_attention_transform_pass(model, pass_args)
+
+        for name, module in model.named_modules():
+            if hasattr(module, "mask_mod_fn"):
+                assert module.mask_mod_fn is None
 
 
 class TestMistralModuleReplacement:
@@ -307,7 +387,7 @@ class TestBertModuleReplacement:
 
 
 # ===================================================================
-# Forward pass tests — require CUDA
+# Forward pass tests -- require CUDA
 # ===================================================================
 
 
@@ -602,4 +682,116 @@ class TestFlexBFloat16:
             if "q_proj" in name and param.grad is not None:
                 assert param.grad.dtype == torch.bfloat16
                 assert param.grad.abs().sum() > 0
+                break
+
+
+# ===================================================================
+# Block mask CUDA tests (seq_len >= 128 to exercise create_block_mask)
+# ===================================================================
+
+
+@requires_cuda
+class TestBlockMaskCUDA:
+    """Validate that block_mask (create_block_mask) works on CUDA with seq_len >= 128."""
+
+    def test_llama_causal_block_mask(self):
+        """Llama forward with causal block_mask at seq_len=128."""
+        from transformers import LlamaConfig, LlamaForCausalLM
+        from chop.passes.module.transforms.attention.flex_attention_transform import (
+            flex_attention_transform_pass,
+            _compiled_flex_attention,
+        )
+        import chop.passes.module.transforms.attention.flex_attention_transform as fat
+
+        fat._compiled_flex_attention = None  # reset compile cache
+
+        config = LlamaConfig(
+            hidden_size=64,
+            intermediate_size=128,
+            num_hidden_layers=2,
+            num_attention_heads=4,
+            num_key_value_heads=2,
+            max_position_embeddings=128,
+            vocab_size=256,
+            _attn_implementation="eager",
+        )
+        model = LlamaForCausalLM(config).to("cuda").to(torch.float32)
+        pass_args = {"score_mod": "causal"}  # block_mask enabled by default
+        model, _ = flex_attention_transform_pass(model, pass_args)
+
+        input_ids = torch.randint(0, 256, (2, 128), device="cuda")
+        with torch.no_grad():
+            output = model(input_ids)
+
+        assert output.logits.shape == (2, 128, 256)
+
+    def test_llama_sliding_window_block_mask(self):
+        """Llama forward with sliding_window block_mask at seq_len=128."""
+        from transformers import LlamaConfig, LlamaForCausalLM
+        from chop.passes.module.transforms.attention.flex_attention_transform import (
+            flex_attention_transform_pass,
+        )
+        import chop.passes.module.transforms.attention.flex_attention_transform as fat
+
+        fat._compiled_flex_attention = None
+
+        config = LlamaConfig(
+            hidden_size=64,
+            intermediate_size=128,
+            num_hidden_layers=2,
+            num_attention_heads=4,
+            num_key_value_heads=2,
+            max_position_embeddings=128,
+            vocab_size=256,
+            _attn_implementation="eager",
+        )
+        model = LlamaForCausalLM(config).to("cuda").to(torch.float32)
+        pass_args = {
+            "score_mod": "sliding_window",
+            "score_mod_kwargs": {"window_size": 64},
+        }
+        model, _ = flex_attention_transform_pass(model, pass_args)
+
+        input_ids = torch.randint(0, 256, (2, 128), device="cuda")
+        with torch.no_grad():
+            output = model(input_ids)
+
+        assert output.logits.shape == (2, 128, 256)
+
+    def test_block_mask_training_step(self):
+        """Training step with block_mask to confirm gradients flow."""
+        from transformers import LlamaConfig, LlamaForCausalLM
+        from chop.passes.module.transforms.attention.flex_attention_transform import (
+            flex_attention_transform_pass,
+        )
+        import chop.passes.module.transforms.attention.flex_attention_transform as fat
+
+        fat._compiled_flex_attention = None
+
+        config = LlamaConfig(
+            hidden_size=64,
+            intermediate_size=128,
+            num_hidden_layers=2,
+            num_attention_heads=4,
+            num_key_value_heads=2,
+            max_position_embeddings=128,
+            vocab_size=256,
+            _attn_implementation="eager",
+        )
+        model = LlamaForCausalLM(config).to("cuda").to(torch.float32)
+        pass_args = {"score_mod": "causal"}
+        model, _ = flex_attention_transform_pass(model, pass_args)
+        model.train()
+
+        input_ids = torch.randint(0, 256, (2, 128), device="cuda")
+        labels = input_ids.clone()
+
+        output = model(input_ids, labels=labels)
+        loss = output.loss
+        assert loss is not None and loss.requires_grad
+        loss.backward()
+
+        for name, param in model.named_parameters():
+            if "q_proj" in name and param.grad is not None:
+                assert param.grad.abs().sum() > 0, f"Zero gradient on {name}"
                 break

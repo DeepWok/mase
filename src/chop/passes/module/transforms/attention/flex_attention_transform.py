@@ -3,7 +3,7 @@ FlexAttention transform pass for MASE.
 
 Walks a model and replaces standard attention modules with FlexAttention
 variants that use ``torch.compile(flex_attention)`` with configurable
-``score_mod`` functions.
+``score_mod`` and ``block_mask`` functions.
 
 Supported model families:
     - Llama  (LlamaAttention / LlamaSdpaAttention)
@@ -27,9 +27,9 @@ from typing import Optional, Tuple
 
 import torch
 import torch.nn as nn
-from torch.nn.attention.flex_attention import flex_attention
+from torch.nn.attention.flex_attention import flex_attention, create_block_mask
 
-from .score_mods import get_score_mod
+from .score_mods import get_score_mod, get_mask_mod
 from ...module_modify_helper import set_module_by_name
 
 logger = logging.getLogger(__name__)
@@ -51,6 +51,58 @@ def _get_compiled_flex_attention():
     if _compiled_flex_attention is None:
         _compiled_flex_attention = torch.compile(flex_attention, dynamic=False)
     return _compiled_flex_attention
+
+
+# FlexAttention's default block size for block-sparse tiling.
+# Sequences shorter than this produce sub-block tiles that trigger
+# Triton kernel assertion failures.  Block-level sparsity is also
+# pointless when there is only one block, so we simply skip it.
+_FLEX_BLOCK_SIZE = 128
+
+
+def _make_block_mask(mask_mod_fn, Q_LEN, KV_LEN, device="cuda"):
+    """
+    Create a block_mask using the given mask_mod function.
+
+    The block_mask tells FlexAttention which blocks to skip entirely,
+    providing the main source of speedup for sparse attention patterns.
+
+    Uses ``B=None, H=None`` because our mask_mod functions (causal,
+    sliding_window) are batch- and head-independent.  This avoids
+    redundant per-batch/per-head computation in ``create_block_mask``.
+
+    Returns ``None`` (no block_mask) when either sequence dimension is
+    shorter than the FlexAttention block size, since block-level
+    sparsity cannot help with a single block.
+    """
+    if Q_LEN < _FLEX_BLOCK_SIZE or KV_LEN < _FLEX_BLOCK_SIZE:
+        return None
+    return create_block_mask(
+        mask_mod_fn, B=None, H=None, Q_LEN=Q_LEN, KV_LEN=KV_LEN, device=device,
+    )
+
+
+class _BlockMaskCache:
+    """
+    Caches a ``BlockMask`` and reuses it while (Q_LEN, KV_LEN) stay
+    the same.  ``create_block_mask`` is expensive and the PyTorch docs
+    explicitly recommend creating it once and reusing it.  During training
+    with fixed-length batches the dimensions never change, so the mask is
+    built exactly once.
+    """
+
+    def __init__(self):
+        self._key = None
+        self._mask = None
+
+    def get(self, mask_mod_fn, Q_LEN, KV_LEN, device="cuda"):
+        key = (Q_LEN, KV_LEN, str(device))
+        if key == self._key and self._mask is not None:
+            return self._mask
+        mask = _make_block_mask(mask_mod_fn, Q_LEN, KV_LEN, device)
+        self._key = key
+        self._mask = mask
+        return mask
 
 
 # ============================================================================
@@ -95,13 +147,16 @@ def _build_llama_flex_attention_cls():
     class LlamaFlexAttention(LlamaAttention):
         """
         Llama attention using ``torch.compile(flex_attention)`` with a
-        pluggable ``score_mod``.  Inherits all projections and RoPE from
-        :class:`LlamaAttention` — only the forward kernel dispatch changes.
+        pluggable ``score_mod`` and optional ``block_mask``.
+        Inherits all projections and RoPE from
+        :class:`LlamaAttention` -- only the forward kernel dispatch changes.
         """
 
         def __init__(self, config, layer_idx: Optional[int] = None):
             super().__init__(config, layer_idx)
             self.score_mod_fn = None  # set by the transform pass
+            self.mask_mod_fn = None   # set by the transform pass (for block_mask)
+            self._block_mask_cache = _BlockMaskCache()
 
         def forward(
             self,
@@ -185,21 +240,35 @@ def _build_llama_flex_attention_cls():
                     key_states, value_states, self.layer_idx, cache_kwargs
                 )
 
-            # ---- GQA expansion ----
-            key_states = repeat_kv(key_states, self.num_key_value_groups)
-            value_states = repeat_kv(value_states, self.num_key_value_groups)
-
             # ---- Contiguity (required by some backends) ----
             query_states = query_states.contiguous()
             key_states = key_states.contiguous()
             value_states = value_states.contiguous()
 
+            # ---- Build block_mask if mask_mod is available (cached) ----
+            block_mask = None
+            if self.mask_mod_fn is not None:
+                block_mask = self._block_mask_cache.get(
+                    self.mask_mod_fn,
+                    Q_LEN=query_states.shape[2],
+                    KV_LEN=key_states.shape[2],
+                    device=query_states.device,
+                )
+
             # ---- FlexAttention kernel ----
+            # Use enable_gqa=True so FlexAttention handles GQA natively
+            # instead of manually expanding KV heads with repeat_kv.
+            flex_kwargs = {"score_mod": self.score_mod_fn}
+            if block_mask is not None:
+                flex_kwargs["block_mask"] = block_mask
+            if self.num_key_value_groups > 1:
+                flex_kwargs["enable_gqa"] = True
+
             attn_output = _get_compiled_flex_attention()(
                 query_states,
                 key_states,
                 value_states,
-                score_mod=self.score_mod_fn,
+                **flex_kwargs,
             )
 
             # ---- reshape & output projection ----
@@ -248,12 +317,14 @@ def _build_mistral_flex_attention_cls():
     class MistralFlexAttention(MistralAttention):
         """
         Mistral attention using ``torch.compile(flex_attention)`` with a
-        pluggable ``score_mod``.
+        pluggable ``score_mod`` and optional ``block_mask``.
         """
 
         def __init__(self, config, layer_idx: Optional[int] = None):
             super().__init__(config, layer_idx)
             self.score_mod_fn = None
+            self.mask_mod_fn = None
+            self._block_mask_cache = _BlockMaskCache()
 
         def forward(
             self,
@@ -323,21 +394,33 @@ def _build_mistral_flex_attention_cls():
                     key_states, value_states, self.layer_idx, cache_kwargs
                 )
 
-            # ---- GQA expansion ----
-            key_states = repeat_kv(key_states, self.num_key_value_groups)
-            value_states = repeat_kv(value_states, self.num_key_value_groups)
-
             # ---- Contiguity ----
             query_states = query_states.contiguous()
             key_states = key_states.contiguous()
             value_states = value_states.contiguous()
 
+            # ---- Build block_mask if mask_mod is available (cached) ----
+            block_mask = None
+            if self.mask_mod_fn is not None:
+                block_mask = self._block_mask_cache.get(
+                    self.mask_mod_fn,
+                    Q_LEN=query_states.shape[2],
+                    KV_LEN=key_states.shape[2],
+                    device=query_states.device,
+                )
+
             # ---- FlexAttention kernel ----
+            flex_kwargs = {"score_mod": self.score_mod_fn}
+            if block_mask is not None:
+                flex_kwargs["block_mask"] = block_mask
+            if self.num_key_value_groups > 1:
+                flex_kwargs["enable_gqa"] = True
+
             attn_output = _get_compiled_flex_attention()(
                 query_states,
                 key_states,
                 value_states,
-                score_mod=self.score_mod_fn,
+                **flex_kwargs,
             )
 
             # ---- reshape & output projection ----
@@ -363,12 +446,14 @@ def _build_bert_flex_attention_cls():
     class BertFlexSelfAttention(BertSelfAttention):
         """
         BERT self-attention using ``torch.compile(flex_attention)`` with a
-        pluggable ``score_mod``.
+        pluggable ``score_mod`` and optional ``block_mask``.
         """
 
         def __init__(self, config, position_embedding_type=None):
             super().__init__(config, position_embedding_type)
             self.score_mod_fn = None
+            self.mask_mod_fn = None
+            self._block_mask_cache = _BlockMaskCache()
 
         def forward(
             self,
@@ -381,7 +466,7 @@ def _build_bert_flex_attention_cls():
             output_attentions: Optional[bool] = False,
         ) -> torch.Tensor:
             # Cross-attention and relative position embeddings are not
-            # supported by the flex path — fall back to eager.
+            # supported by the flex path -- fall back to eager.
             if (
                 encoder_hidden_states is not None
                 or self.position_embedding_type != "absolute"
@@ -416,12 +501,26 @@ def _build_bert_flex_attention_cls():
             key_layer = key_layer.contiguous()
             value_layer = value_layer.contiguous()
 
+            # ---- Build block_mask if mask_mod is available (cached) ----
+            block_mask = None
+            if self.mask_mod_fn is not None:
+                block_mask = self._block_mask_cache.get(
+                    self.mask_mod_fn,
+                    Q_LEN=query_layer.shape[2],
+                    KV_LEN=key_layer.shape[2],
+                    device=query_layer.device,
+                )
+
             # ---- FlexAttention kernel ----
+            flex_kwargs = {"score_mod": self.score_mod_fn}
+            if block_mask is not None:
+                flex_kwargs["block_mask"] = block_mask
+
             context_layer = _get_compiled_flex_attention()(
                 query_layer,
                 key_layer,
                 value_layer,
-                score_mod=self.score_mod_fn,
+                **flex_kwargs,
             )
 
             # ---- reshape ----
@@ -441,13 +540,13 @@ def _build_bert_flex_attention_cls():
 # Module replacement logic
 # ============================================================================
 
-def _replace_attention_modules(network, flex_cls, base_cls, target_classes, score_mod_fn):
+def _replace_attention_modules(network, flex_cls, base_cls, target_classes, score_mod_fn, mask_mod_fn):
     """
     Walk *network*, find every module whose type is in *target_classes*,
     and replace it with an instance of *flex_cls* carrying the same weights.
 
     Returns:
-        (network, count) — the mutated network and how many modules were replaced.
+        (network, count) -- the mutated network and how many modules were replaced.
     """
     replacements = []
 
@@ -464,13 +563,10 @@ def _replace_attention_modules(network, flex_cls, base_cls, target_classes, scor
                 layer_idx=getattr(old_module, "layer_idx", None),
             )
         else:
-            # BERT style — reconstruct config from stored attributes.
-            # BertSelfAttention.__init__ reads: config.hidden_size,
-            # config.num_attention_heads, config.attention_probs_dropout_prob,
-            # config.is_decoder, and optionally config.max_position_embeddings.
+            # BERT style -- reconstruct config from stored attributes.
             bert_cfg_attrs = {
                 "num_attention_heads": old_module.num_attention_heads,
-                "hidden_size": old_module.all_head_size,  # num_heads * head_size
+                "hidden_size": old_module.all_head_size,
                 "attention_probs_dropout_prob": old_module.dropout.p,
                 "is_decoder": getattr(old_module, "is_decoder", False),
             }
@@ -490,6 +586,7 @@ def _replace_attention_modules(network, flex_cls, base_cls, target_classes, scor
         # Transfer weights (same architecture, so state_dict keys match)
         new_module.load_state_dict(old_module.state_dict())
         new_module.score_mod_fn = score_mod_fn
+        new_module.mask_mod_fn = mask_mod_fn
 
         # Move to same device / dtype
         device = next(old_module.parameters()).device
@@ -515,11 +612,18 @@ def flex_attention_transform_pass(network, pass_args):
     ``pass_args`` keys:
 
     * ``score_mod`` (str, default ``"causal"``): name of the score
-      modification function — one of ``"none"``, ``"causal"``,
+      modification function -- one of ``"none"``, ``"causal"``,
       ``"sliding_window"``, ``"alibi"``.
     * ``score_mod_kwargs`` (dict, default ``{}``): extra keyword
       arguments forwarded to parameterised score_mod factories
       (e.g. ``{"window_size": 256}``).
+    * ``use_block_mask`` (bool, default ``True``): whether to create
+      a matching block_mask for block-level sparsity. Set to ``False``
+      to disable (e.g. for benchmarking without block skipping).
+
+    The pass automatically creates a matching ``mask_mod`` (block_mask)
+    for score_mods that have a corresponding mask pattern ("causal",
+    "sliding_window"). This enables block-level sparsity for speedup.
 
     :returns: ``(network, stats)`` where *stats* is a dict with counts
         of replaced modules per model family.
@@ -534,7 +638,22 @@ def flex_attention_transform_pass(network, pass_args):
     """
     score_mod_name = pass_args.get("score_mod", "causal")
     score_mod_kwargs = pass_args.get("score_mod_kwargs", {})
+    use_block_mask = pass_args.get("use_block_mask", True)
+
     score_mod_fn = get_score_mod(score_mod_name, **score_mod_kwargs)
+
+    # Automatically create matching mask_mod for block-level sparsity
+    mask_mod_fn = None
+    if use_block_mask:
+        try:
+            mask_mod_fn = get_mask_mod(score_mod_name, **score_mod_kwargs)
+        except ValueError:
+            # No matching mask_mod for this score_mod (e.g. alibi)
+            # That's fine -- just use score_mod without block_mask
+            logger.info(
+                f"No mask_mod available for '{score_mod_name}', "
+                f"running without block_mask (no block-level sparsity)."
+            )
 
     stats = {}
 
@@ -542,7 +661,7 @@ def flex_attention_transform_pass(network, pass_args):
     llama_flex_cls, llama_base_cls, llama_targets = _build_llama_flex_attention_cls()
     if llama_flex_cls is not None:
         network, count = _replace_attention_modules(
-            network, llama_flex_cls, llama_base_cls, llama_targets, score_mod_fn
+            network, llama_flex_cls, llama_base_cls, llama_targets, score_mod_fn, mask_mod_fn
         )
         stats["llama_replaced"] = count
 
@@ -550,7 +669,7 @@ def flex_attention_transform_pass(network, pass_args):
     mistral_flex_cls, mistral_base_cls, mistral_targets = _build_mistral_flex_attention_cls()
     if mistral_flex_cls is not None:
         network, count = _replace_attention_modules(
-            network, mistral_flex_cls, mistral_base_cls, mistral_targets, score_mod_fn
+            network, mistral_flex_cls, mistral_base_cls, mistral_targets, score_mod_fn, mask_mod_fn
         )
         stats["mistral_replaced"] = count
 
@@ -558,14 +677,15 @@ def flex_attention_transform_pass(network, pass_args):
     bert_flex_cls, bert_base_cls, bert_targets = _build_bert_flex_attention_cls()
     if bert_flex_cls is not None:
         network, count = _replace_attention_modules(
-            network, bert_flex_cls, bert_base_cls, bert_targets, score_mod_fn
+            network, bert_flex_cls, bert_base_cls, bert_targets, score_mod_fn, mask_mod_fn
         )
         stats["bert_replaced"] = count
 
     total = sum(stats.values())
+    block_mask_status = "with block_mask" if mask_mod_fn is not None else "without block_mask"
     logger.info(
         f"flex_attention_transform_pass: replaced {total} attention module(s) "
-        f"with score_mod='{score_mod_name}'. Details: {stats}"
+        f"with score_mod='{score_mod_name}' ({block_mask_status}). Details: {stats}"
     )
 
     return network, stats
