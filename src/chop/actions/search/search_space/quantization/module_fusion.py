@@ -113,7 +113,6 @@ class ModuleSearchSpaceQuantizationFusion(SearchSpaceBase):
         quant_cfg = sampled_config["quantization"]
         quant_pass_args = {
             "by": "type",
-            "default": {"config": {"name": None}},
             "linear": {
                 "config": {
                     "name": "integer",
