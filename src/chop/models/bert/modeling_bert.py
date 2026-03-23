@@ -683,7 +683,7 @@ class BertEncoder(nn.Module):
             else:
                 layer_outputs = layer_module(
                     hidden_states,
-                    # attention_mask,
+                    attention_mask,
                     # layer_head_mask,
                     # encoder_hidden_states,
                     # encoder_attention_mask,
@@ -1097,24 +1097,18 @@ class BertModel(BertPreTrainedModel):
         # # and head_mask is converted to shape [num_hidden_layers x batch x num_heads x seq_length x seq_length]
         # head_mask = self.get_head_mask(head_mask, self.config.num_hidden_layers)
 
+        input_shape = input_ids.size()
+        extended_attention_mask = self.get_extended_attention_mask(attention_mask, input_shape)
+
         embedding_output = self.embeddings(
             input_ids=input_ids,
-            # position_ids=position_ids,
-            # token_type_ids=token_type_ids,
-            # inputs_embeds=inputs_embeds,
-            # past_key_values_length=past_key_values_length,
+            position_ids=position_ids,
+            token_type_ids=token_type_ids,
+            inputs_embeds=inputs_embeds,
         )
         encoder_outputs = self.encoder(
             embedding_output,
-            # attention_mask=extended_attention_mask,
-            # head_mask=head_mask,
-            # encoder_hidden_states=encoder_hidden_states,
-            # encoder_attention_mask=encoder_extended_attention_mask,
-            # past_key_values=past_key_values,
-            # use_cache=use_cache,
-            # output_attentions=output_attentions,
-            # output_hidden_states=output_hidden_states,
-            # return_dict=return_dict,
+            attention_mask=extended_attention_mask,
         )
         sequence_output = encoder_outputs
         pooled_output = (
