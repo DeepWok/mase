@@ -31,8 +31,6 @@ import torch._inductor.config
 # 1. Prevent Dynamo from falling back to Python eager mode
 torch._dynamo.config.cache_size_limit = 128 
 
-# 2. Allow Inductor to fall back to ATen for backward-pass GEMMs if Triton fails
-torch._inductor.config.max_autotune_gemm_backends = "ATEN,TRITON"
 
 # ============================================================================
 # Config

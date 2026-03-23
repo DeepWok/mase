@@ -41,15 +41,27 @@ logger = logging.getLogger(__name__)
 _compiled_flex_attention = None
 
 
-def _get_compiled_flex_attention():
-    """Return the compiled flex_attention kernel, compiling on first use.
+# def _get_compiled_flex_attention():
+#     """Return the compiled flex_attention kernel, compiling on first use.
 
-    Uses ``dynamic=False`` to avoid symbolic-shape issues in the inductor's
-    flex_decoding kernel (PyTorch 2.6 bug with ``get_split_k``).
-    """
+#     Uses ``dynamic=False`` to avoid symbolic-shape issues in the inductor's
+#     flex_decoding kernel (PyTorch 2.6 bug with ``get_split_k``).
+#     """
+#     global _compiled_flex_attention
+#     if _compiled_flex_attention is None:
+#         _compiled_flex_attention = torch.compile(flex_attention, dynamic=False)
+#     return _compiled_flex_attention
+
+
+def _get_compiled_flex_attention():
+    """Return the compiled flex_attention kernel, compiling on first use."""
     global _compiled_flex_attention
     if _compiled_flex_attention is None:
-        _compiled_flex_attention = torch.compile(flex_attention, dynamic=False)
+        _compiled_flex_attention = torch.compile(
+            flex_attention, 
+            dynamic=False,
+            mode="max-autotune-no-cudagraphs"
+        )
     return _compiled_flex_attention
 
 
