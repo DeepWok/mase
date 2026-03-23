@@ -34,9 +34,13 @@ def noop_score_mod(score, b, h, q_idx, kv_idx):
     return score
 
 
+# def causal_score_mod(score, b, h, q_idx, kv_idx):
+#     """Standard causal (autoregressive) mask: attend only to past + current."""
+#     return torch.where(torch.as_tensor(q_idx >= kv_idx), score, -float("inf"))
+
 def causal_score_mod(score, b, h, q_idx, kv_idx):
-    """Standard causal (autoregressive) mask: attend only to past + current."""
-    return torch.where(torch.as_tensor(q_idx >= kv_idx), score, -float("inf"))
+    """Standard causal mask: attend only to past + current."""
+    return torch.where(q_idx >= kv_idx, score, float("-inf"))
 
 
 def generate_sliding_window_score_mod(window_size: int):
@@ -50,10 +54,16 @@ def generate_sliding_window_score_mod(window_size: int):
         window_size: Number of past tokens each position can attend to.
     """
 
+    # def sliding_window_score_mod(score, b, h, q_idx, kv_idx):
+    #     causal_mask = q_idx >= kv_idx
+    #     window_mask = (q_idx - kv_idx) < window_size
+    #     return torch.where(torch.as_tensor(causal_mask & window_mask), score, -float("inf"))
+    
     def sliding_window_score_mod(score, b, h, q_idx, kv_idx):
-        causal_mask = q_idx >= kv_idx
-        window_mask = (q_idx - kv_idx) < window_size
-        return torch.where(torch.as_tensor(causal_mask & window_mask), score, -float("inf"))
+        # A single inline return expression. 
+        # No variable reassignments, no torch.as_tensor(). 
+        # This compiles cleanly to Triton.
+        return torch.where((q_idx >= kv_idx) & ((q_idx - kv_idx) < window_size), score, float("-inf"))
 
     return sliding_window_score_mod
 

@@ -37,59 +37,69 @@ requires_cuda = pytest.mark.skipif(
     not torch.cuda.is_available(), reason="FlexAttention requires CUDA"
 )
 
-
 # ===================================================================
 # Score-mod unit tests (CPU)
 # ===================================================================
-
 
 class TestScoreMods:
     """Verify that each score_mod produces correct masking / bias patterns."""
 
     def test_noop_passes_through(self):
         score = torch.tensor(1.5)
-        assert noop_score_mod(score, 0, 0, 3, 5) == score
+        q_idx, kv_idx = torch.tensor(3), torch.tensor(5)
+        assert noop_score_mod(score, 0, 0, q_idx, kv_idx) == score
 
     def test_causal_allows_past(self):
         score = torch.tensor(1.0)
         # q_idx >= kv_idx  ->  score unchanged
-        assert causal_score_mod(score, 0, 0, 5, 3) == score
+        q_idx, kv_idx = torch.tensor(5), torch.tensor(3)
+        assert causal_score_mod(score, 0, 0, q_idx, kv_idx) == score
+        
         # q_idx == kv_idx  ->  score unchanged
-        assert causal_score_mod(score, 0, 0, 3, 3) == score
+        q_idx, kv_idx = torch.tensor(3), torch.tensor(3)
+        assert causal_score_mod(score, 0, 0, q_idx, kv_idx) == score
 
     def test_causal_blocks_future(self):
         score = torch.tensor(1.0)
-        result = causal_score_mod(score, 0, 0, 2, 5)
+        q_idx, kv_idx = torch.tensor(2), torch.tensor(5)
+        result = causal_score_mod(score, 0, 0, q_idx, kv_idx)
         assert result == float("-inf")
 
     def test_sliding_window_within_window(self):
         mod = generate_sliding_window_score_mod(window_size=4)
         score = torch.tensor(2.0)
         # q=5, kv=3 -> distance=2 < 4, and causal -> pass
-        assert mod(score, 0, 0, 5, 3) == score
+        q_idx, kv_idx = torch.tensor(5), torch.tensor(3)
+        assert mod(score, 0, 0, q_idx, kv_idx) == score
 
     def test_sliding_window_outside_window(self):
         mod = generate_sliding_window_score_mod(window_size=4)
         score = torch.tensor(2.0)
         # q=10, kv=2 -> distance=8 >= 4 -> blocked
-        result = mod(score, 0, 0, 10, 2)
+        q_idx, kv_idx = torch.tensor(10), torch.tensor(2)
+        result = mod(score, 0, 0, q_idx, kv_idx)
         assert result == float("-inf")
 
     def test_sliding_window_blocks_future(self):
         mod = generate_sliding_window_score_mod(window_size=4)
         score = torch.tensor(2.0)
-        result = mod(score, 0, 0, 2, 5)
+        q_idx, kv_idx = torch.tensor(2), torch.tensor(5)
+        result = mod(score, 0, 0, q_idx, kv_idx)
         assert result == float("-inf")
 
     def test_alibi_adds_bias(self):
         num_heads = 8
         mod = generate_alibi_score_mod(num_heads)
         score = torch.tensor(0.0)
+        
         # Head 0, q=5, kv=3 -> distance = 2, slope > 0 -> positive bias
-        result = mod(score, 0, 0, 5, 3)
+        q_idx, kv_idx = torch.tensor(5), torch.tensor(3)
+        result = mod(score, 0, 0, q_idx, kv_idx)
         assert result > 0.0
+        
         # Head 0, q=3, kv=5 -> distance = -2 -> negative bias
-        result_neg = mod(score, 0, 0, 3, 5)
+        q_idx, kv_idx = torch.tensor(3), torch.tensor(5)
+        result_neg = mod(score, 0, 0, q_idx, kv_idx)
         assert result_neg < 0.0
 
     def test_get_score_mod_registry(self):
@@ -103,7 +113,6 @@ class TestScoreMods:
     def test_get_score_mod_invalid(self):
         with pytest.raises(ValueError, match="Unknown score_mod"):
             get_score_mod("nonexistent")
-
 
 # ===================================================================
 # Mask-mod unit tests (CPU)
