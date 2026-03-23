@@ -43,9 +43,9 @@ echo "----------------------------------------------"
 echo "Running search..."
 echo "----------------------------------------------"
 
-python src/ch search \
+python scripts/search_bert.py \
     --config configs/search/quantization_fusion_bert.toml \
-    --project-dir "$SAVE_DIR"
+    --save-dir "$SAVE_DIR"
 
 EXIT_CODE=$?
 
