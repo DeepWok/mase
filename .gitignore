@@ -27,6 +27,9 @@ vagrant/.vagrant/
 /src/.machop_cache/
 lightning_logs/
 
+/experiments/flex_attention/results
+/experiments/flex_attention/results_old
+*.pbs
 # macOS
 .DS_Store
 
