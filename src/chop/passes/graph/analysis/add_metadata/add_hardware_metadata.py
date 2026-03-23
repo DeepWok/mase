@@ -72,10 +72,16 @@ def add_component_source(node):
         ]:
             continue
         elif isinstance(arg_info, dict):
-            node.meta["mase"]["hardware"]["interface"][arg] = {
-                "storage": "BRAM",
-                "transpose": False,
-            }
+            if arg_info.get("storage", None) == "DRAM":
+                node.meta["mase"]["hardware"]["interface"][arg] = {
+                    "storage": "DRAM",
+                    "transpose": False,
+                }
+            else:
+                node.meta["mase"]["hardware"]["interface"][arg] = {
+                    "storage": "BRAM",
+                    "transpose": False,
+                }
         else:
             node.meta["mase"]["hardware"]["interface"][arg] = {}
 
