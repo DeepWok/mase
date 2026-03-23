@@ -194,7 +194,28 @@ class VerilogInterfaceEmitter:
     input data_out_{i}_ready,"""
                     i += 1
 
-        # TODO: emit off-chip parameter interface
+        # Emit DRAM parameter ports for off-chip storage
+        for node in self.graph.fx_graph.nodes:
+            if node.meta["mase"].parameters["hardware"]["is_implicit"]:
+                continue
+            if "INTERNAL" not in node.meta["mase"].parameters["hardware"]["toolchain"]:
+                continue
+            node_name = vf(node.name)
+            for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
+                if "data_in" in arg or not isinstance(arg_info, dict):
+                    continue
+                if node.meta["mase"].parameters["hardware"]["interface"][arg]["storage"] != "DRAM":
+                    continue
+                arg_name = v2p(arg)
+                parallelism_params = [
+                    param
+                    for param in parameter_map
+                    if f"{node_name}_{arg_name}_PARALLELISM_DIM" in param
+                ]
+                interface += f"""
+    input  [{node_name}_{arg_name}_PRECISION_0-1:0] {node_name}_{arg} [{'*'.join(parallelism_params)}-1:0],
+    input  {node_name}_{arg}_valid,
+    output {node_name}_{arg}_ready,"""
 
         return _remove_last_comma(interface)
 
@@ -506,11 +527,14 @@ class VerilogInternalComponentEmitter:
         # if node.meta["mase"]["hardware"].get("module") in ["fixed_difflogic_logic", "fixed_difflogic_logic"]:
         #     return components
 
-        # Emit module parameter instances (e.g. weights and biases)
+        # Emit module parameter instances (e.g. weights and biases) - BRAM only
         for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
             if "data_in" in arg:
                 continue
             if not isinstance(arg_info, dict):
+                continue
+            # DRAM parameters are driven from top-level ports, not internal BRAM sources
+            if node.meta["mase"].parameters["hardware"]["interface"][arg]["storage"] == "DRAM":
                 continue
 
             components += self._emit_module_parameters_top_internal(

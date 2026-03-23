@@ -374,8 +374,15 @@ def emit_bram_handshake(node, rtl_dir):
             logger.debug(
                 f"Skipping DAT emission for node: {node_name}, parameter: {param_verilog_name} (DRAM)"
             )
-            # emit_parameters_in_mem_internal_dram(node, param_name, verilog_name, data_name)
-            # emit_parameters_in_dat_internal_dram(node, param_name, data_name)
+            # Remove stale BRAM source files from any previous BRAM runs so
+            # verilator does not attempt to compile them.
+            for stale in [
+                os.path.join(rtl_dir, f"{node_name}_{param_verilog_name}_source.sv"),
+                os.path.join(rtl_dir, f"{node_name}_{param_verilog_name}_rom.dat"),
+            ]:
+                if os.path.exists(stale):
+                    os.remove(stale)
+                    logger.debug(f"Removed stale BRAM file: {stale}")
             
         else:
             assert False, "Emitting parameters in non-BRAM/DRAM hardware is not supported."

@@ -108,6 +108,30 @@ def _emit_cocotb_tb(graph):
                 "precision"
             ]
 
+            # Create StreamDriver instances for any DRAM weight/bias parameters.
+            # These become top-level input ports on the generated top.sv when
+            # add_hardware_metadata_analysis_pass is called with
+            # {"interface": {"storage": "DRAM"}}.
+            self.dram_drivers = {}
+            for node in graph.fx_graph.nodes:
+                if node.meta["mase"].parameters["hardware"]["is_implicit"]:
+                    continue
+                node_name = vf(node.name)
+                for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
+                    if "data_in" in arg or not isinstance(arg_info, dict):
+                        continue
+                    iface = node.meta["mase"].parameters["hardware"]["interface"].get(arg, {})
+                    if iface.get("storage") != "DRAM":
+                        continue
+                    port_name = f"{node_name}_{arg}"
+                    self.dram_drivers[port_name] = StreamDriver(
+                        dut.clk,
+                        getattr(dut, port_name),
+                        getattr(dut, f"{port_name}_valid"),
+                        getattr(dut, f"{port_name}_ready"),
+                    )
+                    self.dram_drivers[port_name].log.setLevel(logging.DEBUG)
+
         def generate_inputs(self, batches):
             """
             Generate inputs for the model by sampling a random tensor
@@ -182,6 +206,52 @@ def _emit_cocotb_tb(graph):
                     if len(block) < block_size:
                         block = block + [0] * (block_size - len(block))
                     self.input_drivers[arg].append(block)
+
+            # Preload DRAM weight/bias drivers with quantised parameter blocks.
+            # Each parameter tensor is split into blocks matching the hardware's
+            # parallelism dimensions, exactly as BRAM would have stored them.
+            if self.dram_drivers:
+                from mase_cocotb.utils import fixed_preprocess_tensor
+
+                for node in graph.fx_graph.nodes:
+                    if node.meta["mase"].parameters["hardware"]["is_implicit"]:
+                        continue
+                    node_name = vf(node.name)
+                    for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
+                        if "data_in" in arg or not isinstance(arg_info, dict):
+                            continue
+                        iface = node.meta["mase"].parameters["hardware"]["interface"].get(arg, {})
+                        if iface.get("storage") != "DRAM":
+                            continue
+                        port_name = f"{node_name}_{arg}"
+                        if port_name not in self.dram_drivers:
+                            continue
+
+                        param_tensor = node.meta["mase"].module.get_parameter(arg)
+                        arg_cap = _cap(arg)
+                        parallelism_0 = self.get_parameter(
+                            f"{node_name}_{arg_cap}_PARALLELISM_DIM_0"
+                        )
+                        parallelism_1 = self.get_parameter(
+                            f"{node_name}_{arg_cap}_PARALLELISM_DIM_1"
+                        )
+                        param_blocks = fixed_preprocess_tensor(
+                            tensor=param_tensor,
+                            q_config={
+                                "width": self.get_parameter(
+                                    f"{node_name}_{arg_cap}_PRECISION_0"
+                                ),
+                                "frac_width": self.get_parameter(
+                                    f"{node_name}_{arg_cap}_PRECISION_1"
+                                ),
+                            },
+                            parallelism=[parallelism_1, parallelism_0],
+                        )
+                        block_size = parallelism_0 * parallelism_1
+                        for block in param_blocks:
+                            if len(block) < block_size:
+                                block = block + [0] * (block_size - len(block))
+                            self.dram_drivers[port_name].append(block)
 
         def load_monitors(self, expectation):
             # DiffLogic: do not need precision, fully unrolled so 1 batch only
