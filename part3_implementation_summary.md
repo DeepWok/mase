@@ -219,3 +219,43 @@ Day 5  Notebook (Pareto plots from study.pkl, ablation table, seq-length scaling
 ## ALiBi Score Mod
 
 Part 1 implements `generate_alibi_score_mod` but no PBS script was added for it. ALiBi requires a model trained with it (e.g. BLOOM, MPT) — applying it to TinyLlama or Mistral would hurt accuracy and pollute the Pareto results. Potential future addition: `quantization_fusion_bloom.toml` + `run_search_bloom.pbs` targeting `bigscience/bloom-560m`.
+
+# BEFORE Fused RMSnorm Implementation
+## BERT Search Results (SST-2, 80 trials)
+
+| Point | Trial | Accuracy | Avg Bitwidth | Latency (ms) | Memory Density | Fusion Strategy | data_in_width | weight_width |
+|-------|-------|----------|--------------|--------------|----------------|-----------------|---------------|--------------|
+| 0 | 61 | 0.518 | 8-bit | 24.88 | 4x | none | 8 | 8 |
+| 1 | 66 | 0.511 | 8-bit | 19.69 | 4x | flex_attention | 8 | 8 |
+| 2 | 69 | **0.521** | 16-bit | 20.57 | 2x | flex_attention | 32 | 16 |
+| 3 | 75 | 0.510 | 8-bit | 19.64 | 4x | flex_attention | 4 | 8 |
+| 4 | 77 | 0.500 | **4-bit** | **19.34** | 8x | flex_attention | 8 | 4 |
+
+> Note: Accuracy ~0.5 (random chance) — BERT classifier head was not fine-tuned on SST-2.
+> FlexAttention delivers ~21% latency reduction vs no-fusion at equivalent 8-bit precision (24.88ms → 19.69ms).
+
+Each trial runs 256 samples (16 batch size = 16 batches) for the accuracy/loss evaluation, plus 50 batches for latency timing with 10 warmup batches. No training; purely inference to evaluate each config.
+---
+
+## TinyLlama-1.1B Search Results (WikiText-2, 100 trials)
+
+| Point | Trial | Perplexity | Avg Bitwidth | Latency (ms) | Memory Density | Fusion Strategy | data_in_width | weight_width |
+|-------|-------|------------|--------------|--------------|----------------|-----------------|---------------|--------------|
+| 0 | 2 | 14,285 | 16-bit | 160.54 | 2x | fused_rmsnorm* | 4 | 16 |
+| 1 | 12 | 72,084 | **4-bit** | **157.30** | 8x | fused_rmsnorm* | 16 | 4 |
+| 2 | 64 | 30,722 | **4-bit** | 157.65 | 8x | none | 4 | 4 |
+| 3 | 73 | 33,464 | **4-bit** | 157.53 | 8x | fused_rmsnorm* | 8 | 4 |
+
+> *fused_rmsnorm silently skipped — Part 2 not yet merged. These configs are effectively no-fusion baselines.
+> Weight quantisation dominates the Pareto front — all memory-efficient points use 4-bit weights.
+> flex_attention does not appear on the Llama Pareto front.
+
+## Sampler Used:
+NSGA-II (Non-dominated Sorting Genetic Algorithm II) is the standard algorithm for multi-objective optimisation — it's specifically designed to find a Pareto front rather than a single best point.
+
+With a single objective you'd use something like TPE (Tree-structured Parzen Estimator) which just finds one optimum. But you have 3 competing objectives (accuracy ↑, latency ↓, bitwidth ↓) that can't all be maximised simultaneously — improving one often worsens another. NSGA-II handles this by:
+
+Non-dominated sorting — ranks trials by whether any other trial beats them on all objectives simultaneously. Trials that aren't beaten by anyone are "Pareto-optimal"
+Crowding distance — spreads solutions evenly along the Pareto front so you get diverse trade-offs, not 80 clustered points
+Genetic evolution — uses crossover and mutation on good configs to generate the next generation of trials, so it learns which combinations of bitwidths and fusion strategies tend to be good
+The result is the 4-5 point Pareto front you saw in best.json, each point representing a genuinely different trade-off that can't be improved in all objectives at once.
