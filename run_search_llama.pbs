@@ -46,7 +46,7 @@ echo "----------------------------------------------"
 
 python src/ch search \
     --config configs/search/quantization_fusion_llama.toml \
-    --save-dir "$SAVE_DIR"
+    --project-dir "$SAVE_DIR"
 
 EXIT_CODE=$?
 
