@@ -30,8 +30,9 @@ score_mod = "none"          # BERT is bidirectional; no causal mask
 [search.search_space.seed.default]
 data_in_width   = [4, 8, 16, 32]
 weight_width    = [4, 8, 16, 32]
-# BERT uses LayerNorm so fused_rmsnorm has no effect — keep search space clean
-fusion_strategy = ["none", "flex_attention"]
+# BERT uses LayerNorm (not RMSNorm) and bidirectional attention — neither
+# fused_rmsnorm nor flex_attention apply. Quantisation search only.
+fusion_strategy = ["none"]
 
 # ---------- Search Strategy ----------
 [search.strategy]
