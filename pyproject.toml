@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11.9"
 
 dependencies = [
-    "torch==2.6",
+    "torch>=2.6",
     "torchvision",
     "onnx",
     "black",
@@ -15,7 +15,7 @@ dependencies = [
     "colorlog",
     "pytest",
     "pytorch-lightning",
-    "transformers==4.51",
+    "transformers==4.57",
     "timm",
     "pytorch-nlp",
     "datasets==3.3.2",
@@ -45,7 +45,7 @@ dependencies = [
     "opencv-python",
     "kornia",
     "ghp-import",
-    "optimum==1.24.0",
+    "optimum[onnxruntime]>=1.25",
     "pytest-profiling",
     "myst_parser",
     "pytest-cov",
