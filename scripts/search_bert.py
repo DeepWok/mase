@@ -32,9 +32,9 @@ def main():
     args = parser.parse_args()
 
     # Model
-    checkpoint = "bert-base-uncased"
+    checkpoint = "textattack/bert-base-uncased-SST-2"
     model = BertForSequenceClassification.from_pretrained(checkpoint, num_labels=2)
-    model_info = get_model_info(checkpoint)
+    model_info = get_model_info("bert-base-uncased")
 
     # Tokenizer + data module
     tokenizer = AutoTokenizer.from_pretrained(checkpoint)
@@ -44,7 +44,7 @@ def main():
         num_workers=4,
         max_token_len=128,
         tokenizer=tokenizer,
-        model_name=checkpoint,
+        model_name="bert-base-uncased",
     )
 
     search(
