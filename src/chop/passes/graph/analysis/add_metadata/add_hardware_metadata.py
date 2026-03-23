@@ -29,7 +29,7 @@ def _cap(name):
     return str(name).upper()
 
 
-def add_component_source(node):
+def add_component_source(node, pass_args={}):
     if node.meta["mase"]["hardware"]["is_implicit"]:
         return
 
@@ -72,16 +72,11 @@ def add_component_source(node):
         ]:
             continue
         elif isinstance(arg_info, dict):
-            if arg_info.get("storage", None) == "DRAM":
-                node.meta["mase"]["hardware"]["interface"][arg] = {
-                    "storage": "DRAM",
-                    "transpose": False,
-                }
-            else:
-                node.meta["mase"]["hardware"]["interface"][arg] = {
-                    "storage": "BRAM",
-                    "transpose": False,
-                }
+            storage_type = pass_args.get("interface", {}).get("storage", "BRAM")
+            node.meta["mase"]["hardware"]["interface"][arg] = {
+                "storage": storage_type,
+                "transpose": False,
+            }
         else:
             node.meta["mase"]["hardware"]["interface"][arg] = {}
 
@@ -478,7 +473,7 @@ def add_hardware_metadata_analysis_pass(graph, pass_args={}):
 
     # Add component source
     for node in graph.nodes:
-        add_component_source(node)
+        add_component_source(node, pass_args)
 
     # * Fix max parallelism to small value to enable verilator simulation
     # ! TO DO: enable this to be overriden by user
