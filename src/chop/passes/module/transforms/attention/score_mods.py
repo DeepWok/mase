@@ -80,13 +80,20 @@ def generate_alibi_score_mod(num_heads: int):
         num_heads: Total number of attention heads.
     """
     
-    # Compute the scalar base constant outside the kernel
+    # 1. Compute the math once, outside the kernel
     base = 2.0 ** (-(2.0 ** -(math.log2(num_heads) - 3)))
+    
+    # 2. Materialize the slopes directly on the GPU
+    slopes = torch.tensor(
+        [base ** (i + 1) for i in range(num_heads)], 
+        dtype=torch.float32, 
+        device=device
+    )
 
     def alibi_score_mod(score, b, h, q_idx, kv_idx):
-        # Calculate the slope dynamically using `h`
-        slope = base ** (h + 1)
-        bias = (q_idx - kv_idx) * slope
+        # 3. A simple scalar multiplication. 
+        # Autograd easily tracks this with almost zero memory overhead.
+        bias = (q_idx - kv_idx) * slopes[h]
         return score + bias
 
     return alibi_score_mod
@@ -138,13 +145,15 @@ def generate_document_mask_mod(doc_len: int):
 def generate_alibi_sliding_window_score_mod(num_heads: int, window_size: int):
     """Pure math compound ALiBi + SWA."""
     base = 2.0 ** (-(2.0 ** -(math.log2(num_heads) - 3)))
+    
+    # Force device="cuda" so TorchInductor doesn't crash fetching CPU memory
+    slopes = torch.tensor(
+        [base ** (i + 1) for i in range(num_heads)], dtype=torch.float32, device=device
+    )
 
     def alibi_sliding_window_score_mod(score, b, h, q_idx, kv_idx):
-        # Calculate the slope dynamically
-        slope = base ** (h + 1)
-        bias = (q_idx - kv_idx) * slope
-        
-        # Apply the sparsity mask and the bias in one step
+        # A simple scalar multiplication. Zero gradient overhead.
+        bias = (q_idx - kv_idx) * slopes[h]
         return torch.where((q_idx >= kv_idx) & ((q_idx - kv_idx) < window_size), score + bias, float("-inf"))
 
     return alibi_sliding_window_score_mod

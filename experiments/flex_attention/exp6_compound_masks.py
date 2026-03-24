@@ -95,8 +95,16 @@ def main():
 
     configs = [
         ("Flex Causal", {"score_mod": "causal"}),
-        ("Flex Sliding Window", {"score_mod": "sliding_window", "score_mod_kwargs": {"window_size": WINDOW_SIZE}}),
-        ("Flex ALiBi + SWA", {"score_mod": "alibi_sliding_window", "score_mod_kwargs": {"num_heads": NUM_HEADS, "window_size": WINDOW_SIZE}}),
+        ("Flex Sliding Window", {
+            "score_mod": "sliding_window", 
+            "score_mod_kwargs": {"window_size": WINDOW_SIZE}
+        }),
+        ("Flex ALiBi + SWA", {
+            "score_mod": "alibi_sliding_window", 
+            "score_mod_kwargs": {"num_heads": NUM_HEADS, "window_size": WINDOW_SIZE},
+            "mask_mod": "sliding_window",
+            "mask_mod_kwargs": {"window_size": WINDOW_SIZE}
+        }),
     ]
 
     results = {"experiment": "exp6_compound_masks", "benchmarks": {}}
