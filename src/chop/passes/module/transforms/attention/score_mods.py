@@ -79,14 +79,14 @@ def generate_alibi_score_mod(num_heads: int):
     Args:
         num_heads: Total number of attention heads.
     """
-    # Pre-compute slopes on meta device -- they are constants.
+    
+    # Compute the scalar base constant outside the kernel
     base = 2.0 ** (-(2.0 ** -(math.log2(num_heads) - 3)))
-    slopes = torch.tensor(
-        [base ** (i + 1) for i in range(num_heads)], dtype=torch.float32
-    )
 
     def alibi_score_mod(score, b, h, q_idx, kv_idx):
-        bias = (q_idx - kv_idx) * slopes[h]
+        # Calculate the slope dynamically using `h`
+        slope = base ** (h + 1)
+        bias = (q_idx - kv_idx) * slope
         return score + bias
 
     return alibi_score_mod
@@ -124,6 +124,45 @@ def generate_sliding_window_mask_mod(window_size: int):
 
     return sliding_window_mask_mod
 
+def generate_document_mask_mod(doc_len: int):
+    """
+    Mask mod for Document Masking. Tells the GPU to physically skip 
+    computing blocks that cross document boundaries.
+    """
+    def document_mask_mod(b, h, q_idx, kv_idx):
+        return (q_idx >= kv_idx) & ((q_idx // doc_len) == (kv_idx // doc_len))
+
+    return document_mask_mod
+
+
+def generate_alibi_sliding_window_score_mod(num_heads: int, window_size: int):
+    """Pure math compound ALiBi + SWA."""
+    base = 2.0 ** (-(2.0 ** -(math.log2(num_heads) - 3)))
+
+    def alibi_sliding_window_score_mod(score, b, h, q_idx, kv_idx):
+        # Calculate the slope dynamically
+        slope = base ** (h + 1)
+        bias = (q_idx - kv_idx) * slope
+        
+        # Apply the sparsity mask and the bias in one step
+        return torch.where((q_idx >= kv_idx) & ((q_idx - kv_idx) < window_size), score + bias, float("-inf"))
+
+    return alibi_sliding_window_score_mod
+
+def generate_document_mask_score_mod(doc_len: int):
+    """
+    Factory for Document Masking (Sequence Packing).
+    Tokens can only attend to past tokens within their specific document chunk.
+    """
+    def document_score_mod(score, b, h, q_idx, kv_idx):
+        # Tokens are in the same document if their index divided by doc_len is equal
+        same_doc = (q_idx // doc_len) == (kv_idx // doc_len)
+        causal = q_idx >= kv_idx
+        return torch.where(same_doc & causal, score, float("-inf"))
+
+    return document_score_mod
+
+
 
 # ---------------------------------------------------------------------------
 # Registry & accessor
@@ -139,7 +178,10 @@ _SCORE_MOD_REGISTRY = {
 _SCORE_MOD_FACTORY = {
     "sliding_window": generate_sliding_window_score_mod,
     "alibi": generate_alibi_score_mod,
+    "alibi_sliding_window": generate_alibi_sliding_window_score_mod,
+    "document_mask": generate_document_mask_score_mod,
 }
+
 
 # Direct (non-parameterised) mask mods
 _MASK_MOD_REGISTRY = {
@@ -150,6 +192,7 @@ _MASK_MOD_REGISTRY = {
 # Factory functions for parameterised mask mods
 _MASK_MOD_FACTORY = {
     "sliding_window": generate_sliding_window_mask_mod,
+    "document_mask": generate_document_mask_mod,
 }
 
 
