@@ -173,3 +173,6 @@ test-trainer/
 
 # DiffLogic: tutorial files
 docs/tutorials/difflogic/data-mnist/
+
+# For testing the emit
+generated-SV

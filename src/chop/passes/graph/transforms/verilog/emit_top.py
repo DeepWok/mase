@@ -195,6 +195,7 @@ class VerilogInterfaceEmitter:
                     i += 1
 
         # Emit DRAM parameter ports for off-chip storage
+        dram_comment_emitted = False
         for node in self.graph.fx_graph.nodes:
             if node.meta["mase"].parameters["hardware"]["is_implicit"]:
                 continue
@@ -206,6 +207,9 @@ class VerilogInterfaceEmitter:
                     continue
                 if node.meta["mase"].parameters["hardware"]["interface"][arg]["storage"] != "DRAM":
                     continue
+                if not dram_comment_emitted:
+                    interface += "\n    // this is for DRAM"
+                    dram_comment_emitted = True
                 arg_name = v2p(arg)
                 parallelism_params = [
                     param
