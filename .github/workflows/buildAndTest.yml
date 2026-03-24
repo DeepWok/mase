@@ -21,7 +21,7 @@ jobs:
   software-test:
     runs-on: ubuntu-latest
     container:
-      image: bingleilou/mase-docker-cpu-triton-latest:20260324144000
+      image: bingleilou/mase-docker-cpu-triton-latest:20260324152746
     steps:
 
       # -----------
@@ -224,7 +224,7 @@ jobs:
     needs: [software-test]
     runs-on: ubuntu-latest
     container:
-      image: bingleilou/mase-docker-cpu-triton-latest:20260324144000
+      image: bingleilou/mase-docker-cpu-triton-latest:20260324152746
     steps:
 
       # -----------
