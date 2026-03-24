@@ -29,7 +29,7 @@ name = "module/quantize_fusion"
 score_mod = "sliding_window"
 # Mistral's default sliding window is 4096; use 512 here to match max_token_len
 [search.search_space.setup.score_mod_kwargs]
-window_size = 512
+window_size = 128   # must be < max_token_len to create real block sparsity
 
 [search.search_space.seed.default]
 data_in_width   = [4, 8, 16, 32]
