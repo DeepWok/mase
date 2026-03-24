@@ -126,7 +126,10 @@ class ModuleSearchSpaceQuantizationFusion(SearchSpaceBase):
             },
         }
         model, _ = quantize_module_transform_pass(model, quant_pass_args)
-        model = model.to(self.accelerator)  # re-pin after quantized modules are instantiated on CPU
+        # Re-pin to accelerator and restore original dtype (quantization pass
+        # creates LinearInteger modules in float32 regardless of source dtype)
+        orig_dtype = next(self.model.parameters()).dtype
+        model = model.to(device=self.accelerator, dtype=orig_dtype)
 
         # 2. FlexAttention fusion
         strategy = sampled_config["fusion_strategy"]
