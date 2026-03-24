@@ -46,7 +46,7 @@ echo "----------------------------------------------"
 echo "Running search..."
 echo "----------------------------------------------"
 
-python -m chop search \
+python scripts/search_mistral.py \
     --config configs/search/quantization_fusion_mistral.toml \
     --save-dir "$SAVE_DIR"
 
