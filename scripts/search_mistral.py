@@ -14,6 +14,7 @@ Usage:
 import argparse
 import sys
 from pathlib import Path
+import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -35,7 +36,9 @@ def main():
 
     # Model
     checkpoint = "mistralai/Mistral-7B-v0.1"
-    model = AutoModelForCausalLM.from_pretrained(checkpoint)
+    # float16: halves tile sizes so FlexAttention Triton kernels fit in L40S
+    # shared memory (101KB). float32 Mistral-7B (head_dim=128) exceeds the limit.
+    model = AutoModelForCausalLM.from_pretrained(checkpoint, torch_dtype=torch.float16)
     model_info = MaseModelInfo(
         name=checkpoint,
         model_source=ModelSource.HF_TRANSFORMERS,
