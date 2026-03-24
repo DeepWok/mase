@@ -87,11 +87,11 @@ def generate_alibi_score_mod(num_heads: int):
     slopes = torch.tensor(
         [base ** (i + 1) for i in range(num_heads)], 
         dtype=torch.float32, 
-        device=device
+        device="cuda"
     )
 
     def alibi_score_mod(score, b, h, q_idx, kv_idx):
-        # 3. A simple scalar multiplication. 
+        # 3. A simple scalar multiplication.
         # Autograd easily tracks this with almost zero memory overhead.
         bias = (q_idx - kv_idx) * slopes[h]
         return score + bias
@@ -148,7 +148,7 @@ def generate_alibi_sliding_window_score_mod(num_heads: int, window_size: int):
     
     # Force device="cuda" so TorchInductor doesn't crash fetching CPU memory
     slopes = torch.tensor(
-        [base ** (i + 1) for i in range(num_heads)], dtype=torch.float32, device=device
+        [base ** (i + 1) for i in range(num_heads)], dtype=torch.float32, device="cuda"
     )
 
     def alibi_sliding_window_score_mod(score, b, h, q_idx, kv_idx):

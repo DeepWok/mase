@@ -632,10 +632,17 @@ def flex_attention_transform_pass(network, pass_args):
     * ``use_block_mask`` (bool, default ``True``): whether to create
       a matching block_mask for block-level sparsity. Set to ``False``
       to disable (e.g. for benchmarking without block skipping).
+    * ``mask_mod`` (str, optional): explicit name of the mask_mod
+      function. When provided, overrides auto-matching. Useful for
+      compound patterns like ``alibi_sliding_window`` where the
+      score_mod and mask_mod have different names.
+    * ``mask_mod_kwargs`` (dict, default ``{}``): extra keyword
+      arguments forwarded to the explicit mask_mod factory.
 
-    The pass automatically creates a matching ``mask_mod`` (block_mask)
-    for score_mods that have a corresponding mask pattern ("causal",
-    "sliding_window"). This enables block-level sparsity for speedup.
+    When ``mask_mod`` is not provided, the pass automatically creates
+    a matching ``mask_mod`` (block_mask) for score_mods that have a
+    corresponding mask pattern ("causal", "sliding_window", "document_mask").
+    This enables block-level sparsity for speedup.
 
     :returns: ``(network, stats)`` where *stats* is a dict with counts
         of replaced modules per model family.
@@ -651,21 +658,28 @@ def flex_attention_transform_pass(network, pass_args):
     score_mod_name = pass_args.get("score_mod", "causal")
     score_mod_kwargs = pass_args.get("score_mod_kwargs", {})
     use_block_mask = pass_args.get("use_block_mask", True)
+    mask_mod_name = pass_args.get("mask_mod", None)
+    mask_mod_kwargs = pass_args.get("mask_mod_kwargs", {})
 
     score_mod_fn = get_score_mod(score_mod_name, **score_mod_kwargs)
 
-    # Automatically create matching mask_mod for block-level sparsity
+    # Create mask_mod for block-level sparsity.
+    # If an explicit mask_mod is provided, use it directly.
+    # Otherwise, auto-match by looking up the same name as score_mod.
     mask_mod_fn = None
     if use_block_mask:
-        try:
-            mask_mod_fn = get_mask_mod(score_mod_name, **score_mod_kwargs)
-        except ValueError:
-            # No matching mask_mod for this score_mod (e.g. alibi)
-            # That's fine -- just use score_mod without block_mask
-            logger.info(
-                f"No mask_mod available for '{score_mod_name}', "
-                f"running without block_mask (no block-level sparsity)."
-            )
+        if mask_mod_name is not None:
+            mask_mod_fn = get_mask_mod(mask_mod_name, **mask_mod_kwargs)
+        else:
+            try:
+                mask_mod_fn = get_mask_mod(score_mod_name, **score_mod_kwargs)
+            except ValueError:
+                # No matching mask_mod for this score_mod (e.g. alibi)
+                # That's fine -- just use score_mod without block_mask
+                logger.info(
+                    f"No mask_mod available for '{score_mod_name}', "
+                    f"running without block_mask (no block-level sparsity)."
+                )
 
     stats = {}
 
