@@ -182,6 +182,7 @@ def exp_seqlen(base_model, cfg, device, num_warmup, num_batches):
 
         for strategy in STRATEGIES:
             print(f"  [seqlen] seq_len={seq_len:5d}  strategy={strategy}")
+            model = None
             try:
                 model = build_model(
                     base_model, strategy,
@@ -197,7 +198,8 @@ def exp_seqlen(base_model, cfg, device, num_warmup, num_batches):
                 print(f"    [ERROR] {e}")
                 results[seq_len][strategy] = {"latency_ms": None, "peak_memory_mb": None}
             finally:
-                del model
+                if model is not None:
+                    del model
                 torch.cuda.empty_cache()
 
     return results
@@ -212,6 +214,7 @@ def exp_batchsize(base_model, cfg, device, num_warmup, num_batches):
 
         for strategy in STRATEGIES:
             print(f"  [batch]  batch_size={batch_size:3d}  strategy={strategy}")
+            model = None
             try:
                 model = build_model(
                     base_model, strategy,
@@ -230,7 +233,8 @@ def exp_batchsize(base_model, cfg, device, num_warmup, num_batches):
                     "throughput_samples_per_sec": None,
                 }
             finally:
-                del model
+                if model is not None:
+                    del model
                 torch.cuda.empty_cache()
 
     return results
