@@ -1,5 +1,9 @@
 # Initial Cocotb Plan: DRAM-Style MLP Testbench Only
 
+1. in `lab4-hardware.ipynb` run until `emit_internal_rtl_transform_pass`
+
+
+
 ## Objective
 Deliver working testbenches for off-chip weight streaming on a small MLP.
 This plan is testbench-focused only and does not include real FPGA integration work.
