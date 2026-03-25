@@ -371,6 +371,10 @@ def emit_bram_handshake(node, rtl_dir):
             ]
             == "DRAM"
         ):
+            # DRAM branch placeholder:
+            # emit/copy DRAM-side helper SV files (controller adapter stubs, etc.) if needed.
+            #
+            pass
             logger.debug(
                 f"Skipping DAT emission for node: {node_name}, parameter: {param_verilog_name} (DRAM)"
             )
@@ -487,15 +491,19 @@ def emit_bram_hls(node, rtl_dir):
     """
     node_name = vf(node.name)
     for param_name, parameter in node.meta["mase"].module.named_parameters():
-        if (
-            node.meta["mase"].parameters["hardware"]["interface"][param_name]["storage"]
-            == "BRAM"
-        ):
+        storage = node.meta["mase"].parameters["hardware"]["interface"][param_name][
+            "storage"
+        ]
+        if storage == "BRAM":
             # Verilog code of the ROM has been emitted using mlir passes
             verilog_name = os.path.join(rtl_dir, f"{node_name}_{param_name}.sv")
             data_name = os.path.join(rtl_dir, f"{node_name}_{param_name}_rom.dat")
             emit_parameters_in_mem_hls(node, param_name, verilog_name, data_name)
             emit_parameters_in_dat_hls(node, param_name, data_name)
+        elif storage == "DRAM":
+            # DRAM branch placeholder:
+            # support DRAM-backed parameter path for HLS components.
+            pass
         else:
             assert False, "Emtting parameters in non-BRAM hardware is not supported."
 

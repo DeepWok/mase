@@ -54,6 +54,11 @@ def add_component_source(node, pass_args={}):
         node.meta["mase"]["hardware"]["dependence_files"] = INTERNAL_COMP[mase_op][0][
             "dependence_files"
         ]
+        if pass_args.get("interface", {}).get("storage", "BRAM") == "DRAM":
+            # DRAM branch placeholder:
+            # override module/dependence_files for DRAM-specialized templates.
+            # Current behavior intentionally falls back to BRAM template set.
+            pass
     else:
         node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_HLS"
         node.meta["mase"]["hardware"]["module"] = None

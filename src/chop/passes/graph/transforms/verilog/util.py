@@ -94,4 +94,10 @@ def include_ip_to_project(node):
     Copy internal files to the project
     """
     mase_op = node.meta["mase"].parameters["common"]["mase_op"]
+    interface = node.meta["mase"].parameters["hardware"].get("interface", {})
+    if any(v.get("storage") == "DRAM" for v in interface.values() if isinstance(v, dict)):
+        # DRAM branch placeholder:
+        # select an alternate dependency file list for DRAM-specific SV templates.
+        # Current behavior intentionally returns default dependence_files.
+        pass
     return node.meta["mase"].parameters["hardware"]["dependence_files"]

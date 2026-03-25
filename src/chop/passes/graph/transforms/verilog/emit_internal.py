@@ -35,6 +35,11 @@ def emit_internal_rtl_transform_pass(graph, pass_args={}):
     for node in graph.fx_graph.nodes:
         if node.meta["mase"].parameters["hardware"]["is_implicit"]:
             continue
+        interface = node.meta["mase"].parameters["hardware"].get("interface", {})
+        if any(v.get("storage") == "DRAM" for v in interface.values() if isinstance(v, dict)):
+            # DRAM branch placeholder:
+            # inject DRAM-specific dependency handling before file inclusion.
+            pass
         if "INTERNAL_RTL" == node.meta["mase"].parameters["hardware"]["toolchain"]:
             if (
                 hasattr(node.meta["mase"].module, "config")

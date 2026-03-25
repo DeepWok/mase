@@ -123,6 +123,9 @@ def _emit_cocotb_tb(graph):
                     iface = node.meta["mase"].parameters["hardware"]["interface"].get(arg, {})
                     if iface.get("storage") != "DRAM":
                         continue
+                    # DRAM branch placeholder:
+                    # customize DRAM-side driver type/protocol mapping here.
+                    pass
                     port_name = f"{node_name}_{arg}"
                     self.dram_drivers[port_name] = StreamDriver(
                         dut.clk,
@@ -223,6 +226,9 @@ def _emit_cocotb_tb(graph):
                         iface = node.meta["mase"].parameters["hardware"]["interface"].get(arg, {})
                         if iface.get("storage") != "DRAM":
                             continue
+                        # DRAM branch placeholder:
+                        # customize parameter block ordering/packing for DRAM sources.
+                        pass
                         port_name = f"{node_name}_{arg}"
                         if port_name not in self.dram_drivers:
                             continue

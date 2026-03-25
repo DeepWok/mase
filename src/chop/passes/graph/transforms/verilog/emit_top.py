@@ -195,7 +195,6 @@ class VerilogInterfaceEmitter:
                     i += 1
 
         # Emit DRAM parameter ports for off-chip storage
-        dram_comment_emitted = False
         for node in self.graph.fx_graph.nodes:
             if node.meta["mase"].parameters["hardware"]["is_implicit"]:
                 continue
@@ -207,9 +206,13 @@ class VerilogInterfaceEmitter:
                     continue
                 if node.meta["mase"].parameters["hardware"]["interface"][arg]["storage"] != "DRAM":
                     continue
-                if not dram_comment_emitted:
-                    interface += "\n    // this is for DRAM"
-                    dram_comment_emitted = True
+                interface += "\n    // this is for DRAM"
+                interface += "\n    // DRAM parameter streaming protocol:"
+                interface += "\n    //   - <param> carries one packed beat of parameter elements"
+                interface += "\n    //   - <param>_valid asserted by upstream DRAM adapter when beat is valid"
+                interface += "\n    //   - <param>_ready asserted by compute when beat is consumed"
+                interface += "\n    //   - transfer occurs when both valid and ready are high"
+                interface += "\n    // Future extension point: add sideband ports (addr/last/id/user) if needed"
                 arg_name = v2p(arg)
                 parallelism_params = [
                     param
@@ -458,6 +461,21 @@ class VerilogInternalComponentEmitter:
     def emit(self, node, parameter_map):
         node_name = vf(node.name)
         component_name = node.meta["mase"].parameters["hardware"]["module"]
+
+        # For staged bring-up, allow fc1 to target a DRAM-specialized module name.
+        if node_name == "fc1":
+            has_dram_param = any(
+                (
+                    isinstance(arg_info, dict)
+                    and "data_in" not in arg
+                    and node.meta["mase"].parameters["hardware"]["interface"][arg]["storage"]
+                    == "DRAM"
+                )
+                for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items()
+            )
+            if has_dram_param:
+                component_name = f"{component_name}_dram"
+
         signals = ""
 
         # Emit component instantiation parameters
@@ -539,6 +557,11 @@ class VerilogInternalComponentEmitter:
                 continue
             # DRAM parameters are driven from top-level ports, not internal BRAM sources
             if node.meta["mase"].parameters["hardware"]["interface"][arg]["storage"] == "DRAM":
+                components += f"""
+// {node_name}.{arg}: DRAM-backed parameter
+// Protocol owner is top-level integration (e.g. DRAM/AXI adapter),
+// so no internal *_source BRAM module is instantiated here.
+"""
                 continue
 
             components += self._emit_module_parameters_top_internal(
@@ -726,6 +749,29 @@ assign data_out_{i} = {node_name}_{result};
                     i += 1
 
         # TODO: emit off-chip parameter interface
+        has_dram_params = False
+        for node in self.graph.fx_graph.nodes:
+            if node.meta["mase"].parameters["hardware"]["is_implicit"]:
+                continue
+            for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
+                if "data_in" in arg or not isinstance(arg_info, dict):
+                    continue
+                if node.meta["mase"].parameters["hardware"]["interface"][arg]["storage"] == "DRAM":
+                    has_dram_params = True
+                    break
+            if has_dram_params:
+                break
+        if has_dram_params:
+            wires += """
+// --------------------------
+//   DRAM protocol notes
+// --------------------------
+// DRAM-backed parameter ports are connected directly at top-level.
+// Beat transfer rule: param_valid && param_ready.
+// If a memory adapter is required (AXI, burst unpacking, address generation),
+// instantiate it in the top-level integration layer and drive the emitted
+// <node>_<param> / <node>_<param>_valid / <node>_<param>_ready ports.
+"""
 
         return wires
 
