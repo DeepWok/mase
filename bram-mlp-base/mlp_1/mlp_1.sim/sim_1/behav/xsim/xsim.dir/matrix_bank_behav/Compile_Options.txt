@@ -1,0 +1,1 @@
+-wto "5fd47522519c4f14b068b67c0386e44c" --incr --debug "typical" --relax --mt "2" -L "xil_defaultlib" -L "uvm" -L "unisims_ver" -L "unimacro_ver" -L "secureip" -L "xpm" --snapshot "matrix_bank_behav" "xil_defaultlib.matrix_bank" "xil_defaultlib.glbl" -log "elaborate.log" 
