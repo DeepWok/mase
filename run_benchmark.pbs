@@ -1,0 +1,61 @@
+#!/bin/bash
+#PBS -l walltime=04:00:00
+#PBS -l select=1:ncpus=8:mem=64gb:ngpus=1:gpu_type=L40S
+#PBS -N benchmark_scaling
+#PBS -o logs/benchmark_output.log
+#PBS -e logs/benchmark_error.log
+# ============================================================================
+# Scaling benchmarks — Experiments 3, 4, 5
+#
+# Runs sequence length scaling, batch size scaling, and peak memory profiling
+# for TinyLlama (causal FlexAttention) and Mistral-7B (sliding_window).
+#
+# Results saved to outputs/benchmark/benchmark_{tinyllama,mistral}.json
+#
+# Usage:
+#     mkdir -p logs
+#     qsub run_benchmark.pbs
+# ============================================================================
+
+cd $HOME/mase
+
+module load Python/3.12.3-GCCcore-13.3.0
+source .venv/bin/activate
+
+mkdir -p outputs/benchmark logs
+
+echo "=============================================="
+echo "Scaling Benchmarks (Experiments 3, 4, 5)"
+echo "=============================================="
+echo "Job ID  : ${PBS_JOBID}"
+echo "Node    : $(hostname)"
+echo "Started : $(date)"
+echo "=============================================="
+
+nvidia-smi
+python -c "import torch; print(f'PyTorch {torch.__version__}, CUDA: {torch.cuda.is_available()}, Device: {torch.cuda.get_device_name(0)}')"
+
+echo ""
+echo "----------------------------------------------"
+echo "TinyLlama — causal FlexAttention"
+echo "----------------------------------------------"
+python scripts/benchmark_seqlen.py \
+    --model tinyllama \
+    --save-dir outputs/benchmark \
+    --num-warmup 5 \
+    --num-batches 20
+
+echo ""
+echo "----------------------------------------------"
+echo "Mistral-7B — sliding_window FlexAttention"
+echo "----------------------------------------------"
+python scripts/benchmark_seqlen.py \
+    --model mistral \
+    --save-dir outputs/benchmark \
+    --num-warmup 5 \
+    --num-batches 20
+
+echo "=============================================="
+echo "Benchmark complete at: $(date)"
+echo "Results: outputs/benchmark/"
+echo "=============================================="
