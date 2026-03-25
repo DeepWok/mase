@@ -27,6 +27,7 @@ func_data = {
         "dropout_p": "config",
         "is_causal": "config",
         "scale": "config",
+        "dtype": "config",
     },
     # https://pytorch.org/docs/stable/generated/torch.flatten.html#torch.flatten
     "flatten": {"input": "data_in", "start_dim": "config", "end_dim": "config"},
@@ -623,6 +624,12 @@ def _annotate_arg_metadata(
 
     # * Handle kwargs
     for k, v in kwargs.items():
+        if k not in func_data:
+            import logging
+            logging.getLogger(__name__).debug(
+                f"Skipping unregistered kwarg '{k}' in func_data for op '{list(func_data.keys())}'"
+            )
+            continue
         if func_data[k] == "data_in":
             # rename this to mase data_in_number
             shape = get_shape(v)
