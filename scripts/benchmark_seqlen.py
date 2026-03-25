@@ -115,8 +115,9 @@ def build_model(base_model, strategy: str, score_mod: str, score_mod_kwargs: dic
         model.eval()
         return model
 
-    # INT8 quantisation — always applied for non-baseline configs
-    model, _ = quantize_module_transform_pass(model, _QUANT_INT8)
+    # INT8 quantisation — always applied for non-baseline configs.
+    # deepcopy the config: quantize_module_transform_pass mutates its args dict.
+    model, _ = quantize_module_transform_pass(model, deepcopy(_QUANT_INT8))
     # Restore original dtype (quantize pass creates float32 LinearInteger modules)
     model = model.to(device=device, dtype=orig_dtype)
 
