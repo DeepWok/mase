@@ -33,6 +33,45 @@ norm = {
     ],
 }
 
+DRAM_INTERNAL_COMP = {
+    "linear": [
+        {
+            "name": "fixed_linear",
+            "dependence_files": [
+                "cast/rtl/fixed_cast.sv",
+                "linear_layers/fixed_operators/rtl/fixed_dot_product.sv",
+                "linear_layers/fixed_operators/rtl/fixed_vector_mult.sv",
+                "linear_layers/fixed_operators/rtl/fixed_accumulator.sv",
+                "linear_layers/fixed_operators/rtl/fixed_adder_tree.sv",
+                "linear_layers/fixed_operators/rtl/fixed_adder_tree_layer.sv",
+                "linear_layers/fixed_operators/rtl/fixed_mult.sv",
+                "common/rtl/register_slice.sv",
+                "common/rtl/join2.sv",
+                "memory/rtl/unpacked_repeat_circular_buffer.sv",
+                "memory/rtl/skid_buffer.sv",
+                "linear_layers/fixed_linear_layer/rtl/fixed_linear.sv",
+                "linear_layers/matmul/rtl/matrix_flatten.sv",
+                "linear_layers/matmul/rtl/matrix_unflatten.sv",
+                "linear_layers/matmul/rtl/matrix_fifo.sv",
+                "linear_layers/matmul/rtl/matrix_accumulator.sv",
+                "linear_layers/matmul/rtl/simple_matmul.sv",
+                "linear_layers/matmul/rtl/matmul.sv",
+                "linear_layers/matmul/rtl/transpose.sv",
+                "linear_layers/matmul/rtl/matrix_stream_transpose.sv",
+                "common/rtl/dummy_param_dram.sv",
+            ],
+        },
+    ],
+    "relu": [
+        {
+            "name": "fixed_relu",
+            "dependence_files": [
+                "activation_layers/rtl/fixed_relu.sv",
+            ],
+        },
+    ],
+}
+
 INTERNAL_COMP = {
     "linear": [
         {

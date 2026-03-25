@@ -14,7 +14,10 @@ from chop.passes.graph.utils import get_mase_op, deepgetattr, get_module_by_name
 
 from torch import nn
 
-from .hardware_metadata_layers import INTERNAL_COMP
+from .hardware_metadata_layers import (
+    INTERNAL_COMP,
+    DRAM_INTERNAL_COMP,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -47,18 +50,29 @@ def add_component_source(node, pass_args={}):
                 node.meta["mase"]["hardware"]["dependence_files"] = op_info[
                     "dependence_files"
                 ]
-    elif mase_op in INTERNAL_COMP.keys():
+    elif mase_op in INTERNAL_COMP.keys() or mase_op in DRAM_INTERNAL_COMP.keys():
         node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_RTL"
-        # take the first ip in the component list by default
-        node.meta["mase"]["hardware"]["module"] = INTERNAL_COMP[mase_op][0]["name"]
-        node.meta["mase"]["hardware"]["dependence_files"] = INTERNAL_COMP[mase_op][0][
-            "dependence_files"
-        ]
-        if pass_args.get("interface", {}).get("storage", "BRAM") == "DRAM":
-            # DRAM branch placeholder:
-            # override module/dependence_files for DRAM-specialized templates.
-            # Current behavior intentionally falls back to BRAM template set.
-            pass
+        storage_type = pass_args.get("interface", {}).get("storage", "BRAM")
+        if storage_type == "DRAM":
+            if mase_op not in DRAM_INTERNAL_COMP.keys():
+                assert (
+                    False
+                ), f"DRAM_INTERNAL_COMP does not define mase_op '{mase_op}'"
+            # In DRAM mode, select module/dependencies only from DRAM_INTERNAL_COMP.
+            node.meta["mase"]["hardware"]["module"] = DRAM_INTERNAL_COMP[mase_op][0][
+                "name"
+            ]
+            node.meta["mase"]["hardware"]["dependence_files"] = DRAM_INTERNAL_COMP[
+                mase_op
+            ][0]["dependence_files"]
+        else:
+            # BRAM/default path keeps existing INTERNAL_COMP behavior unchanged.
+            node.meta["mase"]["hardware"]["module"] = INTERNAL_COMP[mase_op][0][
+                "name"
+            ]
+            node.meta["mase"]["hardware"]["dependence_files"] = INTERNAL_COMP[
+                mase_op
+            ][0]["dependence_files"]
     else:
         node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_HLS"
         node.meta["mase"]["hardware"]["module"] = None
