@@ -1,6 +1,4 @@
 import pytest
-import importlib
-
 import transformers
 from transformers import AutoModel
 from transformers.utils.fx import _SUPPORTED_MODELS
@@ -13,9 +11,7 @@ import chop.passes as passes
 
 def create_masegraph(model_cls_name: str) -> MaseGraph:
     model_cls = getattr(transformers, model_cls_name)
-    model_module_name = model_cls.__module__
-    _CONFIG_FOR_DOC = importlib.import_module(model_module_name)._CONFIG_FOR_DOC
-    config = getattr(transformers, _CONFIG_FOR_DOC)()
+    config = model_cls.config_class()
 
     with init_empty_weights():
         model = AutoModel.from_config(config)
