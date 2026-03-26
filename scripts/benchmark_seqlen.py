@@ -5,13 +5,14 @@ Scaling benchmarks — Experiments 3, 4, 5 from the project plan.
   Exp 4: Latency + throughput vs batch_size [1→16] at fixed seq_len=512
   Exp 5: Peak GPU memory vs seq_len — FlexAttention O(n*w) vs SDPA O(n²)
 
-Three configs per experiment:
-  baseline   — raw model, no passes (FP32 for TinyLlama, FP16 for Mistral)
-  int8_none  — INT8 quantisation, standard SDPA
-  int8_flex  — INT8 quantisation + FlexAttention (causal / sliding_window)
+Five configs per experiment:
+  baseline      — raw model, no passes (FP32 for TinyLlama, FP16 for Mistral)
+  int8_none     — INT8 quantisation, standard SDPA
+  int8_flex     — INT8 quantisation + FlexAttention (causal / sliding_window)
+  int8_rmsnorm  — INT8 quantisation + fused RMSNorm residual (Part 2)
+  int8_both     — INT8 quantisation + FlexAttention + fused RMSNorm (full stack)
 
-At seq_len=512 these three rows form the first three rows of the ablation table
-(Experiment 2). fused_rmsnorm rows added once Part 2 is merged.
+At seq_len=512 these five rows form the complete ablation table (Experiment 2).
 
 Usage:
     python scripts/benchmark_seqlen.py --model tinyllama --save-dir outputs/benchmark/
@@ -107,6 +108,8 @@ def build_model(base_model, strategy: str, score_mod: str, score_mod_kwargs: dic
       'baseline'       — no passes, original dtype
       'int8_none'      — INT8 quantisation only
       'int8_flex'      — INT8 quantisation + FlexAttention
+      'int8_rmsnorm'   — INT8 quantisation + fused RMSNorm (Part 2)
+      'int8_both'      — INT8 quantisation + FlexAttention + fused RMSNorm (Part 2)
     """
     model = deepcopy(base_model).to(device)
     orig_dtype = next(model.parameters()).dtype
@@ -121,11 +124,17 @@ def build_model(base_model, strategy: str, score_mod: str, score_mod_kwargs: dic
     # Restore original dtype (quantize pass creates float32 LinearInteger modules)
     model = model.to(device=device, dtype=orig_dtype)
 
-    if strategy == "int8_flex":
+    if strategy in ("int8_flex", "int8_both"):
         model, _ = flex_attention_transform_pass(
             model,
             {"score_mod": score_mod, "score_mod_kwargs": score_mod_kwargs},
         )
+
+    if strategy in ("int8_rmsnorm", "int8_both"):
+        from chop.passes.module.transforms.fused_ops.rmsnorm_residual_fusion import (
+            rmsnorm_residual_fusion_pass,
+        )
+        model, _ = rmsnorm_residual_fusion_pass(model, {})
 
     model.eval()
     return model
@@ -171,7 +180,7 @@ def run_safely(fn, *args, **kwargs):
 # Experiments
 # ---------------------------------------------------------------------------
 
-STRATEGIES = ["baseline", "int8_none", "int8_flex"]
+STRATEGIES = ["baseline", "int8_none", "int8_flex", "int8_rmsnorm", "int8_both"]
 
 
 def exp_seqlen(base_model, cfg, device, num_warmup, num_batches):
