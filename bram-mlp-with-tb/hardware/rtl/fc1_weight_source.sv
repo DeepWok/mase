@@ -22,7 +22,7 @@ module fc1_weight_rom #(
   logic [DWIDTH-1:0] q0_t1;
 
   initial begin
-    $readmemh("/home/mamin/Projects/iddy/mase/bram-mlp-with-tb/hardware/rtl/fc1_weight_rom.dat", ram);
+    $readmemh("/home/ali/adls/iddy/lmase/bram-mlp-with-tb/hardware/rtl/fc1_weight_rom.dat", ram);
   end
 
   assign q0 = q0_t1;
