@@ -196,15 +196,19 @@ class VerilogInterfaceEmitter:
 
         # Emit DRAM parameter ports for off-chip storage
         for node in self.graph.fx_graph.nodes:
-            if node.meta["mase"].parameters["hardware"]["is_implicit"]:
+            if not hasattr(node, "meta") or "mase" not in node.meta:
                 continue
-            if "INTERNAL" not in node.meta["mase"].parameters["hardware"]["toolchain"]:
+            node_params = node.meta["mase"].parameters
+            hardware = node_params.get("hardware", {})
+            if hardware.get("is_implicit", False):
+                continue
+            if "INTERNAL" not in hardware.get("toolchain", ""):
                 continue
             node_name = vf(node.name)
-            for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
+            for arg, arg_info in node_params.get("common", {}).get("args", {}).items():
                 if "data_in" in arg or not isinstance(arg_info, dict):
                     continue
-                if node.meta["mase"].parameters["hardware"]["interface"][arg]["storage"] != "DRAM":
+                if hardware.get("interface", {}).get(arg, {}).get("storage", "BRAM") != "DRAM":
                     continue
                 interface += "\n    // this is for DRAM"
                 interface += "\n    // DRAM parameter streaming protocol:"
@@ -462,19 +466,19 @@ class VerilogInternalComponentEmitter:
         node_name = vf(node.name)
         component_name = node.meta["mase"].parameters["hardware"]["module"]
 
-        # For staged bring-up, allow fc1 to target a DRAM-specialized module name.
-        if node_name == "fc1":
-            has_dram_param = any(
-                (
-                    isinstance(arg_info, dict)
-                    and "data_in" not in arg
-                    and node.meta["mase"].parameters["hardware"]["interface"][arg]["storage"]
-                    == "DRAM"
-                )
-                for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items()
-            )
-            if has_dram_param:
-                component_name = f"{component_name}_dram"
+        # # For staged bring-up, allow fc1 to target a DRAM-specialized module name.
+        # if node_name == "fc1":
+        #     has_dram_param = any(
+        #         (
+        #             isinstance(arg_info, dict)
+        #             and "data_in" not in arg
+        #             and node.meta["mase"].parameters["hardware"]["interface"][arg]["storage"]
+        #             == "DRAM"
+        #         )
+        #         for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items()
+        #     )
+        #     if has_dram_param:
+        #         component_name = f"{component_name}_dram"
 
         signals = ""
 

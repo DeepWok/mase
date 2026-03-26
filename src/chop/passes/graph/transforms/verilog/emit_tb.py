@@ -68,6 +68,26 @@ async def test(dut):
 
 def _emit_cocotb_tb(graph):
     class MaseGraphTB(Testbench):
+        def _iter_dram_parameter_specs(self):
+            """Yield (node, node_name, arg, arg_info) for DRAM-backed tensor params."""
+            for node in graph.fx_graph.nodes:
+                if not hasattr(node, "meta") or "mase" not in node.meta:
+                    continue
+
+                node_params = node.meta["mase"].parameters
+                hardware = node_params.get("hardware", {})
+                if hardware.get("is_implicit", False):
+                    continue
+
+                args = node_params.get("common", {}).get("args", {})
+                interfaces = hardware.get("interface", {})
+                for arg, arg_info in args.items():
+                    if "data_in" in arg or not isinstance(arg_info, dict):
+                        continue
+                    if interfaces.get(arg, {}).get("storage") != "DRAM":
+                        continue
+                    yield node, vf(node.name), arg, arg_info
+
         def __init__(self, dut, fail_on_checks=True):
             super().__init__(dut, dut.clk, dut.rst, fail_on_checks=fail_on_checks)
 
@@ -108,25 +128,11 @@ def _emit_cocotb_tb(graph):
                 "precision"
             ]
 
-            # Create StreamDriver instances for any DRAM weight/bias parameters.
-            # These become top-level input ports on the generated top.sv when
-            # add_hardware_metadata_analysis_pass is called with
-            # {"interface": {"storage": "DRAM"}}.
+            # Create StreamDriver instances for DRAM-backed weight/bias parameters.
             self.dram_drivers = {}
-            for node in graph.fx_graph.nodes:
-                if node.meta["mase"].parameters["hardware"]["is_implicit"]:
-                    continue
-                node_name = vf(node.name)
-                for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
-                    if "data_in" in arg or not isinstance(arg_info, dict):
-                        continue
-                    iface = node.meta["mase"].parameters["hardware"]["interface"].get(arg, {})
-                    if iface.get("storage") != "DRAM":
-                        continue
-                    # DRAM branch placeholder:
-                    # customize DRAM-side driver type/protocol mapping here.
-                    pass
-                    port_name = f"{node_name}_{arg}"
+            for _node, node_name, arg, _arg_info in self._iter_dram_parameter_specs():
+                port_name = f"{node_name}_{arg}"
+                try:
                     self.dram_drivers[port_name] = StreamDriver(
                         dut.clk,
                         getattr(dut, port_name),
@@ -134,6 +140,20 @@ def _emit_cocotb_tb(graph):
                         getattr(dut, f"{port_name}_ready"),
                     )
                     self.dram_drivers[port_name].log.setLevel(logging.DEBUG)
+                except AttributeError:
+                    logger.warning(
+                        "Skipping DRAM port '%s': signal/handshake not found on DUT",
+                        port_name,
+                    )
+
+            logger.debug("Discovered %d DRAM parameter ports", len(self.dram_drivers))
+            if self.dram_drivers:
+                logger.info(
+                    "DRAM drivers enabled for ports: %s",
+                    ", ".join(sorted(self.dram_drivers.keys())),
+                )
+            else:
+                logger.info("No DRAM parameter ports discovered for this testbench")
 
         def generate_inputs(self, batches):
             """
@@ -157,6 +177,7 @@ def _emit_cocotb_tb(graph):
             return inputs
 
         def load_drivers(self, in_tensors):
+            logger.info("Loading input drivers for %d tensor inputs", len(in_tensors))
             for arg, arg_batches in in_tensors.items():
                 # DiffLogic: do not need precision, fully unrolled so 1 batch only
                 if "difflogic" in graph.nodes_in[0].meta["mase"]["hardware"]["module"]:
@@ -210,54 +231,84 @@ def _emit_cocotb_tb(graph):
                         block = block + [0] * (block_size - len(block))
                     self.input_drivers[arg].append(block)
 
-            # Preload DRAM weight/bias drivers with quantised parameter blocks.
-            # Each parameter tensor is split into blocks matching the hardware's
-            # parallelism dimensions, exactly as BRAM would have stored them.
+            # Preload DRAM parameter drivers with quantized parameter blocks.
             if self.dram_drivers:
                 from mase_cocotb.utils import fixed_preprocess_tensor
 
-                for node in graph.fx_graph.nodes:
-                    if node.meta["mase"].parameters["hardware"]["is_implicit"]:
-                        continue
-                    node_name = vf(node.name)
-                    for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
-                        if "data_in" in arg or not isinstance(arg_info, dict):
-                            continue
-                        iface = node.meta["mase"].parameters["hardware"]["interface"].get(arg, {})
-                        if iface.get("storage") != "DRAM":
-                            continue
-                        # DRAM branch placeholder:
-                        # customize parameter block ordering/packing for DRAM sources.
-                        pass
-                        port_name = f"{node_name}_{arg}"
-                        if port_name not in self.dram_drivers:
-                            continue
+                logger.info("Preloading DRAM parameter streams for %d ports", len(self.dram_drivers))
+                total_blocks_queued = 0
 
-                        param_tensor = node.meta["mase"].module.get_parameter(arg)
-                        arg_cap = _cap(arg)
+                for node, node_name, arg, _arg_info in self._iter_dram_parameter_specs():
+                    port_name = f"{node_name}_{arg}"
+                    if port_name not in self.dram_drivers:
+                        continue
+
+                    module = getattr(node.meta["mase"], "module", None)
+                    if module is None:
+                        logger.warning(
+                            "Skipping DRAM parameter '%s': node module is unavailable",
+                            port_name,
+                        )
+                        continue
+
+                    try:
+                        param_tensor = module.get_parameter(arg)
+                    except Exception as exc:
+                        logger.warning(
+                            "Skipping DRAM parameter '%s': cannot fetch parameter '%s' (%s)",
+                            port_name,
+                            arg,
+                            exc,
+                        )
+                        continue
+
+                    arg_cap = _cap(arg)
+                    try:
                         parallelism_0 = self.get_parameter(
                             f"{node_name}_{arg_cap}_PARALLELISM_DIM_0"
                         )
                         parallelism_1 = self.get_parameter(
                             f"{node_name}_{arg_cap}_PARALLELISM_DIM_1"
                         )
-                        param_blocks = fixed_preprocess_tensor(
-                            tensor=param_tensor,
-                            q_config={
-                                "width": self.get_parameter(
-                                    f"{node_name}_{arg_cap}_PRECISION_0"
-                                ),
-                                "frac_width": self.get_parameter(
-                                    f"{node_name}_{arg_cap}_PRECISION_1"
-                                ),
-                            },
-                            parallelism=[parallelism_1, parallelism_0],
+                        width = self.get_parameter(f"{node_name}_{arg_cap}_PRECISION_0")
+                        frac_width = self.get_parameter(
+                            f"{node_name}_{arg_cap}_PRECISION_1"
                         )
-                        block_size = parallelism_0 * parallelism_1
-                        for block in param_blocks:
-                            if len(block) < block_size:
-                                block = block + [0] * (block_size - len(block))
-                            self.dram_drivers[port_name].append(block)
+                    except Exception as exc:
+                        logger.warning(
+                            "Skipping DRAM parameter '%s': missing DUT parameter metadata (%s)",
+                            port_name,
+                            exc,
+                        )
+                        continue
+
+                    param_blocks = fixed_preprocess_tensor(
+                        tensor=param_tensor,
+                        q_config={
+                            "width": width,
+                            "frac_width": frac_width,
+                        },
+                        parallelism=[parallelism_1, parallelism_0],
+                    )
+                    block_size = parallelism_0 * parallelism_1
+                    port_blocks_queued = 0
+                    for block in param_blocks:
+                        if len(block) < block_size:
+                            block = block + [0] * (block_size - len(block))
+                        self.dram_drivers[port_name].append(block)
+                        port_blocks_queued += 1
+
+                    total_blocks_queued += port_blocks_queued
+                    logger.info(
+                        "Queued %d DRAM blocks for port '%s' (block_size=%d)",
+                        port_blocks_queued,
+                        port_name,
+                        block_size,
+                    )
+
+                logger.info("Queued %d DRAM parameter blocks in total", total_blocks_queued)
+            else:
+                logger.info("No DRAM parameter streams to preload")
 
         def load_monitors(self, expectation):
             # DiffLogic: do not need precision, fully unrolled so 1 batch only
