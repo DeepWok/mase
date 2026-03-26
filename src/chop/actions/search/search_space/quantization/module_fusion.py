@@ -145,9 +145,9 @@ class ModuleSearchSpaceQuantizationFusion(SearchSpaceBase):
         if strategy in ("fused_rmsnorm", "both"):
             try:
                 from .....passes.module.transforms.fused_ops.rmsnorm_residual_fusion import (
-                    rmsnorm_residual_fusion_pass,
+                    fused_rmsnorm_residual_transform_pass,
                 )
-                model, _ = rmsnorm_residual_fusion_pass(model, {})
+                model, _ = fused_rmsnorm_residual_transform_pass(model, {})
             except ImportError:
                 pass  # Part 2 not yet available — skip silently
 

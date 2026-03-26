@@ -132,9 +132,9 @@ def build_model(base_model, strategy: str, score_mod: str, score_mod_kwargs: dic
 
     if strategy in ("int8_rmsnorm", "int8_both"):
         from chop.passes.module.transforms.fused_ops.rmsnorm_residual_fusion import (
-            rmsnorm_residual_fusion_pass,
+            fused_rmsnorm_residual_transform_pass,
         )
-        model, _ = rmsnorm_residual_fusion_pass(model, {})
+        model, _ = fused_rmsnorm_residual_transform_pass(model, {})
 
     model.eval()
     return model
