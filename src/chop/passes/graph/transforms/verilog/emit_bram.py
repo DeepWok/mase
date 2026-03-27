@@ -240,7 +240,8 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
             "precision"
         ][1]
 
-        if node.meta["mase"].module.config.get("floor", False):
+        module_config = getattr(node.meta["mase"].module, "config", None) or {}
+        if module_config.get("floor", False):
             base_quantizer = integer_floor_quantizer_for_hw
         else:
             base_quantizer = integer_quantizer_for_hw
