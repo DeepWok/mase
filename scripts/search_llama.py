@@ -14,6 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from chop.models.utils import MaseModelInfo, ModelSource, ModelTaskType
 from chop.dataset import MaseDataModule
@@ -32,7 +33,7 @@ def main():
 
     # Model
     checkpoint = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
-    model = AutoModelForCausalLM.from_pretrained(checkpoint)
+    model = AutoModelForCausalLM.from_pretrained(checkpoint, torch_dtype=torch.float16)
     model_info = MaseModelInfo(
         name=checkpoint,
         model_source=ModelSource.HF_TRANSFORMERS,
