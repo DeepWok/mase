@@ -219,7 +219,7 @@ def plot_kernel_dispatch(profiling_dir: Path, out_dir: Path):
         ("mistral",   "Mistral-7B"),
     ]
     strategies = ["baseline", "fused_rmsnorm", "flex_attention", "both"]
-    strategy_labels = ["Baseline", "FusedRMSNorm", "FlexAttn", "Both"]
+    strategy_labels = ["Baseline", "RMSNorm", "FlexAttn", "Both"]
     colors = [
         STRATEGY_COLOR["baseline"],
         STRATEGY_COLOR["fused_rmsnorm"],
@@ -251,7 +251,7 @@ def plot_kernel_dispatch(profiling_dir: Path, out_dir: Path):
         ax.set_title(model_label, fontsize=9)
         ax.set_ylabel("Kernel Dispatches" if ax == axes[0] else "")
         ax.set_ylim(0, max(counts) * 1.22)
-        ax.tick_params(axis="x", labelsize=7.5)
+        ax.tick_params(axis="x", labelsize=7)
 
     fig.suptitle("CUDA Kernel Dispatches per Fusion Strategy (seq=512)", fontsize=9)
     plt.tight_layout()
