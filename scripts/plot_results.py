@@ -118,29 +118,33 @@ def plot_pareto_scatter(search_dir: Path, out_dir: Path):
         if bw is not None and lat is not None:
             points.append((bw, lat, strategy))
 
-    # Sort by bitwidth for Pareto line
-    points.sort(key=lambda p: p[0])
+    # Sort by latency descending for a clean Pareto frontier line
+    # (higher latency = worse, so Pareto front goes top-left to bottom-right)
+    points.sort(key=lambda p: p[1], reverse=True)
 
     fig, ax = plt.subplots(figsize=FIG_SIZE)
 
-    # Pareto frontier line
+    # Pareto frontier line through all points sorted by latency
     ax.plot(
         [p[0] for p in points],
         [p[1] for p in points],
         color="#cccccc", linewidth=1, linestyle="--", zorder=1,
     )
 
-    # Points coloured by strategy
+    # Points coloured by strategy — label each point with bitwidth + strategy
     plotted = set()
-    for bw, lat, strat in points:
+    offsets = {0: (5, 5), 1: (5, -12), 2: (5, 5), 3: (-38, 5)}
+    for i, (bw, lat, strat) in enumerate(points):
         color = STRATEGY_COLOR.get(strat, "#999999")
         marker = STRATEGY_MARKER.get(strat, "o")
         label = STRATEGY_LABEL.get(strat, strat) if strat not in plotted else None
-        ax.scatter(bw, lat, color=color, marker=marker, s=80, zorder=3, label=label)
+        ax.scatter(bw, lat, color=color, marker=marker, s=90, zorder=3, label=label)
         plotted.add(strat)
+        dx, dy = offsets.get(i, (5, 5))
         ax.annotate(
-            f"{bw}-bit",
-            xy=(bw, lat), xytext=(4, 4), textcoords="offset points", fontsize=7,
+            f"{int(bw)}-bit\n({STRATEGY_LABEL.get(strat, strat)})",
+            xy=(bw, lat), xytext=(dx, dy), textcoords="offset points",
+            fontsize=6.5, color=color,
         )
 
     ax.set_xlabel("Avg Bitwidth")
@@ -152,18 +156,19 @@ def plot_pareto_scatter(search_dir: Path, out_dir: Path):
 
 
 # ---------------------------------------------------------------------------
-# Plot 2 — Sequence length scaling log-log
+# Plot 2 — Sequence length scaling log-log (Mistral sliding-window)
+# Mistral uses sliding-window FlexAttention → O(n·w) attention compute,
+# demonstrating sub-quadratic scaling vs baseline O(n²) SDPA.
 # ---------------------------------------------------------------------------
 
 def plot_seqlen_scaling(benchmark_dir: Path, out_dir: Path):
-    data = load_json(benchmark_dir / "benchmark_tinyllama.json")
+    data = load_json(benchmark_dir / "benchmark_mistral.json")
     if data is None:
         return
 
     seqlen_data = data.get("seqlen_scaling", {})
-    strategies = ["baseline", "int8_flex", "int8_rmsnorm"]
+    strategies = ["baseline", "int8_flex", "int8_none"]
 
-    # Collect valid (seq_len, latency) pairs per strategy
     series: dict[str, tuple[list, list]] = {s: ([], []) for s in strategies}
     for seq_str, strat_dict in sorted(seqlen_data.items(), key=lambda x: int(x[0])):
         seq = int(seq_str)
@@ -176,72 +181,80 @@ def plot_seqlen_scaling(benchmark_dir: Path, out_dir: Path):
 
     fig, ax = plt.subplots(figsize=FIG_SIZE)
 
-    for strat in strategies:
+    DISPLAY = {
+        "baseline": ("Baseline (SDPA)", STRATEGY_COLOR["baseline"], "o"),
+        "int8_none": ("INT8 + SDPA",     STRATEGY_COLOR["int8_none"], "s"),
+        "int8_flex": ("INT8 + FlexAttn (SWA)", STRATEGY_COLOR["int8_flex"], "D"),
+    }
+
+    for strat, (label, color, marker) in DISPLAY.items():
         xs, ys = series[strat]
         if not xs:
             continue
-        ax.plot(
-            xs, ys,
-            color=STRATEGY_COLOR.get(strat, "#999999"),
-            marker=STRATEGY_MARKER.get(strat, "o"),
-            markersize=4,
-            linewidth=1.2,
-            label=STRATEGY_LABEL.get(strat, strat),
-        )
+        ax.plot(xs, ys, color=color, marker=marker, markersize=4,
+                linewidth=1.2, label=label)
 
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlabel("Sequence Length")
     ax.set_ylabel("Latency (ms)")
-    ax.set_title("Seq-Length Scaling — TinyLlama (FP32, batch=1)")
+    ax.set_title("Seq-Length Scaling — Mistral-7B (FP16)")
     ax.legend(loc="upper left")
 
     save_fig(fig, out_dir, "fig2_seqlen_scaling")
 
 
 # ---------------------------------------------------------------------------
-# Plot 3 — Peak GPU memory vs sequence length
+# Plot 3 — Kernel dispatch bar chart (TinyLlama + Mistral)
+# Replaces unreliable peak-memory plot. Shows fused_rmsnorm ~18% dispatch
+# reduction; flex_attention contributes zero dispatch savings.
 # ---------------------------------------------------------------------------
 
-def plot_memory_scaling(benchmark_dir: Path, out_dir: Path):
-    data = load_json(benchmark_dir / "benchmark_tinyllama.json")
-    if data is None:
-        return
+def plot_kernel_dispatch(profiling_dir: Path, out_dir: Path):
+    import numpy as np
 
-    seqlen_data = data.get("seqlen_scaling", {})
-    strategies = ["baseline", "int8_flex"]
+    models = [
+        ("tinyllama", "TinyLlama-1.1B"),
+        ("mistral",   "Mistral-7B"),
+    ]
+    strategies = ["baseline", "fused_rmsnorm", "flex_attention", "both"]
+    strategy_labels = ["Baseline", "FusedRMSNorm", "FlexAttn", "Both"]
+    colors = [
+        STRATEGY_COLOR["baseline"],
+        STRATEGY_COLOR["fused_rmsnorm"],
+        STRATEGY_COLOR["flex_attention"],
+        STRATEGY_COLOR["both"],
+    ]
 
-    series: dict[str, tuple[list, list]] = {s: ([], []) for s in strategies}
-    for seq_str, strat_dict in sorted(seqlen_data.items(), key=lambda x: int(x[0])):
-        seq = int(seq_str)
-        for strat in strategies:
-            val = strat_dict.get(strat, {})
-            mem = val.get("peak_memory_mb") if isinstance(val, dict) else None
-            if mem is not None:
-                series[strat][0].append(seq)
-                series[strat][1].append(mem)
+    fig, axes = plt.subplots(1, 2, figsize=(6.5, 2.6), sharey=False)
 
-    fig, ax = plt.subplots(figsize=FIG_SIZE)
-
-    for strat in strategies:
-        xs, ys = series[strat]
-        if not xs:
+    for ax, (model_key, model_label) in zip(axes, models):
+        data = load_json(profiling_dir / f"kernel_profile_{model_key}_seq512.json")
+        if data is None:
             continue
-        ax.plot(
-            xs, ys,
-            color=STRATEGY_COLOR.get(strat, "#999999"),
-            marker=STRATEGY_MARKER.get(strat, "o"),
-            markersize=4,
-            linewidth=1.2,
-            label=STRATEGY_LABEL.get(strat, strat),
-        )
+        counts = []
+        for strat in strategies:
+            s = data["strategies"].get(strat, {})
+            counts.append(s.get("total_kernel_launches", 0))
 
-    ax.set_xlabel("Sequence Length")
-    ax.set_ylabel("Peak GPU Memory (MB)")
-    ax.set_title("Peak Memory vs Seq-Length — TinyLlama")
-    ax.legend(loc="upper left")
+        bars = ax.bar(strategy_labels, counts, color=colors, width=0.6, edgecolor="white")
 
-    save_fig(fig, out_dir, "fig3_memory_scaling")
+        # Annotate reduction % vs baseline
+        baseline = counts[0]
+        for bar, count in zip(bars, counts):
+            pct = 100 * (baseline - count) / baseline if baseline > 0 else 0
+            label = f"{count:,}" if pct == 0 else f"{count:,}\n({pct:.0f}%↓)"
+            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 20,
+                    label, ha="center", va="bottom", fontsize=6.5)
+
+        ax.set_title(model_label, fontsize=9)
+        ax.set_ylabel("Kernel Dispatches" if ax == axes[0] else "")
+        ax.set_ylim(0, max(counts) * 1.22)
+        ax.tick_params(axis="x", labelsize=7.5)
+
+    fig.suptitle("CUDA Kernel Dispatches per Fusion Strategy (seq=512)", fontsize=9)
+    plt.tight_layout()
+    save_fig(fig, out_dir, "fig3_kernel_dispatch")
 
 
 # ---------------------------------------------------------------------------
@@ -259,7 +272,7 @@ def main():
     print("Generating figures...")
     plot_pareto_scatter(args.search_dir, args.out_dir)
     plot_seqlen_scaling(args.benchmark_dir, args.out_dir)
-    plot_memory_scaling(args.benchmark_dir, args.out_dir)
+    plot_kernel_dispatch(args.profiling_dir, args.out_dir)
     print(f"Done. Figures saved to {args.out_dir}/")
 
 
