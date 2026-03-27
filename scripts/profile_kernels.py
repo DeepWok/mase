@@ -103,23 +103,14 @@ def make_batch(seq_len: int, vocab_size: int, device: str):
 # Profiling
 # ---------------------------------------------------------------------------
 
-def _cuda_time(e) -> float:
-    """Return CUDA execution time (µs) for a profiler event, compatible with
-    both older PyTorch (self_cuda_time_total) and newer builds (cuda_time_total)."""
-    t = getattr(e, "self_cuda_time_total", None)
-    if t is None:
-        t = getattr(e, "cuda_time_total", 0)
-    return t or 0
-
-
 def profile_strategy(model, batch, num_warmup: int):
     """
     Returns kernel statistics dict for one forward pass captured by
     torch.profiler.
 
-    CUDA kernel events are identified by having non-zero GPU execution time.
-    CPU ops that only launch kernels are excluded so the count reflects
-    actual GPU dispatches.
+    Requires both CPU + CUDA activities: CPU tracing provides the op-level
+    call counts and kernel launch attribution; CUDA tracing measures GPU
+    execution time.  CUDA-attributed events are those with cuda_time_total > 0.
     """
     with torch.no_grad():
         for _ in range(num_warmup):
@@ -127,7 +118,7 @@ def profile_strategy(model, batch, num_warmup: int):
     torch.cuda.synchronize()
 
     with profile(
-        activities=[ProfilerActivity.CUDA],
+        activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
         record_shapes=False,
         with_stack=False,
     ) as prof:
@@ -138,12 +129,12 @@ def profile_strategy(model, batch, num_warmup: int):
 
     avgs = prof.key_averages()
 
-    # CUDA kernel events: those with GPU execution time
-    cuda_events = [e for e in avgs if _cuda_time(e) > 0]
+    # Events that dispatched CUDA work: cuda_time_total > 0
+    cuda_events = [e for e in avgs if e.cuda_time_total > 0]
 
     total_launches = sum(e.count for e in cuda_events)
     unique_kernels = len(cuda_events)
-    total_cuda_ms = sum(_cuda_time(e) for e in cuda_events) / 1e3  # µs→ms
+    total_cuda_ms = sum(e.cuda_time_total for e in cuda_events) / 1e3  # µs→ms
 
     # RMSNorm / fused-kernel events by name
     norm_events = [
@@ -153,7 +144,7 @@ def profile_strategy(model, batch, num_warmup: int):
     norm_launches = sum(e.count for e in norm_events)
 
     # Top-5 kernels by CUDA time
-    top5 = sorted(cuda_events, key=_cuda_time, reverse=True)[:5]
+    top5 = sorted(cuda_events, key=lambda e: e.cuda_time_total, reverse=True)[:5]
 
     return {
         "total_kernel_launches": total_launches,
@@ -164,7 +155,7 @@ def profile_strategy(model, batch, num_warmup: int):
             {
                 "name": e.key[:70],
                 "count": e.count,
-                "cuda_time_ms": round(_cuda_time(e) / 1e3, 3),
+                "cuda_time_ms": round(e.cuda_time_total / 1e3, 3),
             }
             for e in top5
         ],
@@ -235,15 +226,15 @@ def main():
 
     # Reduction summary vs baseline
     baseline = results["strategies"].get("baseline", {})
-    if "total_kernel_launches" in baseline:
+    b = baseline.get("total_kernel_launches", 0)
+    if b > 0:
         print("\n  Reduction vs baseline:")
-        b = baseline["total_kernel_launches"]
         for s in STRATEGIES[1:]:
             s_stats = results["strategies"].get(s, {})
             if "total_kernel_launches" in s_stats:
                 reduction = b - s_stats["total_kernel_launches"]
                 pct = 100 * reduction / b
-                print(f"    {s:<18} -{reduction:>5} launches  ({pct:.1f}% fewer)")
+                print(f"    {s:<18} {reduction:>+6} launches  ({pct:.1f}% vs baseline)")
 
     out_path = args.save_dir / f"kernel_profile_{args.model}_seq{args.seq_len}.json"
     with open(out_path, "w") as f:
