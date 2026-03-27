@@ -58,7 +58,6 @@ DRAM_INTERNAL_COMP = {
                 "linear_layers/matmul/rtl/matmul.sv",
                 "linear_layers/matmul/rtl/transpose.sv",
                 "linear_layers/matmul/rtl/matrix_stream_transpose.sv",
-                "common/rtl/dummy_param_dram.sv",
             ],
         },
     ],
