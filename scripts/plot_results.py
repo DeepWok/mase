@@ -194,12 +194,29 @@ def plot_seqlen_scaling(benchmark_dir: Path, out_dir: Path):
         ax.plot(xs, ys, color=color, marker=marker, markersize=4,
                 linewidth=1.2, label=label)
 
+    # Reference slope lines anchored at seq=1024 to baseline latency there.
+    # Finds the baseline value closest to seq=1024 as the anchor point.
+    import numpy as np
+    bxs, bys = series["baseline"]
+    if len(bxs) >= 2:
+        anchor_x = 1024
+        anchor_y = np.interp(anchor_x, bxs, bys)
+        ref_xs = np.array([min(bxs), max(bxs)], dtype=float)
+        # O(n²): latency ∝ n²
+        slope2 = anchor_y * (ref_xs / anchor_x) ** 2
+        ax.plot(ref_xs, slope2, color="#bbbbbb", linewidth=0.9,
+                linestyle=":", label=r"$O(n^2)$ ref")
+        # O(n·w) with w=128: latency ∝ n (linear)
+        slope1 = anchor_y * (ref_xs / anchor_x) ** 1
+        ax.plot(ref_xs, slope1, color="#bbbbbb", linewidth=0.9,
+                linestyle=(0, (3, 1, 1, 1)), label=r"$O(n{\cdot}w)$ ref")
+
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlabel("Sequence Length")
     ax.set_ylabel("Latency (ms)")
     ax.set_title("Seq-Length Scaling — Mistral-7B (FP16)")
-    ax.legend(loc="upper left")
+    ax.legend(loc="upper left", fontsize=7)
 
     save_fig(fig, out_dir, "fig2_seqlen_scaling")
 
