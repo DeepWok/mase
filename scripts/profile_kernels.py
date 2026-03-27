@@ -129,18 +129,14 @@ def profile_strategy(model, batch, num_warmup: int):
 
     avgs = prof.key_averages()
 
-    # Debug: show available attributes on first event so we can fix attr names
-    if avgs:
-        time_attrs = [a for a in dir(avgs[0]) if "time" in a.lower() and not a.startswith("_")]
-        print(f"    [debug] profiler event time attrs: {time_attrs}")
-        print(f"    [debug] sample event keys: count={avgs[0].count}, key={avgs[0].key!r}")
-
-    # Events that dispatched CUDA work: cuda_time_total > 0
-    cuda_events = [e for e in avgs if e.cuda_time_total > 0]
+    # self_device_time_total > 0: ops that directly dispatched GPU kernels
+    # (device_time_total includes parent ops that contain GPU children — avoid
+    #  double-counting by using the self variant)
+    cuda_events = [e for e in avgs if e.self_device_time_total > 0]
 
     total_launches = sum(e.count for e in cuda_events)
     unique_kernels = len(cuda_events)
-    total_cuda_ms = sum(e.cuda_time_total for e in cuda_events) / 1e3  # µs→ms
+    total_cuda_ms = sum(e.self_device_time_total for e in cuda_events) / 1e3  # µs→ms
 
     # RMSNorm / fused-kernel events by name
     norm_events = [
@@ -149,8 +145,8 @@ def profile_strategy(model, batch, num_warmup: int):
     ]
     norm_launches = sum(e.count for e in norm_events)
 
-    # Top-5 kernels by CUDA time
-    top5 = sorted(cuda_events, key=lambda e: e.cuda_time_total, reverse=True)[:5]
+    # Top-5 kernels by GPU time
+    top5 = sorted(cuda_events, key=lambda e: e.self_device_time_total, reverse=True)[:5]
 
     return {
         "total_kernel_launches": total_launches,
@@ -161,7 +157,7 @@ def profile_strategy(model, batch, num_warmup: int):
             {
                 "name": e.key[:70],
                 "count": e.count,
-                "cuda_time_ms": round(e.cuda_time_total / 1e3, 3),
+                "cuda_time_ms": round(e.self_device_time_total / 1e3, 3),
             }
             for e in top5
         ],
