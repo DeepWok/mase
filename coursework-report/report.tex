@@ -52,5 +52,122 @@ but constrained by device memory budgets. This context provides a concrete
 motivation for moving from BRAM-only parameter delivery to an off-chip memory
 model, and frames the trade-off between achievable model scale and throughput.
 
-\end{document}
+\section{Technical Overview}
 
+\subsection{Current MASE Hardware Architecture}
+
+The baseline MASE hardware emit flow relies on a set of Python-based emitters
+that traverse a \texttt{MaseGraph} to generate a top-level SystemVerilog file
+(\texttt{top.sv}). This generation is handled by specialized classes for
+interfaces, module instantiations, and interconnects.
+
+In the standard flow, all model parameters (weights and biases) are stored in
+on-chip Block RAM (BRAM). For each layer, a \texttt{*\_source} module is
+instantiated alongside the compute module (e.g., \texttt{fixed\_linear}). This
+source module contains a synchronous ROM initialized via a \texttt{.dat} file.
+While simple and efficient for small models, this architecture forces a
+one-to-one mapping between parameter size and BRAM consumption.
+
+\subsection{DRAM Weight Streaming Support}
+
+To overcome the BRAM bottleneck, we have introduced a \texttt{storage="DRAM"}
+metadata attribute that reconfigures how parameters are handled throughout the
+emit pipeline.
+
+\subsubsection{Metadata Transformation}
+We implemented a DRAM transform pass within \texttt{add\_hardware\_metadata\_analysis\_pass}.
+By passing \texttt{interface=\{"storage": "DRAM"\}}, the pass iterates over all
+nodes in the \texttt{MaseGraph}. If a node supports off-chip storage, its
+interface metadata for weights and biases is updated from \texttt{BRAM} to
+\texttt{DRAM}. This change propagates through the entire hardware generation
+flow.
+
+\subsubsection{Top-Level Interface and Module Emitters}
+The \texttt{VerilogTopEmitter} was updated to handle the \texttt{DRAM} storage
+tag. Instead of instantiating internal \texttt{*\_source} modules, the emitter:
+\begin{itemize}
+    \item Exposes weight and bias interfaces as top-level streaming ports
+    (e.g., \texttt{fc1\_weight}, \texttt{fc1\_weight\_valid}, \texttt{fc1\_weight\_ready}).
+    \item Implements a standard valid/ready handshake for these ports, allowing
+    external controllers (like AXI DMA) to stream data directly into the
+    accelerator.
+    \item Skips the generation of internal BRAM source modules and their
+    associated interconnects for these parameters.
+\end{itemize}
+
+\subsubsection{BRAM Emit Pass Refinement}
+The \texttt{emit\_bram\_transform\_pass} was modified to recognize the DRAM
+storage mode. In this mode, the pass skips generating ROM SystemVerilog and data
+files. Crucially, it also performs a cleanup of any stale BRAM source files
+from previous runs to prevent compilation conflicts in the simulation environment.
+
+\subsection{Verification and Simulation}
+
+Testing off-chip memory logic requires a testbench capable of driving both
+activations and parameter streams. We extended the \texttt{emit\_cocotb\_transform\_pass}
+to detect DRAM-tagged parameters and automatically instantiate
+\texttt{StreamDriver} objects in the generated testbench. These drivers load
+quantized parameter data and feed it into the top-level ports according to the
+handshake protocol, mimicking the behavior of an external memory controller.
+
+\section{Case Study: 64-QAM Symbol Classification}
+
+We evaluated our implementation using a symbol classifier for 64-QAM (Quadrature
+Amplitude Modulation), a common requirement in high-speed optical and wireless
+communications.
+
+\subsection{Experimental Setup}
+The model consists of a Multi-Layer Perceptron (MLP) trained to classify I/Q
+samples into 64 constellation points. We compared a standard BRAM-only deployment
+against our DRAM streaming implementation.
+
+\subsection{Utilization and Performance}
+\begin{itemize}
+    \item \textbf{Memory Footprint:} Using off-chip memory reduced on-chip BRAM
+    utilization by approximately [PLACEHOLDER]\% for the target model. This
+    frees up significant resources for arithmetic units or larger hidden layers.
+    \item \textbf{Throughput Trade-off:} The throughput of the DRAM-backed model
+    is limited by the available off-chip bandwidth, achieving [PLACEHOLDER]\% of
+    the BRAM-only speed. This bottleneck could be further mitigated by
+    prefetching or layer fusion techniques.
+\end{itemize}
+
+% [PLACEHOLDER: Insert Figure showing BRAM vs DRAM system design]
+% [PLACEHOLDER: Insert Code Snippet of top.sv DRAM ports]
+% [PLACEHOLDER: Insert Utilization Table]
+
+\section{Conclusion and Future Perspectives}
+
+The implementation of DRAM-backed weight streaming in MASE provides a scalable
+path for deploying large neural network models on resource-constrained FPGAs.
+By decoupling parameter storage from on-chip BRAM, we allow the deployment of
+models that would otherwise exceed the physical memory limits of the device.
+This project is intended to be the start of a wider build-out of off-chip
+support, and several future expansions have been considered in the current
+design:
+
+\begin{itemize}
+    \item \textbf{Smart AXI Burst Controllers:} Standard DDR ports often waste
+    clock cycles due to inefficient access patterns. A future extension could
+    generate custom memory controllers that analyze tensor shapes and issue
+    perfectly aligned, maximum-length AXI bursts to saturate memory bandwidth.
+    \item \textbf{Hardware Layer Fusion:} To minimize the performance impact of
+    off-chip memory fetches, multiple layers could be fused into a single
+    hardware pipeline. Weights for a fused block would be streamed together,
+    keeping intermediate activations entirely within fast on-chip BRAM.
+\end{itemize}
+
+\begin{thebibliography}{9}
+
+\bibitem{mdpi2021}
+"A Multi-Cache System for On-Chip Memory Optimization in FPGA-Based CNN Accelerators" (MDPI, 2021): Details how moving weights off-chip drastically cuts memory usage. It highlights the resulting performance bottleneck.
+
+\bibitem{asu2025}
+"Compute-In-Memory on FPGAs for Deep Learning: A Review" (ASU, 2025): Explores the massive throughput gap between on-chip BRAM compute and off-chip memory fetches.
+
+\bibitem{arc2020}
+"Accuracy, Training Time and Hardware Efficiency Trade-Offs for Quantized Neural Networks on FPGAs" (ARC, 2020): Quantifies the high latency and energy costs of accessing off-chip DDR compared to BRAM.
+
+\end{thebibliography}
+
+\end{document}
