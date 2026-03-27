@@ -164,6 +164,7 @@ class LLaDABlockMXFP(LLaDALlamaBlock):
 
         att = torch.matmul(attn_weights, v_expanded)
         att = att.transpose(1, 2).contiguous().view(B, T, C)
+        att = att.to(dtype)
         return self.attn_out(att), present
 
 
@@ -311,4 +312,5 @@ class LLaDABlockMXInt(LLaDALlamaBlock):
 
         att = torch.matmul(attn_weights, v_expanded)
         att = att.transpose(1, 2).contiguous().view(B, T, C)
+        att = att.to(dtype)
         return self.attn_out(att), present
