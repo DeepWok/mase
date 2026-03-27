@@ -16,6 +16,7 @@ Usage:
 """
 
 import argparse
+import gc
 import json
 import sys
 from pathlib import Path
@@ -134,6 +135,7 @@ def profile_strategy(model, batch, num_warmup: int):
         torch.cuda.synchronize()
 
     avgs = prof.key_averages()
+    del prof  # free profiler event buffers before processing results
 
     # self_device_time_total > 0: ops that directly dispatched GPU kernels
     # (device_time_total includes parent ops that contain GPU children — avoid
@@ -225,6 +227,7 @@ def main():
             if model is not None:
                 model.to("cpu")
                 del model
+            gc.collect()
             torch.cuda.empty_cache()
 
     # Reduction summary vs baseline
