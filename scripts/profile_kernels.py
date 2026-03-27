@@ -18,7 +18,6 @@ Usage:
 import argparse
 import json
 import sys
-from copy import deepcopy
 from pathlib import Path
 
 import torch
@@ -74,8 +73,15 @@ _WARMUP = {
 # Model building
 # ---------------------------------------------------------------------------
 
-def build_model(base_model, strategy: str, cfg: dict, device: str):
-    model = deepcopy(base_model).to(device).eval()
+def build_model(strategy: str, cfg: dict, device: str):
+    """Load a fresh copy of the model from disk for each strategy.
+
+    Avoids deepcopy which requires a full second copy of the model in RAM —
+    fatal for large models like Mistral-7B (~14 GB × 2 = 28 GB peak).
+    """
+    model = AutoModelForCausalLM.from_pretrained(
+        cfg["checkpoint"], torch_dtype=cfg["load_dtype"]
+    ).to(device).eval()
 
     if strategy in ("fused_rmsnorm", "both"):
         model, _ = fused_rmsnorm_residual_transform_pass(model, {})
@@ -182,11 +188,6 @@ def main():
     cfg = MODEL_CONFIGS[args.model]
     args.save_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"Loading {cfg['checkpoint']} ({cfg['load_dtype']}) ...")
-    base_model = AutoModelForCausalLM.from_pretrained(
-        cfg["checkpoint"], torch_dtype=cfg["load_dtype"]
-    )
-
     batch = make_batch(args.seq_len, cfg["vocab_size"], device)
 
     results = {
@@ -206,7 +207,7 @@ def main():
         print(f"  Building {strategy} ...", flush=True)
         model = None
         try:
-            model = build_model(base_model, strategy, cfg, device)
+            model = build_model(strategy, cfg, device)
             stats = profile_strategy(model, batch, num_warmup=_WARMUP[strategy])
             results["strategies"][strategy] = stats
 
