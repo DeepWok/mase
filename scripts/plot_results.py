@@ -199,8 +199,8 @@ def plot_seqlen_scaling(benchmark_dir: Path, out_dir: Path):
     ax.set_xlabel("Sequence Length")
     ax.set_ylabel("Latency (ms)")
     ax.set_title("Seq-Length Scaling — Mistral-7B (FP16)")
-    ax.legend(loc="lower right", fontsize=7, handlelength=1.2,
-              borderpad=0.4, labelspacing=0.25, handletextpad=0.5)
+    ax.legend(loc="lower right", fontsize=6, handlelength=1.0,
+              borderpad=0.3, labelspacing=0.2, handletextpad=0.4)
 
     save_fig(fig, out_dir, "fig2_seqlen_scaling")
 
