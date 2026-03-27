@@ -36,6 +36,10 @@ from transformers.models.gpt_oss.modeling_gpt_oss import (
     GptOssAttention,
 )
 
+from chop.nn.quantized.modules.llada.modeling_llada import (
+    LLaDALlamaBlock,
+)
+
 from transformers.models.bert.modeling_bert import (
     BertSelfAttention,
     BertSdpaSelfAttention,
@@ -69,6 +73,10 @@ qwen3_moe_prefix_map = {
 
 gpt_oss_prefix_map = {
     GptOssAttention: "gpt_oss_self_attention",
+}
+
+llada_prefix_map = {
+    LLaDALlamaBlock: "llada_block",
 }
 
 bert_prefix_map = {
@@ -314,6 +322,19 @@ def instantiate_gpt_oss_module(
     )
 
 
+def instantiate_llada_module(
+    module, postfix, prefix, module_map, module_args, network_args
+):
+    cls = module_map[f"{prefix}_{postfix}"]
+    # LLaDALlamaBlock needs layer_id, config, cache, and q_config
+    return cls(
+        layer_id=module.layer_id,
+        config=module.config,
+        cache=module._LLaDABlock__cache,
+        q_config=module_args,
+    )
+
+
 def instantiate_bert_module(
     module, postfix, prefix, module_map, module_args, network_args
 ):
@@ -335,6 +356,7 @@ def instantiate_module(module, postfix, module_map, additional_module_args):
     )
     is_qwen3, qwen3_layer_name = check_module_instance(module, qwen3_prefix_map)
     is_gpt_oss, gpt_oss_layer_name = check_module_instance(module, gpt_oss_prefix_map)
+    is_llada, llada_layer_name = check_module_instance(module, llada_prefix_map)
     is_bert, bert_layer_name = check_module_instance(module, bert_prefix_map)
 
     module_args = additional_module_args["config"]
@@ -367,6 +389,10 @@ def instantiate_module(module, postfix, module_map, additional_module_args):
     elif is_gpt_oss:
         module = instantiate_gpt_oss_module(
             module, postfix, gpt_oss_layer_name, module_map, module_args, network_args
+        )
+    elif is_llada:
+        module = instantiate_llada_module(
+            module, postfix, llada_layer_name, module_map, module_args, network_args
         )
     elif is_bert:
         module = instantiate_bert_module(

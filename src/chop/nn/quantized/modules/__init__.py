@@ -42,6 +42,11 @@ from .gpt_oss import (
     GptOssAttentionMXInt,
 )
 
+from .llada import (
+    LLaDABlockMXFP,
+    LLaDABlockMXInt,
+)
+
 # from .add import AddInteger
 from .conv1d import (
     Conv1dBlockFP,
@@ -375,6 +380,11 @@ quantized_gpt_oss_module_map = {
     "gpt_oss_self_attention_mxint": GptOssAttentionMXInt,
 }
 
+quantized_llada_module_map = {
+    "llada_block_mxfp": LLaDABlockMXFP,
+    "llada_block_mxint": LLaDABlockMXInt,
+}
+
 quantized_module_map = (
     quantized_basic_module_map
     | quantized_bert_module_map
@@ -383,6 +393,7 @@ quantized_module_map = (
     | quantized_qwen3_module_map
     | quantized_qwen3_moe_module_map
     | quantized_gpt_oss_module_map
+    | quantized_llada_module_map
 )
 
 
