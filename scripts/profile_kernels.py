@@ -103,14 +103,23 @@ def make_batch(seq_len: int, vocab_size: int, device: str):
 # Profiling
 # ---------------------------------------------------------------------------
 
+def _cuda_time(e) -> float:
+    """Return CUDA execution time (µs) for a profiler event, compatible with
+    both older PyTorch (self_cuda_time_total) and newer builds (cuda_time_total)."""
+    t = getattr(e, "self_cuda_time_total", None)
+    if t is None:
+        t = getattr(e, "cuda_time_total", 0)
+    return t or 0
+
+
 def profile_strategy(model, batch, num_warmup: int):
     """
     Returns kernel statistics dict for one forward pass captured by
     torch.profiler.
 
-    CUDA kernel events are identified by having a non-zero self_cuda_time_total
-    (they execute on the GPU).  CPU ops that *launch* those kernels are
-    excluded — this keeps the count focused on actual GPU dispatches.
+    CUDA kernel events are identified by having non-zero GPU execution time.
+    CPU ops that only launch kernels are excluded so the count reflects
+    actual GPU dispatches.
     """
     with torch.no_grad():
         for _ in range(num_warmup):
@@ -130,11 +139,11 @@ def profile_strategy(model, batch, num_warmup: int):
     avgs = prof.key_averages()
 
     # CUDA kernel events: those with GPU execution time
-    cuda_events = [e for e in avgs if e.self_cuda_time_total > 0]
+    cuda_events = [e for e in avgs if _cuda_time(e) > 0]
 
     total_launches = sum(e.count for e in cuda_events)
     unique_kernels = len(cuda_events)
-    total_cuda_ms = sum(e.self_cuda_time_total for e in cuda_events) / 1e3  # µs→ms
+    total_cuda_ms = sum(_cuda_time(e) for e in cuda_events) / 1e3  # µs→ms
 
     # RMSNorm / fused-kernel events by name
     norm_events = [
@@ -144,7 +153,7 @@ def profile_strategy(model, batch, num_warmup: int):
     norm_launches = sum(e.count for e in norm_events)
 
     # Top-5 kernels by CUDA time
-    top5 = sorted(cuda_events, key=lambda e: e.self_cuda_time_total, reverse=True)[:5]
+    top5 = sorted(cuda_events, key=_cuda_time, reverse=True)[:5]
 
     return {
         "total_kernel_launches": total_launches,
@@ -155,7 +164,7 @@ def profile_strategy(model, batch, num_warmup: int):
             {
                 "name": e.key[:70],
                 "count": e.count,
-                "cuda_time_ms": round(e.self_cuda_time_total / 1e3, 3),
+                "cuda_time_ms": round(_cuda_time(e) / 1e3, 3),
             }
             for e in top5
         ],
