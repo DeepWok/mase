@@ -129,6 +129,12 @@ def profile_strategy(model, batch, num_warmup: int):
 
     avgs = prof.key_averages()
 
+    # Debug: show available attributes on first event so we can fix attr names
+    if avgs:
+        time_attrs = [a for a in dir(avgs[0]) if "time" in a.lower() and not a.startswith("_")]
+        print(f"    [debug] profiler event time attrs: {time_attrs}")
+        print(f"    [debug] sample event keys: count={avgs[0].count}, key={avgs[0].key!r}")
+
     # Events that dispatched CUDA work: cuda_time_total > 0
     cuda_events = [e for e in avgs if e.cuda_time_total > 0]
 
