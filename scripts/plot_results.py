@@ -73,7 +73,7 @@ STRATEGY_MARKER = {
     "int8_none": "s",
     "fused_rmsnorm": "^", "int8_rmsnorm": "^",
     "flex_attention": "D", "int8_flex": "D",
-    "both": "*", "int8_both": "*",
+    "both": "P", "int8_both": "P",
 }
 
 FIG_SIZE = (3.5, 2.6)  # IEEE single-column
@@ -133,7 +133,7 @@ def plot_pareto_scatter(search_dir: Path, out_dir: Path):
 
     # Points coloured by strategy — label each point with bitwidth + strategy
     plotted = set()
-    offsets = {0: (5, 5), 1: (5, -12), 2: (5, 5), 3: (-38, 5)}
+    offsets = {0: (5, -20), 1: (5, -12), 2: (5, 5), 3: (-38, 5)}
     for i, (bw, lat, strat) in enumerate(points):
         color = STRATEGY_COLOR.get(strat, "#999999")
         marker = STRATEGY_MARKER.get(strat, "o")
@@ -199,7 +199,8 @@ def plot_seqlen_scaling(benchmark_dir: Path, out_dir: Path):
     ax.set_xlabel("Sequence Length")
     ax.set_ylabel("Latency (ms)")
     ax.set_title("Seq-Length Scaling — Mistral-7B (FP16)")
-    ax.legend(loc="lower right")
+    ax.legend(loc="lower right", fontsize=7, handlelength=1.2,
+              borderpad=0.4, labelspacing=0.25, handletextpad=0.5)
 
     save_fig(fig, out_dir, "fig2_seqlen_scaling")
 
