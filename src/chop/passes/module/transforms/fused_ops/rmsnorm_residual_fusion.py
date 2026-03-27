@@ -137,17 +137,26 @@ def _patch_decoder_layer(
     norm_weight = post_norm.weight
 
     def fused_forward(self, hidden_states, **kwargs):
+        # Defensive: newer HF transformers or combined transform passes can pass
+        # 2D hidden_states in edge cases. Treat (seq, hidden) as (1, seq, hidden).
+        if hidden_states.ndim == 2:
+            hidden_states = hidden_states.unsqueeze(0)
+
         residual = hidden_states
 
         # 1. Pre-attention norm (unchanged)
         hidden_states = self.input_layernorm(hidden_states)
 
-        # 2. Self attention
+        # 2. Self attention — unpack tuple to preserve attn_weights / kv-cache
         attn_out = self.self_attn(hidden_states=hidden_states, **kwargs)
         if isinstance(attn_out, tuple):
             hidden_states = attn_out[0]
+            self_attn_weights = attn_out[1] if len(attn_out) > 1 else None
+            present_key_value = attn_out[2] if len(attn_out) > 2 else None
         else:
             hidden_states = attn_out
+            self_attn_weights = None
+            present_key_value = None
 
         # 3. FUSED: residual + attn_output → post_attention_layernorm
         hidden_states, residual = FusedAddRMSNorm.apply(
@@ -161,7 +170,15 @@ def _patch_decoder_layer(
         # 5. Second residual add (unfused — could be fused in a future pass)
         hidden_states = residual + hidden_states
 
-        return hidden_states
+        # Return a tuple matching LlamaDecoderLayer convention so that
+        # LlamaModel.forward's `layer_outputs[0]` extracts hidden_states
+        # correctly instead of indexing the batch dimension.
+        outputs = (hidden_states,)
+        if kwargs.get("output_attentions", False):
+            outputs += (self_attn_weights,)
+        if kwargs.get("use_cache", False):
+            outputs += (present_key_value,)
+        return outputs
 
     layer.forward = types.MethodType(fused_forward, layer)
     return True

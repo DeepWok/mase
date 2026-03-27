@@ -200,6 +200,11 @@ def _build_llama_flex_attention_cls():
                     **kwargs,
                 )
 
+            # Guard: ensure 3D (batch, seq, hidden). Combined transforms (flex +
+            # fused_rmsnorm) can produce 2D input; treat as (1, seq, hidden).
+            if hidden_states.ndim == 2:
+                hidden_states = hidden_states.unsqueeze(0)
+
             # ---- cache_position / position_ids defaults (from SdpaAttention) ----
             if cache_position is None:
                 past_seen_tokens = (
@@ -366,6 +371,10 @@ def _build_mistral_flex_attention_cls():
                     position_embeddings=position_embeddings,
                     **kwargs,
                 )
+
+            # Guard: ensure 3D (batch, seq, hidden).
+            if hidden_states.ndim == 2:
+                hidden_states = hidden_states.unsqueeze(0)
 
             bsz, q_len, _ = hidden_states.size()
 
