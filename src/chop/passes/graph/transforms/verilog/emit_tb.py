@@ -68,35 +68,115 @@ async def test(dut):
 
 def _emit_cocotb_tb(graph):
     class MaseGraphTB(Testbench):
-        def _iter_dram_parameter_specs(self):
-            """Yield (node, node_name, arg, arg_info) for streamable tensor params.
+        def _dram_storage_enabled(self):
+            """Return True if any argument is explicitly marked with DRAM storage."""
+            observed_interfaces = []
+            interface_count = 0
 
-            Primary path uses explicit DRAM interface metadata. Fallback path
-            allows discovery from tensor parameter args so tests can still drive
-            emitted top-level parameter streams when interface metadata is stale.
-            """
             for node in graph.fx_graph.nodes:
                 if not hasattr(node, "meta") or "mase" not in node.meta:
                     continue
 
+                node_name = vf(getattr(node, "name", "unknown_node"))
                 node_mase = node.meta["mase"]
-                node_params = node_mase.parameters
-                hardware = node_params.get("hardware", {})
-                if hardware.get("is_implicit", False):
+                # Metadata can be stored both in object-style
+                # node.meta["mase"].parameters[...] and dict-style
+                # node.meta["mase"]["hardware"][...]. Check both.
+                node_params = getattr(node_mase, "parameters", None)
+                if node_params is None and isinstance(node_mase, dict):
+                    node_params = node_mase.get("parameters", {})
+
+                hardware_from_params = (
+                    node_params.get("hardware", {}) if isinstance(node_params, dict) else {}
+                )
+                hardware_from_dict = (
+                    node_mase.get("hardware", {}) if isinstance(node_mase, dict) else {}
+                )
+
+                is_implicit = hardware_from_params.get(
+                    "is_implicit", hardware_from_dict.get("is_implicit", False)
+                )
+                if is_implicit:
+                    self._sim_log.info(
+                        "DRAM detect: skip implicit node '%s'", node_name
+                    )
                     continue
 
-                args = node_mase.get("common", {}).get("args", {})
-                if not args:
-                    args = node_params.get("common", {}).get("args", {})
-                interfaces = hardware.get("interface", {})
-                for arg, arg_info in args.items():
-                    if "data_in" in arg or not isinstance(arg_info, dict):
+                interfaces = hardware_from_params.get("interface", {})
+                source = "parameters.hardware.interface"
+                if not interfaces:
+                    interfaces = hardware_from_dict.get("interface", {})
+                    source = "mase.hardware.interface"
+
+                if not interfaces:
+                    self._sim_log.info(
+                        "DRAM detect: node '%s' has no interface metadata", node_name
+                    )
+                    continue
+
+                for iface_name, interface_cfg in interfaces.items():
+                    if not isinstance(interface_cfg, dict):
+                        self._sim_log.info(
+                            "DRAM detect: node '%s' iface '%s' from %s has non-dict config",
+                            node_name,
+                            iface_name,
+                            source,
+                        )
                         continue
-                    # Prefer explicit DRAM metadata when present.
-                    storage = interfaces.get(arg, {}).get("storage")
-                    if storage is not None and storage != "DRAM":
-                        continue
-                    yield node, vf(node.name), arg, arg_info
+
+                    storage = interface_cfg.get("storage", "<missing>")
+                    interface_count += 1
+                    if len(observed_interfaces) < 24:
+                        observed_interfaces.append(f"{node_name}.{iface_name}:{storage}")
+
+                    self._sim_log.info(
+                        "DRAM detect: node='%s' iface='%s' storage='%s' source=%s",
+                        node_name,
+                        iface_name,
+                        storage,
+                        source,
+                    )
+
+                    if storage == "DRAM":
+                        self._sim_log.info(
+                            "DRAM detect: selected DRAM mode from node '%s' iface '%s'",
+                            node_name,
+                            iface_name,
+                        )
+                        return True
+
+            if interface_count == 0:
+                self._sim_log.warning(
+                    "DRAM detect: no interface entries were found; defaulting to BRAM mode"
+                )
+            else:
+                self._sim_log.warning(
+                    "DRAM detect: scanned %d interface entries, no DRAM found. Sample: %s",
+                    interface_count,
+                    ", ".join(observed_interfaces),
+                )
+
+            return False
+
+        def _discover_dram_param_specs_from_dut(self, dut):
+            """Discover streamable parameter ports by probing DUT signal names.
+
+            This is a robust fallback when graph interface metadata is absent in
+            serialized testbench objects.
+            """
+            specs = {}
+            for full_name, param_tensor in self.model.named_parameters():
+                if "." not in full_name:
+                    continue
+                module_name, arg = full_name.rsplit(".", 1)
+                node_name = vf(module_name)
+                port_name = f"{node_name}_{arg}"
+                required = [port_name, f"{port_name}_valid", f"{port_name}_ready"]
+                missing = [sig for sig in required if not hasattr(dut, sig)]
+                if missing:
+                    continue
+                specs[port_name] = (node_name, arg, param_tensor)
+            return specs
 
         def __init__(self, dut, fail_on_checks=True):
             super().__init__(dut, dut.clk, dut.rst, fail_on_checks=fail_on_checks)
@@ -144,39 +224,45 @@ def _emit_cocotb_tb(graph):
             #   fc1.weight -> fc1_weight / fc1_weight_valid / fc1_weight_ready
             self.dram_drivers = {}
             self.dram_param_specs = {}
-            for full_name, param_tensor in self.model.named_parameters():
-                if "." not in full_name:
-                    continue
-                module_name, arg = full_name.rsplit(".", 1)
-                node_name = vf(module_name)
-                port_name = f"{node_name}_{arg}"
-                missing = [
-                    sig
-                    for sig in [port_name, f"{port_name}_valid", f"{port_name}_ready"]
-                    if not hasattr(dut, sig)
-                ]
-                if missing:
-                    continue
+            metadata_dram_mode = self._dram_storage_enabled()
+            discovered_specs = self._discover_dram_param_specs_from_dut(dut)
 
-                self.dram_drivers[port_name] = StreamDriver(
-                    dut.clk,
-                    getattr(dut, port_name),
-                    getattr(dut, f"{port_name}_valid"),
-                    getattr(dut, f"{port_name}_ready"),
+            self.dram_mode = metadata_dram_mode or bool(discovered_specs)
+            if not metadata_dram_mode and discovered_specs:
+                self._sim_log.warning(
+                    "DRAM detect: metadata did not expose DRAM interfaces, "
+                    "but discovered %d DRAM-style DUT parameter ports; enabling DRAM mode",
+                    len(discovered_specs),
                 )
-                self.dram_param_specs[port_name] = (node_name, arg, param_tensor)
-                self.dram_drivers[port_name].log.setLevel(logging.DEBUG)
-                self._sim_log.info("Bound parameter StreamDriver for DUT port '%s'", port_name)
 
-            logger.debug("Discovered %d streamed parameter ports", len(self.dram_drivers))
+            if self.dram_mode:
+                for port_name, (node_name, arg, param_tensor) in discovered_specs.items():
 
-            if self.dram_drivers:
-                self._sim_log.info(
-                    "DRAM drivers enabled for ports: %s",
-                    ", ".join(sorted(self.dram_drivers.keys())),
-                )
+                    self.dram_drivers[port_name] = StreamDriver(
+                        dut.clk,
+                        getattr(dut, port_name),
+                        getattr(dut, f"{port_name}_valid"),
+                        getattr(dut, f"{port_name}_ready"),
+                    )
+                    self.dram_param_specs[port_name] = (node_name, arg, param_tensor)
+                    self.dram_drivers[port_name].log.setLevel(logging.DEBUG)
+                    self._sim_log.info(
+                        "Bound parameter StreamDriver for DUT port '%s'", port_name
+                    )
+
+                logger.debug("Discovered %d streamed parameter ports", len(self.dram_drivers))
+
+                if self.dram_drivers:
+                    self._sim_log.info(
+                        "DRAM drivers enabled for ports: %s",
+                        ", ".join(sorted(self.dram_drivers.keys())),
+                    )
+                else:
+                    self._sim_log.warning(
+                        "DRAM mode enabled, but no parameter stream ports were discovered"
+                    )
             else:
-                self._sim_log.info("No DRAM parameter ports discovered for this testbench")
+                self._sim_log.info("BRAM mode detected; skipping DRAM parameter stream setup")
 
         def generate_inputs(self, batches):
             """
@@ -201,7 +287,7 @@ def _emit_cocotb_tb(graph):
 
         def load_drivers(self, in_tensors):
             # Preload DRAM parameter drivers with quantized parameter blocks.
-            if self.dram_drivers:
+            if self.dram_mode and self.dram_drivers:
                 from mase_cocotb.utils import fixed_preprocess_tensor
 
                 self._sim_log.info("Preloading DRAM parameter streams for %d ports", len(self.dram_drivers))
@@ -248,6 +334,8 @@ def _emit_cocotb_tb(graph):
                     "DRAM mode detected, but zero DRAM parameter blocks were queued. "
                     "Check DRAM interface metadata/parameter extraction."
                 )
+            elif self.dram_mode:
+                self._sim_log.warning("DRAM mode enabled, but no DRAM parameter streams to preload")
             else:
                 self._sim_log.info("No DRAM parameter streams to preload")
 
