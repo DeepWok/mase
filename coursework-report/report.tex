@@ -1,0 +1,56 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{hyperref}
+
+\geometry{margin=1in}
+\onehalfspacing
+
+\title{Off-Chip Memory Support for MASE Hardware Emission\\
+\large Coursework Report}
+\author{}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+The MASE hardware emission flow already provides a strong foundation for rapid
+translation of quantized neural networks into synthesizable RTL, with automatic
+generation of top-level modules, dependencies, and cocotb-based verification
+infrastructure. This makes it highly effective for educational and research
+prototyping, particularly when targeting compact models that fit comfortably in
+on-chip resources.
+
+However, the baseline FPGA-oriented flow is primarily optimized for storing
+layer parameters on chip, typically through BRAM-backed sources. For larger
+models and low-cost FPGA devices, this becomes a critical bottleneck: available
+BRAM limits model size before arithmetic resources are fully utilized. In
+practical deployments, especially where price and power constraints are strict,
+off-chip parameter storage is often required to scale beyond this limit.
+
+This report presents an extension to the MASE emission and verification flow to
+support off-chip compatible designs, with a focus on streaming weights and
+biases from external memory into compute modules. The goal is to preserve the
+existing structure of the toolchain while adding minimal, targeted changes to
+metadata handling, top-level interface generation, and testbench behavior.
+
+Alongside the hardware-generation changes, we introduce a verification path that
+drives valid transactions into both activation inputs and externally streamed
+parameter ports. This ensures that off-chip behavior is not only representable
+in generated RTL, but also testable in a reproducible simulation workflow.
+
+The implementation is evaluated on a use case motivated by collaboration with
+UCL's Optical Networks Group, where larger learned classifiers are desirable
+but constrained by device memory budgets. This context provides a concrete
+motivation for moving from BRAM-only parameter delivery to an off-chip memory
+model, and frames the trade-off between achievable model scale and throughput.
+
+\end{document}
+

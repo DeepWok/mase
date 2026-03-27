@@ -186,21 +186,80 @@ self.output_monitors[result] = StreamMonitor(
 
 Source: `src/chop/passes/graph/transforms/verilog/emit_tb.py`
 
-## 8. End-to-end lab/notebook sequence
+## 8. End-to-end sequence with external-memory pass
 
-Minimal flow used in the lab notebook:
+To make the report pipeline explicit, we define a dedicated transform pass whose only job is to tag supported tensor parameters for off-chip storage.
+
+### 8.1 Proposed pass
 
 ```python
-mg, _ = add_hardware_metadata_analysis_pass(mg, {"interface": {"storage": "DRAM"}})
+def emit_external_memory_transform_pass(graph, pass_args=None):
+    """Mark supported parameter tensors as externally streamed (DRAM)."""
+    if pass_args is None:
+        pass_args = {}
+
+    storage = pass_args.get("storage", "DRAM")
+    supported_ops = set(pass_args.get("supported_ops", ["linear"]))
+
+    for node in graph.fx_graph.nodes:
+        if "mase" not in node.meta:
+            continue
+        mase = node.meta["mase"]
+        common = mase.get("common", {})
+        hardware = mase.get("hardware", {})
+
+        if hardware.get("is_implicit", False):
+            continue
+        if common.get("mase_op") not in supported_ops:
+            continue
+
+        iface = hardware.setdefault("interface", {})
+        for arg, arg_info in common.get("args", {}).items():
+            if "data_in" in arg or not isinstance(arg_info, dict):
+                continue
+            iface.setdefault(arg, {})
+            iface[arg]["storage"] = storage
+            iface[arg].setdefault("transpose", False)
+
+    return graph, {}
+```
+
+Design intent:
+
+- keep this pass minimal and declarative
+- separate policy (which params are off-chip) from code generation
+- let downstream emitters consume the same `hardware.interface` metadata
+
+### 8.2 Revised hardware emit pipeline
+
+```python
+# 1) Build and quantize graph
+mg, _ = init_metadata_analysis_pass(mg, None)
+mg, _ = add_common_metadata_analysis_pass(mg, {"dummy_in": dummy_in, "add_value": False})
+mg, _ = quantize_transform_pass(mg, quan_args)
+
+# 2) Populate hardware defaults
+mg, _ = add_hardware_metadata_analysis_pass(mg)
+
+# 3) Rewrite selected params for external memory
+mg, _ = emit_external_memory_transform_pass(
+    mg,
+    {"storage": "DRAM", "supported_ops": ["linear"]},
+)
+
+# 4) Emit RTL and testbench
 mg, _ = emit_verilog_top_transform_pass(mg)
 mg, _ = emit_internal_rtl_transform_pass(mg)
-mg, _ = emit_bram_transform_pass(mg)
+mg, _ = emit_bram_transform_pass(mg)      # still used for on-chip tensors
 mg, _ = emit_cocotb_transform_pass(mg)
 
+# 5) Simulate
 simulate(skip_build=False, skip_test=False, waves=True)
 ```
 
-Notebook source: `docs/labs/lab4-hardware.ipynb`
+This sequence is equivalent to the current direct DRAM configuration but gives a cleaner report narrative: a dedicated external-memory transform stage followed by unchanged emit stages.
+
+Notebook source for current flow: `docs/labs/lab4-hardware.ipynb`
 
 ## 9. Observed runtime behavior after additions
 
