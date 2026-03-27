@@ -1,6 +1,7 @@
 # FlexAttention Integration into MASE
 
 > **Project:** Hardware-Aware Transformer Optimisation: Integrating Programmable Attention, Triton Kernel Fusion, and Multi-Objective NAS
+> **Author:** Ali Haidar, Imperial College London, ali.haidar25@imperial.ac.uk
 > **Component:** FlexAttention Integration Pass
 > **Hardware:** NVIDIA L40S (48 GB), PyTorch 2.6, bfloat16
 > **Date:** March 2026
@@ -80,7 +81,9 @@ Getting FlexAttention to work reliably inside MASE involved several non-trivial 
 
 ## 4. Experiments
 
-All experiments use the medium LLaMA config (hidden=2048, 16 layers, 16 heads, 4 KV heads, batch=2, bfloat16) on an NVIDIA L40S unless noted otherwise.
+All experiments use the medium LLaMA config (hidden=2048, 16 layers, 16 heads, 4 KV heads, batch=2, bfloat16) on an NVIDIA L40S unless noted otherwise. 
+
+Experiment results are found in: **[experiments/flex_attention/results/](experiments/flex_attention/results/)**
 
 ---
 
@@ -97,7 +100,7 @@ Baseline comparison — how does FlexAttention compare to SDPA for causal and sl
 
 Flex matches SDPA on causal (1.02x) and is **1.46x faster** on SWA at seq=4096. Memory usage is essentially identical.
 
-![Inference Latency](results/figures/fig1_inference_latency.png)
+![Inference Latency](experiments/flex_attention/results/figures/fig1_inference_latency.png)
 
 ---
 
@@ -114,7 +117,7 @@ Same comparison but for full training steps (forward + backward).
 
 The SWA speedup is even larger during training: **1.72x** at seq=4096. This makes sense — backprop through SDPA SWA still processes the full causal triangle.
 
-![Training Latency](results/figures/figS1_training_latency.png)
+![Training Latency](experiments/flex_attention/results/figures/figS1_training_latency.png)
 
 ---
 
@@ -127,7 +130,7 @@ Before benchmarking performance, we needed to verify that FlexAttention actually
 
 The two backends are numerically indistinguishable. The bottom panel shows the per-step absolute difference on a log scale — it's all noise-level.
 
-![Training Equivalence](results/figures/fig2_training_equivalence.png)
+![Training Equivalence](experiments/flex_attention/results/figures/fig2_training_equivalence.png)
 
 ---
 
@@ -144,7 +147,7 @@ How much does block-level sparsity actually matter? We ran FlexAttention with an
 
 Block masking gives a 1.08x speedup for causal and **1.20x for SWA** at seq=4096. Without it, SWA degrades to causal-level performance because the kernel evaluates every block regardless.
 
-![Block Mask Ablation](results/figures/figS2_block_mask_ablation.png)
+![Block Mask Ablation](experiments/flex_attention/results/figures/figS2_block_mask_ablation.png)
 
 ---
 
@@ -159,7 +162,7 @@ We also tested on Mistral to confirm the speedup isn't Llama-specific.
 
 **1.50x speedup** at seq=4096 — consistent with the Llama numbers. The benefit is architecture-independent.
 
-![Mistral SWA](results/figures/figS3_mistral_swa.png)
+![Mistral SWA](experiments/flex_attention/results/figures/figS3_mistral_swa.png)
 
 ---
 
@@ -175,7 +178,7 @@ Can we compose ALiBi bias with sliding-window sparsity without paying extra? The
 
 ALiBi + SWA (324.55 ms) matches plain SWA (324.57 ms) within noise. Composition is genuinely free — the compiler fuses both operations into one Triton kernel.
 
-![Compound Masks](results/figures/figS5_compound_masks.png)
+![Compound Masks](experiments/flex_attention/results/figures/figS5_compound_masks.png)
 
 ---
 
@@ -197,7 +200,7 @@ This is arguably FlexAttention's best use case. When you pack multiple documents
 
 At seq=8192, Flex is **2.25x faster** than SDPA's manual document mask, and actually **1.20x faster than SDPA's causal baseline** — because the block mask prunes cross-document blocks.
 
-![Document Masking](results/figures/fig3_document_masking.png)
+![Document Masking](experiments/flex_attention/results/figures/fig3_document_masking.png)
 
 ---
 
@@ -214,7 +217,7 @@ A quick sanity check — does FlexAttention hold up across batch sizes?
 
 Parity across the board. No surprises here.
 
-![Batch Sensitivity](results/figures/figS6_batch_sensitivity.png)
+![Batch Sensitivity](experiments/flex_attention/results/figures/figS6_batch_sensitivity.png)
 
 ---
 
@@ -230,7 +233,7 @@ This is where FlexAttention struggles. During autoregressive generation, each de
 
 Flex is **4.3-4.4x slower** per token at decode. SDPA's hand-optimised CUDA kernels are much better here. This only affects token-by-token generation — prefill and training are unaffected. Future PyTorch releases with optimised `flex_decoding` kernels should help.
 
-![Decode Caveat](results/figures/fig5_decode_caveat.png)
+![Decode Caveat](experiments/flex_attention/results/figures/fig5_decode_caveat.png)
 
 ---
 
@@ -249,7 +252,7 @@ Translating latency into tokens/sec makes the scaling story clearer.
 
 This is the headline number: Flex SWA achieves **1.73x higher training throughput** than SDPA SWA at seq=4096 (25,070 vs 14,498 tok/sec). The key insight is that SDPA SWA throughput *collapses* beyond seq=1024 because it falls back to the full attention matrix, while Flex maintains near-causal throughput thanks to block sparsity.
 
-![Training Throughput](results/figures/fig6_training_throughput.png)
+![Training Throughput](experiments/flex_attention/results/figures/fig6_training_throughput.png)
 
 ---
 
@@ -267,7 +270,7 @@ Finally, we tested whether the FlexAttention advantage depends on the head confi
 
 Three things stand out: (1) causal shows no regression; (2) SWA gives 1.63-1.74x regardless of head grouping; (3) ALiBi+SWA matches plain SWA exactly, confirming the free composition result from Exp 6 holds across all configs.
 
-![GQA Heatmap](results/figures/fig4_gqa_heatmap.png)
+![GQA Heatmap](experiments/flex_attention/results/figures/fig4_gqa_heatmap.png)
 
 ---
 
