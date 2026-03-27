@@ -1,0 +1,1566 @@
+2026-02-06 23:22:43 | INFO     | ============================================================
+2026-02-06 23:22:43 | INFO     | Fixed Precision Search with TPE Sampler
+2026-02-06 23:22:43 | INFO     | ============================================================
+2026-02-06 23:22:43 | INFO     | Start time: 2026-02-06 23:22:43.639014
+2026-02-06 23:22:43 | INFO     | Number of trials: 100
+2026-02-06 23:22:43 | INFO     | Epochs per trial: 1
+2026-02-06 23:22:43 | INFO     | Output directory: /rds/general/user/aah25/home/lab3_results
+2026-02-06 23:22:43 | INFO     | Checkpoint: prajjwal1/bert-tiny
+2026-02-06 23:22:43 | INFO     | Dataset: imdb
+2026-02-06 23:22:43 | INFO     | Base model path: /rds/general/user/aah25/home/lab2_results/nas_best_model_tpe.pkl
+2026-02-06 23:22:43 | INFO     | ============================================================
+2026-02-06 23:22:43 | INFO     | Fixed Precision Configuration:
+2026-02-06 23:22:43 | INFO     |   Width: 8 (hardcoded)
+2026-02-06 23:22:43 | INFO     |   Frac_width: 4 (hardcoded)
+2026-02-06 23:22:43 | INFO     |   Layer choices: [nn.Linear, LinearInteger]
+2026-02-06 23:22:43 | INFO     | ============================================================
+2026-02-06 23:22:43 | INFO     | Loading dataset...
+2026-02-06 23:22:48 | INFO     | Dataset loaded successfully
+2026-02-06 23:22:48 | INFO     | ============================================================
+2026-02-06 23:22:48 | INFO     | Loading base model...
+2026-02-06 23:22:48 | INFO     | Base model loaded successfully
+2026-02-06 23:22:48 | INFO     | ============================================================
+2026-02-06 23:22:48 | INFO     | Created TPE sampler
+2026-02-06 23:22:48 | INFO     | Created Optuna study
+2026-02-06 23:22:48 | INFO     | ============================================================
+2026-02-06 23:22:48 | INFO     | Starting optimization with TPE sampler...
+2026-02-06 23:22:48 | INFO     | ============================================================
+2026-02-06 23:22:48 | INFO     | Trial 1 started
+2026-02-06 23:22:48 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:22:48 | INFO     |   Quantized layers: 13
+2026-02-06 23:22:48 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:22:49 | INFO     |   Training...
+2026-02-06 23:23:57 | INFO     |   Evaluating...
+2026-02-06 23:24:23 | INFO     |   Accuracy: 0.8744
+2026-02-06 23:24:23 | INFO     |   Duration: 0:01:35.446764
+2026-02-06 23:24:23 | INFO     | Trial 1 completed
+2026-02-06 23:24:23 | INFO     | --------------------------------------------------
+2026-02-06 23:24:23 | INFO     | *** New best accuracy: 0.8744 ***
+2026-02-06 23:24:23 | INFO     |   Best model saved to: /rds/general/user/aah25/home/lab3_results/fixed_precision_best_tpe.pt
+2026-02-06 23:24:23 | INFO     | Progress: 1/100 (1.0%)
+2026-02-06 23:24:23 | INFO     | Elapsed: 0:01:40.245474 | ETA: 2:45:24.301926
+2026-02-06 23:24:23 | INFO     | Best accuracy so far: 0.8744
+2026-02-06 23:24:23 | INFO     | ==================================================
+2026-02-06 23:24:23 | INFO     | Trial 2 started
+2026-02-06 23:24:23 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:24:23 | INFO     |   Quantized layers: 7
+2026-02-06 23:24:23 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:24:24 | INFO     |   Training...
+2026-02-06 23:25:27 | INFO     |   Evaluating...
+2026-02-06 23:25:49 | INFO     |   Accuracy: 0.8747
+2026-02-06 23:25:49 | INFO     |   Duration: 0:01:25.623063
+2026-02-06 23:25:49 | INFO     | Trial 2 completed
+2026-02-06 23:25:49 | INFO     | --------------------------------------------------
+2026-02-06 23:25:49 | INFO     | *** New best accuracy: 0.8747 ***
+2026-02-06 23:25:49 | INFO     |   Best model saved to: /rds/general/user/aah25/home/lab3_results/fixed_precision_best_tpe.pt
+2026-02-06 23:25:49 | INFO     | Progress: 2/100 (2.0%)
+2026-02-06 23:25:49 | INFO     | Elapsed: 0:03:06.009889 | ETA: 2:31:54.484512
+2026-02-06 23:25:49 | INFO     | Best accuracy so far: 0.8747
+2026-02-06 23:25:49 | INFO     | ==================================================
+2026-02-06 23:25:49 | INFO     | Trial 3 started
+2026-02-06 23:25:49 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:25:49 | INFO     |   Quantized layers: 12
+2026-02-06 23:25:49 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:25:50 | INFO     |   Training...
+2026-02-06 23:26:56 | INFO     |   Evaluating...
+2026-02-06 23:27:21 | INFO     |   Accuracy: 0.8767
+2026-02-06 23:27:21 | INFO     |   Duration: 0:01:32.109323
+2026-02-06 23:27:21 | INFO     | Trial 3 completed
+2026-02-06 23:27:21 | INFO     | --------------------------------------------------
+2026-02-06 23:27:21 | INFO     | *** New best accuracy: 0.8767 ***
+2026-02-06 23:27:21 | INFO     |   Best model saved to: /rds/general/user/aah25/home/lab3_results/fixed_precision_best_tpe.pt
+2026-02-06 23:27:21 | INFO     | Progress: 3/100 (3.0%)
+2026-02-06 23:27:21 | INFO     | Elapsed: 0:04:38.276246 | ETA: 2:29:57.598653
+2026-02-06 23:27:21 | INFO     | Best accuracy so far: 0.8767
+2026-02-06 23:27:21 | INFO     | ==================================================
+2026-02-06 23:27:21 | INFO     | Trial 4 started
+2026-02-06 23:27:21 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:27:21 | INFO     |   Quantized layers: 9
+2026-02-06 23:27:21 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:27:22 | INFO     |   Training...
+2026-02-06 23:28:26 | INFO     |   Evaluating...
+2026-02-06 23:28:49 | INFO     |   Accuracy: 0.8774
+2026-02-06 23:28:49 | INFO     |   Duration: 0:01:27.865752
+2026-02-06 23:28:49 | INFO     | Trial 4 completed
+2026-02-06 23:28:49 | INFO     | --------------------------------------------------
+2026-02-06 23:28:49 | INFO     | *** New best accuracy: 0.8774 ***
+2026-02-06 23:28:49 | INFO     |   Best model saved to: /rds/general/user/aah25/home/lab3_results/fixed_precision_best_tpe.pt
+2026-02-06 23:28:49 | INFO     | Progress: 4/100 (4.0%)
+2026-02-06 23:28:49 | INFO     | Elapsed: 0:06:06.309688 | ETA: 2:26:31.432512
+2026-02-06 23:28:49 | INFO     | Best accuracy so far: 0.8774
+2026-02-06 23:28:49 | INFO     | ==================================================
+2026-02-06 23:28:49 | INFO     | Trial 5 started
+2026-02-06 23:28:50 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:28:50 | INFO     |   Quantized layers: 13
+2026-02-06 23:28:50 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:28:50 | INFO     |   Training...
+2026-02-06 23:29:56 | INFO     |   Evaluating...
+2026-02-06 23:30:22 | INFO     |   Accuracy: 0.8772
+2026-02-06 23:30:22 | INFO     |   Duration: 0:01:32.406225
+2026-02-06 23:30:22 | INFO     | Trial 5 completed
+2026-02-06 23:30:22 | INFO     | --------------------------------------------------
+2026-02-06 23:30:22 | INFO     | Progress: 5/100 (5.0%)
+2026-02-06 23:30:22 | INFO     | Elapsed: 0:07:38.804016 | ETA: 2:25:17.276285
+2026-02-06 23:30:22 | INFO     | Best accuracy so far: 0.8774
+2026-02-06 23:30:22 | INFO     | ==================================================
+2026-02-06 23:30:22 | INFO     | Trial 6 started
+2026-02-06 23:30:22 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:30:22 | INFO     |   Quantized layers: 15
+2026-02-06 23:30:22 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:30:23 | INFO     |   Training...
+2026-02-06 23:31:30 | INFO     |   Evaluating...
+2026-02-06 23:31:57 | INFO     |   Accuracy: 0.8760
+2026-02-06 23:31:57 | INFO     |   Duration: 0:01:35.110761
+2026-02-06 23:31:57 | INFO     | Trial 6 completed
+2026-02-06 23:31:57 | INFO     | --------------------------------------------------
+2026-02-06 23:31:57 | INFO     | Progress: 6/100 (6.0%)
+2026-02-06 23:31:57 | INFO     | Elapsed: 0:09:14.014942 | ETA: 2:24:39.567456
+2026-02-06 23:31:57 | INFO     | Best accuracy so far: 0.8774
+2026-02-06 23:31:57 | INFO     | ==================================================
+2026-02-06 23:31:57 | INFO     | Trial 7 started
+2026-02-06 23:31:57 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:31:57 | INFO     |   Quantized layers: 11
+2026-02-06 23:31:57 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:31:58 | INFO     |   Training...
+2026-02-06 23:33:03 | INFO     |   Evaluating...
+2026-02-06 23:33:27 | INFO     |   Accuracy: 0.8736
+2026-02-06 23:33:27 | INFO     |   Duration: 0:01:29.936063
+2026-02-06 23:33:27 | INFO     | Trial 7 completed
+2026-02-06 23:33:27 | INFO     | --------------------------------------------------
+2026-02-06 23:33:27 | INFO     | Progress: 7/100 (7.0%)
+2026-02-06 23:33:27 | INFO     | Elapsed: 0:10:44.066033 | ETA: 2:22:36.877269
+2026-02-06 23:33:27 | INFO     | Best accuracy so far: 0.8774
+2026-02-06 23:33:27 | INFO     | ==================================================
+2026-02-06 23:33:27 | INFO     | Trial 8 started
+2026-02-06 23:33:27 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:33:27 | INFO     |   Quantized layers: 10
+2026-02-06 23:33:27 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:33:28 | INFO     |   Training...
+2026-02-06 23:34:32 | INFO     |   Evaluating...
+2026-02-06 23:34:56 | INFO     |   Accuracy: 0.8746
+2026-02-06 23:34:56 | INFO     |   Duration: 0:01:29.073864
+2026-02-06 23:34:56 | INFO     | Trial 8 completed
+2026-02-06 23:34:56 | INFO     | --------------------------------------------------
+2026-02-06 23:34:56 | INFO     | Progress: 8/100 (8.0%)
+2026-02-06 23:34:56 | INFO     | Elapsed: 0:12:13.268872 | ETA: 2:20:32.592028
+2026-02-06 23:34:56 | INFO     | Best accuracy so far: 0.8774
+2026-02-06 23:34:56 | INFO     | ==================================================
+2026-02-06 23:34:56 | INFO     | Trial 9 started
+2026-02-06 23:34:56 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:34:56 | INFO     |   Quantized layers: 12
+2026-02-06 23:34:56 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:34:57 | INFO     |   Training...
+2026-02-06 23:36:03 | INFO     |   Evaluating...
+2026-02-06 23:36:28 | INFO     |   Accuracy: 0.8752
+2026-02-06 23:36:28 | INFO     |   Duration: 0:01:31.274832
+2026-02-06 23:36:28 | INFO     | Trial 9 completed
+2026-02-06 23:36:28 | INFO     | --------------------------------------------------
+2026-02-06 23:36:28 | INFO     | Progress: 9/100 (9.0%)
+2026-02-06 23:36:28 | INFO     | Elapsed: 0:13:44.686716 | ETA: 2:18:58.498987
+2026-02-06 23:36:28 | INFO     | Best accuracy so far: 0.8774
+2026-02-06 23:36:28 | INFO     | ==================================================
+2026-02-06 23:36:28 | INFO     | Trial 10 started
+2026-02-06 23:36:28 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:36:28 | INFO     |   Quantized layers: 12
+2026-02-06 23:36:28 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:36:29 | INFO     |   Training...
+2026-02-06 23:37:34 | INFO     |   Evaluating...
+2026-02-06 23:37:59 | INFO     |   Accuracy: 0.8765
+2026-02-06 23:37:59 | INFO     |   Duration: 0:01:31.086736
+2026-02-06 23:37:59 | INFO     | Trial 10 completed
+2026-02-06 23:37:59 | INFO     | --------------------------------------------------
+2026-02-06 23:37:59 | INFO     | Progress: 10/100 (10.0%)
+2026-02-06 23:37:59 | INFO     | Elapsed: 0:15:15.933279 | ETA: 2:17:23.399520
+2026-02-06 23:37:59 | INFO     | Best accuracy so far: 0.8774
+2026-02-06 23:37:59 | INFO     | ==================================================
+2026-02-06 23:37:59 | INFO     | Trial 11 started
+2026-02-06 23:37:59 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:37:59 | INFO     |   Quantized layers: 10
+2026-02-06 23:37:59 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:38:00 | INFO     |   Training...
+2026-02-06 23:39:04 | INFO     |   Evaluating...
+2026-02-06 23:39:28 | INFO     |   Accuracy: 0.8762
+2026-02-06 23:39:28 | INFO     |   Duration: 0:01:28.916152
+2026-02-06 23:39:28 | INFO     | Trial 11 completed
+2026-02-06 23:39:28 | INFO     | --------------------------------------------------
+2026-02-06 23:39:28 | INFO     | Progress: 11/100 (11.0%)
+2026-02-06 23:39:28 | INFO     | Elapsed: 0:16:45.022408 | ETA: 2:15:31.544897
+2026-02-06 23:39:28 | INFO     | Best accuracy so far: 0.8774
+2026-02-06 23:39:28 | INFO     | ==================================================
+2026-02-06 23:39:28 | INFO     | Trial 12 started
+2026-02-06 23:39:28 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:39:28 | INFO     |   Quantized layers: 12
+2026-02-06 23:39:28 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:39:29 | INFO     |   Training...
+2026-02-06 23:40:34 | INFO     |   Evaluating...
+2026-02-06 23:40:59 | INFO     |   Accuracy: 0.8759
+2026-02-06 23:40:59 | INFO     |   Duration: 0:01:31.291474
+2026-02-06 23:40:59 | INFO     | Trial 12 completed
+2026-02-06 23:40:59 | INFO     | --------------------------------------------------
+2026-02-06 23:41:00 | INFO     | Progress: 12/100 (12.0%)
+2026-02-06 23:41:00 | INFO     | Elapsed: 0:18:16.555108 | ETA: 2:14:01.404096
+2026-02-06 23:41:00 | INFO     | Best accuracy so far: 0.8774
+2026-02-06 23:41:00 | INFO     | ==================================================
+2026-02-06 23:41:00 | INFO     | Trial 13 started
+2026-02-06 23:41:00 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:41:00 | INFO     |   Quantized layers: 11
+2026-02-06 23:41:00 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:41:00 | INFO     |   Training...
+2026-02-06 23:42:05 | INFO     |   Evaluating...
+2026-02-06 23:42:30 | INFO     |   Accuracy: 0.8778
+2026-02-06 23:42:30 | INFO     |   Duration: 0:01:30.356852
+2026-02-06 23:42:30 | INFO     | Trial 13 completed
+2026-02-06 23:42:30 | INFO     | --------------------------------------------------
+2026-02-06 23:42:30 | INFO     | *** New best accuracy: 0.8778 ***
+2026-02-06 23:42:30 | INFO     |   Best model saved to: /rds/general/user/aah25/home/lab3_results/fixed_precision_best_tpe.pt
+2026-02-06 23:42:30 | INFO     | Progress: 13/100 (13.0%)
+2026-02-06 23:42:30 | INFO     | Elapsed: 0:19:47.204686 | ETA: 2:12:25.139019
+2026-02-06 23:42:30 | INFO     | Best accuracy so far: 0.8778
+2026-02-06 23:42:30 | INFO     | ==================================================
+2026-02-06 23:42:30 | INFO     | Trial 14 started
+2026-02-06 23:42:30 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:42:30 | INFO     |   Quantized layers: 11
+2026-02-06 23:42:30 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:42:31 | INFO     |   Training...
+2026-02-06 23:43:36 | INFO     |   Evaluating...
+2026-02-06 23:44:01 | INFO     |   Accuracy: 0.8771
+2026-02-06 23:44:01 | INFO     |   Duration: 0:01:30.300890
+2026-02-06 23:44:01 | INFO     | Trial 14 completed
+2026-02-06 23:44:01 | INFO     | --------------------------------------------------
+2026-02-06 23:44:01 | INFO     | Progress: 14/100 (14.0%)
+2026-02-06 23:44:01 | INFO     | Elapsed: 0:21:17.719650 | ETA: 2:10:48.849254
+2026-02-06 23:44:01 | INFO     | Best accuracy so far: 0.8778
+2026-02-06 23:44:01 | INFO     | ==================================================
+2026-02-06 23:44:01 | INFO     | Trial 15 started
+2026-02-06 23:44:01 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:44:01 | INFO     |   Quantized layers: 12
+2026-02-06 23:44:01 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:44:02 | INFO     |   Training...
+2026-02-06 23:45:07 | INFO     |   Evaluating...
+2026-02-06 23:45:32 | INFO     |   Accuracy: 0.8770
+2026-02-06 23:45:32 | INFO     |   Duration: 0:01:31.340927
+2026-02-06 23:45:32 | INFO     | Trial 15 completed
+2026-02-06 23:45:32 | INFO     | --------------------------------------------------
+2026-02-06 23:45:32 | INFO     | Progress: 15/100 (15.0%)
+2026-02-06 23:45:32 | INFO     | Elapsed: 0:22:49.287810 | ETA: 2:09:19.297590
+2026-02-06 23:45:32 | INFO     | Best accuracy so far: 0.8778
+2026-02-06 23:45:32 | INFO     | ==================================================
+2026-02-06 23:45:32 | INFO     | Trial 16 started
+2026-02-06 23:45:32 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:45:32 | INFO     |   Quantized layers: 10
+2026-02-06 23:45:32 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:45:33 | INFO     |   Training...
+2026-02-06 23:46:37 | INFO     |   Evaluating...
+2026-02-06 23:47:01 | INFO     |   Accuracy: 0.8759
+2026-02-06 23:47:01 | INFO     |   Duration: 0:01:28.789701
+2026-02-06 23:47:01 | INFO     | Trial 16 completed
+2026-02-06 23:47:01 | INFO     | --------------------------------------------------
+2026-02-06 23:47:01 | INFO     | Progress: 16/100 (16.0%)
+2026-02-06 23:47:01 | INFO     | Elapsed: 0:24:18.320081 | ETA: 2:07:36.180420
+2026-02-06 23:47:01 | INFO     | Best accuracy so far: 0.8778
+2026-02-06 23:47:01 | INFO     | ==================================================
+2026-02-06 23:47:01 | INFO     | Trial 17 started
+2026-02-06 23:47:02 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:47:02 | INFO     |   Quantized layers: 12
+2026-02-06 23:47:02 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:47:02 | INFO     |   Training...
+2026-02-06 23:48:08 | INFO     |   Evaluating...
+2026-02-06 23:48:33 | INFO     |   Accuracy: 0.8745
+2026-02-06 23:48:33 | INFO     |   Duration: 0:01:31.325068
+2026-02-06 23:48:33 | INFO     | Trial 17 completed
+2026-02-06 23:48:33 | INFO     | --------------------------------------------------
+2026-02-06 23:48:33 | INFO     | Progress: 17/100 (17.0%)
+2026-02-06 23:48:33 | INFO     | Elapsed: 0:25:49.902221 | ETA: 2:06:07.169677
+2026-02-06 23:48:33 | INFO     | Best accuracy so far: 0.8778
+2026-02-06 23:48:33 | INFO     | ==================================================
+2026-02-06 23:48:33 | INFO     | Trial 18 started
+2026-02-06 23:48:33 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:48:33 | INFO     |   Quantized layers: 8
+2026-02-06 23:48:33 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:48:34 | INFO     |   Training...
+2026-02-06 23:49:37 | INFO     |   Evaluating...
+2026-02-06 23:49:59 | INFO     |   Accuracy: 0.8756
+2026-02-06 23:49:59 | INFO     |   Duration: 0:01:26.080691
+2026-02-06 23:49:59 | INFO     | Trial 18 completed
+2026-02-06 23:49:59 | INFO     | --------------------------------------------------
+2026-02-06 23:49:59 | INFO     | Progress: 18/100 (18.0%)
+2026-02-06 23:49:59 | INFO     | Elapsed: 0:27:16.255142 | ETA: 2:04:14.051166
+2026-02-06 23:49:59 | INFO     | Best accuracy so far: 0.8778
+2026-02-06 23:49:59 | INFO     | ==================================================
+2026-02-06 23:49:59 | INFO     | Trial 19 started
+2026-02-06 23:49:59 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:49:59 | INFO     |   Quantized layers: 12
+2026-02-06 23:49:59 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:50:00 | INFO     |   Training...
+2026-02-06 23:51:06 | INFO     |   Evaluating...
+2026-02-06 23:51:31 | INFO     |   Accuracy: 0.8760
+2026-02-06 23:51:31 | INFO     |   Duration: 0:01:31.777049
+2026-02-06 23:51:31 | INFO     | Trial 19 completed
+2026-02-06 23:51:31 | INFO     | --------------------------------------------------
+2026-02-06 23:51:31 | INFO     | Progress: 19/100 (19.0%)
+2026-02-06 23:51:31 | INFO     | Elapsed: 0:28:48.317177 | ETA: 2:02:48.089022
+2026-02-06 23:51:31 | INFO     | Best accuracy so far: 0.8778
+2026-02-06 23:51:31 | INFO     | ==================================================
+2026-02-06 23:51:31 | INFO     | Trial 20 started
+2026-02-06 23:51:32 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:51:32 | INFO     |   Quantized layers: 10
+2026-02-06 23:51:32 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:51:32 | INFO     |   Training...
+2026-02-06 23:52:37 | INFO     |   Evaluating...
+2026-02-06 23:53:01 | INFO     |   Accuracy: 0.8748
+2026-02-06 23:53:01 | INFO     |   Duration: 0:01:29.198731
+2026-02-06 23:53:01 | INFO     | Trial 20 completed
+2026-02-06 23:53:01 | INFO     | --------------------------------------------------
+2026-02-06 23:53:01 | INFO     | Progress: 20/100 (20.0%)
+2026-02-06 23:53:01 | INFO     | Elapsed: 0:30:17.821254 | ETA: 2:01:11.285040
+2026-02-06 23:53:01 | INFO     | Best accuracy so far: 0.8778
+2026-02-06 23:53:01 | INFO     | ==================================================
+2026-02-06 23:53:01 | INFO     | Trial 21 started
+2026-02-06 23:53:01 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:53:01 | INFO     |   Quantized layers: 10
+2026-02-06 23:53:01 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:53:02 | INFO     |   Training...
+2026-02-06 23:54:06 | INFO     |   Evaluating...
+2026-02-06 23:54:30 | INFO     |   Accuracy: 0.8755
+2026-02-06 23:54:30 | INFO     |   Duration: 0:01:29.277972
+2026-02-06 23:54:30 | INFO     | Trial 21 completed
+2026-02-06 23:54:30 | INFO     | --------------------------------------------------
+2026-02-06 23:54:31 | INFO     | Progress: 21/100 (21.0%)
+2026-02-06 23:54:31 | INFO     | Elapsed: 0:31:47.421547 | ETA: 1:59:35.538163
+2026-02-06 23:54:31 | INFO     | Best accuracy so far: 0.8778
+2026-02-06 23:54:31 | INFO     | ==================================================
+2026-02-06 23:54:31 | INFO     | Trial 22 started
+2026-02-06 23:54:31 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:54:31 | INFO     |   Quantized layers: 12
+2026-02-06 23:54:31 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:54:31 | INFO     |   Training...
+2026-02-06 23:55:37 | INFO     |   Evaluating...
+2026-02-06 23:56:02 | INFO     |   Accuracy: 0.8752
+2026-02-06 23:56:02 | INFO     |   Duration: 0:01:31.866414
+2026-02-06 23:56:02 | INFO     | Trial 22 completed
+2026-02-06 23:56:02 | INFO     | --------------------------------------------------
+2026-02-06 23:56:03 | INFO     | Progress: 22/100 (22.0%)
+2026-02-06 23:56:03 | INFO     | Elapsed: 0:33:19.624344 | ETA: 1:58:09.577248
+2026-02-06 23:56:03 | INFO     | Best accuracy so far: 0.8778
+2026-02-06 23:56:03 | INFO     | ==================================================
+2026-02-06 23:56:03 | INFO     | Trial 23 started
+2026-02-06 23:56:03 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:56:03 | INFO     |   Quantized layers: 11
+2026-02-06 23:56:03 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:56:03 | INFO     |   Training...
+2026-02-06 23:57:08 | INFO     |   Evaluating...
+2026-02-06 23:57:33 | INFO     |   Accuracy: 0.8772
+2026-02-06 23:57:33 | INFO     |   Duration: 0:01:29.966442
+2026-02-06 23:57:33 | INFO     | Trial 23 completed
+2026-02-06 23:57:33 | INFO     | --------------------------------------------------
+2026-02-06 23:57:33 | INFO     | Progress: 23/100 (23.0%)
+2026-02-06 23:57:33 | INFO     | Elapsed: 0:34:49.935154 | ETA: 1:56:36.739442
+2026-02-06 23:57:33 | INFO     | Best accuracy so far: 0.8778
+2026-02-06 23:57:33 | INFO     | ==================================================
+2026-02-06 23:57:33 | INFO     | Trial 24 started
+2026-02-06 23:57:33 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:57:33 | INFO     |   Quantized layers: 11
+2026-02-06 23:57:33 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:57:34 | INFO     |   Training...
+2026-02-06 23:58:39 | INFO     |   Evaluating...
+2026-02-06 23:59:03 | INFO     |   Accuracy: 0.8766
+2026-02-06 23:59:03 | INFO     |   Duration: 0:01:30.091658
+2026-02-06 23:59:03 | INFO     | Trial 24 completed
+2026-02-06 23:59:03 | INFO     | --------------------------------------------------
+2026-02-06 23:59:04 | INFO     | Progress: 24/100 (24.0%)
+2026-02-06 23:59:04 | INFO     | Elapsed: 0:36:20.387444 | ETA: 1:55:04.560252
+2026-02-06 23:59:04 | INFO     | Best accuracy so far: 0.8778
+2026-02-06 23:59:04 | INFO     | ==================================================
+2026-02-06 23:59:04 | INFO     | Trial 25 started
+2026-02-06 23:59:04 | INFO     |   Model parameters: 23,778,306
+2026-02-06 23:59:04 | INFO     |   Quantized layers: 11
+2026-02-06 23:59:04 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-06 23:59:04 | INFO     |   Training...
+2026-02-07 00:00:09 | INFO     |   Evaluating...
+2026-02-07 00:00:34 | INFO     |   Accuracy: 0.8774
+2026-02-07 00:00:34 | INFO     |   Duration: 0:01:30.291407
+2026-02-07 00:00:34 | INFO     | Trial 25 completed
+2026-02-07 00:00:34 | INFO     | --------------------------------------------------
+2026-02-07 00:00:34 | INFO     | Progress: 25/100 (25.0%)
+2026-02-07 00:00:34 | INFO     | Elapsed: 0:37:51.056654 | ETA: 1:53:33.169950
+2026-02-07 00:00:34 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:00:34 | INFO     | ==================================================
+2026-02-07 00:00:34 | INFO     | Trial 26 started
+2026-02-07 00:00:34 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:00:34 | INFO     |   Quantized layers: 11
+2026-02-07 00:00:34 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:00:35 | INFO     |   Training...
+2026-02-07 00:01:40 | INFO     |   Evaluating...
+2026-02-07 00:02:05 | INFO     |   Accuracy: 0.8751
+2026-02-07 00:02:05 | INFO     |   Duration: 0:01:30.635359
+2026-02-07 00:02:05 | INFO     | Trial 26 completed
+2026-02-07 00:02:05 | INFO     | --------------------------------------------------
+2026-02-07 00:02:05 | INFO     | Progress: 26/100 (26.0%)
+2026-02-07 00:02:05 | INFO     | Elapsed: 0:39:22.090990 | ETA: 1:52:02.874322
+2026-02-07 00:02:05 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:02:05 | INFO     | ==================================================
+2026-02-07 00:02:05 | INFO     | Trial 27 started
+2026-02-07 00:02:05 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:02:05 | INFO     |   Quantized layers: 11
+2026-02-07 00:02:05 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:02:06 | INFO     |   Training...
+2026-02-07 00:03:12 | INFO     |   Evaluating...
+2026-02-07 00:03:37 | INFO     |   Accuracy: 0.8752
+2026-02-07 00:03:37 | INFO     |   Duration: 0:01:31.609544
+2026-02-07 00:03:37 | INFO     | Trial 27 completed
+2026-02-07 00:03:37 | INFO     | --------------------------------------------------
+2026-02-07 00:03:37 | INFO     | Progress: 27/100 (27.0%)
+2026-02-07 00:03:37 | INFO     | Elapsed: 0:40:54.116120 | ETA: 1:50:35.202870
+2026-02-07 00:03:37 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:03:37 | INFO     | ==================================================
+2026-02-07 00:03:37 | INFO     | Trial 28 started
+2026-02-07 00:03:37 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:03:37 | INFO     |   Quantized layers: 11
+2026-02-07 00:03:37 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:03:38 | INFO     |   Training...
+2026-02-07 00:04:43 | INFO     |   Evaluating...
+2026-02-07 00:05:08 | INFO     |   Accuracy: 0.8760
+2026-02-07 00:05:08 | INFO     |   Duration: 0:01:30.750283
+2026-02-07 00:05:08 | INFO     | Trial 28 completed
+2026-02-07 00:05:08 | INFO     | --------------------------------------------------
+2026-02-07 00:05:08 | INFO     | Progress: 28/100 (28.0%)
+2026-02-07 00:05:08 | INFO     | Elapsed: 0:42:25.301649 | ETA: 1:49:05.061360
+2026-02-07 00:05:08 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:05:08 | INFO     | ==================================================
+2026-02-07 00:05:08 | INFO     | Trial 29 started
+2026-02-07 00:05:08 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:05:08 | INFO     |   Quantized layers: 9
+2026-02-07 00:05:08 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:05:09 | INFO     |   Training...
+2026-02-07 00:06:14 | INFO     |   Evaluating...
+2026-02-07 00:06:37 | INFO     |   Accuracy: 0.8752
+2026-02-07 00:06:37 | INFO     |   Duration: 0:01:28.858738
+2026-02-07 00:06:37 | INFO     | Trial 29 completed
+2026-02-07 00:06:37 | INFO     | --------------------------------------------------
+2026-02-07 00:06:38 | INFO     | Progress: 29/100 (29.0%)
+2026-02-07 00:06:38 | INFO     | Elapsed: 0:43:54.604572 | ETA: 1:47:30.238814
+2026-02-07 00:06:38 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:06:38 | INFO     | ==================================================
+2026-02-07 00:06:38 | INFO     | Trial 30 started
+2026-02-07 00:06:38 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:06:38 | INFO     |   Quantized layers: 10
+2026-02-07 00:06:38 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:06:39 | INFO     |   Training...
+2026-02-07 00:07:43 | INFO     |   Evaluating...
+2026-02-07 00:08:08 | INFO     |   Accuracy: 0.8749
+2026-02-07 00:08:08 | INFO     |   Duration: 0:01:29.850746
+2026-02-07 00:08:08 | INFO     | Trial 30 completed
+2026-02-07 00:08:08 | INFO     | --------------------------------------------------
+2026-02-07 00:08:08 | INFO     | Progress: 30/100 (30.0%)
+2026-02-07 00:08:08 | INFO     | Elapsed: 0:45:24.916437 | ETA: 1:45:58.138360
+2026-02-07 00:08:08 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:08:08 | INFO     | ==================================================
+2026-02-07 00:08:08 | INFO     | Trial 31 started
+2026-02-07 00:08:08 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:08:08 | INFO     |   Quantized layers: 11
+2026-02-07 00:08:08 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:08:09 | INFO     |   Training...
+2026-02-07 00:09:14 | INFO     |   Evaluating...
+2026-02-07 00:09:39 | INFO     |   Accuracy: 0.8760
+2026-02-07 00:09:39 | INFO     |   Duration: 0:01:30.709338
+2026-02-07 00:09:39 | INFO     | Trial 31 completed
+2026-02-07 00:09:39 | INFO     | --------------------------------------------------
+2026-02-07 00:09:39 | INFO     | Progress: 31/100 (31.0%)
+2026-02-07 00:09:39 | INFO     | Elapsed: 0:46:56.103829 | ETA: 1:44:28.102071
+2026-02-07 00:09:39 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:09:39 | INFO     | ==================================================
+2026-02-07 00:09:39 | INFO     | Trial 32 started
+2026-02-07 00:09:39 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:09:39 | INFO     |   Quantized layers: 12
+2026-02-07 00:09:39 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:09:40 | INFO     |   Training...
+2026-02-07 00:10:46 | INFO     |   Evaluating...
+2026-02-07 00:11:11 | INFO     |   Accuracy: 0.8770
+2026-02-07 00:11:11 | INFO     |   Duration: 0:01:31.877038
+2026-02-07 00:11:11 | INFO     | Trial 32 completed
+2026-02-07 00:11:11 | INFO     | --------------------------------------------------
+2026-02-07 00:11:12 | INFO     | Progress: 32/100 (32.0%)
+2026-02-07 00:11:12 | INFO     | Elapsed: 0:48:28.468534 | ETA: 1:43:00.495656
+2026-02-07 00:11:12 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:11:12 | INFO     | ==================================================
+2026-02-07 00:11:12 | INFO     | Trial 33 started
+2026-02-07 00:11:12 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:11:12 | INFO     |   Quantized layers: 11
+2026-02-07 00:11:12 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:11:12 | INFO     |   Training...
+2026-02-07 00:12:17 | INFO     |   Evaluating...
+2026-02-07 00:12:42 | INFO     |   Accuracy: 0.8764
+2026-02-07 00:12:42 | INFO     |   Duration: 0:01:30.160630
+2026-02-07 00:12:42 | INFO     | Trial 33 completed
+2026-02-07 00:12:42 | INFO     | --------------------------------------------------
+2026-02-07 00:12:42 | INFO     | Progress: 33/100 (33.0%)
+2026-02-07 00:12:42 | INFO     | Elapsed: 0:49:59.126386 | ETA: 1:41:29.135406
+2026-02-07 00:12:42 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:12:42 | INFO     | ==================================================
+2026-02-07 00:12:42 | INFO     | Trial 34 started
+2026-02-07 00:12:42 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:12:42 | INFO     |   Quantized layers: 10
+2026-02-07 00:12:42 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:12:43 | INFO     |   Training...
+2026-02-07 00:13:48 | INFO     |   Evaluating...
+2026-02-07 00:14:12 | INFO     |   Accuracy: 0.8768
+2026-02-07 00:14:12 | INFO     |   Duration: 0:01:29.491082
+2026-02-07 00:14:12 | INFO     | Trial 34 completed
+2026-02-07 00:14:12 | INFO     | --------------------------------------------------
+2026-02-07 00:14:12 | INFO     | Progress: 34/100 (34.0%)
+2026-02-07 00:14:12 | INFO     | Elapsed: 0:51:29.133348 | ETA: 1:39:56.552958
+2026-02-07 00:14:12 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:14:12 | INFO     | ==================================================
+2026-02-07 00:14:12 | INFO     | Trial 35 started
+2026-02-07 00:14:12 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:14:12 | INFO     |   Quantized layers: 11
+2026-02-07 00:14:12 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:14:13 | INFO     |   Training...
+2026-02-07 00:15:18 | INFO     |   Evaluating...
+2026-02-07 00:15:43 | INFO     |   Accuracy: 0.8763
+2026-02-07 00:15:43 | INFO     |   Duration: 0:01:30.577475
+2026-02-07 00:15:43 | INFO     | Trial 35 completed
+2026-02-07 00:15:43 | INFO     | --------------------------------------------------
+2026-02-07 00:15:43 | INFO     | Progress: 35/100 (35.0%)
+2026-02-07 00:15:43 | INFO     | Elapsed: 0:53:00.239162 | ETA: 1:38:26.158440
+2026-02-07 00:15:43 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:15:43 | INFO     | ==================================================
+2026-02-07 00:15:43 | INFO     | Trial 36 started
+2026-02-07 00:15:43 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:15:43 | INFO     |   Quantized layers: 10
+2026-02-07 00:15:43 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:15:44 | INFO     |   Training...
+2026-02-07 00:16:48 | INFO     |   Evaluating...
+2026-02-07 00:17:12 | INFO     |   Accuracy: 0.8754
+2026-02-07 00:17:12 | INFO     |   Duration: 0:01:28.559863
+2026-02-07 00:17:12 | INFO     | Trial 36 completed
+2026-02-07 00:17:12 | INFO     | --------------------------------------------------
+2026-02-07 00:17:12 | INFO     | Progress: 36/100 (36.0%)
+2026-02-07 00:17:12 | INFO     | Elapsed: 0:54:29.339197 | ETA: 1:36:52.158592
+2026-02-07 00:17:12 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:17:12 | INFO     | ==================================================
+2026-02-07 00:17:12 | INFO     | Trial 37 started
+2026-02-07 00:17:13 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:17:13 | INFO     |   Quantized layers: 9
+2026-02-07 00:17:13 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:17:13 | INFO     |   Training...
+2026-02-07 00:18:17 | INFO     |   Evaluating...
+2026-02-07 00:18:40 | INFO     |   Accuracy: 0.8767
+2026-02-07 00:18:40 | INFO     |   Duration: 0:01:27.851682
+2026-02-07 00:18:40 | INFO     | Trial 37 completed
+2026-02-07 00:18:40 | INFO     | --------------------------------------------------
+2026-02-07 00:18:41 | INFO     | Progress: 37/100 (37.0%)
+2026-02-07 00:18:41 | INFO     | Elapsed: 0:55:57.748147 | ETA: 1:35:17.246850
+2026-02-07 00:18:41 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:18:41 | INFO     | ==================================================
+2026-02-07 00:18:41 | INFO     | Trial 38 started
+2026-02-07 00:18:41 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:18:41 | INFO     |   Quantized layers: 12
+2026-02-07 00:18:41 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:18:42 | INFO     |   Training...
+2026-02-07 00:19:48 | INFO     |   Evaluating...
+2026-02-07 00:20:13 | INFO     |   Accuracy: 0.8744
+2026-02-07 00:20:13 | INFO     |   Duration: 0:01:31.702729
+2026-02-07 00:20:13 | INFO     | Trial 38 completed
+2026-02-07 00:20:13 | INFO     | --------------------------------------------------
+2026-02-07 00:20:13 | INFO     | Progress: 38/100 (38.0%)
+2026-02-07 00:20:13 | INFO     | Elapsed: 0:57:30.020234 | ETA: 1:33:48.980372
+2026-02-07 00:20:13 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:20:13 | INFO     | ==================================================
+2026-02-07 00:20:13 | INFO     | Trial 39 started
+2026-02-07 00:20:13 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:20:13 | INFO     |   Quantized layers: 10
+2026-02-07 00:20:13 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:20:14 | INFO     |   Training...
+2026-02-07 00:21:18 | INFO     |   Evaluating...
+2026-02-07 00:21:42 | INFO     |   Accuracy: 0.8768
+2026-02-07 00:21:42 | INFO     |   Duration: 0:01:29.149301
+2026-02-07 00:21:42 | INFO     | Trial 39 completed
+2026-02-07 00:21:42 | INFO     | --------------------------------------------------
+2026-02-07 00:21:43 | INFO     | Progress: 39/100 (39.0%)
+2026-02-07 00:21:43 | INFO     | Elapsed: 0:58:59.759138 | ETA: 1:32:16.546355
+2026-02-07 00:21:43 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:21:43 | INFO     | ==================================================
+2026-02-07 00:21:43 | INFO     | Trial 40 started
+2026-02-07 00:21:43 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:21:43 | INFO     |   Quantized layers: 13
+2026-02-07 00:21:43 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:21:44 | INFO     |   Training...
+2026-02-07 00:22:50 | INFO     |   Evaluating...
+2026-02-07 00:23:16 | INFO     |   Accuracy: 0.8742
+2026-02-07 00:23:16 | INFO     |   Duration: 0:01:32.779976
+2026-02-07 00:23:16 | INFO     | Trial 40 completed
+2026-02-07 00:23:16 | INFO     | --------------------------------------------------
+2026-02-07 00:23:16 | INFO     | Progress: 40/100 (40.0%)
+2026-02-07 00:23:16 | INFO     | Elapsed: 1:00:33.331924 | ETA: 1:30:49.997880
+2026-02-07 00:23:16 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:23:16 | INFO     | ==================================================
+2026-02-07 00:23:16 | INFO     | Trial 41 started
+2026-02-07 00:23:17 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:23:17 | INFO     |   Quantized layers: 12
+2026-02-07 00:23:17 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:23:17 | INFO     |   Training...
+2026-02-07 00:24:23 | INFO     |   Evaluating...
+2026-02-07 00:24:48 | INFO     |   Accuracy: 0.8768
+2026-02-07 00:24:48 | INFO     |   Duration: 0:01:31.272607
+2026-02-07 00:24:48 | INFO     | Trial 41 completed
+2026-02-07 00:24:48 | INFO     | --------------------------------------------------
+2026-02-07 00:24:49 | INFO     | Progress: 41/100 (41.0%)
+2026-02-07 00:24:49 | INFO     | Elapsed: 1:02:05.416230 | ETA: 1:29:20.964790
+2026-02-07 00:24:49 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:24:49 | INFO     | ==================================================
+2026-02-07 00:24:49 | INFO     | Trial 42 started
+2026-02-07 00:24:49 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:24:49 | INFO     |   Quantized layers: 13
+2026-02-07 00:24:49 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:24:49 | INFO     |   Training...
+2026-02-07 00:25:55 | INFO     |   Evaluating...
+2026-02-07 00:26:21 | INFO     |   Accuracy: 0.8767
+2026-02-07 00:26:21 | INFO     |   Duration: 0:01:32.474182
+2026-02-07 00:26:21 | INFO     | Trial 42 completed
+2026-02-07 00:26:21 | INFO     | --------------------------------------------------
+2026-02-07 00:26:22 | INFO     | Progress: 42/100 (42.0%)
+2026-02-07 00:26:22 | INFO     | Elapsed: 1:03:38.716403 | ETA: 1:27:53.465502
+2026-02-07 00:26:22 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:26:22 | INFO     | ==================================================
+2026-02-07 00:26:22 | INFO     | Trial 43 started
+2026-02-07 00:26:22 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:26:22 | INFO     |   Quantized layers: 13
+2026-02-07 00:26:22 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:26:23 | INFO     |   Training...
+2026-02-07 00:27:29 | INFO     |   Evaluating...
+2026-02-07 00:27:55 | INFO     |   Accuracy: 0.8766
+2026-02-07 00:27:55 | INFO     |   Duration: 0:01:32.737156
+2026-02-07 00:27:55 | INFO     | Trial 43 completed
+2026-02-07 00:27:55 | INFO     | --------------------------------------------------
+2026-02-07 00:27:55 | INFO     | Progress: 43/100 (43.0%)
+2026-02-07 00:27:55 | INFO     | Elapsed: 1:05:12.301126 | ETA: 1:26:26.073579
+2026-02-07 00:27:55 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:27:55 | INFO     | ==================================================
+2026-02-07 00:27:55 | INFO     | Trial 44 started
+2026-02-07 00:27:56 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:27:56 | INFO     |   Quantized layers: 13
+2026-02-07 00:27:56 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:27:56 | INFO     |   Training...
+2026-02-07 00:29:03 | INFO     |   Evaluating...
+2026-02-07 00:29:28 | INFO     |   Accuracy: 0.8747
+2026-02-07 00:29:28 | INFO     |   Duration: 0:01:32.892962
+2026-02-07 00:29:28 | INFO     | Trial 44 completed
+2026-02-07 00:29:28 | INFO     | --------------------------------------------------
+2026-02-07 00:29:29 | INFO     | Progress: 44/100 (44.0%)
+2026-02-07 00:29:29 | INFO     | Elapsed: 1:06:46.057820 | ETA: 1:24:58.619064
+2026-02-07 00:29:29 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:29:29 | INFO     | ==================================================
+2026-02-07 00:29:29 | INFO     | Trial 45 started
+2026-02-07 00:29:29 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:29:29 | INFO     |   Quantized layers: 12
+2026-02-07 00:29:29 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:29:30 | INFO     |   Training...
+2026-02-07 00:30:35 | INFO     |   Evaluating...
+2026-02-07 00:31:00 | INFO     |   Accuracy: 0.8746
+2026-02-07 00:31:00 | INFO     |   Duration: 0:01:30.822849
+2026-02-07 00:31:00 | INFO     | Trial 45 completed
+2026-02-07 00:31:00 | INFO     | --------------------------------------------------
+2026-02-07 00:31:01 | INFO     | Progress: 45/100 (45.0%)
+2026-02-07 00:31:01 | INFO     | Elapsed: 1:08:17.742723 | ETA: 1:23:28.352195
+2026-02-07 00:31:01 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:31:01 | INFO     | ==================================================
+2026-02-07 00:31:01 | INFO     | Trial 46 started
+2026-02-07 00:31:01 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:31:01 | INFO     |   Quantized layers: 13
+2026-02-07 00:31:01 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:31:02 | INFO     |   Training...
+2026-02-07 00:32:08 | INFO     |   Evaluating...
+2026-02-07 00:32:33 | INFO     |   Accuracy: 0.8736
+2026-02-07 00:32:33 | INFO     |   Duration: 0:01:32.194286
+2026-02-07 00:32:33 | INFO     | Trial 46 completed
+2026-02-07 00:32:33 | INFO     | --------------------------------------------------
+2026-02-07 00:32:34 | INFO     | Progress: 46/100 (46.0%)
+2026-02-07 00:32:34 | INFO     | Elapsed: 1:09:50.831136 | ETA: 1:21:59.671350
+2026-02-07 00:32:34 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:32:34 | INFO     | ==================================================
+2026-02-07 00:32:34 | INFO     | Trial 47 started
+2026-02-07 00:32:34 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:32:34 | INFO     |   Quantized layers: 12
+2026-02-07 00:32:34 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:32:35 | INFO     |   Training...
+2026-02-07 00:33:40 | INFO     |   Evaluating...
+2026-02-07 00:34:05 | INFO     |   Accuracy: 0.8774
+2026-02-07 00:34:05 | INFO     |   Duration: 0:01:30.830339
+2026-02-07 00:34:05 | INFO     | Trial 47 completed
+2026-02-07 00:34:05 | INFO     | --------------------------------------------------
+2026-02-07 00:34:06 | INFO     | Progress: 47/100 (47.0%)
+2026-02-07 00:34:06 | INFO     | Elapsed: 1:11:22.558536 | ETA: 1:20:29.268151
+2026-02-07 00:34:06 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:34:06 | INFO     | ==================================================
+2026-02-07 00:34:06 | INFO     | Trial 48 started
+2026-02-07 00:34:06 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:34:06 | INFO     |   Quantized layers: 11
+2026-02-07 00:34:06 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:34:06 | INFO     |   Training...
+2026-02-07 00:35:11 | INFO     |   Evaluating...
+2026-02-07 00:35:35 | INFO     |   Accuracy: 0.8770
+2026-02-07 00:35:35 | INFO     |   Duration: 0:01:29.677291
+2026-02-07 00:35:35 | INFO     | Trial 48 completed
+2026-02-07 00:35:35 | INFO     | --------------------------------------------------
+2026-02-07 00:35:36 | INFO     | Progress: 48/100 (48.0%)
+2026-02-07 00:35:36 | INFO     | Elapsed: 1:12:53.151636 | ETA: 1:18:57.580952
+2026-02-07 00:35:36 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:35:36 | INFO     | ==================================================
+2026-02-07 00:35:36 | INFO     | Trial 49 started
+2026-02-07 00:35:36 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:35:36 | INFO     |   Quantized layers: 9
+2026-02-07 00:35:36 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:35:37 | INFO     |   Training...
+2026-02-07 00:36:41 | INFO     |   Evaluating...
+2026-02-07 00:37:03 | INFO     |   Accuracy: 0.8753
+2026-02-07 00:37:03 | INFO     |   Duration: 0:01:27.199932
+2026-02-07 00:37:03 | INFO     | Trial 49 completed
+2026-02-07 00:37:03 | INFO     | --------------------------------------------------
+2026-02-07 00:37:04 | INFO     | Progress: 49/100 (49.0%)
+2026-02-07 00:37:04 | INFO     | Elapsed: 1:14:21.348663 | ETA: 1:17:23.444532
+2026-02-07 00:37:04 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:37:04 | INFO     | ==================================================
+2026-02-07 00:37:04 | INFO     | Trial 50 started
+2026-02-07 00:37:05 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:37:05 | INFO     |   Quantized layers: 11
+2026-02-07 00:37:05 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:37:05 | INFO     |   Training...
+2026-02-07 00:38:10 | INFO     |   Evaluating...
+2026-02-07 00:38:34 | INFO     |   Accuracy: 0.8760
+2026-02-07 00:38:34 | INFO     |   Duration: 0:01:29.315478
+2026-02-07 00:38:34 | INFO     | Trial 50 completed
+2026-02-07 00:38:34 | INFO     | --------------------------------------------------
+2026-02-07 00:38:35 | INFO     | Progress: 50/100 (50.0%)
+2026-02-07 00:38:35 | INFO     | Elapsed: 1:15:51.611603 | ETA: 1:15:51.611600
+2026-02-07 00:38:35 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:38:35 | INFO     | ==================================================
+2026-02-07 00:38:35 | INFO     | Trial 51 started
+2026-02-07 00:38:35 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:38:35 | INFO     |   Quantized layers: 10
+2026-02-07 00:38:35 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:38:35 | INFO     |   Training...
+2026-02-07 00:39:39 | INFO     |   Evaluating...
+2026-02-07 00:40:03 | INFO     |   Accuracy: 0.8752
+2026-02-07 00:40:03 | INFO     |   Duration: 0:01:28.080376
+2026-02-07 00:40:03 | INFO     | Trial 51 completed
+2026-02-07 00:40:03 | INFO     | --------------------------------------------------
+2026-02-07 00:40:04 | INFO     | Progress: 51/100 (51.0%)
+2026-02-07 00:40:04 | INFO     | Elapsed: 1:17:20.650113 | ETA: 1:14:18.663811
+2026-02-07 00:40:04 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:40:04 | INFO     | ==================================================
+2026-02-07 00:40:04 | INFO     | Trial 52 started
+2026-02-07 00:40:04 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:40:04 | INFO     |   Quantized layers: 12
+2026-02-07 00:40:04 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:40:05 | INFO     |   Training...
+2026-02-07 00:41:10 | INFO     |   Evaluating...
+2026-02-07 00:41:34 | INFO     |   Accuracy: 0.8767
+2026-02-07 00:41:34 | INFO     |   Duration: 0:01:30.293012
+2026-02-07 00:41:34 | INFO     | Trial 52 completed
+2026-02-07 00:41:34 | INFO     | --------------------------------------------------
+2026-02-07 00:41:35 | INFO     | Progress: 52/100 (52.0%)
+2026-02-07 00:41:35 | INFO     | Elapsed: 1:18:51.914073 | ETA: 1:12:47.920704
+2026-02-07 00:41:35 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:41:35 | INFO     | ==================================================
+2026-02-07 00:41:35 | INFO     | Trial 53 started
+2026-02-07 00:41:35 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:41:35 | INFO     |   Quantized layers: 13
+2026-02-07 00:41:35 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:41:36 | INFO     |   Training...
+2026-02-07 00:42:41 | INFO     |   Evaluating...
+2026-02-07 00:43:06 | INFO     |   Accuracy: 0.8750
+2026-02-07 00:43:06 | INFO     |   Duration: 0:01:31.093450
+2026-02-07 00:43:06 | INFO     | Trial 53 completed
+2026-02-07 00:43:06 | INFO     | --------------------------------------------------
+2026-02-07 00:43:07 | INFO     | Progress: 53/100 (53.0%)
+2026-02-07 00:43:07 | INFO     | Elapsed: 1:20:23.990946 | ETA: 1:11:17.878759
+2026-02-07 00:43:07 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:43:07 | INFO     | ==================================================
+2026-02-07 00:43:07 | INFO     | Trial 54 started
+2026-02-07 00:43:07 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:43:07 | INFO     |   Quantized layers: 14
+2026-02-07 00:43:07 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:43:08 | INFO     |   Training...
+2026-02-07 00:44:14 | INFO     |   Evaluating...
+2026-02-07 00:44:40 | INFO     |   Accuracy: 0.8752
+2026-02-07 00:44:40 | INFO     |   Duration: 0:01:32.397880
+2026-02-07 00:44:40 | INFO     | Trial 54 completed
+2026-02-07 00:44:40 | INFO     | --------------------------------------------------
+2026-02-07 00:44:41 | INFO     | Progress: 54/100 (54.0%)
+2026-02-07 00:44:41 | INFO     | Elapsed: 1:21:57.389149 | ETA: 1:09:48.887052
+2026-02-07 00:44:41 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:44:41 | INFO     | ==================================================
+2026-02-07 00:44:41 | INFO     | Trial 55 started
+2026-02-07 00:44:41 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:44:41 | INFO     |   Quantized layers: 12
+2026-02-07 00:44:41 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:44:41 | INFO     |   Training...
+2026-02-07 00:45:46 | INFO     |   Evaluating...
+2026-02-07 00:46:10 | INFO     |   Accuracy: 0.8757
+2026-02-07 00:46:10 | INFO     |   Duration: 0:01:29.920305
+2026-02-07 00:46:10 | INFO     | Trial 55 completed
+2026-02-07 00:46:10 | INFO     | --------------------------------------------------
+2026-02-07 00:46:11 | INFO     | Progress: 55/100 (55.0%)
+2026-02-07 00:46:11 | INFO     | Elapsed: 1:23:28.327908 | ETA: 1:08:17.722815
+2026-02-07 00:46:11 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:46:11 | INFO     | ==================================================
+2026-02-07 00:46:11 | INFO     | Trial 56 started
+2026-02-07 00:46:12 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:46:12 | INFO     |   Quantized layers: 10
+2026-02-07 00:46:12 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:46:12 | INFO     |   Training...
+2026-02-07 00:47:16 | INFO     |   Evaluating...
+2026-02-07 00:47:39 | INFO     |   Accuracy: 0.8744
+2026-02-07 00:47:39 | INFO     |   Duration: 0:01:27.659555
+2026-02-07 00:47:39 | INFO     | Trial 56 completed
+2026-02-07 00:47:39 | INFO     | --------------------------------------------------
+2026-02-07 00:47:40 | INFO     | Progress: 56/100 (56.0%)
+2026-02-07 00:47:40 | INFO     | Elapsed: 1:24:57.015141 | ETA: 1:06:44.797632
+2026-02-07 00:47:40 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:47:40 | INFO     | ==================================================
+2026-02-07 00:47:40 | INFO     | Trial 57 started
+2026-02-07 00:47:40 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:47:40 | INFO     |   Quantized layers: 14
+2026-02-07 00:47:40 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:47:41 | INFO     |   Training...
+2026-02-07 00:48:47 | INFO     |   Evaluating...
+2026-02-07 00:49:13 | INFO     |   Accuracy: 0.8749
+2026-02-07 00:49:13 | INFO     |   Duration: 0:01:32.507583
+2026-02-07 00:49:13 | INFO     | Trial 57 completed
+2026-02-07 00:49:13 | INFO     | --------------------------------------------------
+2026-02-07 00:49:14 | INFO     | Progress: 57/100 (57.0%)
+2026-02-07 00:49:14 | INFO     | Elapsed: 1:26:30.565420 | ETA: 1:05:15.689693
+2026-02-07 00:49:14 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:49:14 | INFO     | ==================================================
+2026-02-07 00:49:14 | INFO     | Trial 58 started
+2026-02-07 00:49:14 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:49:14 | INFO     |   Quantized layers: 9
+2026-02-07 00:49:14 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:49:14 | INFO     |   Training...
+2026-02-07 00:50:17 | INFO     |   Evaluating...
+2026-02-07 00:50:40 | INFO     |   Accuracy: 0.8768
+2026-02-07 00:50:40 | INFO     |   Duration: 0:01:26.308185
+2026-02-07 00:50:40 | INFO     | Trial 58 completed
+2026-02-07 00:50:40 | INFO     | --------------------------------------------------
+2026-02-07 00:50:41 | INFO     | Progress: 58/100 (58.0%)
+2026-02-07 00:50:41 | INFO     | Elapsed: 1:27:57.932425 | ETA: 1:03:41.951070
+2026-02-07 00:50:41 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:50:41 | INFO     | ==================================================
+2026-02-07 00:50:41 | INFO     | Trial 59 started
+2026-02-07 00:50:41 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:50:41 | INFO     |   Quantized layers: 12
+2026-02-07 00:50:41 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:50:42 | INFO     |   Training...
+2026-02-07 00:51:47 | INFO     |   Evaluating...
+2026-02-07 00:52:11 | INFO     |   Accuracy: 0.8754
+2026-02-07 00:52:11 | INFO     |   Duration: 0:01:30.184485
+2026-02-07 00:52:11 | INFO     | Trial 59 completed
+2026-02-07 00:52:11 | INFO     | --------------------------------------------------
+2026-02-07 00:52:12 | INFO     | Progress: 59/100 (59.0%)
+2026-02-07 00:52:12 | INFO     | Elapsed: 1:29:29.197577 | ETA: 1:02:11.137309
+2026-02-07 00:52:12 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:52:12 | INFO     | ==================================================
+2026-02-07 00:52:12 | INFO     | Trial 60 started
+2026-02-07 00:52:12 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:52:12 | INFO     |   Quantized layers: 12
+2026-02-07 00:52:12 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:52:13 | INFO     |   Training...
+2026-02-07 00:53:18 | INFO     |   Evaluating...
+2026-02-07 00:53:42 | INFO     |   Accuracy: 0.8756
+2026-02-07 00:53:42 | INFO     |   Duration: 0:01:30.096228
+2026-02-07 00:53:42 | INFO     | Trial 60 completed
+2026-02-07 00:53:42 | INFO     | --------------------------------------------------
+2026-02-07 00:53:44 | INFO     | Progress: 60/100 (60.0%)
+2026-02-07 00:53:44 | INFO     | Elapsed: 1:31:00.393320 | ETA: 1:00:40.262200
+2026-02-07 00:53:44 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:53:44 | INFO     | ==================================================
+2026-02-07 00:53:44 | INFO     | Trial 61 started
+2026-02-07 00:53:44 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:53:44 | INFO     |   Quantized layers: 9
+2026-02-07 00:53:44 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:53:44 | INFO     |   Training...
+2026-02-07 00:54:48 | INFO     |   Evaluating...
+2026-02-07 00:55:10 | INFO     |   Accuracy: 0.8755
+2026-02-07 00:55:10 | INFO     |   Duration: 0:01:26.798494
+2026-02-07 00:55:10 | INFO     | Trial 61 completed
+2026-02-07 00:55:10 | INFO     | --------------------------------------------------
+2026-02-07 00:55:11 | INFO     | Progress: 61/100 (61.0%)
+2026-02-07 00:55:11 | INFO     | Elapsed: 1:32:28.308252 | ETA: 0:59:07.279047
+2026-02-07 00:55:11 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:55:11 | INFO     | ==================================================
+2026-02-07 00:55:11 | INFO     | Trial 62 started
+2026-02-07 00:55:12 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:55:12 | INFO     |   Quantized layers: 11
+2026-02-07 00:55:12 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:55:12 | INFO     |   Training...
+2026-02-07 00:56:17 | INFO     |   Evaluating...
+2026-02-07 00:56:40 | INFO     |   Accuracy: 0.8762
+2026-02-07 00:56:40 | INFO     |   Duration: 0:01:28.772230
+2026-02-07 00:56:40 | INFO     | Trial 62 completed
+2026-02-07 00:56:40 | INFO     | --------------------------------------------------
+2026-02-07 00:56:41 | INFO     | Progress: 62/100 (62.0%)
+2026-02-07 00:56:41 | INFO     | Elapsed: 1:33:58.207012 | ETA: 0:57:35.675274
+2026-02-07 00:56:41 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:56:41 | INFO     | ==================================================
+2026-02-07 00:56:41 | INFO     | Trial 63 started
+2026-02-07 00:56:41 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:56:41 | INFO     |   Quantized layers: 11
+2026-02-07 00:56:41 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:56:42 | INFO     |   Training...
+2026-02-07 00:57:46 | INFO     |   Evaluating...
+2026-02-07 00:58:10 | INFO     |   Accuracy: 0.8768
+2026-02-07 00:58:10 | INFO     |   Duration: 0:01:28.749418
+2026-02-07 00:58:10 | INFO     | Trial 63 completed
+2026-02-07 00:58:10 | INFO     | --------------------------------------------------
+2026-02-07 00:58:11 | INFO     | Progress: 63/100 (63.0%)
+2026-02-07 00:58:11 | INFO     | Elapsed: 1:35:28.102872 | ETA: 0:56:04.123916
+2026-02-07 00:58:11 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:58:11 | INFO     | ==================================================
+2026-02-07 00:58:11 | INFO     | Trial 64 started
+2026-02-07 00:58:11 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:58:11 | INFO     |   Quantized layers: 11
+2026-02-07 00:58:11 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:58:12 | INFO     |   Training...
+2026-02-07 00:59:16 | INFO     |   Evaluating...
+2026-02-07 00:59:40 | INFO     |   Accuracy: 0.8759
+2026-02-07 00:59:40 | INFO     |   Duration: 0:01:29.101650
+2026-02-07 00:59:40 | INFO     | Trial 64 completed
+2026-02-07 00:59:40 | INFO     | --------------------------------------------------
+2026-02-07 00:59:42 | INFO     | Progress: 64/100 (64.0%)
+2026-02-07 00:59:42 | INFO     | Elapsed: 1:36:58.377145 | ETA: 0:54:32.837148
+2026-02-07 00:59:42 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 00:59:42 | INFO     | ==================================================
+2026-02-07 00:59:42 | INFO     | Trial 65 started
+2026-02-07 00:59:42 | INFO     |   Model parameters: 23,778,306
+2026-02-07 00:59:42 | INFO     |   Quantized layers: 11
+2026-02-07 00:59:42 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 00:59:42 | INFO     |   Training...
+2026-02-07 01:00:47 | INFO     |   Evaluating...
+2026-02-07 01:01:11 | INFO     |   Accuracy: 0.8742
+2026-02-07 01:01:11 | INFO     |   Duration: 0:01:29.382922
+2026-02-07 01:01:11 | INFO     | Trial 65 completed
+2026-02-07 01:01:11 | INFO     | --------------------------------------------------
+2026-02-07 01:01:12 | INFO     | Progress: 65/100 (65.0%)
+2026-02-07 01:01:12 | INFO     | Elapsed: 1:38:28.948929 | ETA: 0:53:01.741745
+2026-02-07 01:01:12 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 01:01:12 | INFO     | ==================================================
+2026-02-07 01:01:12 | INFO     | Trial 66 started
+2026-02-07 01:01:12 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:01:12 | INFO     |   Quantized layers: 11
+2026-02-07 01:01:12 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:01:13 | INFO     |   Training...
+2026-02-07 01:02:17 | INFO     |   Evaluating...
+2026-02-07 01:02:41 | INFO     |   Accuracy: 0.8748
+2026-02-07 01:02:41 | INFO     |   Duration: 0:01:29.319563
+2026-02-07 01:02:41 | INFO     | Trial 66 completed
+2026-02-07 01:02:41 | INFO     | --------------------------------------------------
+2026-02-07 01:02:43 | INFO     | Progress: 66/100 (66.0%)
+2026-02-07 01:02:43 | INFO     | Elapsed: 1:39:59.468094 | ETA: 0:51:30.635088
+2026-02-07 01:02:43 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 01:02:43 | INFO     | ==================================================
+2026-02-07 01:02:43 | INFO     | Trial 67 started
+2026-02-07 01:02:43 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:02:43 | INFO     |   Quantized layers: 10
+2026-02-07 01:02:43 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:02:43 | INFO     |   Training...
+2026-02-07 01:03:47 | INFO     |   Evaluating...
+2026-02-07 01:04:11 | INFO     |   Accuracy: 0.8768
+2026-02-07 01:04:11 | INFO     |   Duration: 0:01:28.058903
+2026-02-07 01:04:11 | INFO     | Trial 67 completed
+2026-02-07 01:04:11 | INFO     | --------------------------------------------------
+2026-02-07 01:04:12 | INFO     | Progress: 67/100 (67.0%)
+2026-02-07 01:04:12 | INFO     | Elapsed: 1:41:28.738140 | ETA: 0:49:58.930737
+2026-02-07 01:04:12 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 01:04:12 | INFO     | ==================================================
+2026-02-07 01:04:12 | INFO     | Trial 68 started
+2026-02-07 01:04:12 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:04:12 | INFO     |   Quantized layers: 14
+2026-02-07 01:04:12 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:04:13 | INFO     |   Training...
+2026-02-07 01:05:19 | INFO     |   Evaluating...
+2026-02-07 01:05:45 | INFO     |   Accuracy: 0.8755
+2026-02-07 01:05:45 | INFO     |   Duration: 0:01:33.180659
+2026-02-07 01:05:45 | INFO     | Trial 68 completed
+2026-02-07 01:05:45 | INFO     | --------------------------------------------------
+2026-02-07 01:05:46 | INFO     | Progress: 68/100 (68.0%)
+2026-02-07 01:05:46 | INFO     | Elapsed: 1:43:03.143924 | ETA: 0:48:29.714784
+2026-02-07 01:05:46 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 01:05:46 | INFO     | ==================================================
+2026-02-07 01:05:46 | INFO     | Trial 69 started
+2026-02-07 01:05:46 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:05:46 | INFO     |   Quantized layers: 10
+2026-02-07 01:05:46 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:05:47 | INFO     |   Training...
+2026-02-07 01:06:51 | INFO     |   Evaluating...
+2026-02-07 01:07:14 | INFO     |   Accuracy: 0.8745
+2026-02-07 01:07:14 | INFO     |   Duration: 0:01:28.130509
+2026-02-07 01:07:14 | INFO     | Trial 69 completed
+2026-02-07 01:07:14 | INFO     | --------------------------------------------------
+2026-02-07 01:07:16 | INFO     | Progress: 69/100 (69.0%)
+2026-02-07 01:07:16 | INFO     | Elapsed: 1:44:32.519831 | ETA: 0:46:58.088635
+2026-02-07 01:07:16 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 01:07:16 | INFO     | ==================================================
+2026-02-07 01:07:16 | INFO     | Trial 70 started
+2026-02-07 01:07:16 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:07:16 | INFO     |   Quantized layers: 8
+2026-02-07 01:07:16 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:07:16 | INFO     |   Training...
+2026-02-07 01:08:19 | INFO     |   Evaluating...
+2026-02-07 01:08:42 | INFO     |   Accuracy: 0.8750
+2026-02-07 01:08:42 | INFO     |   Duration: 0:01:26.029106
+2026-02-07 01:08:42 | INFO     | Trial 70 completed
+2026-02-07 01:08:42 | INFO     | --------------------------------------------------
+2026-02-07 01:08:43 | INFO     | Progress: 70/100 (70.0%)
+2026-02-07 01:08:43 | INFO     | Elapsed: 1:45:59.803509 | ETA: 0:45:25.630080
+2026-02-07 01:08:43 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 01:08:43 | INFO     | ==================================================
+2026-02-07 01:08:43 | INFO     | Trial 71 started
+2026-02-07 01:08:43 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:08:43 | INFO     |   Quantized layers: 15
+2026-02-07 01:08:43 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:08:44 | INFO     |   Training...
+2026-02-07 01:09:51 | INFO     |   Evaluating...
+2026-02-07 01:10:18 | INFO     |   Accuracy: 0.8752
+2026-02-07 01:10:18 | INFO     |   Duration: 0:01:34.753645
+2026-02-07 01:10:18 | INFO     | Trial 71 completed
+2026-02-07 01:10:18 | INFO     | --------------------------------------------------
+2026-02-07 01:10:19 | INFO     | Progress: 71/100 (71.0%)
+2026-02-07 01:10:19 | INFO     | Elapsed: 1:47:35.841077 | ETA: 0:43:56.892831
+2026-02-07 01:10:19 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 01:10:19 | INFO     | ==================================================
+2026-02-07 01:10:19 | INFO     | Trial 72 started
+2026-02-07 01:10:19 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:10:19 | INFO     |   Quantized layers: 12
+2026-02-07 01:10:19 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:10:20 | INFO     |   Training...
+2026-02-07 01:11:25 | INFO     |   Evaluating...
+2026-02-07 01:11:50 | INFO     |   Accuracy: 0.8759
+2026-02-07 01:11:50 | INFO     |   Duration: 0:01:30.606990
+2026-02-07 01:11:50 | INFO     | Trial 72 completed
+2026-02-07 01:11:50 | INFO     | --------------------------------------------------
+2026-02-07 01:11:51 | INFO     | Progress: 72/100 (72.0%)
+2026-02-07 01:11:51 | INFO     | Elapsed: 1:49:07.737834 | ETA: 0:42:26.342484
+2026-02-07 01:11:51 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 01:11:51 | INFO     | ==================================================
+2026-02-07 01:11:51 | INFO     | Trial 73 started
+2026-02-07 01:11:51 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:11:51 | INFO     |   Quantized layers: 12
+2026-02-07 01:11:51 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:11:52 | INFO     |   Training...
+2026-02-07 01:12:56 | INFO     |   Evaluating...
+2026-02-07 01:13:21 | INFO     |   Accuracy: 0.8747
+2026-02-07 01:13:21 | INFO     |   Duration: 0:01:30.176415
+2026-02-07 01:13:21 | INFO     | Trial 73 completed
+2026-02-07 01:13:21 | INFO     | --------------------------------------------------
+2026-02-07 01:13:22 | INFO     | Progress: 73/100 (73.0%)
+2026-02-07 01:13:22 | INFO     | Elapsed: 1:50:39.201576 | ETA: 0:40:55.595109
+2026-02-07 01:13:22 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 01:13:22 | INFO     | ==================================================
+2026-02-07 01:13:22 | INFO     | Trial 74 started
+2026-02-07 01:13:22 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:13:22 | INFO     |   Quantized layers: 12
+2026-02-07 01:13:22 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:13:23 | INFO     |   Training...
+2026-02-07 01:14:28 | INFO     |   Evaluating...
+2026-02-07 01:14:53 | INFO     |   Accuracy: 0.8767
+2026-02-07 01:14:53 | INFO     |   Duration: 0:01:30.161159
+2026-02-07 01:14:53 | INFO     | Trial 74 completed
+2026-02-07 01:14:53 | INFO     | --------------------------------------------------
+2026-02-07 01:14:54 | INFO     | Progress: 74/100 (74.0%)
+2026-02-07 01:14:54 | INFO     | Elapsed: 1:52:10.729114 | ETA: 0:39:24.850774
+2026-02-07 01:14:54 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 01:14:54 | INFO     | ==================================================
+2026-02-07 01:14:54 | INFO     | Trial 75 started
+2026-02-07 01:14:54 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:14:54 | INFO     |   Quantized layers: 12
+2026-02-07 01:14:54 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:14:55 | INFO     |   Training...
+2026-02-07 01:16:00 | INFO     |   Evaluating...
+2026-02-07 01:16:24 | INFO     |   Accuracy: 0.8763
+2026-02-07 01:16:24 | INFO     |   Duration: 0:01:30.368851
+2026-02-07 01:16:24 | INFO     | Trial 75 completed
+2026-02-07 01:16:24 | INFO     | --------------------------------------------------
+2026-02-07 01:16:26 | INFO     | Progress: 75/100 (75.0%)
+2026-02-07 01:16:26 | INFO     | Elapsed: 1:53:42.421454 | ETA: 0:37:54.140475
+2026-02-07 01:16:26 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 01:16:26 | INFO     | ==================================================
+2026-02-07 01:16:26 | INFO     | Trial 76 started
+2026-02-07 01:16:26 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:16:26 | INFO     |   Quantized layers: 9
+2026-02-07 01:16:26 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:16:26 | INFO     |   Training...
+2026-02-07 01:17:29 | INFO     |   Evaluating...
+2026-02-07 01:17:52 | INFO     |   Accuracy: 0.8755
+2026-02-07 01:17:52 | INFO     |   Duration: 0:01:26.556351
+2026-02-07 01:17:52 | INFO     | Trial 76 completed
+2026-02-07 01:17:52 | INFO     | --------------------------------------------------
+2026-02-07 01:17:53 | INFO     | Progress: 76/100 (76.0%)
+2026-02-07 01:17:53 | INFO     | Elapsed: 1:55:10.317505 | ETA: 0:36:22.205520
+2026-02-07 01:17:53 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 01:17:53 | INFO     | ==================================================
+2026-02-07 01:17:53 | INFO     | Trial 77 started
+2026-02-07 01:17:54 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:17:54 | INFO     |   Quantized layers: 11
+2026-02-07 01:17:54 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:17:54 | INFO     |   Training...
+2026-02-07 01:18:59 | INFO     |   Evaluating...
+2026-02-07 01:19:23 | INFO     |   Accuracy: 0.8752
+2026-02-07 01:19:23 | INFO     |   Duration: 0:01:29.105505
+2026-02-07 01:19:23 | INFO     | Trial 77 completed
+2026-02-07 01:19:23 | INFO     | --------------------------------------------------
+2026-02-07 01:19:24 | INFO     | Progress: 77/100 (77.0%)
+2026-02-07 01:19:24 | INFO     | Elapsed: 1:56:40.781401 | ETA: 0:34:51.142497
+2026-02-07 01:19:24 | INFO     | Best accuracy so far: 0.8778
+2026-02-07 01:19:24 | INFO     | ==================================================
+2026-02-07 01:19:24 | INFO     | Trial 78 started
+2026-02-07 01:19:24 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:19:24 | INFO     |   Quantized layers: 13
+2026-02-07 01:19:24 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:19:25 | INFO     |   Training...
+2026-02-07 01:20:31 | INFO     |   Evaluating...
+2026-02-07 01:20:56 | INFO     |   Accuracy: 0.8779
+2026-02-07 01:20:56 | INFO     |   Duration: 0:01:31.857296
+2026-02-07 01:20:56 | INFO     | Trial 78 completed
+2026-02-07 01:20:56 | INFO     | --------------------------------------------------
+2026-02-07 01:20:56 | INFO     | *** New best accuracy: 0.8779 ***
+2026-02-07 01:20:56 | INFO     |   Best model saved to: /rds/general/user/aah25/home/lab3_results/fixed_precision_best_tpe.pt
+2026-02-07 01:20:57 | INFO     | Progress: 78/100 (78.0%)
+2026-02-07 01:20:57 | INFO     | Elapsed: 1:58:14.127675 | ETA: 0:33:20.907810
+2026-02-07 01:20:57 | INFO     | Best accuracy so far: 0.8779
+2026-02-07 01:20:57 | INFO     | ==================================================
+2026-02-07 01:20:57 | INFO     | Trial 79 started
+2026-02-07 01:20:57 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:20:57 | INFO     |   Quantized layers: 12
+2026-02-07 01:20:57 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:20:58 | INFO     |   Training...
+2026-02-07 01:22:03 | INFO     |   Evaluating...
+2026-02-07 01:22:28 | INFO     |   Accuracy: 0.8751
+2026-02-07 01:22:28 | INFO     |   Duration: 0:01:30.796568
+2026-02-07 01:22:28 | INFO     | Trial 79 completed
+2026-02-07 01:22:28 | INFO     | --------------------------------------------------
+2026-02-07 01:22:29 | INFO     | Progress: 79/100 (79.0%)
+2026-02-07 01:22:29 | INFO     | Elapsed: 1:59:46.315901 | ETA: 0:31:50.286504
+2026-02-07 01:22:29 | INFO     | Best accuracy so far: 0.8779
+2026-02-07 01:22:29 | INFO     | ==================================================
+2026-02-07 01:22:29 | INFO     | Trial 80 started
+2026-02-07 01:22:30 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:22:30 | INFO     |   Quantized layers: 12
+2026-02-07 01:22:30 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:22:30 | INFO     |   Training...
+2026-02-07 01:23:35 | INFO     |   Evaluating...
+2026-02-07 01:24:00 | INFO     |   Accuracy: 0.8746
+2026-02-07 01:24:00 | INFO     |   Duration: 0:01:30.389305
+2026-02-07 01:24:00 | INFO     | Trial 80 completed
+2026-02-07 01:24:00 | INFO     | --------------------------------------------------
+2026-02-07 01:24:01 | INFO     | Progress: 80/100 (80.0%)
+2026-02-07 01:24:01 | INFO     | Elapsed: 2:01:18.106222 | ETA: 0:30:19.526560
+2026-02-07 01:24:01 | INFO     | Best accuracy so far: 0.8779
+2026-02-07 01:24:01 | INFO     | ==================================================
+2026-02-07 01:24:01 | INFO     | Trial 81 started
+2026-02-07 01:24:01 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:24:01 | INFO     |   Quantized layers: 13
+2026-02-07 01:24:01 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:24:02 | INFO     |   Training...
+2026-02-07 01:25:08 | INFO     |   Evaluating...
+2026-02-07 01:25:33 | INFO     |   Accuracy: 0.8776
+2026-02-07 01:25:33 | INFO     |   Duration: 0:01:32.184059
+2026-02-07 01:25:33 | INFO     | Trial 81 completed
+2026-02-07 01:25:33 | INFO     | --------------------------------------------------
+2026-02-07 01:25:35 | INFO     | Progress: 81/100 (81.0%)
+2026-02-07 01:25:35 | INFO     | Elapsed: 2:02:51.714625 | ETA: 0:28:49.167637
+2026-02-07 01:25:35 | INFO     | Best accuracy so far: 0.8779
+2026-02-07 01:25:35 | INFO     | ==================================================
+2026-02-07 01:25:35 | INFO     | Trial 82 started
+2026-02-07 01:25:35 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:25:35 | INFO     |   Quantized layers: 13
+2026-02-07 01:25:35 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:25:36 | INFO     |   Training...
+2026-02-07 01:26:42 | INFO     |   Evaluating...
+2026-02-07 01:27:07 | INFO     |   Accuracy: 0.8785
+2026-02-07 01:27:07 | INFO     |   Duration: 0:01:31.845293
+2026-02-07 01:27:07 | INFO     | Trial 82 completed
+2026-02-07 01:27:07 | INFO     | --------------------------------------------------
+2026-02-07 01:27:07 | INFO     | *** New best accuracy: 0.8785 ***
+2026-02-07 01:27:07 | INFO     |   Best model saved to: /rds/general/user/aah25/home/lab3_results/fixed_precision_best_tpe.pt
+2026-02-07 01:27:08 | INFO     | Progress: 82/100 (82.0%)
+2026-02-07 01:27:08 | INFO     | Elapsed: 2:04:25.095031 | ETA: 0:27:18.679392
+2026-02-07 01:27:08 | INFO     | Best accuracy so far: 0.8785
+2026-02-07 01:27:08 | INFO     | ==================================================
+2026-02-07 01:27:08 | INFO     | Trial 83 started
+2026-02-07 01:27:08 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:27:08 | INFO     |   Quantized layers: 13
+2026-02-07 01:27:08 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:27:09 | INFO     |   Training...
+2026-02-07 01:28:16 | INFO     |   Evaluating...
+2026-02-07 01:28:41 | INFO     |   Accuracy: 0.8754
+2026-02-07 01:28:41 | INFO     |   Duration: 0:01:33.235824
+2026-02-07 01:28:41 | INFO     | Trial 83 completed
+2026-02-07 01:28:41 | INFO     | --------------------------------------------------
+2026-02-07 01:28:43 | INFO     | Progress: 83/100 (83.0%)
+2026-02-07 01:28:43 | INFO     | Elapsed: 2:05:59.780290 | ETA: 0:25:48.388730
+2026-02-07 01:28:43 | INFO     | Best accuracy so far: 0.8785
+2026-02-07 01:28:43 | INFO     | ==================================================
+2026-02-07 01:28:43 | INFO     | Trial 84 started
+2026-02-07 01:28:43 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:28:43 | INFO     |   Quantized layers: 13
+2026-02-07 01:28:43 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:28:44 | INFO     |   Training...
+2026-02-07 01:29:51 | INFO     |   Evaluating...
+2026-02-07 01:30:16 | INFO     |   Accuracy: 0.8780
+2026-02-07 01:30:16 | INFO     |   Duration: 0:01:33.023920
+2026-02-07 01:30:16 | INFO     | Trial 84 completed
+2026-02-07 01:30:16 | INFO     | --------------------------------------------------
+2026-02-07 01:30:17 | INFO     | Progress: 84/100 (84.0%)
+2026-02-07 01:30:17 | INFO     | Elapsed: 2:07:34.271050 | ETA: 0:24:17.956384
+2026-02-07 01:30:17 | INFO     | Best accuracy so far: 0.8785
+2026-02-07 01:30:17 | INFO     | ==================================================
+2026-02-07 01:30:17 | INFO     | Trial 85 started
+2026-02-07 01:30:17 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:30:17 | INFO     |   Quantized layers: 13
+2026-02-07 01:30:17 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:30:18 | INFO     |   Training...
+2026-02-07 01:31:24 | INFO     |   Evaluating...
+2026-02-07 01:31:49 | INFO     |   Accuracy: 0.8785
+2026-02-07 01:31:49 | INFO     |   Duration: 0:01:31.663153
+2026-02-07 01:31:49 | INFO     | Trial 85 completed
+2026-02-07 01:31:49 | INFO     | --------------------------------------------------
+2026-02-07 01:31:51 | INFO     | Progress: 85/100 (85.0%)
+2026-02-07 01:31:51 | INFO     | Elapsed: 2:09:07.414330 | ETA: 0:22:47.190765
+2026-02-07 01:31:51 | INFO     | Best accuracy so far: 0.8785
+2026-02-07 01:31:51 | INFO     | ==================================================
+2026-02-07 01:31:51 | INFO     | Trial 86 started
+2026-02-07 01:31:51 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:31:51 | INFO     |   Quantized layers: 13
+2026-02-07 01:31:51 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:31:51 | INFO     |   Training...
+2026-02-07 01:32:57 | INFO     |   Evaluating...
+2026-02-07 01:33:22 | INFO     |   Accuracy: 0.8778
+2026-02-07 01:33:22 | INFO     |   Duration: 0:01:31.497701
+2026-02-07 01:33:22 | INFO     | Trial 86 completed
+2026-02-07 01:33:22 | INFO     | --------------------------------------------------
+2026-02-07 01:33:24 | INFO     | Progress: 86/100 (86.0%)
+2026-02-07 01:33:24 | INFO     | Elapsed: 2:10:40.410537 | ETA: 0:21:16.345896
+2026-02-07 01:33:24 | INFO     | Best accuracy so far: 0.8785
+2026-02-07 01:33:24 | INFO     | ==================================================
+2026-02-07 01:33:24 | INFO     | Trial 87 started
+2026-02-07 01:33:24 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:33:24 | INFO     |   Quantized layers: 13
+2026-02-07 01:33:24 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:33:24 | INFO     |   Training...
+2026-02-07 01:34:30 | INFO     |   Evaluating...
+2026-02-07 01:34:55 | INFO     |   Accuracy: 0.8780
+2026-02-07 01:34:55 | INFO     |   Duration: 0:01:31.619421
+2026-02-07 01:34:55 | INFO     | Trial 87 completed
+2026-02-07 01:34:55 | INFO     | --------------------------------------------------
+2026-02-07 01:34:57 | INFO     | Progress: 87/100 (87.0%)
+2026-02-07 01:34:57 | INFO     | Elapsed: 2:12:13.544812 | ETA: 0:19:45.472210
+2026-02-07 01:34:57 | INFO     | Best accuracy so far: 0.8785
+2026-02-07 01:34:57 | INFO     | ==================================================
+2026-02-07 01:34:57 | INFO     | Trial 88 started
+2026-02-07 01:34:57 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:34:57 | INFO     |   Quantized layers: 13
+2026-02-07 01:34:57 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:34:57 | INFO     |   Training...
+2026-02-07 01:36:03 | INFO     |   Evaluating...
+2026-02-07 01:36:28 | INFO     |   Accuracy: 0.8792
+2026-02-07 01:36:28 | INFO     |   Duration: 0:01:31.445183
+2026-02-07 01:36:28 | INFO     | Trial 88 completed
+2026-02-07 01:36:28 | INFO     | --------------------------------------------------
+2026-02-07 01:36:28 | INFO     | *** New best accuracy: 0.8792 ***
+2026-02-07 01:36:28 | INFO     |   Best model saved to: /rds/general/user/aah25/home/lab3_results/fixed_precision_best_tpe.pt
+2026-02-07 01:36:30 | INFO     | Progress: 88/100 (88.0%)
+2026-02-07 01:36:30 | INFO     | Elapsed: 2:13:46.607631 | ETA: 0:18:14.537400
+2026-02-07 01:36:30 | INFO     | Best accuracy so far: 0.8792
+2026-02-07 01:36:30 | INFO     | ==================================================
+2026-02-07 01:36:30 | INFO     | Trial 89 started
+2026-02-07 01:36:30 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:36:30 | INFO     |   Quantized layers: 13
+2026-02-07 01:36:30 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:36:30 | INFO     |   Training...
+2026-02-07 01:37:36 | INFO     |   Evaluating...
+2026-02-07 01:38:02 | INFO     |   Accuracy: 0.8772
+2026-02-07 01:38:02 | INFO     |   Duration: 0:01:31.740098
+2026-02-07 01:38:02 | INFO     | Trial 89 completed
+2026-02-07 01:38:02 | INFO     | --------------------------------------------------
+2026-02-07 01:38:03 | INFO     | Progress: 89/100 (89.0%)
+2026-02-07 01:38:03 | INFO     | Elapsed: 2:15:19.893559 | ETA: 0:16:43.582349
+2026-02-07 01:38:03 | INFO     | Best accuracy so far: 0.8792
+2026-02-07 01:38:03 | INFO     | ==================================================
+2026-02-07 01:38:03 | INFO     | Trial 90 started
+2026-02-07 01:38:03 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:38:03 | INFO     |   Quantized layers: 13
+2026-02-07 01:38:03 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:38:04 | INFO     |   Training...
+2026-02-07 01:39:09 | INFO     |   Evaluating...
+2026-02-07 01:39:35 | INFO     |   Accuracy: 0.8784
+2026-02-07 01:39:35 | INFO     |   Duration: 0:01:31.559766
+2026-02-07 01:39:35 | INFO     | Trial 90 completed
+2026-02-07 01:39:35 | INFO     | --------------------------------------------------
+2026-02-07 01:39:36 | INFO     | Progress: 90/100 (90.0%)
+2026-02-07 01:39:36 | INFO     | Elapsed: 2:16:53.014725 | ETA: 0:15:12.557190
+2026-02-07 01:39:36 | INFO     | Best accuracy so far: 0.8792
+2026-02-07 01:39:36 | INFO     | ==================================================
+2026-02-07 01:39:36 | INFO     | Trial 91 started
+2026-02-07 01:39:36 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:39:36 | INFO     |   Quantized layers: 13
+2026-02-07 01:39:36 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:39:37 | INFO     |   Training...
+2026-02-07 01:40:43 | INFO     |   Evaluating...
+2026-02-07 01:41:08 | INFO     |   Accuracy: 0.8773
+2026-02-07 01:41:08 | INFO     |   Duration: 0:01:31.568387
+2026-02-07 01:41:08 | INFO     | Trial 91 completed
+2026-02-07 01:41:08 | INFO     | --------------------------------------------------
+2026-02-07 01:41:09 | INFO     | Progress: 91/100 (91.0%)
+2026-02-07 01:41:09 | INFO     | Elapsed: 2:18:26.163345 | ETA: 0:13:41.488680
+2026-02-07 01:41:09 | INFO     | Best accuracy so far: 0.8792
+2026-02-07 01:41:09 | INFO     | ==================================================
+2026-02-07 01:41:09 | INFO     | Trial 92 started
+2026-02-07 01:41:09 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:41:09 | INFO     |   Quantized layers: 13
+2026-02-07 01:41:09 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:41:10 | INFO     |   Training...
+2026-02-07 01:42:16 | INFO     |   Evaluating...
+2026-02-07 01:42:41 | INFO     |   Accuracy: 0.8780
+2026-02-07 01:42:41 | INFO     |   Duration: 0:01:31.795918
+2026-02-07 01:42:41 | INFO     | Trial 92 completed
+2026-02-07 01:42:41 | INFO     | --------------------------------------------------
+2026-02-07 01:42:43 | INFO     | Progress: 92/100 (92.0%)
+2026-02-07 01:42:43 | INFO     | Elapsed: 2:19:59.557913 | ETA: 0:12:10.396344
+2026-02-07 01:42:43 | INFO     | Best accuracy so far: 0.8792
+2026-02-07 01:42:43 | INFO     | ==================================================
+2026-02-07 01:42:43 | INFO     | Trial 93 started
+2026-02-07 01:42:43 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:42:43 | INFO     |   Quantized layers: 13
+2026-02-07 01:42:43 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:42:43 | INFO     |   Training...
+2026-02-07 01:43:49 | INFO     |   Evaluating...
+2026-02-07 01:44:14 | INFO     |   Accuracy: 0.8784
+2026-02-07 01:44:14 | INFO     |   Duration: 0:01:31.769893
+2026-02-07 01:44:14 | INFO     | Trial 93 completed
+2026-02-07 01:44:14 | INFO     | --------------------------------------------------
+2026-02-07 01:44:16 | INFO     | Progress: 93/100 (93.0%)
+2026-02-07 01:44:16 | INFO     | Elapsed: 2:21:32.935162 | ETA: 0:10:39.253181
+2026-02-07 01:44:16 | INFO     | Best accuracy so far: 0.8792
+2026-02-07 01:44:16 | INFO     | ==================================================
+2026-02-07 01:44:16 | INFO     | Trial 94 started
+2026-02-07 01:44:16 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:44:16 | INFO     |   Quantized layers: 13
+2026-02-07 01:44:16 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:44:17 | INFO     |   Training...
+2026-02-07 01:45:23 | INFO     |   Evaluating...
+2026-02-07 01:45:48 | INFO     |   Accuracy: 0.8783
+2026-02-07 01:45:48 | INFO     |   Duration: 0:01:31.619583
+2026-02-07 01:45:48 | INFO     | Trial 94 completed
+2026-02-07 01:45:48 | INFO     | --------------------------------------------------
+2026-02-07 01:45:49 | INFO     | Progress: 94/100 (94.0%)
+2026-02-07 01:45:49 | INFO     | Elapsed: 2:23:06.179404 | ETA: 0:09:08.054004
+2026-02-07 01:45:49 | INFO     | Best accuracy so far: 0.8792
+2026-02-07 01:45:49 | INFO     | ==================================================
+2026-02-07 01:45:49 | INFO     | Trial 95 started
+2026-02-07 01:45:49 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:45:49 | INFO     |   Quantized layers: 13
+2026-02-07 01:45:49 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:45:50 | INFO     |   Training...
+2026-02-07 01:46:56 | INFO     |   Evaluating...
+2026-02-07 01:47:21 | INFO     |   Accuracy: 0.8770
+2026-02-07 01:47:21 | INFO     |   Duration: 0:01:31.770202
+2026-02-07 01:47:21 | INFO     | Trial 95 completed
+2026-02-07 01:47:21 | INFO     | --------------------------------------------------
+2026-02-07 01:47:23 | INFO     | Progress: 95/100 (95.0%)
+2026-02-07 01:47:23 | INFO     | Elapsed: 2:24:39.619803 | ETA: 0:07:36.822095
+2026-02-07 01:47:23 | INFO     | Best accuracy so far: 0.8792
+2026-02-07 01:47:23 | INFO     | ==================================================
+2026-02-07 01:47:23 | INFO     | Trial 96 started
+2026-02-07 01:47:23 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:47:23 | INFO     |   Quantized layers: 13
+2026-02-07 01:47:23 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:47:24 | INFO     |   Training...
+2026-02-07 01:48:29 | INFO     |   Evaluating...
+2026-02-07 01:48:54 | INFO     |   Accuracy: 0.8763
+2026-02-07 01:48:54 | INFO     |   Duration: 0:01:31.690410
+2026-02-07 01:48:54 | INFO     | Trial 96 completed
+2026-02-07 01:48:54 | INFO     | --------------------------------------------------
+2026-02-07 01:48:56 | INFO     | Progress: 96/100 (96.0%)
+2026-02-07 01:48:56 | INFO     | Elapsed: 2:26:12.970619 | ETA: 0:06:05.540444
+2026-02-07 01:48:56 | INFO     | Best accuracy so far: 0.8792
+2026-02-07 01:48:56 | INFO     | ==================================================
+2026-02-07 01:48:56 | INFO     | Trial 97 started
+2026-02-07 01:48:56 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:48:56 | INFO     |   Quantized layers: 13
+2026-02-07 01:48:56 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:48:57 | INFO     |   Training...
+2026-02-07 01:50:03 | INFO     |   Evaluating...
+2026-02-07 01:50:28 | INFO     |   Accuracy: 0.8776
+2026-02-07 01:50:28 | INFO     |   Duration: 0:01:31.722992
+2026-02-07 01:50:28 | INFO     | Trial 97 completed
+2026-02-07 01:50:28 | INFO     | --------------------------------------------------
+2026-02-07 01:50:30 | INFO     | Progress: 97/100 (97.0%)
+2026-02-07 01:50:30 | INFO     | Elapsed: 2:27:46.371996 | ETA: 0:04:34.217691
+2026-02-07 01:50:30 | INFO     | Best accuracy so far: 0.8792
+2026-02-07 01:50:30 | INFO     | ==================================================
+2026-02-07 01:50:30 | INFO     | Trial 98 started
+2026-02-07 01:50:30 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:50:30 | INFO     |   Quantized layers: 14
+2026-02-07 01:50:30 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:50:30 | INFO     |   Training...
+2026-02-07 01:51:36 | INFO     |   Evaluating...
+2026-02-07 01:52:02 | INFO     |   Accuracy: 0.8770
+2026-02-07 01:52:02 | INFO     |   Duration: 0:01:32.696383
+2026-02-07 01:52:02 | INFO     | Trial 98 completed
+2026-02-07 01:52:02 | INFO     | --------------------------------------------------
+2026-02-07 01:52:04 | INFO     | Progress: 98/100 (98.0%)
+2026-02-07 01:52:04 | INFO     | Elapsed: 2:29:20.760864 | ETA: 0:03:02.872670
+2026-02-07 01:52:04 | INFO     | Best accuracy so far: 0.8792
+2026-02-07 01:52:04 | INFO     | ==================================================
+2026-02-07 01:52:04 | INFO     | Trial 99 started
+2026-02-07 01:52:04 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:52:04 | INFO     |   Quantized layers: 12
+2026-02-07 01:52:04 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:52:05 | INFO     |   Training...
+2026-02-07 01:53:10 | INFO     |   Evaluating...
+2026-02-07 01:53:35 | INFO     |   Accuracy: 0.8750
+2026-02-07 01:53:35 | INFO     |   Duration: 0:01:30.646889
+2026-02-07 01:53:35 | INFO     | Trial 99 completed
+2026-02-07 01:53:35 | INFO     | --------------------------------------------------
+2026-02-07 01:53:36 | INFO     | Progress: 99/100 (99.0%)
+2026-02-07 01:53:36 | INFO     | Elapsed: 2:30:53.108273 | ETA: 0:01:31.445538
+2026-02-07 01:53:36 | INFO     | Best accuracy so far: 0.8792
+2026-02-07 01:53:36 | INFO     | ==================================================
+2026-02-07 01:53:36 | INFO     | Trial 100 started
+2026-02-07 01:53:36 | INFO     |   Model parameters: 23,778,306
+2026-02-07 01:53:36 | INFO     |   Quantized layers: 12
+2026-02-07 01:53:36 | INFO     |   Fixed precision: width=8, frac_width=4
+2026-02-07 01:53:37 | INFO     |   Training...
+2026-02-07 01:54:42 | INFO     |   Evaluating...
+2026-02-07 01:55:07 | INFO     |   Accuracy: 0.8764
+2026-02-07 01:55:07 | INFO     |   Duration: 0:01:30.555279
+2026-02-07 01:55:07 | INFO     | Trial 100 completed
+2026-02-07 01:55:07 | INFO     | --------------------------------------------------
+2026-02-07 01:55:09 | INFO     | Progress: 100/100 (100.0%)
+2026-02-07 01:55:09 | INFO     | Elapsed: 2:32:25.389167 | ETA: 0:00:00
+2026-02-07 01:55:09 | INFO     | Best accuracy so far: 0.8792
+2026-02-07 01:55:09 | INFO     | ==================================================
+2026-02-07 01:55:09 | INFO     | Results saved to: /rds/general/user/aah25/home/lab3_results/fixed_precision_results_tpe.pkl
+2026-02-07 01:55:09 | INFO     | Best model saved to: /rds/general/user/aah25/home/lab3_results/fixed_precision_best_tpe.pt
+2026-02-07 01:55:10 | INFO     | Progress plot saved to: /rds/general/user/aah25/home/lab3_results/fixed_precision_progress_tpe.png
+2026-02-07 01:55:10 | INFO     | 
+2026-02-07 01:55:10 | INFO     | ============================================================
+2026-02-07 01:55:10 | INFO     | FINAL RESULTS - TPE Sampler
+2026-02-07 01:55:10 | INFO     | Fixed Precision: width=8, frac_width=4
+2026-02-07 01:55:10 | INFO     | ============================================================
+2026-02-07 01:55:10 | INFO     | Trials completed: 100/100
+2026-02-07 01:55:10 | INFO     | Best accuracy: 0.8792
+2026-02-07 01:55:10 | INFO     | Best trial: 88
+2026-02-07 01:55:10 | INFO     | ------------------------------------------------------------
+2026-02-07 01:55:10 | INFO     | Start time: 2026-02-06 23:22:43.639014
+2026-02-07 01:55:10 | INFO     | End time: 2026-02-07 01:55:09.041638
+2026-02-07 01:55:10 | INFO     | Total duration: 2:32:25.402624
+2026-02-07 01:55:10 | INFO     | ============================================================
+2026-02-07 01:55:10 | INFO     | 
+2026-02-07 01:55:10 | INFO     | All Trial Results:
+2026-02-07 01:55:10 | INFO     | ------------------------------------------------------------
+2026-02-07 01:55:10 | INFO     | Trial    Accuracy     Best So Far 
+2026-02-07 01:55:10 | INFO     | ------------------------------------------------------------
+2026-02-07 01:55:10 | INFO     | 1        0.8744       0.8744      
+2026-02-07 01:55:10 | INFO     | 2        0.8747       0.8747      
+2026-02-07 01:55:10 | INFO     | 3        0.8767       0.8767      
+2026-02-07 01:55:10 | INFO     | 4        0.8774       0.8774      
+2026-02-07 01:55:10 | INFO     | 5        0.8772       0.8774      
+2026-02-07 01:55:10 | INFO     | 6        0.8760       0.8774      
+2026-02-07 01:55:10 | INFO     | 7        0.8736       0.8774      
+2026-02-07 01:55:10 | INFO     | 8        0.8746       0.8774      
+2026-02-07 01:55:10 | INFO     | 9        0.8752       0.8774      
+2026-02-07 01:55:10 | INFO     | 10       0.8765       0.8774      
+2026-02-07 01:55:10 | INFO     | 11       0.8762       0.8774      
+2026-02-07 01:55:10 | INFO     | 12       0.8759       0.8774      
+2026-02-07 01:55:10 | INFO     | 13       0.8778       0.8778      
+2026-02-07 01:55:10 | INFO     | 14       0.8771       0.8778      
+2026-02-07 01:55:10 | INFO     | 15       0.8770       0.8778      
+2026-02-07 01:55:10 | INFO     | 16       0.8759       0.8778      
+2026-02-07 01:55:10 | INFO     | 17       0.8745       0.8778      
+2026-02-07 01:55:10 | INFO     | 18       0.8756       0.8778      
+2026-02-07 01:55:10 | INFO     | 19       0.8760       0.8778      
+2026-02-07 01:55:10 | INFO     | 20       0.8748       0.8778      
+2026-02-07 01:55:10 | INFO     | 21       0.8755       0.8778      
+2026-02-07 01:55:10 | INFO     | 22       0.8752       0.8778      
+2026-02-07 01:55:10 | INFO     | 23       0.8772       0.8778      
+2026-02-07 01:55:10 | INFO     | 24       0.8766       0.8778      
+2026-02-07 01:55:10 | INFO     | 25       0.8774       0.8778      
+2026-02-07 01:55:10 | INFO     | 26       0.8751       0.8778      
+2026-02-07 01:55:10 | INFO     | 27       0.8752       0.8778      
+2026-02-07 01:55:10 | INFO     | 28       0.8760       0.8778      
+2026-02-07 01:55:10 | INFO     | 29       0.8752       0.8778      
+2026-02-07 01:55:10 | INFO     | 30       0.8749       0.8778      
+2026-02-07 01:55:10 | INFO     | 31       0.8760       0.8778      
+2026-02-07 01:55:10 | INFO     | 32       0.8770       0.8778      
+2026-02-07 01:55:10 | INFO     | 33       0.8764       0.8778      
+2026-02-07 01:55:10 | INFO     | 34       0.8768       0.8778      
+2026-02-07 01:55:10 | INFO     | 35       0.8763       0.8778      
+2026-02-07 01:55:10 | INFO     | 36       0.8754       0.8778      
+2026-02-07 01:55:10 | INFO     | 37       0.8767       0.8778      
+2026-02-07 01:55:10 | INFO     | 38       0.8744       0.8778      
+2026-02-07 01:55:10 | INFO     | 39       0.8768       0.8778      
+2026-02-07 01:55:10 | INFO     | 40       0.8742       0.8778      
+2026-02-07 01:55:10 | INFO     | 41       0.8768       0.8778      
+2026-02-07 01:55:10 | INFO     | 42       0.8767       0.8778      
+2026-02-07 01:55:10 | INFO     | 43       0.8766       0.8778      
+2026-02-07 01:55:10 | INFO     | 44       0.8747       0.8778      
+2026-02-07 01:55:10 | INFO     | 45       0.8746       0.8778      
+2026-02-07 01:55:10 | INFO     | 46       0.8736       0.8778      
+2026-02-07 01:55:10 | INFO     | 47       0.8774       0.8778      
+2026-02-07 01:55:10 | INFO     | 48       0.8770       0.8778      
+2026-02-07 01:55:10 | INFO     | 49       0.8753       0.8778      
+2026-02-07 01:55:10 | INFO     | 50       0.8760       0.8778      
+2026-02-07 01:55:10 | INFO     | 51       0.8752       0.8778      
+2026-02-07 01:55:10 | INFO     | 52       0.8767       0.8778      
+2026-02-07 01:55:10 | INFO     | 53       0.8750       0.8778      
+2026-02-07 01:55:10 | INFO     | 54       0.8752       0.8778      
+2026-02-07 01:55:10 | INFO     | 55       0.8757       0.8778      
+2026-02-07 01:55:10 | INFO     | 56       0.8744       0.8778      
+2026-02-07 01:55:10 | INFO     | 57       0.8749       0.8778      
+2026-02-07 01:55:10 | INFO     | 58       0.8768       0.8778      
+2026-02-07 01:55:10 | INFO     | 59       0.8754       0.8778      
+2026-02-07 01:55:10 | INFO     | 60       0.8756       0.8778      
+2026-02-07 01:55:10 | INFO     | 61       0.8755       0.8778      
+2026-02-07 01:55:10 | INFO     | 62       0.8762       0.8778      
+2026-02-07 01:55:10 | INFO     | 63       0.8768       0.8778      
+2026-02-07 01:55:10 | INFO     | 64       0.8759       0.8778      
+2026-02-07 01:55:10 | INFO     | 65       0.8742       0.8778      
+2026-02-07 01:55:10 | INFO     | 66       0.8748       0.8778      
+2026-02-07 01:55:10 | INFO     | 67       0.8768       0.8778      
+2026-02-07 01:55:10 | INFO     | 68       0.8755       0.8778      
+2026-02-07 01:55:10 | INFO     | 69       0.8745       0.8778      
+2026-02-07 01:55:10 | INFO     | 70       0.8750       0.8778      
+2026-02-07 01:55:10 | INFO     | 71       0.8752       0.8778      
+2026-02-07 01:55:10 | INFO     | 72       0.8759       0.8778      
+2026-02-07 01:55:10 | INFO     | 73       0.8747       0.8778      
+2026-02-07 01:55:10 | INFO     | 74       0.8767       0.8778      
+2026-02-07 01:55:10 | INFO     | 75       0.8763       0.8778      
+2026-02-07 01:55:10 | INFO     | 76       0.8755       0.8778      
+2026-02-07 01:55:10 | INFO     | 77       0.8752       0.8778      
+2026-02-07 01:55:10 | INFO     | 78       0.8779       0.8779      
+2026-02-07 01:55:10 | INFO     | 79       0.8751       0.8779      
+2026-02-07 01:55:10 | INFO     | 80       0.8746       0.8779      
+2026-02-07 01:55:10 | INFO     | 81       0.8776       0.8779      
+2026-02-07 01:55:10 | INFO     | 82       0.8785       0.8785      
+2026-02-07 01:55:10 | INFO     | 83       0.8754       0.8785      
+2026-02-07 01:55:10 | INFO     | 84       0.8780       0.8785      
+2026-02-07 01:55:10 | INFO     | 85       0.8785       0.8785      
+2026-02-07 01:55:10 | INFO     | 86       0.8778       0.8785      
+2026-02-07 01:55:10 | INFO     | 87       0.8780       0.8785      
+2026-02-07 01:55:10 | INFO     | 88       0.8792       0.8792      
+2026-02-07 01:55:10 | INFO     | 89       0.8772       0.8792      
+2026-02-07 01:55:10 | INFO     | 90       0.8784       0.8792      
+2026-02-07 01:55:10 | INFO     | 91       0.8773       0.8792      
+2026-02-07 01:55:10 | INFO     | 92       0.8780       0.8792      
+2026-02-07 01:55:10 | INFO     | 93       0.8784       0.8792      
+2026-02-07 01:55:10 | INFO     | 94       0.8783       0.8792      
+2026-02-07 01:55:10 | INFO     | 95       0.8770       0.8792      
+2026-02-07 01:55:10 | INFO     | 96       0.8763       0.8792      
+2026-02-07 01:55:10 | INFO     | 97       0.8776       0.8792      
+2026-02-07 01:55:10 | INFO     | 98       0.8770       0.8792      
+2026-02-07 01:55:10 | INFO     | 99       0.8750       0.8792      
+2026-02-07 01:55:10 | INFO     | 100      0.8764       0.8792      
+2026-02-07 01:55:10 | INFO     | ============================================================
+2026-02-07 01:55:10 | INFO     | Fixed precision search completed!

@@ -1,0 +1,1459 @@
+2026-02-03 20:14:51 | INFO     | ============================================================
+2026-02-03 20:14:51 | INFO     | NAS Search with GRID Sampler
+2026-02-03 20:14:51 | INFO     | ============================================================
+2026-02-03 20:14:51 | INFO     | Start time: 2026-02-03 20:14:51.801461
+2026-02-03 20:14:51 | INFO     | Number of trials: 100
+2026-02-03 20:14:51 | INFO     | Output directory: /rds/general/user/aah25/home/nas_results
+2026-02-03 20:14:51 | INFO     | Output file prefix: grid
+2026-02-03 20:14:51 | INFO     | Checkpoint: prajjwal1/bert-tiny
+2026-02-03 20:14:51 | INFO     | Dataset: imdb
+2026-02-03 20:14:51 | INFO     | ============================================================
+2026-02-03 20:14:51 | INFO     | Search Space:
+2026-02-03 20:14:51 | INFO     |   num_layers: [2, 4, 8]
+2026-02-03 20:14:51 | INFO     |   num_heads: [2, 4, 8, 16]
+2026-02-03 20:14:51 | INFO     |   hidden_size: [128, 192, 256, 384, 512]
+2026-02-03 20:14:51 | INFO     |   intermediate_size: [512, 768, 1024, 1536, 2048]
+2026-02-03 20:14:51 | INFO     |   linear_layer_choices: [nn.Linear, Identity]
+2026-02-03 20:14:51 | INFO     | ============================================================
+2026-02-03 20:14:51 | INFO     | Loading dataset...
+2026-02-03 20:14:58 | INFO     | Dataset loaded successfully
+2026-02-03 20:14:58 | INFO     | ============================================================
+2026-02-03 20:14:58 | INFO     | Created GRID sampler
+2026-02-03 20:14:58 | INFO     | Created Optuna study
+2026-02-03 20:14:58 | INFO     | ============================================================
+2026-02-03 20:14:58 | INFO     | Starting optimization with GRID sampler...
+2026-02-03 20:14:58 | INFO     | ============================================================
+2026-02-03 20:14:58 | INFO     | Trial 1 started
+2026-02-03 20:15:00 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 4, 'hidden_size': 384, 'intermediate_size': 1024}
+2026-02-03 20:15:00 | INFO     |   Model parameters: 17,590,146
+2026-02-03 20:15:01 | INFO     |   Training...
+2026-02-03 20:15:58 | INFO     |   Evaluating...
+2026-02-03 20:16:19 | INFO     |   Accuracy: 0.8646
+2026-02-03 20:16:19 | INFO     |   Duration: 0:01:21.075477
+2026-02-03 20:16:19 | INFO     | Trial 1 completed
+2026-02-03 20:16:19 | INFO     | --------------------------------------------------
+2026-02-03 20:16:19 | INFO     | *** New best accuracy: 0.8646 ***
+2026-02-03 20:16:19 | INFO     |   Best model saved to: /rds/general/user/aah25/home/nas_results/nas_best_model_grid.pkl
+2026-02-03 20:16:19 | INFO     | Progress: 1/100 (1.0%)
+2026-02-03 20:16:19 | INFO     | Elapsed: 0:01:27.447428 | ETA: 2:24:17.295372
+2026-02-03 20:16:19 | INFO     | Best accuracy so far: 0.8646
+2026-02-03 20:16:19 | INFO     | ==================================================
+2026-02-03 20:16:19 | INFO     | Trial 2 started
+2026-02-03 20:16:19 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 8, 'hidden_size': 384, 'intermediate_size': 512}
+2026-02-03 20:16:19 | INFO     |   Model parameters: 19,963,266
+2026-02-03 20:16:20 | INFO     |   Training...
+2026-02-03 20:17:39 | INFO     |   Evaluating...
+2026-02-03 20:18:06 | INFO     |   Accuracy: 0.8582
+2026-02-03 20:18:06 | INFO     |   Duration: 0:01:46.943916
+2026-02-03 20:18:06 | INFO     | Trial 2 completed
+2026-02-03 20:18:06 | INFO     | --------------------------------------------------
+2026-02-03 20:18:06 | INFO     | Progress: 2/100 (2.0%)
+2026-02-03 20:18:06 | INFO     | Elapsed: 0:03:14.451905 | ETA: 2:38:48.143296
+2026-02-03 20:18:06 | INFO     | Best accuracy so far: 0.8646
+2026-02-03 20:18:06 | INFO     | ==================================================
+2026-02-03 20:18:06 | INFO     | Trial 3 started
+2026-02-03 20:18:06 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 2, 'hidden_size': 128, 'intermediate_size': 768}
+2026-02-03 20:18:06 | INFO     |   Model parameters: 4,517,762
+2026-02-03 20:18:07 | INFO     |   Training...
+2026-02-03 20:18:39 | INFO     |   Evaluating...
+2026-02-03 20:18:55 | INFO     |   Accuracy: 0.8466
+2026-02-03 20:18:55 | INFO     |   Duration: 0:00:49.514492
+2026-02-03 20:18:55 | INFO     | Trial 3 completed
+2026-02-03 20:18:55 | INFO     | --------------------------------------------------
+2026-02-03 20:18:55 | INFO     | Progress: 3/100 (3.0%)
+2026-02-03 20:18:55 | INFO     | Elapsed: 0:04:04.037145 | ETA: 2:11:30.534355
+2026-02-03 20:18:55 | INFO     | Best accuracy so far: 0.8646
+2026-02-03 20:18:55 | INFO     | ==================================================
+2026-02-03 20:18:55 | INFO     | Trial 4 started
+2026-02-03 20:18:56 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 4, 'hidden_size': 384, 'intermediate_size': 1536}
+2026-02-03 20:18:56 | INFO     |   Model parameters: 26,262,914
+2026-02-03 20:18:57 | INFO     |   Training...
+2026-02-03 20:20:32 | INFO     |   Evaluating...
+2026-02-03 20:21:02 | INFO     |   Accuracy: 0.8655
+2026-02-03 20:21:02 | INFO     |   Duration: 0:02:06.884056
+2026-02-03 20:21:02 | INFO     | Trial 4 completed
+2026-02-03 20:21:02 | INFO     | --------------------------------------------------
+2026-02-03 20:21:02 | INFO     | *** New best accuracy: 0.8655 ***
+2026-02-03 20:21:02 | INFO     |   Best model saved to: /rds/general/user/aah25/home/nas_results/nas_best_model_grid.pkl
+2026-02-03 20:21:02 | INFO     | Progress: 4/100 (4.0%)
+2026-02-03 20:21:02 | INFO     | Elapsed: 0:06:11.170608 | ETA: 2:28:28.094592
+2026-02-03 20:21:02 | INFO     | Best accuracy so far: 0.8655
+2026-02-03 20:21:02 | INFO     | ==================================================
+2026-02-03 20:21:02 | INFO     | Trial 5 started
+2026-02-03 20:21:03 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 16, 'hidden_size': 384, 'intermediate_size': 2048}
+2026-02-03 20:21:03 | INFO     |   Model parameters: 29,412,738
+2026-02-03 20:21:04 | INFO     |   Training...
+2026-02-03 20:23:04 | INFO     |   Evaluating...
+2026-02-03 20:23:41 | INFO     |   Accuracy: 0.8635
+2026-02-03 20:23:41 | INFO     |   Duration: 0:02:38.812987
+2026-02-03 20:23:41 | INFO     | Trial 5 completed
+2026-02-03 20:23:41 | INFO     | --------------------------------------------------
+2026-02-03 20:23:41 | INFO     | Progress: 5/100 (5.0%)
+2026-02-03 20:23:41 | INFO     | Elapsed: 0:08:50.112524 | ETA: 2:47:52.137975
+2026-02-03 20:23:41 | INFO     | Best accuracy so far: 0.8655
+2026-02-03 20:23:41 | INFO     | ==================================================
+2026-02-03 20:23:41 | INFO     | Trial 6 started
+2026-02-03 20:23:42 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 4, 'hidden_size': 256, 'intermediate_size': 768}
+2026-02-03 20:23:42 | INFO     |   Model parameters: 10,645,762
+2026-02-03 20:23:42 | INFO     |   Training...
+2026-02-03 20:24:27 | INFO     |   Evaluating...
+2026-02-03 20:24:46 | INFO     |   Accuracy: 0.8618
+2026-02-03 20:24:46 | INFO     |   Duration: 0:01:04.747132
+2026-02-03 20:24:46 | INFO     | Trial 6 completed
+2026-02-03 20:24:46 | INFO     | --------------------------------------------------
+2026-02-03 20:24:46 | INFO     | Progress: 6/100 (6.0%)
+2026-02-03 20:24:46 | INFO     | Elapsed: 0:09:54.996670 | ETA: 2:35:21.614528
+2026-02-03 20:24:46 | INFO     | Best accuracy so far: 0.8655
+2026-02-03 20:24:46 | INFO     | ==================================================
+2026-02-03 20:24:46 | INFO     | Trial 7 started
+2026-02-03 20:24:47 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 2, 'hidden_size': 384, 'intermediate_size': 2048}
+2026-02-03 20:24:47 | INFO     |   Model parameters: 29,412,738
+2026-02-03 20:24:48 | INFO     |   Training...
+2026-02-03 20:26:30 | INFO     |   Evaluating...
+2026-02-03 20:27:03 | INFO     |   Accuracy: 0.8602
+2026-02-03 20:27:03 | INFO     |   Duration: 0:02:16.748065
+2026-02-03 20:27:03 | INFO     | Trial 7 completed
+2026-02-03 20:27:03 | INFO     | --------------------------------------------------
+2026-02-03 20:27:03 | INFO     | Progress: 7/100 (7.0%)
+2026-02-03 20:27:03 | INFO     | Elapsed: 0:12:11.913761 | ETA: 2:42:03.997137
+2026-02-03 20:27:03 | INFO     | Best accuracy so far: 0.8655
+2026-02-03 20:27:03 | INFO     | ==================================================
+2026-02-03 20:27:03 | INFO     | Trial 8 started
+2026-02-03 20:27:04 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 2, 'hidden_size': 384, 'intermediate_size': 1024}
+2026-02-03 20:27:04 | INFO     |   Model parameters: 23,113,090
+2026-02-03 20:27:04 | INFO     |   Training...
+2026-02-03 20:28:31 | INFO     |   Evaluating...
+2026-02-03 20:28:59 | INFO     |   Accuracy: 0.8691
+2026-02-03 20:28:59 | INFO     |   Duration: 0:01:55.560588
+2026-02-03 20:28:59 | INFO     | Trial 8 completed
+2026-02-03 20:28:59 | INFO     | --------------------------------------------------
+2026-02-03 20:28:59 | INFO     | *** New best accuracy: 0.8691 ***
+2026-02-03 20:28:59 | INFO     |   Best model saved to: /rds/general/user/aah25/home/nas_results/nas_best_model_grid.pkl
+2026-02-03 20:28:59 | INFO     | Progress: 8/100 (8.0%)
+2026-02-03 20:28:59 | INFO     | Elapsed: 0:14:07.788208 | ETA: 2:42:29.564392
+2026-02-03 20:28:59 | INFO     | Best accuracy so far: 0.8691
+2026-02-03 20:28:59 | INFO     | ==================================================
+2026-02-03 20:28:59 | INFO     | Trial 9 started
+2026-02-03 20:28:59 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 4, 'hidden_size': 128, 'intermediate_size': 2048}
+2026-02-03 20:28:59 | INFO     |   Model parameters: 6,361,730
+2026-02-03 20:29:00 | INFO     |   Training...
+2026-02-03 20:29:44 | INFO     |   Evaluating...
+2026-02-03 20:30:03 | INFO     |   Accuracy: 0.8447
+2026-02-03 20:30:03 | INFO     |   Duration: 0:01:03.429310
+2026-02-03 20:30:03 | INFO     | Trial 9 completed
+2026-02-03 20:30:03 | INFO     | --------------------------------------------------
+2026-02-03 20:30:03 | INFO     | Progress: 9/100 (9.0%)
+2026-02-03 20:30:03 | INFO     | Elapsed: 0:15:11.413663 | ETA: 2:33:35.404835
+2026-02-03 20:30:03 | INFO     | Best accuracy so far: 0.8691
+2026-02-03 20:30:03 | INFO     | ==================================================
+2026-02-03 20:30:03 | INFO     | Trial 10 started
+2026-02-03 20:30:03 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 2, 'hidden_size': 192, 'intermediate_size': 2048}
+2026-02-03 20:30:03 | INFO     |   Model parameters: 7,872,066
+2026-02-03 20:30:04 | INFO     |   Training...
+2026-02-03 20:30:37 | INFO     |   Evaluating...
+2026-02-03 20:30:54 | INFO     |   Accuracy: 0.8600
+2026-02-03 20:30:54 | INFO     |   Duration: 0:00:51.042277
+2026-02-03 20:30:54 | INFO     | Trial 10 completed
+2026-02-03 20:30:54 | INFO     | --------------------------------------------------
+2026-02-03 20:30:54 | INFO     | Progress: 10/100 (10.0%)
+2026-02-03 20:30:54 | INFO     | Elapsed: 0:16:02.661926 | ETA: 2:24:23.957370
+2026-02-03 20:30:54 | INFO     | Best accuracy so far: 0.8691
+2026-02-03 20:30:54 | INFO     | ==================================================
+2026-02-03 20:30:54 | INFO     | Trial 11 started
+2026-02-03 20:30:54 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 2, 'hidden_size': 512, 'intermediate_size': 2048}
+2026-02-03 20:30:54 | INFO     |   Model parameters: 41,374,210
+2026-02-03 20:30:55 | INFO     |   Training...
+2026-02-03 20:33:00 | INFO     |   Evaluating...
+2026-02-03 20:33:39 | INFO     |   Accuracy: 0.8660
+2026-02-03 20:33:39 | INFO     |   Duration: 0:02:45.133087
+2026-02-03 20:33:39 | INFO     | Trial 11 completed
+2026-02-03 20:33:39 | INFO     | --------------------------------------------------
+2026-02-03 20:33:39 | INFO     | Progress: 11/100 (11.0%)
+2026-02-03 20:33:39 | INFO     | Elapsed: 0:18:48.033864 | ETA: 2:32:06.819437
+2026-02-03 20:33:39 | INFO     | Best accuracy so far: 0.8691
+2026-02-03 20:33:39 | INFO     | ==================================================
+2026-02-03 20:33:39 | INFO     | Trial 12 started
+2026-02-03 20:33:40 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 4, 'hidden_size': 128, 'intermediate_size': 768}
+2026-02-03 20:33:40 | INFO     |   Model parameters: 4,517,762
+2026-02-03 20:33:40 | INFO     |   Training...
+2026-02-03 20:34:13 | INFO     |   Evaluating...
+2026-02-03 20:34:29 | INFO     |   Accuracy: 0.8495
+2026-02-03 20:34:29 | INFO     |   Duration: 0:00:49.944641
+2026-02-03 20:34:29 | INFO     | Trial 12 completed
+2026-02-03 20:34:29 | INFO     | --------------------------------------------------
+2026-02-03 20:34:30 | INFO     | Progress: 12/100 (12.0%)
+2026-02-03 20:34:30 | INFO     | Elapsed: 0:19:38.223792 | ETA: 2:24:00.307808
+2026-02-03 20:34:30 | INFO     | Best accuracy so far: 0.8691
+2026-02-03 20:34:30 | INFO     | ==================================================
+2026-02-03 20:34:30 | INFO     | Trial 13 started
+2026-02-03 20:34:30 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 4, 'hidden_size': 384, 'intermediate_size': 512}
+2026-02-03 20:34:30 | INFO     |   Model parameters: 16,015,234
+2026-02-03 20:34:31 | INFO     |   Training...
+2026-02-03 20:35:21 | INFO     |   Evaluating...
+2026-02-03 20:35:40 | INFO     |   Accuracy: 0.8654
+2026-02-03 20:35:40 | INFO     |   Duration: 0:01:10.836648
+2026-02-03 20:35:40 | INFO     | Trial 13 completed
+2026-02-03 20:35:40 | INFO     | --------------------------------------------------
+2026-02-03 20:35:41 | INFO     | Progress: 13/100 (13.0%)
+2026-02-03 20:35:41 | INFO     | Elapsed: 0:20:49.314426 | ETA: 2:19:20.796570
+2026-02-03 20:35:41 | INFO     | Best accuracy so far: 0.8691
+2026-02-03 20:35:41 | INFO     | ==================================================
+2026-02-03 20:35:41 | INFO     | Trial 14 started
+2026-02-03 20:35:41 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 8, 'hidden_size': 512, 'intermediate_size': 512}
+2026-02-03 20:35:41 | INFO     |   Model parameters: 28,779,010
+2026-02-03 20:35:42 | INFO     |   Training...
+2026-02-03 20:37:13 | INFO     |   Evaluating...
+2026-02-03 20:37:43 | INFO     |   Accuracy: 0.8688
+2026-02-03 20:37:43 | INFO     |   Duration: 0:02:02.159261
+2026-02-03 20:37:43 | INFO     | Trial 14 completed
+2026-02-03 20:37:43 | INFO     | --------------------------------------------------
+2026-02-03 20:37:43 | INFO     | Progress: 14/100 (14.0%)
+2026-02-03 20:37:43 | INFO     | Elapsed: 0:22:51.770112 | ETA: 2:20:26.587794
+2026-02-03 20:37:43 | INFO     | Best accuracy so far: 0.8691
+2026-02-03 20:37:43 | INFO     | ==================================================
+2026-02-03 20:37:43 | INFO     | Trial 15 started
+2026-02-03 20:37:43 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 16, 'hidden_size': 128, 'intermediate_size': 768}
+2026-02-03 20:37:43 | INFO     |   Model parameters: 5,045,890
+2026-02-03 20:37:45 | INFO     |   Training...
+2026-02-03 20:38:33 | INFO     |   Evaluating...
+2026-02-03 20:38:52 | INFO     |   Accuracy: 0.8443
+2026-02-03 20:38:52 | INFO     |   Duration: 0:01:09.224341
+2026-02-03 20:38:52 | INFO     | Trial 15 completed
+2026-02-03 20:38:52 | INFO     | --------------------------------------------------
+2026-02-03 20:38:53 | INFO     | Progress: 15/100 (15.0%)
+2026-02-03 20:38:53 | INFO     | Elapsed: 0:24:01.294331 | ETA: 2:16:07.334565
+2026-02-03 20:38:53 | INFO     | Best accuracy so far: 0.8691
+2026-02-03 20:38:53 | INFO     | ==================================================
+2026-02-03 20:38:53 | INFO     | Trial 16 started
+2026-02-03 20:38:53 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 2, 'hidden_size': 192, 'intermediate_size': 768}
+2026-02-03 20:38:53 | INFO     |   Model parameters: 9,555,650
+2026-02-03 20:38:54 | INFO     |   Training...
+2026-02-03 20:39:57 | INFO     |   Evaluating...
+2026-02-03 20:40:20 | INFO     |   Accuracy: 0.8587
+2026-02-03 20:40:20 | INFO     |   Duration: 0:01:27.770365
+2026-02-03 20:40:20 | INFO     | Trial 16 completed
+2026-02-03 20:40:20 | INFO     | --------------------------------------------------
+2026-02-03 20:40:21 | INFO     | Progress: 16/100 (16.0%)
+2026-02-03 20:40:21 | INFO     | Elapsed: 0:25:29.389527 | ETA: 2:13:49.294980
+2026-02-03 20:40:21 | INFO     | Best accuracy so far: 0.8691
+2026-02-03 20:40:21 | INFO     | ==================================================
+2026-02-03 20:40:21 | INFO     | Trial 17 started
+2026-02-03 20:40:21 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 8, 'hidden_size': 512, 'intermediate_size': 1024}
+2026-02-03 20:40:21 | INFO     |   Model parameters: 20,360,706
+2026-02-03 20:40:22 | INFO     |   Training...
+2026-02-03 20:41:07 | INFO     |   Evaluating...
+2026-02-03 20:41:25 | INFO     |   Accuracy: 0.8730
+2026-02-03 20:41:25 | INFO     |   Duration: 0:01:04.071250
+2026-02-03 20:41:25 | INFO     | Trial 17 completed
+2026-02-03 20:41:25 | INFO     | --------------------------------------------------
+2026-02-03 20:41:25 | INFO     | *** New best accuracy: 0.8730 ***
+2026-02-03 20:41:25 | INFO     |   Best model saved to: /rds/general/user/aah25/home/nas_results/nas_best_model_grid.pkl
+2026-02-03 20:41:25 | INFO     | Progress: 17/100 (17.0%)
+2026-02-03 20:41:25 | INFO     | Elapsed: 0:26:33.870817 | ETA: 2:09:41.839881
+2026-02-03 20:41:25 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 20:41:25 | INFO     | ==================================================
+2026-02-03 20:41:25 | INFO     | Trial 18 started
+2026-02-03 20:41:25 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 8, 'hidden_size': 192, 'intermediate_size': 1024}
+2026-02-03 20:41:25 | INFO     |   Model parameters: 7,083,586
+2026-02-03 20:41:26 | INFO     |   Training...
+2026-02-03 20:42:01 | INFO     |   Evaluating...
+2026-02-03 20:42:17 | INFO     |   Accuracy: 0.8580
+2026-02-03 20:42:17 | INFO     |   Duration: 0:00:51.932987
+2026-02-03 20:42:17 | INFO     | Trial 18 completed
+2026-02-03 20:42:17 | INFO     | --------------------------------------------------
+2026-02-03 20:42:17 | INFO     | Progress: 18/100 (18.0%)
+2026-02-03 20:42:17 | INFO     | Elapsed: 0:27:26.126701 | ETA: 2:04:59.021606
+2026-02-03 20:42:17 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 20:42:17 | INFO     | ==================================================
+2026-02-03 20:42:17 | INFO     | Trial 19 started
+2026-02-03 20:42:18 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 2, 'hidden_size': 384, 'intermediate_size': 2048}
+2026-02-03 20:42:18 | INFO     |   Model parameters: 20,739,970
+2026-02-03 20:42:19 | INFO     |   Training...
+2026-02-03 20:43:20 | INFO     |   Evaluating...
+2026-02-03 20:43:44 | INFO     |   Accuracy: 0.8652
+2026-02-03 20:43:44 | INFO     |   Duration: 0:01:26.146169
+2026-02-03 20:43:44 | INFO     | Trial 19 completed
+2026-02-03 20:43:44 | INFO     | --------------------------------------------------
+2026-02-03 20:43:44 | INFO     | Progress: 19/100 (19.0%)
+2026-02-03 20:43:44 | INFO     | Elapsed: 0:28:52.613600 | ETA: 2:03:06.405309
+2026-02-03 20:43:44 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 20:43:44 | INFO     | ==================================================
+2026-02-03 20:43:44 | INFO     | Trial 20 started
+2026-02-03 20:43:44 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 8, 'hidden_size': 256, 'intermediate_size': 1536}
+2026-02-03 20:43:44 | INFO     |   Model parameters: 16,431,362
+2026-02-03 20:43:45 | INFO     |   Training...
+2026-02-03 20:45:05 | INFO     |   Evaluating...
+2026-02-03 20:45:31 | INFO     |   Accuracy: 0.8542
+2026-02-03 20:45:31 | INFO     |   Duration: 0:01:47.461035
+2026-02-03 20:45:31 | INFO     | Trial 20 completed
+2026-02-03 20:45:31 | INFO     | --------------------------------------------------
+2026-02-03 20:45:32 | INFO     | Progress: 20/100 (20.0%)
+2026-02-03 20:45:32 | INFO     | Elapsed: 0:30:40.443203 | ETA: 2:02:41.772800
+2026-02-03 20:45:32 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 20:45:32 | INFO     | ==================================================
+2026-02-03 20:45:32 | INFO     | Trial 21 started
+2026-02-03 20:45:32 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 16, 'hidden_size': 384, 'intermediate_size': 512}
+2026-02-03 20:45:32 | INFO     |   Model parameters: 16,015,234
+2026-02-03 20:45:33 | INFO     |   Training...
+2026-02-03 20:46:29 | INFO     |   Evaluating...
+2026-02-03 20:46:50 | INFO     |   Accuracy: 0.8655
+2026-02-03 20:46:50 | INFO     |   Duration: 0:01:18.633798
+2026-02-03 20:46:50 | INFO     | Trial 21 completed
+2026-02-03 20:46:50 | INFO     | --------------------------------------------------
+2026-02-03 20:46:51 | INFO     | Progress: 21/100 (21.0%)
+2026-02-03 20:46:51 | INFO     | Elapsed: 0:31:59.453053 | ETA: 2:00:20.799554
+2026-02-03 20:46:51 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 20:46:51 | INFO     | ==================================================
+2026-02-03 20:46:51 | INFO     | Trial 22 started
+2026-02-03 20:46:51 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 8, 'hidden_size': 192, 'intermediate_size': 1536}
+2026-02-03 20:46:51 | INFO     |   Model parameters: 8,958,914
+2026-02-03 20:46:52 | INFO     |   Training...
+2026-02-03 20:47:40 | INFO     |   Evaluating...
+2026-02-03 20:47:59 | INFO     |   Accuracy: 0.8536
+2026-02-03 20:47:59 | INFO     |   Duration: 0:01:08.418810
+2026-02-03 20:47:59 | INFO     | Trial 22 completed
+2026-02-03 20:47:59 | INFO     | --------------------------------------------------
+2026-02-03 20:48:00 | INFO     | Progress: 22/100 (22.0%)
+2026-02-03 20:48:00 | INFO     | Elapsed: 0:33:08.262331 | ETA: 1:57:29.293680
+2026-02-03 20:48:00 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 20:48:00 | INFO     | ==================================================
+2026-02-03 20:48:00 | INFO     | Trial 23 started
+2026-02-03 20:48:00 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 4, 'hidden_size': 256, 'intermediate_size': 512}
+2026-02-03 20:48:00 | INFO     |   Model parameters: 10,120,450
+2026-02-03 20:48:01 | INFO     |   Training...
+2026-02-03 20:48:44 | INFO     |   Evaluating...
+2026-02-03 20:49:03 | INFO     |   Accuracy: 0.8611
+2026-02-03 20:49:03 | INFO     |   Duration: 0:01:03.250069
+2026-02-03 20:49:03 | INFO     | Trial 23 completed
+2026-02-03 20:49:03 | INFO     | --------------------------------------------------
+2026-02-03 20:49:03 | INFO     | Progress: 23/100 (23.0%)
+2026-02-03 20:49:03 | INFO     | Elapsed: 0:34:11.917781 | ETA: 1:54:29.463909
+2026-02-03 20:49:03 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 20:49:03 | INFO     | ==================================================
+2026-02-03 20:49:03 | INFO     | Trial 24 started
+2026-02-03 20:49:03 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 16, 'hidden_size': 256, 'intermediate_size': 512}
+2026-02-03 20:49:03 | INFO     |   Model parameters: 9,066,242
+2026-02-03 20:49:04 | INFO     |   Training...
+2026-02-03 20:49:41 | INFO     |   Evaluating...
+2026-02-03 20:49:58 | INFO     |   Accuracy: 0.8590
+2026-02-03 20:49:58 | INFO     |   Duration: 0:00:54.899244
+2026-02-03 20:49:58 | INFO     | Trial 24 completed
+2026-02-03 20:49:58 | INFO     | --------------------------------------------------
+2026-02-03 20:49:59 | INFO     | Progress: 24/100 (24.0%)
+2026-02-03 20:49:59 | INFO     | Elapsed: 0:35:07.234191 | ETA: 1:51:12.908300
+2026-02-03 20:49:59 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 20:49:59 | INFO     | ==================================================
+2026-02-03 20:49:59 | INFO     | Trial 25 started
+2026-02-03 20:49:59 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 8, 'hidden_size': 384, 'intermediate_size': 1536}
+2026-02-03 20:49:59 | INFO     |   Model parameters: 15,616,130
+2026-02-03 20:50:00 | INFO     |   Training...
+2026-02-03 20:50:40 | INFO     |   Evaluating...
+2026-02-03 20:50:58 | INFO     |   Accuracy: 0.8686
+2026-02-03 20:50:58 | INFO     |   Duration: 0:00:59.641128
+2026-02-03 20:50:58 | INFO     | Trial 25 completed
+2026-02-03 20:50:58 | INFO     | --------------------------------------------------
+2026-02-03 20:50:59 | INFO     | Progress: 25/100 (25.0%)
+2026-02-03 20:50:59 | INFO     | Elapsed: 0:36:07.299265 | ETA: 1:48:21.897825
+2026-02-03 20:50:59 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 20:50:59 | INFO     | ==================================================
+2026-02-03 20:50:59 | INFO     | Trial 26 started
+2026-02-03 20:50:59 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 8, 'hidden_size': 192, 'intermediate_size': 2048}
+2026-02-03 20:50:59 | INFO     |   Model parameters: 13,498,050
+2026-02-03 20:51:00 | INFO     |   Training...
+2026-02-03 20:52:18 | INFO     |   Evaluating...
+2026-02-03 20:52:45 | INFO     |   Accuracy: 0.8510
+2026-02-03 20:52:45 | INFO     |   Duration: 0:01:45.998061
+2026-02-03 20:52:45 | INFO     | Trial 26 completed
+2026-02-03 20:52:45 | INFO     | --------------------------------------------------
+2026-02-03 20:52:45 | INFO     | Progress: 26/100 (26.0%)
+2026-02-03 20:52:45 | INFO     | Elapsed: 0:37:53.746005 | ETA: 1:47:51.430906
+2026-02-03 20:52:45 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 20:52:45 | INFO     | ==================================================
+2026-02-03 20:52:45 | INFO     | Trial 27 started
+2026-02-03 20:52:45 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 2, 'hidden_size': 384, 'intermediate_size': 768}
+2026-02-03 20:52:45 | INFO     |   Model parameters: 21,538,178
+2026-02-03 20:52:46 | INFO     |   Training...
+2026-02-03 20:54:05 | INFO     |   Evaluating...
+2026-02-03 20:54:32 | INFO     |   Accuracy: 0.8680
+2026-02-03 20:54:32 | INFO     |   Duration: 0:01:47.002745
+2026-02-03 20:54:32 | INFO     | Trial 27 completed
+2026-02-03 20:54:32 | INFO     | --------------------------------------------------
+2026-02-03 20:54:33 | INFO     | Progress: 27/100 (27.0%)
+2026-02-03 20:54:33 | INFO     | Elapsed: 0:39:41.223224 | ETA: 1:47:18.122069
+2026-02-03 20:54:33 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 20:54:33 | INFO     | ==================================================
+2026-02-03 20:54:33 | INFO     | Trial 28 started
+2026-02-03 20:54:33 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 16, 'hidden_size': 512, 'intermediate_size': 1536}
+2026-02-03 20:54:33 | INFO     |   Model parameters: 26,665,474
+2026-02-03 20:54:34 | INFO     |   Training...
+2026-02-03 20:55:50 | INFO     |   Evaluating...
+2026-02-03 20:56:16 | INFO     |   Accuracy: 0.8669
+2026-02-03 20:56:16 | INFO     |   Duration: 0:01:43.545691
+2026-02-03 20:56:16 | INFO     | Trial 28 completed
+2026-02-03 20:56:16 | INFO     | --------------------------------------------------
+2026-02-03 20:56:17 | INFO     | Progress: 28/100 (28.0%)
+2026-02-03 20:56:17 | INFO     | Elapsed: 0:41:25.248290 | ETA: 1:46:30.638496
+2026-02-03 20:56:17 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 20:56:17 | INFO     | ==================================================
+2026-02-03 20:56:17 | INFO     | Trial 29 started
+2026-02-03 20:56:17 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 8, 'hidden_size': 384, 'intermediate_size': 2048}
+2026-02-03 20:56:17 | INFO     |   Model parameters: 16,403,586
+2026-02-03 20:56:18 | INFO     |   Training...
+2026-02-03 20:57:00 | INFO     |   Evaluating...
+2026-02-03 20:57:19 | INFO     |   Accuracy: 0.8665
+2026-02-03 20:57:19 | INFO     |   Duration: 0:01:02.452588
+2026-02-03 20:57:19 | INFO     | Trial 29 completed
+2026-02-03 20:57:19 | INFO     | --------------------------------------------------
+2026-02-03 20:57:19 | INFO     | Progress: 29/100 (29.0%)
+2026-02-03 20:57:19 | INFO     | Elapsed: 0:42:28.193894 | ETA: 1:43:58.681605
+2026-02-03 20:57:19 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 20:57:19 | INFO     | ==================================================
+2026-02-03 20:57:20 | INFO     | Trial 30 started
+2026-02-03 20:57:20 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 8, 'hidden_size': 512, 'intermediate_size': 2048}
+2026-02-03 20:57:20 | INFO     |   Model parameters: 28,764,674
+2026-02-03 20:57:21 | INFO     |   Training...
+2026-02-03 20:58:37 | INFO     |   Evaluating...
+2026-02-03 20:59:03 | INFO     |   Accuracy: 0.8687
+2026-02-03 20:59:03 | INFO     |   Duration: 0:01:43.666397
+2026-02-03 20:59:03 | INFO     | Trial 30 completed
+2026-02-03 20:59:03 | INFO     | --------------------------------------------------
+2026-02-03 20:59:04 | INFO     | Progress: 30/100 (30.0%)
+2026-02-03 20:59:04 | INFO     | Elapsed: 0:44:12.364247 | ETA: 1:43:08.849940
+2026-02-03 20:59:04 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 20:59:04 | INFO     | ==================================================
+2026-02-03 20:59:04 | INFO     | Trial 31 started
+2026-02-03 20:59:04 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 8, 'hidden_size': 192, 'intermediate_size': 1024}
+2026-02-03 20:59:04 | INFO     |   Model parameters: 10,344,130
+2026-02-03 20:59:05 | INFO     |   Training...
+2026-02-03 21:00:16 | INFO     |   Evaluating...
+2026-02-03 21:00:40 | INFO     |   Accuracy: 0.8499
+2026-02-03 21:00:40 | INFO     |   Duration: 0:01:36.023173
+2026-02-03 21:00:40 | INFO     | Trial 31 completed
+2026-02-03 21:00:40 | INFO     | --------------------------------------------------
+2026-02-03 21:00:40 | INFO     | Progress: 31/100 (31.0%)
+2026-02-03 21:00:40 | INFO     | Elapsed: 0:45:48.926636 | ETA: 1:41:58.578657
+2026-02-03 21:00:40 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:00:40 | INFO     | ==================================================
+2026-02-03 21:00:40 | INFO     | Trial 32 started
+2026-02-03 21:00:40 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 8, 'hidden_size': 192, 'intermediate_size': 512}
+2026-02-03 21:00:40 | INFO     |   Model parameters: 6,689,346
+2026-02-03 21:00:43 | INFO     |   Training...
+2026-02-03 21:01:17 | INFO     |   Evaluating...
+2026-02-03 21:01:33 | INFO     |   Accuracy: 0.8584
+2026-02-03 21:01:33 | INFO     |   Duration: 0:00:52.856795
+2026-02-03 21:01:33 | INFO     | Trial 32 completed
+2026-02-03 21:01:33 | INFO     | --------------------------------------------------
+2026-02-03 21:01:34 | INFO     | Progress: 32/100 (32.0%)
+2026-02-03 21:01:34 | INFO     | Elapsed: 0:46:42.333017 | ETA: 1:39:14.957676
+2026-02-03 21:01:34 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:01:34 | INFO     | ==================================================
+2026-02-03 21:01:34 | INFO     | Trial 33 started
+2026-02-03 21:01:34 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 8, 'hidden_size': 128, 'intermediate_size': 512}
+2026-02-03 21:01:34 | INFO     |   Model parameters: 5,575,810
+2026-02-03 21:01:35 | INFO     |   Training...
+2026-02-03 21:02:39 | INFO     |   Evaluating...
+2026-02-03 21:03:02 | INFO     |   Accuracy: 0.8441
+2026-02-03 21:03:02 | INFO     |   Duration: 0:01:28.413449
+2026-02-03 21:03:02 | INFO     | Trial 33 completed
+2026-02-03 21:03:02 | INFO     | --------------------------------------------------
+2026-02-03 21:03:03 | INFO     | Progress: 33/100 (33.0%)
+2026-02-03 21:03:03 | INFO     | Elapsed: 0:48:11.316936 | ETA: 1:37:50.249555
+2026-02-03 21:03:03 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:03:03 | INFO     | ==================================================
+2026-02-03 21:03:03 | INFO     | Trial 34 started
+2026-02-03 21:03:03 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 2, 'hidden_size': 256, 'intermediate_size': 512}
+2026-02-03 21:03:03 | INFO     |   Model parameters: 12,228,866
+2026-02-03 21:03:04 | INFO     |   Training...
+2026-02-03 21:04:10 | INFO     |   Evaluating...
+2026-02-03 21:04:33 | INFO     |   Accuracy: 0.8586
+2026-02-03 21:04:33 | INFO     |   Duration: 0:01:30.444662
+2026-02-03 21:04:33 | INFO     | Trial 34 completed
+2026-02-03 21:04:33 | INFO     | --------------------------------------------------
+2026-02-03 21:04:34 | INFO     | Progress: 34/100 (34.0%)
+2026-02-03 21:04:34 | INFO     | Elapsed: 0:49:42.570998 | ETA: 1:36:29.696616
+2026-02-03 21:04:34 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:04:34 | INFO     | ==================================================
+2026-02-03 21:04:34 | INFO     | Trial 35 started
+2026-02-03 21:04:34 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 4, 'hidden_size': 384, 'intermediate_size': 1536}
+2026-02-03 21:04:34 | INFO     |   Model parameters: 15,616,130
+2026-02-03 21:04:35 | INFO     |   Training...
+2026-02-03 21:05:16 | INFO     |   Evaluating...
+2026-02-03 21:05:33 | INFO     |   Accuracy: 0.8664
+2026-02-03 21:05:33 | INFO     |   Duration: 0:00:59.598519
+2026-02-03 21:05:33 | INFO     | Trial 35 completed
+2026-02-03 21:05:33 | INFO     | --------------------------------------------------
+2026-02-03 21:05:34 | INFO     | Progress: 35/100 (35.0%)
+2026-02-03 21:05:34 | INFO     | Elapsed: 0:50:42.770802 | ETA: 1:34:10.860085
+2026-02-03 21:05:34 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:05:34 | INFO     | ==================================================
+2026-02-03 21:05:34 | INFO     | Trial 36 started
+2026-02-03 21:05:34 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 8, 'hidden_size': 256, 'intermediate_size': 1024}
+2026-02-03 21:05:34 | INFO     |   Model parameters: 9,591,554
+2026-02-03 21:05:35 | INFO     |   Training...
+2026-02-03 21:06:10 | INFO     |   Evaluating...
+2026-02-03 21:06:27 | INFO     |   Accuracy: 0.8652
+2026-02-03 21:06:27 | INFO     |   Duration: 0:00:52.825849
+2026-02-03 21:06:27 | INFO     | Trial 36 completed
+2026-02-03 21:06:27 | INFO     | --------------------------------------------------
+2026-02-03 21:06:28 | INFO     | Progress: 36/100 (36.0%)
+2026-02-03 21:06:28 | INFO     | Elapsed: 0:51:36.422213 | ETA: 1:31:44.750592
+2026-02-03 21:06:28 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:06:28 | INFO     | ==================================================
+2026-02-03 21:06:28 | INFO     | Trial 37 started
+2026-02-03 21:06:28 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 8, 'hidden_size': 256, 'intermediate_size': 2048}
+2026-02-03 21:06:28 | INFO     |   Model parameters: 18,532,610
+2026-02-03 21:06:29 | INFO     |   Training...
+2026-02-03 21:07:54 | INFO     |   Evaluating...
+2026-02-03 21:08:23 | INFO     |   Accuracy: 0.8578
+2026-02-03 21:08:23 | INFO     |   Duration: 0:01:55.292170
+2026-02-03 21:08:23 | INFO     | Trial 37 completed
+2026-02-03 21:08:23 | INFO     | --------------------------------------------------
+2026-02-03 21:08:24 | INFO     | Progress: 37/100 (37.0%)
+2026-02-03 21:08:24 | INFO     | Elapsed: 0:53:32.567915 | ETA: 1:31:10.048080
+2026-02-03 21:08:24 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:08:24 | INFO     | ==================================================
+2026-02-03 21:08:24 | INFO     | Trial 38 started
+2026-02-03 21:08:24 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 2, 'hidden_size': 384, 'intermediate_size': 512}
+2026-02-03 21:08:24 | INFO     |   Model parameters: 19,963,266
+2026-02-03 21:08:25 | INFO     |   Training...
+2026-02-03 21:09:40 | INFO     |   Evaluating...
+2026-02-03 21:10:06 | INFO     |   Accuracy: 0.8687
+2026-02-03 21:10:06 | INFO     |   Duration: 0:01:42.192883
+2026-02-03 21:10:06 | INFO     | Trial 38 completed
+2026-02-03 21:10:06 | INFO     | --------------------------------------------------
+2026-02-03 21:10:07 | INFO     | Progress: 38/100 (38.0%)
+2026-02-03 21:10:07 | INFO     | Elapsed: 0:55:15.634194 | ETA: 1:30:09.718922
+2026-02-03 21:10:07 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:10:07 | INFO     | ==================================================
+2026-02-03 21:10:07 | INFO     | Trial 39 started
+2026-02-03 21:10:08 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 16, 'hidden_size': 512, 'intermediate_size': 2048}
+2026-02-03 21:10:08 | INFO     |   Model parameters: 41,374,210
+2026-02-03 21:10:11 | INFO     |   Training...
+2026-02-03 21:12:31 | INFO     |   Evaluating...
+2026-02-03 21:13:14 | INFO     |   Accuracy: 0.8640
+2026-02-03 21:13:14 | INFO     |   Duration: 0:03:07.005100
+2026-02-03 21:13:14 | INFO     | Trial 39 completed
+2026-02-03 21:13:14 | INFO     | --------------------------------------------------
+2026-02-03 21:13:15 | INFO     | Progress: 39/100 (39.0%)
+2026-02-03 21:13:15 | INFO     | Elapsed: 0:58:23.531141 | ETA: 1:31:19.882052
+2026-02-03 21:13:15 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:13:15 | INFO     | ==================================================
+2026-02-03 21:13:15 | INFO     | Trial 40 started
+2026-02-03 21:13:15 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 4, 'hidden_size': 128, 'intermediate_size': 512}
+2026-02-03 21:13:15 | INFO     |   Model parameters: 5,575,810
+2026-02-03 21:13:16 | INFO     |   Training...
+2026-02-03 21:14:18 | INFO     |   Evaluating...
+2026-02-03 21:14:41 | INFO     |   Accuracy: 0.8480
+2026-02-03 21:14:41 | INFO     |   Duration: 0:01:26.520297
+2026-02-03 21:14:41 | INFO     | Trial 40 completed
+2026-02-03 21:14:41 | INFO     | --------------------------------------------------
+2026-02-03 21:14:42 | INFO     | Progress: 40/100 (40.0%)
+2026-02-03 21:14:42 | INFO     | Elapsed: 0:59:50.978606 | ETA: 1:29:46.467900
+2026-02-03 21:14:42 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:14:42 | INFO     | ==================================================
+2026-02-03 21:14:42 | INFO     | Trial 41 started
+2026-02-03 21:14:43 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 8, 'hidden_size': 384, 'intermediate_size': 1536}
+2026-02-03 21:14:43 | INFO     |   Model parameters: 19,165,058
+2026-02-03 21:14:43 | INFO     |   Training...
+2026-02-03 21:15:43 | INFO     |   Evaluating...
+2026-02-03 21:16:06 | INFO     |   Accuracy: 0.8682
+2026-02-03 21:16:06 | INFO     |   Duration: 0:01:23.738670
+2026-02-03 21:16:06 | INFO     | Trial 41 completed
+2026-02-03 21:16:06 | INFO     | --------------------------------------------------
+2026-02-03 21:16:07 | INFO     | Progress: 41/100 (41.0%)
+2026-02-03 21:16:07 | INFO     | Elapsed: 1:01:15.653684 | ETA: 1:28:09.355310
+2026-02-03 21:16:07 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:16:07 | INFO     | ==================================================
+2026-02-03 21:16:07 | INFO     | Trial 42 started
+2026-02-03 21:16:07 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 4, 'hidden_size': 192, 'intermediate_size': 1024}
+2026-02-03 21:16:07 | INFO     |   Model parameters: 10,344,130
+2026-02-03 21:16:08 | INFO     |   Training...
+2026-02-03 21:17:14 | INFO     |   Evaluating...
+2026-02-03 21:17:38 | INFO     |   Accuracy: 0.8552
+2026-02-03 21:17:38 | INFO     |   Duration: 0:01:30.668425
+2026-02-03 21:17:38 | INFO     | Trial 42 completed
+2026-02-03 21:17:38 | INFO     | --------------------------------------------------
+2026-02-03 21:17:39 | INFO     | Progress: 42/100 (42.0%)
+2026-02-03 21:17:39 | INFO     | Elapsed: 1:02:47.297288 | ETA: 1:26:42.458132
+2026-02-03 21:17:39 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:17:39 | INFO     | ==================================================
+2026-02-03 21:17:39 | INFO     | Trial 43 started
+2026-02-03 21:17:39 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 16, 'hidden_size': 192, 'intermediate_size': 768}
+2026-02-03 21:17:39 | INFO     |   Model parameters: 6,886,466
+2026-02-03 21:17:40 | INFO     |   Training...
+2026-02-03 21:18:16 | INFO     |   Evaluating...
+2026-02-03 21:18:33 | INFO     |   Accuracy: 0.8582
+2026-02-03 21:18:33 | INFO     |   Duration: 0:00:54.165745
+2026-02-03 21:18:33 | INFO     | Trial 43 completed
+2026-02-03 21:18:33 | INFO     | --------------------------------------------------
+2026-02-03 21:18:34 | INFO     | Progress: 43/100 (43.0%)
+2026-02-03 21:18:34 | INFO     | Elapsed: 1:03:42.451461 | ETA: 1:24:26.970540
+2026-02-03 21:18:34 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:18:34 | INFO     | ==================================================
+2026-02-03 21:18:34 | INFO     | Trial 44 started
+2026-02-03 21:18:34 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 16, 'hidden_size': 128, 'intermediate_size': 1024}
+2026-02-03 21:18:34 | INFO     |   Model parameters: 5,309,058
+2026-02-03 21:18:35 | INFO     |   Training...
+2026-02-03 21:19:24 | INFO     |   Evaluating...
+2026-02-03 21:19:44 | INFO     |   Accuracy: 0.8492
+2026-02-03 21:19:44 | INFO     |   Duration: 0:01:10.191292
+2026-02-03 21:19:44 | INFO     | Trial 44 completed
+2026-02-03 21:19:44 | INFO     | --------------------------------------------------
+2026-02-03 21:19:45 | INFO     | Progress: 44/100 (44.0%)
+2026-02-03 21:19:45 | INFO     | Elapsed: 1:04:53.638736 | ETA: 1:22:35.540184
+2026-02-03 21:19:45 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:19:45 | INFO     | ==================================================
+2026-02-03 21:19:45 | INFO     | Trial 45 started
+2026-02-03 21:19:45 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 8, 'hidden_size': 128, 'intermediate_size': 2048}
+2026-02-03 21:19:45 | INFO     |   Model parameters: 6,361,730
+2026-02-03 21:19:46 | INFO     |   Training...
+2026-02-03 21:20:33 | INFO     |   Evaluating...
+2026-02-03 21:20:52 | INFO     |   Accuracy: 0.8454
+2026-02-03 21:20:52 | INFO     |   Duration: 0:01:06.700474
+2026-02-03 21:20:52 | INFO     | Trial 45 completed
+2026-02-03 21:20:52 | INFO     | --------------------------------------------------
+2026-02-03 21:20:53 | INFO     | Progress: 45/100 (45.0%)
+2026-02-03 21:20:53 | INFO     | Elapsed: 1:06:01.351409 | ETA: 1:20:41.651705
+2026-02-03 21:20:53 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:20:53 | INFO     | ==================================================
+2026-02-03 21:20:53 | INFO     | Trial 46 started
+2026-02-03 21:20:53 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 8, 'hidden_size': 256, 'intermediate_size': 768}
+2026-02-03 21:20:53 | INFO     |   Model parameters: 10,645,762
+2026-02-03 21:20:54 | INFO     |   Training...
+2026-02-03 21:21:41 | INFO     |   Evaluating...
+2026-02-03 21:22:00 | INFO     |   Accuracy: 0.8614
+2026-02-03 21:22:00 | INFO     |   Duration: 0:01:07.181791
+2026-02-03 21:22:00 | INFO     | Trial 46 completed
+2026-02-03 21:22:00 | INFO     | --------------------------------------------------
+2026-02-03 21:22:01 | INFO     | Progress: 46/100 (46.0%)
+2026-02-03 21:22:01 | INFO     | Elapsed: 1:07:09.558327 | ETA: 1:18:50.351076
+2026-02-03 21:22:01 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:22:01 | INFO     | ==================================================
+2026-02-03 21:22:01 | INFO     | Trial 47 started
+2026-02-03 21:22:01 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 8, 'hidden_size': 384, 'intermediate_size': 2048}
+2026-02-03 21:22:01 | INFO     |   Model parameters: 29,412,738
+2026-02-03 21:22:02 | INFO     |   Training...
+2026-02-03 21:23:50 | INFO     |   Evaluating...
+2026-02-03 21:24:25 | INFO     |   Accuracy: 0.8577
+2026-02-03 21:24:25 | INFO     |   Duration: 0:02:24.120788
+2026-02-03 21:24:25 | INFO     | Trial 47 completed
+2026-02-03 21:24:25 | INFO     | --------------------------------------------------
+2026-02-03 21:24:26 | INFO     | Progress: 47/100 (47.0%)
+2026-02-03 21:24:26 | INFO     | Elapsed: 1:09:34.725373 | ETA: 1:18:27.669032
+2026-02-03 21:24:26 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:24:26 | INFO     | ==================================================
+2026-02-03 21:24:26 | INFO     | Trial 48 started
+2026-02-03 21:24:26 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 4, 'hidden_size': 192, 'intermediate_size': 512}
+2026-02-03 21:24:26 | INFO     |   Model parameters: 7,381,954
+2026-02-03 21:24:27 | INFO     |   Training...
+2026-02-03 21:25:11 | INFO     |   Evaluating...
+2026-02-03 21:25:30 | INFO     |   Accuracy: 0.8573
+2026-02-03 21:25:30 | INFO     |   Duration: 0:01:03.477663
+2026-02-03 21:25:30 | INFO     | Trial 48 completed
+2026-02-03 21:25:30 | INFO     | --------------------------------------------------
+2026-02-03 21:25:31 | INFO     | Progress: 48/100 (48.0%)
+2026-02-03 21:25:31 | INFO     | Elapsed: 1:10:39.269594 | ETA: 1:16:32.542084
+2026-02-03 21:25:31 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:25:31 | INFO     | ==================================================
+2026-02-03 21:25:31 | INFO     | Trial 49 started
+2026-02-03 21:25:31 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 8, 'hidden_size': 128, 'intermediate_size': 512}
+2026-02-03 21:25:31 | INFO     |   Model parameters: 4,782,722
+2026-02-03 21:25:32 | INFO     |   Training...
+2026-02-03 21:26:15 | INFO     |   Evaluating...
+2026-02-03 21:26:34 | INFO     |   Accuracy: 0.8470
+2026-02-03 21:26:34 | INFO     |   Duration: 0:01:03.066650
+2026-02-03 21:26:34 | INFO     | Trial 49 completed
+2026-02-03 21:26:34 | INFO     | --------------------------------------------------
+2026-02-03 21:26:35 | INFO     | Progress: 49/100 (49.0%)
+2026-02-03 21:26:35 | INFO     | Elapsed: 1:11:43.417883 | ETA: 1:14:39.067605
+2026-02-03 21:26:35 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:26:35 | INFO     | ==================================================
+2026-02-03 21:26:35 | INFO     | Trial 50 started
+2026-02-03 21:26:35 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 16, 'hidden_size': 128, 'intermediate_size': 1536}
+2026-02-03 21:26:35 | INFO     |   Model parameters: 4,912,514
+2026-02-03 21:26:36 | INFO     |   Training...
+2026-02-03 21:27:12 | INFO     |   Evaluating...
+2026-02-03 21:27:29 | INFO     |   Accuracy: 0.8481
+2026-02-03 21:27:29 | INFO     |   Duration: 0:00:53.926430
+2026-02-03 21:27:29 | INFO     | Trial 50 completed
+2026-02-03 21:27:29 | INFO     | --------------------------------------------------
+2026-02-03 21:27:30 | INFO     | Progress: 50/100 (50.0%)
+2026-02-03 21:27:30 | INFO     | Elapsed: 1:12:38.434590 | ETA: 1:12:38.434600
+2026-02-03 21:27:30 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:27:30 | INFO     | ==================================================
+2026-02-03 21:27:30 | INFO     | Trial 51 started
+2026-02-03 21:27:30 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 2, 'hidden_size': 192, 'intermediate_size': 768}
+2026-02-03 21:27:30 | INFO     |   Model parameters: 7,776,194
+2026-02-03 21:27:31 | INFO     |   Training...
+2026-02-03 21:28:13 | INFO     |   Evaluating...
+2026-02-03 21:28:32 | INFO     |   Accuracy: 0.8574
+2026-02-03 21:28:32 | INFO     |   Duration: 0:01:02.396921
+2026-02-03 21:28:32 | INFO     | Trial 51 completed
+2026-02-03 21:28:32 | INFO     | --------------------------------------------------
+2026-02-03 21:28:33 | INFO     | Progress: 51/100 (51.0%)
+2026-02-03 21:28:33 | INFO     | Elapsed: 1:13:41.911764 | ETA: 1:10:48.503448
+2026-02-03 21:28:33 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:28:33 | INFO     | ==================================================
+2026-02-03 21:28:33 | INFO     | Trial 52 started
+2026-02-03 21:28:33 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 16, 'hidden_size': 384, 'intermediate_size': 1024}
+2026-02-03 21:28:33 | INFO     |   Model parameters: 14,828,674
+2026-02-03 21:28:35 | INFO     |   Training...
+2026-02-03 21:29:17 | INFO     |   Evaluating...
+2026-02-03 21:29:34 | INFO     |   Accuracy: 0.8671
+2026-02-03 21:29:34 | INFO     |   Duration: 0:01:01.169396
+2026-02-03 21:29:34 | INFO     | Trial 52 completed
+2026-02-03 21:29:34 | INFO     | --------------------------------------------------
+2026-02-03 21:29:35 | INFO     | Progress: 52/100 (52.0%)
+2026-02-03 21:29:35 | INFO     | Elapsed: 1:14:44.163459 | ETA: 1:08:59.227824
+2026-02-03 21:29:35 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:29:35 | INFO     | ==================================================
+2026-02-03 21:29:35 | INFO     | Trial 53 started
+2026-02-03 21:29:36 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 4, 'hidden_size': 256, 'intermediate_size': 2048}
+2026-02-03 21:29:36 | INFO     |   Model parameters: 18,532,610
+2026-02-03 21:29:37 | INFO     |   Training...
+2026-02-03 21:30:56 | INFO     |   Evaluating...
+2026-02-03 21:31:23 | INFO     |   Accuracy: 0.8593
+2026-02-03 21:31:23 | INFO     |   Duration: 0:01:48.003423
+2026-02-03 21:31:23 | INFO     | Trial 53 completed
+2026-02-03 21:31:23 | INFO     | --------------------------------------------------
+2026-02-03 21:31:25 | INFO     | Progress: 53/100 (53.0%)
+2026-02-03 21:31:25 | INFO     | Elapsed: 1:16:33.279466 | ETA: 1:07:53.285550
+2026-02-03 21:31:25 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:31:25 | INFO     | ==================================================
+2026-02-03 21:31:25 | INFO     | Trial 54 started
+2026-02-03 21:31:25 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 16, 'hidden_size': 192, 'intermediate_size': 1536}
+2026-02-03 21:31:25 | INFO     |   Model parameters: 8,958,914
+2026-02-03 21:31:26 | INFO     |   Training...
+2026-02-03 21:32:19 | INFO     |   Evaluating...
+2026-02-03 21:32:40 | INFO     |   Accuracy: 0.8534
+2026-02-03 21:32:40 | INFO     |   Duration: 0:01:15.559251
+2026-02-03 21:32:40 | INFO     | Trial 54 completed
+2026-02-03 21:32:40 | INFO     | --------------------------------------------------
+2026-02-03 21:32:41 | INFO     | Progress: 54/100 (54.0%)
+2026-02-03 21:32:41 | INFO     | Elapsed: 1:17:49.968890 | ETA: 1:06:18.121630
+2026-02-03 21:32:41 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:32:41 | INFO     | ==================================================
+2026-02-03 21:32:41 | INFO     | Trial 55 started
+2026-02-03 21:32:41 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 16, 'hidden_size': 128, 'intermediate_size': 2048}
+2026-02-03 21:32:41 | INFO     |   Model parameters: 8,733,826
+2026-02-03 21:32:42 | INFO     |   Training...
+2026-02-03 21:34:06 | INFO     |   Evaluating...
+2026-02-03 21:34:33 | INFO     |   Accuracy: 0.8365
+2026-02-03 21:34:33 | INFO     |   Duration: 0:01:51.315798
+2026-02-03 21:34:33 | INFO     | Trial 55 completed
+2026-02-03 21:34:33 | INFO     | --------------------------------------------------
+2026-02-03 21:34:34 | INFO     | Progress: 55/100 (55.0%)
+2026-02-03 21:34:34 | INFO     | Elapsed: 1:19:42.425758 | ETA: 1:05:12.893820
+2026-02-03 21:34:34 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:34:34 | INFO     | ==================================================
+2026-02-03 21:34:34 | INFO     | Trial 56 started
+2026-02-03 21:34:34 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 2, 'hidden_size': 512, 'intermediate_size': 768}
+2026-02-03 21:34:34 | INFO     |   Model parameters: 23,516,674
+2026-02-03 21:34:35 | INFO     |   Training...
+2026-02-03 21:35:35 | INFO     |   Evaluating...
+2026-02-03 21:35:56 | INFO     |   Accuracy: 0.8671
+2026-02-03 21:35:56 | INFO     |   Duration: 0:01:22.631117
+2026-02-03 21:35:56 | INFO     | Trial 56 completed
+2026-02-03 21:35:56 | INFO     | --------------------------------------------------
+2026-02-03 21:35:58 | INFO     | Progress: 56/100 (56.0%)
+2026-02-03 21:35:58 | INFO     | Elapsed: 1:21:06.221753 | ETA: 1:03:43.459948
+2026-02-03 21:35:58 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:35:58 | INFO     | ==================================================
+2026-02-03 21:35:58 | INFO     | Trial 57 started
+2026-02-03 21:35:58 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 2, 'hidden_size': 256, 'intermediate_size': 2048}
+2026-02-03 21:35:58 | INFO     |   Model parameters: 10,642,178
+2026-02-03 21:35:59 | INFO     |   Training...
+2026-02-03 21:36:36 | INFO     |   Evaluating...
+2026-02-03 21:36:52 | INFO     |   Accuracy: 0.8604
+2026-02-03 21:36:52 | INFO     |   Duration: 0:00:54.963759
+2026-02-03 21:36:52 | INFO     | Trial 57 completed
+2026-02-03 21:36:52 | INFO     | --------------------------------------------------
+2026-02-03 21:36:54 | INFO     | Progress: 57/100 (57.0%)
+2026-02-03 21:36:54 | INFO     | Elapsed: 1:22:02.348940 | ETA: 1:01:53.350957
+2026-02-03 21:36:54 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:36:54 | INFO     | ==================================================
+2026-02-03 21:36:54 | INFO     | Trial 58 started
+2026-02-03 21:36:54 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 2, 'hidden_size': 128, 'intermediate_size': 1024}
+2026-02-03 21:36:54 | INFO     |   Model parameters: 6,628,482
+2026-02-03 21:36:55 | INFO     |   Training...
+2026-02-03 21:37:55 | INFO     |   Evaluating...
+2026-02-03 21:38:18 | INFO     |   Accuracy: 0.8428
+2026-02-03 21:38:18 | INFO     |   Duration: 0:01:24.521055
+2026-02-03 21:38:18 | INFO     | Trial 58 completed
+2026-02-03 21:38:18 | INFO     | --------------------------------------------------
+2026-02-03 21:38:19 | INFO     | Progress: 58/100 (58.0%)
+2026-02-03 21:38:19 | INFO     | Elapsed: 1:23:28.053404 | ETA: 1:00:26.521416
+2026-02-03 21:38:19 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:38:19 | INFO     | ==================================================
+2026-02-03 21:38:19 | INFO     | Trial 59 started
+2026-02-03 21:38:20 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 8, 'hidden_size': 512, 'intermediate_size': 1536}
+2026-02-03 21:38:20 | INFO     |   Model parameters: 37,175,810
+2026-02-03 21:38:21 | INFO     |   Training...
+2026-02-03 21:40:19 | INFO     |   Evaluating...
+2026-02-03 21:40:55 | INFO     |   Accuracy: 0.8650
+2026-02-03 21:40:55 | INFO     |   Duration: 0:02:36.086415
+2026-02-03 21:40:55 | INFO     | Trial 59 completed
+2026-02-03 21:40:55 | INFO     | --------------------------------------------------
+2026-02-03 21:40:57 | INFO     | Progress: 59/100 (59.0%)
+2026-02-03 21:40:57 | INFO     | Elapsed: 1:26:05.337908 | ETA: 0:59:49.472100
+2026-02-03 21:40:57 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:40:57 | INFO     | ==================================================
+2026-02-03 21:40:57 | INFO     | Trial 60 started
+2026-02-03 21:40:57 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 16, 'hidden_size': 256, 'intermediate_size': 1024}
+2026-02-03 21:40:57 | INFO     |   Model parameters: 9,591,554
+2026-02-03 21:40:58 | INFO     |   Training...
+2026-02-03 21:41:35 | INFO     |   Evaluating...
+2026-02-03 21:41:52 | INFO     |   Accuracy: 0.8640
+2026-02-03 21:41:52 | INFO     |   Duration: 0:00:55.570329
+2026-02-03 21:41:52 | INFO     | Trial 60 completed
+2026-02-03 21:41:52 | INFO     | --------------------------------------------------
+2026-02-03 21:41:53 | INFO     | Progress: 60/100 (60.0%)
+2026-02-03 21:41:53 | INFO     | Elapsed: 1:27:02.122365 | ETA: 0:58:01.414920
+2026-02-03 21:41:53 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:41:53 | INFO     | ==================================================
+2026-02-03 21:41:53 | INFO     | Trial 61 started
+2026-02-03 21:41:54 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 2, 'hidden_size': 256, 'intermediate_size': 768}
+2026-02-03 21:41:54 | INFO     |   Model parameters: 13,279,490
+2026-02-03 21:41:54 | INFO     |   Training...
+2026-02-03 21:43:00 | INFO     |   Evaluating...
+2026-02-03 21:43:23 | INFO     |   Accuracy: 0.8540
+2026-02-03 21:43:23 | INFO     |   Duration: 0:01:29.602733
+2026-02-03 21:43:23 | INFO     | Trial 61 completed
+2026-02-03 21:43:23 | INFO     | --------------------------------------------------
+2026-02-03 21:43:24 | INFO     | Progress: 61/100 (61.0%)
+2026-02-03 21:43:24 | INFO     | Elapsed: 1:28:32.975861 | ETA: 0:56:36.820635
+2026-02-03 21:43:24 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:43:24 | INFO     | ==================================================
+2026-02-03 21:43:24 | INFO     | Trial 62 started
+2026-02-03 21:43:25 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 2, 'hidden_size': 256, 'intermediate_size': 1024}
+2026-02-03 21:43:25 | INFO     |   Model parameters: 11,171,074
+2026-02-03 21:43:25 | INFO     |   Training...
+2026-02-03 21:44:12 | INFO     |   Evaluating...
+2026-02-03 21:44:31 | INFO     |   Accuracy: 0.8558
+2026-02-03 21:44:31 | INFO     |   Duration: 0:01:06.897774
+2026-02-03 21:44:31 | INFO     | Trial 62 completed
+2026-02-03 21:44:31 | INFO     | --------------------------------------------------
+2026-02-03 21:44:32 | INFO     | Progress: 62/100 (62.0%)
+2026-02-03 21:44:32 | INFO     | Elapsed: 1:29:41.131114 | ETA: 0:54:58.112606
+2026-02-03 21:44:32 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:44:32 | INFO     | ==================================================
+2026-02-03 21:44:32 | INFO     | Trial 63 started
+2026-02-03 21:44:33 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 4, 'hidden_size': 192, 'intermediate_size': 512}
+2026-02-03 21:44:33 | INFO     |   Model parameters: 6,689,346
+2026-02-03 21:44:33 | INFO     |   Training...
+2026-02-03 21:45:05 | INFO     |   Evaluating...
+2026-02-03 21:45:22 | INFO     |   Accuracy: 0.8557
+2026-02-03 21:45:22 | INFO     |   Duration: 0:00:49.265624
+2026-02-03 21:45:22 | INFO     | Trial 63 completed
+2026-02-03 21:45:22 | INFO     | --------------------------------------------------
+2026-02-03 21:45:23 | INFO     | Progress: 63/100 (63.0%)
+2026-02-03 21:45:23 | INFO     | Elapsed: 1:30:31.663999 | ETA: 0:53:10.024893
+2026-02-03 21:45:23 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:45:23 | INFO     | ==================================================
+2026-02-03 21:45:23 | INFO     | Trial 64 started
+2026-02-03 21:45:23 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 4, 'hidden_size': 512, 'intermediate_size': 2048}
+2026-02-03 21:45:24 | INFO     |   Model parameters: 41,374,210
+2026-02-03 21:45:24 | INFO     |   Training...
+2026-02-03 21:47:30 | INFO     |   Evaluating...
+2026-02-03 21:48:09 | INFO     |   Accuracy: 0.8663
+2026-02-03 21:48:09 | INFO     |   Duration: 0:02:45.538493
+2026-02-03 21:48:09 | INFO     | Trial 64 completed
+2026-02-03 21:48:09 | INFO     | --------------------------------------------------
+2026-02-03 21:48:10 | INFO     | Progress: 64/100 (64.0%)
+2026-02-03 21:48:10 | INFO     | Elapsed: 1:33:18.503380 | ETA: 0:52:29.158140
+2026-02-03 21:48:10 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:48:10 | INFO     | ==================================================
+2026-02-03 21:48:10 | INFO     | Trial 65 started
+2026-02-03 21:48:10 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 16, 'hidden_size': 512, 'intermediate_size': 1536}
+2026-02-03 21:48:10 | INFO     |   Model parameters: 21,410,306
+2026-02-03 21:48:11 | INFO     |   Training...
+2026-02-03 21:49:01 | INFO     |   Evaluating...
+2026-02-03 21:49:20 | INFO     |   Accuracy: 0.8697
+2026-02-03 21:49:20 | INFO     |   Duration: 0:01:10.652294
+2026-02-03 21:49:20 | INFO     | Trial 65 completed
+2026-02-03 21:49:20 | INFO     | --------------------------------------------------
+2026-02-03 21:49:22 | INFO     | Progress: 65/100 (65.0%)
+2026-02-03 21:49:22 | INFO     | Elapsed: 1:34:30.450803 | ETA: 0:50:53.319675
+2026-02-03 21:49:22 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:49:22 | INFO     | ==================================================
+2026-02-03 21:49:22 | INFO     | Trial 66 started
+2026-02-03 21:49:22 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 8, 'hidden_size': 384, 'intermediate_size': 1536}
+2026-02-03 21:49:22 | INFO     |   Model parameters: 26,262,914
+2026-02-03 21:49:23 | INFO     |   Training...
+2026-02-03 21:51:00 | INFO     |   Evaluating...
+2026-02-03 21:51:32 | INFO     |   Accuracy: 0.8593
+2026-02-03 21:51:32 | INFO     |   Duration: 0:02:10.434855
+2026-02-03 21:51:32 | INFO     | Trial 66 completed
+2026-02-03 21:51:32 | INFO     | --------------------------------------------------
+2026-02-03 21:51:33 | INFO     | Progress: 66/100 (66.0%)
+2026-02-03 21:51:33 | INFO     | Elapsed: 1:36:42.194409 | ETA: 0:49:49.009224
+2026-02-03 21:51:33 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:51:33 | INFO     | ==================================================
+2026-02-03 21:51:34 | INFO     | Trial 67 started
+2026-02-03 21:51:34 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 2, 'hidden_size': 512, 'intermediate_size': 768}
+2026-02-03 21:51:34 | INFO     |   Model parameters: 19,835,906
+2026-02-03 21:51:35 | INFO     |   Training...
+2026-02-03 21:52:17 | INFO     |   Evaluating...
+2026-02-03 21:52:34 | INFO     |   Accuracy: 0.8648
+2026-02-03 21:52:34 | INFO     |   Duration: 0:01:00.876788
+2026-02-03 21:52:34 | INFO     | Trial 67 completed
+2026-02-03 21:52:34 | INFO     | --------------------------------------------------
+2026-02-03 21:52:36 | INFO     | Progress: 67/100 (67.0%)
+2026-02-03 21:52:36 | INFO     | Elapsed: 1:37:44.395893 | ETA: 0:48:08.433801
+2026-02-03 21:52:36 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:52:36 | INFO     | ==================================================
+2026-02-03 21:52:36 | INFO     | Trial 68 started
+2026-02-03 21:52:36 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 4, 'hidden_size': 192, 'intermediate_size': 2048}
+2026-02-03 21:52:36 | INFO     |   Model parameters: 7,872,066
+2026-02-03 21:52:37 | INFO     |   Training...
+2026-02-03 21:53:10 | INFO     |   Evaluating...
+2026-02-03 21:53:27 | INFO     |   Accuracy: 0.8627
+2026-02-03 21:53:27 | INFO     |   Duration: 0:00:51.309516
+2026-02-03 21:53:27 | INFO     | Trial 68 completed
+2026-02-03 21:53:27 | INFO     | --------------------------------------------------
+2026-02-03 21:53:28 | INFO     | Progress: 68/100 (68.0%)
+2026-02-03 21:53:28 | INFO     | Elapsed: 1:38:37.057419 | ETA: 0:46:24.497600
+2026-02-03 21:53:28 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:53:28 | INFO     | ==================================================
+2026-02-03 21:53:28 | INFO     | Trial 69 started
+2026-02-03 21:53:29 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 8, 'hidden_size': 128, 'intermediate_size': 768}
+2026-02-03 21:53:29 | INFO     |   Model parameters: 6,102,146
+2026-02-03 21:53:29 | INFO     |   Training...
+2026-02-03 21:54:33 | INFO     |   Evaluating...
+2026-02-03 21:54:56 | INFO     |   Accuracy: 0.8449
+2026-02-03 21:54:56 | INFO     |   Duration: 0:01:27.732187
+2026-02-03 21:54:56 | INFO     | Trial 69 completed
+2026-02-03 21:54:56 | INFO     | --------------------------------------------------
+2026-02-03 21:54:57 | INFO     | Progress: 69/100 (69.0%)
+2026-02-03 21:54:57 | INFO     | Elapsed: 1:40:06.158922 | ETA: 0:44:58.419211
+2026-02-03 21:54:57 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:54:57 | INFO     | ==================================================
+2026-02-03 21:54:57 | INFO     | Trial 70 started
+2026-02-03 21:54:58 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 16, 'hidden_size': 128, 'intermediate_size': 1536}
+2026-02-03 21:54:58 | INFO     |   Model parameters: 5,835,394
+2026-02-03 21:54:58 | INFO     |   Training...
+2026-02-03 21:55:49 | INFO     |   Evaluating...
+2026-02-03 21:56:08 | INFO     |   Accuracy: 0.8435
+2026-02-03 21:56:08 | INFO     |   Duration: 0:01:10.997307
+2026-02-03 21:56:08 | INFO     | Trial 70 completed
+2026-02-03 21:56:08 | INFO     | --------------------------------------------------
+2026-02-03 21:56:10 | INFO     | Progress: 70/100 (70.0%)
+2026-02-03 21:56:10 | INFO     | Elapsed: 1:41:18.550955 | ETA: 0:43:25.093260
+2026-02-03 21:56:10 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:56:10 | INFO     | ==================================================
+2026-02-03 21:56:10 | INFO     | Trial 71 started
+2026-02-03 21:56:10 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 2, 'hidden_size': 256, 'intermediate_size': 1536}
+2026-02-03 21:56:10 | INFO     |   Model parameters: 10,116,866
+2026-02-03 21:56:11 | INFO     |   Training...
+2026-02-03 21:56:46 | INFO     |   Evaluating...
+2026-02-03 21:57:03 | INFO     |   Accuracy: 0.8604
+2026-02-03 21:57:03 | INFO     |   Duration: 0:00:52.833137
+2026-02-03 21:57:03 | INFO     | Trial 71 completed
+2026-02-03 21:57:03 | INFO     | --------------------------------------------------
+2026-02-03 21:57:04 | INFO     | Progress: 71/100 (71.0%)
+2026-02-03 21:57:04 | INFO     | Elapsed: 1:42:12.785870 | ETA: 0:41:44.940714
+2026-02-03 21:57:04 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:57:04 | INFO     | ==================================================
+2026-02-03 21:57:04 | INFO     | Trial 72 started
+2026-02-03 21:57:04 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 2, 'hidden_size': 384, 'intermediate_size': 2048}
+2026-02-03 21:57:04 | INFO     |   Model parameters: 16,403,586
+2026-02-03 21:57:05 | INFO     |   Training...
+2026-02-03 21:57:46 | INFO     |   Evaluating...
+2026-02-03 21:58:05 | INFO     |   Accuracy: 0.8660
+2026-02-03 21:58:05 | INFO     |   Duration: 0:01:00.502732
+2026-02-03 21:58:05 | INFO     | Trial 72 completed
+2026-02-03 21:58:05 | INFO     | --------------------------------------------------
+2026-02-03 21:58:06 | INFO     | Progress: 72/100 (72.0%)
+2026-02-03 21:58:06 | INFO     | Elapsed: 1:43:14.694319 | ETA: 0:40:09.047788
+2026-02-03 21:58:06 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:58:06 | INFO     | ==================================================
+2026-02-03 21:58:06 | INFO     | Trial 73 started
+2026-02-03 21:58:06 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 16, 'hidden_size': 512, 'intermediate_size': 1024}
+2026-02-03 21:58:06 | INFO     |   Model parameters: 20,360,706
+2026-02-03 21:58:07 | INFO     |   Training...
+2026-02-03 21:58:54 | INFO     |   Evaluating...
+2026-02-03 21:59:13 | INFO     |   Accuracy: 0.8708
+2026-02-03 21:59:13 | INFO     |   Duration: 0:01:06.923543
+2026-02-03 21:59:13 | INFO     | Trial 73 completed
+2026-02-03 21:59:13 | INFO     | --------------------------------------------------
+2026-02-03 21:59:14 | INFO     | Progress: 73/100 (73.0%)
+2026-02-03 21:59:14 | INFO     | Elapsed: 1:44:23.020573 | ETA: 0:38:36.459654
+2026-02-03 21:59:14 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 21:59:14 | INFO     | ==================================================
+2026-02-03 21:59:14 | INFO     | Trial 74 started
+2026-02-03 21:59:15 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 4, 'hidden_size': 128, 'intermediate_size': 1024}
+2026-02-03 21:59:15 | INFO     |   Model parameters: 4,649,346
+2026-02-03 21:59:15 | INFO     |   Training...
+2026-02-03 21:59:48 | INFO     |   Evaluating...
+2026-02-03 22:00:05 | INFO     |   Accuracy: 0.8432
+2026-02-03 22:00:05 | INFO     |   Duration: 0:00:50.468275
+2026-02-03 22:00:05 | INFO     | Trial 74 completed
+2026-02-03 22:00:05 | INFO     | --------------------------------------------------
+2026-02-03 22:00:06 | INFO     | Progress: 74/100 (74.0%)
+2026-02-03 22:00:06 | INFO     | Elapsed: 1:45:14.903775 | ETA: 0:36:58.749988
+2026-02-03 22:00:06 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:00:06 | INFO     | ==================================================
+2026-02-03 22:00:06 | INFO     | Trial 75 started
+2026-02-03 22:00:06 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 2, 'hidden_size': 256, 'intermediate_size': 1024}
+2026-02-03 22:00:06 | INFO     |   Model parameters: 9,591,554
+2026-02-03 22:00:07 | INFO     |   Training...
+2026-02-03 22:00:41 | INFO     |   Evaluating...
+2026-02-03 22:00:58 | INFO     |   Accuracy: 0.8632
+2026-02-03 22:00:58 | INFO     |   Duration: 0:00:51.606378
+2026-02-03 22:00:58 | INFO     | Trial 75 completed
+2026-02-03 22:00:58 | INFO     | --------------------------------------------------
+2026-02-03 22:00:59 | INFO     | Progress: 75/100 (75.0%)
+2026-02-03 22:00:59 | INFO     | Elapsed: 1:46:07.939633 | ETA: 0:35:22.646550
+2026-02-03 22:00:59 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:00:59 | INFO     | ==================================================
+2026-02-03 22:00:59 | INFO     | Trial 76 started
+2026-02-03 22:01:00 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 8, 'hidden_size': 512, 'intermediate_size': 768}
+2026-02-03 22:01:00 | INFO     |   Model parameters: 23,516,674
+2026-02-03 22:01:00 | INFO     |   Training...
+2026-02-03 22:02:01 | INFO     |   Evaluating...
+2026-02-03 22:02:23 | INFO     |   Accuracy: 0.8699
+2026-02-03 22:02:23 | INFO     |   Duration: 0:01:23.771580
+2026-02-03 22:02:23 | INFO     | Trial 76 completed
+2026-02-03 22:02:23 | INFO     | --------------------------------------------------
+2026-02-03 22:02:24 | INFO     | Progress: 76/100 (76.0%)
+2026-02-03 22:02:24 | INFO     | Elapsed: 1:47:33.149732 | ETA: 0:33:57.836760
+2026-02-03 22:02:24 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:02:24 | INFO     | ==================================================
+2026-02-03 22:02:24 | INFO     | Trial 77 started
+2026-02-03 22:02:25 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 2, 'hidden_size': 128, 'intermediate_size': 1536}
+2026-02-03 22:02:25 | INFO     |   Model parameters: 5,835,394
+2026-02-03 22:02:25 | INFO     |   Training...
+2026-02-03 22:03:08 | INFO     |   Evaluating...
+2026-02-03 22:03:27 | INFO     |   Accuracy: 0.8525
+2026-02-03 22:03:27 | INFO     |   Duration: 0:01:02.078931
+2026-02-03 22:03:27 | INFO     | Trial 77 completed
+2026-02-03 22:03:27 | INFO     | --------------------------------------------------
+2026-02-03 22:03:28 | INFO     | Progress: 77/100 (77.0%)
+2026-02-03 22:03:28 | INFO     | Elapsed: 1:48:36.690535 | ETA: 0:32:26.543935
+2026-02-03 22:03:28 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:03:28 | INFO     | ==================================================
+2026-02-03 22:03:28 | INFO     | Trial 78 started
+2026-02-03 22:03:28 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 2, 'hidden_size': 192, 'intermediate_size': 1536}
+2026-02-03 22:03:28 | INFO     |   Model parameters: 8,958,914
+2026-02-03 22:03:29 | INFO     |   Training...
+2026-02-03 22:04:14 | INFO     |   Evaluating...
+2026-02-03 22:04:33 | INFO     |   Accuracy: 0.8607
+2026-02-03 22:04:33 | INFO     |   Duration: 0:01:05.025725
+2026-02-03 22:04:33 | INFO     | Trial 78 completed
+2026-02-03 22:04:33 | INFO     | --------------------------------------------------
+2026-02-03 22:04:35 | INFO     | Progress: 78/100 (78.0%)
+2026-02-03 22:04:35 | INFO     | Elapsed: 1:49:43.254581 | ETA: 0:30:56.815400
+2026-02-03 22:04:35 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:04:35 | INFO     | ==================================================
+2026-02-03 22:04:35 | INFO     | Trial 79 started
+2026-02-03 22:04:35 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 16, 'hidden_size': 384, 'intermediate_size': 512}
+2026-02-03 22:04:35 | INFO     |   Model parameters: 19,963,266
+2026-02-03 22:04:37 | INFO     |   Training...
+2026-02-03 22:06:08 | INFO     |   Evaluating...
+2026-02-03 22:06:37 | INFO     |   Accuracy: 0.8634
+2026-02-03 22:06:37 | INFO     |   Duration: 0:02:02.021760
+2026-02-03 22:06:37 | INFO     | Trial 79 completed
+2026-02-03 22:06:37 | INFO     | --------------------------------------------------
+2026-02-03 22:06:38 | INFO     | Progress: 79/100 (79.0%)
+2026-02-03 22:06:38 | INFO     | Elapsed: 1:51:46.775589 | ETA: 0:29:42.813774
+2026-02-03 22:06:38 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:06:38 | INFO     | ==================================================
+2026-02-03 22:06:38 | INFO     | Trial 80 started
+2026-02-03 22:06:38 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 4, 'hidden_size': 256, 'intermediate_size': 768}
+2026-02-03 22:06:38 | INFO     |   Model parameters: 9,328,898
+2026-02-03 22:06:39 | INFO     |   Training...
+2026-02-03 22:07:12 | INFO     |   Evaluating...
+2026-02-03 22:07:29 | INFO     |   Accuracy: 0.8633
+2026-02-03 22:07:29 | INFO     |   Duration: 0:00:50.622932
+2026-02-03 22:07:29 | INFO     | Trial 80 completed
+2026-02-03 22:07:29 | INFO     | --------------------------------------------------
+2026-02-03 22:07:30 | INFO     | Progress: 80/100 (80.0%)
+2026-02-03 22:07:30 | INFO     | Elapsed: 1:52:38.903457 | ETA: 0:28:09.725860
+2026-02-03 22:07:30 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:07:30 | INFO     | ==================================================
+2026-02-03 22:07:30 | INFO     | Trial 81 started
+2026-02-03 22:07:30 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 16, 'hidden_size': 192, 'intermediate_size': 2048}
+2026-02-03 22:07:30 | INFO     |   Model parameters: 9,747,394
+2026-02-03 22:07:31 | INFO     |   Training...
+2026-02-03 22:08:26 | INFO     |   Evaluating...
+2026-02-03 22:08:48 | INFO     |   Accuracy: 0.8496
+2026-02-03 22:08:48 | INFO     |   Duration: 0:01:17.722040
+2026-02-03 22:08:48 | INFO     | Trial 81 completed
+2026-02-03 22:08:48 | INFO     | --------------------------------------------------
+2026-02-03 22:08:49 | INFO     | Progress: 81/100 (81.0%)
+2026-02-03 22:08:49 | INFO     | Elapsed: 1:53:58.145361 | ETA: 0:26:44.009412
+2026-02-03 22:08:49 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:08:49 | INFO     | ==================================================
+2026-02-03 22:08:49 | INFO     | Trial 82 started
+2026-02-03 22:08:50 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 4, 'hidden_size': 256, 'intermediate_size': 1536}
+2026-02-03 22:08:50 | INFO     |   Model parameters: 12,221,698
+2026-02-03 22:08:50 | INFO     |   Training...
+2026-02-03 22:09:38 | INFO     |   Evaluating...
+2026-02-03 22:09:57 | INFO     |   Accuracy: 0.8584
+2026-02-03 22:09:57 | INFO     |   Duration: 0:01:07.720226
+2026-02-03 22:09:57 | INFO     | Trial 82 completed
+2026-02-03 22:09:57 | INFO     | --------------------------------------------------
+2026-02-03 22:09:59 | INFO     | Progress: 82/100 (82.0%)
+2026-02-03 22:09:59 | INFO     | Elapsed: 1:55:07.408997 | ETA: 0:25:16.260510
+2026-02-03 22:09:59 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:09:59 | INFO     | ==================================================
+2026-02-03 22:09:59 | INFO     | Trial 83 started
+2026-02-03 22:09:59 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 2, 'hidden_size': 512, 'intermediate_size': 1024}
+2026-02-03 22:09:59 | INFO     |   Model parameters: 20,360,706
+2026-02-03 22:10:00 | INFO     |   Training...
+2026-02-03 22:10:44 | INFO     |   Evaluating...
+2026-02-03 22:11:01 | INFO     |   Accuracy: 0.8712
+2026-02-03 22:11:01 | INFO     |   Duration: 0:01:02.494104
+2026-02-03 22:11:01 | INFO     | Trial 83 completed
+2026-02-03 22:11:01 | INFO     | --------------------------------------------------
+2026-02-03 22:11:03 | INFO     | Progress: 83/100 (83.0%)
+2026-02-03 22:11:03 | INFO     | Elapsed: 1:56:11.449153 | ETA: 0:23:47.887171
+2026-02-03 22:11:03 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:11:03 | INFO     | ==================================================
+2026-02-03 22:11:03 | INFO     | Trial 84 started
+2026-02-03 22:11:03 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 16, 'hidden_size': 384, 'intermediate_size': 1024}
+2026-02-03 22:11:03 | INFO     |   Model parameters: 17,590,146
+2026-02-03 22:11:04 | INFO     |   Training...
+2026-02-03 22:12:05 | INFO     |   Evaluating...
+2026-02-03 22:12:27 | INFO     |   Accuracy: 0.8652
+2026-02-03 22:12:27 | INFO     |   Duration: 0:01:23.931497
+2026-02-03 22:12:27 | INFO     | Trial 84 completed
+2026-02-03 22:12:27 | INFO     | --------------------------------------------------
+2026-02-03 22:12:28 | INFO     | Progress: 84/100 (84.0%)
+2026-02-03 22:12:28 | INFO     | Elapsed: 1:57:36.939378 | ETA: 0:22:24.178928
+2026-02-03 22:12:28 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:12:28 | INFO     | ==================================================
+2026-02-03 22:12:28 | INFO     | Trial 85 started
+2026-02-03 22:12:29 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 16, 'hidden_size': 384, 'intermediate_size': 2048}
+2026-02-03 22:12:29 | INFO     |   Model parameters: 20,739,970
+2026-02-03 22:12:30 | INFO     |   Training...
+2026-02-03 22:13:41 | INFO     |   Evaluating...
+2026-02-03 22:14:06 | INFO     |   Accuracy: 0.8666
+2026-02-03 22:14:06 | INFO     |   Duration: 0:01:37.346229
+2026-02-03 22:14:06 | INFO     | Trial 85 completed
+2026-02-03 22:14:06 | INFO     | --------------------------------------------------
+2026-02-03 22:14:07 | INFO     | Progress: 85/100 (85.0%)
+2026-02-03 22:14:07 | INFO     | Elapsed: 1:59:15.864168 | ETA: 0:21:02.799555
+2026-02-03 22:14:07 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:14:07 | INFO     | ==================================================
+2026-02-03 22:14:07 | INFO     | Trial 86 started
+2026-02-03 22:14:07 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 4, 'hidden_size': 192, 'intermediate_size': 768}
+2026-02-03 22:14:07 | INFO     |   Model parameters: 7,776,194
+2026-02-03 22:14:08 | INFO     |   Training...
+2026-02-03 22:14:51 | INFO     |   Evaluating...
+2026-02-03 22:15:10 | INFO     |   Accuracy: 0.8576
+2026-02-03 22:15:10 | INFO     |   Duration: 0:01:03.010486
+2026-02-03 22:15:10 | INFO     | Trial 86 completed
+2026-02-03 22:15:10 | INFO     | --------------------------------------------------
+2026-02-03 22:15:12 | INFO     | Progress: 86/100 (86.0%)
+2026-02-03 22:15:12 | INFO     | Elapsed: 2:00:20.476805 | ETA: 0:19:35.426462
+2026-02-03 22:15:12 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:15:12 | INFO     | ==================================================
+2026-02-03 22:15:12 | INFO     | Trial 87 started
+2026-02-03 22:15:12 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 8, 'hidden_size': 384, 'intermediate_size': 1024}
+2026-02-03 22:15:12 | INFO     |   Model parameters: 23,113,090
+2026-02-03 22:15:13 | INFO     |   Training...
+2026-02-03 22:16:42 | INFO     |   Evaluating...
+2026-02-03 22:17:10 | INFO     |   Accuracy: 0.8654
+2026-02-03 22:17:10 | INFO     |   Duration: 0:01:58.214014
+2026-02-03 22:17:10 | INFO     | Trial 87 completed
+2026-02-03 22:17:10 | INFO     | --------------------------------------------------
+2026-02-03 22:17:12 | INFO     | Progress: 87/100 (87.0%)
+2026-02-03 22:17:12 | INFO     | Elapsed: 2:02:20.313065 | ETA: 0:18:16.828395
+2026-02-03 22:17:12 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:17:12 | INFO     | ==================================================
+2026-02-03 22:17:12 | INFO     | Trial 88 started
+2026-02-03 22:17:12 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 16, 'hidden_size': 384, 'intermediate_size': 1536}
+2026-02-03 22:17:12 | INFO     |   Model parameters: 15,616,130
+2026-02-03 22:17:13 | INFO     |   Training...
+2026-02-03 22:17:58 | INFO     |   Evaluating...
+2026-02-03 22:18:17 | INFO     |   Accuracy: 0.8690
+2026-02-03 22:18:17 | INFO     |   Duration: 0:01:05.550966
+2026-02-03 22:18:17 | INFO     | Trial 88 completed
+2026-02-03 22:18:17 | INFO     | --------------------------------------------------
+2026-02-03 22:18:19 | INFO     | Progress: 88/100 (88.0%)
+2026-02-03 22:18:19 | INFO     | Elapsed: 2:03:27.548209 | ETA: 0:16:50.120208
+2026-02-03 22:18:19 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:18:19 | INFO     | ==================================================
+2026-02-03 22:18:19 | INFO     | Trial 89 started
+2026-02-03 22:18:19 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 4, 'hidden_size': 512, 'intermediate_size': 768}
+2026-02-03 22:18:19 | INFO     |   Model parameters: 19,835,906
+2026-02-03 22:18:20 | INFO     |   Training...
+2026-02-03 22:19:05 | INFO     |   Evaluating...
+2026-02-03 22:19:23 | INFO     |   Accuracy: 0.8669
+2026-02-03 22:19:23 | INFO     |   Duration: 0:01:04.180275
+2026-02-03 22:19:23 | INFO     | Trial 89 completed
+2026-02-03 22:19:23 | INFO     | --------------------------------------------------
+2026-02-03 22:19:25 | INFO     | Progress: 89/100 (89.0%)
+2026-02-03 22:19:25 | INFO     | Elapsed: 2:04:33.440491 | ETA: 0:15:23.683651
+2026-02-03 22:19:25 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:19:25 | INFO     | ==================================================
+2026-02-03 22:19:25 | INFO     | Trial 90 started
+2026-02-03 22:19:25 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 16, 'hidden_size': 384, 'intermediate_size': 2048}
+2026-02-03 22:19:25 | INFO     |   Model parameters: 16,403,586
+2026-02-03 22:19:26 | INFO     |   Training...
+2026-02-03 22:20:15 | INFO     |   Evaluating...
+2026-02-03 22:20:35 | INFO     |   Accuracy: 0.8676
+2026-02-03 22:20:35 | INFO     |   Duration: 0:01:10.094862
+2026-02-03 22:20:35 | INFO     | Trial 90 completed
+2026-02-03 22:20:35 | INFO     | --------------------------------------------------
+2026-02-03 22:20:37 | INFO     | Progress: 90/100 (90.0%)
+2026-02-03 22:20:37 | INFO     | Elapsed: 2:05:45.264662 | ETA: 0:13:58.362740
+2026-02-03 22:20:37 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:20:37 | INFO     | ==================================================
+2026-02-03 22:20:37 | INFO     | Trial 91 started
+2026-02-03 22:20:37 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 8, 'hidden_size': 512, 'intermediate_size': 1536}
+2026-02-03 22:20:37 | INFO     |   Model parameters: 21,410,306
+2026-02-03 22:20:38 | INFO     |   Training...
+2026-02-03 22:21:28 | INFO     |   Evaluating...
+2026-02-03 22:21:47 | INFO     |   Accuracy: 0.8694
+2026-02-03 22:21:47 | INFO     |   Duration: 0:01:10.472241
+2026-02-03 22:21:47 | INFO     | Trial 91 completed
+2026-02-03 22:21:47 | INFO     | --------------------------------------------------
+2026-02-03 22:21:49 | INFO     | Progress: 91/100 (91.0%)
+2026-02-03 22:21:49 | INFO     | Elapsed: 2:06:57.536632 | ETA: 0:12:33.382746
+2026-02-03 22:21:49 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:21:49 | INFO     | ==================================================
+2026-02-03 22:21:49 | INFO     | Trial 92 started
+2026-02-03 22:21:49 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 8, 'hidden_size': 128, 'intermediate_size': 1536}
+2026-02-03 22:21:49 | INFO     |   Model parameters: 7,681,154
+2026-02-03 22:21:50 | INFO     |   Training...
+2026-02-03 22:23:00 | INFO     |   Evaluating...
+2026-02-03 22:23:23 | INFO     |   Accuracy: 0.8416
+2026-02-03 22:23:23 | INFO     |   Duration: 0:01:34.579235
+2026-02-03 22:23:23 | INFO     | Trial 92 completed
+2026-02-03 22:23:23 | INFO     | --------------------------------------------------
+2026-02-03 22:23:25 | INFO     | Progress: 92/100 (92.0%)
+2026-02-03 22:23:25 | INFO     | Elapsed: 2:08:33.807942 | ETA: 0:11:10.765904
+2026-02-03 22:23:25 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:23:25 | INFO     | ==================================================
+2026-02-03 22:23:25 | INFO     | Trial 93 started
+2026-02-03 22:23:26 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 8, 'hidden_size': 512, 'intermediate_size': 1024}
+2026-02-03 22:23:26 | INFO     |   Model parameters: 32,977,410
+2026-02-03 22:23:27 | INFO     |   Training...
+2026-02-03 22:25:11 | INFO     |   Evaluating...
+2026-02-03 22:25:43 | INFO     |   Accuracy: 0.8686
+2026-02-03 22:25:43 | INFO     |   Duration: 0:02:17.967663
+2026-02-03 22:25:43 | INFO     | Trial 93 completed
+2026-02-03 22:25:43 | INFO     | --------------------------------------------------
+2026-02-03 22:25:45 | INFO     | Progress: 93/100 (93.0%)
+2026-02-03 22:25:45 | INFO     | Elapsed: 2:10:53.486903 | ETA: 0:09:51.122672
+2026-02-03 22:25:45 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:25:45 | INFO     | ==================================================
+2026-02-03 22:25:45 | INFO     | Trial 94 started
+2026-02-03 22:25:45 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 16, 'hidden_size': 384, 'intermediate_size': 512}
+2026-02-03 22:25:45 | INFO     |   Model parameters: 14,041,218
+2026-02-03 22:25:46 | INFO     |   Training...
+2026-02-03 22:26:25 | INFO     |   Evaluating...
+2026-02-03 22:26:42 | INFO     |   Accuracy: 0.8657
+2026-02-03 22:26:42 | INFO     |   Duration: 0:00:57.419168
+2026-02-03 22:26:42 | INFO     | Trial 94 completed
+2026-02-03 22:26:42 | INFO     | --------------------------------------------------
+2026-02-03 22:26:44 | INFO     | Progress: 94/100 (94.0%)
+2026-02-03 22:26:44 | INFO     | Elapsed: 2:11:52.627741 | ETA: 0:08:25.061346
+2026-02-03 22:26:44 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:26:44 | INFO     | ==================================================
+2026-02-03 22:26:44 | INFO     | Trial 95 started
+2026-02-03 22:26:44 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 8, 'hidden_size': 256, 'intermediate_size': 1024}
+2026-02-03 22:26:44 | INFO     |   Model parameters: 14,330,114
+2026-02-03 22:26:45 | INFO     |   Training...
+2026-02-03 22:27:58 | INFO     |   Evaluating...
+2026-02-03 22:28:23 | INFO     |   Accuracy: 0.8587
+2026-02-03 22:28:23 | INFO     |   Duration: 0:01:39.117044
+2026-02-03 22:28:23 | INFO     | Trial 95 completed
+2026-02-03 22:28:23 | INFO     | --------------------------------------------------
+2026-02-03 22:28:25 | INFO     | Progress: 95/100 (95.0%)
+2026-02-03 22:28:25 | INFO     | Elapsed: 2:13:33.763522 | ETA: 0:07:01.777025
+2026-02-03 22:28:25 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:28:25 | INFO     | ==================================================
+2026-02-03 22:28:25 | INFO     | Trial 96 started
+2026-02-03 22:28:25 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 2, 'hidden_size': 256, 'intermediate_size': 1536}
+2026-02-03 22:28:25 | INFO     |   Model parameters: 16,431,362
+2026-02-03 22:28:26 | INFO     |   Training...
+2026-02-03 22:29:39 | INFO     |   Evaluating...
+2026-02-03 22:30:04 | INFO     |   Accuracy: 0.8579
+2026-02-03 22:30:04 | INFO     |   Duration: 0:01:38.846325
+2026-02-03 22:30:04 | INFO     | Trial 96 completed
+2026-02-03 22:30:04 | INFO     | --------------------------------------------------
+2026-02-03 22:30:06 | INFO     | Progress: 96/100 (96.0%)
+2026-02-03 22:30:06 | INFO     | Elapsed: 2:15:14.672925 | ETA: 0:05:38.111372
+2026-02-03 22:30:06 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:30:06 | INFO     | ==================================================
+2026-02-03 22:30:06 | INFO     | Trial 97 started
+2026-02-03 22:30:06 | INFO     |   Hyperparameters: {'num_layers': 8, 'num_heads': 4, 'hidden_size': 192, 'intermediate_size': 1536}
+2026-02-03 22:30:06 | INFO     |   Model parameters: 11,921,090
+2026-02-03 22:30:07 | INFO     |   Training...
+2026-02-03 22:31:17 | INFO     |   Evaluating...
+2026-02-03 22:31:41 | INFO     |   Accuracy: 0.8541
+2026-02-03 22:31:41 | INFO     |   Duration: 0:01:35.251772
+2026-02-03 22:31:41 | INFO     | Trial 97 completed
+2026-02-03 22:31:41 | INFO     | --------------------------------------------------
+2026-02-03 22:31:43 | INFO     | Progress: 97/100 (97.0%)
+2026-02-03 22:31:43 | INFO     | Elapsed: 2:16:51.985668 | ETA: 0:04:13.978938
+2026-02-03 22:31:43 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:31:43 | INFO     | ==================================================
+2026-02-03 22:31:43 | INFO     | Trial 98 started
+2026-02-03 22:31:43 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 8, 'hidden_size': 128, 'intermediate_size': 2048}
+2026-02-03 22:31:43 | INFO     |   Model parameters: 5,175,682
+2026-02-03 22:31:44 | INFO     |   Training...
+2026-02-03 22:32:19 | INFO     |   Evaluating...
+2026-02-03 22:32:36 | INFO     |   Accuracy: 0.8483
+2026-02-03 22:32:36 | INFO     |   Duration: 0:00:52.256896
+2026-02-03 22:32:36 | INFO     | Trial 98 completed
+2026-02-03 22:32:36 | INFO     | --------------------------------------------------
+2026-02-03 22:32:38 | INFO     | Progress: 98/100 (98.0%)
+2026-02-03 22:32:38 | INFO     | Elapsed: 2:17:46.316773 | ETA: 0:02:48.700342
+2026-02-03 22:32:38 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:32:38 | INFO     | ==================================================
+2026-02-03 22:32:38 | INFO     | Trial 99 started
+2026-02-03 22:32:38 | INFO     |   Hyperparameters: {'num_layers': 4, 'num_heads': 2, 'hidden_size': 384, 'intermediate_size': 512}
+2026-02-03 22:32:38 | INFO     |   Model parameters: 16,015,234
+2026-02-03 22:32:39 | INFO     |   Training...
+2026-02-03 22:33:27 | INFO     |   Evaluating...
+2026-02-03 22:33:46 | INFO     |   Accuracy: 0.8669
+2026-02-03 22:33:46 | INFO     |   Duration: 0:01:08.605123
+2026-02-03 22:33:46 | INFO     | Trial 99 completed
+2026-02-03 22:33:46 | INFO     | --------------------------------------------------
+2026-02-03 22:33:48 | INFO     | Progress: 99/100 (99.0%)
+2026-02-03 22:33:48 | INFO     | Elapsed: 2:18:57.016966 | ETA: 0:01:24.212293
+2026-02-03 22:33:48 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:33:48 | INFO     | ==================================================
+2026-02-03 22:33:48 | INFO     | Trial 100 started
+2026-02-03 22:33:49 | INFO     |   Hyperparameters: {'num_layers': 2, 'num_heads': 8, 'hidden_size': 128, 'intermediate_size': 768}
+2026-02-03 22:33:49 | INFO     |   Model parameters: 4,517,762
+2026-02-03 22:33:49 | INFO     |   Training...
+2026-02-03 22:34:23 | INFO     |   Evaluating...
+2026-02-03 22:34:39 | INFO     |   Accuracy: 0.8478
+2026-02-03 22:34:39 | INFO     |   Duration: 0:00:50.601710
+2026-02-03 22:34:39 | INFO     | Trial 100 completed
+2026-02-03 22:34:39 | INFO     | --------------------------------------------------
+2026-02-03 22:34:41 | INFO     | Progress: 100/100 (100.0%)
+2026-02-03 22:34:41 | INFO     | Elapsed: 2:19:49.721715 | ETA: 0:00:00
+2026-02-03 22:34:41 | INFO     | Best accuracy so far: 0.8730
+2026-02-03 22:34:41 | INFO     | ==================================================
+2026-02-03 22:34:42 | INFO     | Results saved to: /rds/general/user/aah25/home/nas_results/nas_results_grid.pkl
+2026-02-03 22:34:42 | INFO     | Best model saved to: /rds/general/user/aah25/home/nas_results/nas_best_model_grid.pkl
+2026-02-03 22:34:42 | INFO     | 
+2026-02-03 22:34:42 | INFO     | ============================================================
+2026-02-03 22:34:42 | INFO     | FINAL RESULTS - GRID Sampler
+2026-02-03 22:34:42 | INFO     | ============================================================
+2026-02-03 22:34:42 | INFO     | Trials completed: 100/100
+2026-02-03 22:34:42 | INFO     | Best accuracy: 0.8730
+2026-02-03 22:34:42 | INFO     | Best trial: 17
+2026-02-03 22:34:42 | INFO     | Best hyperparameters:
+2026-02-03 22:34:42 | INFO     |   num_layers: 2
+2026-02-03 22:34:42 | INFO     |   num_heads: 8
+2026-02-03 22:34:42 | INFO     |   hidden_size: 512
+2026-02-03 22:34:42 | INFO     |   intermediate_size: 1024
+2026-02-03 22:34:42 | INFO     | ------------------------------------------------------------
+2026-02-03 22:34:42 | INFO     | Start time: 2026-02-03 20:14:51.801461
+2026-02-03 22:34:42 | INFO     | End time: 2026-02-03 22:34:41.539363
+2026-02-03 22:34:42 | INFO     | Total duration: 2:19:49.737902
+2026-02-03 22:34:42 | INFO     | ============================================================
+2026-02-03 22:34:42 | INFO     | 
+2026-02-03 22:34:42 | INFO     | All Trial Results:
+2026-02-03 22:34:42 | INFO     | ------------------------------------------------------------
+2026-02-03 22:34:42 | INFO     | Trial    Accuracy     Best So Far 
+2026-02-03 22:34:42 | INFO     | ------------------------------------------------------------
+2026-02-03 22:34:42 | INFO     | 1        0.8646       0.8646      
+2026-02-03 22:34:42 | INFO     | 2        0.8582       0.8646      
+2026-02-03 22:34:42 | INFO     | 3        0.8466       0.8646      
+2026-02-03 22:34:42 | INFO     | 4        0.8655       0.8655      
+2026-02-03 22:34:42 | INFO     | 5        0.8635       0.8655      
+2026-02-03 22:34:42 | INFO     | 6        0.8618       0.8655      
+2026-02-03 22:34:42 | INFO     | 7        0.8602       0.8655      
+2026-02-03 22:34:42 | INFO     | 8        0.8691       0.8691      
+2026-02-03 22:34:42 | INFO     | 9        0.8447       0.8691      
+2026-02-03 22:34:42 | INFO     | 10       0.8600       0.8691      
+2026-02-03 22:34:42 | INFO     | 11       0.8660       0.8691      
+2026-02-03 22:34:42 | INFO     | 12       0.8495       0.8691      
+2026-02-03 22:34:42 | INFO     | 13       0.8654       0.8691      
+2026-02-03 22:34:42 | INFO     | 14       0.8688       0.8691      
+2026-02-03 22:34:42 | INFO     | 15       0.8443       0.8691      
+2026-02-03 22:34:42 | INFO     | 16       0.8587       0.8691      
+2026-02-03 22:34:42 | INFO     | 17       0.8730       0.8730      
+2026-02-03 22:34:42 | INFO     | 18       0.8580       0.8730      
+2026-02-03 22:34:42 | INFO     | 19       0.8652       0.8730      
+2026-02-03 22:34:42 | INFO     | 20       0.8542       0.8730      
+2026-02-03 22:34:42 | INFO     | 21       0.8655       0.8730      
+2026-02-03 22:34:42 | INFO     | 22       0.8536       0.8730      
+2026-02-03 22:34:42 | INFO     | 23       0.8611       0.8730      
+2026-02-03 22:34:42 | INFO     | 24       0.8590       0.8730      
+2026-02-03 22:34:42 | INFO     | 25       0.8686       0.8730      
+2026-02-03 22:34:42 | INFO     | 26       0.8510       0.8730      
+2026-02-03 22:34:42 | INFO     | 27       0.8680       0.8730      
+2026-02-03 22:34:42 | INFO     | 28       0.8669       0.8730      
+2026-02-03 22:34:42 | INFO     | 29       0.8665       0.8730      
+2026-02-03 22:34:42 | INFO     | 30       0.8687       0.8730      
+2026-02-03 22:34:42 | INFO     | 31       0.8499       0.8730      
+2026-02-03 22:34:42 | INFO     | 32       0.8584       0.8730      
+2026-02-03 22:34:42 | INFO     | 33       0.8441       0.8730      
+2026-02-03 22:34:42 | INFO     | 34       0.8586       0.8730      
+2026-02-03 22:34:42 | INFO     | 35       0.8664       0.8730      
+2026-02-03 22:34:42 | INFO     | 36       0.8652       0.8730      
+2026-02-03 22:34:42 | INFO     | 37       0.8578       0.8730      
+2026-02-03 22:34:42 | INFO     | 38       0.8687       0.8730      
+2026-02-03 22:34:42 | INFO     | 39       0.8640       0.8730      
+2026-02-03 22:34:42 | INFO     | 40       0.8480       0.8730      
+2026-02-03 22:34:42 | INFO     | 41       0.8682       0.8730      
+2026-02-03 22:34:42 | INFO     | 42       0.8552       0.8730      
+2026-02-03 22:34:42 | INFO     | 43       0.8582       0.8730      
+2026-02-03 22:34:42 | INFO     | 44       0.8492       0.8730      
+2026-02-03 22:34:42 | INFO     | 45       0.8454       0.8730      
+2026-02-03 22:34:42 | INFO     | 46       0.8614       0.8730      
+2026-02-03 22:34:42 | INFO     | 47       0.8577       0.8730      
+2026-02-03 22:34:42 | INFO     | 48       0.8573       0.8730      
+2026-02-03 22:34:42 | INFO     | 49       0.8470       0.8730      
+2026-02-03 22:34:42 | INFO     | 50       0.8481       0.8730      
+2026-02-03 22:34:42 | INFO     | 51       0.8574       0.8730      
+2026-02-03 22:34:42 | INFO     | 52       0.8671       0.8730      
+2026-02-03 22:34:42 | INFO     | 53       0.8593       0.8730      
+2026-02-03 22:34:42 | INFO     | 54       0.8534       0.8730      
+2026-02-03 22:34:42 | INFO     | 55       0.8365       0.8730      
+2026-02-03 22:34:42 | INFO     | 56       0.8671       0.8730      
+2026-02-03 22:34:42 | INFO     | 57       0.8604       0.8730      
+2026-02-03 22:34:42 | INFO     | 58       0.8428       0.8730      
+2026-02-03 22:34:42 | INFO     | 59       0.8650       0.8730      
+2026-02-03 22:34:42 | INFO     | 60       0.8640       0.8730      
+2026-02-03 22:34:42 | INFO     | 61       0.8540       0.8730      
+2026-02-03 22:34:42 | INFO     | 62       0.8558       0.8730      
+2026-02-03 22:34:42 | INFO     | 63       0.8557       0.8730      
+2026-02-03 22:34:42 | INFO     | 64       0.8663       0.8730      
+2026-02-03 22:34:42 | INFO     | 65       0.8697       0.8730      
+2026-02-03 22:34:42 | INFO     | 66       0.8593       0.8730      
+2026-02-03 22:34:42 | INFO     | 67       0.8648       0.8730      
+2026-02-03 22:34:42 | INFO     | 68       0.8627       0.8730      
+2026-02-03 22:34:42 | INFO     | 69       0.8449       0.8730      
+2026-02-03 22:34:42 | INFO     | 70       0.8435       0.8730      
+2026-02-03 22:34:42 | INFO     | 71       0.8604       0.8730      
+2026-02-03 22:34:42 | INFO     | 72       0.8660       0.8730      
+2026-02-03 22:34:42 | INFO     | 73       0.8708       0.8730      
+2026-02-03 22:34:42 | INFO     | 74       0.8432       0.8730      
+2026-02-03 22:34:42 | INFO     | 75       0.8632       0.8730      
+2026-02-03 22:34:42 | INFO     | 76       0.8699       0.8730      
+2026-02-03 22:34:42 | INFO     | 77       0.8525       0.8730      
+2026-02-03 22:34:42 | INFO     | 78       0.8607       0.8730      
+2026-02-03 22:34:42 | INFO     | 79       0.8634       0.8730      
+2026-02-03 22:34:42 | INFO     | 80       0.8633       0.8730      
+2026-02-03 22:34:42 | INFO     | 81       0.8496       0.8730      
+2026-02-03 22:34:42 | INFO     | 82       0.8584       0.8730      
+2026-02-03 22:34:42 | INFO     | 83       0.8712       0.8730      
+2026-02-03 22:34:42 | INFO     | 84       0.8652       0.8730      
+2026-02-03 22:34:42 | INFO     | 85       0.8666       0.8730      
+2026-02-03 22:34:42 | INFO     | 86       0.8576       0.8730      
+2026-02-03 22:34:42 | INFO     | 87       0.8654       0.8730      
+2026-02-03 22:34:42 | INFO     | 88       0.8690       0.8730      
+2026-02-03 22:34:42 | INFO     | 89       0.8669       0.8730      
+2026-02-03 22:34:42 | INFO     | 90       0.8676       0.8730      
+2026-02-03 22:34:42 | INFO     | 91       0.8694       0.8730      
+2026-02-03 22:34:42 | INFO     | 92       0.8416       0.8730      
+2026-02-03 22:34:42 | INFO     | 93       0.8686       0.8730      
+2026-02-03 22:34:42 | INFO     | 94       0.8657       0.8730      
+2026-02-03 22:34:42 | INFO     | 95       0.8587       0.8730      
+2026-02-03 22:34:42 | INFO     | 96       0.8579       0.8730      
+2026-02-03 22:34:42 | INFO     | 97       0.8541       0.8730      
+2026-02-03 22:34:42 | INFO     | 98       0.8483       0.8730      
+2026-02-03 22:34:42 | INFO     | 99       0.8669       0.8730      
+2026-02-03 22:34:42 | INFO     | 100      0.8478       0.8730      
+2026-02-03 22:34:42 | INFO     | ============================================================
+2026-02-03 22:34:42 | INFO     | NAS search completed!

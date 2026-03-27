@@ -1,0 +1,235 @@
+{
+  "experiment": "exp11_throughput",
+  "config": {
+    "hidden_size": 2048,
+    "num_layers": 16,
+    "num_heads": 16,
+    "num_kv_heads": 4,
+    "batch_size": 2,
+    "dtype": "torch.bfloat16",
+    "window_size": 256,
+    "device": "NVIDIA L40S"
+  },
+  "throughput": {
+    "inference": {
+      "SDPA causal": {
+        "256": {
+          "latency_ms": 11.71640329360962,
+          "throughput_tok_per_sec": 43699.41757461148,
+          "peak_mem_mb": 1686.25830078125
+        },
+        "512": {
+          "latency_ms": 13.24718074798584,
+          "throughput_tok_per_sec": 77299.46616420202,
+          "peak_mem_mb": 1734.76220703125
+        },
+        "1024": {
+          "latency_ms": 22.31265296936035,
+          "throughput_tok_per_sec": 91786.48557893612,
+          "peak_mem_mb": 1834.27001953125
+        },
+        "2048": {
+          "latency_ms": 44.781772994995116,
+          "throughput_tok_per_sec": 91465.78453822664,
+          "peak_mem_mb": 2030.28564453125
+        },
+        "4096": {
+          "latency_ms": 106.19494323730468,
+          "throughput_tok_per_sec": 77141.1495714447,
+          "peak_mem_mb": 2424.31689453125
+        }
+      },
+      "SDPA sliding_window(256)": {
+        "256": {
+          "latency_ms": 11.558397006988525,
+          "throughput_tok_per_sec": 44296.799953352594,
+          "peak_mem_mb": 1686.38330078125
+        },
+        "512": {
+          "latency_ms": 13.456591892242432,
+          "throughput_tok_per_sec": 76096.53381777328,
+          "peak_mem_mb": 1735.26220703125
+        },
+        "1024": {
+          "latency_ms": 24.25292835235596,
+          "throughput_tok_per_sec": 84443.41113146672,
+          "peak_mem_mb": 1836.27001953125
+        },
+        "2048": {
+          "latency_ms": 52.84484748840332,
+          "throughput_tok_per_sec": 77509.92186889853,
+          "peak_mem_mb": 2038.28564453125
+        },
+        "4096": {
+          "latency_ms": 139.15596923828124,
+          "throughput_tok_per_sec": 58869.195801242095,
+          "peak_mem_mb": 2456.31689453125
+        }
+      },
+      "Flex causal": {
+        "256": {
+          "latency_ms": 12.776956844329835,
+          "throughput_tok_per_sec": 40072.13973076975,
+          "peak_mem_mb": 1956.26220703125
+        },
+        "512": {
+          "latency_ms": 13.601481628417968,
+          "throughput_tok_per_sec": 75285.9157535108,
+          "peak_mem_mb": 1956.26220703125
+        },
+        "1024": {
+          "latency_ms": 22.400000190734865,
+          "throughput_tok_per_sec": 91428.57065006178,
+          "peak_mem_mb": 1956.26220703125
+        },
+        "2048": {
+          "latency_ms": 44.81566696166992,
+          "throughput_tok_per_sec": 91396.60921488101,
+          "peak_mem_mb": 2030.38720703125
+        },
+        "4096": {
+          "latency_ms": 105.37062377929688,
+          "throughput_tok_per_sec": 77744.62849492552,
+          "peak_mem_mb": 2424.60595703125
+        }
+      },
+      "Flex sliding_window(256)": {
+        "256": {
+          "latency_ms": 12.768969535827637,
+          "throughput_tok_per_sec": 40097.20585231344,
+          "peak_mem_mb": 1956.26220703125
+        },
+        "512": {
+          "latency_ms": 13.5752703666687,
+          "throughput_tok_per_sec": 75431.27851907999,
+          "peak_mem_mb": 1956.26220703125
+        },
+        "1024": {
+          "latency_ms": 21.809971237182616,
+          "throughput_tok_per_sec": 93902.00370867422,
+          "peak_mem_mb": 1956.26220703125
+        },
+        "2048": {
+          "latency_ms": 42.3938045501709,
+          "throughput_tok_per_sec": 96617.8913042021,
+          "peak_mem_mb": 2030.38720703125
+        },
+        "4096": {
+          "latency_ms": 94.97702484130859,
+          "throughput_tok_per_sec": 86252.43856277369,
+          "peak_mem_mb": 2424.60595703125
+        }
+      }
+    },
+    "training": {
+      "SDPA causal": {
+        "256": {
+          "latency_ms": 38.24783363342285,
+          "throughput_tok_per_sec": 13386.379079849088,
+          "peak_mem_mb": 3320.14208984375
+        },
+        "512": {
+          "latency_ms": 42.04779891967773,
+          "throughput_tok_per_sec": 24353.236704639574,
+          "peak_mem_mb": 3655.27490234375
+        },
+        "1024": {
+          "latency_ms": 75.16712951660156,
+          "throughput_tok_per_sec": 27245.951962921168,
+          "peak_mem_mb": 5691.16943359375
+        },
+        "2048": {
+          "latency_ms": 155.47013092041016,
+          "throughput_tok_per_sec": 26345.89664105233,
+          "peak_mem_mb": 9735.95849609375
+        },
+        "4096": {
+          "latency_ms": 370.22423400878904,
+          "throughput_tok_per_sec": 22127.13066159122,
+          "peak_mem_mb": 17699.53662109375
+        }
+      },
+      "SDPA sliding_window(256)": {
+        "256": {
+          "latency_ms": 38.035149002075194,
+          "throughput_tok_per_sec": 13461.232923579853,
+          "peak_mem_mb": 3321.51708984375
+        },
+        "512": {
+          "latency_ms": 45.79153938293457,
+          "throughput_tok_per_sec": 22362.20956532465,
+          "peak_mem_mb": 3592.77490234375
+        },
+        "1024": {
+          "latency_ms": 87.2637435913086,
+          "throughput_tok_per_sec": 23469.082527465387,
+          "peak_mem_mb": 5569.16943359375
+        },
+        "2048": {
+          "latency_ms": 207.054541015625,
+          "throughput_tok_per_sec": 19782.227329614096,
+          "peak_mem_mb": 9503.95849609375
+        },
+        "4096": {
+          "latency_ms": 565.0281433105469,
+          "throughput_tok_per_sec": 14498.392862349107,
+          "peak_mem_mb": 17283.53662109375
+        }
+      },
+      "Flex causal": {
+        "256": {
+          "latency_ms": 38.73126983642578,
+          "throughput_tok_per_sec": 13219.292890791743,
+          "peak_mem_mb": 3315.08740234375
+        },
+        "512": {
+          "latency_ms": 43.955404663085936,
+          "throughput_tok_per_sec": 23296.33881996683,
+          "peak_mem_mb": 3583.97412109375
+        },
+        "1024": {
+          "latency_ms": 76.03097610473633,
+          "throughput_tok_per_sec": 26936.38967858023,
+          "peak_mem_mb": 5495.23974609375
+        },
+        "2048": {
+          "latency_ms": 159.10625152587892,
+          "throughput_tok_per_sec": 25743.8030292215,
+          "peak_mem_mb": 9348.06005859375
+        },
+        "4096": {
+          "latency_ms": 375.6388366699219,
+          "throughput_tok_per_sec": 21808.181690218586,
+          "peak_mem_mb": 16931.82568359375
+        }
+      },
+      "Flex sliding_window(256)": {
+        "256": {
+          "latency_ms": 38.40962219238281,
+          "throughput_tok_per_sec": 13329.993131292424,
+          "peak_mem_mb": 3315.58740234375
+        },
+        "512": {
+          "latency_ms": 43.70749435424805,
+          "throughput_tok_per_sec": 23428.47640042021,
+          "peak_mem_mb": 3583.97412109375
+        },
+        "1024": {
+          "latency_ms": 72.98406143188477,
+          "throughput_tok_per_sec": 28060.921245269095,
+          "peak_mem_mb": 5495.23974609375
+        },
+        "2048": {
+          "latency_ms": 146.79623718261718,
+          "throughput_tok_per_sec": 27902.62256453142,
+          "peak_mem_mb": 9348.06005859375
+        },
+        "4096": {
+          "latency_ms": 326.766796875,
+          "throughput_tok_per_sec": 25069.86657868343,
+          "peak_mem_mb": 16931.82568359375
+        }
+      }
+    }
+  }
+}

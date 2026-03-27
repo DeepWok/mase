@@ -1,0 +1,103 @@
+{
+  "experiment": "exp10_decode_generation",
+  "config": {
+    "hidden_size": 2048,
+    "num_layers": 16,
+    "num_heads": 16,
+    "num_kv_heads": 4,
+    "batch_size": 1,
+    "dtype": "torch.bfloat16",
+    "num_new_tokens": 128,
+    "window_size": 256,
+    "device": "NVIDIA L40S"
+  },
+  "benchmarks": {
+    "SDPA causal": {
+      "128": {
+        "prefill_ms": 11.686707305908204,
+        "total_generation_ms": 1484.42333984375,
+        "decode_ms": 1472.7366325378418,
+        "per_token_ms": 11.50575494170189,
+        "tokens_per_sec": 86.91302787751566,
+        "tokens_generated": 128,
+        "peak_mem_mb": 1648.56787109375
+      },
+      "512": {
+        "prefill_ms": 11.586950302124023,
+        "total_generation_ms": 1480.202197265625,
+        "decode_ms": 1468.615246963501,
+        "per_token_ms": 11.473556616902352,
+        "tokens_per_sec": 87.15693253536074,
+        "tokens_generated": 128,
+        "peak_mem_mb": 1686.25830078125
+      },
+      "1024": {
+        "prefill_ms": 12.737331199645997,
+        "total_generation_ms": 1479.198095703125,
+        "decode_ms": 1466.4607645034791,
+        "per_token_ms": 11.45672472268343,
+        "tokens_per_sec": 87.28498102254977,
+        "tokens_generated": 128,
+        "peak_mem_mb": 1734.76220703125
+      }
+    },
+    "Flex causal": {
+      "128": {
+        "prefill_ms": 12.750233459472657,
+        "total_generation_ms": 1760.2627685546875,
+        "decode_ms": 1747.5125350952148,
+        "per_token_ms": 13.652441680431366,
+        "tokens_per_sec": 73.24697101129853,
+        "tokens_generated": 128,
+        "peak_mem_mb": 1956.27001953125
+      },
+      "512": {
+        "prefill_ms": 41.969042205810545,
+        "total_generation_ms": 6423.12646484375,
+        "decode_ms": 6381.15742263794,
+        "per_token_ms": 49.852792364358905,
+        "tokens_per_sec": 20.05905692686789,
+        "tokens_generated": 128,
+        "peak_mem_mb": 1956.26318359375
+      },
+      "1024": {
+        "prefill_ms": 43.575706481933594,
+        "total_generation_ms": 6432.286328125,
+        "decode_ms": 6388.710621643067,
+        "per_token_ms": 49.91180173158646,
+        "tokens_per_sec": 20.035341648809975,
+        "tokens_generated": 128,
+        "peak_mem_mb": 1956.26611328125
+      }
+    },
+    "Flex sliding_window(256)": {
+      "128": {
+        "prefill_ms": 43.817388916015624,
+        "total_generation_ms": 6539.3208984375,
+        "decode_ms": 6495.503509521484,
+        "per_token_ms": 50.7461211681366,
+        "tokens_per_sec": 19.705939626138328,
+        "tokens_generated": 128,
+        "peak_mem_mb": 1956.27001953125
+      },
+      "512": {
+        "prefill_ms": 43.613799285888675,
+        "total_generation_ms": 6511.12763671875,
+        "decode_ms": 6467.513837432862,
+        "per_token_ms": 50.52745185494423,
+        "tokens_per_sec": 19.791221668387927,
+        "tokens_generated": 128,
+        "peak_mem_mb": 1956.26318359375
+      },
+      "1024": {
+        "prefill_ms": 47.7853759765625,
+        "total_generation_ms": 6525.26259765625,
+        "decode_ms": 6477.477221679688,
+        "per_token_ms": 50.605290794372564,
+        "tokens_per_sec": 19.76077963988703,
+        "tokens_generated": 128,
+        "peak_mem_mb": 1956.26611328125
+      }
+    }
+  }
+}
