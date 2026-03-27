@@ -110,15 +110,15 @@ to detect DRAM-tagged parameters and automatically instantiate
 quantized parameter data and feed it into the top-level ports according to the
 handshake protocol, mimicking the behavior of an external memory controller.
 
-\section{Case Study: 64-QAM Symbol Classification}
+\section{Case Study: 16-QAM Symbol Classification}
 
-We evaluated our implementation using a symbol classifier for 64-QAM (Quadrature
+We evaluated our implementation using a symbol classifier for 16-QAM (Quadrature
 Amplitude Modulation), a common requirement in high-speed optical and wireless
 communications.
 
 \subsection{Experimental Setup}
 The model consists of a Multi-Layer Perceptron (MLP) trained to classify I/Q
-samples into 64 constellation points. We compared a standard BRAM-only deployment
+samples into 16 constellation points. We compared a standard BRAM-only deployment
 against our DRAM streaming implementation.
 
 \subsection{Utilization and Performance}
