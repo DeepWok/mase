@@ -69,22 +69,32 @@ async def test(dut):
 def _emit_cocotb_tb(graph):
     class MaseGraphTB(Testbench):
         def _iter_dram_parameter_specs(self):
-            """Yield (node, node_name, arg, arg_info) for DRAM-backed tensor params."""
+            """Yield (node, node_name, arg, arg_info) for streamable tensor params.
+
+            Primary path uses explicit DRAM interface metadata. Fallback path
+            allows discovery from tensor parameter args so tests can still drive
+            emitted top-level parameter streams when interface metadata is stale.
+            """
             for node in graph.fx_graph.nodes:
                 if not hasattr(node, "meta") or "mase" not in node.meta:
                     continue
 
-                node_params = node.meta["mase"].parameters
+                node_mase = node.meta["mase"]
+                node_params = node_mase.parameters
                 hardware = node_params.get("hardware", {})
                 if hardware.get("is_implicit", False):
                     continue
 
-                args = node_params.get("common", {}).get("args", {})
+                args = node_mase.get("common", {}).get("args", {})
+                if not args:
+                    args = node_params.get("common", {}).get("args", {})
                 interfaces = hardware.get("interface", {})
                 for arg, arg_info in args.items():
                     if "data_in" in arg or not isinstance(arg_info, dict):
                         continue
-                    if interfaces.get(arg, {}).get("storage") != "DRAM":
+                    # Prefer explicit DRAM metadata when present.
+                    storage = interfaces.get(arg, {}).get("storage")
+                    if storage is not None and storage != "DRAM":
                         continue
                     yield node, vf(node.name), arg, arg_info
 
@@ -129,25 +139,37 @@ def _emit_cocotb_tb(graph):
                 "precision"
             ]
 
-            # Create StreamDriver instances for DRAM-backed weight/bias parameters.
+            # Create StreamDriver instances for streamed parameter ports.
+            # Map model parameters to top-level DUT ports by name, e.g.:
+            #   fc1.weight -> fc1_weight / fc1_weight_valid / fc1_weight_ready
             self.dram_drivers = {}
-            for _node, node_name, arg, _arg_info in self._iter_dram_parameter_specs():
+            self.dram_param_specs = {}
+            for full_name, param_tensor in self.model.named_parameters():
+                if "." not in full_name:
+                    continue
+                module_name, arg = full_name.rsplit(".", 1)
+                node_name = vf(module_name)
                 port_name = f"{node_name}_{arg}"
-                try:
-                    self.dram_drivers[port_name] = StreamDriver(
-                        dut.clk,
-                        getattr(dut, port_name),
-                        getattr(dut, f"{port_name}_valid"),
-                        getattr(dut, f"{port_name}_ready"),
-                    )
-                    self.dram_drivers[port_name].log.setLevel(logging.DEBUG)
-                except AttributeError:
-                    self._sim_log.warning(
-                        "Skipping DRAM port '%s': signal/handshake not found on DUT",
-                        port_name,
-                    )
+                missing = [
+                    sig
+                    for sig in [port_name, f"{port_name}_valid", f"{port_name}_ready"]
+                    if not hasattr(dut, sig)
+                ]
+                if missing:
+                    continue
 
-            logger.debug("Discovered %d DRAM parameter ports", len(self.dram_drivers))
+                self.dram_drivers[port_name] = StreamDriver(
+                    dut.clk,
+                    getattr(dut, port_name),
+                    getattr(dut, f"{port_name}_valid"),
+                    getattr(dut, f"{port_name}_ready"),
+                )
+                self.dram_param_specs[port_name] = (node_name, arg, param_tensor)
+                self.dram_drivers[port_name].log.setLevel(logging.DEBUG)
+                self._sim_log.info("Bound parameter StreamDriver for DUT port '%s'", port_name)
+
+            logger.debug("Discovered %d streamed parameter ports", len(self.dram_drivers))
+
             if self.dram_drivers:
                 self._sim_log.info(
                     "DRAM drivers enabled for ports: %s",
@@ -185,49 +207,17 @@ def _emit_cocotb_tb(graph):
                 self._sim_log.info("Preloading DRAM parameter streams for %d ports", len(self.dram_drivers))
                 total_blocks_queued = 0
 
-                for node, node_name, arg, _arg_info in self._iter_dram_parameter_specs():
-                    port_name = f"{node_name}_{arg}"
-                    if port_name not in self.dram_drivers:
-                        continue
-
-                    module = getattr(node.meta["mase"], "module", None)
-                    if module is None:
-                        self._sim_log.warning(
-                            "Skipping DRAM parameter '%s': node module is unavailable",
-                            port_name,
-                        )
-                        continue
-
-                    try:
-                        param_tensor = module.get_parameter(arg)
-                    except Exception as exc:
-                        self._sim_log.warning(
-                            "Skipping DRAM parameter '%s': cannot fetch parameter '%s' (%s)",
-                            port_name,
-                            arg,
-                            exc,
-                        )
-                        continue
+                for port_name, (node_name, arg, param_tensor) in self.dram_param_specs.items():
 
                     arg_cap = _cap(arg)
-                    try:
-                        parallelism_0 = self.get_parameter(
-                            f"{node_name}_{arg_cap}_PARALLELISM_DIM_0"
-                        )
-                        parallelism_1 = self.get_parameter(
-                            f"{node_name}_{arg_cap}_PARALLELISM_DIM_1"
-                        )
-                        width = self.get_parameter(f"{node_name}_{arg_cap}_PRECISION_0")
-                        frac_width = self.get_parameter(
-                            f"{node_name}_{arg_cap}_PRECISION_1"
-                        )
-                    except Exception as exc:
-                        self._sim_log.warning(
-                            "Skipping DRAM parameter '%s': missing DUT parameter metadata (%s)",
-                            port_name,
-                            exc,
-                        )
-                        continue
+                    parallelism_0 = self.get_parameter(
+                        f"{node_name}_{arg_cap}_PARALLELISM_DIM_0"
+                    )
+                    parallelism_1 = self.get_parameter(
+                        f"{node_name}_{arg_cap}_PARALLELISM_DIM_1"
+                    )
+                    width = self.get_parameter(f"{node_name}_{arg_cap}_PRECISION_0")
+                    frac_width = self.get_parameter(f"{node_name}_{arg_cap}_PRECISION_1")
 
                     param_blocks = fixed_preprocess_tensor(
                         tensor=param_tensor,

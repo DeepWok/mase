@@ -116,7 +116,7 @@ def test_emit_verilog_linear():
     mg, _ = passes.emit_bram_transform_pass(mg)
     mg, _ = passes.emit_internal_rtl_transform_pass(mg)
     mg, _ = passes.emit_cocotb_transform_pass(
-        mg, pass_args={"wait_time": 100, "wait_unit": "ms", "batch_size": batch_size}
+        mg, pass_args={"wait_time": 2, "wait_units": "ms", "batch_size": batch_size}
     )
     mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
