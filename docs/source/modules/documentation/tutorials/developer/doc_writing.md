@@ -11,10 +11,10 @@ Documentations are automatically generated from the [docstring](https://peps.pyt
 You can easily generate a local copy of the documentation website for testing whether your doc has been written correctly.
 
 ```bash
-machop/sphinx_docs
+cd docs
 make html
 ```
-This would then build a doc directory under `sphinx_docs/build`, and you can open `sphinx_docs/build/html` and open the `index.html` page to have a local version of the doc.
+This would then build a doc directory under `docs/build`, and you can open `docs/build/html` and open the `index.html` page to have a local version of the doc.
 
 ## Automatic documentation generation through docstrings
 
@@ -49,14 +49,14 @@ Here we can fill the details into the template:
 * `_return_parameters_`: list a set of parameters extracted by the pass as outputs and give a description for each of them. This is similar to `_input_parameters_` but they are output (often seen in analysis passes).
 * `_detailed_descriptions_`: give a detailed description of the pass, including motivation, use cases, dependences on other passes, data structures introduced by the pass, examples of inputs and outputs.
 
-A complete example of a pass doc can be found [here](https://github.com/DeepWok/mase/blob/main/machop/chop/passes/graph/analysis/add_metadata/add_common_metadata.py#L226-L378).
+A complete example of a pass doc can be found [here](https://github.com/DeepWok/mase/blob/main/src/chop/passes/graph/analysis/add_metadata/add_common_metadata.py#L226-L378).
 
 ### Add the pass to the sphinx directory
 
 The MASE sphinx system only keeps track of the MASE passes, instead of all the Python functions in the codebase.
 In order to add your pass to the sphinx system so that it can be displayed on the website, you need to add your pass to the pass list.
 
-The pass list is under [this folder](https://github.com/DeepWok/mase/tree/main/machop/sphinx_docs/source/modules/api). Find the right category and append your pass to the list. 
+The pass list is under [this folder](https://github.com/DeepWok/mase/tree/main/docs/source/modules/api). Find the right category and append your pass to the list. 
 For example, here we are adding `add_common_metadata` pass, which is a analysis pass belonging to `add_metadata` group, so we find the rst file at `analysis/add_metadata.rst`, and append our pass here:
 
 ```rst

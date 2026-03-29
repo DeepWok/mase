@@ -87,7 +87,7 @@ The following MASE Types are available:
    torch.fx.
 
 You may find more clue in `this
-file <https://github.com/DeepWok/mase/blob/main/machop/chop/passes/graph/common.py>`__.
+file <https://github.com/DeepWok/mase/blob/main/src/chop/passes/graph/common.py>`__.
 
 A deeper dive into the quantisation transform
 ---------------------------------------------
@@ -109,7 +109,7 @@ A deeper dive into the quantisation transform
    indeed quantised. You might need to go through the source code of the
    implementation of the quantisation pass and also the implementation
    of the `Quantized
-   Layers <https://github.com/DeepWok/mase/blob/main/machop/chop/passes/graph/transforms/quantize/quantized_modules>`__
+   Layers <https://github.com/DeepWok/mase/blob/main/src/chop/passes/graph/transforms/quantize/quantized_modules>`__
    .
 
 The command line interface
@@ -123,7 +123,7 @@ The same flow can also be executed on the command line throw the
    # make sure you have the same printout
    pwd
    # it should show
-   # your_dir/mase-tools/machop
+   # your_dir/mase (repository root)
 
    # enter the following command
    ./ch transform --config configs/examples/jsc_toy_by_type.toml --task cls --cpu=0
@@ -135,8 +135,8 @@ Optional Task: Write your own pass
 ----------------------------------
 
 Many examples of existing passes are in the `source
-code <https://github.com/DeepWok/mase/blob/main/machop/chop/passes/graph/__init__.py>`__, the `test
-files <https://github.com/DeepWok/mase/blob/main/machop/test/passes/graph>`__ for these passes also contain useful
+code <https://github.com/DeepWok/mase/blob/main/src/chop/passes/graph/__init__.py>`__, the `test
+files <https://github.com/DeepWok/mase/blob/main/test/passes/graph>`__ for these passes also contain useful
 information on helping you to understand how these passes are used.
 
 Implement a pass to count the number of FLOPs (floating-point

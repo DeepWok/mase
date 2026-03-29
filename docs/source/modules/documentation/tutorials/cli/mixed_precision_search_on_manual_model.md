@@ -2,7 +2,7 @@
 
 This tutorial shows how to search for mixed-precision quantization strategy for OPT model on Wikitext2 dataset.
 
-> **Note**: Manual model refers to the model named as `<model_arch>_quantized` at `mase-tools/machop/chop/models/manual`. Usually these are models that cannot be directly converted to MASE Graph.
+> **Note**: Manual model refers to the model named as `<model_arch>_quantized` at `src/chop/models/manual`. Usually these are models that cannot be directly converted to MASE Graph.
 
 ## Search for Mixed-Precision Quantization Scheme
 
@@ -77,7 +77,7 @@ average_bitwidth.direction = "minimize"
 
 Run the search:
 ```bash
-cd machop
+cd /path/to/mase
 ./ch search --config ../configs/examples/search_opt_quantized_tpe_search.toml
 ```
 

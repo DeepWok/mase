@@ -54,8 +54,9 @@ python3 -m pip install -e . -vvv
 ```bash
 python -c "import chop"
 ```
-3. (Optional but suggested) You can also run the test stack to ensure the codebase is running correctly by running the following command.
+
+3. (Optional but suggested) You can also run the Chop test stack to ensure the codebase is running correctly by running the following command.
 
 ```bash
-pytest test/
+pytest test
 ```

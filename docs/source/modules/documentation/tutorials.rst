@@ -42,12 +42,13 @@ The following show how to effectively run Neural Architecture Search (NAS) and m
 Inference Deployment
 ---------------------
 
-The following tutorials show how to deploy an optimized model to software platforms.
+The following tutorials show how to deploy an optimized model to a range of platforms, including FPGA and GPU clusters.
 
 .. toctree::
    :maxdepth: 1
 
    tutorials/tutorial_7_distributed_deployment
+   tutorials/tutorial_8_emit_verilog
    tutorials/tutorial_9_kernel_fusion
 
 Advanced Topics
@@ -69,7 +70,7 @@ If you'd like to contribute to Mase, you may find the following resources useful
 .. toctree::
    :titlesonly:
 
-   tutorials/developer/Add-model-to-machop
+   tutorials/developer/Add-model-to-chop
    tutorials/developer/doc_writing
    tutorials/developer/how_to_extend_search
 

@@ -40,9 +40,9 @@ For more details, explore the documentation
 
 .. toctree::
    :maxdepth: 2
-   :caption: Machop API
+   :caption: Chop API
 
-   modules/machop
+   modules/chop
 
 .. toctree::
    :maxdepth: 1

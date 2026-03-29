@@ -6,7 +6,7 @@
   <img src='../imgs/mase_rt_logo.png' style="max-width: 100%; max-height: 100%; height: auto;">
 </div>
 
-This documentation details the rationality, functionality and methodology of TensorRT and ONNXRT integration into the Machop framework.
+This documentation details the rationality, functionality and methodology of TensorRT and ONNXRT integration into the Chop framework.
 
 <p>Continuing the ideology behind MASE to provide a reliable and efficient streaming accelerator system, we have now integrated TensorRT and ONNXRT, two powerful SDKs for optimizing inference using techniques such as quantization, layer and tensor fusion, and kernel tuning.
 
@@ -218,7 +218,7 @@ To showcase the improved inference speeds and to evaluate accuracy, latency, pow
 
 The environment setup during the [MASE installation](../../README.md) either through Docker or Conda will have you covered, there are no other requirements.
 
-The procedure in the [How It Works Section](#⚙️-how-it-works) can be acomplished by the machop's transform action.
+The procedure in the [How It Works Section](#⚙️-how-it-works) can be acomplished by Chop's transform action.
 
 ```python
 ./ch transform --config {config_file} --load {model_checkpoint} --load-type pl
@@ -249,7 +249,7 @@ To integrate the functionality mentioned in this document we have developed **SI
 - Analyis Passes:
   - `runtime_analysis_pass`
 
-These passes and their respective tutorials demonstrating their capability are thoroughly documented in the MASE Documentation under the [Machop API Passes](https://deepwok.github.io/mase/modules/api/passes.html) and [Tutorials](https://deepwok.github.io/mase/modules/documentation/tutorials.html) sections.
+These passes and their respective tutorials demonstrating their capability are thoroughly documented in the MASE Documentation under the [Chop API Passes](https://deepwok.github.io/mase/modules/api/passes.html) and [Tutorials](https://deepwok.github.io/mase/modules/documentation/tutorials.html) sections.
 
 ### Scheduler Args in `chop.actions.train`
 
@@ -257,4 +257,4 @@ For the cosine annealing functionality integrated into the QAT `tensorrt_fine_tu
 
 ### Added input channel pre-processing to enable vision models functioning on MNIST
 
-An issue was opened in which errors in processing MNIST dataset with vision models were brought to attention. This was traceable to MNIST dataset being grayscale, hence providing only one channel, whilst MASE convolutional models expect 3 channels. The proposed fix applies a series of checks to ascertain that the model-dataset combination requires intervention (since some feedforward neural network models are able to run on MNIST without further action), then, if needed, overrides the model architecture when using MNIST by including a single Conv2d, mapping the single input channel to 3 output channels, before the first convolutional layer. A check is further added in the machop/chop/tools/get_input.py file that constructs the dummy_input accordingly, in case the first model layer was overridden.
+An issue was opened in which errors in processing MNIST dataset with vision models were brought to attention. This was traceable to MNIST dataset being grayscale, hence providing only one channel, whilst MASE convolutional models expect 3 channels. The proposed fix applies a series of checks to ascertain that the model-dataset combination requires intervention (since some feedforward neural network models are able to run on MNIST without further action), then, if needed, overrides the model architecture when using MNIST by including a single Conv2d, mapping the single input channel to 3 output channels, before the first convolutional layer. A check is further added in the `src/chop/tools/get_input.py` file that constructs the dummy_input accordingly, in case the first model layer was overridden.

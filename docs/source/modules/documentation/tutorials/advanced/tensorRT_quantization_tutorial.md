@@ -3,7 +3,7 @@
 This notebook is designed to show the features of the TensorRT passes integrated into MASE as part of the MASERT framework. The following demonstrations were run on a NVIDIA RTX A2000 GPU with a Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz CPU.
 
 ## Section 1. INT8 Quantization
-Firstly, we will show you how to do a int8 quantization of a simple model, `jsc-toy`, and compare the quantized model to the original model using the `Machop API`. The quantization process is split into the following stages, each using their own individual pass, and are explained in depth at each subsection:
+Firstly, we will show you how to do a int8 quantization of a simple model, `jsc-toy`, and compare the quantized model to the original model using the `Chop API`. The quantization process is split into the following stages, each using their own individual pass, and are explained in depth at each subsection:
 
 1. Fake quantization: `tensorrt_fake_quantize_transform_pass`
 2. Calibration: `tensorrt_calibrate_transform_pass`
@@ -11,7 +11,7 @@ Firstly, we will show you how to do a int8 quantization of a simple model, `jsc-
 4. Quantization: `tensorrt_engine_interface_pass`
 5. Analysis: `tensorrt_analysis_pass`
 
-We start by loading in the required libraries and passes required for the notebook as well as ensuring the correct path is set for machop to be used.
+We start by loading in the required libraries and passes required for the notebook as well as ensuring the correct path is set for chop to be used.
 
 
 ```python
@@ -21,12 +21,12 @@ from pathlib import Path
 import toml
 
 # Figure out the correct path
-machop_path = Path(".").resolve().parent.parent.parent /"machop"
-assert machop_path.exists(), "Failed to find machop at: {}".format(machop_path)
-sys.path.append(str(machop_path))
+chop_src = Path(".").resolve().parent.parent.parent / "src"
+assert chop_src.exists(), "Failed to find src at: {}".format(chop_src)
+sys.path.append(str(chop_src))
 
-# Add directory to the PATH so that chop can be called
-new_path = "../../../machop"
+# Add directory to the PATH so that ./ch can be called
+new_path = "../../../src"
 full_path = os.path.abspath(new_path)
 os.environ['PATH'] += os.pathsep + full_path
 
@@ -68,7 +68,7 @@ Next, we load in the toml file used for quantization.
 
 ```python
 # Path to your TOML file
-JSC_TOML_PATH = '../../../machop/configs/tensorrt/jsc_toy_INT8_quantization_by_type.toml'
+JSC_TOML_PATH = '../../../configs/tensorrt/jsc_toy_INT8_quantization_by_type.toml'
 
 # Reading TOML file and converting it into a Python dictionary
 with open(JSC_TOML_PATH, 'r') as toml_file:
@@ -133,7 +133,7 @@ input_generator = InputGenerator(
 mg = MaseGraph(model=model)
 ```
 
-Next, we train the `jsc-toy` model using the machop `train` action with the config from the toml file.
+Next, we train the `jsc-toy` model using the chop `train` action with the config from the toml file.
 
 
 ```bash
@@ -550,15 +550,15 @@ The fine tuned checkpoints are stored in the ckpts/fine_tuning folder:
 
 ```
 mase_output
-└── tensorrt
-    └── quantization
-        └──model_task_dataset_date
-            ├── cache
-            ├── ckpts
-            │   └── fine_tuning
-            ├── json
-            ├── onnx
-            └── trt
+??? tensorrt
+    ??? quantization
+        ???model_task_dataset_date
+            ??? cache
+            ??? ckpts
+            ?   ??? fine_tuning
+            ??? json
+            ??? onnx
+            ??? trt
 ```
 
 
@@ -737,7 +737,7 @@ Since float quantization does not require calibration, nor is it supported by `p
 
 
 ```text
-JSC_FP16_BY_TYPE_TOML = "../../../machop/configs/tensorrt/jsc_toy_FP16_quantization_by_type.toml"
+JSC_FP16_BY_TYPE_TOML = "../../../configs/tensorrt/jsc_toy_FP16_quantization_by_type.toml"
 !ch transform --config {JSC_FP16_BY_TYPE_TOML} --load {JSC_CHECKPOINT_PATH} --load-type pl
 
     8808.24s - pydevd: Sending message related to process being replaced timed-out after 5 seconds
@@ -932,7 +932,7 @@ You may either download a pretrained model [here](https://imperiallondon-my.shar
 
 
 ```bash
-VGG_TYPEWISE_TOML = "../../../machop/configs/tensorrt/vgg7_typewise_mixed_precision.toml"
+VGG_TYPEWISE_TOML = "../../../configs/tensorrt/vgg7_typewise_mixed_precision.toml"
 
 ch train --config {VGG_TYPEWISE_TOML}
 ```
@@ -1281,331 +1281,331 @@ ch transform --config {VGG_TYPEWISE_TOML} --load {VGG_CHECKPOINT_PATH} --load-ty
     0         Non-trainable params
     14.0 M    Total params
     56.118    Total estimated model params size (MB)
-    Epoch 0: 100%|█| 782/782 [00:36<00:00, 21.71it/s, v_num=14, train_acc_step=0.938
+    Epoch 0: 100%|?| 782/782 [00:36<00:00, 21.71it/s, v_num=14, train_acc_step=0.938
     Validation: |                                             | 0/? [00:00<?, ?it/s][A
     Validation:   0%|                                       | 0/157 [00:00<?, ?it/s][A
     Validation DataLoader 0:   0%|                          | 0/157 [00:00<?, ?it/s][A
     Validation DataLoader 0:   1%|                  | 1/157 [00:00<00:03, 48.47it/s][A
-    Validation DataLoader 0:   1%|▏                 | 2/157 [00:00<00:03, 49.82it/s][A
-    Validation DataLoader 0:   2%|▎                 | 3/157 [00:00<00:03, 50.58it/s][A
-    Validation DataLoader 0:   3%|▍                 | 4/157 [00:00<00:03, 49.84it/s][A
-    Validation DataLoader 0:   3%|▌                 | 5/157 [00:00<00:03, 50.45it/s][A
-    Validation DataLoader 0:   4%|▋                 | 6/157 [00:00<00:02, 50.79it/s][A
-    Validation DataLoader 0:   4%|▊                 | 7/157 [00:00<00:02, 51.03it/s][A
-    Validation DataLoader 0:   5%|▉                 | 8/157 [00:00<00:02, 51.28it/s][A
-    Validation DataLoader 0:   6%|█                 | 9/157 [00:00<00:02, 51.86it/s][A
-    Validation DataLoader 0:   6%|█                | 10/157 [00:00<00:02, 52.48it/s][A
-    Validation DataLoader 0:   7%|█▏               | 11/157 [00:00<00:02, 51.76it/s][A
-    Validation DataLoader 0:   8%|█▎               | 12/157 [00:00<00:02, 52.32it/s][A
-    Validation DataLoader 0:   8%|█▍               | 13/157 [00:00<00:02, 51.83it/s][A
-    Validation DataLoader 0:   9%|█▌               | 14/157 [00:00<00:02, 51.22it/s][A
-    Validation DataLoader 0:  10%|█▌               | 15/157 [00:00<00:02, 51.72it/s][A
-    Validation DataLoader 0:  10%|█▋               | 16/157 [00:00<00:02, 52.16it/s][A
-    Validation DataLoader 0:  11%|█▊               | 17/157 [00:00<00:02, 51.60it/s][A
-    Validation DataLoader 0:  11%|█▉               | 18/157 [00:00<00:02, 50.72it/s][A
-    Validation DataLoader 0:  12%|██               | 19/157 [00:00<00:02, 51.01it/s][A
-    Validation DataLoader 0:  13%|██▏              | 20/157 [00:00<00:02, 51.09it/s][A
-    Validation DataLoader 0:  13%|██▎              | 21/157 [00:00<00:02, 51.49it/s][A
-    Validation DataLoader 0:  14%|██▍              | 22/157 [00:00<00:02, 51.40it/s][A
-    Validation DataLoader 0:  15%|██▍              | 23/157 [00:00<00:02, 51.65it/s][A
-    Validation DataLoader 0:  15%|██▌              | 24/157 [00:00<00:02, 51.76it/s][A
-    Validation DataLoader 0:  16%|██▋              | 25/157 [00:00<00:02, 52.09it/s][A
-    Validation DataLoader 0:  17%|██▊              | 26/157 [00:00<00:02, 52.40it/s][A
-    Validation DataLoader 0:  17%|██▉              | 27/157 [00:00<00:02, 52.68it/s][A
-    Validation DataLoader 0:  18%|███              | 28/157 [00:00<00:02, 52.53it/s][A
-    Validation DataLoader 0:  18%|███▏             | 29/157 [00:00<00:02, 52.67it/s][A
-    Validation DataLoader 0:  19%|███▏             | 30/157 [00:00<00:02, 52.92it/s][A
-    Validation DataLoader 0:  20%|███▎             | 31/157 [00:00<00:02, 53.15it/s][A
-    Validation DataLoader 0:  20%|███▍             | 32/157 [00:00<00:02, 53.37it/s][A
-    Validation DataLoader 0:  21%|███▌             | 33/157 [00:00<00:02, 53.58it/s][A
-    Validation DataLoader 0:  22%|███▋             | 34/157 [00:00<00:02, 53.77it/s][A
-    Validation DataLoader 0:  22%|███▊             | 35/157 [00:00<00:02, 53.96it/s][A
-    Validation DataLoader 0:  23%|███▉             | 36/157 [00:00<00:02, 54.12it/s][A
-    Validation DataLoader 0:  24%|████             | 37/157 [00:00<00:02, 54.28it/s][A
-    Validation DataLoader 0:  24%|████             | 38/157 [00:00<00:02, 54.42it/s][A
-    Validation DataLoader 0:  25%|████▏            | 39/157 [00:00<00:02, 54.56it/s][A
-    Validation DataLoader 0:  25%|████▎            | 40/157 [00:00<00:02, 54.68it/s][A
-    Validation DataLoader 0:  26%|████▍            | 41/157 [00:00<00:02, 54.81it/s][A
-    Validation DataLoader 0:  27%|████▌            | 42/157 [00:00<00:02, 54.94it/s][A
-    Validation DataLoader 0:  27%|████▋            | 43/157 [00:00<00:02, 55.06it/s][A
-    Validation DataLoader 0:  28%|████▊            | 44/157 [00:00<00:02, 55.18it/s][A
-    Validation DataLoader 0:  29%|████▊            | 45/157 [00:00<00:02, 55.30it/s][A
-    Validation DataLoader 0:  29%|████▉            | 46/157 [00:00<00:02, 55.40it/s][A
-    Validation DataLoader 0:  30%|█████            | 47/157 [00:00<00:01, 55.50it/s][A
-    Validation DataLoader 0:  31%|█████▏           | 48/157 [00:00<00:01, 55.60it/s][A
-    Validation DataLoader 0:  31%|█████▎           | 49/157 [00:00<00:01, 55.68it/s][A
-    Validation DataLoader 0:  32%|█████▍           | 50/157 [00:00<00:01, 55.65it/s][A
-    Validation DataLoader 0:  32%|█████▌           | 51/157 [00:00<00:01, 55.74it/s][A
-    Validation DataLoader 0:  33%|█████▋           | 52/157 [00:00<00:01, 55.78it/s][A
-    Validation DataLoader 0:  34%|█████▋           | 53/157 [00:00<00:01, 55.86it/s][A
-    Validation DataLoader 0:  34%|█████▊           | 54/157 [00:00<00:01, 55.95it/s][A
-    Validation DataLoader 0:  35%|█████▉           | 55/157 [00:00<00:01, 55.98it/s][A
-    Validation DataLoader 0:  36%|██████           | 56/157 [00:01<00:01, 55.90it/s][A
-    Validation DataLoader 0:  36%|██████▏          | 57/157 [00:01<00:01, 55.88it/s][A
-    Validation DataLoader 0:  37%|██████▎          | 58/157 [00:01<00:01, 55.91it/s][A
-    Validation DataLoader 0:  38%|██████▍          | 59/157 [00:01<00:01, 55.95it/s][A
-    Validation DataLoader 0:  38%|██████▍          | 60/157 [00:01<00:01, 55.99it/s][A
-    Validation DataLoader 0:  39%|██████▌          | 61/157 [00:01<00:01, 56.01it/s][A
-    Validation DataLoader 0:  39%|██████▋          | 62/157 [00:01<00:01, 56.04it/s][A
-    Validation DataLoader 0:  40%|██████▊          | 63/157 [00:01<00:01, 56.06it/s][A
-    Validation DataLoader 0:  41%|██████▉          | 64/157 [00:01<00:01, 56.08it/s][A
-    Validation DataLoader 0:  41%|███████          | 65/157 [00:01<00:01, 56.10it/s][A
-    Validation DataLoader 0:  42%|███████▏         | 66/157 [00:01<00:01, 56.14it/s][A
-    Validation DataLoader 0:  43%|███████▎         | 67/157 [00:01<00:01, 56.16it/s][A
-    Validation DataLoader 0:  43%|███████▎         | 68/157 [00:01<00:01, 56.17it/s][A
-    Validation DataLoader 0:  44%|███████▍         | 69/157 [00:01<00:01, 56.20it/s][A
-    Validation DataLoader 0:  45%|███████▌         | 70/157 [00:01<00:01, 56.22it/s][A
-    Validation DataLoader 0:  45%|███████▋         | 71/157 [00:01<00:01, 56.24it/s][A
-    Validation DataLoader 0:  46%|███████▊         | 72/157 [00:01<00:01, 56.25it/s][A
-    Validation DataLoader 0:  46%|███████▉         | 73/157 [00:01<00:01, 56.27it/s][A
-    Validation DataLoader 0:  47%|████████         | 74/157 [00:01<00:01, 56.29it/s][A
-    Validation DataLoader 0:  48%|████████         | 75/157 [00:01<00:01, 56.31it/s][A
-    Validation DataLoader 0:  48%|████████▏        | 76/157 [00:01<00:01, 56.32it/s][A
-    Validation DataLoader 0:  49%|████████▎        | 77/157 [00:01<00:01, 56.33it/s][A
-    Validation DataLoader 0:  50%|████████▍        | 78/157 [00:01<00:01, 56.36it/s][A
-    Validation DataLoader 0:  50%|████████▌        | 79/157 [00:01<00:01, 56.37it/s][A
-    Validation DataLoader 0:  51%|████████▋        | 80/157 [00:01<00:01, 56.39it/s][A
-    Validation DataLoader 0:  52%|████████▊        | 81/157 [00:01<00:01, 56.41it/s][A
-    Validation DataLoader 0:  52%|████████▉        | 82/157 [00:01<00:01, 56.42it/s][A
-    Validation DataLoader 0:  53%|████████▉        | 83/157 [00:01<00:01, 56.43it/s][A
-    Validation DataLoader 0:  54%|█████████        | 84/157 [00:01<00:01, 56.33it/s][A
-    Validation DataLoader 0:  54%|█████████▏       | 85/157 [00:01<00:01, 56.31it/s][A
-    Validation DataLoader 0:  55%|█████████▎       | 86/157 [00:01<00:01, 56.33it/s][A
-    Validation DataLoader 0:  55%|█████████▍       | 87/157 [00:01<00:01, 56.35it/s][A
-    Validation DataLoader 0:  56%|█████████▌       | 88/157 [00:01<00:01, 56.37it/s][A
-    Validation DataLoader 0:  57%|█████████▋       | 89/157 [00:01<00:01, 56.40it/s][A
-    Validation DataLoader 0:  57%|█████████▋       | 90/157 [00:01<00:01, 56.41it/s][A
-    Validation DataLoader 0:  58%|█████████▊       | 91/157 [00:01<00:01, 56.43it/s][A
-    Validation DataLoader 0:  59%|█████████▉       | 92/157 [00:01<00:01, 56.44it/s][A
-    Validation DataLoader 0:  59%|██████████       | 93/157 [00:01<00:01, 56.45it/s][A
-    Validation DataLoader 0:  60%|██████████▏      | 94/157 [00:01<00:01, 56.46it/s][A
-    Validation DataLoader 0:  61%|██████████▎      | 95/157 [00:01<00:01, 56.47it/s][A
-    Validation DataLoader 0:  61%|██████████▍      | 96/157 [00:01<00:01, 56.48it/s][A
-    Validation DataLoader 0:  62%|██████████▌      | 97/157 [00:01<00:01, 56.49it/s][A
-    Validation DataLoader 0:  62%|██████████▌      | 98/157 [00:01<00:01, 56.50it/s][A
-    Validation DataLoader 0:  63%|██████████▋      | 99/157 [00:01<00:01, 56.51it/s][A
-    Validation DataLoader 0:  64%|██████████▏     | 100/157 [00:01<00:01, 56.51it/s][A
-    Validation DataLoader 0:  64%|██████████▎     | 101/157 [00:01<00:00, 56.52it/s][A
-    Validation DataLoader 0:  65%|██████████▍     | 102/157 [00:01<00:00, 56.53it/s][A
-    Validation DataLoader 0:  66%|██████████▍     | 103/157 [00:01<00:00, 56.55it/s][A
-    Validation DataLoader 0:  66%|██████████▌     | 104/157 [00:01<00:00, 56.57it/s][A
-    Validation DataLoader 0:  67%|██████████▋     | 105/157 [00:01<00:00, 56.58it/s][A
-    Validation DataLoader 0:  68%|██████████▊     | 106/157 [00:01<00:00, 56.60it/s][A
-    Validation DataLoader 0:  68%|██████████▉     | 107/157 [00:01<00:00, 56.61it/s][A
-    Validation DataLoader 0:  69%|███████████     | 108/157 [00:01<00:00, 56.62it/s][A
-    Validation DataLoader 0:  69%|███████████     | 109/157 [00:01<00:00, 56.64it/s][A
-    Validation DataLoader 0:  70%|███████████▏    | 110/157 [00:01<00:00, 56.65it/s][A
-    Validation DataLoader 0:  71%|███████████▎    | 111/157 [00:01<00:00, 56.66it/s][A
-    Validation DataLoader 0:  71%|███████████▍    | 112/157 [00:01<00:00, 56.67it/s][A
-    Validation DataLoader 0:  72%|███████████▌    | 113/157 [00:01<00:00, 56.69it/s][A
-    Validation DataLoader 0:  73%|███████████▌    | 114/157 [00:02<00:00, 56.69it/s][A
-    Validation DataLoader 0:  73%|███████████▋    | 115/157 [00:02<00:00, 56.70it/s][A
-    Validation DataLoader 0:  74%|███████████▊    | 116/157 [00:02<00:00, 56.71it/s][A
-    Validation DataLoader 0:  75%|███████████▉    | 117/157 [00:02<00:00, 56.73it/s][A
-    Validation DataLoader 0:  75%|████████████    | 118/157 [00:02<00:00, 56.74it/s][A
-    Validation DataLoader 0:  76%|████████████▏   | 119/157 [00:02<00:00, 56.75it/s][A
-    Validation DataLoader 0:  76%|████████████▏   | 120/157 [00:02<00:00, 56.76it/s][A
-    Validation DataLoader 0:  77%|████████████▎   | 121/157 [00:02<00:00, 56.76it/s][A
-    Validation DataLoader 0:  78%|████████████▍   | 122/157 [00:02<00:00, 56.77it/s][A
-    Validation DataLoader 0:  78%|████████████▌   | 123/157 [00:02<00:00, 56.77it/s][A
-    Validation DataLoader 0:  79%|████████████▋   | 124/157 [00:02<00:00, 56.78it/s][A
-    Validation DataLoader 0:  80%|████████████▋   | 125/157 [00:02<00:00, 56.80it/s][A
-    Validation DataLoader 0:  80%|████████████▊   | 126/157 [00:02<00:00, 56.81it/s][A
-    Validation DataLoader 0:  81%|████████████▉   | 127/157 [00:02<00:00, 56.81it/s][A
-    Validation DataLoader 0:  82%|█████████████   | 128/157 [00:02<00:00, 56.82it/s][A
-    Validation DataLoader 0:  82%|█████████████▏  | 129/157 [00:02<00:00, 56.82it/s][A
-    Validation DataLoader 0:  83%|█████████████▏  | 130/157 [00:02<00:00, 56.83it/s][A
-    Validation DataLoader 0:  83%|█████████████▎  | 131/157 [00:02<00:00, 56.84it/s][A
-    Validation DataLoader 0:  84%|█████████████▍  | 132/157 [00:02<00:00, 56.84it/s][A
-    Validation DataLoader 0:  85%|█████████████▌  | 133/157 [00:02<00:00, 56.85it/s][A
-    Validation DataLoader 0:  85%|█████████████▋  | 134/157 [00:02<00:00, 56.86it/s][A
-    Validation DataLoader 0:  86%|█████████████▊  | 135/157 [00:02<00:00, 56.87it/s][A
-    Validation DataLoader 0:  87%|█████████████▊  | 136/157 [00:02<00:00, 56.87it/s][A
-    Validation DataLoader 0:  87%|█████████████▉  | 137/157 [00:02<00:00, 56.87it/s][A
-    Validation DataLoader 0:  88%|██████████████  | 138/157 [00:02<00:00, 56.88it/s][A
-    Validation DataLoader 0:  89%|██████████████▏ | 139/157 [00:02<00:00, 56.89it/s][A
-    Validation DataLoader 0:  89%|██████████████▎ | 140/157 [00:02<00:00, 56.89it/s][A
-    Validation DataLoader 0:  90%|██████████████▎ | 141/157 [00:02<00:00, 56.89it/s][A
-    Validation DataLoader 0:  90%|██████████████▍ | 142/157 [00:02<00:00, 56.90it/s][A
-    Validation DataLoader 0:  91%|██████████████▌ | 143/157 [00:02<00:00, 56.90it/s][A
-    Validation DataLoader 0:  92%|██████████████▋ | 144/157 [00:02<00:00, 56.91it/s][A
-    Validation DataLoader 0:  92%|██████████████▊ | 145/157 [00:02<00:00, 56.92it/s][A
-    Validation DataLoader 0:  93%|██████████████▉ | 146/157 [00:02<00:00, 56.93it/s][A
-    Validation DataLoader 0:  94%|██████████████▉ | 147/157 [00:02<00:00, 56.94it/s][A
-    Validation DataLoader 0:  94%|███████████████ | 148/157 [00:02<00:00, 56.95it/s][A
-    Validation DataLoader 0:  95%|███████████████▏| 149/157 [00:02<00:00, 56.96it/s][A
-    Validation DataLoader 0:  96%|███████████████▎| 150/157 [00:02<00:00, 56.97it/s][A
-    Validation DataLoader 0:  96%|███████████████▍| 151/157 [00:02<00:00, 56.98it/s][A
-    Validation DataLoader 0:  97%|███████████████▍| 152/157 [00:02<00:00, 56.98it/s][A
-    Validation DataLoader 0:  97%|███████████████▌| 153/157 [00:02<00:00, 56.98it/s][A
-    Validation DataLoader 0:  98%|███████████████▋| 154/157 [00:02<00:00, 56.99it/s][A
-    Validation DataLoader 0:  99%|███████████████▊| 155/157 [00:02<00:00, 56.99it/s][A
-    Validation DataLoader 0:  99%|███████████████▉| 156/157 [00:02<00:00, 56.97it/s][A
-    Validation DataLoader 0: 100%|████████████████| 157/157 [00:02<00:00, 57.15it/s][A
-    Epoch 1: 100%|█| 782/782 [00:43<00:00, 18.17it/s, v_num=14, train_acc_step=0.812[A
+    Validation DataLoader 0:   1%|?                 | 2/157 [00:00<00:03, 49.82it/s][A
+    Validation DataLoader 0:   2%|?                 | 3/157 [00:00<00:03, 50.58it/s][A
+    Validation DataLoader 0:   3%|?                 | 4/157 [00:00<00:03, 49.84it/s][A
+    Validation DataLoader 0:   3%|?                 | 5/157 [00:00<00:03, 50.45it/s][A
+    Validation DataLoader 0:   4%|?                 | 6/157 [00:00<00:02, 50.79it/s][A
+    Validation DataLoader 0:   4%|?                 | 7/157 [00:00<00:02, 51.03it/s][A
+    Validation DataLoader 0:   5%|?                 | 8/157 [00:00<00:02, 51.28it/s][A
+    Validation DataLoader 0:   6%|?                 | 9/157 [00:00<00:02, 51.86it/s][A
+    Validation DataLoader 0:   6%|?                | 10/157 [00:00<00:02, 52.48it/s][A
+    Validation DataLoader 0:   7%|??               | 11/157 [00:00<00:02, 51.76it/s][A
+    Validation DataLoader 0:   8%|??               | 12/157 [00:00<00:02, 52.32it/s][A
+    Validation DataLoader 0:   8%|??               | 13/157 [00:00<00:02, 51.83it/s][A
+    Validation DataLoader 0:   9%|??               | 14/157 [00:00<00:02, 51.22it/s][A
+    Validation DataLoader 0:  10%|??               | 15/157 [00:00<00:02, 51.72it/s][A
+    Validation DataLoader 0:  10%|??               | 16/157 [00:00<00:02, 52.16it/s][A
+    Validation DataLoader 0:  11%|??               | 17/157 [00:00<00:02, 51.60it/s][A
+    Validation DataLoader 0:  11%|??               | 18/157 [00:00<00:02, 50.72it/s][A
+    Validation DataLoader 0:  12%|??               | 19/157 [00:00<00:02, 51.01it/s][A
+    Validation DataLoader 0:  13%|???              | 20/157 [00:00<00:02, 51.09it/s][A
+    Validation DataLoader 0:  13%|???              | 21/157 [00:00<00:02, 51.49it/s][A
+    Validation DataLoader 0:  14%|???              | 22/157 [00:00<00:02, 51.40it/s][A
+    Validation DataLoader 0:  15%|???              | 23/157 [00:00<00:02, 51.65it/s][A
+    Validation DataLoader 0:  15%|???              | 24/157 [00:00<00:02, 51.76it/s][A
+    Validation DataLoader 0:  16%|???              | 25/157 [00:00<00:02, 52.09it/s][A
+    Validation DataLoader 0:  17%|???              | 26/157 [00:00<00:02, 52.40it/s][A
+    Validation DataLoader 0:  17%|???              | 27/157 [00:00<00:02, 52.68it/s][A
+    Validation DataLoader 0:  18%|???              | 28/157 [00:00<00:02, 52.53it/s][A
+    Validation DataLoader 0:  18%|????             | 29/157 [00:00<00:02, 52.67it/s][A
+    Validation DataLoader 0:  19%|????             | 30/157 [00:00<00:02, 52.92it/s][A
+    Validation DataLoader 0:  20%|????             | 31/157 [00:00<00:02, 53.15it/s][A
+    Validation DataLoader 0:  20%|????             | 32/157 [00:00<00:02, 53.37it/s][A
+    Validation DataLoader 0:  21%|????             | 33/157 [00:00<00:02, 53.58it/s][A
+    Validation DataLoader 0:  22%|????             | 34/157 [00:00<00:02, 53.77it/s][A
+    Validation DataLoader 0:  22%|????             | 35/157 [00:00<00:02, 53.96it/s][A
+    Validation DataLoader 0:  23%|????             | 36/157 [00:00<00:02, 54.12it/s][A
+    Validation DataLoader 0:  24%|????             | 37/157 [00:00<00:02, 54.28it/s][A
+    Validation DataLoader 0:  24%|????             | 38/157 [00:00<00:02, 54.42it/s][A
+    Validation DataLoader 0:  25%|?????            | 39/157 [00:00<00:02, 54.56it/s][A
+    Validation DataLoader 0:  25%|?????            | 40/157 [00:00<00:02, 54.68it/s][A
+    Validation DataLoader 0:  26%|?????            | 41/157 [00:00<00:02, 54.81it/s][A
+    Validation DataLoader 0:  27%|?????            | 42/157 [00:00<00:02, 54.94it/s][A
+    Validation DataLoader 0:  27%|?????            | 43/157 [00:00<00:02, 55.06it/s][A
+    Validation DataLoader 0:  28%|?????            | 44/157 [00:00<00:02, 55.18it/s][A
+    Validation DataLoader 0:  29%|?????            | 45/157 [00:00<00:02, 55.30it/s][A
+    Validation DataLoader 0:  29%|?????            | 46/157 [00:00<00:02, 55.40it/s][A
+    Validation DataLoader 0:  30%|?????            | 47/157 [00:00<00:01, 55.50it/s][A
+    Validation DataLoader 0:  31%|??????           | 48/157 [00:00<00:01, 55.60it/s][A
+    Validation DataLoader 0:  31%|??????           | 49/157 [00:00<00:01, 55.68it/s][A
+    Validation DataLoader 0:  32%|??????           | 50/157 [00:00<00:01, 55.65it/s][A
+    Validation DataLoader 0:  32%|??????           | 51/157 [00:00<00:01, 55.74it/s][A
+    Validation DataLoader 0:  33%|??????           | 52/157 [00:00<00:01, 55.78it/s][A
+    Validation DataLoader 0:  34%|??????           | 53/157 [00:00<00:01, 55.86it/s][A
+    Validation DataLoader 0:  34%|??????           | 54/157 [00:00<00:01, 55.95it/s][A
+    Validation DataLoader 0:  35%|??????           | 55/157 [00:00<00:01, 55.98it/s][A
+    Validation DataLoader 0:  36%|??????           | 56/157 [00:01<00:01, 55.90it/s][A
+    Validation DataLoader 0:  36%|???????          | 57/157 [00:01<00:01, 55.88it/s][A
+    Validation DataLoader 0:  37%|???????          | 58/157 [00:01<00:01, 55.91it/s][A
+    Validation DataLoader 0:  38%|???????          | 59/157 [00:01<00:01, 55.95it/s][A
+    Validation DataLoader 0:  38%|???????          | 60/157 [00:01<00:01, 55.99it/s][A
+    Validation DataLoader 0:  39%|???????          | 61/157 [00:01<00:01, 56.01it/s][A
+    Validation DataLoader 0:  39%|???????          | 62/157 [00:01<00:01, 56.04it/s][A
+    Validation DataLoader 0:  40%|???????          | 63/157 [00:01<00:01, 56.06it/s][A
+    Validation DataLoader 0:  41%|???????          | 64/157 [00:01<00:01, 56.08it/s][A
+    Validation DataLoader 0:  41%|???????          | 65/157 [00:01<00:01, 56.10it/s][A
+    Validation DataLoader 0:  42%|????????         | 66/157 [00:01<00:01, 56.14it/s][A
+    Validation DataLoader 0:  43%|????????         | 67/157 [00:01<00:01, 56.16it/s][A
+    Validation DataLoader 0:  43%|????????         | 68/157 [00:01<00:01, 56.17it/s][A
+    Validation DataLoader 0:  44%|????????         | 69/157 [00:01<00:01, 56.20it/s][A
+    Validation DataLoader 0:  45%|????????         | 70/157 [00:01<00:01, 56.22it/s][A
+    Validation DataLoader 0:  45%|????????         | 71/157 [00:01<00:01, 56.24it/s][A
+    Validation DataLoader 0:  46%|????????         | 72/157 [00:01<00:01, 56.25it/s][A
+    Validation DataLoader 0:  46%|????????         | 73/157 [00:01<00:01, 56.27it/s][A
+    Validation DataLoader 0:  47%|????????         | 74/157 [00:01<00:01, 56.29it/s][A
+    Validation DataLoader 0:  48%|????????         | 75/157 [00:01<00:01, 56.31it/s][A
+    Validation DataLoader 0:  48%|?????????        | 76/157 [00:01<00:01, 56.32it/s][A
+    Validation DataLoader 0:  49%|?????????        | 77/157 [00:01<00:01, 56.33it/s][A
+    Validation DataLoader 0:  50%|?????????        | 78/157 [00:01<00:01, 56.36it/s][A
+    Validation DataLoader 0:  50%|?????????        | 79/157 [00:01<00:01, 56.37it/s][A
+    Validation DataLoader 0:  51%|?????????        | 80/157 [00:01<00:01, 56.39it/s][A
+    Validation DataLoader 0:  52%|?????????        | 81/157 [00:01<00:01, 56.41it/s][A
+    Validation DataLoader 0:  52%|?????????        | 82/157 [00:01<00:01, 56.42it/s][A
+    Validation DataLoader 0:  53%|?????????        | 83/157 [00:01<00:01, 56.43it/s][A
+    Validation DataLoader 0:  54%|?????????        | 84/157 [00:01<00:01, 56.33it/s][A
+    Validation DataLoader 0:  54%|??????????       | 85/157 [00:01<00:01, 56.31it/s][A
+    Validation DataLoader 0:  55%|??????????       | 86/157 [00:01<00:01, 56.33it/s][A
+    Validation DataLoader 0:  55%|??????????       | 87/157 [00:01<00:01, 56.35it/s][A
+    Validation DataLoader 0:  56%|??????????       | 88/157 [00:01<00:01, 56.37it/s][A
+    Validation DataLoader 0:  57%|??????????       | 89/157 [00:01<00:01, 56.40it/s][A
+    Validation DataLoader 0:  57%|??????????       | 90/157 [00:01<00:01, 56.41it/s][A
+    Validation DataLoader 0:  58%|??????????       | 91/157 [00:01<00:01, 56.43it/s][A
+    Validation DataLoader 0:  59%|??????????       | 92/157 [00:01<00:01, 56.44it/s][A
+    Validation DataLoader 0:  59%|??????????       | 93/157 [00:01<00:01, 56.45it/s][A
+    Validation DataLoader 0:  60%|???????????      | 94/157 [00:01<00:01, 56.46it/s][A
+    Validation DataLoader 0:  61%|???????????      | 95/157 [00:01<00:01, 56.47it/s][A
+    Validation DataLoader 0:  61%|???????????      | 96/157 [00:01<00:01, 56.48it/s][A
+    Validation DataLoader 0:  62%|???????????      | 97/157 [00:01<00:01, 56.49it/s][A
+    Validation DataLoader 0:  62%|???????????      | 98/157 [00:01<00:01, 56.50it/s][A
+    Validation DataLoader 0:  63%|???????????      | 99/157 [00:01<00:01, 56.51it/s][A
+    Validation DataLoader 0:  64%|???????????     | 100/157 [00:01<00:01, 56.51it/s][A
+    Validation DataLoader 0:  64%|???????????     | 101/157 [00:01<00:00, 56.52it/s][A
+    Validation DataLoader 0:  65%|???????????     | 102/157 [00:01<00:00, 56.53it/s][A
+    Validation DataLoader 0:  66%|???????????     | 103/157 [00:01<00:00, 56.55it/s][A
+    Validation DataLoader 0:  66%|???????????     | 104/157 [00:01<00:00, 56.57it/s][A
+    Validation DataLoader 0:  67%|???????????     | 105/157 [00:01<00:00, 56.58it/s][A
+    Validation DataLoader 0:  68%|???????????     | 106/157 [00:01<00:00, 56.60it/s][A
+    Validation DataLoader 0:  68%|???????????     | 107/157 [00:01<00:00, 56.61it/s][A
+    Validation DataLoader 0:  69%|???????????     | 108/157 [00:01<00:00, 56.62it/s][A
+    Validation DataLoader 0:  69%|???????????     | 109/157 [00:01<00:00, 56.64it/s][A
+    Validation DataLoader 0:  70%|????????????    | 110/157 [00:01<00:00, 56.65it/s][A
+    Validation DataLoader 0:  71%|????????????    | 111/157 [00:01<00:00, 56.66it/s][A
+    Validation DataLoader 0:  71%|????????????    | 112/157 [00:01<00:00, 56.67it/s][A
+    Validation DataLoader 0:  72%|????????????    | 113/157 [00:01<00:00, 56.69it/s][A
+    Validation DataLoader 0:  73%|????????????    | 114/157 [00:02<00:00, 56.69it/s][A
+    Validation DataLoader 0:  73%|????????????    | 115/157 [00:02<00:00, 56.70it/s][A
+    Validation DataLoader 0:  74%|????????????    | 116/157 [00:02<00:00, 56.71it/s][A
+    Validation DataLoader 0:  75%|????????????    | 117/157 [00:02<00:00, 56.73it/s][A
+    Validation DataLoader 0:  75%|????????????    | 118/157 [00:02<00:00, 56.74it/s][A
+    Validation DataLoader 0:  76%|?????????????   | 119/157 [00:02<00:00, 56.75it/s][A
+    Validation DataLoader 0:  76%|?????????????   | 120/157 [00:02<00:00, 56.76it/s][A
+    Validation DataLoader 0:  77%|?????????????   | 121/157 [00:02<00:00, 56.76it/s][A
+    Validation DataLoader 0:  78%|?????????????   | 122/157 [00:02<00:00, 56.77it/s][A
+    Validation DataLoader 0:  78%|?????????????   | 123/157 [00:02<00:00, 56.77it/s][A
+    Validation DataLoader 0:  79%|?????????????   | 124/157 [00:02<00:00, 56.78it/s][A
+    Validation DataLoader 0:  80%|?????????????   | 125/157 [00:02<00:00, 56.80it/s][A
+    Validation DataLoader 0:  80%|?????????????   | 126/157 [00:02<00:00, 56.81it/s][A
+    Validation DataLoader 0:  81%|?????????????   | 127/157 [00:02<00:00, 56.81it/s][A
+    Validation DataLoader 0:  82%|?????????????   | 128/157 [00:02<00:00, 56.82it/s][A
+    Validation DataLoader 0:  82%|??????????????  | 129/157 [00:02<00:00, 56.82it/s][A
+    Validation DataLoader 0:  83%|??????????????  | 130/157 [00:02<00:00, 56.83it/s][A
+    Validation DataLoader 0:  83%|??????????????  | 131/157 [00:02<00:00, 56.84it/s][A
+    Validation DataLoader 0:  84%|??????????????  | 132/157 [00:02<00:00, 56.84it/s][A
+    Validation DataLoader 0:  85%|??????????????  | 133/157 [00:02<00:00, 56.85it/s][A
+    Validation DataLoader 0:  85%|??????????????  | 134/157 [00:02<00:00, 56.86it/s][A
+    Validation DataLoader 0:  86%|??????????????  | 135/157 [00:02<00:00, 56.87it/s][A
+    Validation DataLoader 0:  87%|??????????????  | 136/157 [00:02<00:00, 56.87it/s][A
+    Validation DataLoader 0:  87%|??????????????  | 137/157 [00:02<00:00, 56.87it/s][A
+    Validation DataLoader 0:  88%|??????????????  | 138/157 [00:02<00:00, 56.88it/s][A
+    Validation DataLoader 0:  89%|??????????????? | 139/157 [00:02<00:00, 56.89it/s][A
+    Validation DataLoader 0:  89%|??????????????? | 140/157 [00:02<00:00, 56.89it/s][A
+    Validation DataLoader 0:  90%|??????????????? | 141/157 [00:02<00:00, 56.89it/s][A
+    Validation DataLoader 0:  90%|??????????????? | 142/157 [00:02<00:00, 56.90it/s][A
+    Validation DataLoader 0:  91%|??????????????? | 143/157 [00:02<00:00, 56.90it/s][A
+    Validation DataLoader 0:  92%|??????????????? | 144/157 [00:02<00:00, 56.91it/s][A
+    Validation DataLoader 0:  92%|??????????????? | 145/157 [00:02<00:00, 56.92it/s][A
+    Validation DataLoader 0:  93%|??????????????? | 146/157 [00:02<00:00, 56.93it/s][A
+    Validation DataLoader 0:  94%|??????????????? | 147/157 [00:02<00:00, 56.94it/s][A
+    Validation DataLoader 0:  94%|??????????????? | 148/157 [00:02<00:00, 56.95it/s][A
+    Validation DataLoader 0:  95%|????????????????| 149/157 [00:02<00:00, 56.96it/s][A
+    Validation DataLoader 0:  96%|????????????????| 150/157 [00:02<00:00, 56.97it/s][A
+    Validation DataLoader 0:  96%|????????????????| 151/157 [00:02<00:00, 56.98it/s][A
+    Validation DataLoader 0:  97%|????????????????| 152/157 [00:02<00:00, 56.98it/s][A
+    Validation DataLoader 0:  97%|????????????????| 153/157 [00:02<00:00, 56.98it/s][A
+    Validation DataLoader 0:  98%|????????????????| 154/157 [00:02<00:00, 56.99it/s][A
+    Validation DataLoader 0:  99%|????????????????| 155/157 [00:02<00:00, 56.99it/s][A
+    Validation DataLoader 0:  99%|????????????????| 156/157 [00:02<00:00, 56.97it/s][A
+    Validation DataLoader 0: 100%|????????????????| 157/157 [00:02<00:00, 57.15it/s][A
+    Epoch 1: 100%|?| 782/782 [00:43<00:00, 18.17it/s, v_num=14, train_acc_step=0.812[A
     Validation: |                                             | 0/? [00:00<?, ?it/s][A
     Validation:   0%|                                       | 0/157 [00:00<?, ?it/s][A
     Validation DataLoader 0:   0%|                          | 0/157 [00:00<?, ?it/s][A
     Validation DataLoader 0:   1%|                  | 1/157 [00:00<00:08, 19.41it/s][A
-    Validation DataLoader 0:   1%|▏                 | 2/157 [00:00<00:05, 27.82it/s][A
-    Validation DataLoader 0:   2%|▎                 | 3/157 [00:00<00:05, 30.69it/s][A
-    Validation DataLoader 0:   3%|▍                 | 4/157 [00:00<00:04, 33.41it/s][A
-    Validation DataLoader 0:   3%|▌                 | 5/157 [00:00<00:04, 35.97it/s][A
-    Validation DataLoader 0:   4%|▋                 | 6/157 [00:00<00:03, 37.98it/s][A
-    Validation DataLoader 0:   4%|▊                 | 7/157 [00:00<00:03, 39.56it/s][A
-    Validation DataLoader 0:   5%|▉                 | 8/157 [00:00<00:03, 37.82it/s][A
-    Validation DataLoader 0:   6%|█                 | 9/157 [00:00<00:03, 39.03it/s][A
-    Validation DataLoader 0:   6%|█                | 10/157 [00:00<00:03, 36.79it/s][A
-    Validation DataLoader 0:   7%|█▏               | 11/157 [00:00<00:03, 37.70it/s][A
-    Validation DataLoader 0:   8%|█▎               | 12/157 [00:00<00:03, 38.78it/s][A
-    Validation DataLoader 0:   8%|█▍               | 13/157 [00:00<00:03, 39.57it/s][A
-    Validation DataLoader 0:   9%|█▌               | 14/157 [00:00<00:03, 40.44it/s][A
-    Validation DataLoader 0:  10%|█▌               | 15/157 [00:00<00:03, 41.38it/s][A
-    Validation DataLoader 0:  10%|█▋               | 16/157 [00:00<00:03, 42.21it/s][A
-    Validation DataLoader 0:  11%|█▊               | 17/157 [00:00<00:03, 42.51it/s][A
-    Validation DataLoader 0:  11%|█▉               | 18/157 [00:00<00:03, 42.74it/s][A
-    Validation DataLoader 0:  12%|██               | 19/157 [00:00<00:03, 43.44it/s][A
-    Validation DataLoader 0:  13%|██▏              | 20/157 [00:00<00:03, 44.09it/s][A
-    Validation DataLoader 0:  13%|██▎              | 21/157 [00:00<00:03, 44.54it/s][A
-    Validation DataLoader 0:  14%|██▍              | 22/157 [00:00<00:02, 45.10it/s][A
-    Validation DataLoader 0:  15%|██▍              | 23/157 [00:00<00:02, 45.08it/s][A
-    Validation DataLoader 0:  15%|██▌              | 24/157 [00:00<00:02, 45.59it/s][A
-    Validation DataLoader 0:  16%|██▋              | 25/157 [00:00<00:02, 46.05it/s][A
-    Validation DataLoader 0:  17%|██▊              | 26/157 [00:00<00:02, 46.49it/s][A
-    Validation DataLoader 0:  17%|██▉              | 27/157 [00:00<00:02, 46.89it/s][A
-    Validation DataLoader 0:  18%|███              | 28/157 [00:00<00:02, 47.27it/s][A
-    Validation DataLoader 0:  18%|███▏             | 29/157 [00:00<00:02, 47.64it/s][A
-    Validation DataLoader 0:  19%|███▏             | 30/157 [00:00<00:02, 46.89it/s][A
-    Validation DataLoader 0:  20%|███▎             | 31/157 [00:00<00:02, 47.24it/s][A
-    Validation DataLoader 0:  20%|███▍             | 32/157 [00:00<00:02, 47.56it/s][A
-    Validation DataLoader 0:  21%|███▌             | 33/157 [00:00<00:02, 44.02it/s][A
-    Validation DataLoader 0:  22%|███▋             | 34/157 [00:00<00:02, 44.31it/s][A
-    Validation DataLoader 0:  22%|███▊             | 35/157 [00:00<00:02, 44.65it/s][A
-    Validation DataLoader 0:  23%|███▉             | 36/157 [00:00<00:02, 42.92it/s][A
-    Validation DataLoader 0:  24%|████             | 37/157 [00:00<00:02, 43.21it/s][A
-    Validation DataLoader 0:  24%|████             | 38/157 [00:00<00:02, 43.55it/s][A
-    Validation DataLoader 0:  25%|████▏            | 39/157 [00:00<00:02, 43.89it/s][A
-    Validation DataLoader 0:  25%|████▎            | 40/157 [00:00<00:02, 44.20it/s][A
-    Validation DataLoader 0:  26%|████▍            | 41/157 [00:00<00:02, 44.37it/s][A
-    Validation DataLoader 0:  27%|████▌            | 42/157 [00:00<00:02, 44.61it/s][A
-    Validation DataLoader 0:  27%|████▋            | 43/157 [00:00<00:02, 44.90it/s][A
-    Validation DataLoader 0:  28%|████▊            | 44/157 [00:00<00:02, 45.17it/s][A
-    Validation DataLoader 0:  29%|████▊            | 45/157 [00:00<00:02, 45.43it/s][A
-    Validation DataLoader 0:  29%|████▉            | 46/157 [00:01<00:02, 45.69it/s][A
-    Validation DataLoader 0:  30%|█████            | 47/157 [00:01<00:02, 45.93it/s][A
-    Validation DataLoader 0:  31%|█████▏           | 48/157 [00:01<00:02, 46.17it/s][A
-    Validation DataLoader 0:  31%|█████▎           | 49/157 [00:01<00:02, 46.40it/s][A
-    Validation DataLoader 0:  32%|█████▍           | 50/157 [00:01<00:02, 46.62it/s][A
-    Validation DataLoader 0:  32%|█████▌           | 51/157 [00:01<00:02, 46.80it/s][A
-    Validation DataLoader 0:  33%|█████▋           | 52/157 [00:01<00:02, 47.01it/s][A
-    Validation DataLoader 0:  34%|█████▋           | 53/157 [00:01<00:02, 47.21it/s][A
-    Validation DataLoader 0:  34%|█████▊           | 54/157 [00:01<00:02, 47.41it/s][A
-    Validation DataLoader 0:  35%|█████▉           | 55/157 [00:01<00:02, 47.60it/s][A
-    Validation DataLoader 0:  36%|██████           | 56/157 [00:01<00:02, 47.78it/s][A
-    Validation DataLoader 0:  36%|██████▏          | 57/157 [00:01<00:02, 47.92it/s][A
-    Validation DataLoader 0:  37%|██████▎          | 58/157 [00:01<00:02, 48.05it/s][A
-    Validation DataLoader 0:  38%|██████▍          | 59/157 [00:01<00:02, 48.18it/s][A
-    Validation DataLoader 0:  38%|██████▍          | 60/157 [00:01<00:02, 48.31it/s][A
-    Validation DataLoader 0:  39%|██████▌          | 61/157 [00:01<00:01, 48.34it/s][A
-    Validation DataLoader 0:  39%|██████▋          | 62/157 [00:01<00:01, 48.43it/s][A
-    Validation DataLoader 0:  40%|██████▊          | 63/157 [00:01<00:01, 48.56it/s][A
-    Validation DataLoader 0:  41%|██████▉          | 64/157 [00:01<00:01, 48.58it/s][A
-    Validation DataLoader 0:  41%|███████          | 65/157 [00:01<00:01, 48.67it/s][A
-    Validation DataLoader 0:  42%|███████▏         | 66/157 [00:01<00:01, 48.79it/s][A
-    Validation DataLoader 0:  43%|███████▎         | 67/157 [00:01<00:01, 48.91it/s][A
-    Validation DataLoader 0:  43%|███████▎         | 68/157 [00:01<00:01, 49.02it/s][A
-    Validation DataLoader 0:  44%|███████▍         | 69/157 [00:01<00:01, 49.03it/s][A
-    Validation DataLoader 0:  45%|███████▌         | 70/157 [00:01<00:01, 49.10it/s][A
-    Validation DataLoader 0:  45%|███████▋         | 71/157 [00:01<00:01, 49.20it/s][A
-    Validation DataLoader 0:  46%|███████▊         | 72/157 [00:01<00:01, 49.31it/s][A
-    Validation DataLoader 0:  46%|███████▉         | 73/157 [00:01<00:01, 49.41it/s][A
-    Validation DataLoader 0:  47%|████████         | 74/157 [00:01<00:01, 49.51it/s][A
-    Validation DataLoader 0:  48%|████████         | 75/157 [00:01<00:01, 49.61it/s][A
-    Validation DataLoader 0:  48%|████████▏        | 76/157 [00:01<00:01, 49.70it/s][A
-    Validation DataLoader 0:  49%|████████▎        | 77/157 [00:01<00:01, 49.79it/s][A
-    Validation DataLoader 0:  50%|████████▍        | 78/157 [00:01<00:01, 49.87it/s][A
-    Validation DataLoader 0:  50%|████████▌        | 79/157 [00:01<00:01, 49.96it/s][A
-    Validation DataLoader 0:  51%|████████▋        | 80/157 [00:01<00:01, 50.05it/s][A
-    Validation DataLoader 0:  52%|████████▊        | 81/157 [00:01<00:01, 50.13it/s][A
-    Validation DataLoader 0:  52%|████████▉        | 82/157 [00:01<00:01, 50.22it/s][A
-    Validation DataLoader 0:  53%|████████▉        | 83/157 [00:01<00:01, 50.29it/s][A
-    Validation DataLoader 0:  54%|█████████        | 84/157 [00:01<00:01, 50.37it/s][A
-    Validation DataLoader 0:  54%|█████████▏       | 85/157 [00:01<00:01, 50.45it/s][A
-    Validation DataLoader 0:  55%|█████████▎       | 86/157 [00:01<00:01, 50.52it/s][A
-    Validation DataLoader 0:  55%|█████████▍       | 87/157 [00:01<00:01, 50.60it/s][A
-    Validation DataLoader 0:  56%|█████████▌       | 88/157 [00:01<00:01, 50.67it/s][A
-    Validation DataLoader 0:  57%|█████████▋       | 89/157 [00:01<00:01, 50.67it/s][A
-    Validation DataLoader 0:  57%|█████████▋       | 90/157 [00:01<00:01, 50.70it/s][A
-    Validation DataLoader 0:  58%|█████████▊       | 91/157 [00:01<00:01, 50.77it/s][A
-    Validation DataLoader 0:  59%|█████████▉       | 92/157 [00:01<00:01, 50.76it/s][A
-    Validation DataLoader 0:  59%|██████████       | 93/157 [00:01<00:01, 50.80it/s][A
-    Validation DataLoader 0:  60%|██████████▏      | 94/157 [00:01<00:01, 50.87it/s][A
-    Validation DataLoader 0:  61%|██████████▎      | 95/157 [00:01<00:01, 50.94it/s][A
-    Validation DataLoader 0:  61%|██████████▍      | 96/157 [00:01<00:01, 51.00it/s][A
-    Validation DataLoader 0:  62%|██████████▌      | 97/157 [00:01<00:01, 50.99it/s][A
-    Validation DataLoader 0:  62%|██████████▌      | 98/157 [00:01<00:01, 51.02it/s][A
-    Validation DataLoader 0:  63%|██████████▋      | 99/157 [00:01<00:01, 51.08it/s][A
-    Validation DataLoader 0:  64%|██████████▏     | 100/157 [00:01<00:01, 51.15it/s][A
-    Validation DataLoader 0:  64%|██████████▎     | 101/157 [00:01<00:01, 51.21it/s][A
-    Validation DataLoader 0:  65%|██████████▍     | 102/157 [00:01<00:01, 51.27it/s][A
-    Validation DataLoader 0:  66%|██████████▍     | 103/157 [00:02<00:01, 51.33it/s][A
-    Validation DataLoader 0:  66%|██████████▌     | 104/157 [00:02<00:01, 51.39it/s][A
-    Validation DataLoader 0:  67%|██████████▋     | 105/157 [00:02<00:01, 51.45it/s][A
-    Validation DataLoader 0:  68%|██████████▊     | 106/157 [00:02<00:00, 51.51it/s][A
-    Validation DataLoader 0:  68%|██████████▉     | 107/157 [00:02<00:00, 51.57it/s][A
-    Validation DataLoader 0:  69%|███████████     | 108/157 [00:02<00:00, 51.63it/s][A
-    Validation DataLoader 0:  69%|███████████     | 109/157 [00:02<00:00, 51.68it/s][A
-    Validation DataLoader 0:  70%|███████████▏    | 110/157 [00:02<00:00, 51.73it/s][A
-    Validation DataLoader 0:  71%|███████████▎    | 111/157 [00:02<00:00, 51.79it/s][A
-    Validation DataLoader 0:  71%|███████████▍    | 112/157 [00:02<00:00, 51.84it/s][A
-    Validation DataLoader 0:  72%|███████████▌    | 113/157 [00:02<00:00, 51.89it/s][A
-    Validation DataLoader 0:  73%|███████████▌    | 114/157 [00:02<00:00, 51.94it/s][A
-    Validation DataLoader 0:  73%|███████████▋    | 115/157 [00:02<00:00, 51.99it/s][A
-    Validation DataLoader 0:  74%|███████████▊    | 116/157 [00:02<00:00, 52.04it/s][A
-    Validation DataLoader 0:  75%|███████████▉    | 117/157 [00:02<00:00, 52.09it/s][A
-    Validation DataLoader 0:  75%|████████████    | 118/157 [00:02<00:00, 52.13it/s][A
-    Validation DataLoader 0:  76%|████████████▏   | 119/157 [00:02<00:00, 52.18it/s][A
-    Validation DataLoader 0:  76%|████████████▏   | 120/157 [00:02<00:00, 52.23it/s][A
-    Validation DataLoader 0:  77%|████████████▎   | 121/157 [00:02<00:00, 52.27it/s][A
-    Validation DataLoader 0:  78%|████████████▍   | 122/157 [00:02<00:00, 52.32it/s][A
-    Validation DataLoader 0:  78%|████████████▌   | 123/157 [00:02<00:00, 52.36it/s][A
-    Validation DataLoader 0:  79%|████████████▋   | 124/157 [00:02<00:00, 52.41it/s][A
-    Validation DataLoader 0:  80%|████████████▋   | 125/157 [00:02<00:00, 52.45it/s][A
-    Validation DataLoader 0:  80%|████████████▊   | 126/157 [00:02<00:00, 52.50it/s][A
-    Validation DataLoader 0:  81%|████████████▉   | 127/157 [00:02<00:00, 52.54it/s][A
-    Validation DataLoader 0:  82%|█████████████   | 128/157 [00:02<00:00, 52.58it/s][A
-    Validation DataLoader 0:  82%|█████████████▏  | 129/157 [00:02<00:00, 52.62it/s][A
-    Validation DataLoader 0:  83%|█████████████▏  | 130/157 [00:02<00:00, 52.67it/s][A
-    Validation DataLoader 0:  83%|█████████████▎  | 131/157 [00:02<00:00, 52.70it/s][A
-    Validation DataLoader 0:  84%|█████████████▍  | 132/157 [00:02<00:00, 52.74it/s][A
-    Validation DataLoader 0:  85%|█████████████▌  | 133/157 [00:02<00:00, 52.78it/s][A
-    Validation DataLoader 0:  85%|█████████████▋  | 134/157 [00:02<00:00, 52.81it/s][A
-    Validation DataLoader 0:  86%|█████████████▊  | 135/157 [00:02<00:00, 52.85it/s][A
-    Validation DataLoader 0:  87%|█████████████▊  | 136/157 [00:02<00:00, 52.89it/s][A
-    Validation DataLoader 0:  87%|█████████████▉  | 137/157 [00:02<00:00, 52.93it/s][A
-    Validation DataLoader 0:  88%|██████████████  | 138/157 [00:02<00:00, 52.96it/s][A
-    Validation DataLoader 0:  89%|██████████████▏ | 139/157 [00:02<00:00, 53.00it/s][A
-    Validation DataLoader 0:  89%|██████████████▎ | 140/157 [00:02<00:00, 53.03it/s][A
-    Validation DataLoader 0:  90%|██████████████▎ | 141/157 [00:02<00:00, 53.06it/s][A
-    Validation DataLoader 0:  90%|██████████████▍ | 142/157 [00:02<00:00, 53.10it/s][A
-    Validation DataLoader 0:  91%|██████████████▌ | 143/157 [00:02<00:00, 53.13it/s][A
-    Validation DataLoader 0:  92%|██████████████▋ | 144/157 [00:02<00:00, 53.16it/s][A
-    Validation DataLoader 0:  92%|██████████████▊ | 145/157 [00:02<00:00, 53.19it/s][A
-    Validation DataLoader 0:  93%|██████████████▉ | 146/157 [00:02<00:00, 53.22it/s][A
-    Validation DataLoader 0:  94%|██████████████▉ | 147/157 [00:02<00:00, 53.26it/s][A
-    Validation DataLoader 0:  94%|███████████████ | 148/157 [00:02<00:00, 53.29it/s][A
-    Validation DataLoader 0:  95%|███████████████▏| 149/157 [00:02<00:00, 53.32it/s][A
-    Validation DataLoader 0:  96%|███████████████▎| 150/157 [00:02<00:00, 53.35it/s][A
-    Validation DataLoader 0:  96%|███████████████▍| 151/157 [00:02<00:00, 53.39it/s][A
-    Validation DataLoader 0:  97%|███████████████▍| 152/157 [00:02<00:00, 53.41it/s][A
-    Validation DataLoader 0:  97%|███████████████▌| 153/157 [00:02<00:00, 53.44it/s][A
-    Validation DataLoader 0:  98%|███████████████▋| 154/157 [00:02<00:00, 53.47it/s][A
-    Validation DataLoader 0:  99%|███████████████▊| 155/157 [00:02<00:00, 53.50it/s][A
-    Validation DataLoader 0:  99%|███████████████▉| 156/157 [00:02<00:00, 53.53it/s][A
-    Validation DataLoader 0: 100%|████████████████| 157/157 [00:02<00:00, 53.69it/s][A
-    Epoch 1: 100%|█| 782/782 [00:54<00:00, 14.27it/s, v_num=14, train_acc_step=0.812[AINFO: `Trainer.fit` stopped: `max_epochs=2` reached.
+    Validation DataLoader 0:   1%|?                 | 2/157 [00:00<00:05, 27.82it/s][A
+    Validation DataLoader 0:   2%|?                 | 3/157 [00:00<00:05, 30.69it/s][A
+    Validation DataLoader 0:   3%|?                 | 4/157 [00:00<00:04, 33.41it/s][A
+    Validation DataLoader 0:   3%|?                 | 5/157 [00:00<00:04, 35.97it/s][A
+    Validation DataLoader 0:   4%|?                 | 6/157 [00:00<00:03, 37.98it/s][A
+    Validation DataLoader 0:   4%|?                 | 7/157 [00:00<00:03, 39.56it/s][A
+    Validation DataLoader 0:   5%|?                 | 8/157 [00:00<00:03, 37.82it/s][A
+    Validation DataLoader 0:   6%|?                 | 9/157 [00:00<00:03, 39.03it/s][A
+    Validation DataLoader 0:   6%|?                | 10/157 [00:00<00:03, 36.79it/s][A
+    Validation DataLoader 0:   7%|??               | 11/157 [00:00<00:03, 37.70it/s][A
+    Validation DataLoader 0:   8%|??               | 12/157 [00:00<00:03, 38.78it/s][A
+    Validation DataLoader 0:   8%|??               | 13/157 [00:00<00:03, 39.57it/s][A
+    Validation DataLoader 0:   9%|??               | 14/157 [00:00<00:03, 40.44it/s][A
+    Validation DataLoader 0:  10%|??               | 15/157 [00:00<00:03, 41.38it/s][A
+    Validation DataLoader 0:  10%|??               | 16/157 [00:00<00:03, 42.21it/s][A
+    Validation DataLoader 0:  11%|??               | 17/157 [00:00<00:03, 42.51it/s][A
+    Validation DataLoader 0:  11%|??               | 18/157 [00:00<00:03, 42.74it/s][A
+    Validation DataLoader 0:  12%|??               | 19/157 [00:00<00:03, 43.44it/s][A
+    Validation DataLoader 0:  13%|???              | 20/157 [00:00<00:03, 44.09it/s][A
+    Validation DataLoader 0:  13%|???              | 21/157 [00:00<00:03, 44.54it/s][A
+    Validation DataLoader 0:  14%|???              | 22/157 [00:00<00:02, 45.10it/s][A
+    Validation DataLoader 0:  15%|???              | 23/157 [00:00<00:02, 45.08it/s][A
+    Validation DataLoader 0:  15%|???              | 24/157 [00:00<00:02, 45.59it/s][A
+    Validation DataLoader 0:  16%|???              | 25/157 [00:00<00:02, 46.05it/s][A
+    Validation DataLoader 0:  17%|???              | 26/157 [00:00<00:02, 46.49it/s][A
+    Validation DataLoader 0:  17%|???              | 27/157 [00:00<00:02, 46.89it/s][A
+    Validation DataLoader 0:  18%|???              | 28/157 [00:00<00:02, 47.27it/s][A
+    Validation DataLoader 0:  18%|????             | 29/157 [00:00<00:02, 47.64it/s][A
+    Validation DataLoader 0:  19%|????             | 30/157 [00:00<00:02, 46.89it/s][A
+    Validation DataLoader 0:  20%|????             | 31/157 [00:00<00:02, 47.24it/s][A
+    Validation DataLoader 0:  20%|????             | 32/157 [00:00<00:02, 47.56it/s][A
+    Validation DataLoader 0:  21%|????             | 33/157 [00:00<00:02, 44.02it/s][A
+    Validation DataLoader 0:  22%|????             | 34/157 [00:00<00:02, 44.31it/s][A
+    Validation DataLoader 0:  22%|????             | 35/157 [00:00<00:02, 44.65it/s][A
+    Validation DataLoader 0:  23%|????             | 36/157 [00:00<00:02, 42.92it/s][A
+    Validation DataLoader 0:  24%|????             | 37/157 [00:00<00:02, 43.21it/s][A
+    Validation DataLoader 0:  24%|????             | 38/157 [00:00<00:02, 43.55it/s][A
+    Validation DataLoader 0:  25%|?????            | 39/157 [00:00<00:02, 43.89it/s][A
+    Validation DataLoader 0:  25%|?????            | 40/157 [00:00<00:02, 44.20it/s][A
+    Validation DataLoader 0:  26%|?????            | 41/157 [00:00<00:02, 44.37it/s][A
+    Validation DataLoader 0:  27%|?????            | 42/157 [00:00<00:02, 44.61it/s][A
+    Validation DataLoader 0:  27%|?????            | 43/157 [00:00<00:02, 44.90it/s][A
+    Validation DataLoader 0:  28%|?????            | 44/157 [00:00<00:02, 45.17it/s][A
+    Validation DataLoader 0:  29%|?????            | 45/157 [00:00<00:02, 45.43it/s][A
+    Validation DataLoader 0:  29%|?????            | 46/157 [00:01<00:02, 45.69it/s][A
+    Validation DataLoader 0:  30%|?????            | 47/157 [00:01<00:02, 45.93it/s][A
+    Validation DataLoader 0:  31%|??????           | 48/157 [00:01<00:02, 46.17it/s][A
+    Validation DataLoader 0:  31%|??????           | 49/157 [00:01<00:02, 46.40it/s][A
+    Validation DataLoader 0:  32%|??????           | 50/157 [00:01<00:02, 46.62it/s][A
+    Validation DataLoader 0:  32%|??????           | 51/157 [00:01<00:02, 46.80it/s][A
+    Validation DataLoader 0:  33%|??????           | 52/157 [00:01<00:02, 47.01it/s][A
+    Validation DataLoader 0:  34%|??????           | 53/157 [00:01<00:02, 47.21it/s][A
+    Validation DataLoader 0:  34%|??????           | 54/157 [00:01<00:02, 47.41it/s][A
+    Validation DataLoader 0:  35%|??????           | 55/157 [00:01<00:02, 47.60it/s][A
+    Validation DataLoader 0:  36%|??????           | 56/157 [00:01<00:02, 47.78it/s][A
+    Validation DataLoader 0:  36%|???????          | 57/157 [00:01<00:02, 47.92it/s][A
+    Validation DataLoader 0:  37%|???????          | 58/157 [00:01<00:02, 48.05it/s][A
+    Validation DataLoader 0:  38%|???????          | 59/157 [00:01<00:02, 48.18it/s][A
+    Validation DataLoader 0:  38%|???????          | 60/157 [00:01<00:02, 48.31it/s][A
+    Validation DataLoader 0:  39%|???????          | 61/157 [00:01<00:01, 48.34it/s][A
+    Validation DataLoader 0:  39%|???????          | 62/157 [00:01<00:01, 48.43it/s][A
+    Validation DataLoader 0:  40%|???????          | 63/157 [00:01<00:01, 48.56it/s][A
+    Validation DataLoader 0:  41%|???????          | 64/157 [00:01<00:01, 48.58it/s][A
+    Validation DataLoader 0:  41%|???????          | 65/157 [00:01<00:01, 48.67it/s][A
+    Validation DataLoader 0:  42%|????????         | 66/157 [00:01<00:01, 48.79it/s][A
+    Validation DataLoader 0:  43%|????????         | 67/157 [00:01<00:01, 48.91it/s][A
+    Validation DataLoader 0:  43%|????????         | 68/157 [00:01<00:01, 49.02it/s][A
+    Validation DataLoader 0:  44%|????????         | 69/157 [00:01<00:01, 49.03it/s][A
+    Validation DataLoader 0:  45%|????????         | 70/157 [00:01<00:01, 49.10it/s][A
+    Validation DataLoader 0:  45%|????????         | 71/157 [00:01<00:01, 49.20it/s][A
+    Validation DataLoader 0:  46%|????????         | 72/157 [00:01<00:01, 49.31it/s][A
+    Validation DataLoader 0:  46%|????????         | 73/157 [00:01<00:01, 49.41it/s][A
+    Validation DataLoader 0:  47%|????????         | 74/157 [00:01<00:01, 49.51it/s][A
+    Validation DataLoader 0:  48%|????????         | 75/157 [00:01<00:01, 49.61it/s][A
+    Validation DataLoader 0:  48%|?????????        | 76/157 [00:01<00:01, 49.70it/s][A
+    Validation DataLoader 0:  49%|?????????        | 77/157 [00:01<00:01, 49.79it/s][A
+    Validation DataLoader 0:  50%|?????????        | 78/157 [00:01<00:01, 49.87it/s][A
+    Validation DataLoader 0:  50%|?????????        | 79/157 [00:01<00:01, 49.96it/s][A
+    Validation DataLoader 0:  51%|?????????        | 80/157 [00:01<00:01, 50.05it/s][A
+    Validation DataLoader 0:  52%|?????????        | 81/157 [00:01<00:01, 50.13it/s][A
+    Validation DataLoader 0:  52%|?????????        | 82/157 [00:01<00:01, 50.22it/s][A
+    Validation DataLoader 0:  53%|?????????        | 83/157 [00:01<00:01, 50.29it/s][A
+    Validation DataLoader 0:  54%|?????????        | 84/157 [00:01<00:01, 50.37it/s][A
+    Validation DataLoader 0:  54%|??????????       | 85/157 [00:01<00:01, 50.45it/s][A
+    Validation DataLoader 0:  55%|??????????       | 86/157 [00:01<00:01, 50.52it/s][A
+    Validation DataLoader 0:  55%|??????????       | 87/157 [00:01<00:01, 50.60it/s][A
+    Validation DataLoader 0:  56%|??????????       | 88/157 [00:01<00:01, 50.67it/s][A
+    Validation DataLoader 0:  57%|??????????       | 89/157 [00:01<00:01, 50.67it/s][A
+    Validation DataLoader 0:  57%|??????????       | 90/157 [00:01<00:01, 50.70it/s][A
+    Validation DataLoader 0:  58%|??????????       | 91/157 [00:01<00:01, 50.77it/s][A
+    Validation DataLoader 0:  59%|??????????       | 92/157 [00:01<00:01, 50.76it/s][A
+    Validation DataLoader 0:  59%|??????????       | 93/157 [00:01<00:01, 50.80it/s][A
+    Validation DataLoader 0:  60%|???????????      | 94/157 [00:01<00:01, 50.87it/s][A
+    Validation DataLoader 0:  61%|???????????      | 95/157 [00:01<00:01, 50.94it/s][A
+    Validation DataLoader 0:  61%|???????????      | 96/157 [00:01<00:01, 51.00it/s][A
+    Validation DataLoader 0:  62%|???????????      | 97/157 [00:01<00:01, 50.99it/s][A
+    Validation DataLoader 0:  62%|???????????      | 98/157 [00:01<00:01, 51.02it/s][A
+    Validation DataLoader 0:  63%|???????????      | 99/157 [00:01<00:01, 51.08it/s][A
+    Validation DataLoader 0:  64%|???????????     | 100/157 [00:01<00:01, 51.15it/s][A
+    Validation DataLoader 0:  64%|???????????     | 101/157 [00:01<00:01, 51.21it/s][A
+    Validation DataLoader 0:  65%|???????????     | 102/157 [00:01<00:01, 51.27it/s][A
+    Validation DataLoader 0:  66%|???????????     | 103/157 [00:02<00:01, 51.33it/s][A
+    Validation DataLoader 0:  66%|???????????     | 104/157 [00:02<00:01, 51.39it/s][A
+    Validation DataLoader 0:  67%|???????????     | 105/157 [00:02<00:01, 51.45it/s][A
+    Validation DataLoader 0:  68%|???????????     | 106/157 [00:02<00:00, 51.51it/s][A
+    Validation DataLoader 0:  68%|???????????     | 107/157 [00:02<00:00, 51.57it/s][A
+    Validation DataLoader 0:  69%|???????????     | 108/157 [00:02<00:00, 51.63it/s][A
+    Validation DataLoader 0:  69%|???????????     | 109/157 [00:02<00:00, 51.68it/s][A
+    Validation DataLoader 0:  70%|????????????    | 110/157 [00:02<00:00, 51.73it/s][A
+    Validation DataLoader 0:  71%|????????????    | 111/157 [00:02<00:00, 51.79it/s][A
+    Validation DataLoader 0:  71%|????????????    | 112/157 [00:02<00:00, 51.84it/s][A
+    Validation DataLoader 0:  72%|????????????    | 113/157 [00:02<00:00, 51.89it/s][A
+    Validation DataLoader 0:  73%|????????????    | 114/157 [00:02<00:00, 51.94it/s][A
+    Validation DataLoader 0:  73%|????????????    | 115/157 [00:02<00:00, 51.99it/s][A
+    Validation DataLoader 0:  74%|????????????    | 116/157 [00:02<00:00, 52.04it/s][A
+    Validation DataLoader 0:  75%|????????????    | 117/157 [00:02<00:00, 52.09it/s][A
+    Validation DataLoader 0:  75%|????????????    | 118/157 [00:02<00:00, 52.13it/s][A
+    Validation DataLoader 0:  76%|?????????????   | 119/157 [00:02<00:00, 52.18it/s][A
+    Validation DataLoader 0:  76%|?????????????   | 120/157 [00:02<00:00, 52.23it/s][A
+    Validation DataLoader 0:  77%|?????????????   | 121/157 [00:02<00:00, 52.27it/s][A
+    Validation DataLoader 0:  78%|?????????????   | 122/157 [00:02<00:00, 52.32it/s][A
+    Validation DataLoader 0:  78%|?????????????   | 123/157 [00:02<00:00, 52.36it/s][A
+    Validation DataLoader 0:  79%|?????????????   | 124/157 [00:02<00:00, 52.41it/s][A
+    Validation DataLoader 0:  80%|?????????????   | 125/157 [00:02<00:00, 52.45it/s][A
+    Validation DataLoader 0:  80%|?????????????   | 126/157 [00:02<00:00, 52.50it/s][A
+    Validation DataLoader 0:  81%|?????????????   | 127/157 [00:02<00:00, 52.54it/s][A
+    Validation DataLoader 0:  82%|?????????????   | 128/157 [00:02<00:00, 52.58it/s][A
+    Validation DataLoader 0:  82%|??????????????  | 129/157 [00:02<00:00, 52.62it/s][A
+    Validation DataLoader 0:  83%|??????????????  | 130/157 [00:02<00:00, 52.67it/s][A
+    Validation DataLoader 0:  83%|??????????????  | 131/157 [00:02<00:00, 52.70it/s][A
+    Validation DataLoader 0:  84%|??????????????  | 132/157 [00:02<00:00, 52.74it/s][A
+    Validation DataLoader 0:  85%|??????????????  | 133/157 [00:02<00:00, 52.78it/s][A
+    Validation DataLoader 0:  85%|??????????????  | 134/157 [00:02<00:00, 52.81it/s][A
+    Validation DataLoader 0:  86%|??????????????  | 135/157 [00:02<00:00, 52.85it/s][A
+    Validation DataLoader 0:  87%|??????????????  | 136/157 [00:02<00:00, 52.89it/s][A
+    Validation DataLoader 0:  87%|??????????????  | 137/157 [00:02<00:00, 52.93it/s][A
+    Validation DataLoader 0:  88%|??????????????  | 138/157 [00:02<00:00, 52.96it/s][A
+    Validation DataLoader 0:  89%|??????????????? | 139/157 [00:02<00:00, 53.00it/s][A
+    Validation DataLoader 0:  89%|??????????????? | 140/157 [00:02<00:00, 53.03it/s][A
+    Validation DataLoader 0:  90%|??????????????? | 141/157 [00:02<00:00, 53.06it/s][A
+    Validation DataLoader 0:  90%|??????????????? | 142/157 [00:02<00:00, 53.10it/s][A
+    Validation DataLoader 0:  91%|??????????????? | 143/157 [00:02<00:00, 53.13it/s][A
+    Validation DataLoader 0:  92%|??????????????? | 144/157 [00:02<00:00, 53.16it/s][A
+    Validation DataLoader 0:  92%|??????????????? | 145/157 [00:02<00:00, 53.19it/s][A
+    Validation DataLoader 0:  93%|??????????????? | 146/157 [00:02<00:00, 53.22it/s][A
+    Validation DataLoader 0:  94%|??????????????? | 147/157 [00:02<00:00, 53.26it/s][A
+    Validation DataLoader 0:  94%|??????????????? | 148/157 [00:02<00:00, 53.29it/s][A
+    Validation DataLoader 0:  95%|????????????????| 149/157 [00:02<00:00, 53.32it/s][A
+    Validation DataLoader 0:  96%|????????????????| 150/157 [00:02<00:00, 53.35it/s][A
+    Validation DataLoader 0:  96%|????????????????| 151/157 [00:02<00:00, 53.39it/s][A
+    Validation DataLoader 0:  97%|????????????????| 152/157 [00:02<00:00, 53.41it/s][A
+    Validation DataLoader 0:  97%|????????????????| 153/157 [00:02<00:00, 53.44it/s][A
+    Validation DataLoader 0:  98%|????????????????| 154/157 [00:02<00:00, 53.47it/s][A
+    Validation DataLoader 0:  99%|????????????????| 155/157 [00:02<00:00, 53.50it/s][A
+    Validation DataLoader 0:  99%|????????????????| 156/157 [00:02<00:00, 53.53it/s][A
+    Validation DataLoader 0: 100%|????????????????| 157/157 [00:02<00:00, 53.69it/s][A
+    Epoch 1: 100%|?| 782/782 [00:54<00:00, 14.27it/s, v_num=14, train_acc_step=0.812[AINFO: `Trainer.fit` stopped: `max_epochs=2` reached.
     I0328 23:03:10.943096 139939454809920 rank_zero.py:64] `Trainer.fit` stopped: `max_epochs=2` reached.
-    Epoch 1: 100%|█| 782/782 [00:55<00:00, 14.01it/s, v_num=14, train_acc_step=0.812
+    Epoch 1: 100%|?| 782/782 [00:55<00:00, 14.01it/s, v_num=14, train_acc_step=0.812
     [32mINFO    [0m [34mFine Tuning Complete[0m
     I0328 23:03:18.680018 139939454809920 fine_tune.py:161] Fine Tuning Complete
     [32mINFO    [0m [34mConverting PyTorch model to ONNX...[0m
@@ -1707,7 +1707,7 @@ For this, we set:
 
 
 ```text
-VGG_LAYERWISE_TOML = "../../../machop/configs/tensorrt/vgg7_layerwise_mixed_precision.toml"
+VGG_LAYERWISE_TOML = "../../../configs/tensorrt/vgg7_layerwise_mixed_precision.toml"
 
 ch transform --config {VGG_LAYERWISE_TOML} --load {VGG_CHECKPOINT_PATH} --load-type pl
 

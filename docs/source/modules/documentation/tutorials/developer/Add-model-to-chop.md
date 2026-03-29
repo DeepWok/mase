@@ -1,15 +1,15 @@
-# Developer: Guide on how to add a new model into Machop
+# Developer: Guide on how to add a new model into Chop
 
-This document includes steps to add a new model into Machop
+This document includes steps to add a new model into Chop
 ## Overall Structure
 ### Model
-All models that Machop support are defined inside **mase-tools/machop/chop/models**. Each model has a unique get model function, which can be called to create the model. Those get model function will be exported into a dictionary in `__init__` file.
+All models that Chop supports are defined inside **src/chop/models**. Each model has a unique get model function, which can be called to create the model. Those get model function will be exported into a dictionary in `__init__` file.
 
 ### Command Line Interface
 Command Line Interface (cli) will take the input config, and perform the task defined inside the config. When training, cli will look into the dictionary contains the get funtions, use the get-function to create a model, and do training then.
 
 ## What To Do
-1. Find the GitHub repositories of the original paper, find the code that defines the models, and copy it into the right folder under **mase-tools\machop\chop\models**
+1. Find the GitHub repositories of the original paper, find the code that defines the models, and copy it into the right folder under **src/chop/models**
 
 2. Create or modify the get model functions, and export them into the dictionary. Requirements on the get model function are shown in the next part
 

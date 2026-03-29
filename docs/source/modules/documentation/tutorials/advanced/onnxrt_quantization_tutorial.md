@@ -3,9 +3,9 @@
 This notebook is designed to demonstrate the features of the ONNXRT passes integrated into MASE as part of the MASERT framework. The following demonstrations were run on a NVIDIA RTX A2000 GPU with a Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz CPU.
 
 ## Section 1. ONNX Runtime Optimizations
-Firstly, we will show you how we can utilise the ONNX RT optimizations. We expect to see a speed up without a loss in model accuracy. We will use a simple model, `jsc-toy`, and compare the optimized model to the original model using the `Machop API`.
+Firstly, we will show you how we can utilise the ONNX RT optimizations. We expect to see a speed up without a loss in model accuracy. We will use a simple model, `jsc-toy`, and compare the optimized model to the original model using the `Chop API`.
 
-First, we load the machop requirements by running the cell below.
+First, we load the Chop Python path and CLI directory by running the cell below.
 
 
 ```python
@@ -15,12 +15,12 @@ from pathlib import Path
 import toml
 
 # Figure out the correct path
-machop_path = Path(".").resolve().parent.parent.parent /"machop"
-assert machop_path.exists(), "Failed to find machop at: {}".format(machop_path)
-sys.path.append(str(machop_path))
+chop_src = Path(".").resolve().parent.parent.parent / "src"
+assert chop_src.exists(), "Failed to find src at: {}".format(chop_src)
+sys.path.append(str(chop_src))
 
-# Add directory to the PATH so that chop can be called
-new_path = "../../../machop"
+# Add directory to the PATH so that ./ch can be called
+new_path = "../../../src"
 full_path = os.path.abspath(new_path)
 os.environ['PATH'] += os.pathsep + full_path
 
@@ -58,7 +58,7 @@ We then load in a demonstration toml file and set the relevant pass arguments (t
 
 
 ```python
-JSC_TOML_PATH = "../../../machop/configs/onnx/jsc_gpu_ort.toml"
+JSC_TOML_PATH = "../../../configs/onnx/jsc_gpu_ort.toml"
 
 # Reading TOML file and converting it into a Python dictionary
 with open(JSC_TOML_PATH, 'r') as toml_file:
@@ -117,7 +117,7 @@ input_generator = InputGenerator(
 mg = MaseGraph(model=model)
 ```
 
-Next, we train the `jsc-toy` model using the machop `train` action with the config from the toml file. You may want to switch to GPU for this task - it will not affect the cpu optimizations later on.
+Next, we train the `jsc-toy` model using the Chop `train` action with the config from the toml file. You may want to switch to GPU for this task - it will not affect the cpu optimizations later on.
 
 
 ```bash
@@ -159,12 +159,12 @@ In this case, since we are not quantizing the model, only the `onnx_path` is ava
 The models are also stored in the directory:
 ```
 mase_output
-└── onnxrt
-    └── model_task_dataset_date
-        ├── optimized
-        ├── pre_processed
-        ├── static_quantized
-        └── dynamic_quantized
+??? onnxrt
+    ??? model_task_dataset_date
+        ??? optimized
+        ??? pre_processed
+        ??? static_quantized
+        ??? dynamic_quantized
 ```
 
 
@@ -302,11 +302,11 @@ As shown above, the latency of the cpu inference is around 3.5x less with the `j
 
 Lets now run the same optimzations, this time using a GPU and a larger model - the `vgg7`.  We will also utilse the chop action from the terminal which runs the same `onnx_runtime_interface_pass` pass.
 
-First lets train the `vgg7` model using the machop `train` action with the config from the new toml file and then load the trained checkpoint it into the `transform` pass.
+First lets train the `vgg7` model using the Chop `train` action with the config from the new toml file and then load the trained checkpoint it into the `transform` pass.
 
 
 ```bash
-VGG_TOML_PATH = "../../../machop/configs/onnx/vgg7_gpu_quant.toml"
+VGG_TOML_PATH = "../../../configs/onnx/vgg7_gpu_quant.toml"
 
 # !ch train --config {VGG_TOML_PATH}
 
@@ -685,7 +685,7 @@ We will also set the `precision_types` to `['static', 'dynamic', 'auto']` to com
 
 
 ```bash
-VGG_TOML_PATH = "../../../machop/configs/onnx/vgg7_gpu_quant.toml"
+VGG_TOML_PATH = "../../../configs/onnx/vgg7_gpu_quant.toml"
 VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ckpt"
 !ch transform --config {VGG_TOML_PATH} --load {VGG_CHECKPOINT_PATH} --load-type pl
 ```

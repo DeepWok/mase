@@ -18,11 +18,11 @@ Note that search_space is search space + model, and search_strategy is search al
 
 ## How to extend search_space?
 
-- `[Required]` Create a new search space class that inherits from `SearchSpaceBase` at `mase-tools/machop/chop/actions/search/search_space/base.py` and implement corresponding abstract methods.
-- `[Required]` Register the new search space to `SEARCH_SPACE_MAP` at `mase-tools/machop/chop/actions/search/search_space/__init__.py`.
+- `[Required]` Create a new search space class that inherits from `SearchSpaceBase` at `src/chop/actions/search/search_space/base.py` and implement corresponding abstract methods.
+- `[Required]` Register the new search space to `SEARCH_SPACE_MAP` at `src/chop/actions/search/search_space/__init__.py`.
 - `[Optional]` Add new software (hardware) metrics:
-    - subclass `SoftwareRunnerBase` at `mase-tools/machop/chop/actions/search/runners/software/base.py`and implement corresponding abstract methods.
-    - Register the new software metrics at `SOFTWARE_RUNNER_MAP` at `mase-tools/machop/chop/actions/search/runners/software/__init__.py`.
+    - subclass `SoftwareRunnerBase` at `src/chop/actions/search/strategies/runners/software/base.py` and implement corresponding abstract methods.
+    - Register the new software metrics at `SOFTWARE_RUNNER_MAP` at `src/chop/actions/search/strategies/runners/software/__init__.py`.
 
 
 

@@ -5,7 +5,7 @@ MASE has several functionalities, and this document aims to introduce the simple
 ## Command line interface
 
 MASE actually supports usage in two modes:
-* A direct `import` as a module (eg. `machop/examples/toy/main.py`).
+* A direct `import` as a module (eg. a script under `src/chop` or your own package).
 * Through the command line interface (the focus of this document).
 
 In this case, we can try a toymodel, the command looks like the following

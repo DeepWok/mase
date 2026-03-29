@@ -64,9 +64,9 @@ model:
    from pprint import pprint as pp
 
    # figure out the correct path
-   machop_path = Path(".").resolve().parent.parent /"machop"
-   assert machop_path.exists(), "Failed to find machop at: {}".format(machop_path)
-   sys.path.append(str(machop_path))
+   chop_src = Path(".").resolve().parent.parent / "src"
+   assert chop_src.exists(), "Failed to find src at: {}".format(chop_src)
+   sys.path.append(str(chop_src))
 
    from chop.dataset import MaseDataModule, get_dataset_info
    from chop.tools.logger import get_logger
@@ -133,7 +133,7 @@ the current directory with a name of ``lab3.py``.
 .. warning::
    [Directory madness] The directory has to be correct because
    the line
-   ``machop_path = Path(".").resolve().parent.parent /"machop"`` traces
+   ``chop_src = Path(".").resolve().parent.parent / "src"`` traces
    to the parent directory based on relative positions.
 
 Defining a search space
@@ -249,22 +249,22 @@ The search command in the MASE flow
 
 The search flow implemented in MASE is very similar to the one that you
 have constructed manually, the overall flow is implemented in
-`search.py <https://github.com/DeepWok/mase/blob/main/machop/chop/actions/search/search.py>`__, the
+`search.py <https://github.com/DeepWok/mase/blob/main/src/chop/actions/search/search.py>`__, the
 following bullet points provide you pointers to the code base.
 
 -  MaseGraph: this is the
-   `MaseGraph <https://github.com/DeepWok/mase/blob/main/machop/chop/ir/graph/mase_graph.py>`__ that you
+   `MaseGraph <https://github.com/DeepWok/mase/blob/main/src/chop/ir/graph/mase_graph.py>`__ that you
    have used in lab2.
 -  Search space: The base class is implemented in
-   `base.py <https://github.com/DeepWok/mase/blob/main/machop/chop/actions/search/search_space/base.py>`__ ,
+   `base.py <https://github.com/DeepWok/mase/blob/main/src/chop/actions/search/search_space/base.py>`__ ,
    where in the same folder you can see a range of different supported
    search spaces.
 -  Search strategy: Similar to the search space, you can find a a base
    class
-   `definition <https://github.com/DeepWok/mase/blob/main/machop/chop/actions/search/strategies/base.py>`__,
+   `definition <https://github.com/DeepWok/mase/blob/main/src/chop/actions/search/strategies/base.py>`__,
    where different strategies are also defined in the same folder.
 -  Runner: Different
-   `runners <https://github.com/DeepWok/mase/blob/main/machop/chop/actions/search/strategies/runners>`__ can
+   `runners <https://github.com/DeepWok/mase/blob/main/src/chop/actions/search/strategies/runners>`__ can
    produce different metrics, they may also use ``transforms`` to help
    compute certain search metrics.
 

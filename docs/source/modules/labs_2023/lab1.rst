@@ -47,11 +47,11 @@ Please be aware that pushing to the ``main`` branch would be blocked,
 and your final project would be submitted as a `pull
 request <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests>`__.
 
-Getting familiar with the Machop Command Line
+Getting familiar with the Chop Command Line
 =============================================
 
-The software framework of MASE is called Machop, you can find a reason
-for the naming in the Machop `Readme <https://github.com/DeepWok/mase/tree/main/machop>`__.
+The software framework of MASE is called Chop, you can find more detail
+in the Chop `README <https://github.com/DeepWok/mase/tree/main/src/chop>`__.
 
 After installation, you should be able to run
 
@@ -236,7 +236,7 @@ and Lightning checkpointing
    ./ch test jsc-tiny jsc --load ../mase_output/jsc-tiny_classification_jsc_2023-10-19/software/training_ckpts/best.ckpt --load-type pl
 
 The above command would return you the performance of the trained model
-on the test set. ``--load-type pl`` tells Machop that the checkpoint is
+on the test set. ``--load-type pl`` tells Chop that the checkpoint is
 saved by PyTorch Lightning. For PyTorch Lightning, see `this
 section <#the-entry-point-for-the-train-reset-action>`__
 
@@ -246,12 +246,12 @@ The definition of the JSC dataset
 ---------------------------------
 
 Datasets are defined in under the
-`dataset <https://github.com/DeepWok/mase/tree/main/machop/chop/dataset>`__ folder in ``chop``, one should
+`dataset <https://github.com/DeepWok/mase/tree/main/src/chop/dataset>`__ folder in ``chop``, one should
 take a look at the
-`\__init__.py <https://github.com/DeepWok/mase/blob/main/machop/chop/dataset/__init__.py>`__ to understand
+`\__init__.py <https://github.com/DeepWok/mase/blob/main/src/chop/dataset/__init__.py>`__ to understand
 how different datasets are declared. The JSC dataset is defined and
 detailed in `this
-file <https://github.com/DeepWok/mase/blob/main/machop/chop/dataset/physical/jsc.py>`__:
+file <https://github.com/DeepWok/mase/blob/main/src/chop/dataset/physical/jsc.py>`__:
 
 .. code:: python
 
@@ -280,8 +280,8 @@ programming), you should check this
 The definition of the JSC Tiny network
 --------------------------------------
 
-The network definition can also be found in the
-`\__init__.py <https://github.com/DeepWok/mase/blob/main/machop/chop/models/physical/jet_substructure/__init__.py>`__
+The network definition can also be found in
+`jet_substructure.py <https://github.com/DeepWok/mase/blob/main/src/chop/models/jet_substructure/jet_substructure.py>`__
 
 .. code:: python
 
@@ -336,18 +336,18 @@ A deeper dive into the framework
 ================================
 
 When you execute ``./ch``, what really happens is the
-`ch <https://github.com/DeepWok/mase/blob/main/machop/ch>`__ file got executed and from the ``import`` you
-can tell it is calling into `cli.py <https://github.com/DeepWok/mase/blob/main/machop/chop/cli.py>`__.
+`ch <https://github.com/DeepWok/mase/blob/main/src/ch>`__ file got executed and from the ``import`` you
+can tell it is calling into `cli.py <https://github.com/DeepWok/mase/blob/main/src/chop/cli.py>`__.
 
 The entry point for the train/reset action
 ------------------------------------------
 
 When you choose to execute ``./ch train``, we are executing the train
-action, and invoking `train.py <https://github.com/DeepWok/mase/blob/main/machop/chop/actions/train.py>`__.
+action, and invoking `train.py <https://github.com/DeepWok/mase/blob/main/src/chop/actions/train.py>`__.
 The entire training flow is orchestrated using `PyTorch
 Lightning <https://lightning.ai/>`__, so that the detailed lightning
 related wrapping occurs in
-`jet_substructure.py <https://github.com/DeepWok/mase/blob/main/machop/chop/plt_wrapper/physical/jet_substructure.py>`__.
+`jet_substructure.py <https://github.com/DeepWok/mase/blob/main/src/chop/tools/plt_wrapper/physical/jet_substructure.py>`__.
 PyTorch Lightning’s checkpointing callbacks saves the model parameters
 (``torch.nn.Module.state_dict()``), the optimizer states, and other
 hyper-parameters specified in ``lightning.pl.LightningModule``, so that
@@ -356,13 +356,13 @@ checkpoint has extension ``.ckpt``, this is why we have
 ``--load-type pl`` in the ``./ch test`` command.
 
 Test action has similar implementation based on PyTorch Lightning
-(`test.py <https://github.com/DeepWok/mase/blob/main/machop/chop/actions/test.py>`__)
+(`test.py <https://github.com/DeepWok/mase/blob/main/src/chop/actions/test.py>`__)
 
 The entry point for the model
 -----------------------------
 
 All models are defined in the
-`\__init__.py <https://github.com/DeepWok/mase/blob/main/machop/chop/models/__init__.py>`__ under the model
+`\__init__.py <https://github.com/DeepWok/mase/blob/main/src/chop/models/__init__.py>`__ under the model
 folder. The ``get_model`` function is called inside ``actions`` (such as
 ``train``) to ping down different models.
 
@@ -370,7 +370,7 @@ The entry point for the dataset
 -------------------------------
 
 Similar to the model definitions, all datasets are defined in the
-`\__init__.py <https://github.com/DeepWok/mase/blob/main/machop/chop/dataset/__init__.py>`__ under the
+`\__init__.py <https://github.com/DeepWok/mase/blob/main/src/chop/dataset/__init__.py>`__ under the
 dataset folder.
 
 Train your own network

@@ -57,6 +57,6 @@ If you installed the packages for MASE, black is then included. It is crucial to
 Example on using black for format the whole directory:
 ```bash
 # all .py files should be in chop
-cd machop/chop
+cd src/chop
 black *
 ```

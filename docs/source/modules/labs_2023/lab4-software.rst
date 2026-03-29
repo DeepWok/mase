@@ -71,9 +71,9 @@ name it ``lab4.py``.
    from pprint import pprint as pp
 
    # figure out the correct path
-   machop_path = Path(".").resolve().parent.parent /"machop"
-   assert machop_path.exists(), "Failed to find machop at: {}".format(machop_path)
-   sys.path.append(str(machop_path))
+   chop_src = Path(".").resolve().parent.parent / "src"
+   assert chop_src.exists(), "Failed to find src at: {}".format(chop_src)
+   sys.path.append(str(chop_src))
 
    from chop.dataset import MaseDataModule, get_dataset_info
    from chop.tools.logger import set_logging_verbosity, get_logger
@@ -301,11 +301,11 @@ We have looked at how to search, on the architecture level, for a simple
 linear layer based network. MASE has the following components that you
 can have a look:
 
--  `Cifar10 dataset <https://github.com/DeepWok/mase/blob/main/machop/chop/dataset/vision/cifar.py>`__
--  `VGG <https://github.com/DeepWok/mase/blob/main/machop/chop/models/vision/vgg_cifar/vgg_cifar.py>`__,
+-  `Cifar10 dataset <https://github.com/DeepWok/mase/blob/main/src/chop/dataset/vision/cifar.py>`__
+-  `VGG <https://github.com/DeepWok/mase/blob/main/src/chop/models/vision/vgg_cifar/vgg_cifar.py>`__,
    this is a variant used for CIFAR
 -  `TPE-based
-   Search <https://github.com/DeepWok/mase/blob/main/machop/chop/actions/search/strategies/optuna.py>`__,
+   Search <https://github.com/DeepWok/mase/blob/main/src/chop/actions/search/strategies/optuna.py>`__,
    implementd using
    `Optuna <https://optuna.readthedocs.io/en/stable/reference/index.html>`__
 
