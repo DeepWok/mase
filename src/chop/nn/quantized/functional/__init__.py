@@ -42,6 +42,8 @@ from .matmul import (
     bmm_minifloat_ieee,
     bmm_binary,
     bmm_ternary,
+    bmm_mxfp,
+    bmm_mxint,
     matmul_block_fp,
     matmul_block_log,
     matmul_block_minifloat,
@@ -51,7 +53,14 @@ from .matmul import (
     matmul_minifloat_ieee,
     matmul_binary,
     matmul_ternary,
+    matmul_mxfp,
+    matmul_mxint,
 )
+from .softmax import softmax_mxfp, softmax_mxint, softmax_minifloat
+from .silu import silu_mxfp, silu_mxint, silu_minifloat
+from .rope import rope_mxfp, rope_mxint, rope_minifloat
+from .kvcache import kv_cache_mxfp, kv_cache_mxint
+
 from .mult import (
     mult_block_fp,
     mult_block_log,
@@ -203,6 +212,10 @@ quantized_func_map = {
     "matmul_block_log": matmul_block_log,
     "matmul_binary": matmul_binary,
     "matmul_ternary": matmul_ternary,
+    "matmul_mxfp": matmul_mxfp,
+    "matmul_mxint": matmul_mxint,
+    "bmm_mxfp": bmm_mxfp,
+    "bmm_mxint": bmm_mxint,
     "relu_block_minifloat": relu_block_minifloat,
     "relu_integer": relu_integer,
     "relu_fixed": relu_integer,
@@ -277,4 +290,15 @@ quantized_func_map = {
     "linear_ternary": linearTernary,
     "linear_lutnet": linearLUT,
     "linear_logicnets": linearLogicNets,
+    "softmax_mxfp": softmax_mxfp,
+    "softmax_mxint": softmax_mxint,
+    "softmax_minifloat": softmax_minifloat,
+    "silu_mxfp": silu_mxfp,
+    "silu_mxint": silu_mxint,
+    "silu_minifloat": silu_minifloat,
+    "rope_mxfp": rope_mxfp,
+    "rope_mxint": rope_mxint,
+    "rope_minifloat": rope_minifloat,
+    "kv_cache_mxfp": kv_cache_mxfp,
+    "kv_cache_mxint": kv_cache_mxint,
 }

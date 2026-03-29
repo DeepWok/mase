@@ -20,6 +20,25 @@ from transformers.models.llama.modeling_llama import (
     LlamaRMSNorm,
 )
 
+from transformers.models.qwen3.modeling_qwen3 import (
+    Qwen3Attention,
+    Qwen3MLP,
+    Qwen3RMSNorm,
+)
+
+from transformers.models.qwen3_moe.modeling_qwen3_moe import (
+    Qwen3MoeAttention,
+    Qwen3MoeMLP,
+)
+
+from transformers.models.gpt_oss.modeling_gpt_oss import (
+    GptOssAttention,
+)
+
+from chop.nn.quantized.modules.llada.modeling_llada import (
+    LLaDALlamaBlock,
+)
+
 from transformers.models.bert.modeling_bert import (
     BertSelfAttention,
     BertSdpaSelfAttention,
@@ -38,6 +57,25 @@ llama_prefix_map = {
     LlamaAttention: "llama_self_attention",
     LlamaMLP: "llama_mlp",
     LlamaRMSNorm: "llama_rms_norm",
+}
+
+qwen3_prefix_map = {
+    Qwen3Attention: "qwen3_self_attention",
+    Qwen3MLP: "qwen3_mlp",
+    Qwen3RMSNorm: "qwen3_rms_norm",
+}
+
+qwen3_moe_prefix_map = {
+    Qwen3MoeAttention: "qwen3_moe_self_attention",
+    Qwen3MoeMLP: "qwen3_moe_mlp",
+}
+
+gpt_oss_prefix_map = {
+    GptOssAttention: "gpt_oss_self_attention",
+}
+
+llada_prefix_map = {
+    LLaDALlamaBlock: "llada_block",
 }
 
 bert_prefix_map = {
@@ -111,6 +149,8 @@ instantiation of different supported modules
 def instantiate_linear(module, postfix, module_map, additional_module_args):
     linear_cls = module_map[f"linear_{postfix}"]
     has_bias = not (module.bias is None)
+    orig_dtype = module.weight.dtype
+    orig_device = module.weight.device
 
     # TODO: some transformed modules have "config" as an argument then extract the additional_module_args from it. Some directly take the additional_module_args.
     # Need to handle this better
@@ -119,6 +159,8 @@ def instantiate_linear(module, postfix, module_map, additional_module_args):
             in_features=module.in_features,
             out_features=module.out_features,
             bias=has_bias,
+            device=orig_device,
+            dtype=orig_dtype,
             config=additional_module_args,
         )
     else:
@@ -126,6 +168,8 @@ def instantiate_linear(module, postfix, module_map, additional_module_args):
             in_features=module.in_features,
             out_features=module.out_features,
             bias=has_bias,
+            device=orig_device,
+            dtype=orig_dtype,
             **additional_module_args,
         )
 
@@ -168,16 +212,28 @@ def instantiate_conv2d(module, postfix, module_map, additional_module_args):
 
 def instantiate_embedding(module, postfix, module_map, additional_module_args):
     embedding_cls = module_map[f"embedding_{postfix}"]
-    embedding = embedding_cls(
-        num_embeddings=module.num_embeddings,
-        embedding_dim=module.embedding_dim,
-        padding_idx=module.padding_idx,
-        max_norm=module.max_norm,
-        norm_type=module.norm_type,
-        scale_grad_by_freq=module.scale_grad_by_freq,
-        sparse=module.sparse,
-        **additional_module_args,
-    )
+    if "config" in inspect.signature(embedding_cls.__init__).parameters:
+        embedding = embedding_cls(
+            num_embeddings=module.num_embeddings,
+            embedding_dim=module.embedding_dim,
+            padding_idx=module.padding_idx,
+            max_norm=module.max_norm,
+            norm_type=module.norm_type,
+            scale_grad_by_freq=module.scale_grad_by_freq,
+            sparse=module.sparse,
+            config=additional_module_args,
+        )
+    else:
+        embedding = embedding_cls(
+            num_embeddings=module.num_embeddings,
+            embedding_dim=module.embedding_dim,
+            padding_idx=module.padding_idx,
+            max_norm=module.max_norm,
+            norm_type=module.norm_type,
+            scale_grad_by_freq=module.scale_grad_by_freq,
+            sparse=module.sparse,
+            **additional_module_args,
+        )
     return embedding
 
 
@@ -219,6 +275,58 @@ def instantiate_llama_module(
     return llama_module
 
 
+def instantiate_qwen3_module(
+    module, postfix, prefix, module_map, module_args, network_args
+):
+    qwen3_cls = module_map[f"{prefix}_{postfix}"]
+    qwen3_module = qwen3_cls(
+        config=network_args,
+        layer_idx=module.layer_idx if hasattr(module, "layer_idx") else None,
+        q_config=module_args,
+    )
+    return qwen3_module
+
+
+def instantiate_qwen3_moe_module(
+    module, postfix, prefix, module_map, module_args, network_args
+):
+    cls = module_map[f"{prefix}_{postfix}"]
+    kwargs = {
+        "config": network_args,
+        "q_config": module_args,
+    }
+    if hasattr(module, "layer_idx"):
+        kwargs["layer_idx"] = module.layer_idx
+    # Qwen3MoeMLP uses a custom intermediate_size per expert
+    if hasattr(module, "intermediate_size"):
+        kwargs["intermediate_size"] = module.intermediate_size
+    return cls(**kwargs)
+
+
+def instantiate_gpt_oss_module(
+    module, postfix, prefix, module_map, module_args, network_args
+):
+    cls = module_map[f"{prefix}_{postfix}"]
+    return cls(
+        config=network_args,
+        layer_idx=module.layer_idx if hasattr(module, "layer_idx") else None,
+        q_config=module_args,
+    )
+
+
+def instantiate_llada_module(
+    module, postfix, prefix, module_map, module_args, network_args
+):
+    cls = module_map[f"{prefix}_{postfix}"]
+    # LLaDALlamaBlock needs layer_id, config, cache, and q_config
+    return cls(
+        layer_id=module.layer_id,
+        config=module.config,
+        cache=module._LLaDABlock__cache,
+        q_config=module_args,
+    )
+
+
 def instantiate_bert_module(
     module, postfix, prefix, module_map, module_args, network_args
 ):
@@ -235,6 +343,12 @@ def instantiate_bert_module(
 def instantiate_module(module, postfix, module_map, additional_module_args):
     is_roberta, roberta_layer_name = check_module_instance(module, roberta_prefix_map)
     is_llama, llama_layer_name = check_module_instance(module, llama_prefix_map)
+    is_qwen3_moe, qwen3_moe_layer_name = check_module_instance(
+        module, qwen3_moe_prefix_map
+    )
+    is_qwen3, qwen3_layer_name = check_module_instance(module, qwen3_prefix_map)
+    is_gpt_oss, gpt_oss_layer_name = check_module_instance(module, gpt_oss_prefix_map)
+    is_llada, llada_layer_name = check_module_instance(module, llada_prefix_map)
     is_bert, bert_layer_name = check_module_instance(module, bert_prefix_map)
 
     module_args = additional_module_args["config"]
@@ -255,6 +369,22 @@ def instantiate_module(module, postfix, module_map, additional_module_args):
     elif is_llama:
         module = instantiate_llama_module(
             module, postfix, llama_layer_name, module_map, module_args, network_args
+        )
+    elif is_qwen3_moe:
+        module = instantiate_qwen3_moe_module(
+            module, postfix, qwen3_moe_layer_name, module_map, module_args, network_args
+        )
+    elif is_qwen3:
+        module = instantiate_qwen3_module(
+            module, postfix, qwen3_layer_name, module_map, module_args, network_args
+        )
+    elif is_gpt_oss:
+        module = instantiate_gpt_oss_module(
+            module, postfix, gpt_oss_layer_name, module_map, module_args, network_args
+        )
+    elif is_llada:
+        module = instantiate_llada_module(
+            module, postfix, llada_layer_name, module_map, module_args, network_args
         )
     elif is_bert:
         module = instantiate_bert_module(

@@ -9,7 +9,43 @@ from .roberta import (
     RobertaSelfOutputLSQInteger,
 )
 
-from .llama import LlamaAttentionLSQInteger, LlamaRMSNormLSQInteger, LlamaMLPLSQInteger
+from .embedding import EmbeddingMXFP, EmbeddingMXInt
+
+from .llama import (
+    LlamaAttentionLSQInteger,
+    LlamaRMSNormLSQInteger,
+    LlamaMLPLSQInteger,
+    LlamaAttentionMXFP,
+    LlamaAttentionMXInt,
+    LlamaMLPMXFP,
+    LlamaMLPMXInt,
+    LlamaRMSNormMinifloat,
+)
+
+from .qwen3 import (
+    Qwen3AttentionMXFP,
+    Qwen3AttentionMXInt,
+    Qwen3MLPMXFP,
+    Qwen3MLPMXInt,
+    Qwen3RMSNormMinifloat,
+)
+
+from .qwen3_moe import (
+    Qwen3MoeAttentionMXFP,
+    Qwen3MoeAttentionMXInt,
+    Qwen3MoeMLPMXFP,
+    Qwen3MoeMLPMXInt,
+)
+
+from .gpt_oss import (
+    GptOssAttentionMXFP,
+    GptOssAttentionMXInt,
+)
+
+from .llada import (
+    LLaDABlockMXFP,
+    LLaDABlockMXInt,
+)
 
 # from .add import AddInteger
 from .conv1d import (
@@ -60,6 +96,8 @@ from .linear import (
     LinearLUT,
     LinearLogicNets,
     LinearMXIntHardware,
+    LinearMXFP,
+    LinearMXInt,
 )
 from .pool2d import (
     AdaptiveAvgPool2dInteger,
@@ -200,6 +238,8 @@ quantized_basic_module_map = {
     "linear_fixed": LinearInteger,
     "linear_log": LinearLog,
     "linear_mxint_hardware": LinearMXIntHardware,
+    "linear_mxfp": LinearMXFP,
+    "linear_mxint": LinearMXInt,
     "linear_block_log": LinearBlockLog,
     "linear_minifloat_ieee": LinearMinifloatIEEE,
     "linear_minifloat_denorm": LinearMinifloatDenorm,
@@ -291,6 +331,8 @@ quantized_basic_module_map = {
     "softplus_ternary": SoftplusTernary,
     "batch_norm1d_fixed": BatchNorm1dInteger,
     "batch_norm1d_linear": BatchNorm1dInteger,
+    "embedding_mxfp": EmbeddingMXFP,
+    "embedding_mxint": EmbeddingMXInt,
 }
 
 quantized_bert_module_map = {
@@ -309,8 +351,38 @@ quantized_roberta_module_map = {
 
 quantized_llama_module_map = {
     "llama_self_attention_lsqinteger": LlamaAttentionLSQInteger,
+    "llama_self_attention_mxfp": LlamaAttentionMXFP,
+    "llama_self_attention_mxint": LlamaAttentionMXInt,
     "llama_rms_norm_lsqinteger": LlamaRMSNormLSQInteger,
+    "llama_rms_norm_minifloat": LlamaRMSNormMinifloat,
     "llama_mlp_lsqinteger": LlamaMLPLSQInteger,
+    "llama_mlp_mxfp": LlamaMLPMXFP,
+    "llama_mlp_mxint": LlamaMLPMXInt,
+}
+
+quantized_qwen3_module_map = {
+    "qwen3_self_attention_mxfp": Qwen3AttentionMXFP,
+    "qwen3_self_attention_mxint": Qwen3AttentionMXInt,
+    "qwen3_rms_norm_minifloat": Qwen3RMSNormMinifloat,
+    "qwen3_mlp_mxfp": Qwen3MLPMXFP,
+    "qwen3_mlp_mxint": Qwen3MLPMXInt,
+}
+
+quantized_qwen3_moe_module_map = {
+    "qwen3_moe_self_attention_mxfp": Qwen3MoeAttentionMXFP,
+    "qwen3_moe_self_attention_mxint": Qwen3MoeAttentionMXInt,
+    "qwen3_moe_mlp_mxfp": Qwen3MoeMLPMXFP,
+    "qwen3_moe_mlp_mxint": Qwen3MoeMLPMXInt,
+}
+
+quantized_gpt_oss_module_map = {
+    "gpt_oss_self_attention_mxfp": GptOssAttentionMXFP,
+    "gpt_oss_self_attention_mxint": GptOssAttentionMXInt,
+}
+
+quantized_llada_module_map = {
+    "llada_block_mxfp": LLaDABlockMXFP,
+    "llada_block_mxint": LLaDABlockMXInt,
 }
 
 quantized_module_map = (
@@ -318,6 +390,10 @@ quantized_module_map = (
     | quantized_bert_module_map
     | quantized_roberta_module_map
     | quantized_llama_module_map
+    | quantized_qwen3_module_map
+    | quantized_qwen3_moe_module_map
+    | quantized_gpt_oss_module_map
+    | quantized_llada_module_map
 )
 
 

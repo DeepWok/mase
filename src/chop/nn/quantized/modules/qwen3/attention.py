@@ -2,17 +2,15 @@ from typing import Optional, Tuple
 
 import torch
 from torch import Tensor, nn, LongTensor
-from transformers.models.llama.modeling_llama import (
+from transformers.models.qwen3.modeling_qwen3 import (
     apply_rotary_pos_emb,
-    LlamaConfig,
     Cache,
     repeat_kv,
-    LlamaAttention,
+    Qwen3Attention,
 )
 
 from functools import partial
 
-from chop.nn.quantizers.SNN.LSQ import LSQInteger
 from chop.nn.quantizers import mxfp_quantizer, mxint_quantizer
 from chop.nn.quantized.functional.rope import rope_minifloat
 from chop.nn.quantized.functional.softmax import softmax_minifloat
@@ -23,112 +21,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class LlamaAttentionLSQInteger(nn.Module):
-    def __init__(self, config: LlamaConfig, layer_idx: int, q_config: dict = None):
-        super().__init__()
-        self.config = config
-        self.layer_idx = layer_idx
-        self.head_dim = getattr(
-            config, "head_dim", config.hidden_size // config.num_attention_heads
-        )
-        self.num_key_value_groups = (
-            config.num_attention_heads // config.num_key_value_heads
-        )
-        self.scaling = self.head_dim**-0.5
-        self.attention_dropout = config.attention_dropout
-        self.is_causal = True
-
-        self.q_proj = nn.Linear(
-            config.hidden_size,
-            config.num_attention_heads * self.head_dim,
-            bias=config.attention_bias,
-        )
-        self.k_proj = nn.Linear(
-            config.hidden_size,
-            config.num_key_value_heads * self.head_dim,
-            bias=config.attention_bias,
-        )
-        self.v_proj = nn.Linear(
-            config.hidden_size,
-            config.num_key_value_heads * self.head_dim,
-            bias=config.attention_bias,
-        )
-        self.o_proj = nn.Linear(
-            config.num_attention_heads * self.head_dim,
-            config.hidden_size,
-            bias=config.attention_bias,
-        )
-
-        self.query_quan = LSQInteger(level=q_config["level"], sym=True)
-        self.key_quan = LSQInteger(level=q_config["level"], sym=True)
-        self.value_quan = LSQInteger(level=q_config["level"], sym=True)
-        self.o_quant = LSQInteger(level=q_config["level"], sym=True)
-        self.attn_quan = LSQInteger(level=q_config["level"], sym=False)
-        self.after_attn_quan = LSQInteger(level=q_config["level"], sym=False)
-
-    def forward(
-        self,
-        hidden_states: torch.Tensor,
-        position_embeddings: Tuple[torch.Tensor, torch.Tensor],
-        attention_mask: Optional[torch.Tensor],
-        past_key_value: Optional[Cache] = None,
-        cache_position: Optional[torch.LongTensor] = None,
-        **kwargs,
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
-        input_shape = hidden_states.shape[:-1]
-        hidden_shape = (*input_shape, -1, self.head_dim)
-
-        query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)
-        key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)
-        value_states = self.v_proj(hidden_states).view(hidden_shape).transpose(1, 2)
-
-        query_states = self.query_quan(query_states)
-        key_states = self.key_quan(key_states)
-        value_states = self.value_quan(value_states)
-
-        cos, sin = position_embeddings
-        query_states, key_states = apply_rotary_pos_emb(
-            query_states, key_states, cos, sin
-        )
-
-        if past_key_value is not None:
-            # sin and cos are specific to RoPE models; cache_position needed for the static cache
-            cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
-            key_states, value_states = past_key_value.update(
-                key_states, value_states, self.layer_idx, cache_kwargs
-            )
-
-        key_states = repeat_kv(key_states, self.num_key_value_groups)
-        value_states = repeat_kv(value_states, self.num_key_value_groups)
-
-        attn_weights = (
-            torch.matmul(query_states, key_states.transpose(2, 3)) * self.scaling
-        )
-        attn_weights = self.attn_quan(attn_weights)
-
-        if attention_mask is not None:
-            causal_mask = attention_mask[:, :, :, : key_states.shape[-2]]
-            attn_weights = attn_weights + causal_mask
-
-        attn_weights = nn.functional.softmax(
-            attn_weights, dim=-1, dtype=torch.float32
-        ).to(query_states.dtype)
-        attn_weights = nn.functional.dropout(
-            attn_weights, p=self.attention_dropout, training=self.training
-        )
-        attn_output = torch.matmul(attn_weights, value_states)
-        attn_output = self.after_attn_quan(attn_output)
-        attn_output = attn_output.transpose(1, 2).contiguous()
-
-        attn_output = attn_output.reshape(*input_shape, -1).contiguous()
-        attn_output = self.o_proj(attn_output)
-        attn_output = self.o_quant(attn_output)
-
-        return attn_output, attn_weights
-
-
-class LlamaAttentionMXFP(LlamaAttention):
-    """MXFP-quantized LlamaAttention."""
+class Qwen3AttentionMXFP(Qwen3Attention):
+    """MXFP-quantized Qwen3Attention."""
 
     def __init__(self, config, layer_idx, q_config: dict = None):
         super().__init__(config, layer_idx)
@@ -156,8 +50,13 @@ class LlamaAttentionMXFP(LlamaAttention):
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
 
-        query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)
-        key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)
+        # Qwen3-specific: q_norm/k_norm applied after projection, before transpose
+        query_states = self.q_norm(
+            self.q_proj(hidden_states).view(hidden_shape)
+        ).transpose(1, 2)
+        key_states = self.k_norm(
+            self.k_proj(hidden_states).view(hidden_shape)
+        ).transpose(1, 2)
         value_states = self.v_proj(hidden_states).view(hidden_shape).transpose(1, 2)
 
         cos, sin = position_embeddings
@@ -214,7 +113,7 @@ class LlamaAttentionMXFP(LlamaAttention):
         return attn_output, attn_weights
 
     @classmethod
-    def from_attention(cls, attention: LlamaAttention, q_config: dict = None):
+    def from_attention(cls, attention: Qwen3Attention, q_config: dict = None):
         new_attn = cls(
             config=attention.config,
             layer_idx=attention.layer_idx,
@@ -229,8 +128,8 @@ class LlamaAttentionMXFP(LlamaAttention):
         return new_attn
 
 
-class LlamaAttentionMXInt(LlamaAttention):
-    """MXInt-quantized LlamaAttention."""
+class Qwen3AttentionMXInt(Qwen3Attention):
+    """MXInt-quantized Qwen3Attention."""
 
     def __init__(self, config, layer_idx, q_config: dict = None):
         super().__init__(config, layer_idx)
@@ -258,8 +157,13 @@ class LlamaAttentionMXInt(LlamaAttention):
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
 
-        query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)
-        key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)
+        # Qwen3-specific: q_norm/k_norm applied after projection, before transpose
+        query_states = self.q_norm(
+            self.q_proj(hidden_states).view(hidden_shape)
+        ).transpose(1, 2)
+        key_states = self.k_norm(
+            self.k_proj(hidden_states).view(hidden_shape)
+        ).transpose(1, 2)
         value_states = self.v_proj(hidden_states).view(hidden_shape).transpose(1, 2)
 
         cos, sin = position_embeddings
@@ -316,7 +220,7 @@ class LlamaAttentionMXInt(LlamaAttention):
         return attn_output, attn_weights
 
     @classmethod
-    def from_attention(cls, attention: LlamaAttention, q_config: dict = None):
+    def from_attention(cls, attention: Qwen3Attention, q_config: dict = None):
         new_attn = cls(
             config=attention.config,
             layer_idx=attention.layer_idx,

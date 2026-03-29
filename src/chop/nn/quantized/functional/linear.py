@@ -16,6 +16,8 @@ from chop.nn.quantizers import (
     binary_quantizer,
     ternary_quantizer,
     mxint_hardware,
+    mxfp_quantizer,
+    mxint_quantizer,
 )
 
 
