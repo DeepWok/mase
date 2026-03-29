@@ -35,7 +35,6 @@ For more details, explore the documentation
    modules/documentation/installation
    modules/documentation/quickstart
    modules/documentation/tutorials
-   modules/documentation/health
    modules/documentation/specifications
 
 .. toctree::

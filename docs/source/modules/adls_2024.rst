@@ -39,4 +39,4 @@ This module covers the following topics:
     :maxdepth: 1
     :caption: Additional Resources
 
-    labs_2024/setup_docker_env
+    labs_2023/setup_docker_env
