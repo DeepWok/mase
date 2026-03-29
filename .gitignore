@@ -18,7 +18,6 @@ vagrant/.vagrant/
 /mase_output/
 .devcontainer/
 *.ckpt
-!/docs/tutorials/tensorrt/checkpoints/*.ckpt
 *.pkl
 /src/examples/**/cache/
 /src/examples/**/ckpts/
@@ -170,6 +169,3 @@ prof/
 # HuggingFace trainer cache
 mase-trainer/
 test-trainer/
-
-# DiffLogic: tutorial files
-docs/tutorials/difflogic/data-mnist/

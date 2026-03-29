@@ -39,18 +39,6 @@ The following show how to effectively run Neural Architecture Search (NAS) and m
    tutorials/tutorial_5_nas_optuna
    tutorials/tutorial_6_mixed_precision_search
 
-Inference Deployment
----------------------
-
-The following tutorials show how to deploy an optimized model to a range of platforms, including FPGA and GPU clusters.
-
-.. toctree::
-   :maxdepth: 1
-
-   tutorials/tutorial_7_distributed_deployment
-   tutorials/tutorial_8_emit_verilog
-   tutorials/tutorial_9_kernel_fusion
-
 Advanced Topics
 ---------------
 
