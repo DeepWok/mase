@@ -215,17 +215,47 @@ class LlamaAttentionMXFP(LlamaAttention):
 
     @classmethod
     def from_attention(cls, attention: LlamaAttention, q_config: dict = None):
-        new_attn = cls(
-            config=attention.config,
-            layer_idx=attention.layer_idx,
-            q_config=q_config,
-        )
-        device, dtype = (
-            next(attention.parameters()).device,
-            next(attention.parameters()).dtype,
-        )
-        new_attn = new_attn.to(dtype=dtype, device=device)
-        new_attn.load_state_dict(attention.state_dict(), strict=True)
+        """Create a quantized LlamaAttention that REUSES the original's
+        child linears (q_proj, k_proj, v_proj, o_proj).
+
+        This matters for tensor-parallel models: if the original attention's
+        q/k/v/o projections have DTensor-backed weights (sharded by HF's
+        tp_plan), instantiating a fresh ``cls(config, layer_idx)`` would
+        allocate brand-new full-size weight tensors and lose the sharding.
+        By sharing the child modules directly, the DTensor weights are
+        preserved and the TP dispatch keeps working.
+        """
+        new_attn = cls.__new__(cls)
+        nn.Module.__init__(new_attn)
+
+        # Copy base LlamaAttention metadata (mirrors transformers __init__)
+        new_attn.config = attention.config
+        new_attn.layer_idx = attention.layer_idx
+        new_attn.head_dim = attention.head_dim
+        new_attn.num_key_value_groups = attention.num_key_value_groups
+        new_attn.scaling = attention.scaling
+        new_attn.attention_dropout = attention.attention_dropout
+        new_attn.is_causal = attention.is_causal
+
+        # Reuse child linears (preserves any DTensor-sharded weights)
+        new_attn.q_proj = attention.q_proj
+        new_attn.k_proj = attention.k_proj
+        new_attn.v_proj = attention.v_proj
+        new_attn.o_proj = attention.o_proj
+
+        # MX quant config (matches __init__)
+        q_config = q_config or {}
+        new_attn.qk_config = q_config.get("qk_matmul", {})
+        new_attn.av_config = q_config.get("av_matmul", {})
+        new_attn.rope_config = q_config.get("rope", {})
+        new_attn.softmax_config = q_config.get("softmax", {})
+        new_attn.kv_cache_config = q_config.get("kv_cache", {})
+        new_attn.qk_bypass = new_attn.qk_config.get("bypass", False)
+        new_attn.av_bypass = new_attn.av_config.get("bypass", False)
+        new_attn.rope_bypass = new_attn.rope_config.get("bypass", False)
+        new_attn.softmax_bypass = new_attn.softmax_config.get("bypass", False)
+        new_attn.kv_cache_bypass = new_attn.kv_cache_config.get("bypass", False)
+
         return new_attn
 
 
@@ -251,7 +281,7 @@ class LlamaAttentionMXInt(LlamaAttention):
         hidden_states: Tensor,
         position_embeddings: Tuple[Tensor, Tensor],
         attention_mask: Optional[Tensor],
-        past_key_value: Optional[Cache] = None,
+        past_key_values: Optional[Cache] = None,
         cache_position: Optional[LongTensor] = None,
         **kwargs,
     ) -> Tuple[Tensor, Optional[Tensor], Optional[Tuple[Tensor]]]:
@@ -279,7 +309,7 @@ class LlamaAttentionMXInt(LlamaAttention):
                 sin,
             )
 
-        if past_key_value is not None:
+        if past_key_values is not None:
             cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
             if not self.kv_cache_bypass:
                 key_states, value_states = kv_cache_mxint(
@@ -287,7 +317,7 @@ class LlamaAttentionMXInt(LlamaAttention):
                     value_states,
                     self.kv_cache_config,
                 )
-            key_states, value_states = past_key_value.update(
+            key_states, value_states = past_key_values.update(
                 key_states,
                 value_states,
                 self.layer_idx,
@@ -317,17 +347,37 @@ class LlamaAttentionMXInt(LlamaAttention):
 
     @classmethod
     def from_attention(cls, attention: LlamaAttention, q_config: dict = None):
-        new_attn = cls(
-            config=attention.config,
-            layer_idx=attention.layer_idx,
-            q_config=q_config,
-        )
-        device, dtype = (
-            next(attention.parameters()).device,
-            next(attention.parameters()).dtype,
-        )
-        new_attn = new_attn.to(dtype=dtype, device=device)
-        new_attn.load_state_dict(attention.state_dict(), strict=True)
+        """Create a quantized LlamaAttention that REUSES the original's
+        child linears. See LlamaAttentionMXFP.from_attention for details.
+        """
+        new_attn = cls.__new__(cls)
+        nn.Module.__init__(new_attn)
+
+        new_attn.config = attention.config
+        new_attn.layer_idx = attention.layer_idx
+        new_attn.head_dim = attention.head_dim
+        new_attn.num_key_value_groups = attention.num_key_value_groups
+        new_attn.scaling = attention.scaling
+        new_attn.attention_dropout = attention.attention_dropout
+        new_attn.is_causal = attention.is_causal
+
+        new_attn.q_proj = attention.q_proj
+        new_attn.k_proj = attention.k_proj
+        new_attn.v_proj = attention.v_proj
+        new_attn.o_proj = attention.o_proj
+
+        q_config = q_config or {}
+        new_attn.qk_config = q_config.get("qk_matmul", {})
+        new_attn.av_config = q_config.get("av_matmul", {})
+        new_attn.rope_config = q_config.get("rope", {})
+        new_attn.softmax_config = q_config.get("softmax", {})
+        new_attn.kv_cache_config = q_config.get("kv_cache", {})
+        new_attn.qk_bypass = new_attn.qk_config.get("bypass", False)
+        new_attn.av_bypass = new_attn.av_config.get("bypass", False)
+        new_attn.rope_bypass = new_attn.rope_config.get("bypass", False)
+        new_attn.softmax_bypass = new_attn.softmax_config.get("bypass", False)
+        new_attn.kv_cache_bypass = new_attn.kv_cache_config.get("bypass", False)
+
         return new_attn
 
 

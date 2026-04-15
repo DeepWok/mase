@@ -7,7 +7,11 @@ from typing import Tuple
 import torch
 from pathlib import Path
 from functools import reduce
-from transformers import PreTrainedModel, TFPreTrainedModel
+from transformers import PreTrainedModel
+try:
+    from transformers import TFPreTrainedModel
+except ImportError:
+    TFPreTrainedModel = None
 
 
 def match_a_pattern(name: str, patterns: list[str]) -> str | None:
@@ -19,4 +23,6 @@ def match_a_pattern(name: str, patterns: list[str]) -> str | None:
 
 
 def check_is_huggingface_model(model):
+    if TFPreTrainedModel is None:
+        return isinstance(model, PreTrainedModel)
     return isinstance(model, (PreTrainedModel, TFPreTrainedModel))

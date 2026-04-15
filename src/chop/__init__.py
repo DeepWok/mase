@@ -1,7 +1,16 @@
-from .ir.graph.mase_graph import MaseGraph
+try:
+    from .ir.graph.mase_graph import MaseGraph
+except ImportError:
+    MaseGraph = None
 
-from .ir.onnx.mase_onnx_graph import MaseOnnxGraph
+try:
+    from .ir.onnx.mase_onnx_graph import MaseOnnxGraph
+except ImportError:
+    MaseOnnxGraph = None
 
 from . import passes
 
-from .pipelines import AutoPipelineForDistributedInference
+try:
+    from .pipelines import AutoPipelineForDistributedInference
+except ImportError:
+    AutoPipelineForDistributedInference = None

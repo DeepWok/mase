@@ -18,12 +18,20 @@ from ...module_modify_helper import (
     get_module_by_name,
     set_module_by_name,
 )
-from transformers.models.bert.modeling_bert import (
-    BertAttention,
-    BertSelfAttention,
-    BertSdpaSelfAttention,
-    BertSelfOutput,
-)
+try:
+    from transformers.models.bert.modeling_bert import (
+        BertAttention,
+        BertSelfAttention,
+        BertSdpaSelfAttention,
+        BertSelfOutput,
+    )
+except ImportError:
+    from transformers.models.bert.modeling_bert import (
+        BertAttention,
+        BertSelfAttention,
+        BertSelfOutput,
+    )
+    BertSdpaSelfAttention = None
 from transformers.models.gpt2.modeling_gpt2 import (
     GPT2Attention,
     GPT2Block,

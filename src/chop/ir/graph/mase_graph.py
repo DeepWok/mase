@@ -13,8 +13,14 @@ from torch.fx.passes.graph_drawer import FxGraphDrawer
 import matplotlib.pyplot as plt
 
 from transformers import PreTrainedModel
-from transformers.utils.fx import symbolic_trace as hf_symbolic_trace
-from transformers.utils.fx import HFTracer
+try:
+    from transformers.utils.fx import symbolic_trace as hf_symbolic_trace
+    from transformers.utils.fx import HFTracer
+except ImportError:
+    # transformers.utils.fx was removed in newer transformers versions.
+    # MaseGraph tracing is not needed for module-level quantization passes.
+    hf_symbolic_trace = None
+    HFTracer = None
 
 from chop.ir.common import MASE_IMPLICIT_FUNCS
 from chop.nn import MASE_LEAF_LAYERS

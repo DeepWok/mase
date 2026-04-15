@@ -37,6 +37,14 @@ from .qwen3_moe import (
     Qwen3MoeMLPMXInt,
 )
 
+from .glm4_moe import (
+    Glm4MoeAttentionMXFP,
+    Glm4MoeAttentionMXInt,
+    Glm4MoeMLPMXFP,
+    Glm4MoeMLPMXInt,
+    Glm4MoeRMSNormMinifloat,
+)
+
 from .gpt_oss import (
     GptOssAttentionMXFP,
     GptOssAttentionMXInt,
@@ -375,6 +383,14 @@ quantized_qwen3_moe_module_map = {
     "qwen3_moe_mlp_mxint": Qwen3MoeMLPMXInt,
 }
 
+quantized_glm4_moe_module_map = {
+    "glm4_moe_self_attention_mxfp": Glm4MoeAttentionMXFP,
+    "glm4_moe_self_attention_mxint": Glm4MoeAttentionMXInt,
+    "glm4_moe_rms_norm_minifloat": Glm4MoeRMSNormMinifloat,
+    "glm4_moe_mlp_mxfp": Glm4MoeMLPMXFP,
+    "glm4_moe_mlp_mxint": Glm4MoeMLPMXInt,
+}
+
 quantized_gpt_oss_module_map = {
     "gpt_oss_self_attention_mxfp": GptOssAttentionMXFP,
     "gpt_oss_self_attention_mxint": GptOssAttentionMXInt,
@@ -392,6 +408,7 @@ quantized_module_map = (
     | quantized_llama_module_map
     | quantized_qwen3_module_map
     | quantized_qwen3_moe_module_map
+    | quantized_glm4_moe_module_map
     | quantized_gpt_oss_module_map
     | quantized_llada_module_map
 )

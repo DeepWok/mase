@@ -5,14 +5,26 @@ from copy import deepcopy
 import logging
 import inspect
 
-from transformers.models.roberta.modeling_roberta import (
-    RobertaSelfAttention,
-    RobertaSdpaSelfAttention,
-    RobertaClassificationHead,
-    RobertaIntermediate,
-    RobertaOutput,
-    RobertaSelfOutput,
-)
+try:
+    from transformers.models.roberta.modeling_roberta import (
+        RobertaSelfAttention,
+        RobertaSdpaSelfAttention,
+        RobertaClassificationHead,
+        RobertaIntermediate,
+        RobertaOutput,
+        RobertaSelfOutput,
+    )
+except ImportError:
+    # RobertaSdpaSelfAttention was removed in newer transformers.
+    # Roberta quantization paths won't be available, but other models still work.
+    from transformers.models.roberta.modeling_roberta import (
+        RobertaSelfAttention,
+        RobertaClassificationHead,
+        RobertaIntermediate,
+        RobertaOutput,
+        RobertaSelfOutput,
+    )
+    RobertaSdpaSelfAttention = None
 
 from transformers.models.llama.modeling_llama import (
     LlamaAttention,
@@ -31,6 +43,9 @@ from transformers.models.qwen3_moe.modeling_qwen3_moe import (
     Qwen3MoeMLP,
 )
 
+from transformers.models.glm4_moe.modeling_glm4_moe import (
+    Glm4MoeAttention,
+)
 from transformers.models.gpt_oss.modeling_gpt_oss import (
     GptOssAttention,
 )
@@ -39,10 +54,14 @@ from chop.nn.quantized.modules.llada.modeling_llada import (
     LLaDALlamaBlock,
 )
 
-from transformers.models.bert.modeling_bert import (
-    BertSelfAttention,
-    BertSdpaSelfAttention,
-)
+try:
+    from transformers.models.bert.modeling_bert import (
+        BertSelfAttention,
+        BertSdpaSelfAttention,
+    )
+except ImportError:
+    from transformers.models.bert.modeling_bert import BertSelfAttention
+    BertSdpaSelfAttention = None
 
 roberta_prefix_map = {
     RobertaSdpaSelfAttention: "roberta_self_attention",
@@ -70,6 +89,10 @@ qwen3_moe_prefix_map = {
     Qwen3MoeMLP: "qwen3_moe_mlp",
 }
 
+glm4_moe_prefix_map = {
+    Glm4MoeAttention: "glm4_moe_self_attention",
+}
+
 gpt_oss_prefix_map = {
     GptOssAttention: "gpt_oss_self_attention",
 }
@@ -95,6 +118,8 @@ def check_module_instance(module, prefix_map):
                and the corresponding prefix if it is an instance, otherwise None.
     """
     for cls, name in prefix_map.items():
+        if cls is None:
+            continue  # Skip classes that weren't importable (e.g. RobertaSdpaSelfAttention in newer transformers)
         if isinstance(module, cls):
             return True, name
     return False, None
@@ -284,6 +309,15 @@ def instantiate_qwen3_module(
         layer_idx=module.layer_idx if hasattr(module, "layer_idx") else None,
         q_config=module_args,
     )
+    # Freshly-constructed sub-modules (e.g. Qwen3RMSNorm's q_norm/k_norm
+    # weights) default to fp32; without this, `fp32_weight * bf16_input`
+    # promotes activations to fp32 and breaks downstream matmuls with bf16
+    # KV tensors. Match the original module's dtype/device and copy weights.
+    params = list(module.parameters())
+    if params:
+        device, dtype = params[0].device, params[0].dtype
+        qwen3_module = qwen3_module.to(dtype=dtype, device=device)
+        qwen3_module.load_state_dict(module.state_dict(), strict=True)
     return qwen3_module
 
 
@@ -304,6 +338,17 @@ def instantiate_qwen3_moe_module(
 
 
 def instantiate_gpt_oss_module(
+    module, postfix, prefix, module_map, module_args, network_args
+):
+    cls = module_map[f"{prefix}_{postfix}"]
+    return cls(
+        config=network_args,
+        layer_idx=module.layer_idx if hasattr(module, "layer_idx") else None,
+        q_config=module_args,
+    )
+
+
+def instantiate_glm4_moe_module(
     module, postfix, prefix, module_map, module_args, network_args
 ):
     cls = module_map[f"{prefix}_{postfix}"]
@@ -347,6 +392,9 @@ def instantiate_module(module, postfix, module_map, additional_module_args):
         module, qwen3_moe_prefix_map
     )
     is_qwen3, qwen3_layer_name = check_module_instance(module, qwen3_prefix_map)
+    is_glm4_moe, glm4_moe_layer_name = check_module_instance(
+        module, glm4_moe_prefix_map
+    )
     is_gpt_oss, gpt_oss_layer_name = check_module_instance(module, gpt_oss_prefix_map)
     is_llada, llada_layer_name = check_module_instance(module, llada_prefix_map)
     is_bert, bert_layer_name = check_module_instance(module, bert_prefix_map)
@@ -377,6 +425,10 @@ def instantiate_module(module, postfix, module_map, additional_module_args):
     elif is_qwen3:
         module = instantiate_qwen3_module(
             module, postfix, qwen3_layer_name, module_map, module_args, network_args
+        )
+    elif is_glm4_moe:
+        module = instantiate_glm4_moe_module(
+            module, postfix, glm4_moe_layer_name, module_map, module_args, network_args
         )
     elif is_gpt_oss:
         module = instantiate_gpt_oss_module(

@@ -29,7 +29,7 @@ requirements = [
     "colorlog",
     "pytest",
     "pytorch-lightning",
-    "transformers==4.51",
+    "transformers==5.5.0",
     "toml",
     "timm",
     "pytorch-nlp",

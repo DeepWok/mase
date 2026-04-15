@@ -913,6 +913,73 @@ class LinearMXInt(_LinearBase):
         self.gptq = config.get("gptq", False)
         self.clip_search = config.get("clip_search", False)
 
+    @classmethod
+    def from_linear(cls, linear: torch.nn.Linear, config: dict) -> "LinearMXInt":
+        """Create a LinearMXInt that REUSES the original Linear's Parameters.
+
+        Unlike ``__init__`` which allocates a fresh weight tensor via
+        ``torch.nn.Linear.__init__``, this classmethod shares the original
+        module's ``weight`` and ``bias`` Parameters directly. This is
+        critical for tensor-parallel models: if ``linear.weight`` is a
+        DTensor shard (from HF's ``tp_plan="auto"``), re-allocating would
+        lose the sharding and fail the state-dict copy. By sharing the
+        Parameter, the DTensor is preserved and TP dispatch keeps working.
+
+        The weight is then quantized in place. ``mxint_quantizer`` handles
+        DTensor inputs transparently (each rank quantizes its local shard).
+        """
+        assert config is not None, "config is None!"
+        new = cls.__new__(cls)
+        torch.nn.Module.__init__(new)
+
+        # nn.Linear attributes
+        new.in_features = linear.in_features
+        new.out_features = linear.out_features
+        new.weight = linear.weight          # share Parameter (may be DTensor)
+        new.bias = linear.bias              # share Parameter (may be DTensor)
+
+        # _LinearBase attributes
+        new.pruning_masks = None
+
+        # LinearMXInt attributes
+        new.config = config
+        new.bypass = config.get("bypass", False)
+        new.gptq = config.get("gptq", False)
+        new.clip_search = config.get("clip_search", False)
+
+        # Quantize weight (and optionally bias) in place. This mirrors the
+        # logic in load_state_dict() but skips the state-dict copy.
+        if not new.bypass and not new.gptq:
+            with torch.no_grad():
+                new.weight.data.copy_(
+                    mxint_quantizer(
+                        new.weight.data,
+                        block_size=config["weight_block_size"],
+                        element_bits=config["weight_width"],
+                        block_dim=1,
+                        quantile_search=new.clip_search,
+                    )
+                )
+
+                b_block_size = config.get("bias_block_size")
+                b_element_bits = config.get("bias_width")
+                if (
+                    new.bias is not None
+                    and b_block_size is not None
+                    and b_element_bits is not None
+                ):
+                    new.bias.data.copy_(
+                        mxint_quantizer(
+                            new.bias.data,
+                            block_size=b_block_size,
+                            element_bits=b_element_bits,
+                            block_dim=0,
+                            quantile_search=new.clip_search,
+                        )
+                    )
+
+        return new
+
     def load_state_dict(self, state_dict, strict=True, assign=False):
         """Load pretrained weights, then quantize them in place."""
         result = super().load_state_dict(state_dict, strict=strict, assign=assign)
@@ -962,6 +1029,7 @@ class LinearMXInt(_LinearBase):
         x_block_size = self.config.get("data_in_block_size")
         x_element_bits = self.config.get("data_in_width")
         if x_block_size is not None and x_element_bits is not None:
+            # mxint_quantizer natively handles DTensor inputs (TP-compatible).
             x = mxint_quantizer(
                 x,
                 block_size=x_block_size,

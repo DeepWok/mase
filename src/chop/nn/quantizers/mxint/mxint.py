@@ -46,7 +46,7 @@ def mxint_quantizer_sim(
         percentiles = torch.tensor(
             [1.0, 0.995, 0.99, 0.97, 0.95, 0.93, 0.90, 0.80, 0.70, 0.60, 0.50],
             device=tensor.device,
-            dtype=torch.float32,
+            dtype=tensor.dtype,
         )
 
         device = str(tensor.device)
@@ -166,7 +166,7 @@ def mxint_quantizer_sim(
         out_dq = permute_for_dequantize(
             dequant, tensor_meta.shape, tensor_meta.block_dim
         )
-        out_dq = out_dq.to(dtype or tensor_dtype)
+        out_dq = out_dq.to(tensor_dtype)
 
     return out_dq
 
@@ -222,8 +222,13 @@ def mxint_quantizer(
     Converts tensor to MXINT format with block-wise shared scale
     and integer elements, then dequantizes back.
 
+    Handles DTensor inputs transparently (unwraps, quantizes local shard,
+    re-wraps with the same placement). MX is a pointwise-on-blocks operation,
+    so each rank can quantize its own shard independently as long as
+    shard_size is divisible by block_size along ``block_dim``.
+
     Args:
-        x: Input tensor to quantize
+        x: Input tensor to quantize (torch.Tensor or DTensor)
         block_size: Number of elements per block (e.g., 32)
         element_bits: Bits per element (e.g., 4 or 8)
         block_dim: Dimension to apply block quantization (-1 for last dim)
@@ -231,7 +236,8 @@ def mxint_quantizer(
         quantile_search: Enable quantile-based clipping search
 
     Returns:
-        Quantized tensor in dequantized form
+        Quantized tensor in dequantized form (same type as input:
+        torch.Tensor in, torch.Tensor out; DTensor in, DTensor out).
 
     Example:
         >>> x = torch.randn(4, 32)
@@ -241,11 +247,36 @@ def mxint_quantizer(
         - MXINT8: element_bits=8
         - MXINT4: element_bits=4
     """
+    # Handle DTensor (HF tensor parallelism) by unwrapping, recursing on the
+    # local shard, and re-wrapping with the same placements/mesh.
+    try:
+        from torch.distributed.tensor import DTensor
+    except ImportError:
+        DTensor = None
+
+    if DTensor is not None and isinstance(x, DTensor):
+        placements = x.placements
+        mesh = x.device_mesh
+        local = x.to_local()
+        local_q = mxint_quantizer(
+            local, block_size, element_bits, block_dim, scale_bits, quantile_search,
+        )
+        return DTensor.from_local(local_q, mesh, placements)
+
+    # Handle tensors whose total element count isn't a multiple of block_size
+    # (common in MoE expert forwards where n_matched_tokens is arbitrary).
+    # Pad with zeros at the end, quantize as 1D, then trim + reshape back.
+    if x.numel() % block_size != 0:
+        import torch.nn.functional as F
+        orig_shape = x.shape
+        orig_numel = x.numel()
+        pad = block_size - (orig_numel % block_size)
+        x_padded = F.pad(x.reshape(-1), (0, pad))
+        q_padded = MXIntQuantize.apply(
+            x_padded, block_size, element_bits, -1, scale_bits, quantile_search,
+        )
+        return q_padded[:orig_numel].reshape(orig_shape)
+
     return MXIntQuantize.apply(
-        x,
-        block_size,
-        element_bits,
-        block_dim,
-        scale_bits,
-        quantile_search,
+        x, block_size, element_bits, block_dim, scale_bits, quantile_search,
     )

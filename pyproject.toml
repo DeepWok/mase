@@ -15,7 +15,7 @@ dependencies = [
     "colorlog",
     "pytest",
     "pytorch-lightning",
-    "transformers==4.57",
+    "transformers==5.5.0",
     "timm",
     "pytorch-nlp",
     "datasets==3.3.2",

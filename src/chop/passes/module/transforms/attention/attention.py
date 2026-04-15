@@ -1,10 +1,18 @@
 import torch
-from transformers.models.bert.modeling_bert import (
-    BertSelfAttention,
-    BertSdpaSelfAttention,
-    BertSelfOutput,
-    BertAttention,
-)
+try:
+    from transformers.models.bert.modeling_bert import (
+        BertSelfAttention,
+        BertSdpaSelfAttention,
+        BertSelfOutput,
+        BertAttention,
+    )
+except ImportError:
+    from transformers.models.bert.modeling_bert import (
+        BertSelfAttention,
+        BertSelfOutput,
+        BertAttention,
+    )
+    BertSdpaSelfAttention = None
 from transformers.models.gpt2.modeling_gpt2 import (
     GPT2Attention,
     GPT2Block,
