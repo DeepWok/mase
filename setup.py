@@ -48,7 +48,7 @@ requirements = [
     "stable-baselines3[extra]",
     "h5py",
     "scikit-learn",
-    "scipy==1.14",
+    "scipy>=1.15",
     "onnxruntime",
     "matplotlib",
     "sphinx-rtd-theme",
@@ -61,7 +61,7 @@ requirements = [
     "kornia",
     "einops",
     "ghp-import",
-    "optimum==1.24.0",
+    # "optimum==1.24.0",  # pinned transformers<4.58; incompatible with transformers==5.5.0
     "pytest-profiling",
     "myst_parser",
     "pytest-cov",
