@@ -106,6 +106,13 @@ bert_prefix_map = {
     BertSdpaSelfAttention: "bert_self_attention",
 }
 
+# Original module classes whose quantized replacement defines a `from_self`
+# classmethod. These go through the generic `instantiate_from_self` helper,
+# skipping family-specific instantiation logic.
+from_self_prefix_map = {
+    Qwen3Attention: "qwen3_self_attention",
+}
+
 
 def check_module_instance(module, prefix_map):
     """
@@ -300,26 +307,17 @@ def instantiate_llama_module(
     return llama_module
 
 
-def instantiate_qwen3_module(
+def instantiate_from_self(
     module, postfix, prefix, module_map, module_args, network_args
 ):
-    qwen3_cls = module_map[f"{prefix}_{postfix}"]
-    qwen3_module = qwen3_cls(
-        config=network_args,
-        layer_idx=module.layer_idx if hasattr(module, "layer_idx") else None,
-        q_config=module_args,
-    )
-    # Freshly-constructed sub-modules (e.g. Qwen3RMSNorm's q_norm/k_norm
-    # weights) default to fp32; without this, `fp32_weight * bf16_input`
-    # promotes activations to fp32 and breaks downstream matmuls with bf16
-    # KV tensors. Match the original module's dtype/device and copy weights.
-    params = list(module.parameters())
-    if params:
-        device, dtype = params[0].device, params[0].dtype
-        qwen3_module = qwen3_module.to(dtype=dtype, device=device)
-        qwen3_module.load_state_dict(module.state_dict(), strict=True)
-    return qwen3_module
+    """Build the quantized replacement via the class's own `from_self` classmethod.
 
+    Quantized modules that know how to reconstruct themselves from the original
+    (matching dtype/device and copying state_dict) expose a `from_self`
+    classmethod. This helper just dispatches to it — no type-specific logic.
+    """
+    cls = module_map[f"{prefix}_{postfix}"]
+    return cls.from_self(module, q_config=module_args)
 
 def instantiate_qwen3_moe_module(
     module, postfix, prefix, module_map, module_args, network_args
@@ -398,11 +396,18 @@ def instantiate_module(module, postfix, module_map, additional_module_args):
     is_gpt_oss, gpt_oss_layer_name = check_module_instance(module, gpt_oss_prefix_map)
     is_llada, llada_layer_name = check_module_instance(module, llada_prefix_map)
     is_bert, bert_layer_name = check_module_instance(module, bert_prefix_map)
+    has_from_self, from_self_layer_name = check_module_instance(
+        module, from_self_prefix_map
+    )
 
     module_args = additional_module_args["config"]
     network_args = additional_module_args.get("network_config", None)
 
-    if isinstance(module, torch.nn.Linear):
+    if has_from_self:
+        module = instantiate_from_self(
+            module, postfix, from_self_layer_name, module_map, module_args, network_args
+        )
+    elif isinstance(module, torch.nn.Linear):
         module = instantiate_linear(module, postfix, module_map, module_args)
     elif isinstance(module, torch.nn.Conv2d):
         module = instantiate_conv2d(module, postfix, module_map, module_args)
@@ -421,10 +426,6 @@ def instantiate_module(module, postfix, module_map, additional_module_args):
     elif is_qwen3_moe:
         module = instantiate_qwen3_moe_module(
             module, postfix, qwen3_moe_layer_name, module_map, module_args, network_args
-        )
-    elif is_qwen3:
-        module = instantiate_qwen3_module(
-            module, postfix, qwen3_layer_name, module_map, module_args, network_args
         )
     elif is_glm4_moe:
         module = instantiate_glm4_moe_module(

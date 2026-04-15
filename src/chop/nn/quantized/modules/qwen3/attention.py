@@ -43,7 +43,7 @@ class Qwen3AttentionMXFP(Qwen3Attention):
         hidden_states: Tensor,
         position_embeddings: Tuple[Tensor, Tensor],
         attention_mask: Optional[Tensor],
-        past_key_value: Optional[Cache] = None,
+        past_key_values: Optional[Cache] = None,
         cache_position: Optional[LongTensor] = None,
         **kwargs,
     ) -> Tuple[Tensor, Optional[Tensor], Optional[Tuple[Tensor]]]:
@@ -76,7 +76,7 @@ class Qwen3AttentionMXFP(Qwen3Attention):
                 sin,
             )
 
-        if past_key_value is not None:
+        if past_key_values is not None:
             cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
             if not self.kv_cache_bypass:
                 key_states, value_states = kv_cache_mxfp(
@@ -84,7 +84,7 @@ class Qwen3AttentionMXFP(Qwen3Attention):
                     value_states,
                     self.kv_cache_config,
                 )
-            key_states, value_states = past_key_value.update(
+            key_states, value_states = past_key_values.update(
                 key_states,
                 value_states,
                 self.layer_idx,
@@ -113,7 +113,7 @@ class Qwen3AttentionMXFP(Qwen3Attention):
         return attn_output, attn_weights
 
     @classmethod
-    def from_attention(cls, attention: Qwen3Attention, q_config: dict = None):
+    def from_self(cls, attention: Qwen3Attention, q_config: dict = None):
         new_attn = cls(
             config=attention.config,
             layer_idx=attention.layer_idx,
@@ -150,7 +150,7 @@ class Qwen3AttentionMXInt(Qwen3Attention):
         hidden_states: Tensor,
         position_embeddings: Tuple[Tensor, Tensor],
         attention_mask: Optional[Tensor],
-        past_key_value: Optional[Cache] = None,
+        past_key_values: Optional[Cache] = None,
         cache_position: Optional[LongTensor] = None,
         **kwargs,
     ) -> Tuple[Tensor, Optional[Tensor], Optional[Tuple[Tensor]]]:
@@ -183,7 +183,7 @@ class Qwen3AttentionMXInt(Qwen3Attention):
                 sin,
             )
 
-        if past_key_value is not None:
+        if past_key_values is not None:
             cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
             if not self.kv_cache_bypass:
                 key_states, value_states = kv_cache_mxint(
@@ -191,13 +191,14 @@ class Qwen3AttentionMXInt(Qwen3Attention):
                     value_states,
                     self.kv_cache_config,
                 )
-            key_states, value_states = past_key_value.update(
+            key_states, value_states = past_key_values.update(
                 key_states,
                 value_states,
                 self.layer_idx,
                 cache_kwargs,
             )
 
+        assert self.config._attn_implementation == "eager", "Only eager attention is supported for MXInt-quantized Qwen3Attention"
         attn_output, attn_weights = _eager_attention_forward_mxint(
             self,
             query_states,
@@ -214,13 +215,12 @@ class Qwen3AttentionMXInt(Qwen3Attention):
             softmax_config=self.softmax_config,
             **kwargs,
         )
-
         attn_output = attn_output.reshape(*input_shape, -1).contiguous()
         attn_output = self.o_proj(attn_output)
         return attn_output, attn_weights
 
     @classmethod
-    def from_attention(cls, attention: Qwen3Attention, q_config: dict = None):
+    def from_self(cls, attention: Qwen3Attention, q_config: dict = None):
         new_attn = cls(
             config=attention.config,
             layer_idx=attention.layer_idx,
