@@ -176,10 +176,3 @@ MASE_TYPE_MAP = {
     "output": {"type": "output"},
 }
 
-MASE_HARDWARE_TOOLCHAIN = [
-    "INTERNAL_RTL",
-    "EXTERNAL_RTL",
-    "INTERNAL_HLS",
-    "EXTERNAL_HLS",
-    "MLIR_HLS",
-]

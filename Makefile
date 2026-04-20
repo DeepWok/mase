@@ -67,11 +67,6 @@ test-sw:
 		$(sw_test_dir)
 
 test-all: test-sw
-	mkdir -p ./tmp
-	(cd tmp; python3 ../scripts/test-torch-mlir.py || exit 1)
-
-build:
-	bash scripts/build-llvm.sh || exit 1
 
 clean:
 	rm -rf llvm
