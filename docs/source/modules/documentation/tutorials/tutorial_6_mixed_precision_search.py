@@ -37,14 +37,14 @@ dataset_name = "imdb"
 # ── Step 1: Load base model ────────────────────────────────────────────────────
 print("\n[1/4] Loading base model...", flush=True)
 
-# Option A: load from HuggingFace directly
-base_model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
-print(f"      Loaded {checkpoint} from HuggingFace  ✓", flush=True)
+# Option A: load from Tutorial 5 NAS checkpoint
+with open(f"{Path.home()}/tutorial_5_best_model.pkl", "rb") as f:
+    base_model = dill.load(f)
+print("      Loaded from tutorial_5_best_model.pkl  ✓", flush=True)
 
-# Option B: load from Tutorial 5 NAS checkpoint (comment out Option A above)
-# with open(f"{Path.home()}/tutorial_5_best_model.pkl", "rb") as f:
-#     base_model = dill.load(f)
-# print("      Loaded from tutorial_5_best_model.pkl  ✓", flush=True)
+# Option B: load from HuggingFace directly (use if Tutorial 5 checkpoint is not available)
+# base_model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
+# print(f"      Loaded {checkpoint} from HuggingFace  ✓", flush=True)
 
 # ── Step 2: Load dataset ───────────────────────────────────────────────────────
 print("\n[2/4] Loading and tokenizing IMDb dataset...", flush=True)

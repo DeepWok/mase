@@ -24,9 +24,9 @@ The following tutorials show how to use Mase for standard model compression and 
    :maxdepth: 1
 
    tutorials/tutorial_1_introduction_to_mase_script
-   tutorials/tutorial_2_lora_finetune
-   tutorials/tutorial_3_qat
-   tutorials/tutorial_4_pruning
+   tutorials/tutorial_2_lora_finetune_script
+   tutorials/tutorial_3_qat_script
+   tutorials/tutorial_4_pruning_script
 
 Architecture Search
 ---------------------
@@ -36,8 +36,8 @@ The following show how to effectively run Neural Architecture Search (NAS) and m
 .. toctree::
    :maxdepth: 1
 
-   tutorials/tutorial_5_nas_optuna
-   tutorials/tutorial_6_mixed_precision_search
+   tutorials/tutorial_5_nas_optuna_script
+   tutorials/tutorial_6_mixed_precision_search_script
 
 Advanced Topics
 ---------------

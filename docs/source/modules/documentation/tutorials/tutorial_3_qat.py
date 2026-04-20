@@ -16,21 +16,20 @@ from transformers import AutoModelForSequenceClassification
 import chop.passes as passes
 from chop import MaseGraph
 
-# Option A: start from scratch
-model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
-model.config.problem_type = "single_label_classification"
+# Option A: load from Tutorial 2 LoRA checkpoint
+mg = MaseGraph.from_checkpoint(f"{Path.home()}/tutorial_2_lora")
+print("      Loaded from tutorial_2_lora  ✓", flush=True)
 
-mg = MaseGraph(
-    model,
-    hf_input_names=["input_ids", "attention_mask", "labels"],
-)
-mg, _ = passes.init_metadata_analysis_pass(mg)
-mg, _ = passes.add_common_metadata_analysis_pass(mg)
-print("      Fresh MaseGraph built  ✓", flush=True)
-
-# Option B: load from Tutorial 2 LoRA checkpoint (comment out Option A above)
-# mg = MaseGraph.from_checkpoint(f"{Path.home()}/tutorial_2_lora")
-# print("      Loaded from tutorial_2_lora  ✓", flush=True)
+# Option B: start from scratch (use if Tutorial 2 checkpoint is not available)
+# model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
+# model.config.problem_type = "single_label_classification"
+# mg = MaseGraph(
+#     model,
+#     hf_input_names=["input_ids", "attention_mask", "labels"],
+# )
+# mg, _ = passes.init_metadata_analysis_pass(mg)
+# mg, _ = passes.add_common_metadata_analysis_pass(mg)
+# print("      Fresh MaseGraph built  ✓", flush=True)
 
 # ── Step 2: Baseline evaluation ────────────────────────────────────────────────
 print("\n[2/5] Loading dataset and evaluating baseline accuracy...", flush=True)
