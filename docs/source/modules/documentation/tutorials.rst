@@ -23,7 +23,7 @@ The following tutorials show how to use Mase for standard model compression and 
 .. toctree::
    :maxdepth: 1
 
-   tutorials/tutorial_1_introduction_to_mase
+   tutorials/tutorial_1_introduction_to_mase_script
    tutorials/tutorial_2_lora_finetune
    tutorials/tutorial_3_qat
    tutorials/tutorial_4_pruning

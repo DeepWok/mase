@@ -25,7 +25,7 @@ cd src
 You can fetch all command-line arguments:
 
 ```text
-[nix-shell:~/Projects/mase/src]$ ./ch -help
+[~/Projects/mase/src]$ ./ch -help
 INFO     Set logging level to debug
 WARNING  TensorRT pass is unavailable because the following dependencies are not installed: pytorch_quantization, tensorrt, pycuda, cuda.
 usage: ch [--config PATH] [--task TASK] [--load PATH] [--load-type] [--batch-size NUM] [--debug] [--log-level] [--report-to {wandb,tensorboard}] [--seed NUM] [--quant-config TOML]
@@ -109,7 +109,7 @@ information:
 
 Maintained by the DeepWok Lab. Raise issues at https://github.com/JianyiCheng/mase-tools/issues
 (.venv)
-[nix-shell:~/Projects/mase/src]$
+[~/Projects/mase/src]$
 ```
 
 ### Training implementation
