@@ -1,11 +1,9 @@
 Tutorial 1: Introduction to the Mase IR, MaseGraph and Torch FX passes
 =======================================================================
 
-This tutorial is maintained as a plain Python script.
-
-- Student run command: ``uv run python docs/source/modules/documentation/tutorials/tutorial_1_introduction_to_mase.py``
-- Single source of truth: ``docs/source/modules/documentation/tutorials/tutorial_1_introduction_to_mase.py``
-- This page only documents the flow and references code with ``literalinclude``.
+In this tutorial, you will import a pretrained model into MASE by generating a compute graph through
+``MaseGraph``, then run analysis and transform passes on top of that graph. The end-to-end flow matches
+the old notebook version but is now optimized for script-based execution and maintenance.
 
 Run this tutorial
 -----------------
@@ -15,6 +13,147 @@ From the repository root:
 .. code-block:: bash
 
    uv run python docs/source/modules/documentation/tutorials/tutorial_1_introduction_to_mase.py
+
+What this tutorial covers
+-------------------------
+
+1. Load a pretrained ``bert-tiny`` sequence classification model from HuggingFace.
+2. Build and inspect an FX graph through ``MaseGraph``.
+3. Raise graph metadata with analysis passes.
+4. Write and run a custom analysis pass (count dropout nodes).
+5. Write and run a custom transform pass (remove dropout nodes).
+6. Export and reload the transformed ``MaseGraph`` checkpoint.
+
+Expected terminal output (excerpt)
+----------------------------------
+
+The script prints progress markers for each step. A successful run should contain output similar to:
+
+.. code-block:: text
+
+   ============================================================
+   Tutorial 1: Introduction to MaseGraph & FX passes
+   ============================================================
+
+   [1/6] Loading pretrained bert-tiny from HuggingFace...
+         Model loaded. Parameters: 4,386,178
+
+   [2/6] Building MaseGraph and drawing SVG...
+         Graph saved to .../docs/source/modules/documentation/tutorials/bert-base-uncased.svg
+         FX node type sanity check passed.
+
+   [3/6] Running metadata analysis passes...
+         Metadata analysis passes completed  ✓
+
+   [4/6] Running count_dropout_analysis_pass...
+   INFO     Found dropout module: bert.embeddings.dropout
+   INFO     Found dropout module: bert.encoder.layer.0.attention.output.dropout
+   INFO     Found dropout module: bert.encoder.layer.0.output.dropout
+   INFO     Found dropout module: bert.encoder.layer.1.attention.output.dropout
+   INFO     Found dropout module: bert.encoder.layer.1.output.dropout
+   INFO     Found dropout module: dropout
+         Dropout count: 6
+
+   [5/6] Running remove_dropout_transform_pass...
+   INFO     Removing dropout module: bert.embeddings.dropout
+   INFO     Removing dropout module: bert.encoder.layer.0.attention.output.dropout
+   INFO     Removing dropout module: bert.encoder.layer.0.output.dropout
+   INFO     Removing dropout module: bert.encoder.layer.1.attention.output.dropout
+   INFO     Removing dropout module: bert.encoder.layer.1.output.dropout
+   INFO     Removing dropout module: dropout
+         Verified: 0 dropout nodes remain  ✓
+
+   [6/6] Exporting MaseGraph checkpoint...
+   INFO     Exporting MaseGraph to .../tutorial_1.pt, .../tutorial_1.mz
+         Exported to .../tutorial_1
+         Reloaded from checkpoint  ✓
+
+   ============================================================
+   Tutorial 1 complete!
+   ============================================================
+
+.. note::
+
+   During step ``[3/6]``, some environments print large tensor dumps from underlying libraries.
+   This is expected and can be ignored as long as the run reaches ``Tutorial 1 complete!``.
+
+.. note::
+
+   Some runs may also print warnings from optional dependencies (for example CUDA or model loading
+   warnings). As long as the script finishes and prints ``Tutorial 1 complete!``, the tutorial run
+   is considered successful.
+
+Generate an FX graph for the model
+----------------------------------
+
+To import a model into MASE, you first need a computation graph representation. MASE uses Torch FX,
+which provides a high-level graph that is easy to inspect and transform from Python.
+
+When you construct ``MaseGraph(model)``, symbolic tracing records model operations and builds an FX graph.
+The script writes a graph visualization to ``bert-base-uncased.svg`` in the tutorial script directory.
+
+FX graph node types quick primer
+--------------------------------
+
+FX graphs include six core node types:
+
+- ``placeholder``: function input node.
+- ``get_attr``: reads module attributes/parameters.
+- ``call_function``: calls a free function.
+- ``call_module``: calls a ``torch.nn.Module`` in the module hierarchy.
+- ``call_method``: calls a method on a value (for example a tensor method).
+- ``output``: return node of the graph.
+
+The script includes a short ReLU sanity check to show how one operation can appear as function/method/module
+forms with equivalent outputs.
+
+Inspect the generated graph
+---------------------------
+
+The full graph generated by the script is shown below.
+
+.. figure:: imgs/bert-base-uncased.svg
+   :width: 100%
+   :align: center
+
+   FX graph generated from ``prajjwal1/bert-tiny`` in Tutorial 1.
+
+Use this graph to identify module boundaries and operation flow. A useful exercise is to locate attention
+subgraphs and compare them with the corresponding HuggingFace BERT implementation.
+
+.. note::
+
+   For documentation rendering, this page indexes the static copy at ``imgs/bert-base-uncased.svg``.
+   When you run the script, it writes the generated SVG to ``bert-base-uncased.svg`` next to
+   ``tutorial_1_introduction_to_mase.py``.
+
+Understanding the Mase IR
+-------------------------
+
+MASE IR is built on top of Torch FX. FX captures executable graph structure, while MASE adds domain-specific
+metadata and pass infrastructure used by MASE optimization workflows.
+
+In this tutorial, the key transition step is running metadata analysis passes so each node gets the metadata
+required by downstream passes.
+
+Understanding the pass system
+-----------------------------
+
+A pass is a function that iterates over graph nodes and returns:
+
+1. the updated graph
+2. a ``pass_outputs`` dictionary
+
+Both analysis and transform passes follow the same callable contract, which allows pass chaining.
+
+.. code-block:: python
+
+   def dummy_pass(mg, pass_args={}):
+       pass_outputs = {}
+       for node in mg.fx_graph.nodes:
+           # do something
+           ...
+       return mg, pass_outputs
 
 Step 1: Load a pretrained model
 -------------------------------
@@ -71,4 +210,23 @@ Step 6: Export and reload MaseGraph
    :language: python
    :start-after: # [export:start]
    :end-before: # [export:end]
+
+Try it yourself
+---------------
+
+In ``remove_dropout_transform_pass``, temporarily comment out ``node.replace_all_uses_with(parent_node)``
+and run the script again. You should see graph consistency/runtime issues because downstream nodes still
+reference the removed dropout node.
+
+This is a useful exercise to understand why rewiring users is required before deleting a node.
+
+What success looks like
+-----------------------
+
+After a successful run:
+
+- The SVG is generated at ``docs/source/modules/documentation/tutorials/bert-base-uncased.svg``.
+- Dropout count is reported before transform (in your run: ``6``).
+- Dropout count becomes ``0`` after transform.
+- Checkpoint files are exported to your home directory as ``tutorial_1.pt`` and ``tutorial_1.mz``.
 
