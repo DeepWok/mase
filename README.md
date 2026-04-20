@@ -32,8 +32,6 @@ Mase is a Machine Learning compiler based on PyTorch FX, maintained by researche
   - Quantization-Aware Training (QAT): finetuning quantized models to minimize accuracy loss.
   - And more!
 
-- Hardware Generation: automatic generation of high-performance FPGA accelerators for arbitrary Pytorch models, through the Emit Verilog flow.
-
 - Distributed Deployment (Beta): Automatic parallelization of models across distributed GPU clusters, based on the Alpa algorithm.
 
 For more details, refer to the Tutorials. If you enjoy using the framework, you can support us by starring the repository on GitHub!
@@ -59,13 +57,9 @@ For more details, refer to the Tutorials. If you enjoy using the framework, you 
 
 This repo contains the following directories:
 * `src/chop` - MASE's software stack
-* `src/mase_components` - Internal hardware library
-* `src/mase_cocotb` - Internal hardware testing flow
-* `src/mase_hls` - HLS component of MASE
 * `scripts` - Run and test scripts  
 * `test` - Unit testing 
 * `docs` - Documentation
-* `mlir-air` - MLIR AIR for ACAP devices
 * `setup.py` - Installation entry point
 * `Docker` - Docker container configurations
 
