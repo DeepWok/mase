@@ -1,6 +1,5 @@
 from . import graph
 from . import module
-from . import onnx
 
 from .graph.analysis import (
     add_common_metadata_analysis_pass,
@@ -22,7 +21,6 @@ from .graph.transforms import (
     summarize_quantization_analysis_pass,
     conv_bn_fusion_transform_pass,
     logicnets_fusion_transform_pass,
-    onnx_annotate_transform_pass,
     raise_granularity_transform_pass,
     patch_metadata_transform_pass,
     insert_lora_adapter_transform_pass,
@@ -32,10 +30,6 @@ from .module.analysis import calculate_avg_bits_module_analysis_pass
 from .module.transforms import (
     quantize_module_transform_pass,
     resharding_transform_pass,
-)
-
-from .onnx.analysis import (
-    export_fx_graph_analysis_pass,
 )
 
 from .graph.analysis.autosharding import autosharding_analysis_pass

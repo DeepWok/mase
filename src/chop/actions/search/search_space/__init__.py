@@ -4,22 +4,10 @@ from .quantization import (
 )
 from .base import SearchSpaceBase
 
-from chop.tools.check_dependency import check_deps_tensorRT_pass
-
-# from .nas_bert import NasBertSpace
-
 SEARCH_SPACE_MAP = {
     "graph/quantize/mixed_precision_ptq": GraphSearchSpaceMixedPrecisionPTQ,
     "module/manual_hf/quantize/llm_mixed_precision_ptq": ManualHFModuleSearchSpaceMixedPrecisionPTQ,
 }
-
-if check_deps_tensorRT_pass(silent=True):
-    from .trt import GraphSearchSpaceTRTMixedPrecisionPTQ
-
-    # enable the search space for tensorrt if it is correctly installed
-    SEARCH_SPACE_MAP["graph/tensorrt/mixed_precision_ptq"] = (
-        GraphSearchSpaceTRTMixedPrecisionPTQ,
-    )
 
 
 def get_search_space_cls(name: str) -> SearchSpaceBase:

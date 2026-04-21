@@ -39,16 +39,6 @@ The following show how to effectively run Neural Architecture Search (NAS) and m
    tutorials/tutorial_5_nas_optuna_script
    tutorials/tutorial_6_mixed_precision_search_script
 
-Advanced Topics
----------------
-
-.. toctree::
-   :titlesonly:
-
-   tutorials/advanced/tensorRT_quantization_tutorial
-   tutorials/advanced/onnxrt_quantization_tutorial
-   tutorials/advanced/cli
-
 
 Developer Guide
 ---------------
