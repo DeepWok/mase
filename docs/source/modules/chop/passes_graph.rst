@@ -48,9 +48,6 @@ Summary of MaseGraph Analysis Passes
   * - :py:meth:`~chop.passes.graph.analysis.pruning.hook_inspector.hook_inspection_analysis_pass`
     - `test_hook_inspection_analysis_pass <https://github.com/DeepWok/mase/blob/main/test/passes/graph/anlysis/pruning/test_hook_inspect.py>`_
     - Provide hook information of the modules
-  * - :py:meth:`~chop.passes.graph.analysis.runtime.runtime_analysis.runtime_analysis_pass`
-    - fill me
-    - Perform runtime analysis on the given graph (MaseGraph, TensorRT, ONNX models)
   * - :py:meth:`~chop.passes.graph.analysis.verify.verify.verify_metadata_analysis_pass`
     - fill me
     - fill me
@@ -73,7 +70,6 @@ Summary of MaseGraph Analysis Passes
   analysis/verify
   analysis/quantization
   analysis/pruning
-  analysis/runtime
 
 
 Summary of MaseGraph Transform Passes
@@ -104,18 +100,6 @@ Summary of MaseGraph Transform Passes
   * - :py:meth:`~chop.passes.graph.transforms.utils.logicnets_fusion_transform_pass`
     - `test_logicnets_fusion <https://github.com/DeepWok/mase/blob/main/test/passes/graph/transforms/utils/test_conv_bn_fusion.py>`_ (DEV, Disabled) 
     - Perform LogicNets fusion on the given graph (DEV, Disabled) 
-  * - :py:meth:`~chop.passes.graph.transforms.utils.onnx_annotate_transform_pass`
-    - NA (DEV, Disabled) 
-    - Convert MaseGraph to ONNX and annotate the relevant layers with sparsity information (DEV, Disabled) 
-  * - :py:meth:`~chop.passes.graph.transforms.tensorrt.quantize.calibrate.tensorrt_fake_quantize_transform_pass`
-    - Apply TensorRT fake quantization to the given graph for INT8 quantization calibration
-    - fille me
-  * - :py:meth:`~chop.passes.graph.transforms.tensorrt.quantize.calibrate.tensorrt_calibrate_transform_pass`
-    - Apply TensorRT calibration to the given graph for INT8 quantization
-    - fille me
-  * - :py:meth:`~chop.passes.graph.transforms.tensorrt.quantize.fine_tune.tensorrt_fine_tune_transform_pass`
-    - Apply TensorRT fine tune to the given graph for quantization aware training
-    - fille me
 
 
 .. toctree::
@@ -125,7 +109,6 @@ Summary of MaseGraph Transform Passes
   transform/pruning
   transform/quantize
   transform/utils
-  transform/tensorrt
 
 
 Summary of MaseGraph Interface Passes
@@ -150,17 +133,9 @@ Summary of MaseGraph Interface Passes
   * - :py:meth:`~chop.passes.graph.interface.save_and_load.load_node_meta_param_interface_pass`
     - fill me
     - fill me
-  * - :py:meth:`~chop.passes.graph.interface.tensorrt.quantize.tensorrt_engine_interface_pass`
-    - Converts the given graph to a TensorRT engine model
-    - fill me
-  * - :py:meth:`~chop.passes.graph.interface.onnxrt.onnx_runtime.onnx_runtime_interface_pass`
-    - Converts the given graph to a ONNXRuntime model
-    - fill me
 
 .. toctree::
   :maxdepth: 2
   :caption: Full list of graph-level interface passes
 
   interface/save_and_load
-  interface/tensorrt
-  interface/onnxrt

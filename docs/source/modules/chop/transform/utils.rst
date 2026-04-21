@@ -10,8 +10,3 @@ logicnets\_fusion\_transform\_pass
 ----------------------------------
 
 .. autofunction:: chop.passes.graph.transforms.utils.logicnets_fusion_transform_pass
-
-onnx\_annotate\_transform\_pass
--------------------------------
-
-.. autofunction:: chop.passes.graph.transforms.utils.onnx_annotate_transform_pass

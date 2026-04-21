@@ -41,14 +41,6 @@ chop.tools.logger
    :undoc-members:
    :show-inheritance:
 
-chop.tools.onnx_operators
-------------------------------------------------------
-
-.. automodule:: chop.tools.onnx_operators
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 chop.tools.registry
 ------------------------------------------------------
 
