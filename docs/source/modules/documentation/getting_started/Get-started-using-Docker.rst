@@ -1,47 +1,61 @@
 Getting Started using Docker
 =============================
 
-Install Conda (for the first time)
------------------------------------
+Docker provides a pre-built environment with all MASE dependencies installed, which is useful for users who want to avoid manual environment setup, or who need a reproducible environment across different machines.
 
-If you don't have ``Docker`` installed yet, follow the instructions `here <https://docs.docker.com/engine/install/>`_ to install on your platform.
+Prerequisites
+-------------
 
-Install environment using Docker
------------------------------------
+1. Install `Docker Desktop <https://docs.docker.com/get-docker/>`_ for your platform (Linux, macOS, or Windows).
 
-1. Start by cloning mase:
+2. **For GPU support (Linux only):** Install the `NVIDIA Container Toolkit <https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html>`_ so that Docker containers can access your NVIDIA GPU.
 
-.. code-block:: shell
+   .. note::
 
-  git clone git@github.com:DeepWok/mase.git
+       GPU passthrough is only supported on Linux hosts with an NVIDIA GPU. On macOS (including Apple Silicon) and Windows, containers run in CPU-only mode.
 
-2. Create your own branch to work on:
+Pull the MASE Docker Image
+--------------------------
 
-.. code-block:: shell
-
-  cd mase
-  git checkout -b your_branch_name
-
-Launching Docker
------------------------------------
-
-3. If you're an Imperial College student running MASE on a CAS server (ee-beholder/ee-kraken), you can just run the following commands to use the existing docker container.
+The pre-built MASE image is hosted on Docker Hub:
 
 .. code-block:: shell
 
-  make shell
+    docker pull bingleilou/mase-docker-cpu-triton:latest
 
-If you do not have access to one of our servers and need access to Vivado/Vitis toolflows, you need to rebuild your docker container from scratch by running the following command:
+Run the Container
+-----------------
+
+**CPU only:**
 
 .. code-block:: shell
 
-  make shell vhls=$YOUR_VHLS_PATH vhls_version=$YOUR_VHLS_VERSION local=1
+    docker run -it --rm \
+        -v $(pwd):/workspace \
+        bingleilou/mase-docker-cpu-triton:latest bash
 
-The first argument points to your Xilinx tool directory and you should see the following folder under the path:
- 
+**With GPU access (Linux + NVIDIA only):**
+
 .. code-block:: shell
 
-  DocNav  Model_Composer  Vitis  Vitis_HLS  Vivado  xic
+    docker run -it --rm --gpus all \
+        -v $(pwd):/workspace \
+        bingleilou/mase-docker-cpu-triton:latest bash
 
-The second argument indicates your Xilinx tool version, e.g. 2023.1.
-The last argument asks to build the docker container locally with the new arguments.
+The ``-v $(pwd):/workspace`` flag mounts your current directory into the container so you can access your local files.
+
+Clone and Run MASE Inside the Container
+----------------------------------------
+
+Once inside the container shell:
+
+.. code-block:: shell
+
+    git clone https://github.com/DeepWok/mase.git
+    cd mase
+    uv run python docs/source/modules/documentation/tutorials/tutorial_1_introduction_to_mase.py
+
+Imperial College Students
+--------------------------
+
+If you are an Imperial College student working on the ADLS module and need access to a GPU server, refer to :doc:`Get-started-students` for instructions on connecting to the department servers.

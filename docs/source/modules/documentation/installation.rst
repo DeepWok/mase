@@ -1,11 +1,7 @@
 Installation
 =============================
 
-To use MASE, you can easily create an environment with all required dependendies using Docker or Anaconda. Follow the instructions on the links below according to your preferred method.
-
-.. hint::
-
-    Some parts of the flow may assume you have a version of Vivado/Vitis installed. Other parts, such as the emit verilog flow, require Verilator, which is included in the Docker container, but not on the Conda environment. If you prefer using Conda, you can just install Verilator locally.
+To use MASE, you can create an environment with all required dependencies using ``uv`` (recommended), Docker, or Anaconda. Follow the instructions on the links below according to your preferred method.
 
 .. toctree::
     :maxdepth: 1
@@ -40,17 +36,3 @@ To import a model into MASE and use all its features, the following options are 
     model = MyModel()
     mg = MaseGraph(model)
 
-* Import a model using the ONNX backend.
-
-    * HuggingFace models can be imported using the :code:`MaseOnnxGraph.from_pretrained` method, which first exports an ONNX representation of the model, then imports it into MASE. See list of supported models `here <https://huggingface.co/docs/optimum/en/exporters/onnx/overview>`_.
-
-    * Any other ONNX models can be directly imported using the :code:`export_fx_graph` analysis pass.
-
-.. code-block:: python
-
-    from chop import MaseOnnxGraph
-    from chop.passes export_fx_graph_analysis_pass
-
-    pretrained = "bert-base-uncased"
-    og = MaseOnnxGraph.from_pretrained(pretrained)
-    mg, _ = export_fx_graph_analysis_pass(og)
