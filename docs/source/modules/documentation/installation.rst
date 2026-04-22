@@ -1,14 +1,15 @@
 Installation
 =============================
 
-To use MASE, you can create an environment with all required dependencies using ``uv`` (recommended), Docker, or Anaconda. Follow the instructions on the links below according to your preferred method.
+To use MASE, you can set up the environment using one of the following methods. ``uv`` is recommended for local development, and Docker for a fully isolated environment.
 
 .. toctree::
     :maxdepth: 1
 
-    getting_started/Get-started-using-Anaconda
+    getting_started/Get-started-using-uv
     getting_started/Get-started-using-Docker
     getting_started/Get-started-students
+
 
 Import a model
 ----------------
