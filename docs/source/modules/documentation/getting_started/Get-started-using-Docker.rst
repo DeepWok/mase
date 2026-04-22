@@ -57,6 +57,40 @@ Set Up and Run MASE
         -v $(pwd):/workspace \
         docker.io/deepwok/mase-docker-gpu:latest bash
 
+.. note::
+
+   **On systems using Podman as a Docker emulator (e.g. RHEL/CentOS 9):**
+
+   SELinux will block access to the mounted volume. Add ``:z`` to the volume mount flag:
+
+   .. code-block:: shell
+
+      docker run -it --rm \
+          -v $(pwd):/workspace:z \
+          docker.io/deepwok/mase-docker-cpu:latest bash
+
+   The ``:z`` flag relabels the directory so SELinux allows container access.
+
+   The standard ``--gpus all`` flag does not work with Podman. Use the following flags instead:
+
+   .. code-block:: shell
+
+      docker run -it --rm \
+          --security-opt=label=disable \
+          --device nvidia.com/gpu=all \
+          -v $(pwd):/workspace:z \
+          docker.io/deepwok/mase-docker-gpu:latest bash
+
+   - ``--device nvidia.com/gpu=all`` replaces ``--gpus all`` for Podman's CDI-based GPU passthrough.
+   - ``--security-opt=label=disable`` disables SELinux restrictions on the container.
+   Validate GPU access inside the container:
+
+   .. code-block:: shell
+
+       nvidia-smi
+       python3 -c "import torch; print(torch.cuda.is_available())"
+
+
 3. Inside the container, run a tutorial directly (MASE is pre-installed in the image):
 
 .. code-block:: shell

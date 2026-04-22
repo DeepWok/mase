@@ -47,20 +47,32 @@ MASE uses ``uv`` for modern dependency management. The environment state is defi
 How to run code with uv
 ------------------------
 
-In the ``uv`` workflow, the standard way to execute commands is via ``uv run``.
-This ensures the command runs within the correct virtual environment without needing to manually activate it.
+There are two equivalent ways to run code in the ``uv`` environment:
 
-1. **Running Python scripts** — use ``uv run python`` instead of just ``python``:
+**Option A — Use** ``uv run``
+
+No need to activate the environment manually. Prefix every command with ``uv run``:
 
 .. code-block:: bash
 
     uv run python path/to/your_script.py
+    uv run pytest test/
 
-2. **Running tests**:
+**Option B — Activate the virtual environment**
+
+Activate the ``.venv`` created by ``uv sync``, then use ``python`` directly as normal:
 
 .. code-block:: bash
 
-    uv run pytest test/ --ignore=test/passes/graph/transforms/verilog
+    # Linux / macOS
+    source .venv/bin/activate
+
+    # Once activated, run commands without the uv run prefix
+    python path/to/your_script.py
+    pytest test/
+
+    # To deactivate when done
+    deactivate
 
 Test your installation
 -----------------------
