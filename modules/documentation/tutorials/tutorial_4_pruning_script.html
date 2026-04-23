@@ -1,0 +1,770 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tutorial 4: Unstructured Pruning on Bert &#8212; MASE 0.0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_style.css?v=92936fa5" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/modern.css?v=803738c0" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="../../../_static/documentation_options.js?v=e645c8fa"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="../../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+    <script src="../../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+    <script src="../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+    <script src="../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+    <script src="../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'modules/documentation/tutorials/tutorial_4_pruning_script';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Tutorial 5: Neural Architecture Search (NAS) with Mase and Optuna" href="tutorial_5_nas_optuna_script.html" />
+    <link rel="prev" title="Tutorial 3: Running Quantization-Aware Training (QAT) on Bert" href="tutorial_3_qat_script.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">MASE 0.0.1 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../installation.html">Installation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started/Get-started-using-uv.html">Getting Started using uv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started/Get-started-using-Docker.html">Getting Started using Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started/Get-started-students.html">Additional Instructions for Imperial College Students</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../tutorials.html">Tutorials</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="tutorial_1_introduction_to_mase_script.html">Tutorial 1: Introduction to the Mase IR, MaseGraph and Torch FX passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_2_lora_finetune_script.html">Tutorial 2: Finetuning Bert for Sequence Classification using a LoRA adapter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_3_qat_script.html">Tutorial 3: Running Quantization-Aware Training (QAT) on Bert</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Tutorial 4: Unstructured Pruning on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_5_nas_optuna_script.html">Tutorial 5: Neural Architecture Search (NAS) with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_6_mixed_precision_search_script.html">Tutorial 6: Mixed Precision Quantization Search with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer/Add-model-to-chop.html">Developer: Guide on how to add a new model into Chop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer/doc_writing.html">Developer: How to write documentations in MASE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer/how_to_extend_search.html">Developer: How to extend search</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../specifications.html">Coding Style Specifications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../specifications/Python-coding-style-specifications.html">Python Coding Style Specifications</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Chop API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../chop.html">Chop Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chop/actions.html">chop.actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../chop/datasets.html">chop.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../chop/distributed.html">chop.distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../chop/ir.html">chop.ir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../chop/models.html">chop.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../chop/nn.html">chop.nn</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../chop/nn_quantized.html">chop.nn.quantized</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../chop/nn_quantized_functional.html">chop.nn.quantized.functional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../chop/nn_quantized_modules.html">chop.nn.quantized.modules</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../chop/passes.html">chop.passes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../chop/passes_module.html">chop.passes.module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/module_analysis/quantization.html">chop.passes.module.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/module_transform/quantization.html">chop.passes.module.transform.quantize</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../chop/passes_graph.html">chop.passes.graph</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/analysis/add_metadata.html">chop.passes.graph.analysis.add_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/analysis/autosharding.html">chop.passes.graph.analysis.autosharding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/analysis/init_metadata.html">chop.passes.graph.analysis.init_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/analysis/report.html">chop.passes.graph.analysis.report</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/analysis/statistical_profiler.html">chop.passes.graph.analysis.statistical_profiler.profile_statistics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/analysis/verify.html">chop.passes.graph.analysis.verify.verify</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/analysis/quantization.html">chop.passes.graph.calculate_avg_bits_mg_analysis_pass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/analysis/pruning.html">chop.passes.graph.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/transform/pruning.html">chop.passes.transform.pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/transform/quantize.html">chop.passes.transform.quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/transform/utils.html">chop.passes.transform.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../chop/interface/save_and_load.html">chop.passes.interface.save_and_load</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../chop/pipelines.html">chop.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../chop/tools.html">chop.tools</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Deep Learning Systems</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../adls_2024.html">Advanced Deep Learning Systems: 2024/2025</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2024/lab_0_introduction.html">Lab 0: Introduction to Mase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2024/lab_1_compression.html">Lab 1: Model Compression (Quantization and Pruning)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2024/lab_2_nas.html">Lab 2: Neural Architecture Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2024/lab_3_mixed_precision_search.html">Lab 3: Mixed Precision Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2024/lab4-software.html">Lab 4 (Software Stream) Performance Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2023/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../adls_2023.html">Advanced Deep Learning Systems: 2023/2024</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2023/lab1.html">Lab 1 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2023/lab2.html">Lab 2 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2023/lab3.html">Lab 3 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2023/lab4-software.html">Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2023/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../_sources/modules/documentation/tutorials/tutorial_4_pruning_script.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Tutorial 4: Unstructured Pruning on Bert</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-this-tutorial">Run this tutorial</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#expected-terminal-output-excerpt">Expected terminal output (excerpt)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#importing-the-model">Importing the model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-import-model">Step 1: Import model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unstructured-pruning">Unstructured Pruning</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-load-dataset-and-baseline-evaluation">Step 2: Load dataset and baseline evaluation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-apply-l1-norm-unstructured-pruning">Step 3: Apply L1-norm unstructured pruning</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-evaluate-accuracy-after-pruning">Step 4: Evaluate accuracy after pruning</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-finetune-to-recover-accuracy">Step 5: Finetune to recover accuracy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conclusion">Conclusion</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="tutorial-4-unstructured-pruning-on-bert">
+<h1>Tutorial 4: Unstructured Pruning on Bert<a class="headerlink" href="#tutorial-4-unstructured-pruning-on-bert" title="Link to this heading">#</a></h1>
+<p>Pruning is a technique used to reduce the size and complexity of neural networks by removing unnecessary
+parameters (weights and connections). The goal is to create a smaller, more efficient model that maintains
+most of the original model’s performance.</p>
+<p>The following benefits can be seen from pruning neural networks:</p>
+<ul class="simple">
+<li><p><strong>Reduce model size</strong>: Deep neural networks often have millions of parameters, leading to large storage requirements.</p></li>
+<li><p><strong>Decrease inference time</strong>: Fewer parameters mean fewer computations, resulting in faster predictions.</p></li>
+<li><p><strong>Improve generalization</strong>: Removing unnecessary connections can help prevent overfitting.</p></li>
+<li><p><strong>Energy efficiency</strong>: Smaller models require less energy to run, which is crucial for edge devices and mobile applications.</p></li>
+</ul>
+<p>Structured pruning removes entire structures (e.g., channels, filters, or layers) from the network, while
+<strong>unstructured pruning</strong> removes individual weights or connections regardless of their location. In this
+tutorial, we build on top of Tutorial 3 by taking the quantized BERT model and running MASE’s unstructured
+pruning pass. After pruning, we run further fine-tuning iterations to retain sequence classification accuracy.</p>
+<section id="run-this-tutorial">
+<h2>Run this tutorial<a class="headerlink" href="#run-this-tutorial" title="Link to this heading">#</a></h2>
+<p>From the repository root:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>docs/source/modules/documentation/tutorials/tutorial_4_pruning.py
+</pre></div>
+</div>
+</section>
+<section id="expected-terminal-output-excerpt">
+<h2>Expected terminal output (excerpt)<a class="headerlink" href="#expected-terminal-output-excerpt" title="Link to this heading">#</a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>============================================================
+Tutorial 4: Unstructured Pruning on BERT (IMDb)
+============================================================
+
+[1/5] Loading model...
+      Loaded from tutorial_3_qat  ✓
+
+[2/5] Loading dataset and evaluating baseline accuracy...
+INFO     Tokenizing dataset imdb with AutoTokenizer for bert-base-uncased.
+      Dataset loaded: 25000 train / 25000 test
+      [Baseline] Accuracy: 0.8399
+
+[3/5] Applying L1-norm unstructured pruning (sparsity=0.5)...
+INFO     Pruning module: bert_encoder_layer_0_attention_self_query
+INFO     Pruning module: bert_encoder_layer_0_attention_self_key
+...
+INFO     Pruning module: classifier
+      prune_transform_pass  ✓
+
+[4/5] Evaluating accuracy after pruning (before finetuning)...
+      [Pruned] Accuracy: 0.7284
+
+[5/5] Finetuning pruned model (5 epochs) to recover accuracy...
+{&#39;loss&#39;: 0.4703, &#39;grad_norm&#39;: 1.3808, &#39;learning_rate&#39;: 4.8403e-05, &#39;epoch&#39;: 0.16}
+...
+{&#39;train_runtime&#39;: 1321.7466, &#39;train_samples_per_second&#39;: 94.572, &#39;train_steps_per_second&#39;: 11.821, &#39;train_loss&#39;: 0.39856, &#39;epoch&#39;: 5.0}
+      [Pruned + finetuned] Accuracy: 0.8311
+
+============================================================
+Tutorial 4 complete!
+============================================================
+</pre></div>
+</div>
+</section>
+<section id="importing-the-model">
+<h2>Importing the model<a class="headerlink" href="#importing-the-model" title="Link to this heading">#</a></h2>
+<p>This tutorial builds on Tutorial 3. The default option loads the QAT checkpoint saved at the end of
+Tutorial 3.</p>
+</section>
+<section id="step-1-import-model">
+<h2>Step 1: Import model<a class="headerlink" href="#step-1-import-model" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[1/5] Loading model...&quot;</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoModelForSequenceClassification</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">chop.passes</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">passes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop</span><span class="w"> </span><span class="kn">import</span> <span class="n">MaseGraph</span>
+
+<span class="c1"># Option A: load from Tutorial 3 QAT checkpoint</span>
+<span class="n">mg</span> <span class="o">=</span> <span class="n">MaseGraph</span><span class="o">.</span><span class="n">from_checkpoint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span><span class="si">}</span><span class="s2">/tutorial_3_qat&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;      Loaded from tutorial_3_qat  ✓&quot;</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Option B: start from scratch (use if Tutorial 3 checkpoint is not available)</span>
+<span class="c1"># model = AutoModelForSequenceClassification.from_pretrained(checkpoint)</span>
+<span class="c1"># model.config.problem_type = &quot;single_label_classification&quot;</span>
+<span class="c1"># mg = MaseGraph(</span>
+<span class="c1">#     model,</span>
+<span class="c1">#     hf_input_names=[&quot;input_ids&quot;, &quot;attention_mask&quot;, &quot;labels&quot;],</span>
+<span class="c1"># )</span>
+<span class="c1"># mg, _ = passes.init_metadata_analysis_pass(mg)</span>
+<span class="c1"># mg, _ = passes.add_common_metadata_analysis_pass(mg)</span>
+<span class="c1"># print(&quot;      Fresh MaseGraph built  ✓&quot;, flush=True)</span>
+
+</pre></div>
+</div>
+<p>Example output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[1/5] Loading model...
+      Loaded from tutorial_3_qat  ✓
+</pre></div>
+</div>
+<p>If Tutorial 3 has not been run yet, you can build a fresh MaseGraph instead (comment out Option A and
+uncomment Option B in the script):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">AutoModelForSequenceClassification</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">problem_type</span> <span class="o">=</span> <span class="s2">&quot;single_label_classification&quot;</span>
+<span class="n">mg</span> <span class="o">=</span> <span class="n">MaseGraph</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">hf_input_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;input_ids&quot;</span><span class="p">,</span> <span class="s2">&quot;attention_mask&quot;</span><span class="p">,</span> <span class="s2">&quot;labels&quot;</span><span class="p">])</span>
+<span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">passes</span><span class="o">.</span><span class="n">init_metadata_analysis_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">)</span>
+<span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">passes</span><span class="o">.</span><span class="n">add_common_metadata_analysis_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="unstructured-pruning">
+<h2>Unstructured Pruning<a class="headerlink" href="#unstructured-pruning" title="Link to this heading">#</a></h2>
+<p>Before running pruning, we evaluate the model accuracy on the IMDb dataset. If you are coming from
+Tutorial 3, this should be the same as the accuracy after Quantization-Aware Training (QAT). If
+you have just initialized the model, this will likely be around 50% (random guess), in which case
+pruning would not have a significant effect on accuracy.</p>
+</section>
+<section id="step-2-load-dataset-and-baseline-evaluation">
+<h2>Step 2: Load dataset and baseline evaluation<a class="headerlink" href="#step-2-load-dataset-and-baseline-evaluation" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[2/5] Loading dataset and evaluating baseline accuracy...&quot;</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_tokenized_dataset</span><span class="p">,</span> <span class="n">get_trainer</span>
+
+<span class="n">dataset</span><span class="p">,</span> <span class="n">tokenizer</span> <span class="o">=</span> <span class="n">get_tokenized_dataset</span><span class="p">(</span>
+    <span class="n">dataset</span><span class="o">=</span><span class="n">dataset_name</span><span class="p">,</span>
+    <span class="n">checkpoint</span><span class="o">=</span><span class="n">tokenizer_checkpoint</span><span class="p">,</span>
+    <span class="n">return_tokenizer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;      Dataset loaded: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2"> train / </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;test&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2"> test&quot;</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">trainer</span> <span class="o">=</span> <span class="n">get_trainer</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">mg</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+    <span class="n">tokenized_dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+    <span class="n">tokenizer</span><span class="o">=</span><span class="n">tokenizer</span><span class="p">,</span>
+    <span class="n">evaluate_metric</span><span class="o">=</span><span class="s2">&quot;accuracy&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">eval_results</span> <span class="o">=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;      [Baseline] Accuracy: </span><span class="si">{</span><span class="n">eval_results</span><span class="p">[</span><span class="s1">&#39;eval_accuracy&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+</pre></div>
+</div>
+<p>Example output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[2/5] Loading dataset and evaluating baseline accuracy...
+INFO     Tokenizing dataset imdb with AutoTokenizer for bert-base-uncased.
+      Dataset loaded: 25000 train / 25000 test
+      [Baseline] Accuracy: 0.8399
+</pre></div>
+</div>
+<p>To run the pruning pass, we pass the following pruning configuration dictionary, which defines:</p>
+<ul class="simple">
+<li><p><strong>Sparsity</strong>: a value between 0 and 1, expressing the proportion of elements to prune (set to 0).</p></li>
+<li><p><strong>Method</strong>: pruning methods supported include <code class="docutils literal notranslate"><span class="pre">random</span></code> and <code class="docutils literal notranslate"><span class="pre">l1-norm</span></code>.</p></li>
+<li><p><strong>Scope</strong>: whether to consider each tensor individually (<code class="docutils literal notranslate"><span class="pre">local</span></code>) or all tensors together (<code class="docutils literal notranslate"><span class="pre">global</span></code>) when computing pruning statistics.</p></li>
+</ul>
+<p>We use L1-norm pruning with local scope at 50% sparsity. This removes the weights with the smallest
+absolute values within each layer independently.</p>
+</section>
+<section id="step-3-apply-l1-norm-unstructured-pruning">
+<h2>Step 3: Apply L1-norm unstructured pruning<a class="headerlink" href="#step-3-apply-l1-norm-unstructured-pruning" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[3/5] Applying L1-norm unstructured pruning (sparsity=0.5)...&quot;</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">pruning_config</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;weight&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;sparsity&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;l1-norm&quot;</span><span class="p">,</span> <span class="s2">&quot;scope&quot;</span><span class="p">:</span> <span class="s2">&quot;local&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;activation&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;sparsity&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;l1-norm&quot;</span><span class="p">,</span> <span class="s2">&quot;scope&quot;</span><span class="p">:</span> <span class="s2">&quot;local&quot;</span><span class="p">},</span>
+<span class="p">}</span>
+
+<span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">passes</span><span class="o">.</span><span class="n">prune_transform_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">pruning_config</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;      prune_transform_pass  ✓&quot;</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+</pre></div>
+</div>
+<p>Example output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[3/5] Applying L1-norm unstructured pruning (sparsity=0.5)...
+INFO     Pruning module: bert_encoder_layer_0_attention_self_query
+INFO     Pruning module: bert_encoder_layer_0_attention_self_key
+INFO     Pruning module: bert_encoder_layer_0_attention_self_value
+INFO     Pruning module: bert_encoder_layer_0_attention_output_dense
+INFO     Pruning module: bert_encoder_layer_0_intermediate_dense
+INFO     Pruning module: bert_encoder_layer_0_output_dense
+INFO     Pruning module: bert_encoder_layer_1_attention_self_query
+INFO     Pruning module: bert_encoder_layer_1_attention_self_key
+INFO     Pruning module: bert_encoder_layer_1_attention_self_value
+INFO     Pruning module: bert_encoder_layer_1_attention_output_dense
+INFO     Pruning module: bert_encoder_layer_1_intermediate_dense
+INFO     Pruning module: bert_encoder_layer_1_output_dense
+INFO     Pruning module: bert_pooler_dense
+INFO     Pruning module: classifier
+      prune_transform_pass  ✓
+</pre></div>
+</div>
+</section>
+<section id="step-4-evaluate-accuracy-after-pruning">
+<h2>Step 4: Evaluate accuracy after pruning<a class="headerlink" href="#step-4-evaluate-accuracy-after-pruning" title="Link to this heading">#</a></h2>
+<p>Let’s evaluate the immediate effect of pruning on accuracy. It is likely to observe drops of around
+10% or more.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[4/5] Evaluating accuracy after pruning (before finetuning)...&quot;</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">trainer</span> <span class="o">=</span> <span class="n">get_trainer</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">mg</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+    <span class="n">tokenized_dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+    <span class="n">tokenizer</span><span class="o">=</span><span class="n">tokenizer</span><span class="p">,</span>
+    <span class="n">evaluate_metric</span><span class="o">=</span><span class="s2">&quot;accuracy&quot;</span><span class="p">,</span>
+    <span class="n">num_train_epochs</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">eval_results</span> <span class="o">=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;      [Pruned] Accuracy: </span><span class="si">{</span><span class="n">eval_results</span><span class="p">[</span><span class="s1">&#39;eval_accuracy&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+</pre></div>
+</div>
+<p>Example output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[4/5] Evaluating accuracy after pruning (before finetuning)...
+      [Pruned] Accuracy: 0.7284
+</pre></div>
+</div>
+</section>
+<section id="step-5-finetune-to-recover-accuracy">
+<h2>Step 5: Finetune to recover accuracy<a class="headerlink" href="#step-5-finetune-to-recover-accuracy" title="Link to this heading">#</a></h2>
+<p>To overcome the drop in accuracy, we run finetuning epochs on the pruned model. This allows the model
+to adapt to the new pruning mask.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[5/5] Finetuning pruned model (5 epochs) to recover accuracy...&quot;</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+<span class="n">eval_results</span> <span class="o">=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;      [Pruned + finetuned] Accuracy: </span><span class="si">{</span><span class="n">eval_results</span><span class="p">[</span><span class="s1">&#39;eval_accuracy&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Tutorial 4 complete!&quot;</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Example output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[5/5] Finetuning pruned model (5 epochs) to recover accuracy...
+{&#39;loss&#39;: 0.4703, &#39;grad_norm&#39;: 1.380826473236084, &#39;learning_rate&#39;: 4.8403200000000004e-05, &#39;epoch&#39;: 0.16}
+{&#39;loss&#39;: 0.4248, &#39;grad_norm&#39;: 0.7311906814575195, &#39;learning_rate&#39;: 4.68032e-05, &#39;epoch&#39;: 0.32}
+{&#39;loss&#39;: 0.4266, &#39;grad_norm&#39;: 1.6150014400482178, &#39;learning_rate&#39;: 4.52032e-05, &#39;epoch&#39;: 0.48}
+{&#39;loss&#39;: 0.4096, &#39;grad_norm&#39;: 1.2620729207992554, &#39;learning_rate&#39;: 4.36032e-05, &#39;epoch&#39;: 0.64}
+{&#39;loss&#39;: 0.4126, &#39;grad_norm&#39;: 0.5686410665512085, &#39;learning_rate&#39;: 4.2003200000000005e-05, &#39;epoch&#39;: 0.8}
+{&#39;loss&#39;: 0.4122, &#39;grad_norm&#39;: 1.589716911315918, &#39;learning_rate&#39;: 4.04032e-05, &#39;epoch&#39;: 0.96}
+...
+{&#39;loss&#39;: 0.3835, &#39;grad_norm&#39;: 0.9885391592979431, &#39;learning_rate&#39;: 4.032e-07, &#39;epoch&#39;: 4.96}
+{&#39;train_runtime&#39;: 1321.7466, &#39;train_samples_per_second&#39;: 94.572, &#39;train_steps_per_second&#39;: 11.821, &#39;train_loss&#39;: 0.39856319970703125, &#39;epoch&#39;: 5.0}
+      [Pruned + finetuned] Accuracy: 0.8311
+</pre></div>
+</div>
+</section>
+<section id="conclusion">
+<h2>Conclusion<a class="headerlink" href="#conclusion" title="Link to this heading">#</a></h2>
+<p>Tutorial 4 demonstrates a standard pruning + finetuning workflow:</p>
+<ul class="simple">
+<li><p>Unstructured L1-norm pruning at 50% sparsity causes an accuracy drop from ~0.84 to ~0.73.</p></li>
+<li><p>Five epochs of finetuning recovers the accuracy back to ~0.83, close to the pre-pruning baseline.</p></li>
+<li><p>Pruning and quantization (from Tutorial 3) can be combined to achieve both weight compression and
+reduced numerical precision simultaneously.</p></li>
+</ul>
+<p><strong>Task</strong>: Try changing the <code class="docutils literal notranslate"><span class="pre">sparsity</span></code> value (e.g., <code class="docutils literal notranslate"><span class="pre">0.3</span></code> or <code class="docutils literal notranslate"><span class="pre">0.7</span></code>) and observe how the pruned
+accuracy and finetuning recovery change.</p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="tutorial_3_qat_script.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tutorial 3: Running Quantization-Aware Training (QAT) on Bert</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="tutorial_5_nas_optuna_script.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Tutorial 5: Neural Architecture Search (NAS) with Mase and Optuna</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-this-tutorial">Run this tutorial</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#expected-terminal-output-excerpt">Expected terminal output (excerpt)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#importing-the-model">Importing the model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-import-model">Step 1: Import model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unstructured-pruning">Unstructured Pruning</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-load-dataset-and-baseline-evaluation">Step 2: Load dataset and baseline evaluation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-apply-l1-norm-unstructured-pruning">Step 3: Apply L1-norm unstructured pruning</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-evaluate-accuracy-after-pruning">Step 4: Evaluate accuracy after pruning</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-finetune-to-recover-accuracy">Step 5: Finetune to recover accuracy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conclusion">Conclusion</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By DeepWok
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, DeepWok.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
