@@ -185,7 +185,7 @@ class BertEmbeddings(nn.Module):
         # self.LayerNorm is not snake-cased to stick with TensorFlow model variable name and be able to load
         # any TensorFlow checkpoint file
         self.LayerNorm = nn.LayerNorm(
-            config.hidden_size, eps=config.layer_norm_eps, elementwise_affine=False
+            config.hidden_size, eps=config.layer_norm_eps
         )
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
         # position_ids (1, len position emb) is contiguous in memory and exported when serialized
@@ -422,7 +422,7 @@ class BertSelfOutput(nn.Module):
         super().__init__()
         self.dense = nn.Linear(config.hidden_size, config.hidden_size)
         self.LayerNorm = nn.LayerNorm(
-            config.hidden_size, eps=config.layer_norm_eps, elementwise_affine=False
+            config.hidden_size, eps=config.layer_norm_eps
         )
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
@@ -513,7 +513,7 @@ class BertOutput(nn.Module):
         super().__init__()
         self.dense = nn.Linear(config.intermediate_size, config.hidden_size)
         self.LayerNorm = nn.LayerNorm(
-            config.hidden_size, eps=config.layer_norm_eps, elementwise_affine=False
+            config.hidden_size, eps=config.layer_norm_eps
         )
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
@@ -683,7 +683,7 @@ class BertEncoder(nn.Module):
             else:
                 layer_outputs = layer_module(
                     hidden_states,
-                    # attention_mask,
+                    attention_mask,
                     # layer_head_mask,
                     # encoder_hidden_states,
                     # encoder_attention_mask,
@@ -749,7 +749,7 @@ class BertPredictionHeadTransform(nn.Module):
         else:
             self.transform_act_fn = config.hidden_act
         self.LayerNorm = nn.LayerNorm(
-            config.hidden_size, eps=config.layer_norm_eps, elementwise_affine=False
+            config.hidden_size, eps=config.layer_norm_eps
         )
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
@@ -964,15 +964,10 @@ class BertModel(BertPreTrainedModel):
         super().__init__(config)
         self.config = config
 
-        # self.embeddings = BertEmbeddings(config)
-        def passthrough_function(input_ids):
-            return input_ids
-
-        self.embeddings = passthrough_function
+        self.embeddings = BertEmbeddings(config)
         self.encoder = BertEncoder(config)
 
-        # self.pooler = BertPooler(config) if add_pooling_layer else None
-        self.pooler = None
+        self.pooler = BertPooler(config) if add_pooling_layer else None
 
         # Initialize weights and apply final processing
         self.post_init()
@@ -1102,32 +1097,25 @@ class BertModel(BertPreTrainedModel):
         # # and head_mask is converted to shape [num_hidden_layers x batch x num_heads x seq_length x seq_length]
         # head_mask = self.get_head_mask(head_mask, self.config.num_hidden_layers)
 
+        input_shape = input_ids.size()
+        extended_attention_mask = self.get_extended_attention_mask(attention_mask, input_shape)
+
         embedding_output = self.embeddings(
             input_ids=input_ids,
-            # position_ids=position_ids,
-            # token_type_ids=token_type_ids,
-            # inputs_embeds=inputs_embeds,
-            # past_key_values_length=past_key_values_length,
+            position_ids=position_ids,
+            token_type_ids=token_type_ids,
+            inputs_embeds=inputs_embeds,
         )
         encoder_outputs = self.encoder(
             embedding_output,
-            # attention_mask=extended_attention_mask,
-            # head_mask=head_mask,
-            # encoder_hidden_states=encoder_hidden_states,
-            # encoder_attention_mask=encoder_extended_attention_mask,
-            # past_key_values=past_key_values,
-            # use_cache=use_cache,
-            # output_attentions=output_attentions,
-            # output_hidden_states=output_hidden_states,
-            # return_dict=return_dict,
+            attention_mask=extended_attention_mask,
         )
-        # sequence_output = encoder_outputs[0]
         sequence_output = encoder_outputs
         pooled_output = (
-            self.pooler(sequence_output) if self.pooler is not None else sequence_output
+            self.pooler(sequence_output) if self.pooler is not None else None
         )
 
-        return pooled_output
+        return (sequence_output, pooled_output)
         # if not return_dict:
         #     return (sequence_output, pooled_output) + encoder_outputs[1:]
 
@@ -1790,8 +1778,8 @@ class BertForSequenceClassification(BertPreTrainedModel):
         return SequenceClassifierOutput(
             loss=loss,
             logits=logits,
-            hidden_states=outputs.hidden_states,
-            attentions=outputs.attentions,
+            hidden_states=None,
+            attentions=None,
         )
 
 

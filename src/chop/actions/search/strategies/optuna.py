@@ -1,3 +1,4 @@
+import gc
 import optuna
 import torch
 import pandas as pd
@@ -82,7 +83,18 @@ class SearchStrategyOptuna(SearchStrategyBase):
         software_metrics = self.compute_software_metrics(
             model, sampled_config, is_eval_mode
         )
-        metrics = software_metrics
+        hardware_metrics = self.compute_hardware_metrics(
+            model, sampled_config, is_eval_mode
+        )
+
+        # Free the trial model from GPU immediately — without this, CUDA memory
+        # accumulates across trials and causes OOM on long searches.
+        model.to("cpu")
+        del model
+        gc.collect()
+        torch.cuda.empty_cache()
+
+        metrics = software_metrics | hardware_metrics
         scaled_metrics = {}
         for metric_name in self.metric_names:
             metric_value = metrics.get(metric_name, 32.0)
@@ -94,7 +106,8 @@ class SearchStrategyOptuna(SearchStrategyBase):
         trial.set_user_attr("scaled_metrics", scaled_metrics)
         trial.set_user_attr("sampled_config", sampled_config)
 
-        self.visualizer.log_metrics(metrics=scaled_metrics, step=trial.number)
+        if self.visualizer is not None:
+            self.visualizer.log_metrics(metrics=scaled_metrics, step=trial.number)
 
         if not self.sum_scaled_metrics:
             return list(scaled_metrics.values())

@@ -27,6 +27,8 @@ from .transforms import (
     conv_bn_fusion_transform_pass,
     logicnets_fusion_transform_pass,
     raise_granularity_transform_pass,
+    ann2snn_transform_pass,
+    fused_rmsnorm_transform_pass,
 )
 
 from .interface import (
@@ -66,6 +68,8 @@ TRANSFORM_PASSES = [
     "prune",
     "prune_detach_hook" "conv_bn_fusion",
     "logicnets_fusion",
+    "fused_rmsnorm",
+    
 ]
 
 INTERFACE_PASSES = [
@@ -102,6 +106,8 @@ PASSES = {
     "summarize_quantization": summarize_quantization_analysis_pass,
     "prune": prune_transform_pass,
     "prune_detach_hook": prune_detach_hook_transform_pass,
+    "ann2snn": ann2snn_transform_pass,
+    "fused_rmsnorm": fused_rmsnorm_transform_pass,
     # "remove_prune_wrappers": prune_unwrap_transform_pass,
     "conv_bn_fusion": conv_bn_fusion_transform_pass,
     "logicnets_fusion": logicnets_fusion_transform_pass,

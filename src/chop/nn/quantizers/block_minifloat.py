@@ -80,16 +80,27 @@ class BlockMinifloatQuantize(torch.autograd.Function):
             skip_first_dim=skip_first_dim,
         )
 
+    # @staticmethod
+    # def backward(
+    #     ctx,
+    #     grad_output: Tensor,
+    #     width: int,
+    #     exponent_width: int,
+    #     exponent_bias_width: int,
+    #     block_size: list[int] | int = [16],
+    #     skip_first_dim: bool = False,
+    # ):
+    #     return grad_output, None, None, None, None, None
+    
     @staticmethod
     def backward(
         ctx,
         grad_output: Tensor,
-        width: int,
-        exponent_width: int,
-        exponent_bias_width: int,
-        block_size: list[int] | int = [16],
-        skip_first_dim: bool = False,
+        # REMOVED: width, exponent_width, etc.
+        # PyTorch does not pass these arguments to backward automatically.
     ):
+        # Return gradients for inputs. 
+        # First return is for 'x' (grad_output), the rest are None (for width, exp_width, etc.)
         return grad_output, None, None, None, None, None
 
 

@@ -84,10 +84,11 @@ class RunnerBasicEval(SWRunnerBase):
             k: v.to(self.accelerator) if isinstance(v, torch.Tensor) else v
             for k, v in batch.items()
         }
-        outputs = model(**batch)
+        model_inputs = {k: v for k, v in batch.items() if isinstance(v, torch.Tensor)}
+        outputs = model(**model_inputs)
         loss = outputs["loss"]
         logits = outputs["logits"]
-        acc = self.metric(logits, batch["labels"])
+        acc = self.metric(logits, batch["labels"].view(-1))
         self.loss(loss)
         return {"loss": loss, "accuracy": acc}
 
@@ -96,7 +97,8 @@ class RunnerBasicEval(SWRunnerBase):
             k: v.to(self.accelerator) if isinstance(v, torch.Tensor) else v
             for k, v in batch.items()
         }
-        outputs = model(**batch)
+        model_inputs = {k: v for k, v in batch.items() if isinstance(v, torch.Tensor)}
+        outputs = model(**model_inputs)
         loss = outputs["loss"]
         logits = outputs["logits"]
         perplexity = self.metric(logits, batch["labels"])
@@ -119,14 +121,16 @@ class RunnerBasicEval(SWRunnerBase):
         else:
             forward_model = model
 
+        self.loss.reset()
+        self.metric.reset()
+
         num_batches = math.ceil(self.config["num_samples"] / data_module.batch_size)
         data_loader = getattr(
             data_module, self.config.get("dataloader", "val_dataloader")
         )()
 
         for i, batch in enumerate(data_loader):
-            outputs = self.forward(batch, forward_model)
-            self.loss(outputs["loss"])
+            self.forward(batch, forward_model)
             if i >= num_batches - 1:
                 break
         return self.compute()

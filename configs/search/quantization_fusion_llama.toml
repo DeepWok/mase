@@ -1,0 +1,65 @@
+# =============================================================================
+# Part 3: Quantisation + Fusion Search — TinyLlama-1.1B on Wikitext-2
+# =============================================================================
+# Model  : TinyLlama-1.1B-Chat-v1.0 (decoder, GQA, RMSNorm)
+# Task   : Language modelling (perplexity on wikitext2)
+# Fusion : all 4 strategies including fused_rmsnorm (auto-skipped if Part 2 not merged)
+# Trials : 100 NSGA-II trials, 3 objectives: perplexity ↓ + latency ↓ + avg_bitwidth ↓
+# HPC    : ~5h on L40S with num_samples=256, max_token_len=512
+# =============================================================================
+
+model          = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+dataset        = "wikitext2"
+task           = "lm"
+is_pretrained  = true
+load_name      = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+load_type      = "hf"
+accelerator    = "gpu"
+batch_size     = 4
+max_token_len  = 512
+project        = "llama_quantize_fusion"
+seed           = 42
+
+# ---------- Search Space ----------
+[search.search_space]
+name = "module/quantize_fusion"
+
+[search.search_space.setup]
+score_mod = "causal"        # TinyLlama is a causal decoder
+
+[search.search_space.seed.default]
+data_in_width   = [4, 8, 16, 32]
+weight_width    = [4, 8, 16, 32]
+# fused_rmsnorm auto-skipped if Part 2 not merged yet (ImportError caught silently)
+fusion_strategy = ["none", "flex_attention", "fused_rmsnorm", "both"]
+
+# ---------- Search Strategy ----------
+[search.strategy]
+name      = "optuna"
+eval_mode = true
+
+[search.strategy.sw_runner.basic_evaluation]
+data_loader = "val_dataloader"
+num_samples = 256
+
+[search.strategy.hw_runner.latency]
+num_batches        = 50
+num_warmup_batches = 10
+
+[search.strategy.hw_runner.average_bitwidth]
+compare_to = 32
+
+[search.strategy.setup]
+n_jobs             = 1
+n_trials           = 100
+timeout            = 18000      # 5h ceiling
+sampler            = "nsgaii"
+sum_scaled_metrics = false
+
+[search.strategy.metrics]
+perplexity.scale       = 1.0
+perplexity.direction   = "minimize"
+latency.scale          = 1.0
+latency.direction      = "minimize"
+average_bitwidth.scale     = 1.0
+average_bitwidth.direction = "minimize"
