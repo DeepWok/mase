@@ -496,6 +496,43 @@ def generic_matmul_mxint(x, y, config, style="matmul"):
     return matmul(x, y)
 
 
+def generic_matmul_mxint_rotate(x, y, config, style="matmul"):
+    """MXINT (b)matmul with an exact Hadamard rotation around the X-side
+    activation quantizer. Mirrors Plena's ``matmul_mxfp(online_rotate=True)``:
+    rotation is applied to ``x`` only; ``y`` is quantized plainly. Optional
+    config keys: ``clip_search``, ``force_fp32_had``.
+    """
+    bypass = config.get("bypass", False)
+    matmul = matmul_mapping[style]
+    if bypass:
+        return matmul(x, y)
+
+    # Lazy import keeps fast_hadamard_transform optional at module load.
+    from chop.nn.quantizers.rotation import mxint_rotate_quantizer
+
+    x_block_size = config["data_in_block_size"]
+    x_element_bits = config["data_in_width"]
+    y_block_size = config["weight_block_size"]
+    y_element_bits = config["weight_width"]
+
+    x = mxint_rotate_quantizer(
+        x,
+        hadamard_dim=x.shape[-1],
+        block_size=x_block_size,
+        element_bits=x_element_bits,
+        block_dim=-1,
+        quantile_search=config.get("clip_search", False),
+        force_fp32=config.get("force_fp32_had", False),
+    )
+    y = mxint_quantizer(
+        y,
+        block_size=y_block_size,
+        element_bits=y_element_bits,
+        block_dim=-1,
+    )
+    return matmul(x, y)
+
+
 def matmul_mxfp(x, y, config):
     return generic_matmul_mxfp(x, y, config, "matmul")
 
@@ -504,9 +541,17 @@ def matmul_mxint(x, y, config):
     return generic_matmul_mxint(x, y, config, "matmul")
 
 
+def matmul_mxint_rotate(x, y, config):
+    return generic_matmul_mxint_rotate(x, y, config, "matmul")
+
+
 def bmm_mxfp(x, y, config):
     return generic_matmul_mxfp(x, y, config, "bmm")
 
 
 def bmm_mxint(x, y, config):
     return generic_matmul_mxint(x, y, config, "bmm")
+
+
+def bmm_mxint_rotate(x, y, config):
+    return generic_matmul_mxint_rotate(x, y, config, "bmm")

@@ -79,6 +79,13 @@ dependencies = [
     # mase-triton is automatically installed on Linux x86_64
     # On other platforms, install manually if needed: pip install mase-triton
     "mase-triton>=0.0.6.post4; platform_machine == 'x86_64' and sys_platform == 'linux'",
+    # NOTE: fast-hadamard-transform (CUDA extension used by the online
+    # Hadamard rotation path under chop.nn.quantizers.rotation) is NOT listed
+    # here on purpose. Its sdist doesn't declare torch as a build-system
+    # requirement, so uv's isolated build env breaks. Install it manually
+    # *after* mase is installed and torch is in the env:
+    #     uv pip install --no-build-isolation fast-hadamard-transform
+    # Plain mxint paths don't need it; only rotate paths do.
 ]
 
 [build-system]
@@ -87,3 +94,20 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+# Pin PyTorch wheels to the cu128 index so torch/torchvision match the system
+# CUDA 12.8 toolkit (nvcc), which is what fast-hadamard-transform compiles
+# against. Mismatch with the default cu13x wheels causes the well-known
+# "detected CUDA version (12.8) mismatches the version that was used to
+# compile PyTorch" build error from torch.utils.cpp_extension.
+[tool.uv]
+find-links = ["https://download.pytorch.org/whl/cu128"]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+torchvision = { index = "pytorch-cu128" }
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true

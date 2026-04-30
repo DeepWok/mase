@@ -44,6 +44,7 @@ from .matmul import (
     bmm_ternary,
     bmm_mxfp,
     bmm_mxint,
+    bmm_mxint_rotate,
     matmul_block_fp,
     matmul_block_log,
     matmul_block_minifloat,
@@ -55,11 +56,12 @@ from .matmul import (
     matmul_ternary,
     matmul_mxfp,
     matmul_mxint,
+    matmul_mxint_rotate,
 )
 from .softmax import softmax_mxfp, softmax_mxint, softmax_minifloat
 from .silu import silu_mxfp, silu_mxint, silu_minifloat
 from .rope import rope_mxfp, rope_mxint, rope_minifloat
-from .kvcache import kv_cache_mxfp, kv_cache_mxint
+from .kvcache import kv_cache_mxfp, kv_cache_mxint, kv_cache_mxint_rotate
 
 from .mult import (
     mult_block_fp,
@@ -214,8 +216,10 @@ quantized_func_map = {
     "matmul_ternary": matmul_ternary,
     "matmul_mxfp": matmul_mxfp,
     "matmul_mxint": matmul_mxint,
+    "matmul_mxint_rotate": matmul_mxint_rotate,
     "bmm_mxfp": bmm_mxfp,
     "bmm_mxint": bmm_mxint,
+    "bmm_mxint_rotate": bmm_mxint_rotate,
     "relu_block_minifloat": relu_block_minifloat,
     "relu_integer": relu_integer,
     "relu_fixed": relu_integer,
@@ -301,4 +305,5 @@ quantized_func_map = {
     "rope_minifloat": rope_minifloat,
     "kv_cache_mxfp": kv_cache_mxfp,
     "kv_cache_mxint": kv_cache_mxint,
+    "kv_cache_mxint_rotate": kv_cache_mxint_rotate,
 }

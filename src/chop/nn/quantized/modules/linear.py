@@ -37,6 +37,10 @@ from chop.nn.quantizers import (
     mxfp_quantizer,
 )
 
+# `chop.nn.quantizers.rotation` triggers an `import fast_hadamard_transform`
+# at load time. We defer that import to RotateMXIntLinear.forward so users
+# that never touch the rotate path don't need the CUDA extension installed.
+
 # LUTNet
 import numpy as np
 from typing import Type
@@ -1035,6 +1039,48 @@ class LinearMXInt(_LinearBase):
                 block_size=x_block_size,
                 element_bits=x_element_bits,
                 block_dim=-1,
+            )
+
+        return F.linear(x, self.weight, self.bias)
+
+
+class RotateMXIntLinear(LinearMXInt):
+    """LinearMXInt + exact Hadamard rotation around the activation quantizer.
+
+    Identical to ``LinearMXInt`` for weight/bias quantization (and reuses its
+    ``__init__`` / ``from_linear`` / ``load_state_dict``). The forward path
+    differs by replacing the plain MXINT activation quantize with
+    ``mxint_rotate_quantizer``: the input is rotated by an exact Hadamard,
+    quantized, and rotated back.
+
+    The rotation pair is mathematically a no-op in fp; for the round trip to
+    cancel correctly under the surrounding linears, the upstream weights must
+    be offline-rotated to match (run the rotate pass with
+    ``online_rotate=True``). Typical use: layers whose inputs feed
+    ``o_proj`` / ``down_proj``.
+
+    Extra config keys (optional):
+        force_fp32_had: run the Hadamard multiplications in fp32.
+    """
+
+    @torch.no_grad()
+    def forward(self, x):
+        if self.bypass:
+            return F.linear(x, self.weight, self.bias)
+
+        x_block_size = self.config.get("data_in_block_size")
+        x_element_bits = self.config.get("data_in_width")
+        if x_block_size is not None and x_element_bits is not None:
+            from chop.nn.quantizers.rotation import mxint_rotate_quantizer
+
+            x = mxint_rotate_quantizer(
+                x,
+                hadamard_dim=self.in_features,
+                block_size=x_block_size,
+                element_bits=x_element_bits,
+                block_dim=-1,
+                quantile_search=self.clip_search,
+                force_fp32=self.config.get("force_fp32_had", False),
             )
 
         return F.linear(x, self.weight, self.bias)

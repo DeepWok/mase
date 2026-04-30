@@ -2,7 +2,7 @@ import torch
 import tqdm
 from typing import Iterable
 
-from chop.nn.quantized.rotation import (
+from chop.nn.quantizers.rotation import (
     apply_exact_had_to_linear,
     random_hadamard_matrix,
 )
