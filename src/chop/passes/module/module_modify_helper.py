@@ -111,6 +111,7 @@ bert_prefix_map = {
 # skipping family-specific instantiation logic.
 from_self_prefix_map = {
     Qwen3Attention: "qwen3_self_attention",
+    LlamaAttention: "llama_self_attention",
 }
 
 
