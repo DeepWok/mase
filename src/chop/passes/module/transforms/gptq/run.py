@@ -108,6 +108,8 @@ def run_gptq(network, gptq_config):
             self.module = module
 
         def forward(self, inp, **kwargs):
+            if cache["i"] >= nsamples:
+                raise ValueError
             inps[cache["i"]] = inp
             cache["i"] += 1
             cache["attention_mask"] = kwargs["attention_mask"]
@@ -116,6 +118,8 @@ def run_gptq(network, gptq_config):
 
     layers[0] = Catcher(layers[0])
     for batch in dataloader:
+        if cache["i"] >= nsamples:
+            break
         try:
             network(batch[0].to(dev))
         except ValueError:
@@ -123,6 +127,17 @@ def run_gptq(network, gptq_config):
     layers[0] = layers[0].module
     torch.cuda.empty_cache()
 
+    collected = int(cache["i"])
+    if collected <= 0:
+        raise RuntimeError("No calibration samples collected from dataloader.")
+    if collected < nsamples:
+        logging.warning(
+            "GPTQ requested nsamples=%d but only collected=%d; "
+            "continuing with collected samples.",
+            nsamples, collected,
+        )
+        nsamples = collected
+        inps = inps[:nsamples]
     outs = torch.zeros_like(inps)
     attention_mask = cache["attention_mask"]
     position_ids = cache["position_ids"]

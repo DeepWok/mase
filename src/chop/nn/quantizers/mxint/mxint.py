@@ -46,7 +46,7 @@ def mxint_quantizer_sim(
         percentiles = torch.tensor(
             [1.0, 0.995, 0.99, 0.97, 0.95, 0.93, 0.90, 0.80, 0.70, 0.60, 0.50],
             device=tensor.device,
-            dtype=tensor.dtype,
+            dtype=torch.float32,
         )
 
         device = str(tensor.device)

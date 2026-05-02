@@ -165,12 +165,20 @@ def eager_attention_forward_mxint_rotate(
     av_config: dict = None,
     softmax_bypass: bool = False,
     softmax_config: dict = None,
+    qk_use_rotate: bool = True,
+    av_use_rotate: bool = True,
     **kwargs,
 ):
     """MXINT eager attention with online Hadamard rotation around the Q-side
     and A-side activation quantizers.
 
     Optional config keys per stage: ``clip_search``, ``force_fp32_had``.
+
+    Per-stage rotate toggles (``qk_use_rotate`` / ``av_use_rotate``) let the
+    caller mix rotated and non-rotated stages within the same attention
+    instance. When False (and the corresponding bypass flag is also False),
+    the stage falls back to plain ``mxint_quantizer``. Used by the rotation
+    search to evaluate qk_matmul vs av_matmul independently.
 
     Note: ``hadamard_dim`` follows ``tensor.shape[-1]`` — this is head_dim for
     Q (always supported) but seq_len for the A side, which may not be in the
@@ -185,15 +193,23 @@ def eager_attention_forward_mxint_rotate(
     value_states = repeat_kv(value, module.num_key_value_groups)
 
     if not qk_bypass:
-        query = mxint_rotate_quantizer(
-            query,
-            hadamard_dim=query.shape[-1],
-            block_size=qk_config["data_in_block_size"],
-            element_bits=qk_config["data_in_width"],
-            block_dim=-1,
-            quantile_search=qk_config.get("clip_search", False),
-            force_fp32=qk_config.get("force_fp32_had", False),
-        )
+        if qk_use_rotate:
+            query = mxint_rotate_quantizer(
+                query,
+                hadamard_dim=query.shape[-1],
+                block_size=qk_config["data_in_block_size"],
+                element_bits=qk_config["data_in_width"],
+                block_dim=-1,
+                quantile_search=qk_config.get("clip_search", False),
+                force_fp32=qk_config.get("force_fp32_had", False),
+            )
+        else:
+            query = mxint_quantizer(
+                query,
+                block_size=qk_config["data_in_block_size"],
+                element_bits=qk_config["data_in_width"],
+                block_dim=-1,
+            )
 
     attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling
 
@@ -216,15 +232,23 @@ def eager_attention_forward_mxint_rotate(
     )
 
     if not av_bypass:
-        attn_weights = mxint_rotate_quantizer(
-            attn_weights,
-            hadamard_dim=attn_weights.shape[-1],
-            block_size=av_config["data_in_block_size"],
-            element_bits=av_config["data_in_width"],
-            block_dim=-1,
-            quantile_search=av_config.get("clip_search", False),
-            force_fp32=av_config.get("force_fp32_had", False),
-        )
+        if av_use_rotate:
+            attn_weights = mxint_rotate_quantizer(
+                attn_weights,
+                hadamard_dim=attn_weights.shape[-1],
+                block_size=av_config["data_in_block_size"],
+                element_bits=av_config["data_in_width"],
+                block_dim=-1,
+                quantile_search=av_config.get("clip_search", False),
+                force_fp32=av_config.get("force_fp32_had", False),
+            )
+        else:
+            attn_weights = mxint_quantizer(
+                attn_weights,
+                block_size=av_config["data_in_block_size"],
+                element_bits=av_config["data_in_width"],
+                block_dim=-1,
+            )
 
     attn_output = torch.matmul(attn_weights, value_states)
     attn_output = attn_output.transpose(1, 2).contiguous()

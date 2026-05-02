@@ -245,11 +245,28 @@ class Qwen3AttentionMXIntRotate(Qwen3AttentionMXInt):
     quantize and the Q/A activation quantizes inside the eager-attention
     forward all go through ``mxint_rotate_quantizer``.
 
+    Per-stage toggles let the rotation search evaluate qk_matmul / av_matmul /
+    kv_cache rotations independently within a single attention class. Each
+    flag defaults to True so an unmodified rotate config keeps the original
+    "all three rotated" behavior. Toggle via the matching block in q_config:
+
+        q_config["qk_matmul"]["rotate"]   = True | False  (default True)
+        q_config["av_matmul"]["rotate"]   = True | False  (default True)
+        q_config["kv_cache"]["rotate"]    = True | False  (default True)
+
     Note on ``hadamard_dim``: the rotation runs along the last dim of each
     tensor — head_dim for Q (always supported) and seq_len for the A-side
     rotate (often falls back to plain MXINT with a warning when seq_len isn't
     in the Hadamard table).
     """
+
+    def __init__(self, config, layer_idx, q_config: dict = None):
+        super().__init__(config, layer_idx, q_config=q_config)
+        # Per-stage rotate toggles (default True = original "all rotated"
+        # behavior). The rotation search flips these per trial.
+        self.qk_use_rotate = self.qk_config.get("rotate", True)
+        self.av_use_rotate = self.av_config.get("rotate", True)
+        self.kv_cache_use_rotate = self.kv_cache_config.get("rotate", True)
 
     def forward(
         self,
@@ -291,11 +308,18 @@ class Qwen3AttentionMXIntRotate(Qwen3AttentionMXInt):
         if past_key_values is not None:
             cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
             if not self.kv_cache_bypass:
-                key_states, value_states = kv_cache_mxint_rotate(
-                    key_states,
-                    value_states,
-                    self.kv_cache_config,
-                )
+                if self.kv_cache_use_rotate:
+                    key_states, value_states = kv_cache_mxint_rotate(
+                        key_states,
+                        value_states,
+                        self.kv_cache_config,
+                    )
+                else:
+                    key_states, value_states = kv_cache_mxint(
+                        key_states,
+                        value_states,
+                        self.kv_cache_config,
+                    )
             key_states, value_states = past_key_values.update(
                 key_states,
                 value_states,
@@ -320,6 +344,8 @@ class Qwen3AttentionMXIntRotate(Qwen3AttentionMXInt):
             av_config=self.av_config,
             softmax_bypass=self.softmax_bypass,
             softmax_config=self.softmax_config,
+            qk_use_rotate=self.qk_use_rotate,
+            av_use_rotate=self.av_use_rotate,
             **kwargs,
         )
         attn_output = attn_output.reshape(*input_shape, -1).contiguous()
