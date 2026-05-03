@@ -5,9 +5,9 @@ Given a base quantization config (with all online Hadamard rotations OFF),
 this pass:
 
 1. Runs the standard quantize_module_transform_pass once. The base config is
-   patched so that every matched attention block uses the *_mxint_rotate
+   patched so that every matched attention block uses the *_mx{int,fp}_rotate
    class but with all per-stage rotate flags set to False — this gives the
-   same numerics as plain mxint while making per-trial flag-flipping cheap.
+   same numerics as plain mx{int,fp} while making per-trial flag-flipping cheap.
 2. Computes baseline perplexity on a calibration loader.
 3. For each of the 9 matmul types per decoder layer
    (q_proj / k_proj / v_proj / o_proj / qk_matmul / av_matmul /
@@ -21,10 +21,11 @@ this pass:
    ``output_json`` (when provided).
 
 Toggling is done in place — linear types are physically swapped between
-``LinearMXInt`` and ``RotateMXIntLinear`` (sharing the underlying weight
-Parameter via ``from_linear``), and attention stages flip the new
+plain MX{Int,FP} and their Rotate counterpart (sharing the underlying weight
+Parameter via ``from_linear``), and attention stages flip the
 ``qk_use_rotate`` / ``av_use_rotate`` / ``kv_cache_use_rotate`` instance
-attrs on ``Qwen3AttentionMXIntRotate``.
+attrs on the rotate attention class (Qwen3AttentionMXIntRotate /
+LlamaAttentionMXIntRotate / LlamaAttentionMXFPRotate).
 """
 
 from __future__ import annotations
@@ -41,10 +42,44 @@ import tqdm
 
 logger = logging.getLogger(__name__)
 
-from chop.nn.quantized.modules.linear import LinearMXInt, RotateMXIntLinear
+from chop.nn.quantized.modules.linear import (
+    LinearMXInt,
+    LinearMXFP,
+    RotateMXIntLinear,
+    RotateMXFPLinear,
+)
 from chop.nn.quantized.modules.qwen3.attention import Qwen3AttentionMXIntRotate
+from chop.nn.quantized.modules.llama.attention import (
+    LlamaAttentionMXIntRotate,
+    LlamaAttentionMXFPRotate,
+)
 
 from .quantize import quantize_module_transform_pass
+
+
+# ---------------------------------------------------------------------------
+# Format-agnostic registries
+# ---------------------------------------------------------------------------
+# (plain class, rotate counterpart) pairs — the linear toggle uses both
+# directions of this map.
+_LINEAR_PLAIN_TO_ROTATE = {
+    LinearMXInt: RotateMXIntLinear,
+    LinearMXFP: RotateMXFPLinear,
+}
+_LINEAR_ROTATE_TO_PLAIN = {v: k for k, v in _LINEAR_PLAIN_TO_ROTATE.items()}
+
+# All rotate attention classes the search can flip per-stage flags on.
+_ROTATE_ATTENTION_CLASSES = (
+    Qwen3AttentionMXIntRotate,
+    LlamaAttentionMXIntRotate,
+    LlamaAttentionMXFPRotate,
+)
+
+# Map base format name → rotate class name used in the patched q_config.
+_NAME_TO_ROTATE_NAME = {
+    "mxint": "mxint_rotate",
+    "mxfp":  "mxfp_rotate",
+}
 
 
 # Order matters only for the readability of the report.
@@ -71,7 +106,11 @@ _ATTN_STAGE_TO_FLAG = {
 def _patch_base_args_for_rotate_class(base_args: dict) -> dict:
     """Force every attention selector to use the rotate class with all stage
     flags OFF — gives baseline (non-rotated) numerics while leaving the
-    per-stage toggle hooks in place for the search."""
+    per-stage toggle hooks in place for the search.
+
+    Handles both ``name == "mxint"`` and ``name == "mxfp"`` selectors,
+    bumping each to its corresponding ``*_rotate`` registry name.
+    """
     args = copy.deepcopy(base_args)
 
     # The selectors live as top-level keys (everything except control keys).
@@ -84,17 +123,15 @@ def _patch_base_args_for_rotate_class(base_args: dict) -> dict:
         if not isinstance(cfg, dict):
             continue
         name = cfg.get("name")
-        # Heuristic: an attention selector has nested matmul/cache blocks. The
-        # name we care about is exactly "mxint" (already MXInt — bump it to
-        # the rotate class so we can flip stage flags without re-instantiating).
+        # Heuristic: an attention selector has nested matmul/cache blocks.
         has_attn_substructure = any(
             isinstance(cfg.get(stage), dict)
             for stage in ("qk_matmul", "av_matmul", "kv_cache")
         )
         if not has_attn_substructure:
             continue
-        if name == "mxint":
-            cfg["name"] = "mxint_rotate"
+        if name in _NAME_TO_ROTATE_NAME:
+            cfg["name"] = _NAME_TO_ROTATE_NAME[name]
         # Force all three stages OFF in the baseline regardless of whether
         # the user pre-set anything — the search drives them.
         for stage in ("qk_matmul", "av_matmul", "kv_cache"):
@@ -105,20 +142,29 @@ def _patch_base_args_for_rotate_class(base_args: dict) -> dict:
 
 
 def _toggle_linear_rotation(model: torch.nn.Module, matmul_type: str, enable: bool) -> int:
-    """Swap LinearMXInt <-> RotateMXIntLinear in place for every linear whose
-    qualified name ends in ``.{matmul_type}``. Returns the number of swapped
-    modules. ``from_linear`` shares the existing weight Parameter, so the
-    swap is O(modules) and does not allocate new weight storage."""
+    """Swap plain MX{Int,FP} linear <-> rotate counterpart in place for every
+    linear whose qualified name ends in ``.{matmul_type}``. Returns the number
+    of swapped modules. ``from_linear`` shares the existing weight Parameter,
+    so the swap is O(modules) and does not allocate new weight storage.
+
+    Each module's current class determines which (plain, rotate) pair it
+    belongs to — a single search can mix MXInt and MXFP linears.
+    """
     suffix = f".{matmul_type}"
-    target_cls = RotateMXIntLinear if enable else LinearMXInt
-    other_cls = LinearMXInt if enable else RotateMXIntLinear
+    if enable:
+        # plain -> rotate
+        from_to = _LINEAR_PLAIN_TO_ROTATE
+    else:
+        # rotate -> plain
+        from_to = _LINEAR_ROTATE_TO_PLAIN
 
     swapped = 0
     # Materialize the list — we mutate the tree as we iterate.
     for name, module in list(model.named_modules()):
         if not name.endswith(suffix):
             continue
-        if not isinstance(module, other_cls):
+        target_cls = from_to.get(type(module))
+        if target_cls is None:
             continue  # already in target state, or not the kind we manage
         # Resolve parent + attr.
         parent_name, _, attr = name.rpartition(".")
@@ -130,12 +176,13 @@ def _toggle_linear_rotation(model: torch.nn.Module, matmul_type: str, enable: bo
 
 
 def _toggle_attention_stage(model: torch.nn.Module, stage: str, enable: bool) -> int:
-    """Flip the per-stage rotate flag on every Qwen3AttentionMXIntRotate
-    instance. Returns the number of attention modules touched."""
+    """Flip the per-stage rotate flag on every rotate-attention instance
+    (Qwen3 MXInt / Llama MXInt / Llama MXFP). Returns the number of attention
+    modules touched."""
     flag = _ATTN_STAGE_TO_FLAG[stage]
     touched = 0
     for _, module in model.named_modules():
-        if isinstance(module, Qwen3AttentionMXIntRotate):
+        if isinstance(module, _ROTATE_ATTENTION_CLASSES):
             setattr(module, flag, bool(enable))
             touched += 1
     return touched

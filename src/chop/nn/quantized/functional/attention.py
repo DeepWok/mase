@@ -9,6 +9,7 @@ Functions:
     eager_attention_forward_mxfp        — MXFP-quantized eager attention
     eager_attention_forward_mxint       — MXINT-quantized eager attention
     eager_attention_forward_mxint_rotate — MXINT + online Hadamard rotation
+    eager_attention_forward_mxfp_rotate  — MXFP  + online Hadamard rotation
 """
 
 from functools import partial
@@ -247,6 +248,104 @@ def eager_attention_forward_mxint_rotate(
                 attn_weights,
                 block_size=av_config["data_in_block_size"],
                 element_bits=av_config["data_in_width"],
+                block_dim=-1,
+            )
+
+    attn_output = torch.matmul(attn_weights, value_states)
+    attn_output = attn_output.transpose(1, 2).contiguous()
+    return attn_output, attn_weights
+
+
+def eager_attention_forward_mxfp_rotate(
+    module,
+    query: Tensor,
+    key: Tensor,
+    value: Tensor,
+    attention_mask: Optional[Tensor],
+    scaling: float,
+    dropout: float = 0.0,
+    qk_bypass: bool = False,
+    qk_config: dict = None,
+    av_bypass: bool = False,
+    av_config: dict = None,
+    softmax_bypass: bool = False,
+    softmax_config: dict = None,
+    qk_use_rotate: bool = True,
+    av_use_rotate: bool = True,
+    **kwargs,
+):
+    """MXFP eager attention with online Hadamard rotation around the Q-side
+    and A-side activation quantizers. Mirrors ``eager_attention_forward_mxint_rotate``
+    — only the inner quantizer differs.
+
+    Per-stage rotate toggles let the caller mix rotated and non-rotated stages
+    within the same attention instance. When False (and the corresponding
+    bypass flag is also False), the stage falls back to plain ``mxfp_quantizer``.
+    """
+    from chop.nn.quantizers.rotation import mxfp_rotate_quantizer
+
+    key_states = repeat_kv(key, module.num_key_value_groups)
+    value_states = repeat_kv(value, module.num_key_value_groups)
+
+    if not qk_bypass:
+        if qk_use_rotate:
+            query = mxfp_rotate_quantizer(
+                query,
+                hadamard_dim=query.shape[-1],
+                block_size=qk_config["data_in_block_size"],
+                element_exp_bits=qk_config["data_in_exponent_width"],
+                element_frac_bits=qk_config["data_in_frac_width"],
+                block_dim=-1,
+                quantile_search=qk_config.get("clip_search", False),
+                force_fp32=qk_config.get("force_fp32_had", False),
+            )
+        else:
+            query = mxfp_quantizer(
+                query,
+                block_size=qk_config["data_in_block_size"],
+                element_exp_bits=qk_config["data_in_exponent_width"],
+                element_frac_bits=qk_config["data_in_frac_width"],
+                block_dim=-1,
+            )
+
+    attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling
+
+    if attention_mask is not None:
+        causal_mask = attention_mask[:, :, :, : key_states.shape[-2]]
+        attn_weights = attn_weights + causal_mask.to(attn_weights.dtype)
+
+    if not softmax_bypass:
+        attn_weights = softmax_minifloat(attn_weights, softmax_config, dim=-1)
+    else:
+        attn_weights = nn.functional.softmax(
+            attn_weights.to(torch.float32),
+            dim=-1,
+        ).to(attn_weights.dtype)
+
+    attn_weights = nn.functional.dropout(
+        attn_weights,
+        p=dropout,
+        training=module.training,
+    )
+
+    if not av_bypass:
+        if av_use_rotate:
+            attn_weights = mxfp_rotate_quantizer(
+                attn_weights,
+                hadamard_dim=attn_weights.shape[-1],
+                block_size=av_config["data_in_block_size"],
+                element_exp_bits=av_config["data_in_exponent_width"],
+                element_frac_bits=av_config["data_in_frac_width"],
+                block_dim=-1,
+                quantile_search=av_config.get("clip_search", False),
+                force_fp32=av_config.get("force_fp32_had", False),
+            )
+        else:
+            attn_weights = mxfp_quantizer(
+                attn_weights,
+                block_size=av_config["data_in_block_size"],
+                element_exp_bits=av_config["data_in_exponent_width"],
+                element_frac_bits=av_config["data_in_frac_width"],
                 block_dim=-1,
             )
 

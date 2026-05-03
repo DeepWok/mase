@@ -17,6 +17,7 @@ from .hadamard_utils import (
     random_hadamard_matrix,
 )
 from .mxint_rotate import mxint_rotate_quantizer
+from .mxfp_rotate import mxfp_rotate_quantizer
 
 __all__ = [
     "apply_exact_had_to_linear",
@@ -28,4 +29,5 @@ __all__ = [
     "matmul_hadUt_cuda",
     "random_hadamard_matrix",
     "mxint_rotate_quantizer",
+    "mxfp_rotate_quantizer",
 ]

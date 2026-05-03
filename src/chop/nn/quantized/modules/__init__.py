@@ -18,6 +18,7 @@ from .llama import (
     LlamaAttentionMXFP,
     LlamaAttentionMXInt,
     LlamaAttentionMXIntRotate,
+    LlamaAttentionMXFPRotate,
     LlamaMLPMXFP,
     LlamaMLPMXInt,
     LlamaRMSNormMinifloat,
@@ -111,6 +112,7 @@ from .linear import (
     LinearMXFP,
     LinearMXInt,
     RotateMXIntLinear,
+    RotateMXFPLinear,
 )
 from .pool2d import (
     AdaptiveAvgPool2dInteger,
@@ -254,6 +256,7 @@ quantized_basic_module_map = {
     "linear_mxfp": LinearMXFP,
     "linear_mxint": LinearMXInt,
     "linear_mxint_rotate": RotateMXIntLinear,
+    "linear_mxfp_rotate": RotateMXFPLinear,
     "linear_block_log": LinearBlockLog,
     "linear_minifloat_ieee": LinearMinifloatIEEE,
     "linear_minifloat_denorm": LinearMinifloatDenorm,
@@ -368,6 +371,7 @@ quantized_llama_module_map = {
     "llama_self_attention_mxfp": LlamaAttentionMXFP,
     "llama_self_attention_mxint": LlamaAttentionMXInt,
     "llama_self_attention_mxint_rotate": LlamaAttentionMXIntRotate,
+    "llama_self_attention_mxfp_rotate": LlamaAttentionMXFPRotate,
     "llama_rms_norm_lsqinteger": LlamaRMSNormLSQInteger,
     "llama_rms_norm_minifloat": LlamaRMSNormMinifloat,
     "llama_mlp_lsqinteger": LlamaMLPLSQInteger,
