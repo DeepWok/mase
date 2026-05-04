@@ -6,7 +6,9 @@ from transformers.models.qwen3.modeling_qwen3 import (
     apply_rotary_pos_emb,
     Cache,
     Qwen3Attention,
+    eager_attention_forward as _hf_eager_attention_forward,
 )
+from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS
 
 from chop.nn.quantized.functional.rope import rope_minifloat
 from chop.nn.quantized.functional.kvcache import (
@@ -23,6 +25,33 @@ from chop.nn.quantized.functional.attention import (
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def _hf_attention_dispatch(
+    module,
+    query_states,
+    key_states,
+    value_states,
+    attention_mask,
+    **kwargs,
+):
+    """Call HF's configured attention backend (sdpa / flash / eager / ...).
+
+    Used when all in-attention quant stages (qk / av / softmax) are bypassed —
+    in that case the wrapper has nothing to inject inside the attention compute,
+    so we shouldn't force eager. Mirrors HF Qwen3's own dispatch line.
+    """
+    attention_interface = ALL_ATTENTION_FUNCTIONS.get_interface(
+        module.config._attn_implementation, _hf_eager_attention_forward
+    )
+    return attention_interface(
+        module,
+        query_states,
+        key_states,
+        value_states,
+        attention_mask,
+        **kwargs,
+    )
 
 
 class Qwen3AttentionMXFP(Qwen3Attention):
@@ -95,22 +124,38 @@ class Qwen3AttentionMXFP(Qwen3Attention):
                 cache_kwargs,
             )
 
-        attn_output, attn_weights = _eager_attention_forward_mxfp(
-            self,
-            query_states,
-            key_states,
-            value_states,
-            attention_mask,
-            dropout=0.0 if not self.training else self.attention_dropout,
-            scaling=self.scaling,
-            qk_bypass=self.qk_bypass,
-            qk_config=self.qk_config,
-            av_bypass=self.av_bypass,
-            av_config=self.av_config,
-            softmax_bypass=self.softmax_bypass,
-            softmax_config=self.softmax_config,
-            **kwargs,
-        )
+        if self.qk_bypass and self.av_bypass and self.softmax_bypass:
+            attn_output, attn_weights = _hf_attention_dispatch(
+                self,
+                query_states,
+                key_states,
+                value_states,
+                attention_mask,
+                dropout=0.0 if not self.training else self.attention_dropout,
+                scaling=self.scaling,
+                **kwargs,
+            )
+        else:
+            assert self.config._attn_implementation == "eager", (
+                "MXFP-quantized eager attention requires _attn_implementation='eager' "
+                "when any of qk/av/softmax stages are active."
+            )
+            attn_output, attn_weights = _eager_attention_forward_mxfp(
+                self,
+                query_states,
+                key_states,
+                value_states,
+                attention_mask,
+                dropout=0.0 if not self.training else self.attention_dropout,
+                scaling=self.scaling,
+                qk_bypass=self.qk_bypass,
+                qk_config=self.qk_config,
+                av_bypass=self.av_bypass,
+                av_config=self.av_config,
+                softmax_bypass=self.softmax_bypass,
+                softmax_config=self.softmax_config,
+                **kwargs,
+            )
 
         attn_output = attn_output.reshape(*input_shape, -1).contiguous()
         attn_output = self.o_proj(attn_output)
@@ -202,23 +247,38 @@ class Qwen3AttentionMXInt(Qwen3Attention):
                 cache_kwargs,
             )
 
-        assert self.config._attn_implementation == "eager", "Only eager attention is supported for MXInt-quantized Qwen3Attention"
-        attn_output, attn_weights = _eager_attention_forward_mxint(
-            self,
-            query_states,
-            key_states,
-            value_states,
-            attention_mask,
-            dropout=0.0 if not self.training else self.attention_dropout,
-            scaling=self.scaling,
-            qk_bypass=self.qk_bypass,
-            qk_config=self.qk_config,
-            av_bypass=self.av_bypass,
-            av_config=self.av_config,
-            softmax_bypass=self.softmax_bypass,
-            softmax_config=self.softmax_config,
-            **kwargs,
-        )
+        if self.qk_bypass and self.av_bypass and self.softmax_bypass:
+            attn_output, attn_weights = _hf_attention_dispatch(
+                self,
+                query_states,
+                key_states,
+                value_states,
+                attention_mask,
+                dropout=0.0 if not self.training else self.attention_dropout,
+                scaling=self.scaling,
+                **kwargs,
+            )
+        else:
+            assert self.config._attn_implementation == "eager", (
+                "MXInt-quantized eager attention requires _attn_implementation='eager' "
+                "when any of qk/av/softmax stages are active."
+            )
+            attn_output, attn_weights = _eager_attention_forward_mxint(
+                self,
+                query_states,
+                key_states,
+                value_states,
+                attention_mask,
+                dropout=0.0 if not self.training else self.attention_dropout,
+                scaling=self.scaling,
+                qk_bypass=self.qk_bypass,
+                qk_config=self.qk_config,
+                av_bypass=self.av_bypass,
+                av_config=self.av_config,
+                softmax_bypass=self.softmax_bypass,
+                softmax_config=self.softmax_config,
+                **kwargs,
+            )
         attn_output = attn_output.reshape(*input_shape, -1).contiguous()
         attn_output = self.o_proj(attn_output)
         return attn_output, attn_weights
@@ -327,27 +387,40 @@ class Qwen3AttentionMXIntRotate(Qwen3AttentionMXInt):
                 cache_kwargs,
             )
 
-        assert self.config._attn_implementation == "eager", (
-            "Only eager attention is supported for MXInt-rotate-quantized Qwen3Attention"
-        )
-        attn_output, attn_weights = _eager_attention_forward_mxint_rotate(
-            self,
-            query_states,
-            key_states,
-            value_states,
-            attention_mask,
-            dropout=0.0 if not self.training else self.attention_dropout,
-            scaling=self.scaling,
-            qk_bypass=self.qk_bypass,
-            qk_config=self.qk_config,
-            av_bypass=self.av_bypass,
-            av_config=self.av_config,
-            softmax_bypass=self.softmax_bypass,
-            softmax_config=self.softmax_config,
-            qk_use_rotate=self.qk_use_rotate,
-            av_use_rotate=self.av_use_rotate,
-            **kwargs,
-        )
+        if self.qk_bypass and self.av_bypass and self.softmax_bypass:
+            attn_output, attn_weights = _hf_attention_dispatch(
+                self,
+                query_states,
+                key_states,
+                value_states,
+                attention_mask,
+                dropout=0.0 if not self.training else self.attention_dropout,
+                scaling=self.scaling,
+                **kwargs,
+            )
+        else:
+            assert self.config._attn_implementation == "eager", (
+                "MXInt-rotate-quantized attention requires _attn_implementation='eager' "
+                "when any of qk/av/softmax stages are active."
+            )
+            attn_output, attn_weights = _eager_attention_forward_mxint_rotate(
+                self,
+                query_states,
+                key_states,
+                value_states,
+                attention_mask,
+                dropout=0.0 if not self.training else self.attention_dropout,
+                scaling=self.scaling,
+                qk_bypass=self.qk_bypass,
+                qk_config=self.qk_config,
+                av_bypass=self.av_bypass,
+                av_config=self.av_config,
+                softmax_bypass=self.softmax_bypass,
+                softmax_config=self.softmax_config,
+                qk_use_rotate=self.qk_use_rotate,
+                av_use_rotate=self.av_use_rotate,
+                **kwargs,
+            )
         attn_output = attn_output.reshape(*input_shape, -1).contiguous()
         attn_output = self.o_proj(attn_output)
         return attn_output, attn_weights

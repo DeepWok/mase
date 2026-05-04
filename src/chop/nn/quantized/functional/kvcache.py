@@ -85,6 +85,7 @@ def kv_cache_mxfp_rotate(
     head dim of K/V (last dim). Optional config keys:
     ``clip_search``, ``force_fp32_had``.
     """
+    # Lazy import keeps fast_hadamard_transform optional at module load.
     from chop.nn.quantizers.rotation import mxfp_rotate_quantizer
 
     x_block_size = config["data_in_block_size"]

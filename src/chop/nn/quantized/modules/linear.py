@@ -1178,3 +1178,43 @@ class RotateMXIntLinear(LinearMXInt):
             )
 
         return F.linear(x, self.weight, self.bias)
+
+
+class RotateMXFPLinear(LinearMXFP):
+    """LinearMXFP + exact Hadamard rotation around the activation quantizer.
+
+    Mirrors ``RotateMXIntLinear`` for MXFP. Reuses ``LinearMXFP`` for weight
+    quantization (and its ``__init__`` / ``from_linear`` / ``load_state_dict``);
+    only the forward activation quantize swaps to ``mxfp_rotate_quantizer``.
+
+    Extra config keys (optional):
+        force_fp32_had: run the Hadamard multiplications in fp32.
+    """
+
+    @torch.no_grad()
+    def forward(self, x):
+        if self.bypass:
+            return F.linear(x, self.weight, self.bias)
+
+        x_block_size = self.config.get("data_in_block_size")
+        x_exp_bits = self.config.get("data_in_exponent_width")
+        x_frac_bits = self.config.get("data_in_frac_width")
+        if (
+            x_block_size is not None
+            and x_exp_bits is not None
+            and x_frac_bits is not None
+        ):
+            from chop.nn.quantizers.rotation import mxfp_rotate_quantizer
+
+            x = mxfp_rotate_quantizer(
+                x,
+                hadamard_dim=self.in_features,
+                block_size=x_block_size,
+                element_exp_bits=x_exp_bits,
+                element_frac_bits=x_frac_bits,
+                block_dim=-1,
+                quantile_search=self.clip_search,
+                force_fp32=self.config.get("force_fp32_had", False),
+            )
+
+        return F.linear(x, self.weight, self.bias)
