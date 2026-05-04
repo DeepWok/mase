@@ -16,6 +16,7 @@ from .llama import (
     LlamaRMSNormLSQInteger,
     LlamaMLPLSQInteger,
     LlamaAttentionMXFP,
+    LlamaAttentionMXFPRotate,
     LlamaAttentionMXInt,
     LlamaAttentionMXIntRotate,
     LlamaMLPMXFP,
@@ -110,6 +111,7 @@ from .linear import (
     LinearMXIntHardware,
     LinearMXFP,
     LinearMXInt,
+    RotateMXFPLinear,
     RotateMXIntLinear,
 )
 from .pool2d import (
@@ -252,6 +254,7 @@ quantized_basic_module_map = {
     "linear_log": LinearLog,
     "linear_mxint_hardware": LinearMXIntHardware,
     "linear_mxfp": LinearMXFP,
+    "linear_mxfp_rotate": RotateMXFPLinear,
     "linear_mxint": LinearMXInt,
     "linear_mxint_rotate": RotateMXIntLinear,
     "linear_block_log": LinearBlockLog,
@@ -366,6 +369,7 @@ quantized_roberta_module_map = {
 quantized_llama_module_map = {
     "llama_self_attention_lsqinteger": LlamaAttentionLSQInteger,
     "llama_self_attention_mxfp": LlamaAttentionMXFP,
+    "llama_self_attention_mxfp_rotate": LlamaAttentionMXFPRotate,
     "llama_self_attention_mxint": LlamaAttentionMXInt,
     "llama_self_attention_mxint_rotate": LlamaAttentionMXIntRotate,
     "llama_rms_norm_lsqinteger": LlamaRMSNormLSQInteger,

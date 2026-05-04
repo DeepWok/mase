@@ -18,11 +18,13 @@ from chop.nn.quantized.functional.rope import rope_minifloat
 from chop.nn.quantized.functional.softmax import softmax_minifloat
 from chop.nn.quantized.functional.kvcache import (
     kv_cache_mxfp,
+    kv_cache_mxfp_rotate,
     kv_cache_mxint,
     kv_cache_mxint_rotate,
 )
 from chop.nn.quantized.functional.attention import (
     eager_attention_forward_mxfp as _eager_attention_forward_mxfp,
+    eager_attention_forward_mxfp_rotate as _eager_attention_forward_mxfp_rotate,
     eager_attention_forward_mxint as _eager_attention_forward_mxint,
     eager_attention_forward_mxint_rotate as _eager_attention_forward_mxint_rotate,
 )
@@ -361,7 +363,22 @@ class LlamaAttentionMXInt(LlamaAttention):
 class LlamaAttentionMXIntRotate(LlamaAttentionMXInt):
     """LlamaAttentionMXInt with online Hadamard rotation around the
     activation quantizers (KV-cache, Q@K, A@V). See
-    ``Qwen3AttentionMXIntRotate`` for the same pattern in Qwen3."""
+    ``Qwen3AttentionMXIntRotate`` for the same pattern in Qwen3.
+
+    Per-stage rotate toggles let the rotation search swap stages independently.
+    Each defaults True (preserves "all rotated" baseline if the user doesn't
+    pre-set them); the search drives them via the matching block in q_config:
+
+        q_config["qk_matmul"]["rotate"]   = True | False  (default True)
+        q_config["av_matmul"]["rotate"]   = True | False  (default True)
+        q_config["kv_cache"]["rotate"]    = True | False  (default True)
+    """
+
+    def __init__(self, config, layer_idx, q_config: dict = None):
+        super().__init__(config, layer_idx, q_config=q_config)
+        self.qk_use_rotate = self.qk_config.get("rotate", True)
+        self.av_use_rotate = self.av_config.get("rotate", True)
+        self.kv_cache_use_rotate = self.kv_cache_config.get("rotate", True)
 
     def forward(
         self,
@@ -399,11 +416,18 @@ class LlamaAttentionMXIntRotate(LlamaAttentionMXInt):
         if past_key_values is not None:
             cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
             if not self.kv_cache_bypass:
-                key_states, value_states = kv_cache_mxint_rotate(
-                    key_states,
-                    value_states,
-                    self.kv_cache_config,
-                )
+                if self.kv_cache_use_rotate:
+                    key_states, value_states = kv_cache_mxint_rotate(
+                        key_states,
+                        value_states,
+                        self.kv_cache_config,
+                    )
+                else:
+                    key_states, value_states = kv_cache_mxint(
+                        key_states,
+                        value_states,
+                        self.kv_cache_config,
+                    )
             key_states, value_states = past_key_values.update(
                 key_states,
                 value_states,
@@ -425,6 +449,100 @@ class LlamaAttentionMXIntRotate(LlamaAttentionMXInt):
             av_config=self.av_config,
             softmax_bypass=self.softmax_bypass,
             softmax_config=self.softmax_config,
+            qk_use_rotate=self.qk_use_rotate,
+            av_use_rotate=self.av_use_rotate,
+            **kwargs,
+        )
+
+        attn_output = attn_output.reshape(*input_shape, -1).contiguous()
+        attn_output = self.o_proj(attn_output)
+        return attn_output, attn_weights
+
+
+class LlamaAttentionMXFPRotate(LlamaAttentionMXFP):
+    """LlamaAttentionMXFP with online Hadamard rotation around the activation
+    quantizers (KV-cache, Q@K, A@V). MXFP equivalent of
+    ``LlamaAttentionMXIntRotate``. Per-stage rotate toggles match the MXINT
+    variant so the rotation-search machinery is uniform across formats.
+    """
+
+    def __init__(self, config, layer_idx, q_config: dict = None):
+        super().__init__(config, layer_idx, q_config=q_config)
+        self.qk_use_rotate = self.qk_config.get("rotate", True)
+        self.av_use_rotate = self.av_config.get("rotate", True)
+        self.kv_cache_use_rotate = self.kv_cache_config.get("rotate", True)
+
+    def forward(
+        self,
+        hidden_states: Tensor,
+        position_embeddings: Tuple[Tensor, Tensor],
+        attention_mask: Optional[Tensor],
+        past_key_values: Optional[Cache] = None,
+        cache_position: Optional[LongTensor] = None,
+        **kwargs,
+    ) -> Tuple[Tensor, Optional[Tensor], Optional[Tuple[Tensor]]]:
+        input_shape = hidden_states.shape[:-1]
+        hidden_shape = (*input_shape, -1, self.head_dim)
+
+        query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)
+        key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)
+        value_states = self.v_proj(hidden_states).view(hidden_shape).transpose(1, 2)
+
+        cos, sin = position_embeddings
+        if not self.rope_bypass:
+            query_states, key_states = rope_minifloat(
+                query_states,
+                key_states,
+                cos,
+                sin,
+                self.rope_config,
+            )
+        else:
+            query_states, key_states = apply_rotary_pos_emb(
+                query_states,
+                key_states,
+                cos,
+                sin,
+            )
+
+        if past_key_values is not None:
+            cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
+            if not self.kv_cache_bypass:
+                if self.kv_cache_use_rotate:
+                    key_states, value_states = kv_cache_mxfp_rotate(
+                        key_states,
+                        value_states,
+                        self.kv_cache_config,
+                    )
+                else:
+                    key_states, value_states = kv_cache_mxfp(
+                        key_states,
+                        value_states,
+                        self.kv_cache_config,
+                    )
+            key_states, value_states = past_key_values.update(
+                key_states,
+                value_states,
+                self.layer_idx,
+                cache_kwargs,
+            )
+
+        attn_output, attn_weights = _eager_attention_forward_mxfp_rotate(
+            self,
+            query_states,
+            key_states,
+            value_states,
+            attention_mask,
+            dropout=0.0 if not self.training else self.attention_dropout,
+            scaling=self.scaling,
+            qk_bypass=self.qk_bypass,
+            qk_config=self.qk_config,
+            av_bypass=self.av_bypass,
+            av_config=self.av_config,
+            softmax_bypass=self.softmax_bypass,
+            softmax_config=self.softmax_config,
+            qk_use_rotate=self.qk_use_rotate,
+            av_use_rotate=self.av_use_rotate,
             **kwargs,
         )
 

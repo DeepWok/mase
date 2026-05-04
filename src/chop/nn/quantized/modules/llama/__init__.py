@@ -1,6 +1,7 @@
 from .attention import (
     LlamaAttentionLSQInteger,
     LlamaAttentionMXFP,
+    LlamaAttentionMXFPRotate,
     LlamaAttentionMXInt,
     LlamaAttentionMXIntRotate,
 )

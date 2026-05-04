@@ -16,6 +16,7 @@ from .hadamard_utils import (
     matmul_hadUt_cuda,
     random_hadamard_matrix,
 )
+from .mxfp_rotate import mxfp_rotate_quantizer
 from .mxint_rotate import mxint_rotate_quantizer
 
 __all__ = [
@@ -27,5 +28,6 @@ __all__ = [
     "matmul_hadU_cuda",
     "matmul_hadUt_cuda",
     "random_hadamard_matrix",
+    "mxfp_rotate_quantizer",
     "mxint_rotate_quantizer",
 ]

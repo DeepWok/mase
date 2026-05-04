@@ -20,11 +20,18 @@ this pass:
    measures combined perplexity, and writes a JSON summary to
    ``output_json`` (when provided).
 
-Toggling is done in place — linear types are physically swapped between
-``LinearMXInt`` and ``RotateMXIntLinear`` (sharing the underlying weight
-Parameter via ``from_linear``), and attention stages flip the new
+Toggling is done in place — linear types are physically swapped between the
+plain and rotate variants (``LinearMXInt`` ↔ ``RotateMXIntLinear`` for MXINT,
+``LinearMXFP`` ↔ ``RotateMXFPLinear`` for MXFP, sharing the underlying weight
+Parameter via ``from_linear``), and attention stages flip the
 ``qk_use_rotate`` / ``av_use_rotate`` / ``kv_cache_use_rotate`` instance
-attrs on ``Qwen3AttentionMXIntRotate``.
+attrs on the rotate-variant attention class.
+
+Format selection: ``[rotation_search].format = "mxint"`` (default) or
+``"mxfp"``. The MXFP path currently only ships Llama support — Qwen3 / GLM4
+MoE / etc. attention variants haven't been ported yet, so toggle the
+attention-stage entries for those archs only after adding the corresponding
+``*MXFPRotate`` class + its per-stage flags.
 """
 
 from __future__ import annotations
@@ -41,10 +48,42 @@ import tqdm
 
 logger = logging.getLogger(__name__)
 
-from chop.nn.quantized.modules.linear import LinearMXInt, RotateMXIntLinear
+from chop.nn.quantized.modules.linear import (
+    LinearMXFP,
+    LinearMXInt,
+    RotateMXFPLinear,
+    RotateMXIntLinear,
+)
+from chop.nn.quantized.modules.llama.attention import LlamaAttentionMXFPRotate
 from chop.nn.quantized.modules.qwen3.attention import Qwen3AttentionMXIntRotate
 
 from .quantize import quantize_module_transform_pass
+
+
+# Per-format wiring: which linear classes to swap between, which attention
+# classes carry the per-stage ``*_use_rotate`` flags, and which postfix the
+# attention-config "name" should be patched up to during the search baseline.
+_FORMAT_REGISTRY = {
+    "mxint": {
+        "linear_plain": LinearMXInt,
+        "linear_rotate": RotateMXIntLinear,
+        # Tuple of attention rotate classes. Add an entry per arch you've
+        # ported; the toggle helper iterates and flips flags on every match.
+        "attn_rotate_classes": (Qwen3AttentionMXIntRotate,),
+        "name_plain": "mxint",
+        "name_rotate": "mxint_rotate",
+    },
+    "mxfp": {
+        "linear_plain": LinearMXFP,
+        "linear_rotate": RotateMXFPLinear,
+        # Llama-only for now (only Llama has *MXFPRotate). To add Qwen3 /
+        # MoE archs later: implement <Arch>AttentionMXFPRotate with the
+        # same per-stage flag attrs and append it here.
+        "attn_rotate_classes": (LlamaAttentionMXFPRotate,),
+        "name_plain": "mxfp",
+        "name_rotate": "mxfp_rotate",
+    },
+}
 
 
 # Order matters only for the readability of the report.
@@ -68,10 +107,13 @@ _ATTN_STAGE_TO_FLAG = {
 }
 
 
-def _patch_base_args_for_rotate_class(base_args: dict) -> dict:
+def _patch_base_args_for_rotate_class(base_args: dict, fmt: str) -> dict:
     """Force every attention selector to use the rotate class with all stage
     flags OFF — gives baseline (non-rotated) numerics while leaving the
     per-stage toggle hooks in place for the search."""
+    spec = _FORMAT_REGISTRY[fmt]
+    name_plain = spec["name_plain"]
+    name_rotate = spec["name_rotate"]
     args = copy.deepcopy(base_args)
 
     # The selectors live as top-level keys (everything except control keys).
@@ -85,16 +127,16 @@ def _patch_base_args_for_rotate_class(base_args: dict) -> dict:
             continue
         name = cfg.get("name")
         # Heuristic: an attention selector has nested matmul/cache blocks. The
-        # name we care about is exactly "mxint" (already MXInt — bump it to
-        # the rotate class so we can flip stage flags without re-instantiating).
+        # name we care about is exactly the format's plain name — bump it to
+        # the rotate class so we can flip stage flags without re-instantiating.
         has_attn_substructure = any(
             isinstance(cfg.get(stage), dict)
             for stage in ("qk_matmul", "av_matmul", "kv_cache")
         )
         if not has_attn_substructure:
             continue
-        if name == "mxint":
-            cfg["name"] = "mxint_rotate"
+        if name == name_plain:
+            cfg["name"] = name_rotate
         # Force all three stages OFF in the baseline regardless of whether
         # the user pre-set anything — the search drives them.
         for stage in ("qk_matmul", "av_matmul", "kv_cache"):
@@ -104,14 +146,19 @@ def _patch_base_args_for_rotate_class(base_args: dict) -> dict:
     return args
 
 
-def _toggle_linear_rotation(model: torch.nn.Module, matmul_type: str, enable: bool) -> int:
-    """Swap LinearMXInt <-> RotateMXIntLinear in place for every linear whose
+def _toggle_linear_rotation(
+    model: torch.nn.Module, matmul_type: str, enable: bool, fmt: str
+) -> int:
+    """Swap plain-linear <-> rotate-linear in place for every linear whose
     qualified name ends in ``.{matmul_type}``. Returns the number of swapped
     modules. ``from_linear`` shares the existing weight Parameter, so the
     swap is O(modules) and does not allocate new weight storage."""
+    spec = _FORMAT_REGISTRY[fmt]
+    plain_cls = spec["linear_plain"]
+    rotate_cls = spec["linear_rotate"]
     suffix = f".{matmul_type}"
-    target_cls = RotateMXIntLinear if enable else LinearMXInt
-    other_cls = LinearMXInt if enable else RotateMXIntLinear
+    target_cls = rotate_cls if enable else plain_cls
+    other_cls = plain_cls if enable else rotate_cls
 
     swapped = 0
     # Materialize the list — we mutate the tree as we iterate.
@@ -129,23 +176,29 @@ def _toggle_linear_rotation(model: torch.nn.Module, matmul_type: str, enable: bo
     return swapped
 
 
-def _toggle_attention_stage(model: torch.nn.Module, stage: str, enable: bool) -> int:
-    """Flip the per-stage rotate flag on every Qwen3AttentionMXIntRotate
-    instance. Returns the number of attention modules touched."""
+def _toggle_attention_stage(
+    model: torch.nn.Module, stage: str, enable: bool, fmt: str
+) -> int:
+    """Flip the per-stage rotate flag on every rotate-attention instance for
+    the chosen format. Returns the number of attention modules touched."""
+    spec = _FORMAT_REGISTRY[fmt]
+    rotate_classes = spec["attn_rotate_classes"]
     flag = _ATTN_STAGE_TO_FLAG[stage]
     touched = 0
     for _, module in model.named_modules():
-        if isinstance(module, Qwen3AttentionMXIntRotate):
+        if isinstance(module, rotate_classes):
             setattr(module, flag, bool(enable))
             touched += 1
     return touched
 
 
-def _toggle(model: torch.nn.Module, matmul_type: str, enable: bool) -> int:
+def _toggle(
+    model: torch.nn.Module, matmul_type: str, enable: bool, fmt: str = "mxint"
+) -> int:
     if matmul_type in LINEAR_MATMUL_TYPES:
-        return _toggle_linear_rotation(model, matmul_type, enable)
+        return _toggle_linear_rotation(model, matmul_type, enable, fmt)
     if matmul_type in ATTENTION_MATMUL_TYPES:
-        return _toggle_attention_stage(model, matmul_type, enable)
+        return _toggle_attention_stage(model, matmul_type, enable, fmt)
     raise ValueError(f"Unknown matmul_type: {matmul_type}")
 
 
@@ -189,7 +242,7 @@ def _compute_calibration_perplexity(
 
 def _search_greedy_forward(
     network, calib_loader, device, matmul_types, baseline_ppl,
-    improvement_eps,
+    improvement_eps, fmt,
 ) -> dict:
     """Greedy forward selection. Each round: try every remaining matmul on
     top of the currently committed set, pick the one with the largest Δ
@@ -223,7 +276,7 @@ def _search_greedy_forward(
 
         for cand_idx, candidate in enumerate(remaining, start=1):
             t_trial = time.time()
-            n_touched = _toggle(network, candidate, enable=True)
+            n_touched = _toggle(network, candidate, enable=True, fmt=fmt)
             per_type_swap_count.setdefault(candidate, n_touched)
             if n_touched == 0:
                 logger.warning(
@@ -237,7 +290,7 @@ def _search_greedy_forward(
                 label=f"r{round_idx}_+{candidate}",
             )
             round_ppls[candidate] = ppl
-            _toggle(network, candidate, enable=False)
+            _toggle(network, candidate, enable=False, fmt=fmt)
             n_trials += 1
             delta = current_ppl - ppl
             logger.info(
@@ -274,7 +327,7 @@ def _search_greedy_forward(
             break
 
         # Commit the winner: leave it ON in the network and remove from remaining.
-        n_touched = _toggle(network, best_cand, enable=True)
+        n_touched = _toggle(network, best_cand, enable=True, fmt=fmt)
         committed.append(best_cand)
         remaining.remove(best_cand)
         prev_ppl = current_ppl
@@ -358,6 +411,11 @@ def rotation_search_transform_pass(network, pass_args):
     output_json = pass_args.get("output_json", None)
     improvement_eps = float(pass_args.get("improvement_eps", 0.0))
     cache_winners = bool(pass_args.get("cache_winners", False))
+    fmt = pass_args.get("format", "mxint")
+    if fmt not in _FORMAT_REGISTRY:
+        raise ValueError(
+            f"Unknown rotation_search format {fmt!r}; valid: {list(_FORMAT_REGISTRY)}"
+        )
 
     for t in matmul_types:
         if t not in ALL_MATMUL_TYPES:
@@ -382,7 +440,7 @@ def rotation_search_transform_pass(network, pass_args):
         logger.info("=" * 64)
 
     logger.info("=" * 64)
-    logger.info("BEGIN — matmul_types=%s", list(matmul_types))
+    logger.info("BEGIN — format=%s matmul_types=%s", fmt, list(matmul_types))
     logger.info("device=%s  improvement_eps=%s  cache_winners=%s",
                 device, improvement_eps, cache_winners)
     logger.info("calib batches=%d", len(calib_loader))
@@ -394,7 +452,7 @@ def rotation_search_transform_pass(network, pass_args):
     logger.info("  this is the slow step on first run; "
                 "resumes fast if checkpoint_dir is populated.")
     t0 = time.time()
-    patched_args = _patch_base_args_for_rotate_class(base_args)
+    patched_args = _patch_base_args_for_rotate_class(base_args, fmt)
     network, _ = quantize_module_transform_pass(network, patched_args)
     network.to(device)
     logger.info("  quantization done in %.1fs", time.time() - t0)
@@ -412,11 +470,12 @@ def rotation_search_transform_pass(network, pass_args):
         logger.info("STEP 2/2 — applying %d cached winners (no calib forwards)",
                     len(cached.get("winners", [])))
         for w in cached.get("winners", []):
-            n = _toggle(network, w, enable=True)
+            n = _toggle(network, w, enable=True, fmt=fmt)
             logger.info("  enabling %s: %d modules", w, n)
         results = dict(cached)
         results["from_cache"] = True
         results["matmul_types_searched"] = list(matmul_types)
+        results["format"] = fmt
         logger.info("-----Rotation Search (cached) Done-----")
         return network, results
 
@@ -429,12 +488,13 @@ def rotation_search_transform_pass(network, pass_args):
     # Steps 3 + 4: greedy forward selection.
     results = _search_greedy_forward(
         network, calib_loader, device, matmul_types, baseline_ppl,
-        improvement_eps,
+        improvement_eps, fmt,
     )
 
     results["baseline_ppl"] = baseline_ppl
     results["improvement_eps"] = improvement_eps
     results["matmul_types_searched"] = list(matmul_types)
+    results["format"] = fmt
 
     if output_json:
         out_path = Path(output_json)
@@ -520,6 +580,7 @@ def dispatch_rotation_search_block(network, base_pass_args: dict, rot_cfg: dict)
         "improvement_eps": float(rot_cfg.get("improvement_eps", 0.0)),
         "output_json": cache_path,
         "cache_winners": bool(rot_cfg.get("cache_winners", True)),
+        "format": rot_cfg.get("format", "mxint"),
     }
     if "matmul_types" in rot_cfg:
         search_args["matmul_types"] = list(rot_cfg["matmul_types"])
