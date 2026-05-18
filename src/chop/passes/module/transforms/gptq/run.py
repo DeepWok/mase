@@ -32,7 +32,7 @@ def run_gptq(network, gptq_config):
             device: str - e.g. "cuda:0".
             dataset: str - "wikitext2" | "c4" | "ptb".
             nsamples: int - calibration samples (default 128).
-            seqlen: int - sequence length (default 2048).
+            seqlen: int - sequence length (default 256).
             format: str - "mxfp" | "mxint".
             weight_config: dict - Mase-style weight config, e.g.
                 {"weight_block_size": 32, "weight_exponent_width": 2, "weight_frac_width": 1}
@@ -51,7 +51,9 @@ def run_gptq(network, gptq_config):
     dev = gptq_config.get("device", "cuda:0")
     dataset = gptq_config.get("dataset", "wikitext2")
     nsamples = gptq_config.get("nsamples", 128)
-    seqlen = gptq_config.get("seqlen", 2048)
+    # Keep a conservative default to avoid unnecessary memory pressure during
+    # integration validation and small-run experiments.
+    seqlen = gptq_config.get("seqlen", 256)
     fmt = gptq_config["format"]
     weight_config = gptq_config["weight_config"]
     quantile_search = gptq_config.get("quantile_search", True)
@@ -88,6 +90,16 @@ def run_gptq(network, gptq_config):
     network.config.use_cache = False
 
     layers = network.model.layers
+
+    # Preserve decode-time FP weights before GPTQ mutates any linear weights.
+    # This supports step-1 phase policy: prefill may use GPTQ, decode must use FP.
+    for layer in layers:
+        for module in layer.modules():
+            if isinstance(module, nn.Linear):
+                if not hasattr(module, "_mase_decode_weight_fp"):
+                    module._mase_decode_weight_fp = module.weight.detach().clone().cpu()
+                if module.bias is not None and not hasattr(module, "_mase_decode_bias_fp"):
+                    module._mase_decode_bias_fp = module.bias.detach().clone().cpu()
 
     # Move embedding + norm + rope to device
     network.model.embed_tokens = network.model.embed_tokens.to(dev)

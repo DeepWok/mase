@@ -1,8 +1,23 @@
+"""Llama MLP quantization with phase-aware dispatch.
+
+Step-1 policy is explicit:
+- prefill: quantization path can run
+- decode: full precision only
+
+Phase source:
+- Runtime phase is written by decoder-layer pre-hooks before layer execution.
+"""
+
 import torch
 from torch import nn, Tensor
 
 from chop.nn.quantizers.SNN.LSQ import LSQInteger
 from chop.nn.quantized.functional.silu import silu_minifloat
+from chop.nn.quantized.modules.phase_context import get_active_phase
+from chop.nn.quantized.modules.phase_config import (
+    get_phase_subconfig,
+    normalize_phase_q_config,
+)
 
 from transformers.models.llama.modeling_llama import LlamaMLP, ACT2FN
 
@@ -51,13 +66,24 @@ class LlamaMLPMXFP(LlamaMLP):
     def __init__(self, config, layer_idx=None, q_config: dict = None):
         super().__init__(config)
         self.layer_idx = layer_idx
-        self.q_config = q_config or {}
-        self.bypass = self.q_config.get("bypass", False)
+        self.phase_q_config = normalize_phase_q_config(q_config)
+        self.decode_policy = self.phase_q_config["decode_policy"]
+        if self.decode_policy != "fp_only":
+            raise ValueError(
+                "Step-1 integration only supports decode_policy='fp_only' "
+                f"for {self.__class__.__name__}, got {self.decode_policy!r}."
+            )
 
     def forward(self, x: Tensor) -> Tensor:
-        if self.bypass:
+        phase = get_active_phase()
+        sub_cfg, decode_policy = get_phase_subconfig(self.phase_q_config, phase)
+        bypass = sub_cfg.get("bypass", False)
+        if phase == "decode" and decode_policy == "fp_only":
+            bypass = True
+
+        if bypass:
             return super().forward(x)
-        x = silu_minifloat(self.gate_proj(x), self.q_config) * self.up_proj(x)
+        x = silu_minifloat(self.gate_proj(x), sub_cfg) * self.up_proj(x)
         return self.down_proj(x)
 
 
@@ -67,11 +93,22 @@ class LlamaMLPMXInt(LlamaMLP):
     def __init__(self, config, layer_idx=None, q_config: dict = None):
         super().__init__(config)
         self.layer_idx = layer_idx
-        self.q_config = q_config or {}
-        self.bypass = self.q_config.get("bypass", False)
+        self.phase_q_config = normalize_phase_q_config(q_config)
+        self.decode_policy = self.phase_q_config["decode_policy"]
+        if self.decode_policy != "fp_only":
+            raise ValueError(
+                "Step-1 integration only supports decode_policy='fp_only' "
+                f"for {self.__class__.__name__}, got {self.decode_policy!r}."
+            )
 
     def forward(self, x: Tensor) -> Tensor:
-        if self.bypass:
+        phase = get_active_phase()
+        sub_cfg, decode_policy = get_phase_subconfig(self.phase_q_config, phase)
+        bypass = sub_cfg.get("bypass", False)
+        if phase == "decode" and decode_policy == "fp_only":
+            bypass = True
+
+        if bypass:
             return super().forward(x)
-        x = silu_minifloat(self.gate_proj(x), self.q_config) * self.up_proj(x)
+        x = silu_minifloat(self.gate_proj(x), sub_cfg) * self.up_proj(x)
         return self.down_proj(x)
