@@ -1,3 +1,15 @@
+"""Llama attention quantization modules with phase-aware runtime dispatch.
+
+Step-1 constraints for this integration:
+1. Keep API compatible with existing MASE module replacement.
+2. Support phase-structured configs (`prefill`/`decode`) for forward
+   compatibility.
+3. Enforce `decode_policy == "fp_only"` at runtime to keep decode fully FP.
+
+Runtime phase is set earlier by decoder-layer pre-hooks in quantize pass.
+Attention consumes context phase to select per-phase quantization settings.
+"""
+
 from typing import Optional, Tuple
 
 import torch
@@ -17,10 +29,27 @@ from chop.nn.quantizers import mxfp_quantizer, mxint_quantizer
 from chop.nn.quantized.functional.rope import rope_minifloat
 from chop.nn.quantized.functional.softmax import softmax_minifloat
 from chop.nn.quantized.functional.kvcache import kv_cache_mxfp, kv_cache_mxint
+from chop.nn.quantized.modules.phase_context import (
+    get_active_phase,
+)
+from chop.nn.quantized.modules.phase_config import (
+    get_phase_subconfig,
+    normalize_phase_q_config,
+)
 
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def _with_decode_fp_bypass(sub_cfg: dict, decode_policy: str, phase: str) -> dict:
+    """Return phase config, forcing decode to FP when policy requires it."""
+
+    if phase == "decode" and decode_policy == "fp_only":
+        cfg = dict(sub_cfg)
+        cfg["bypass"] = True
+        return cfg
+    return sub_cfg
 
 
 class LlamaAttentionLSQInteger(nn.Module):
@@ -71,10 +100,12 @@ class LlamaAttentionLSQInteger(nn.Module):
         hidden_states: torch.Tensor,
         position_embeddings: Tuple[torch.Tensor, torch.Tensor],
         attention_mask: Optional[torch.Tensor],
-        past_key_value: Optional[Cache] = None,
+        past_key_values: Optional[Cache] = None,
         cache_position: Optional[torch.LongTensor] = None,
         **kwargs,
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
+        # HF compatibility: tolerate legacy alias when callers still pass it.
+        past_key_value = kwargs.pop("past_key_value", past_key_values)
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
 
@@ -132,27 +163,58 @@ class LlamaAttentionMXFP(LlamaAttention):
 
     def __init__(self, config, layer_idx, q_config: dict = None):
         super().__init__(config, layer_idx)
-        q_config = q_config or {}
-        self.qk_config = q_config.get("qk_matmul", {})
-        self.av_config = q_config.get("av_matmul", {})
-        self.rope_config = q_config.get("rope", {})
-        self.softmax_config = q_config.get("softmax", {})
-        self.kv_cache_config = q_config.get("kv_cache", {})
-        self.qk_bypass = self.qk_config.get("bypass", False)
-        self.av_bypass = self.av_config.get("bypass", False)
-        self.rope_bypass = self.rope_config.get("bypass", False)
-        self.softmax_bypass = self.softmax_config.get("bypass", False)
-        self.kv_cache_bypass = self.kv_cache_config.get("bypass", False)
+        self.phase_q_config = normalize_phase_q_config(q_config)
+        self.decode_policy = self.phase_q_config["decode_policy"]
+        if self.decode_policy != "fp_only":
+            raise ValueError(
+                "Step-1 integration only supports decode_policy='fp_only' "
+                f"for {self.__class__.__name__}, got {self.decode_policy!r}."
+            )
+
+    def _resolve_phase_quant_config(self, phase: str) -> dict:
+        """Resolve attention sub-config for current phase."""
+
+        sub_cfg, decode_policy = get_phase_subconfig(self.phase_q_config, phase)
+        qk_cfg = _with_decode_fp_bypass(
+            sub_cfg.get("qk_matmul", {}), decode_policy, phase
+        )
+        av_cfg = _with_decode_fp_bypass(
+            sub_cfg.get("av_matmul", {}), decode_policy, phase
+        )
+        rope_cfg = _with_decode_fp_bypass(sub_cfg.get("rope", {}), decode_policy, phase)
+        softmax_cfg = _with_decode_fp_bypass(
+            sub_cfg.get("softmax", {}), decode_policy, phase
+        )
+        kv_cfg = _with_decode_fp_bypass(
+            sub_cfg.get("kv_cache", {}), decode_policy, phase
+        )
+        return {
+            "qk_config": qk_cfg,
+            "av_config": av_cfg,
+            "rope_config": rope_cfg,
+            "softmax_config": softmax_cfg,
+            "kv_cache_config": kv_cfg,
+            "qk_bypass": qk_cfg.get("bypass", False),
+            "av_bypass": av_cfg.get("bypass", False),
+            "rope_bypass": rope_cfg.get("bypass", False),
+            "softmax_bypass": softmax_cfg.get("bypass", False),
+            "kv_cache_bypass": kv_cfg.get("bypass", False),
+        }
 
     def forward(
         self,
         hidden_states: Tensor,
         position_embeddings: Tuple[Tensor, Tensor],
         attention_mask: Optional[Tensor],
-        past_key_value: Optional[Cache] = None,
+        past_key_values: Optional[Cache] = None,
         cache_position: Optional[LongTensor] = None,
         **kwargs,
     ) -> Tuple[Tensor, Optional[Tensor], Optional[Tuple[Tensor]]]:
+        past_key_value = kwargs.pop("past_key_value", past_key_values)
+        # Phase is written by decoder-layer pre-hooks before input_layernorm.
+        phase = get_active_phase()
+        cfg = self._resolve_phase_quant_config(phase)
+
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
 
@@ -161,13 +223,13 @@ class LlamaAttentionMXFP(LlamaAttention):
         value_states = self.v_proj(hidden_states).view(hidden_shape).transpose(1, 2)
 
         cos, sin = position_embeddings
-        if not self.rope_bypass:
+        if not cfg["rope_bypass"]:
             query_states, key_states = rope_minifloat(
                 query_states,
                 key_states,
                 cos,
                 sin,
-                self.rope_config,
+                cfg["rope_config"],
             )
         else:
             query_states, key_states = apply_rotary_pos_emb(
@@ -179,11 +241,11 @@ class LlamaAttentionMXFP(LlamaAttention):
 
         if past_key_value is not None:
             cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
-            if not self.kv_cache_bypass:
+            if not cfg["kv_cache_bypass"]:
                 key_states, value_states = kv_cache_mxfp(
                     key_states,
                     value_states,
-                    self.kv_cache_config,
+                    cfg["kv_cache_config"],
                 )
             key_states, value_states = past_key_value.update(
                 key_states,
@@ -200,12 +262,12 @@ class LlamaAttentionMXFP(LlamaAttention):
             attention_mask,
             dropout=0.0 if not self.training else self.attention_dropout,
             scaling=self.scaling,
-            qk_bypass=self.qk_bypass,
-            qk_config=self.qk_config,
-            av_bypass=self.av_bypass,
-            av_config=self.av_config,
-            softmax_bypass=self.softmax_bypass,
-            softmax_config=self.softmax_config,
+            qk_bypass=cfg["qk_bypass"],
+            qk_config=cfg["qk_config"],
+            av_bypass=cfg["av_bypass"],
+            av_config=cfg["av_config"],
+            softmax_bypass=cfg["softmax_bypass"],
+            softmax_config=cfg["softmax_config"],
             **kwargs,
         )
 
@@ -234,27 +296,58 @@ class LlamaAttentionMXInt(LlamaAttention):
 
     def __init__(self, config, layer_idx, q_config: dict = None):
         super().__init__(config, layer_idx)
-        q_config = q_config or {}
-        self.qk_config = q_config.get("qk_matmul", {})
-        self.av_config = q_config.get("av_matmul", {})
-        self.rope_config = q_config.get("rope", {})
-        self.softmax_config = q_config.get("softmax", {})
-        self.kv_cache_config = q_config.get("kv_cache", {})
-        self.qk_bypass = self.qk_config.get("bypass", False)
-        self.av_bypass = self.av_config.get("bypass", False)
-        self.rope_bypass = self.rope_config.get("bypass", False)
-        self.softmax_bypass = self.softmax_config.get("bypass", False)
-        self.kv_cache_bypass = self.kv_cache_config.get("bypass", False)
+        self.phase_q_config = normalize_phase_q_config(q_config)
+        self.decode_policy = self.phase_q_config["decode_policy"]
+        if self.decode_policy != "fp_only":
+            raise ValueError(
+                "Step-1 integration only supports decode_policy='fp_only' "
+                f"for {self.__class__.__name__}, got {self.decode_policy!r}."
+            )
+
+    def _resolve_phase_quant_config(self, phase: str) -> dict:
+        """Resolve attention sub-config for current phase."""
+
+        sub_cfg, decode_policy = get_phase_subconfig(self.phase_q_config, phase)
+        qk_cfg = _with_decode_fp_bypass(
+            sub_cfg.get("qk_matmul", {}), decode_policy, phase
+        )
+        av_cfg = _with_decode_fp_bypass(
+            sub_cfg.get("av_matmul", {}), decode_policy, phase
+        )
+        rope_cfg = _with_decode_fp_bypass(sub_cfg.get("rope", {}), decode_policy, phase)
+        softmax_cfg = _with_decode_fp_bypass(
+            sub_cfg.get("softmax", {}), decode_policy, phase
+        )
+        kv_cfg = _with_decode_fp_bypass(
+            sub_cfg.get("kv_cache", {}), decode_policy, phase
+        )
+        return {
+            "qk_config": qk_cfg,
+            "av_config": av_cfg,
+            "rope_config": rope_cfg,
+            "softmax_config": softmax_cfg,
+            "kv_cache_config": kv_cfg,
+            "qk_bypass": qk_cfg.get("bypass", False),
+            "av_bypass": av_cfg.get("bypass", False),
+            "rope_bypass": rope_cfg.get("bypass", False),
+            "softmax_bypass": softmax_cfg.get("bypass", False),
+            "kv_cache_bypass": kv_cfg.get("bypass", False),
+        }
 
     def forward(
         self,
         hidden_states: Tensor,
         position_embeddings: Tuple[Tensor, Tensor],
         attention_mask: Optional[Tensor],
-        past_key_value: Optional[Cache] = None,
+        past_key_values: Optional[Cache] = None,
         cache_position: Optional[LongTensor] = None,
         **kwargs,
     ) -> Tuple[Tensor, Optional[Tensor], Optional[Tuple[Tensor]]]:
+        past_key_value = kwargs.pop("past_key_value", past_key_values)
+        # Phase is written by decoder-layer pre-hooks before input_layernorm.
+        phase = get_active_phase()
+        cfg = self._resolve_phase_quant_config(phase)
+
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
 
@@ -263,13 +356,13 @@ class LlamaAttentionMXInt(LlamaAttention):
         value_states = self.v_proj(hidden_states).view(hidden_shape).transpose(1, 2)
 
         cos, sin = position_embeddings
-        if not self.rope_bypass:
+        if not cfg["rope_bypass"]:
             query_states, key_states = rope_minifloat(
                 query_states,
                 key_states,
                 cos,
                 sin,
-                self.rope_config,
+                cfg["rope_config"],
             )
         else:
             query_states, key_states = apply_rotary_pos_emb(
@@ -281,11 +374,11 @@ class LlamaAttentionMXInt(LlamaAttention):
 
         if past_key_value is not None:
             cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
-            if not self.kv_cache_bypass:
+            if not cfg["kv_cache_bypass"]:
                 key_states, value_states = kv_cache_mxint(
                     key_states,
                     value_states,
-                    self.kv_cache_config,
+                    cfg["kv_cache_config"],
                 )
             key_states, value_states = past_key_value.update(
                 key_states,
@@ -302,12 +395,12 @@ class LlamaAttentionMXInt(LlamaAttention):
             attention_mask,
             dropout=0.0 if not self.training else self.attention_dropout,
             scaling=self.scaling,
-            qk_bypass=self.qk_bypass,
-            qk_config=self.qk_config,
-            av_bypass=self.av_bypass,
-            av_config=self.av_config,
-            softmax_bypass=self.softmax_bypass,
-            softmax_config=self.softmax_config,
+            qk_bypass=cfg["qk_bypass"],
+            qk_config=cfg["qk_config"],
+            av_bypass=cfg["av_bypass"],
+            av_config=cfg["av_config"],
+            softmax_bypass=cfg["softmax_bypass"],
+            softmax_config=cfg["softmax_config"],
             **kwargs,
         )
 
