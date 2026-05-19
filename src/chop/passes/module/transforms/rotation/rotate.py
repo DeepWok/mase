@@ -2,7 +2,7 @@ import torch
 import tqdm
 from typing import Iterable
 
-from chop.nn.quantized.rotation import (
+from chop.nn.quantizers.rotation import (
     apply_exact_had_to_linear,
     random_hadamard_matrix,
 )
@@ -159,7 +159,7 @@ def _get_hadamard(size: int) -> torch.Tensor:
     return random_hadamard_matrix(size, device)
 
 
-@torch.inference_mode()
+@torch.no_grad()
 def rotate_llama(model, online_rotate=False):
     """Apply QuaRot rotation to a Llama model.
 
@@ -192,7 +192,7 @@ def rotate_llama(model, online_rotate=False):
     rotate_lm_head(model, Q)
 
 
-@torch.inference_mode()
+@torch.no_grad()
 def rotate_qwen3(model, online_rotate=False):
     """Apply QuaRot rotation to a Qwen3 model.
 

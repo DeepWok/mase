@@ -16,7 +16,9 @@ from .llama import (
     LlamaRMSNormLSQInteger,
     LlamaMLPLSQInteger,
     LlamaAttentionMXFP,
+    LlamaAttentionMXFPRotate,
     LlamaAttentionMXInt,
+    LlamaAttentionMXIntRotate,
     LlamaMLPMXFP,
     LlamaMLPMXInt,
     LlamaRMSNormMinifloat,
@@ -25,6 +27,7 @@ from .llama import (
 from .qwen3 import (
     Qwen3AttentionMXFP,
     Qwen3AttentionMXInt,
+    Qwen3AttentionMXIntRotate,
     Qwen3MLPMXFP,
     Qwen3MLPMXInt,
     Qwen3RMSNormMinifloat,
@@ -33,6 +36,7 @@ from .qwen3 import (
 from .qwen3_moe import (
     Qwen3MoeAttentionMXFP,
     Qwen3MoeAttentionMXInt,
+    Qwen3MoeAttentionMXIntRotate,
     Qwen3MoeMLPMXFP,
     Qwen3MoeMLPMXInt,
 )
@@ -98,6 +102,8 @@ from .linear import (
     LinearMXIntHardware,
     LinearMXFP,
     LinearMXInt,
+    RotateMXFPLinear,
+    RotateMXIntLinear,
 )
 from .pool2d import (
     AdaptiveAvgPool2dInteger,
@@ -239,7 +245,9 @@ quantized_basic_module_map = {
     "linear_log": LinearLog,
     "linear_mxint_hardware": LinearMXIntHardware,
     "linear_mxfp": LinearMXFP,
+    "linear_mxfp_rotate": RotateMXFPLinear,
     "linear_mxint": LinearMXInt,
+    "linear_mxint_rotate": RotateMXIntLinear,
     "linear_block_log": LinearBlockLog,
     "linear_minifloat_ieee": LinearMinifloatIEEE,
     "linear_minifloat_denorm": LinearMinifloatDenorm,
@@ -352,7 +360,9 @@ quantized_roberta_module_map = {
 quantized_llama_module_map = {
     "llama_self_attention_lsqinteger": LlamaAttentionLSQInteger,
     "llama_self_attention_mxfp": LlamaAttentionMXFP,
+    "llama_self_attention_mxfp_rotate": LlamaAttentionMXFPRotate,
     "llama_self_attention_mxint": LlamaAttentionMXInt,
+    "llama_self_attention_mxint_rotate": LlamaAttentionMXIntRotate,
     "llama_rms_norm_lsqinteger": LlamaRMSNormLSQInteger,
     "llama_rms_norm_minifloat": LlamaRMSNormMinifloat,
     "llama_mlp_lsqinteger": LlamaMLPLSQInteger,
@@ -363,6 +373,7 @@ quantized_llama_module_map = {
 quantized_qwen3_module_map = {
     "qwen3_self_attention_mxfp": Qwen3AttentionMXFP,
     "qwen3_self_attention_mxint": Qwen3AttentionMXInt,
+    "qwen3_self_attention_mxint_rotate": Qwen3AttentionMXIntRotate,
     "qwen3_rms_norm_minifloat": Qwen3RMSNormMinifloat,
     "qwen3_mlp_mxfp": Qwen3MLPMXFP,
     "qwen3_mlp_mxint": Qwen3MLPMXInt,
@@ -371,6 +382,7 @@ quantized_qwen3_module_map = {
 quantized_qwen3_moe_module_map = {
     "qwen3_moe_self_attention_mxfp": Qwen3MoeAttentionMXFP,
     "qwen3_moe_self_attention_mxint": Qwen3MoeAttentionMXInt,
+    "qwen3_moe_self_attention_mxint_rotate": Qwen3MoeAttentionMXIntRotate,
     "qwen3_moe_mlp_mxfp": Qwen3MoeMLPMXFP,
     "qwen3_moe_mlp_mxint": Qwen3MoeMLPMXInt,
 }

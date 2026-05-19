@@ -130,6 +130,18 @@ def quantize_module_transform_pass(network, pass_args):
     :raises ValueError: If the quantize "by" argument is unsupported.
 
     """
+    # If TOML has a [rotation_search] block, route the WHOLE quantize step
+    # through the rotation search pass — it handles GPTQ, baseline module
+    # replacement, and per-matmul rotate flag tuning end-to-end. Decisions
+    # are cached to disk (default <gptq.checkpoint_dir>/rotation_decisions.json)
+    # so a re-run skips the calib forwards entirely (mirrors GPTQ's
+    # checkpoint resume).
+    if "rotation_search" in pass_args:
+        from .rotation_search import dispatch_rotation_search_block
+
+        rot_cfg = pass_args.pop("rotation_search")
+        return dispatch_rotation_search_block(network, pass_args, rot_cfg)
+
     # GPTQ pre-pass: quantize linear weights before module replacement
     gptq_config = pass_args.pop("gptq", None)
     if gptq_config is not None:
