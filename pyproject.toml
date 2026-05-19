@@ -81,6 +81,27 @@ dependencies = [
     "mase-triton>=0.0.6.post4; platform_machine == 'x86_64' and sys_platform == 'linux'",
 ]
 
+[project.optional-dependencies]
+mx-ptq = [
+    "fast-hadamard-transform @ git+https://github.com/Dao-AILab/fast-hadamard-transform.git",
+    "lm-eval>=0.4",
+]
+
+[tool.uv]
+find-links = ["https://download.pytorch.org/whl/cu128"]
+
+[tool.uv.extra-build-dependencies]
+fast-hadamard-transform = ["setuptools", "wheel", "torch"]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+torchvision = { index = "pytorch-cu128" }
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
