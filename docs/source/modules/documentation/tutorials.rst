@@ -40,6 +40,18 @@ The following show how to effectively run Neural Architecture Search (NAS) and m
    tutorials/tutorial_6_mixed_precision_search_script
 
 
+Post-Training Quantization
+--------------------------
+
+The following tutorial walks through Mase's MX post-training quantization flow end to end,
+mirroring the PLENA Software walk-through.
+
+.. toctree::
+   :maxdepth: 1
+
+   tutorials/tutorial_7_mx_ptq_script
+
+
 Developer Guide
 ---------------
 
