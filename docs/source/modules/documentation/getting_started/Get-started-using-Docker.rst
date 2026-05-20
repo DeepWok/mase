@@ -95,7 +95,7 @@ Set Up and Run MASE
 
 .. code-block:: shell
 
-    cd /workspace/mase
+    cd /workspace
     python3 docs/source/modules/documentation/tutorials/tutorial_1_introduction_to_mase.py
 
 .. note::
@@ -105,7 +105,7 @@ Set Up and Run MASE
 
     .. code-block:: shell
 
-        cd /workspace/mase
+        cd /workspace
         pip3 install -e .
 
 
