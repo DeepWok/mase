@@ -24,21 +24,32 @@ Prerequisites
 -------------
 
 A CUDA 12.8 toolkit (``nvcc`` reachable) and an NVIDIA driver supporting it.
-The repo's ``pyproject.toml`` pins ``torch 2.11.0+cu128``; everything else is
-handled by one install command.
+The ``mx-ptq`` optional dependencies include ``fast-hadamard-transform`` (built
+from source, ~2-3 min CUDA compile) and ``lm-eval``.
+
+**Using uv:**
 
 .. code-block:: bash
 
-   uv sync --extra mx-ptq
+   uv sync --no-build-isolation --extra mx-ptq
 
-This installs the base deps + ``torch 2.11.0+cu128`` from the PyTorch index +
-builds ``fast-hadamard-transform`` from source (~2-3 min CUDA compile).
+**Using pip:**
+
+.. code-block:: bash
+
+   pip install --no-build-isolation --extra-index-url https://download.pytorch.org/whl/cu128 ".[mx-ptq]"
 
 Verify:
 
 .. code-block:: bash
 
    uv run python -c "from chop.passes.module.transforms import quantize_module_transform_pass; print('OK')"
+
+Run the full tutorial script:
+
+.. code-block:: bash
+
+   uv run python docs/source/modules/documentation/tutorials/tutorial_7_mx_ptq.py
 
 MX quantization refresher
 -------------------------
