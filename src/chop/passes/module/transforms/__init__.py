@@ -1,3 +1,4 @@
 from .autosharding import resharding_transform_pass
-from .quantize import quantize_module_transform_pass
+from .quantize import quantize_module_transform_pass, rotation_search_transform_pass
 from .attention import attention_swap_transform_pass
+from .token_collector_pass import attach_token_collector_pass

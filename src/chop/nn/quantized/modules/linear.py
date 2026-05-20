@@ -37,6 +37,10 @@ from chop.nn.quantizers import (
     mxfp_quantizer,
 )
 
+# `chop.nn.quantizers.rotation` triggers an `import fast_hadamard_transform`
+# at load time. We defer that import to RotateMXIntLinear.forward so users
+# that never touch the rotate path don't need the CUDA extension installed.
+
 # LUTNet
 import numpy as np
 from typing import Type
@@ -832,6 +836,63 @@ class LinearMXFP(_LinearBase):
         self.gptq = config.get("gptq", False)
         self.clip_search = config.get("clip_search", False)
 
+    @classmethod
+    def from_linear(cls, linear: torch.nn.Linear, config: dict) -> "LinearMXFP":
+        """Create a LinearMXFP that REUSES the original Linear's Parameters.
+
+        Mirrors ``LinearMXInt.from_linear`` for MXFP: shares the existing
+        ``weight`` / ``bias`` Parameter (preserving DTensor sharding), then
+        quantizes them in place. Used by the rotation-search swap path so
+        ``LinearMXFP`` ↔ ``RotateMXFPLinear`` swaps stay zero-copy.
+        """
+        assert config is not None, "config is None!"
+        new = cls.__new__(cls)
+        torch.nn.Module.__init__(new)
+
+        new.in_features = linear.in_features
+        new.out_features = linear.out_features
+        new.weight = linear.weight
+        new.bias = linear.bias
+
+        new.pruning_masks = None
+
+        new.config = config
+        new.bypass = config.get("bypass", False)
+        new.gptq = config.get("gptq", False)
+        new.clip_search = config.get("clip_search", False)
+
+        if not new.bypass and not new.gptq:
+            with torch.no_grad():
+                new.weight.data.copy_(
+                    mxfp_quantizer(
+                        new.weight.data,
+                        block_size=config["weight_block_size"],
+                        element_exp_bits=config["weight_exponent_width"],
+                        element_frac_bits=config["weight_frac_width"],
+                        block_dim=1,
+                    )
+                )
+
+                b_block_size = config.get("bias_block_size")
+                b_exp_bits = config.get("bias_exponent_width")
+                b_frac_bits = config.get("bias_frac_width")
+                if (
+                    new.bias is not None
+                    and b_block_size is not None
+                    and b_exp_bits is not None
+                ):
+                    new.bias.data.copy_(
+                        mxfp_quantizer(
+                            new.bias.data,
+                            block_size=b_block_size,
+                            element_exp_bits=b_exp_bits,
+                            element_frac_bits=b_frac_bits,
+                            block_dim=0,
+                        )
+                    )
+
+        return new
+
     def load_state_dict(self, state_dict, strict=True, assign=False):
         """Load pretrained weights, then quantize them in place."""
         result = super().load_state_dict(state_dict, strict=strict, assign=assign)
@@ -913,6 +974,73 @@ class LinearMXInt(_LinearBase):
         self.gptq = config.get("gptq", False)
         self.clip_search = config.get("clip_search", False)
 
+    @classmethod
+    def from_linear(cls, linear: torch.nn.Linear, config: dict) -> "LinearMXInt":
+        """Create a LinearMXInt that REUSES the original Linear's Parameters.
+
+        Unlike ``__init__`` which allocates a fresh weight tensor via
+        ``torch.nn.Linear.__init__``, this classmethod shares the original
+        module's ``weight`` and ``bias`` Parameters directly. This is
+        critical for tensor-parallel models: if ``linear.weight`` is a
+        DTensor shard (from HF's ``tp_plan="auto"``), re-allocating would
+        lose the sharding and fail the state-dict copy. By sharing the
+        Parameter, the DTensor is preserved and TP dispatch keeps working.
+
+        The weight is then quantized in place. ``mxint_quantizer`` handles
+        DTensor inputs transparently (each rank quantizes its local shard).
+        """
+        assert config is not None, "config is None!"
+        new = cls.__new__(cls)
+        torch.nn.Module.__init__(new)
+
+        # nn.Linear attributes
+        new.in_features = linear.in_features
+        new.out_features = linear.out_features
+        new.weight = linear.weight          # share Parameter (may be DTensor)
+        new.bias = linear.bias              # share Parameter (may be DTensor)
+
+        # _LinearBase attributes
+        new.pruning_masks = None
+
+        # LinearMXInt attributes
+        new.config = config
+        new.bypass = config.get("bypass", False)
+        new.gptq = config.get("gptq", False)
+        new.clip_search = config.get("clip_search", False)
+
+        # Quantize weight (and optionally bias) in place. This mirrors the
+        # logic in load_state_dict() but skips the state-dict copy.
+        if not new.bypass and not new.gptq:
+            with torch.no_grad():
+                new.weight.data.copy_(
+                    mxint_quantizer(
+                        new.weight.data,
+                        block_size=config["weight_block_size"],
+                        element_bits=config["weight_width"],
+                        block_dim=1,
+                        quantile_search=new.clip_search,
+                    )
+                )
+
+                b_block_size = config.get("bias_block_size")
+                b_element_bits = config.get("bias_width")
+                if (
+                    new.bias is not None
+                    and b_block_size is not None
+                    and b_element_bits is not None
+                ):
+                    new.bias.data.copy_(
+                        mxint_quantizer(
+                            new.bias.data,
+                            block_size=b_block_size,
+                            element_bits=b_element_bits,
+                            block_dim=0,
+                            quantile_search=new.clip_search,
+                        )
+                    )
+
+        return new
+
     def load_state_dict(self, state_dict, strict=True, assign=False):
         """Load pretrained weights, then quantize them in place."""
         result = super().load_state_dict(state_dict, strict=strict, assign=assign)
@@ -962,11 +1090,131 @@ class LinearMXInt(_LinearBase):
         x_block_size = self.config.get("data_in_block_size")
         x_element_bits = self.config.get("data_in_width")
         if x_block_size is not None and x_element_bits is not None:
+            # mxint_quantizer natively handles DTensor inputs (TP-compatible).
             x = mxint_quantizer(
                 x,
                 block_size=x_block_size,
                 element_bits=x_element_bits,
                 block_dim=-1,
+            )
+
+        return F.linear(x, self.weight, self.bias)
+
+
+class RotateMXFPLinear(LinearMXFP):
+    """LinearMXFP + exact Hadamard rotation around the activation quantizer.
+
+    MXFP equivalent of ``RotateMXIntLinear``: identical weight/bias quantize
+    pipeline (inherits ``__init__`` / ``from_linear`` / ``load_state_dict``),
+    only the forward swaps the plain MXFP activation quantize for
+    ``mxfp_rotate_quantizer``.
+
+    Extra config keys (optional):
+        force_fp32_had: run the Hadamard multiplications in fp32.
+    """
+
+    @torch.no_grad()
+    def forward(self, x):
+        if self.bypass:
+            return F.linear(x, self.weight, self.bias)
+
+        x_block_size = self.config.get("data_in_block_size")
+        x_exp_bits = self.config.get("data_in_exponent_width")
+        x_frac_bits = self.config.get("data_in_frac_width")
+        if x_block_size is not None and x_exp_bits is not None:
+            from chop.nn.quantizers.rotation import mxfp_rotate_quantizer
+
+            x = mxfp_rotate_quantizer(
+                x,
+                hadamard_dim=self.in_features,
+                block_size=x_block_size,
+                element_exp_bits=x_exp_bits,
+                element_frac_bits=x_frac_bits,
+                block_dim=-1,
+                quantile_search=self.clip_search,
+                force_fp32=self.config.get("force_fp32_had", False),
+            )
+
+        return F.linear(x, self.weight, self.bias)
+
+
+class RotateMXIntLinear(LinearMXInt):
+    """LinearMXInt + exact Hadamard rotation around the activation quantizer.
+
+    Identical to ``LinearMXInt`` for weight/bias quantization (and reuses its
+    ``__init__`` / ``from_linear`` / ``load_state_dict``). The forward path
+    differs by replacing the plain MXINT activation quantize with
+    ``mxint_rotate_quantizer``: the input is rotated by an exact Hadamard,
+    quantized, and rotated back.
+
+    The rotation pair is mathematically a no-op in fp; for the round trip to
+    cancel correctly under the surrounding linears, the upstream weights must
+    be offline-rotated to match (run the rotate pass with
+    ``online_rotate=True``). Typical use: layers whose inputs feed
+    ``o_proj`` / ``down_proj``.
+
+    Extra config keys (optional):
+        force_fp32_had: run the Hadamard multiplications in fp32.
+    """
+
+    @torch.no_grad()
+    def forward(self, x):
+        if self.bypass:
+            return F.linear(x, self.weight, self.bias)
+
+        x_block_size = self.config.get("data_in_block_size")
+        x_element_bits = self.config.get("data_in_width")
+        if x_block_size is not None and x_element_bits is not None:
+            from chop.nn.quantizers.rotation import mxint_rotate_quantizer
+
+            x = mxint_rotate_quantizer(
+                x,
+                hadamard_dim=self.in_features,
+                block_size=x_block_size,
+                element_bits=x_element_bits,
+                block_dim=-1,
+                quantile_search=self.clip_search,
+                force_fp32=self.config.get("force_fp32_had", False),
+            )
+
+        return F.linear(x, self.weight, self.bias)
+
+
+class RotateMXFPLinear(LinearMXFP):
+    """LinearMXFP + exact Hadamard rotation around the activation quantizer.
+
+    Mirrors ``RotateMXIntLinear`` for MXFP. Reuses ``LinearMXFP`` for weight
+    quantization (and its ``__init__`` / ``from_linear`` / ``load_state_dict``);
+    only the forward activation quantize swaps to ``mxfp_rotate_quantizer``.
+
+    Extra config keys (optional):
+        force_fp32_had: run the Hadamard multiplications in fp32.
+    """
+
+    @torch.no_grad()
+    def forward(self, x):
+        if self.bypass:
+            return F.linear(x, self.weight, self.bias)
+
+        x_block_size = self.config.get("data_in_block_size")
+        x_exp_bits = self.config.get("data_in_exponent_width")
+        x_frac_bits = self.config.get("data_in_frac_width")
+        if (
+            x_block_size is not None
+            and x_exp_bits is not None
+            and x_frac_bits is not None
+        ):
+            from chop.nn.quantizers.rotation import mxfp_rotate_quantizer
+
+            x = mxfp_rotate_quantizer(
+                x,
+                hadamard_dim=self.in_features,
+                block_size=x_block_size,
+                element_exp_bits=x_exp_bits,
+                element_frac_bits=x_frac_bits,
+                block_dim=-1,
+                quantile_search=self.clip_search,
+                force_fp32=self.config.get("force_fp32_had", False),
             )
 
         return F.linear(x, self.weight, self.bias)

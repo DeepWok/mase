@@ -54,13 +54,9 @@ def mxfp_quantizer_sim(
             scales, elements, tensor_meta = _extract_with_meta(
                 tensor, block_dim, mxfp_meta, percentile=percentile
             )
-            scale_bias = 2 ** (mxfp_meta.scale_exp_bits - 1) - 1
-            q = (
-                elements
-                / 2 ** (mxfp_meta.element_frac_bits - 1)
-                * 2 ** (scales - scale_bias)
-            )
-            q = q.to(dtype=qtensor.dtype)
+            # Plena: elements are already block-relative minifloat values,
+            # scales are raw log2-domain exponents — dequant is just scale-back.
+            q = (elements * 2**scales).to(dtype=qtensor.dtype)
 
             if act_tensor is not None:
                 BATCH_SIZE = cali_batch_size

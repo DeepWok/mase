@@ -1,3 +1,7 @@
-from .attention import Qwen3AttentionMXFP, Qwen3AttentionMXInt
+from .attention import (
+    Qwen3AttentionMXFP,
+    Qwen3AttentionMXInt,
+    Qwen3AttentionMXIntRotate,
+)
 from .rms_norm import Qwen3RMSNormMinifloat
 from .mlp import Qwen3MLPMXFP, Qwen3MLPMXInt
