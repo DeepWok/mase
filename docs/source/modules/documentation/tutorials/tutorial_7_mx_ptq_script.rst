@@ -1,25 +1,24 @@
 Tutorial 7: MX Post-Training Quantization with Mase
 ====================================================
 
-This tutorial walks through the full MX post-training quantization flow end to end
-against Mase's ``chop`` APIs, mirroring the
-`PLENA Software walk-through <https://aicrosssim.github.io/PLENA_Software/>`_.
-``unsloth/Llama-3.2-1B`` is quantized to **W4 A4 KV4** (weights, activations, and
-KV cache all MXInt4) with three progressive configs; WikiText perplexity recovers
-as each optimization tool is added.
+This tutorial walks through the full MX post-training quantization flow
+end to end against Mase's ``chop`` APIs, using **``unsloth/Llama-3.2-1B``**
+as the demo model.
 
 Contents
 --------
 
 - **The MX quantization config** — block-scaled integer / floating-point formats
   expressed as a single TOML file consumed by ``quantize_module_transform_pass``.
-- **Progressive configs at the same precision target** — all three configs drive
-  the model to W4 A4 KV4; each adds one new optimization tool: RTN baseline →
-  ``[gptq]`` Hessian-aware weight calibration → ``[rotation_search]`` greedy
-  per-matmul online Hadamard rotation.
-- **Two-tier selectors** — an attention-class selector swaps ``LlamaAttention``
-  for the MXInt-quantized variant so the KV cache can be quantized, while linear
-  selectors handle q/k/v/o + gate/up/down projections.
+- **Quantization algorithm** — RTN, then ``[gptq]`` for weight quantization,
+  then ``[rotation_search]`` for activation quantization.
+
+Live-execution timings
+----------------------
+
+Each step runs in a single-GPU demo slot. The ``[gptq]`` and
+``[rotation_search]`` passes cache to disk, so reruns finish in seconds once
+the first execution completes.
 
 Prerequisites
 -------------
@@ -40,22 +39,6 @@ Verify:
 .. code-block:: bash
 
    uv run python -c "from chop.passes.module.transforms import quantize_module_transform_pass; print('OK')"
-
-How to run
-----------
-
-After the prerequisites above are in place, run the single-file version of
-this tutorial:
-
-.. code-block:: bash
-
-   uv run python docs/source/modules/documentation/tutorials/tutorial_7_mx_ptq.py
-
-A first run takes a few minutes — most of the time is the GPTQ calibration pass
-in Config B. The ``checkpoint_dir`` field caches per-layer GPTQ output, so
-subsequent runs (including Config C, which reuses Config B's checkpoint) finish
-in tens of seconds. The runnable script and a Jupyter notebook companion
-(``tutorial_7_mx_ptq.ipynb``) contain the exact same code as the snippets below.
 
 MX quantization refresher
 -------------------------
@@ -117,10 +100,6 @@ same shared scale:
 
    Q(w;\, s,\, \tau) = s \cdot w_{\tau}
 
-For integer MX formats the representable range is
-:math:`[\min_{\tau},\, \max_{\tau}] = [-(2^{b-1}-1),\, 2^{b-1}-1]`; for MXFP it
-is set by the minifloat's :math:`(E, M)` encoding.
-
 What the TOML exposes
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -140,13 +119,15 @@ What the TOML exposes
        ``data_in_exponent_width`` / ``data_in_frac_width``
 
 Block size is set via ``weight_block_size`` / ``data_in_block_size``. The
-typical "MX4" setting used throughout this tutorial is 4-bit elements with
-block size 32, applied symmetrically to weights and activations.
+typical "MX4" setting used throughout this tutorial is 4-bit integer elements
+with block size 32.
 
-The progressive story
----------------------
+The PTQ Algorithm
+-----------------
 
-Llama-3.2-1B is quantized three ways, with the cost measured at each step:
+Llama-3.2-1B is quantized to **W4 A4 KV4** (weights, activations, KV cache
+all MXInt4) three ways, with the cost measured at each step. Every config
+targets the same final precision; each adds one new optimization tool:
 
 .. list-table::
    :header-rows: 1
@@ -157,26 +138,24 @@ Llama-3.2-1B is quantized three ways, with the cost measured at each step:
      - Where the gain comes from
    * - **A**
      - MXInt4 round-to-nearest
-     - Baseline — the simplest possible quantization
+     - Baseline — naive W4 A4 KV4
    * - **B**
      - + ``[gptq]`` Hessian-aware calib
-     - Re-derives W4 weights so quantization error is *output-aware*, not just
-       element-aware
+     - Re-derives W4 weights so quantization error is *output-aware*
    * - **C**
      - + ``[rotation_search]`` greedy
-     - Per-matmul online Hadamard rotation on the matmul types with worst
-       outliers (QuaRot-style)
+     - Per-matmul online Hadamard rotation on the matmul types with the
+       largest outliers
 
-Perplexity is measured via lm-eval-harness's ``wikitext`` task throughout.
+Perplexity is measured via **lm-eval-harness's ``wikitext`` task**.
 
 Setup
 -----
 
-Helpers used throughout this tutorial — kept inline so the tutorial is
-self-contained. ``load_quant_config`` parses a TOML config into the ``pass_args``
-dict that ``quantize_module_transform_pass`` consumes; ``evaluate_perplexity``
-wraps lm-eval-harness's ``wikitext`` task and returns ``word_perplexity`` —
-the metric used in published quantization papers.
+Helpers used throughout this tutorial: ``load_quant_config`` parses a TOML
+config into the ``pass_args`` dict that ``quantize_module_transform_pass``
+consumes; ``evaluate_perplexity`` wraps the lm-eval-harness WikiText
+perplexity evaluation.
 
 .. code-block:: python
 
@@ -262,7 +241,7 @@ Config A — MXInt4 RTN (W4 A4 KV4)
 Every linear projection plus the KV cache gets MXInt4 with block size 32,
 no calibration. Two tiers of selectors:
 
-- ``self_attn$`` (with end anchor) swaps ``LlamaAttention`` → ``LlamaAttentionMXInt``
+- ``self_attn$`` (with end-anchor) swaps ``LlamaAttention`` → ``LlamaAttentionMXInt``
   so the in-attention KV cache becomes quantizable. The nested
   ``[qk_matmul]``, ``[av_matmul]``, ``[softmax]``, ``[rope]`` sub-blocks are
   bypassed.
@@ -422,7 +401,7 @@ for Llama-3.2-1B; subsequent runs finish in seconds.
 .. note::
 
    Reference result: ``Config B ppl = 31.0363`` — roughly halves the gap
-   from Config A to fp16. Config C targets **activation quantization error**
+   from Config A to fp16. We will target **activation quantization error**
    next.
 
 Config C — add ``[rotation_search]``
@@ -516,10 +495,6 @@ from Config B's cache).
    ppl_c = evaluate_perplexity(model_c, tokenizer)
    print(f"Config C ppl = {ppl_c:.4f}")
 
-Note there is no separate ``rotate_llama`` call — ``quantize_module_transform_pass``
-sees the ``[rotation_search]`` block in ``pass_args`` and dispatches the whole
-quantize step through the search internally.
-
 .. note::
 
    Reference result: ``Config C ppl = 20.4134`` — lowest perplexity of the
@@ -554,8 +529,8 @@ only thing that changes. Perplexity numbers come from lm-eval-harness's
      - Greedy per-matmul online Hadamard
      - 20.4134
 
-(Reference run: Llama-3.2-1B on a single GPU, lm-eval-harness ``wikitext`` task.
-Results may vary slightly across hardware.)
+*Reference run: Llama-3.2-1B on a single GPU. Results may vary slightly
+across hardware.*
 
 Going further
 -------------
@@ -578,8 +553,9 @@ Wrap-up
 
 This tutorial covered:
 
-1. Three MX quantization configs — RTN, +GPTQ, +rotation.
+1. Three MX quantization configs targeting W4 A4 KV4, each adding one new
+   tool: RTN → ``[gptq]`` → ``[rotation_search]``.
 2. Applying them to Llama-3.2-1B via ``quantize_module_transform_pass``, with
-   perplexity improving at each step.
-3. How Mase's building blocks map onto the PLENA flow, and where PLENA
-   extends Mase (broader eval surfaces).
+   perplexity recovering at each step.
+3. How the same ``pass_args`` interface handles plain RTN, weight calibration,
+   and per-matmul rotation through a single TOML config.
