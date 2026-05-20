@@ -83,20 +83,6 @@ dependencies = [
     "lm-eval>=0.4",
 ]
 
-[tool.uv]
-find-links = ["https://download.pytorch.org/whl/cu128"]
-
-[tool.uv.extra-build-dependencies]
-fast-hadamard-transform = ["setuptools", "wheel", "torch"]
-
-[tool.uv.sources]
-torch = { index = "pytorch-cu128" }
-torchvision = { index = "pytorch-cu128" }
-
-[[tool.uv.index]]
-name = "pytorch-cu128"
-url = "https://download.pytorch.org/whl/cu128"
-explicit = true
 
 [build-system]
 requires = ["setuptools"]

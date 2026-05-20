@@ -42,7 +42,9 @@ MASE uses ``uv`` for modern dependency management. The environment state is defi
     # uv will automatically read .python-version, pyproject.toml, and uv.lock
     # It creates a synchronized virtual environment (default in .venv directory)
     # Additionally, `uv sync` automatically installs the MASE project in editable mode
-    uv sync
+    # --no-build-isolation is required because fast-hadamard-transform needs torch
+    # at build time but does not declare it as a build dependency
+    uv sync --no-build-isolation
 
 How to run code with uv
 ------------------------
