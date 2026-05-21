@@ -120,9 +120,8 @@ def _restore_decode_fp_snapshot_if_available(source_module, target_module):
 
     Why this hook exists:
     - GPTQ pre-pass rewrites `nn.Linear.weight` in-place before replacement.
-    - Step-1 requires decode to stay FP (including weight path).
-    - We therefore preserve original FP snapshots on source modules and
-      transfer them here when the target quantized module exposes decode buffers.
+    - In `fp_only` mode, decode needs preserved FP snapshots.
+    - In `quantized` mode, we avoid keeping FP decode banks to save memory.
     """
 
     decode_weight = getattr(source_module, "_mase_decode_weight_fp", None)
@@ -133,20 +132,38 @@ def _restore_decode_fp_snapshot_if_available(source_module, target_module):
     if not target_has_decode_weight:
         return
 
-    if decode_weight is not None:
-        target_module._decode_weight_fp = decode_weight.to(
-            device=target_module.weight.device,
-            dtype=target_module.weight.dtype,
+    decode_policy = getattr(target_module, "decode_policy", None)
+    if decode_policy == "quantized":
+        # Memory policy: quantized decode should not keep an additional FP
+        # decode bank alive after replacement.
+        target_module._decode_weight_fp = torch.empty(
+            0, device=target_module.weight.device
         )
-    if (
-        target_has_decode_bias
-        and decode_bias is not None
-        and getattr(target_module, "bias", None) is not None
-    ):
-        target_module._decode_bias_fp = decode_bias.to(
-            device=target_module.weight.device,
-            dtype=target_module.weight.dtype,
-        )
+        if target_has_decode_bias:
+            target_module._decode_bias_fp = torch.empty(
+                0, device=target_module.weight.device
+            )
+    elif decode_policy == "fp_only":
+        if decode_weight is not None:
+            target_module._decode_weight_fp = decode_weight.to(
+                device=target_module.weight.device,
+                dtype=target_module.weight.dtype,
+            )
+        if (
+            target_has_decode_bias
+            and decode_bias is not None
+            and getattr(target_module, "bias", None) is not None
+        ):
+            target_module._decode_bias_fp = decode_bias.to(
+                device=target_module.weight.device,
+                dtype=target_module.weight.dtype,
+            )
+
+    refresh_decode_runtime_bank = getattr(
+        target_module, "refresh_decode_runtime_bank", None
+    )
+    if callable(refresh_decode_runtime_bank):
+        refresh_decode_runtime_bank()
 
 
 def get_module_by_name(network, name):

@@ -1,13 +1,15 @@
 """Llama attention quantization modules with phase-aware runtime dispatch.
 
-Step-1 constraints for this integration:
-1. Keep API compatible with existing MASE module replacement.
-2. Support phase-structured configs (`prefill`/`decode`) for forward
-   compatibility.
-3. Enforce `decode_policy == "fp_only"` at runtime to keep decode fully FP.
+Compatibility boundaries:
+1. Keep module replacement API stable for existing passes.
+2. Accept phase-structured configs (`prefill`/`decode`) without forcing new
+   caller-side changes.
+3. Preserve default decode behavior (`decode_policy='fp_only'`) while allowing
+   explicit opt-in decode quantization (`decode_policy='quantized'`).
+4. Keep a single local eager attention path (no backend fallback dispatch).
 
-Runtime phase is set earlier by decoder-layer pre-hooks in quantize pass.
-Attention consumes context phase to select per-phase quantization settings.
+Runtime phase is set by decoder-layer pre-hooks in quantize pass. Attention
+consumes context phase to select per-phase quantization settings.
 """
 
 from typing import Optional, Tuple
@@ -30,7 +32,7 @@ from chop.nn.quantized.functional.rope import rope_minifloat
 from chop.nn.quantized.functional.softmax import softmax_minifloat
 from chop.nn.quantized.functional.kvcache import kv_cache_mxfp, kv_cache_mxint
 from chop.nn.quantized.modules.phase_context import (
-    get_active_phase,
+    get_runtime_phase,
 )
 from chop.nn.quantized.modules.phase_config import (
     get_phase_subconfig,
@@ -42,14 +44,21 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def _with_decode_fp_bypass(sub_cfg: dict, decode_policy: str, phase: str) -> dict:
-    """Return phase config, forcing decode to FP when policy requires it."""
+def _apply_decode_fp_only_bypass(
+    phase_subconfig: dict, decode_policy: str, runtime_phase: str
+) -> dict:
+    """Apply `fp_only` decode policy to a phase sub-config.
 
-    if phase == "decode" and decode_policy == "fp_only":
-        cfg = dict(sub_cfg)
+    Why this helper exists:
+    - We keep phase policy handling explicit and centralized instead of
+      duplicating `if decode/fp_only` branches for each attention sub-stage.
+    """
+
+    if runtime_phase == "decode" and decode_policy == "fp_only":
+        cfg = dict(phase_subconfig)
         cfg["bypass"] = True
         return cfg
-    return sub_cfg
+    return phase_subconfig
 
 
 class LlamaAttentionLSQInteger(nn.Module):
@@ -165,28 +174,27 @@ class LlamaAttentionMXFP(LlamaAttention):
         super().__init__(config, layer_idx)
         self.phase_q_config = normalize_phase_q_config(q_config)
         self.decode_policy = self.phase_q_config["decode_policy"]
-        if self.decode_policy != "fp_only":
-            raise ValueError(
-                "Step-1 integration only supports decode_policy='fp_only' "
-                f"for {self.__class__.__name__}, got {self.decode_policy!r}."
-            )
 
-    def _resolve_phase_quant_config(self, phase: str) -> dict:
-        """Resolve attention sub-config for current phase."""
+    def _resolve_phase_attention_quant_config(self, runtime_phase: str) -> dict:
+        """Resolve attention quant config for the current runtime phase."""
 
-        sub_cfg, decode_policy = get_phase_subconfig(self.phase_q_config, phase)
-        qk_cfg = _with_decode_fp_bypass(
-            sub_cfg.get("qk_matmul", {}), decode_policy, phase
+        phase_subconfig, decode_policy = get_phase_subconfig(
+            self.phase_q_config, runtime_phase
         )
-        av_cfg = _with_decode_fp_bypass(
-            sub_cfg.get("av_matmul", {}), decode_policy, phase
+        qk_cfg = _apply_decode_fp_only_bypass(
+            phase_subconfig.get("qk_matmul", {}), decode_policy, runtime_phase
         )
-        rope_cfg = _with_decode_fp_bypass(sub_cfg.get("rope", {}), decode_policy, phase)
-        softmax_cfg = _with_decode_fp_bypass(
-            sub_cfg.get("softmax", {}), decode_policy, phase
+        av_cfg = _apply_decode_fp_only_bypass(
+            phase_subconfig.get("av_matmul", {}), decode_policy, runtime_phase
         )
-        kv_cfg = _with_decode_fp_bypass(
-            sub_cfg.get("kv_cache", {}), decode_policy, phase
+        rope_cfg = _apply_decode_fp_only_bypass(
+            phase_subconfig.get("rope", {}), decode_policy, runtime_phase
+        )
+        softmax_cfg = _apply_decode_fp_only_bypass(
+            phase_subconfig.get("softmax", {}), decode_policy, runtime_phase
+        )
+        kv_cfg = _apply_decode_fp_only_bypass(
+            phase_subconfig.get("kv_cache", {}), decode_policy, runtime_phase
         )
         return {
             "qk_config": qk_cfg,
@@ -212,8 +220,8 @@ class LlamaAttentionMXFP(LlamaAttention):
     ) -> Tuple[Tensor, Optional[Tensor], Optional[Tuple[Tensor]]]:
         past_key_value = kwargs.pop("past_key_value", past_key_values)
         # Phase is written by decoder-layer pre-hooks before input_layernorm.
-        phase = get_active_phase()
-        cfg = self._resolve_phase_quant_config(phase)
+        runtime_phase = get_runtime_phase()
+        phase_attention_config = self._resolve_phase_attention_quant_config(runtime_phase)
 
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
@@ -223,13 +231,13 @@ class LlamaAttentionMXFP(LlamaAttention):
         value_states = self.v_proj(hidden_states).view(hidden_shape).transpose(1, 2)
 
         cos, sin = position_embeddings
-        if not cfg["rope_bypass"]:
+        if not phase_attention_config["rope_bypass"]:
             query_states, key_states = rope_minifloat(
                 query_states,
                 key_states,
                 cos,
                 sin,
-                cfg["rope_config"],
+                phase_attention_config["rope_config"],
             )
         else:
             query_states, key_states = apply_rotary_pos_emb(
@@ -241,11 +249,11 @@ class LlamaAttentionMXFP(LlamaAttention):
 
         if past_key_value is not None:
             cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
-            if not cfg["kv_cache_bypass"]:
+            if not phase_attention_config["kv_cache_bypass"]:
                 key_states, value_states = kv_cache_mxfp(
                     key_states,
                     value_states,
-                    cfg["kv_cache_config"],
+                    phase_attention_config["kv_cache_config"],
                 )
             key_states, value_states = past_key_value.update(
                 key_states,
@@ -254,6 +262,8 @@ class LlamaAttentionMXFP(LlamaAttention):
                 cache_kwargs,
             )
 
+        # Keep a single eager path for maintainability: all-bypass still uses
+        # this function but bypass flags short-circuit quantization stages.
         attn_output, attn_weights = _eager_attention_forward_mxfp(
             self,
             query_states,
@@ -262,12 +272,12 @@ class LlamaAttentionMXFP(LlamaAttention):
             attention_mask,
             dropout=0.0 if not self.training else self.attention_dropout,
             scaling=self.scaling,
-            qk_bypass=cfg["qk_bypass"],
-            qk_config=cfg["qk_config"],
-            av_bypass=cfg["av_bypass"],
-            av_config=cfg["av_config"],
-            softmax_bypass=cfg["softmax_bypass"],
-            softmax_config=cfg["softmax_config"],
+            qk_bypass=phase_attention_config["qk_bypass"],
+            qk_config=phase_attention_config["qk_config"],
+            av_bypass=phase_attention_config["av_bypass"],
+            av_config=phase_attention_config["av_config"],
+            softmax_bypass=phase_attention_config["softmax_bypass"],
+            softmax_config=phase_attention_config["softmax_config"],
             **kwargs,
         )
 
@@ -298,28 +308,27 @@ class LlamaAttentionMXInt(LlamaAttention):
         super().__init__(config, layer_idx)
         self.phase_q_config = normalize_phase_q_config(q_config)
         self.decode_policy = self.phase_q_config["decode_policy"]
-        if self.decode_policy != "fp_only":
-            raise ValueError(
-                "Step-1 integration only supports decode_policy='fp_only' "
-                f"for {self.__class__.__name__}, got {self.decode_policy!r}."
-            )
 
-    def _resolve_phase_quant_config(self, phase: str) -> dict:
-        """Resolve attention sub-config for current phase."""
+    def _resolve_phase_attention_quant_config(self, runtime_phase: str) -> dict:
+        """Resolve attention quant config for the current runtime phase."""
 
-        sub_cfg, decode_policy = get_phase_subconfig(self.phase_q_config, phase)
-        qk_cfg = _with_decode_fp_bypass(
-            sub_cfg.get("qk_matmul", {}), decode_policy, phase
+        phase_subconfig, decode_policy = get_phase_subconfig(
+            self.phase_q_config, runtime_phase
         )
-        av_cfg = _with_decode_fp_bypass(
-            sub_cfg.get("av_matmul", {}), decode_policy, phase
+        qk_cfg = _apply_decode_fp_only_bypass(
+            phase_subconfig.get("qk_matmul", {}), decode_policy, runtime_phase
         )
-        rope_cfg = _with_decode_fp_bypass(sub_cfg.get("rope", {}), decode_policy, phase)
-        softmax_cfg = _with_decode_fp_bypass(
-            sub_cfg.get("softmax", {}), decode_policy, phase
+        av_cfg = _apply_decode_fp_only_bypass(
+            phase_subconfig.get("av_matmul", {}), decode_policy, runtime_phase
         )
-        kv_cfg = _with_decode_fp_bypass(
-            sub_cfg.get("kv_cache", {}), decode_policy, phase
+        rope_cfg = _apply_decode_fp_only_bypass(
+            phase_subconfig.get("rope", {}), decode_policy, runtime_phase
+        )
+        softmax_cfg = _apply_decode_fp_only_bypass(
+            phase_subconfig.get("softmax", {}), decode_policy, runtime_phase
+        )
+        kv_cfg = _apply_decode_fp_only_bypass(
+            phase_subconfig.get("kv_cache", {}), decode_policy, runtime_phase
         )
         return {
             "qk_config": qk_cfg,
@@ -345,8 +354,8 @@ class LlamaAttentionMXInt(LlamaAttention):
     ) -> Tuple[Tensor, Optional[Tensor], Optional[Tuple[Tensor]]]:
         past_key_value = kwargs.pop("past_key_value", past_key_values)
         # Phase is written by decoder-layer pre-hooks before input_layernorm.
-        phase = get_active_phase()
-        cfg = self._resolve_phase_quant_config(phase)
+        runtime_phase = get_runtime_phase()
+        phase_attention_config = self._resolve_phase_attention_quant_config(runtime_phase)
 
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
@@ -356,13 +365,13 @@ class LlamaAttentionMXInt(LlamaAttention):
         value_states = self.v_proj(hidden_states).view(hidden_shape).transpose(1, 2)
 
         cos, sin = position_embeddings
-        if not cfg["rope_bypass"]:
+        if not phase_attention_config["rope_bypass"]:
             query_states, key_states = rope_minifloat(
                 query_states,
                 key_states,
                 cos,
                 sin,
-                cfg["rope_config"],
+                phase_attention_config["rope_config"],
             )
         else:
             query_states, key_states = apply_rotary_pos_emb(
@@ -374,11 +383,11 @@ class LlamaAttentionMXInt(LlamaAttention):
 
         if past_key_value is not None:
             cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
-            if not cfg["kv_cache_bypass"]:
+            if not phase_attention_config["kv_cache_bypass"]:
                 key_states, value_states = kv_cache_mxint(
                     key_states,
                     value_states,
-                    cfg["kv_cache_config"],
+                    phase_attention_config["kv_cache_config"],
                 )
             key_states, value_states = past_key_value.update(
                 key_states,
@@ -387,6 +396,8 @@ class LlamaAttentionMXInt(LlamaAttention):
                 cache_kwargs,
             )
 
+        # Keep a single eager path for maintainability: all-bypass still uses
+        # this function but bypass flags short-circuit quantization stages.
         attn_output, attn_weights = _eager_attention_forward_mxint(
             self,
             query_states,
@@ -395,12 +406,12 @@ class LlamaAttentionMXInt(LlamaAttention):
             attention_mask,
             dropout=0.0 if not self.training else self.attention_dropout,
             scaling=self.scaling,
-            qk_bypass=cfg["qk_bypass"],
-            qk_config=cfg["qk_config"],
-            av_bypass=cfg["av_bypass"],
-            av_config=cfg["av_config"],
-            softmax_bypass=cfg["softmax_bypass"],
-            softmax_config=cfg["softmax_config"],
+            qk_bypass=phase_attention_config["qk_bypass"],
+            qk_config=phase_attention_config["qk_config"],
+            av_bypass=phase_attention_config["av_bypass"],
+            av_config=phase_attention_config["av_config"],
+            softmax_bypass=phase_attention_config["softmax_bypass"],
+            softmax_config=phase_attention_config["softmax_config"],
             **kwargs,
         )
 

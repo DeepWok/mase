@@ -1,12 +1,14 @@
 """Quantization transform pass.
 
-Step-1 integration note (Llama phase split):
-- We keep this pass as a thin wiring layer.
-- Runtime phase behavior remains inside quantized modules.
-- This pass only normalizes/forwards configs to preserve backward compatibility.
+Llama phase-split integration note:
+- This pass remains a thin wiring layer.
+- Runtime phase execution stays in quantized modules.
+- This pass only normalizes configs and writes a consistent runtime decode
+  policy so downstream modules do not diverge silently.
 """
 
 from copy import deepcopy
+from functools import partial
 
 import torch
 from transformers.models.llama.modeling_llama import LlamaDecoderLayer
@@ -14,15 +16,15 @@ from transformers.models.llama.modeling_llama import LlamaDecoderLayer
 from chop.nn.quantized.modules import quantized_module_map
 from chop.nn.quantized.modules.phase_config import normalize_phase_q_config
 from chop.nn.quantized.modules.phase_context import (
-    infer_phase_from_decoder_layer_inputs,
-    set_active_phase,
-    set_decode_policy,
+    infer_runtime_phase_from_decoder_layer_inputs,
+    set_runtime_phase,
+    set_runtime_decode_policy,
 )
 from ...module_modify_helper import replace_by_name, instantiate_module
 from ...state_dict_map import match_a_pattern, check_is_huggingface_model
 
 
-def _prepare_module_config(config: dict, postfix: str) -> dict:
+def _normalize_quantize_module_config(config: dict, postfix: str) -> dict:
     """Prepare module config before module instantiation.
 
     Why this helper exists:
@@ -46,7 +48,7 @@ def get_config(config: dict, name: str):
         return config["default"]["config"]
 
 
-def _has_quantized_llama_modules(network) -> bool:
+def _has_llama_quantized_runtime_modules(network) -> bool:
     """Return True when network contains quantized Llama modules.
 
     Why name-based detection:
@@ -68,33 +70,88 @@ def _has_quantized_llama_modules(network) -> bool:
     return False
 
 
-def _llama_decoder_layer_phase_pre_hook(module, args, kwargs):
+def _infer_llama_decode_policy_from_quantized_modules(network) -> str:
+    """Infer a single decode policy from quantized Llama modules.
+
+    Why this is fail-fast:
+    - Phase context is global per forward call.
+    - If different Llama quantized modules disagree on decode policy, runtime
+      behavior becomes order-dependent and difficult to debug.
+    """
+
+    quantized_llama_class_names = {
+        "LlamaAttentionMXFP",
+        "LlamaAttentionMXInt",
+        "LlamaMLPMXFP",
+        "LlamaMLPMXInt",
+        "LlamaRMSNormMinifloat",
+        "LinearMXFP",
+        "LinearMXInt",
+    }
+    observed_policies = set()
+    for module in network.modules():
+        if module.__class__.__name__ not in quantized_llama_class_names:
+            continue
+        policy = getattr(module, "decode_policy", None)
+        if policy is None:
+            continue
+        if policy not in ("fp_only", "quantized"):
+            raise ValueError(
+                f"Unsupported decode_policy={policy!r} on "
+                f"{module.__class__.__name__}."
+            )
+        observed_policies.add(policy)
+
+    if not observed_policies:
+        return "fp_only"
+    if len(observed_policies) > 1:
+        raise ValueError(
+            "Mixed decode policies detected across quantized Llama modules: "
+            f"{sorted(observed_policies)}. Use a single decode_policy."
+        )
+    return next(iter(observed_policies))
+
+
+def _llama_phase_context_pre_hook(module, args, kwargs, decode_policy):
     """Set runtime phase before decoder-layer body executes.
 
     Hook timing is critical: it runs before `input_layernorm`, ensuring modules
     that execute before attention still observe correct phase in step-1.
     """
 
-    phase = infer_phase_from_decoder_layer_inputs(args, kwargs)
-    set_active_phase(phase)
-    # Step-1 invariant: decode path is always full-precision.
-    set_decode_policy("fp_only")
+    phase = infer_runtime_phase_from_decoder_layer_inputs(args, kwargs)
+    set_runtime_phase(phase)
+    # Keep decode policy explicit in context so all downstream modules apply
+    # the same policy in this forward call.
+    set_runtime_decode_policy(decode_policy)
     return None
 
 
-def _install_llama_phase_pre_hooks(network) -> None:
+def _install_llama_phase_context_pre_hooks(network) -> None:
     """Install idempotent phase pre-hooks on all Llama decoder layers."""
 
-    if not _has_quantized_llama_modules(network):
+    if not _has_llama_quantized_runtime_modules(network):
         return
+    decode_policy = _infer_llama_decode_policy_from_quantized_modules(network)
 
     for module in network.modules():
         if not isinstance(module, LlamaDecoderLayer):
             continue
         if getattr(module, "_mase_phase_hook_installed", False):
+            prev_policy = getattr(module, "_mase_phase_hook_decode_policy", None)
+            if prev_policy is not None and prev_policy != decode_policy:
+                raise ValueError(
+                    "Llama phase hook already installed with decode_policy="
+                    f"{prev_policy!r}, but current network resolves to "
+                    f"{decode_policy!r}. Rebuild model to avoid mixed policies."
+                )
             continue
-        module.register_forward_pre_hook(_llama_decoder_layer_phase_pre_hook, with_kwargs=True)
+        module.register_forward_pre_hook(
+            partial(_llama_phase_context_pre_hook, decode_policy=decode_policy),
+            with_kwargs=True,
+        )
         module._mase_phase_hook_installed = True
+        module._mase_phase_hook_decode_policy = decode_policy
 
 
 def quantize_by_type(network, pass_args):
@@ -111,7 +168,7 @@ def quantize_by_type(network, pass_args):
             raise ValueError(f"{type_name} is not supported!")
         config = deepcopy(config["config"])
         postfix = config.pop("name")
-        config = _prepare_module_config(config, postfix)
+        config = _normalize_quantize_module_config(config, postfix)
         for n, m in n_m.items():
             if isinstance(m, module):
                 new_m = instantiate_module(
@@ -132,7 +189,7 @@ def quantize_by_name(network, pass_args):
         if n in quantize_names:
             quan_config = deepcopy(pass_args[n]["config"])
             postfix = quan_config.pop("name")
-            quan_config = _prepare_module_config(quan_config, postfix)
+            quan_config = _normalize_quantize_module_config(quan_config, postfix)
 
             additional_module_args = (
                 {"config": quan_config, "network_config": network.config}
@@ -162,7 +219,7 @@ def quantize_by_regex_name(network, pass_args):
 
         quan_config = deepcopy(pass_args[matched_pattern]["config"])
         postfix = quan_config["name"]
-        quan_config = _prepare_module_config(quan_config, postfix)
+        quan_config = _normalize_quantize_module_config(quan_config, postfix)
 
         additional_module_args = (
             {"config": quan_config, "network_config": network.config}
@@ -240,6 +297,6 @@ def quantize_module_transform_pass(network, pass_args):
 
     # Install phase hooks only after module replacement, so detection sees
     # quantized Llama modules rather than original HF modules.
-    _install_llama_phase_pre_hooks(network)
+    _install_llama_phase_context_pre_hooks(network)
 
     return network, {}

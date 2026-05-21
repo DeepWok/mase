@@ -16,7 +16,7 @@ from chop.nn.quantized.functional.linear import (
 import torch
 from torch import Tensor
 from torch.nn import functional as F
-from chop.nn.quantized.modules.phase_context import get_active_phase
+from chop.nn.quantized.modules.phase_context import get_runtime_phase
 from chop.nn.quantized.modules.phase_config import (
     get_phase_subconfig,
     normalize_phase_q_config,
@@ -822,13 +822,14 @@ class LinearMXIntHardware(_LinearBase):
 class LinearMXFP(_LinearBase):
     """MXFP linear with prefill/decode phase-aware execution.
 
-    Step-1 policy for maintainable migration:
-    - Prefill can run quantized path.
-    - Decode is forced to full precision (`decode_policy='fp_only'`).
+    Runtime phase policy:
+    - `fp_only`: decode uses preserved FP snapshots.
+    - `quantized`: decode uses decode-specific quantized weight bank.
 
-    Why dual weight representation exists:
-    - `self.weight` stores prefill weight (PTQ/GPTQ output).
-    - `_decode_weight_fp` stores original FP weight snapshot for decode path.
+    Memory policy (this change):
+    - We do not keep all decode banks alive at once.
+    - Active policy keeps only one decode bank type (`_fp` or `_q`), so common
+      runtime memory is bounded to `self.weight + one decode bank`.
     """
 
     # NOTE: backward is not supported — inference only (PTQ)
@@ -845,10 +846,10 @@ class LinearMXFP(_LinearBase):
         assert config is not None, "config is None!"
         self.phase_config = normalize_phase_q_config(config)
         self.decode_policy = self.phase_config["decode_policy"]
-        if self.decode_policy != "fp_only":
+        if self.decode_policy not in ("fp_only", "quantized"):
             raise ValueError(
-                "Step-1 integration only supports decode_policy='fp_only' "
-                f"for {self.__class__.__name__}, got {self.decode_policy!r}."
+                "Unsupported decode_policy "
+                f"{self.decode_policy!r} for {self.__class__.__name__}."
             )
 
         prefill_cfg, _ = get_phase_subconfig(self.phase_config, "prefill")
@@ -857,25 +858,88 @@ class LinearMXFP(_LinearBase):
         self.gptq = prefill_cfg.get("gptq", False)
         self.clip_search = prefill_cfg.get("clip_search", False)
 
-        # Non-persistent buffers keep decode FP weights without polluting
-        # serialized checkpoints.
+        # Decode banks are non-persistent runtime buffers; they are excluded
+        # from checkpoints so saved artifacts remain upstream-compatible.
         self.register_buffer("_decode_weight_fp", torch.empty(0), persistent=False)
         self.register_buffer("_decode_bias_fp", torch.empty(0), persistent=False)
+        self.register_buffer("_decode_weight_q", torch.empty(0), persistent=False)
+        self.register_buffer("_decode_bias_q", torch.empty(0), persistent=False)
 
-    def _capture_decode_fp_snapshot(self, state_dict) -> None:
-        """Save FP weights for decode before any prefill quantization mutates data."""
+    def _capture_decode_fp_bank_snapshot(self, state_dict) -> None:
+        """Save FP snapshot only when fp-only decode policy actually needs it."""
+
+        if self.decode_policy != "fp_only":
+            # Quantized decode should not keep an extra FP bank in steady-state.
+            self._decode_weight_fp = torch.empty(0, device=self.weight.device)
+            self._decode_bias_fp = torch.empty(0, device=self.weight.device)
+            return
 
         if "weight" in state_dict:
             self._decode_weight_fp = state_dict["weight"].detach().clone()
         if self.bias is not None and "bias" in state_dict and state_dict["bias"] is not None:
             self._decode_bias_fp = state_dict["bias"].detach().clone()
 
+    def _build_decode_quantized_bank(self) -> None:
+        """Build decode quantized bank once from current model weights.
+
+        Why source is `self.weight`:
+        - This mode targets low-memory operation with no extra FP decode bank.
+        - `self.weight` already represents current prefill bank (FP/PTQ/GPTQ),
+          so decode quant bank stays deterministic without a third copy.
+        """
+
+        if self.decode_policy != "quantized":
+            self._decode_weight_q = torch.empty(0, device=self.weight.device)
+            self._decode_bias_q = torch.empty(0, device=self.weight.device)
+            return
+
+        decode_cfg, _ = get_phase_subconfig(self.phase_config, "decode")
+        if decode_cfg.get("bypass", False):
+            self._decode_weight_q = torch.empty(0, device=self.weight.device)
+            self._decode_bias_q = torch.empty(0, device=self.weight.device)
+            return
+
+        source_weight = self.weight
+        source_bias = self.bias
+        source_weight = source_weight.to(self.weight.device, self.weight.dtype)
+        self._decode_weight_q = mxfp_quantizer(
+            source_weight,
+            block_size=decode_cfg["weight_block_size"],
+            element_exp_bits=decode_cfg["weight_exponent_width"],
+            element_frac_bits=decode_cfg["weight_frac_width"],
+            block_dim=1,
+        )
+
+        if (
+            source_bias is not None
+            and decode_cfg.get("bias_block_size") is not None
+            and decode_cfg.get("bias_exponent_width") is not None
+        ):
+            self._decode_bias_q = mxfp_quantizer(
+                source_bias.to(self.weight.device, self.weight.dtype),
+                block_size=decode_cfg["bias_block_size"],
+                element_exp_bits=decode_cfg["bias_exponent_width"],
+                element_frac_bits=decode_cfg.get("bias_frac_width"),
+                block_dim=0,
+            )
+        else:
+            self._decode_bias_q = torch.empty(0, device=self.weight.device)
+        # Quantized mode keeps only quantized decode bank, not FP decode bank.
+        self._decode_weight_fp = torch.empty(0, device=self.weight.device)
+        self._decode_bias_fp = torch.empty(0, device=self.weight.device)
+
+    def refresh_decode_runtime_bank(self) -> None:
+        """Refresh decode bank according to active decode policy."""
+
+        self._build_decode_quantized_bank()
+
     def load_state_dict(self, state_dict, strict=True, assign=False):
         """Load pretrained weights, then quantize them in place."""
-        self._capture_decode_fp_snapshot(state_dict)
+        self._capture_decode_fp_bank_snapshot(state_dict)
         result = super().load_state_dict(state_dict, strict=strict, assign=assign)
 
         if self.bypass or self.gptq:
+            self._build_decode_quantized_bank()
             return result
 
         # Quantize weight
@@ -911,21 +975,15 @@ class LinearMXFP(_LinearBase):
                 )
             )
 
+        self._build_decode_quantized_bank()
         return result
-
-    def _is_decode_fp_mode(self) -> bool:
-        """Return True when current call must use decode full-precision path."""
-
-        phase = get_active_phase()
-        return phase == "decode" and self.decode_policy == "fp_only"
 
     @torch.no_grad()
     def forward(self, x):
-        if self._is_decode_fp_mode():
+        runtime_phase = get_runtime_phase()
+        if runtime_phase == "decode" and self.decode_policy == "fp_only":
             # Why this branch exists:
-            # decode must stay full precision in step-1 even when prefill is
-            # quantized/GPTQ. This guarantees deterministic behavior for staged
-            # rollout and easier upstream rebases.
+            # Default path must remain fully backward-compatible.
             decode_weight = (
                 self._decode_weight_fp if self._decode_weight_fp.numel() > 0 else self.weight
             )
@@ -936,14 +994,41 @@ class LinearMXFP(_LinearBase):
             )
             return F.linear(x, decode_weight, decode_bias)
 
-        prefill_cfg, _ = get_phase_subconfig(self.phase_config, "prefill")
-        if prefill_cfg.get("bypass", False):
+        if runtime_phase == "decode" and self.decode_policy == "quantized":
+            decode_phase_config, _ = get_phase_subconfig(self.phase_config, "decode")
+            if decode_phase_config.get("bypass", False):
+                # No fallback bank: bypass means decode consumes current bank
+                # directly (typically FP if prefill is FP, or PTQ/GPTQ bank).
+                return F.linear(x, self.weight, self.bias)
+
+            x_block_size = decode_phase_config.get("data_in_block_size")
+            x_exp_bits = decode_phase_config.get("data_in_exponent_width")
+            x_frac_bits = decode_phase_config.get("data_in_frac_width")
+            if x_block_size is not None and x_exp_bits is not None:
+                x = mxfp_quantizer(
+                    x,
+                    block_size=x_block_size,
+                    element_exp_bits=x_exp_bits,
+                    element_frac_bits=x_frac_bits,
+                    block_dim=-1,
+                )
+            decode_weight = (
+                self._decode_weight_q if self._decode_weight_q.numel() > 0 else self.weight
+            )
+            if self.bias is not None and self._decode_bias_q.numel() > 0:
+                decode_bias = self._decode_bias_q
+            else:
+                decode_bias = self.bias
+            return F.linear(x, decode_weight, decode_bias)
+
+        prefill_phase_config, _ = get_phase_subconfig(self.phase_config, "prefill")
+        if prefill_phase_config.get("bypass", False):
             return F.linear(x, self.weight, self.bias)
 
         # Only quantize activations; weights/bias already quantized in load_state_dict
-        x_block_size = prefill_cfg.get("data_in_block_size")
-        x_exp_bits = prefill_cfg.get("data_in_exponent_width")
-        x_frac_bits = prefill_cfg.get("data_in_frac_width")
+        x_block_size = prefill_phase_config.get("data_in_block_size")
+        x_exp_bits = prefill_phase_config.get("data_in_exponent_width")
+        x_frac_bits = prefill_phase_config.get("data_in_frac_width")
         if x_block_size is not None and x_exp_bits is not None:
             x = mxfp_quantizer(
                 x,
@@ -959,8 +1044,7 @@ class LinearMXFP(_LinearBase):
 class LinearMXInt(_LinearBase):
     """MXInt linear with prefill/decode phase-aware execution.
 
-    Behavior mirrors `LinearMXFP`: prefill may be quantized, decode is forced to
-    FP using cached original weights/bias.
+    Behavior mirrors `LinearMXFP` with the same low-memory decode-bank policy.
     """
 
     # NOTE: backward is not supported — inference only (PTQ)
@@ -977,10 +1061,10 @@ class LinearMXInt(_LinearBase):
         assert config is not None, "config is None!"
         self.phase_config = normalize_phase_q_config(config)
         self.decode_policy = self.phase_config["decode_policy"]
-        if self.decode_policy != "fp_only":
+        if self.decode_policy not in ("fp_only", "quantized"):
             raise ValueError(
-                "Step-1 integration only supports decode_policy='fp_only' "
-                f"for {self.__class__.__name__}, got {self.decode_policy!r}."
+                "Unsupported decode_policy "
+                f"{self.decode_policy!r} for {self.__class__.__name__}."
             )
 
         prefill_cfg, _ = get_phase_subconfig(self.phase_config, "prefill")
@@ -991,21 +1075,72 @@ class LinearMXInt(_LinearBase):
 
         self.register_buffer("_decode_weight_fp", torch.empty(0), persistent=False)
         self.register_buffer("_decode_bias_fp", torch.empty(0), persistent=False)
+        self.register_buffer("_decode_weight_q", torch.empty(0), persistent=False)
+        self.register_buffer("_decode_bias_q", torch.empty(0), persistent=False)
 
-    def _capture_decode_fp_snapshot(self, state_dict) -> None:
-        """Save FP weights for decode before prefill quantization mutates data."""
+    def _capture_decode_fp_bank_snapshot(self, state_dict) -> None:
+        """Save FP snapshot only when fp-only decode policy actually needs it."""
+
+        if self.decode_policy != "fp_only":
+            self._decode_weight_fp = torch.empty(0, device=self.weight.device)
+            self._decode_bias_fp = torch.empty(0, device=self.weight.device)
+            return
 
         if "weight" in state_dict:
             self._decode_weight_fp = state_dict["weight"].detach().clone()
         if self.bias is not None and "bias" in state_dict and state_dict["bias"] is not None:
             self._decode_bias_fp = state_dict["bias"].detach().clone()
 
+    def _build_decode_quantized_bank(self) -> None:
+        """Build decode quantized bank once from FP source snapshot."""
+
+        if self.decode_policy != "quantized":
+            self._decode_weight_q = torch.empty(0, device=self.weight.device)
+            self._decode_bias_q = torch.empty(0, device=self.weight.device)
+            return
+
+        decode_cfg, _ = get_phase_subconfig(self.phase_config, "decode")
+        if decode_cfg.get("bypass", False):
+            self._decode_weight_q = torch.empty(0, device=self.weight.device)
+            self._decode_bias_q = torch.empty(0, device=self.weight.device)
+            return
+
+        source_weight = self.weight
+        source_bias = self.bias
+        source_weight = source_weight.to(self.weight.device, self.weight.dtype)
+        self._decode_weight_q = mxint_quantizer(
+            source_weight,
+            block_size=decode_cfg["weight_block_size"],
+            element_bits=decode_cfg["weight_width"],
+            block_dim=1,
+            quantile_search=decode_cfg.get("clip_search", False),
+        )
+        if source_bias is not None and decode_cfg.get("bias_block_size") is not None:
+            self._decode_bias_q = mxint_quantizer(
+                source_bias.to(self.weight.device, self.weight.dtype),
+                block_size=decode_cfg["bias_block_size"],
+                element_bits=decode_cfg.get("bias_width"),
+                block_dim=0,
+                quantile_search=decode_cfg.get("clip_search", False),
+            )
+        else:
+            self._decode_bias_q = torch.empty(0, device=self.weight.device)
+        # Quantized mode keeps only quantized decode bank, not FP decode bank.
+        self._decode_weight_fp = torch.empty(0, device=self.weight.device)
+        self._decode_bias_fp = torch.empty(0, device=self.weight.device)
+
+    def refresh_decode_runtime_bank(self) -> None:
+        """Refresh decode bank according to active decode policy."""
+
+        self._build_decode_quantized_bank()
+
     def load_state_dict(self, state_dict, strict=True, assign=False):
         """Load pretrained weights, then quantize them in place."""
-        self._capture_decode_fp_snapshot(state_dict)
+        self._capture_decode_fp_bank_snapshot(state_dict)
         result = super().load_state_dict(state_dict, strict=strict, assign=assign)
 
         if self.bypass or self.gptq:
+            self._build_decode_quantized_bank()
             return result
 
         # Quantize weight
@@ -1039,17 +1174,13 @@ class LinearMXInt(_LinearBase):
                 )
             )
 
+        self._build_decode_quantized_bank()
         return result
-
-    def _is_decode_fp_mode(self) -> bool:
-        """Return True when current call must use decode full-precision path."""
-
-        phase = get_active_phase()
-        return phase == "decode" and self.decode_policy == "fp_only"
 
     @torch.no_grad()
     def forward(self, x):
-        if self._is_decode_fp_mode():
+        runtime_phase = get_runtime_phase()
+        if runtime_phase == "decode" and self.decode_policy == "fp_only":
             decode_weight = (
                 self._decode_weight_fp if self._decode_weight_fp.numel() > 0 else self.weight
             )
@@ -1060,13 +1191,36 @@ class LinearMXInt(_LinearBase):
             )
             return F.linear(x, decode_weight, decode_bias)
 
-        prefill_cfg, _ = get_phase_subconfig(self.phase_config, "prefill")
-        if prefill_cfg.get("bypass", False):
+        if runtime_phase == "decode" and self.decode_policy == "quantized":
+            decode_phase_config, _ = get_phase_subconfig(self.phase_config, "decode")
+            if decode_phase_config.get("bypass", False):
+                return F.linear(x, self.weight, self.bias)
+
+            x_block_size = decode_phase_config.get("data_in_block_size")
+            x_element_bits = decode_phase_config.get("data_in_width")
+            if x_block_size is not None and x_element_bits is not None:
+                x = mxint_quantizer(
+                    x,
+                    block_size=x_block_size,
+                    element_bits=x_element_bits,
+                    block_dim=-1,
+                )
+            decode_weight = (
+                self._decode_weight_q if self._decode_weight_q.numel() > 0 else self.weight
+            )
+            if self.bias is not None and self._decode_bias_q.numel() > 0:
+                decode_bias = self._decode_bias_q
+            else:
+                decode_bias = self.bias
+            return F.linear(x, decode_weight, decode_bias)
+
+        prefill_phase_config, _ = get_phase_subconfig(self.phase_config, "prefill")
+        if prefill_phase_config.get("bypass", False):
             return F.linear(x, self.weight, self.bias)
 
         # Only quantize activations; weights/bias already quantized in load_state_dict
-        x_block_size = prefill_cfg.get("data_in_block_size")
-        x_element_bits = prefill_cfg.get("data_in_width")
+        x_block_size = prefill_phase_config.get("data_in_block_size")
+        x_element_bits = prefill_phase_config.get("data_in_width")
         if x_block_size is not None and x_element_bits is not None:
             x = mxint_quantizer(
                 x,
