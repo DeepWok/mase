@@ -1,7 +1,7 @@
 """Llama RMSNorm quantization with phase-aware dispatch.
 
-Decode is intentionally forced to FP in step-1 for deterministic integration.
-Runtime phase is supplied by decoder-layer pre-hooks via phase context.
+Default decode behavior remains FP-only for backward compatibility.
+`quantized` decode is opt-in via phase config and policy.
 """
 
 from functools import partial
@@ -11,7 +11,7 @@ from torch import Tensor, nn
 
 from chop.nn.quantizers.SNN.LSQ import LSQInteger
 from chop.nn.quantizers._minifloat_mx import MinifloatMeta, minifloat_quantizer_sim
-from chop.nn.quantized.modules.phase_context import get_active_phase
+from chop.nn.quantized.modules.phase_context import get_runtime_phase
 from chop.nn.quantized.modules.phase_config import (
     get_phase_subconfig,
     normalize_phase_q_config,
@@ -51,11 +51,6 @@ class LlamaRMSNormMinifloat(LlamaRMSNorm):
         self.variance_epsilon = config.rms_norm_eps
         self.phase_q_config = normalize_phase_q_config(q_config)
         self.decode_policy = self.phase_q_config["decode_policy"]
-        if self.decode_policy != "fp_only":
-            raise ValueError(
-                "Step-1 integration only supports decode_policy='fp_only' "
-                f"for {self.__class__.__name__}, got {self.decode_policy!r}."
-            )
 
     @staticmethod
     def _build_weight_quantizer(sub_cfg: dict, bypass: bool):
@@ -90,17 +85,16 @@ class LlamaRMSNormMinifloat(LlamaRMSNorm):
         )
 
     def forward(self, hidden_states):
-        phase = get_active_phase()
-        sub_cfg, decode_policy = get_phase_subconfig(self.phase_q_config, phase)
-        bypass = sub_cfg.get("bypass", False)
-        if phase == "decode" and decode_policy == "fp_only":
-            # Why force bypass here:
-            # step-1 intentionally keeps decode fully FP for stability and
-            # backward compatibility while still accepting phase-shaped configs.
+        runtime_phase = get_runtime_phase()
+        phase_subconfig, decode_policy = get_phase_subconfig(
+            self.phase_q_config, runtime_phase
+        )
+        bypass = phase_subconfig.get("bypass", False)
+        if runtime_phase == "decode" and decode_policy == "fp_only":
             bypass = True
 
-        w_quantizer = self._build_weight_quantizer(sub_cfg, bypass)
-        x_quantizer = self._build_input_quantizer(sub_cfg, bypass)
+        w_quantizer = self._build_weight_quantizer(phase_subconfig, bypass)
+        x_quantizer = self._build_input_quantizer(phase_subconfig, bypass)
 
         input_dtype = hidden_states.dtype
         if x_quantizer is not None:

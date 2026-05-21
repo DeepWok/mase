@@ -1,11 +1,7 @@
 """Llama MLP quantization with phase-aware dispatch.
 
-Step-1 policy is explicit:
-- prefill: quantization path can run
-- decode: full precision only
-
-Phase source:
-- Runtime phase is written by decoder-layer pre-hooks before layer execution.
+Default policy keeps decode full precision (`fp_only`) for compatibility.
+`quantized` decode is opt-in and consumes decode-phase sub-config directly.
 """
 
 import torch
@@ -13,7 +9,7 @@ from torch import nn, Tensor
 
 from chop.nn.quantizers.SNN.LSQ import LSQInteger
 from chop.nn.quantized.functional.silu import silu_minifloat
-from chop.nn.quantized.modules.phase_context import get_active_phase
+from chop.nn.quantized.modules.phase_context import get_runtime_phase
 from chop.nn.quantized.modules.phase_config import (
     get_phase_subconfig,
     normalize_phase_q_config,
@@ -68,22 +64,19 @@ class LlamaMLPMXFP(LlamaMLP):
         self.layer_idx = layer_idx
         self.phase_q_config = normalize_phase_q_config(q_config)
         self.decode_policy = self.phase_q_config["decode_policy"]
-        if self.decode_policy != "fp_only":
-            raise ValueError(
-                "Step-1 integration only supports decode_policy='fp_only' "
-                f"for {self.__class__.__name__}, got {self.decode_policy!r}."
-            )
 
     def forward(self, x: Tensor) -> Tensor:
-        phase = get_active_phase()
-        sub_cfg, decode_policy = get_phase_subconfig(self.phase_q_config, phase)
-        bypass = sub_cfg.get("bypass", False)
-        if phase == "decode" and decode_policy == "fp_only":
+        runtime_phase = get_runtime_phase()
+        phase_subconfig, decode_policy = get_phase_subconfig(
+            self.phase_q_config, runtime_phase
+        )
+        bypass = phase_subconfig.get("bypass", False)
+        if runtime_phase == "decode" and decode_policy == "fp_only":
             bypass = True
 
         if bypass:
             return super().forward(x)
-        x = silu_minifloat(self.gate_proj(x), sub_cfg) * self.up_proj(x)
+        x = silu_minifloat(self.gate_proj(x), phase_subconfig) * self.up_proj(x)
         return self.down_proj(x)
 
 
@@ -95,20 +88,17 @@ class LlamaMLPMXInt(LlamaMLP):
         self.layer_idx = layer_idx
         self.phase_q_config = normalize_phase_q_config(q_config)
         self.decode_policy = self.phase_q_config["decode_policy"]
-        if self.decode_policy != "fp_only":
-            raise ValueError(
-                "Step-1 integration only supports decode_policy='fp_only' "
-                f"for {self.__class__.__name__}, got {self.decode_policy!r}."
-            )
 
     def forward(self, x: Tensor) -> Tensor:
-        phase = get_active_phase()
-        sub_cfg, decode_policy = get_phase_subconfig(self.phase_q_config, phase)
-        bypass = sub_cfg.get("bypass", False)
-        if phase == "decode" and decode_policy == "fp_only":
+        runtime_phase = get_runtime_phase()
+        phase_subconfig, decode_policy = get_phase_subconfig(
+            self.phase_q_config, runtime_phase
+        )
+        bypass = phase_subconfig.get("bypass", False)
+        if runtime_phase == "decode" and decode_policy == "fp_only":
             bypass = True
 
         if bypass:
             return super().forward(x)
-        x = silu_minifloat(self.gate_proj(x), sub_cfg) * self.up_proj(x)
+        x = silu_minifloat(self.gate_proj(x), phase_subconfig) * self.up_proj(x)
         return self.down_proj(x)

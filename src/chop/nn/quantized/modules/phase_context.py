@@ -19,7 +19,7 @@ from contextvars import ContextVar
 from typing import Any, Literal
 
 Phase = Literal["prefill", "decode"]
-DecodePolicy = Literal["fp_only"]
+DecodePolicy = Literal["fp_only", "quantized"]
 
 
 _ACTIVE_PHASE: ContextVar[Phase] = ContextVar("active_quant_phase", default="prefill")
@@ -28,16 +28,16 @@ _DECODE_POLICY: ContextVar[DecodePolicy] = ContextVar(
 )
 
 
-def set_active_phase(phase: Phase) -> None:
-    """Set the current runtime phase for quantized module dispatch."""
+def set_runtime_phase(phase: Phase) -> None:
+    """Set runtime phase used by phase-aware quantized modules."""
 
     if phase not in ("prefill", "decode"):
         raise ValueError(f"Unsupported phase: {phase}")
     _ACTIVE_PHASE.set(phase)
 
 
-def get_active_phase() -> Phase:
-    """Return the current runtime phase.
+def get_runtime_phase() -> Phase:
+    """Return current runtime phase.
 
     Defaults to `prefill` when no explicit phase has been written yet.
     """
@@ -45,28 +45,35 @@ def get_active_phase() -> Phase:
     return _ACTIVE_PHASE.get()
 
 
-def set_decode_policy(policy: DecodePolicy) -> None:
-    """Set decode policy for current runtime context.
+def set_runtime_decode_policy(policy: DecodePolicy) -> None:
+    """Set decode policy in runtime phase context.
 
-    Current step intentionally supports only `fp_only` to keep the first
-    migration minimal and deterministic.
+    Supported policies:
+    - `fp_only`: decode path is forced to full precision.
+    - `quantized`: decode path may consume decode-phase quantized configs.
+
+    Why we validate here:
+    - This context is shared by all quantized modules during forward.
+    - Central validation prevents silent fallback to unintended behavior.
     """
 
-    if policy != "fp_only":
+    if policy not in ("fp_only", "quantized"):
         raise ValueError(f"Unsupported decode policy: {policy}")
     _DECODE_POLICY.set(policy)
 
 
-def get_decode_policy() -> DecodePolicy:
-    """Return decode policy for current runtime context.
+def get_runtime_decode_policy() -> DecodePolicy:
+    """Return decode policy from runtime phase context.
 
-    Defaults to `fp_only`, matching step-1 product decision.
+    Defaults to `fp_only` to preserve backward compatibility.
     """
 
     return _DECODE_POLICY.get()
 
 
-def infer_phase_from_hidden_and_cache(hidden_states: Any, past_cache: Any) -> Phase:
+def infer_runtime_phase_from_hidden_and_cache(
+    hidden_states: Any, past_cache: Any
+) -> Phase:
     """Infer runtime phase from hidden-state shape and cache state.
 
     Rules are intentionally unchanged from step-1 attention-local logic:
@@ -102,7 +109,7 @@ def infer_phase_from_hidden_and_cache(hidden_states: Any, past_cache: Any) -> Ph
     return "prefill"
 
 
-def extract_past_cache_from_decoder_layer_inputs(
+def extract_decoder_layer_past_cache(
     args: tuple[Any, ...],
     kwargs: dict[str, Any],
 ) -> Any:
@@ -123,12 +130,12 @@ def extract_past_cache_from_decoder_layer_inputs(
     return None
 
 
-def infer_phase_from_decoder_layer_inputs(
+def infer_runtime_phase_from_decoder_layer_inputs(
     args: tuple[Any, ...],
     kwargs: dict[str, Any],
 ) -> Phase:
     """Infer runtime phase from decoder-layer forward inputs."""
 
     hidden_states = kwargs.get("hidden_states", args[0] if args else None)
-    past_cache = extract_past_cache_from_decoder_layer_inputs(args, kwargs)
-    return infer_phase_from_hidden_and_cache(hidden_states, past_cache)
+    past_cache = extract_decoder_layer_past_cache(args, kwargs)
+    return infer_runtime_phase_from_hidden_and_cache(hidden_states, past_cache)

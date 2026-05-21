@@ -8,6 +8,7 @@ import types
 from pathlib import Path
 
 import torch
+import pytest
 from transformers.models.llama.configuration_llama import LlamaConfig
 from transformers.models.llama.modeling_llama import LlamaDecoderLayer
 
@@ -29,7 +30,8 @@ if "chop" not in sys.modules:
 from chop.nn.quantized.modules.linear import LinearMXFP
 from chop.passes.module.transforms.quantize.quantize import (
     quantize_module_transform_pass,
-    _install_llama_phase_pre_hooks,
+    _install_llama_phase_context_pre_hooks,
+    _infer_llama_decode_policy_from_quantized_modules,
 )
 
 
@@ -70,15 +72,47 @@ def test_quantize_pass_accepts_phase_config_for_mxfp_linear():
     assert pass_args == pass_args_before
 
 
+def test_quantize_pass_accepts_quantized_decode_policy():
+    """`decode_policy=quantized` should pass parsing and instantiation."""
+
+    model = _TinyMLP()
+    pass_args = {
+        "by": "name",
+        "fc1": {
+            "config": {
+                "name": "mxfp",
+                "decode_policy": "quantized",
+                "prefill": {"bypass": True},
+                "decode": {
+                    "bypass": False,
+                    "data_in_block_size": 16,
+                    "data_in_exponent_width": 4,
+                    "data_in_frac_width": 3,
+                    "weight_block_size": 16,
+                    "weight_exponent_width": 4,
+                    "weight_frac_width": 3,
+                },
+            }
+        },
+    }
+    quantized_model, _ = quantize_module_transform_pass(model, pass_args)
+    assert isinstance(quantized_model.fc1, LinearMXFP)
+    assert quantized_model.fc1.decode_policy == "quantized"
+
+
 def test_llama_phase_pre_hook_installation_is_gated_and_idempotent():
     """Hooks should install only for quantized Llama runs and only once."""
 
     class LlamaAttentionMXFP(torch.nn.Module):
+        def __init__(self, decode_policy: str = "fp_only"):
+            super().__init__()
+            self.decode_policy = decode_policy
+
         def forward(self, x):
             return x
 
     class TinyNetwork(torch.nn.Module):
-        def __init__(self, with_quantized_marker: bool):
+        def __init__(self, with_quantized_marker: bool, decode_policy: str = "fp_only"):
             super().__init__()
             cfg = LlamaConfig(
                 hidden_size=16,
@@ -89,19 +123,37 @@ def test_llama_phase_pre_hook_installation_is_gated_and_idempotent():
             )
             self.layer = LlamaDecoderLayer(cfg, layer_idx=0)
             if with_quantized_marker:
-                self.quant_marker = LlamaAttentionMXFP()
+                self.quant_marker = LlamaAttentionMXFP(decode_policy=decode_policy)
 
     net_without_marker = TinyNetwork(with_quantized_marker=False)
     before_no_marker = len(net_without_marker.layer._forward_pre_hooks)
-    _install_llama_phase_pre_hooks(net_without_marker)
+    _install_llama_phase_context_pre_hooks(net_without_marker)
     assert len(net_without_marker.layer._forward_pre_hooks) == before_no_marker
 
     net_with_marker = TinyNetwork(with_quantized_marker=True)
     before_with_marker = len(net_with_marker.layer._forward_pre_hooks)
-    _install_llama_phase_pre_hooks(net_with_marker)
+    _install_llama_phase_context_pre_hooks(net_with_marker)
     after_first = len(net_with_marker.layer._forward_pre_hooks)
-    _install_llama_phase_pre_hooks(net_with_marker)
+    _install_llama_phase_context_pre_hooks(net_with_marker)
     after_second = len(net_with_marker.layer._forward_pre_hooks)
 
     assert after_first == before_with_marker + 1
     assert after_second == after_first
+
+
+def test_decode_policy_inference_fails_fast_on_mixed_llama_policies():
+    """Mixed decode policies must raise instead of silently choosing one."""
+
+    class LlamaAttentionMXFP(torch.nn.Module):
+        def __init__(self, decode_policy: str):
+            super().__init__()
+            self.decode_policy = decode_policy
+
+    class TinyNetwork(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.a = LlamaAttentionMXFP("fp_only")
+            self.b = LlamaAttentionMXFP("quantized")
+
+    with pytest.raises(ValueError, match="Mixed decode policies"):
+        _infer_llama_decode_policy_from_quantized_modules(TinyNetwork())
