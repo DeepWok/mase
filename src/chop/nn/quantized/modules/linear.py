@@ -1230,3 +1230,24 @@ class LinearMXInt(_LinearBase):
             )
 
         return F.linear(x, self.weight, self.bias)
+
+
+class RotateMXFPLinear(LinearMXFP):
+    """Compatibility alias for rotate-aware MXFP linear.
+
+    Phase-split migration does not modify rotate-specific linear behavior in
+    this PR. We keep the exported symbol so module-map and package imports from
+    mainline remain stable after cherry-pick migration.
+    """
+
+    pass
+
+
+class RotateMXIntLinear(LinearMXInt):
+    """Compatibility alias for rotate-aware MXInt linear.
+
+    This keeps the public import contract intact while split-phase work is
+    focused on decode-policy wiring and bank selection.
+    """
+
+    pass

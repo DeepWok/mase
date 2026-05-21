@@ -559,3 +559,24 @@ def _eager_attention_forward_mxint(
     attn_output = torch.matmul(attn_weights, value_states)
     attn_output = attn_output.transpose(1, 2).contiguous()
     return attn_output, attn_weights
+
+
+class LlamaAttentionMXFPRotate(LlamaAttentionMXFP):
+    """Rotation-variant compatibility alias for MXFP attention.
+
+    The phase-split migration intentionally keeps one phase-aware eager path in
+    this file. We retain the rotate class symbol to preserve mainline import
+    contracts (`llama/__init__.py`) and downstream module map wiring.
+    """
+
+    pass
+
+
+class LlamaAttentionMXIntRotate(LlamaAttentionMXInt):
+    """Rotation-variant compatibility alias for MXInt attention.
+
+    Keeping this symbol avoids breaking existing registry/import paths while we
+    focus this PR on phase-split decode policy behavior.
+    """
+
+    pass
