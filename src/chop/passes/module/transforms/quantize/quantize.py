@@ -24,6 +24,24 @@ from ...module_modify_helper import replace_by_name, instantiate_module
 from ...state_dict_map import match_a_pattern, check_is_huggingface_model
 
 
+_LLAMA_PHASE_CONTEXT_POLICY_MODULE_CLASS_NAMES = {
+    "LlamaAttentionMXFP",
+    "LlamaAttentionMXInt",
+    "LlamaMLPMXFP",
+    "LlamaMLPMXInt",
+    "LlamaRMSNormMinifloat",
+    "LinearMXFP",
+    "LinearMXInt",
+}
+"""Class names that participate in Llama phase-policy runtime wiring.
+
+Why include LinearMX*:
+- Linear modules consume runtime phase/decode policy during forward.
+- Hook installation must trigger even for linear-only quantization configs.
+- Reusing one list for detection + policy inference prevents drift.
+"""
+
+
 def _normalize_quantize_module_config(config: dict, postfix: str) -> dict:
     """Prepare module config before module instantiation.
 
@@ -57,15 +75,11 @@ def _has_llama_quantized_runtime_modules(network) -> bool:
       matching the module-replacement products used in step-1.
     """
 
-    quantized_llama_class_names = {
-        "LlamaAttentionMXFP",
-        "LlamaAttentionMXInt",
-        "LlamaMLPMXFP",
-        "LlamaMLPMXInt",
-        "LlamaRMSNormMinifloat",
-    }
     for module in network.modules():
-        if module.__class__.__name__ in quantized_llama_class_names:
+        if (
+            module.__class__.__name__
+            in _LLAMA_PHASE_CONTEXT_POLICY_MODULE_CLASS_NAMES
+        ):
             return True
     return False
 
@@ -79,18 +93,12 @@ def _infer_llama_decode_policy_from_quantized_modules(network) -> str:
       behavior becomes order-dependent and difficult to debug.
     """
 
-    quantized_llama_class_names = {
-        "LlamaAttentionMXFP",
-        "LlamaAttentionMXInt",
-        "LlamaMLPMXFP",
-        "LlamaMLPMXInt",
-        "LlamaRMSNormMinifloat",
-        "LinearMXFP",
-        "LinearMXInt",
-    }
     observed_policies = set()
     for module in network.modules():
-        if module.__class__.__name__ not in quantized_llama_class_names:
+        if (
+            module.__class__.__name__
+            not in _LLAMA_PHASE_CONTEXT_POLICY_MODULE_CLASS_NAMES
+        ):
             continue
         policy = getattr(module, "decode_policy", None)
         if policy is None:

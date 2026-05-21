@@ -111,8 +111,21 @@ def test_llama_phase_pre_hook_installation_is_gated_and_idempotent():
         def forward(self, x):
             return x
 
+    class LinearMXFP(torch.nn.Module):
+        def __init__(self, decode_policy: str = "fp_only"):
+            super().__init__()
+            self.decode_policy = decode_policy
+
+        def forward(self, x):
+            return x
+
     class TinyNetwork(torch.nn.Module):
-        def __init__(self, with_quantized_marker: bool, decode_policy: str = "fp_only"):
+        def __init__(
+            self,
+            with_quantized_marker: bool,
+            marker_class: type[torch.nn.Module] = LlamaAttentionMXFP,
+            decode_policy: str = "fp_only",
+        ):
             super().__init__()
             cfg = LlamaConfig(
                 hidden_size=16,
@@ -123,7 +136,7 @@ def test_llama_phase_pre_hook_installation_is_gated_and_idempotent():
             )
             self.layer = LlamaDecoderLayer(cfg, layer_idx=0)
             if with_quantized_marker:
-                self.quant_marker = LlamaAttentionMXFP(decode_policy=decode_policy)
+                self.quant_marker = marker_class(decode_policy=decode_policy)
 
     net_without_marker = TinyNetwork(with_quantized_marker=False)
     before_no_marker = len(net_without_marker.layer._forward_pre_hooks)
@@ -139,6 +152,17 @@ def test_llama_phase_pre_hook_installation_is_gated_and_idempotent():
 
     assert after_first == before_with_marker + 1
     assert after_second == after_first
+
+    # Linear-only quantization must also install the hook, because runtime
+    # phase/decode policy is consumed inside quantized Linear forward paths.
+    net_with_linear_marker = TinyNetwork(
+        with_quantized_marker=True, marker_class=LinearMXFP
+    )
+    before_linear_marker = len(net_with_linear_marker.layer._forward_pre_hooks)
+    _install_llama_phase_context_pre_hooks(net_with_linear_marker)
+    assert len(net_with_linear_marker.layer._forward_pre_hooks) == (
+        before_linear_marker + 1
+    )
 
 
 def test_decode_policy_inference_fails_fast_on_mixed_llama_policies():
