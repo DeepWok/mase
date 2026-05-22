@@ -29,7 +29,9 @@ if "cvxpy" not in sys.modules:
     sys.modules["cvxpy"] = types.ModuleType("cvxpy")
 
 # Bypass heavyweight `chop/__init__.py` side effects during focused unit tests.
-repo_root = next(p for p in Path(__file__).resolve().parents if (p / "src/chop").exists())
+repo_root = next(
+    p for p in Path(__file__).resolve().parents if (p / "src/chop").exists()
+)
 if "chop" not in sys.modules:
     chop_stub = types.ModuleType("chop")
     chop_stub.__path__ = [str(repo_root / "src/chop")]
@@ -94,9 +96,7 @@ def test_infer_runtime_phase_from_cache_state():
         == "prefill"
     )
     assert (
-        infer_runtime_phase_from_hidden_and_cache(
-            hidden_decode, _DummyCache(seq_len=0)
-        )
+        infer_runtime_phase_from_hidden_and_cache(hidden_decode, _DummyCache(seq_len=0))
         == "decode"
     )
     assert (
@@ -291,7 +291,9 @@ def test_linear_mxfp_decode_quantized_uses_decode_quant_bank():
     x = torch.randn(2, 8)
     set_runtime_phase("decode")
     out_decode = target(x)
-    expected_decode = torch.nn.functional.linear(x, target._decode_weight_q, target.bias)
+    expected_decode = torch.nn.functional.linear(
+        x, target._decode_weight_q, target.bias
+    )
     assert out_decode.shape == expected_decode.shape
 
     set_runtime_phase("prefill")

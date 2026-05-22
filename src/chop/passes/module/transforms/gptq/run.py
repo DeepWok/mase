@@ -98,7 +98,9 @@ def run_gptq(network, gptq_config):
             if isinstance(module, nn.Linear):
                 if not hasattr(module, "_mase_decode_weight_fp"):
                     module._mase_decode_weight_fp = module.weight.detach().clone().cpu()
-                if module.bias is not None and not hasattr(module, "_mase_decode_bias_fp"):
+                if module.bias is not None and not hasattr(
+                    module, "_mase_decode_bias_fp"
+                ):
                     module._mase_decode_bias_fp = module.bias.detach().clone().cpu()
 
     # Move embedding + norm + rope to device
@@ -146,7 +148,8 @@ def run_gptq(network, gptq_config):
         logging.warning(
             "GPTQ requested nsamples=%d but only collected=%d; "
             "continuing with collected samples.",
-            nsamples, collected,
+            nsamples,
+            collected,
         )
         nsamples = collected
         inps = inps[:nsamples]

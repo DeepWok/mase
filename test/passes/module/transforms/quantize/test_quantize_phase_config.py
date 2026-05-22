@@ -22,7 +22,9 @@ if "cvxpy" not in sys.modules:
 
 # Bypass heavyweight `chop/__init__.py` side effects during focused unit tests.
 if "chop" not in sys.modules:
-    repo_root = next(p for p in Path(__file__).resolve().parents if (p / "src/chop").exists())
+    repo_root = next(
+        p for p in Path(__file__).resolve().parents if (p / "src/chop").exists()
+    )
     chop_stub = types.ModuleType("chop")
     chop_stub.__path__ = [str(repo_root / "src/chop")]
     sys.modules["chop"] = chop_stub

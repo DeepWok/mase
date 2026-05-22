@@ -221,7 +221,9 @@ class LlamaAttentionMXFP(LlamaAttention):
         past_key_value = kwargs.pop("past_key_value", past_key_values)
         # Phase is written by decoder-layer pre-hooks before input_layernorm.
         runtime_phase = get_runtime_phase()
-        phase_attention_config = self._resolve_phase_attention_quant_config(runtime_phase)
+        phase_attention_config = self._resolve_phase_attention_quant_config(
+            runtime_phase
+        )
 
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
@@ -355,7 +357,9 @@ class LlamaAttentionMXInt(LlamaAttention):
         past_key_value = kwargs.pop("past_key_value", past_key_values)
         # Phase is written by decoder-layer pre-hooks before input_layernorm.
         runtime_phase = get_runtime_phase()
-        phase_attention_config = self._resolve_phase_attention_quant_config(runtime_phase)
+        phase_attention_config = self._resolve_phase_attention_quant_config(
+            runtime_phase
+        )
 
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)

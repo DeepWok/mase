@@ -23,7 +23,6 @@ from chop.nn.quantized.modules.phase_context import (
 from ...module_modify_helper import replace_by_name, instantiate_module
 from ...state_dict_map import match_a_pattern, check_is_huggingface_model
 
-
 _LLAMA_PHASE_CONTEXT_POLICY_MODULE_CLASS_NAMES = {
     "LlamaAttentionMXFP",
     "LlamaAttentionMXInt",
@@ -76,10 +75,7 @@ def _has_llama_quantized_runtime_modules(network) -> bool:
     """
 
     for module in network.modules():
-        if (
-            module.__class__.__name__
-            in _LLAMA_PHASE_CONTEXT_POLICY_MODULE_CLASS_NAMES
-        ):
+        if module.__class__.__name__ in _LLAMA_PHASE_CONTEXT_POLICY_MODULE_CLASS_NAMES:
             return True
     return False
 

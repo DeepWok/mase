@@ -876,7 +876,11 @@ class LinearMXFP(_LinearBase):
 
         if "weight" in state_dict:
             self._decode_weight_fp = state_dict["weight"].detach().clone()
-        if self.bias is not None and "bias" in state_dict and state_dict["bias"] is not None:
+        if (
+            self.bias is not None
+            and "bias" in state_dict
+            and state_dict["bias"] is not None
+        ):
             self._decode_bias_fp = state_dict["bias"].detach().clone()
 
     def _build_decode_quantized_bank(self) -> None:
@@ -985,7 +989,9 @@ class LinearMXFP(_LinearBase):
             # Why this branch exists:
             # Default path must remain fully backward-compatible.
             decode_weight = (
-                self._decode_weight_fp if self._decode_weight_fp.numel() > 0 else self.weight
+                self._decode_weight_fp
+                if self._decode_weight_fp.numel() > 0
+                else self.weight
             )
             decode_bias = (
                 self._decode_bias_fp
@@ -1013,7 +1019,9 @@ class LinearMXFP(_LinearBase):
                     block_dim=-1,
                 )
             decode_weight = (
-                self._decode_weight_q if self._decode_weight_q.numel() > 0 else self.weight
+                self._decode_weight_q
+                if self._decode_weight_q.numel() > 0
+                else self.weight
             )
             if self.bias is not None and self._decode_bias_q.numel() > 0:
                 decode_bias = self._decode_bias_q
@@ -1088,7 +1096,11 @@ class LinearMXInt(_LinearBase):
 
         if "weight" in state_dict:
             self._decode_weight_fp = state_dict["weight"].detach().clone()
-        if self.bias is not None and "bias" in state_dict and state_dict["bias"] is not None:
+        if (
+            self.bias is not None
+            and "bias" in state_dict
+            and state_dict["bias"] is not None
+        ):
             self._decode_bias_fp = state_dict["bias"].detach().clone()
 
     def _build_decode_quantized_bank(self) -> None:
@@ -1182,7 +1194,9 @@ class LinearMXInt(_LinearBase):
         runtime_phase = get_runtime_phase()
         if runtime_phase == "decode" and self.decode_policy == "fp_only":
             decode_weight = (
-                self._decode_weight_fp if self._decode_weight_fp.numel() > 0 else self.weight
+                self._decode_weight_fp
+                if self._decode_weight_fp.numel() > 0
+                else self.weight
             )
             decode_bias = (
                 self._decode_bias_fp
@@ -1206,7 +1220,9 @@ class LinearMXInt(_LinearBase):
                     block_dim=-1,
                 )
             decode_weight = (
-                self._decode_weight_q if self._decode_weight_q.numel() > 0 else self.weight
+                self._decode_weight_q
+                if self._decode_weight_q.numel() > 0
+                else self.weight
             )
             if self.bias is not None and self._decode_bias_q.numel() > 0:
                 decode_bias = self._decode_bias_q

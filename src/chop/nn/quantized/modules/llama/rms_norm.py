@@ -102,9 +102,5 @@ class LlamaRMSNormMinifloat(LlamaRMSNorm):
         hidden_states = hidden_states.to(torch.float32)
         variance = hidden_states.pow(2).mean(-1, keepdim=True)
         hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)
-        weight = (
-            w_quantizer(self.weight)
-            if w_quantizer is not None
-            else self.weight
-        )
+        weight = w_quantizer(self.weight) if w_quantizer is not None else self.weight
         return weight * hidden_states.to(input_dtype)
