@@ -1,26 +1,21 @@
 Machine-Learning System Exploration Tools
 ==========================================
 
-Mase is a Machine Learning compiler based on PyTorch FX, maintained by researchers at Imperial College London. We provide a set of tools for inference and training optimization of state-of-the-art language and vision models. The following features are supported, among others:
+Mase is a machine learning optimization framework based on PyTorch FX, maintained by researchers at Imperial College London. It provides a modular set of tools for training and inference optimization of state-of-the-art language and vision models.
 
-- **Quantization Search**: mixed-precision quantization of any PyTorch model. We support `microscaling <https://arxiv.org/abs/2310.10537>`__ and other numerical formats, at various granularities.
+The following capabilities are supported:
 
-- **Quantization-Aware Training (QAT)**: finetuning quantized models to minimize accuracy loss.
+- **MX Post-Training Quantization (PTQ)**: quantize models to MX formats (MXINT, MXFP) with optional GPTQ weight calibration and rotation-based activation outlier mitigation.
 
-- **Distributed Deployment**: Automatic parallelization of models across distributed GPU clusters, based on the `Alpa <https://arxiv.org/abs/2201.12023>`__ algorithm.
+- **Quantization-Aware Training (QAT)**: finetune quantized models to recover accuracy after quantization.
 
-For more details, refer to the `Tutorials <https://deepwok.github.io/mase/modules/documentation/tutorials.html>`_. If you enjoy using the framework, you can support us by starring the repository on `GitHub <https://github.com/DeepWok/mase>`__!
+- **Mixed-Precision Search**: automatically search for the best per-layer precision assignment using NAS-style search with Optuna.
 
-Efficient AI Optimization 
-----------------------------------------------------
+- **LoRA Fine-tuning**: parameter-efficient finetuning of large language models.
 
-MASE provides a set of composable tools for optimizing AI models. The tools are designed to be modular and can be used in a variety of ways to optimize models for different targets. The tools can be used to optimize models for inference, training, or both. The tools can be used to optimize models for a variety of targets, including CPUs and GPUs. The tools can be used to optimize models for a variety of applications, including computer vision, natural language processing, and speech recognition.
+- **Pruning**: structured and unstructured pruning of model weights.
 
-
-
-.. image:: ../imgs/mase_overview.png
-   :alt: logo
-   :align: center
+For a hands-on introduction, refer to the `Tutorials <https://deepwok.github.io/mase/modules/documentation/tutorials.html>`_. If you enjoy using the framework, please star the repository on `GitHub <https://github.com/DeepWok/mase>`__!
 
 
 Documentation

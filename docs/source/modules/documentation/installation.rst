@@ -1,7 +1,9 @@
 Installation
 =============================
 
-To use MASE, you can set up the environment using one of the following methods. ``uv`` is recommended for local development, and Docker for a fully isolated environment.
+**``uv`` is the recommended way to install MASE.** It handles Python version pinning, dependency locking, and editable installs automatically. Follow the uv guide to get started in a few commands.
+
+Docker is available as an alternative for fully isolated environments. A separate guide is provided for students setting up MASE for coursework.
 
 .. toctree::
     :maxdepth: 1

@@ -23,7 +23,23 @@ the first execution completes.
 Prerequisites
 -------------
 
-A CUDA 12.8 toolkit (``nvcc`` reachable) and an NVIDIA driver supporting it.
+A CUDA 12.8 toolkit and an NVIDIA driver supporting it. Verify your CUDA
+version by running:
+
+.. code-block:: bash
+
+   nvcc --version
+
+Expected output (version line should read ``release 12.8``):
+
+.. code-block:: text
+
+   nvcc: NVIDIA (R) Cuda compiler driver
+   Copyright (c) 2005-2025 NVIDIA Corporation
+   Built on Fri_Feb_21_20:23:50_PST_2025
+   Cuda compilation tools, release 12.8, V12.8.93
+   Build cuda_12.8.r12.8/compiler.35583870_0
+
 The ``mx-ptq`` optional dependencies include ``fast-hadamard-transform`` (built
 from source, ~2-3 min CUDA compile) and ``lm-eval``.
 
@@ -45,7 +61,8 @@ Verify:
 
    uv run python -c "from chop.passes.module.transforms import quantize_module_transform_pass; print('OK')"
 
-Run the full tutorial script:
+Run the full tutorial script
+(:download:`view source <tutorial_7_mx_ptq.py>`):
 
 .. code-block:: bash
 
@@ -151,10 +168,10 @@ targets the same final precision; each adds one new optimization tool:
      - MXInt4 round-to-nearest
      - Baseline — naive W4 A4 KV4
    * - **B**
-     - + ``[gptq]`` Hessian-aware calib
+     - ``[gptq]`` Hessian-aware calib
      - Re-derives W4 weights so quantization error is *output-aware*
    * - **C**
-     - + ``[rotation_search]`` greedy
+     - ``[rotation_search]`` greedy
      - Per-matmul online Hadamard rotation on the matmul types with the
        largest outliers
 
