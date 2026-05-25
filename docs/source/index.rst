@@ -32,11 +32,6 @@ For more details, explore the documentation
    modules/documentation/tutorials
    modules/documentation/specifications
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Chop API
-
-   modules/chop
 
 .. toctree::
    :maxdepth: 1

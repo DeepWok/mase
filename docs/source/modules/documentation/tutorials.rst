@@ -7,14 +7,6 @@ The following tutorials walk through the main flows of MASE, from model training
 
    For a quick introduction, see the Quickstart page. The tutorials on this page dive deeper into various features and use cases.
 
-See below a summary of the main tutorials:
-
-.. figure:: tutorials/imgs/tutorial_overview.png
-   :width: 80%
-   :align: center
-
-   Overview of the main Mase tutorials.
-
 Core Tutorials
 ---------------------
 
