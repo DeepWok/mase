@@ -1,0 +1,102 @@
+/* This is the core CSS to style the representation of each need 
+
+Note: we use `table.need.need.need` to select a need table, to increase the specificity of the selector,
+so that it should be generally higher than the specificity of the theme CSS selectors.
+This avoids having to use !important.
+*/
+
+:root {
+    --sn-width-need-border: 1px;
+    --sn-width-need-border-row: 1px;
+    --sn-width-need-border-radius: 3px;
+}
+
+table.need.need.need {
+    display: table;
+    margin-bottom: 10px;
+    background-color: var(--sn-color-need-bg);
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: var(--sn-width-need-border) solid var(--sn-color-need-border);
+    border-radius: var(--sn-width-need-border-radius);
+}
+
+table.need.need.need > tbody > tr {
+    display: table-row;
+}
+
+table.need.need.need > tbody > tr.head {
+    background-color: var(--sn-color-need-bg-head);
+}
+
+table.need.need.need > tbody > tr.meta {
+    font-size: smaller;
+}
+
+table.need.need.need > tbody > tr.footer {
+    font-size: small;
+}
+
+table.need.need.need a {
+    border-bottom: none;
+}
+
+table.need.need.need > tbody > tr > td {
+    display: table-cell;
+    border: none;
+    padding: 0.9375em 1.25em;
+    /* This is needed to avoid custom settings for common tables, like the ReadTheDocs theme docs */
+    /* It reimplements the normal browser behavior of breaking/wrapping table content if too long.*/
+    white-space: normal;
+}
+
+table.need.need.need > tbody > tr.head > td:not([rowspan]) {
+    /* note we don't add the border for heads with rowspans,
+       because if they span to the bottom of the table, the border would be doubled
+    */
+    border-bottom: var(--sn-width-need-border-row) solid var(--sn-color-need-border);
+}
+
+table.need.need.need > tbody > tr.meta > td:not([rowspan]) {
+    border-bottom: var(--sn-width-need-border-row) solid var(--sn-color-need-border);
+}
+
+table.need.need.need > tbody > tr.footer > td {
+    border-top: var(--sn-width-need-border-row) solid var(--sn-color-need-border);
+}
+
+table.need.need.need > tbody > tr.head div.line-block,
+table.need.need.need > tbody > tr.meta div.line-block,
+table.need.need.need > tbody > tr.footer div.line-block {
+    display: block;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+/* We need not line-block margin:24 px here, which is coming from sphinx theme */
+table.need.need.need > tbody > tr > td div.needs_side.line-block {
+    margin-bottom: 0;
+}
+
+
+/* *************** */
+/* collapse button */
+/* *************** */
+
+span.needs_collapse {
+    float: right;
+}
+
+span.needs_collapse svg {
+    height: 1rem;
+}
+
+span.needs_collapse> :is(.collapsed, .visible) {
+    cursor: pointer;
+}
+
+/* this class is added/removed dynamically by sphinx_needs_collapse.js */
+.collapse_is_hidden {
+    display: none !important;
+}

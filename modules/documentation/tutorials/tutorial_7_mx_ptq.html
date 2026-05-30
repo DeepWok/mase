@@ -1,0 +1,1078 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tutorial 7: MX Post-Training Quantization with Mase &#8212; MASE 0.0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-data-viewer/jsonview.bundle.css?v=f6ef2277" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/libs/html/datatables.min.css?v=4b4fd840" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_toggle.css?v=5c6620df" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_core.css?v=f5b60a78" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_style.css?v=92936fa5" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/need_links.css?v=2150a916" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common_css/needstable.css?v=5e1b6797" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/modern.css?v=803738c0" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="../../../_static/documentation_options.js?v=e645c8fa"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="../../../_static/sphinx-data-viewer/jsonview.bundle.js?v=18cd53c5"></script>
+    <script src="../../../_static/sphinx-data-viewer/jsonview_loader.js?v=f7ff7e7d"></script>
+    <script src="../../../_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
+    <script src="../../../_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
+    <script src="../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'modules/documentation/tutorials/tutorial_7_mx_ptq';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">MASE 0.0.1 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../installation.html">Installation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started/Get-started-using-uv.html">Getting Started using uv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started/Get-started-using-Docker.html">Getting Started using Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started/Get-started-students.html">Additional Instructions for Imperial College Students</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_1_introduction_to_mase_script.html">Tutorial 1: Introduction to the Mase IR, MaseGraph and Torch FX passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_2_lora_finetune_script.html">Tutorial 2: Finetuning Bert for Sequence Classification using a LoRA adapter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_3_qat_script.html">Tutorial 3: Running Quantization-Aware Training (QAT) on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_4_pruning_script.html">Tutorial 4: Unstructured Pruning on Bert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_5_nas_optuna_script.html">Tutorial 5: Neural Architecture Search (NAS) with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_6_mixed_precision_search_script.html">Tutorial 6: Mixed Precision Quantization Search with Mase and Optuna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_7_mx_ptq_script.html">Tutorial 7: MX Post-Training Quantization with Mase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer/Add-model-to-chop.html">Developer: Guide on how to add a new model into Chop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer/doc_writing.html">Developer: How to write documentations in MASE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer/how_to_extend_search.html">Developer: How to extend search</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../specifications.html">Coding Style Specifications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../specifications/Python-coding-style-specifications.html">Python Coding Style Specifications</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Deep Learning Systems</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../adls_2024.html">Advanced Deep Learning Systems: 2024/2025</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2024/lab_0_introduction.html">Lab 0: Introduction to Mase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2024/lab_1_compression.html">Lab 1: Model Compression (Quantization and Pruning)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2024/lab_2_nas.html">Lab 2: Neural Architecture Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2024/lab_3_mixed_precision_search.html">Lab 3: Mixed Precision Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2024/lab4-software.html">Lab 4 (Software Stream) Performance Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2023/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../adls_2023.html">Advanced Deep Learning Systems: 2023/2024</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2023/lab1.html">Lab 1 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2023/lab2.html">Lab 2 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2023/lab3.html">Lab 3 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2023/lab4-software.html">Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../labs_2023/setup_docker_env.html">ADLS Docker Environment Setup</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../_sources/modules/documentation/tutorials/tutorial_7_mx_ptq.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Tutorial 7: MX Post-Training Quantization with Mase</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contents">Contents</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#live-execution-timings">Live-execution timings</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mx-quantization-refresher">MX quantization refresher</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-format-tuple">The format tuple</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quantizing-a-block">Quantizing a block</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-toml-exposes">What the TOML exposes</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-ptq-algorithm">The PTQ Algorithm</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fp16-baseline">fp16 baseline</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#config-a-mxint4-rtn-w4-a4-kv4">Config A — MXInt4 RTN (W4 A4 KV4)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#apply-the-config-in-python">Apply the config in Python</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-changed">What changed?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#measure-config-a-perplexity">Measure — Config A perplexity</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#config-b-add-gptq">Config B — add <code class="docutils literal notranslate"><span class="pre">[gptq]</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#config-c-add-rotation-search">Config C — add <code class="docutils literal notranslate"><span class="pre">[rotation_search]</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recap-the-progressive-cost">Recap — the progressive cost</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#going-further">Going further</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wrap-up">Wrap-up</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="tutorial-7-mx-post-training-quantization-with-mase">
+<h1>Tutorial 7: MX Post-Training Quantization with Mase<a class="headerlink" href="#tutorial-7-mx-post-training-quantization-with-mase" title="Link to this heading">#</a></h1>
+<p>This tutorial walks through the full MX post-training quantization flow
+end to end against Mase’s <code class="docutils literal notranslate"><span class="pre">chop</span></code> APIs, using <strong><code class="docutils literal notranslate"><span class="pre">unsloth/Llama-3.2-1B</span></code></strong>
+as the demo model.</p>
+<section id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>The MX quantization config</strong> — block-scaled integer/floating-point formats expressed as a single TOML file consumed by <code class="docutils literal notranslate"><span class="pre">quantize_module_transform_pass</span></code>.</p></li>
+<li><p><strong>Quantization algorithm</strong> — RTN, then <code class="docutils literal notranslate"><span class="pre">[gptq]</span></code> for weight quantization, then <code class="docutils literal notranslate"><span class="pre">[rotation_search]</span></code> for activation quantization.</p></li>
+</ul>
+</section>
+<section id="live-execution-timings">
+<h2>Live-execution timings<a class="headerlink" href="#live-execution-timings" title="Link to this heading">#</a></h2>
+<p>Each cell runs in a single-GPU demo slot. The <code class="docutils literal notranslate"><span class="pre">[gptq]</span></code> and
+<code class="docutils literal notranslate"><span class="pre">[rotation_search]</span></code> passes cache to disk, so reruns finish in seconds once
+the first execution completes.</p>
+</section>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading">#</a></h2>
+<p>A CUDA 12.8 toolkit (<code class="docutils literal notranslate"><span class="pre">nvcc</span></code> reachable) and an NVIDIA driver supporting it.
+The repo’s <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> pins <code class="docutils literal notranslate"><span class="pre">torch</span> <span class="pre">2.11.0+cu128</span></code>;</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>mx-ptq
+</pre></div>
+</div>
+<p>This installs the base deps + <code class="docutils literal notranslate"><span class="pre">torch</span> <span class="pre">2.11.0+cu128</span></code> from the PyTorch index +
+builds <code class="docutils literal notranslate"><span class="pre">fast-hadamard-transform</span></code> from source (~2-3 min CUDA compile).</p>
+<p>Verify:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;from chop.passes.module.transforms import quantize_module_transform_pass; print(&#39;OK&#39;)&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="mx-quantization-refresher">
+<h2>MX quantization refresher<a class="headerlink" href="#mx-quantization-refresher" title="Link to this heading">#</a></h2>
+<p>MX (Microscaling) formats store a tensor as low-precision <strong>elements</strong>
+grouped into fixed-size <strong>blocks</strong> that share a single power-of-two
+<strong>scale</strong> (Rouhani et al. 2023; OCP MX standard). Mase’s configurable
+MX quantizers (<code class="docutils literal notranslate"><span class="pre">chop.nn.quantizers.mxint</span></code>, <code class="docutils literal notranslate"><span class="pre">chop.nn.quantizers.mxfp</span></code>)
+follow this single-level scaling scheme.</p>
+<p><img alt="MX data formats: MXFP and MXINT, each block sharing one power-of-two scale" src="../../../_images/mx_annotated.png" /></p>
+<p><em>Figure adapted from the PLENA paper. MXFP elements carry sign +
+exponent + mantissa; MXINT elements carry sign + mantissa. Both share a
+single power-of-two scale per block, parameterised by the tunable tuple
+<span class="math notranslate nohighlight">\((M, E, S, B)\)</span> for MXFP and <span class="math notranslate nohighlight">\((M, S, B)\)</span> for MXINT.</em></p>
+<section id="the-format-tuple">
+<h3>The format tuple<a class="headerlink" href="#the-format-tuple" title="Link to this heading">#</a></h3>
+<p>We describe an MX data format as a tuple</p>
+<div class="math notranslate nohighlight">
+\[\tau = (d,\, b,\, B)\]</div>
+<p>where <span class="math notranslate nohighlight">\(d\)</span> is the element datatype (<code class="docutils literal notranslate"><span class="pre">INT</span></code> for MXINT, <code class="docutils literal notranslate"><span class="pre">minifloat</span></code> for
+MXFP), <span class="math notranslate nohighlight">\(b\)</span> is the element bit-width, and <span class="math notranslate nohighlight">\(B\)</span> is the block size. So
+<span class="math notranslate nohighlight">\(\tau = (\texttt{INT},\, 4,\, 16)\)</span> is <strong>MXINT4</strong> with block size 16,
+and <span class="math notranslate nohighlight">\(\tau = (\texttt{minifloat},\, 4,\, 16)\)</span> is <strong>MXFP4</strong> with the
+same block size. Every element in a block shares one scale <span class="math notranslate nohighlight">\(s\)</span> and one
+zero-point <span class="math notranslate nohighlight">\(z\)</span>; we use symmetric quantization throughout, so <span class="math notranslate nohighlight">\(z = 0\)</span>.</p>
+</section>
+<section id="quantizing-a-block">
+<h3>Quantizing a block<a class="headerlink" href="#quantizing-a-block" title="Link to this heading">#</a></h3>
+<p>Given a high-precision tensor <span class="math notranslate nohighlight">\(\mathbf{W}\)</span> partitioned into blocks
+<span class="math notranslate nohighlight">\(w \in \mathbb{R}^{B}\)</span>, the shared scale for each block is derived
+from its absmax against the format’s representable maximum:</p>
+<div class="math notranslate nohighlight">
+\[s \;=\; \frac{\max |w|}{\max_{\tau}}\]</div>
+<p>Each element is then projected into the low-precision grid by scaling,
+round-to-nearest, and clipping to the representable range:</p>
+<div class="math notranslate nohighlight">
+\[w_{\tau} \;=\; \mathrm{clip}\!\left(\mathrm{RTN}\!\left(\tfrac{w}{s}\right),\ \min_{\tau},\ \max_{\tau}\right)\]</div>
+<p>Dequantization reconstructs an approximation of the original block
+using the same shared scale:</p>
+<div class="math notranslate nohighlight">
+\[Q(w;\, s,\, \tau) \;=\; s \cdot w_{\tau}\]</div>
+</section>
+<section id="what-the-toml-exposes">
+<h3>What the TOML exposes<a class="headerlink" href="#what-the-toml-exposes" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Format</p></th>
+<th class="head"><p>Element</p></th>
+<th class="head"><p>Width knobs</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>MXInt</strong></p></td>
+<td><p>Signed integer</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">weight_width</span></code>, <code class="docutils literal notranslate"><span class="pre">data_in_width</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>MXFP</strong></p></td>
+<td><p>Mini-float (exp + frac)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">weight_exponent_width</span></code> / <code class="docutils literal notranslate"><span class="pre">weight_frac_width</span></code>, <code class="docutils literal notranslate"><span class="pre">data_in_exponent_width</span></code> / <code class="docutils literal notranslate"><span class="pre">data_in_frac_width</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Block size is set via <code class="docutils literal notranslate"><span class="pre">weight_block_size</span></code> / <code class="docutils literal notranslate"><span class="pre">data_in_block_size</span></code>. The
+typical “MX4” setting used throughout this tutorial is 4-bit integer elements
+with block size 32.</p>
+</section>
+</section>
+<section id="the-ptq-algorithm">
+<h2>The PTQ Algorithm<a class="headerlink" href="#the-ptq-algorithm" title="Link to this heading">#</a></h2>
+<p>Llama-3.2-1B is quantized to <strong>W4 A4 KV4</strong> (weights, activations, KV cache
+all MXInt4) three ways, with the cost measured at each step. Every config
+targets the same final precision; each adds one new optimization tool:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Config</p></th>
+<th class="head"><p>Adds</p></th>
+<th class="head"><p>Where the gain comes from</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>A</strong></p></td>
+<td><p>MXInt4 round-to-nearest</p></td>
+<td><p>Baseline — naive W4 A4 KV4</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>B</strong></p></td>
+<td><p>+ <code class="docutils literal notranslate"><span class="pre">[gptq]</span></code> Hessian-aware calib</p></td>
+<td><p>Re-derives W4 weights so quantization error is <em>output-aware</em></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>C</strong></p></td>
+<td><p>+ <code class="docutils literal notranslate"><span class="pre">[rotation_search]</span></code> greedy</p></td>
+<td><p>Per-matmul online Hadamard rotation on the matmul types with the largest outliers</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Perplexity is measured via <strong>lm-eval-harness’s <code class="docutils literal notranslate"><span class="pre">wikitext</span></code> task</strong>.</p>
+</section>
+<section id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Link to this heading">#</a></h2>
+<p>Helpers used throughout this tutorial: <code class="docutils literal notranslate"><span class="pre">load_quant_config</span></code> parses a TOML
+config into the <code class="docutils literal notranslate"><span class="pre">pass_args</span></code> dict that <code class="docutils literal notranslate"><span class="pre">quantize_module_transform_pass</span></code>
+consumes; <code class="docutils literal notranslate"><span class="pre">evaluate_perplexity</span></code> wraps the lm-eval-harness WikiText
+perplexity evaluation.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tomllib</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoModelForCausalLM</span><span class="p">,</span> <span class="n">AutoTokenizer</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">chop.passes.module.transforms</span><span class="w"> </span><span class="kn">import</span> <span class="n">quantize_module_transform_pass</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">lm_eval</span><span class="w"> </span><span class="kn">import</span> <span class="n">simple_evaluate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lm_eval.models.huggingface</span><span class="w"> </span><span class="kn">import</span> <span class="n">HFLM</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lm_eval.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_table</span>
+
+
+<span class="n">MODEL_NAME</span> <span class="o">=</span> <span class="s2">&quot;unsloth/Llama-3.2-1B&quot;</span>
+<span class="n">OUTPUT_DIR</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;tutorial_7_output&quot;</span><span class="p">)</span>
+<span class="n">OUTPUT_DIR</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">DEVICE</span> <span class="o">=</span> <span class="s2">&quot;cuda:0&quot;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">load_quant_config</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">tomllib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">by</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;by&quot;</span><span class="p">,</span> <span class="s2">&quot;regex_name&quot;</span><span class="p">)</span>
+    <span class="n">pass_args</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;by&quot;</span><span class="p">:</span> <span class="n">by</span><span class="p">}</span>
+    <span class="n">gptq</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;gptq&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">gptq</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">pass_args</span><span class="p">[</span><span class="s2">&quot;gptq&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">gptq</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">raw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">pass_args</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">value</span><span class="p">)}</span>
+    <span class="k">return</span> <span class="n">pass_args</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">evaluate_perplexity</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">tokenizer</span><span class="p">,</span> <span class="n">max_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2048</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run lm-eval-harness wikitext task on `model`; return word_perplexity.&quot;&quot;&quot;</span>
+    <span class="n">lm</span> <span class="o">=</span> <span class="n">HFLM</span><span class="p">(</span><span class="n">pretrained</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">tokenizer</span><span class="o">=</span><span class="n">tokenizer</span><span class="p">,</span>
+              <span class="n">max_length</span><span class="o">=</span><span class="n">max_length</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">simple_evaluate</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">lm</span><span class="p">,</span> <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;wikitext&quot;</span><span class="p">],</span>
+                              <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">make_table</span><span class="p">(</span><span class="n">results</span><span class="p">))</span>
+    <span class="n">metrics</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;results&quot;</span><span class="p">][</span><span class="s2">&quot;wikitext&quot;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">metrics</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;word_perplexity&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;word_perplexity not found: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">fresh_model</span><span class="p">(</span><span class="n">attn_implementation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;eager&quot;</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">AutoModelForCausalLM</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+        <span class="n">MODEL_NAME</span><span class="p">,</span> <span class="n">torch_dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span> <span class="n">attn_implementation</span><span class="o">=</span><span class="n">attn_implementation</span>
+    <span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">model</span>
+
+
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">MODEL_NAME</span><span class="p">,</span> <span class="n">trust_remote_code</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="fp16-baseline">
+<h2>fp16 baseline<a class="headerlink" href="#fp16-baseline" title="Link to this heading">#</a></h2>
+<p>Reference perplexity before any quantization is applied.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model_fp16</span> <span class="o">=</span> <span class="n">fresh_model</span><span class="p">(</span><span class="n">attn_implementation</span><span class="o">=</span><span class="s2">&quot;sdpa&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">DEVICE</span><span class="p">)</span>
+<span class="n">ppl_fp16</span> <span class="o">=</span> <span class="n">evaluate_perplexity</span><span class="p">(</span><span class="n">model_fp16</span><span class="p">,</span> <span class="n">tokenizer</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;fp16 ppl = </span><span class="si">{</span><span class="n">ppl_fp16</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">del</span> <span class="n">model_fp16</span>
+<span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">empty_cache</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>!!! note “Reference result”
+<code class="docutils literal notranslate"><span class="pre">fp16</span> <span class="pre">ppl</span> <span class="pre">=</span> <span class="pre">12.8835</span></code> — the baseline <code class="docutils literal notranslate"><span class="pre">word_perplexity</span></code> for fp16</p>
+</section>
+<section id="config-a-mxint4-rtn-w4-a4-kv4">
+<h2>Config A — MXInt4 RTN (W4 A4 KV4)<a class="headerlink" href="#config-a-mxint4-rtn-w4-a4-kv4" title="Link to this heading">#</a></h2>
+<p>Every linear projection plus the KV cache gets MXInt4 with block size 32,
+no calibration. Two tiers of selectors:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">self_attn$</span></code> (with end-anchor) swaps <code class="docutils literal notranslate"><span class="pre">LlamaAttention</span></code> → <code class="docutils literal notranslate"><span class="pre">LlamaAttentionMXInt</span></code>
+so the in-attention KV cache becomes quantizable. The nested <code class="docutils literal notranslate"><span class="pre">[qk_matmul]</span></code>,
+<code class="docutils literal notranslate"><span class="pre">[av_matmul]</span></code>, <code class="docutils literal notranslate"><span class="pre">[softmax]</span></code>, <code class="docutils literal notranslate"><span class="pre">[rope]</span></code> sub-blocks are bypassed.</p></li>
+<li><p>You can extend the config to cover these modules
+too — see the <a class="reference external" href="https://aicrosssim.github.io/PLENA_Software/reference/toml-reference/">TOML reference</a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">self_attn.(q|k|v|o)_proj</span></code> and <code class="docutils literal notranslate"><span class="pre">mlp.(gate|up|down)_proj</span></code> swap each <code class="docutils literal notranslate"><span class="pre">nn.Linear</span></code>
+→ <code class="docutils literal notranslate"><span class="pre">LinearMXInt</span></code>.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">config_a_toml</span> <span class="o">=</span> <span class="n">OUTPUT_DIR</span> <span class="o">/</span> <span class="s2">&quot;config_a_rtn.toml&quot;</span>
+<span class="n">config_a_toml</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;&quot;&quot;by = &quot;regex_name&quot;</span>
+
+<span class="s2"># Attention block — swap LlamaAttention for the MXInt variant, quantize KV cache</span>
+<span class="s2">[&#39;model\.layers\.\d+\.self_attn$&#39;]</span>
+<span class="s2">name = &quot;mxint&quot;</span>
+
+<span class="s2">[&#39;model\.layers\.\d+\.self_attn$&#39;.qk_matmul]</span>
+<span class="s2">bypass = true</span>
+
+<span class="s2">[&#39;model\.layers\.\d+\.self_attn$&#39;.av_matmul]</span>
+<span class="s2">bypass = true</span>
+
+<span class="s2">[&#39;model\.layers\.\d+\.self_attn$&#39;.kv_cache]</span>
+<span class="s2">data_in_block_size = 32</span>
+<span class="s2">data_in_width      = 4</span>
+
+<span class="s2">[&#39;model\.layers\.\d+\.self_attn$&#39;.softmax]</span>
+<span class="s2">bypass = true</span>
+
+<span class="s2">[&#39;model\.layers\.\d+\.self_attn$&#39;.rope]</span>
+<span class="s2">bypass = true</span>
+
+<span class="s2"># Linear projections: W4 + A4</span>
+<span class="s2">[&#39;model\.layers\.\d+\.self_attn\.(q|k|v|o)_proj&#39;]</span>
+<span class="s2">name = &quot;mxint&quot;</span>
+<span class="s2">weight_block_size = 32</span>
+<span class="s2">weight_width = 4</span>
+<span class="s2">data_in_block_size = 32</span>
+<span class="s2">data_in_width = 4</span>
+
+<span class="s2">[&#39;model\.layers\.\d+\.mlp\.(gate|up|down)_proj&#39;]</span>
+<span class="s2">name = &quot;mxint&quot;</span>
+<span class="s2">weight_block_size = 32</span>
+<span class="s2">weight_width = 4</span>
+<span class="s2">data_in_block_size = 32</span>
+<span class="s2">data_in_width = 4</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;wrote </span><span class="si">{</span><span class="n">config_a_toml</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="apply-the-config-in-python">
+<h3>Apply the config in Python<a class="headerlink" href="#apply-the-config-in-python" title="Link to this heading">#</a></h3>
+<p>Three steps:</p>
+<ol class="arabic simple">
+<li><p><strong>Load</strong> the model.</p></li>
+<li><p><strong>Parse</strong> the TOML into a <code class="docutils literal notranslate"><span class="pre">pass_args</span></code> dict.</p></li>
+<li><p><strong>Transform</strong> the model in place — every matching <code class="docutils literal notranslate"><span class="pre">nn.Linear</span></code> becomes a
+<code class="docutils literal notranslate"><span class="pre">LinearMXInt</span></code> and every <code class="docutils literal notranslate"><span class="pre">LlamaAttention</span></code> becomes a <code class="docutils literal notranslate"><span class="pre">LlamaAttentionMXInt</span></code>
+that quantizes the KV cache on every call.</p></li>
+</ol>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model_a</span> <span class="o">=</span> <span class="n">fresh_model</span><span class="p">(</span><span class="n">attn_implementation</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span><span class="p">)</span>
+<span class="n">pass_args_a</span> <span class="o">=</span> <span class="n">load_quant_config</span><span class="p">(</span><span class="n">config_a_toml</span><span class="p">)</span>
+<span class="n">model_a</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">quantize_module_transform_pass</span><span class="p">(</span><span class="n">model_a</span><span class="p">,</span> <span class="n">pass_args_a</span><span class="p">)</span>
+<span class="n">model_a</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">DEVICE</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="what-changed">
+<h3>What changed?<a class="headerlink" href="#what-changed" title="Link to this heading">#</a></h3>
+<p>Every projection in a decoder block was a plain <code class="docutils literal notranslate"><span class="pre">torch.nn.Linear</span></code> before; after
+the transform, those slots hold <code class="docutils literal notranslate"><span class="pre">LinearMXInt</span></code>. The attention modules were
+<code class="docutils literal notranslate"><span class="pre">LlamaAttention</span></code>; now they’re <code class="docutils literal notranslate"><span class="pre">LlamaAttentionMXInt</span></code> with the KV cache
+quantizer active. For Llama-3.2-1B: <strong>7 linear projections × 16 layers = 112</strong>
+<code class="docutils literal notranslate"><span class="pre">LinearMXInt</span></code> modules + <strong>16</strong> <code class="docutils literal notranslate"><span class="pre">LlamaAttentionMXInt</span></code> modules, with the embedding,
+lm_head, and RMSNorms left at full precision.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span>
+
+<span class="n">cls_counts</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">model_a</span><span class="o">.</span><span class="n">named_modules</span><span class="p">())</span>
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">cls_counts</span><span class="o">.</span><span class="n">most_common</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">name</span><span class="si">:</span><span class="s2">30s</span><span class="si">}</span><span class="s2">  x</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="measure-config-a-perplexity">
+<h3>Measure — Config A perplexity<a class="headerlink" href="#measure-config-a-perplexity" title="Link to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ppl_a</span> <span class="o">=</span> <span class="n">evaluate_perplexity</span><span class="p">(</span><span class="n">model_a</span><span class="p">,</span> <span class="n">tokenizer</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Config A ppl = </span><span class="si">{</span><span class="n">ppl_a</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">del</span> <span class="n">model_a</span>
+<span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">empty_cache</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>!!! note “Reference result”
+<code class="docutils literal notranslate"><span class="pre">Config</span> <span class="pre">A</span> <span class="pre">ppl</span> <span class="pre">=</span> <span class="pre">54.89</span></code> vs fp16 12.88. Quantization at 4 bits
+with no outlier mitigation accounts for most of the degradation;
+Configs B and C reduce it.</p>
+</section>
+</section>
+<section id="config-b-add-gptq">
+<h2>Config B — add <code class="docutils literal notranslate"><span class="pre">[gptq]</span></code><a class="headerlink" href="#config-b-add-gptq" title="Link to this heading">#</a></h2>
+<p>GPTQ (<a class="reference external" href="https://arxiv.org/abs/2210.17323">Frantar et al., 2022</a>) is a one-time
+pre-pass: it walks the decoder layer by layer and rewrites each linear’s
+weight in place using Hessian-based error compensation against a calibration
+set (wikitext2 here). Mase’s <code class="docutils literal notranslate"><span class="pre">[gptq]</span></code> pass extends the original integer-only
+formulation to MX data formats with block-wise clipping search.</p>
+<p>The TOML keeps Config A’s selectors <strong>unchanged</strong> (attention swap + linear
+selectors + KV cache config) and adds a top-level <code class="docutils literal notranslate"><span class="pre">[gptq]</span></code> block plus a
+<code class="docutils literal notranslate"><span class="pre">gptq</span> <span class="pre">=</span> <span class="pre">true</span></code> flag on each linear selector so the linear classes consume the
+calibrated weights instead of re-quantizing.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">checkpoint_dir</span></code> enables <strong>auto-resume</strong>: re-running this cell only
+recomputes layers that aren’t already on disk. First run takes a few minutes
+for Llama-3.2-1B; subsequent runs finish in seconds.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">config_b_toml</span> <span class="o">=</span> <span class="n">OUTPUT_DIR</span> <span class="o">/</span> <span class="s2">&quot;config_b_gptq.toml&quot;</span>
+<span class="n">config_b_toml</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="sa">rf</span><span class="s2">&quot;&quot;&quot;by = &quot;regex_name&quot;</span>
+
+<span class="s2">[gptq]</span>
+<span class="s2">model_name       = &quot;</span><span class="si">{</span><span class="n">MODEL_NAME</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="s2">format           = &quot;mxint&quot;</span>
+<span class="s2">dataset          = &quot;wikitext2&quot;</span>
+<span class="s2">nsamples         = 32</span>
+<span class="s2">seqlen           = 512</span>
+<span class="s2">cali_batch_size  = 8</span>
+<span class="s2">quantile_search  = true</span>
+<span class="s2">clip_search_y    = true</span>
+<span class="s2">checkpoint_dir   = &quot;</span><span class="si">{</span><span class="n">OUTPUT_DIR</span><span class="si">}</span><span class="s2">/checkpoints/config_b_gptq&quot;</span>
+
+<span class="s2">    [gptq.weight_config]</span>
+<span class="s2">    weight_block_size = 32</span>
+<span class="s2">    weight_width      = 4</span>
+
+<span class="s2"># Same attention + linear selectors as Config A (KV cache stays quantized).</span>
+
+<span class="s2">[&#39;model\.layers\.\d+\.self_attn$&#39;]</span>
+<span class="s2">name = &quot;mxint&quot;</span>
+
+<span class="s2">[&#39;model\.layers\.\d+\.self_attn$&#39;.qk_matmul]</span>
+<span class="s2">bypass = true</span>
+
+<span class="s2">[&#39;model\.layers\.\d+\.self_attn$&#39;.av_matmul]</span>
+<span class="s2">bypass = true</span>
+
+<span class="s2">[&#39;model\.layers\.\d+\.self_attn$&#39;.kv_cache]</span>
+<span class="s2">data_in_block_size = 32</span>
+<span class="s2">data_in_width      = 4</span>
+
+<span class="s2">[&#39;model\.layers\.\d+\.self_attn$&#39;.softmax]</span>
+<span class="s2">bypass = true</span>
+
+<span class="s2">[&#39;model\.layers\.\d+\.self_attn$&#39;.rope]</span>
+<span class="s2">bypass = true</span>
+
+<span class="s2">[&#39;model\.layers\.\d+\.self_attn\.(q|k|v|o)_proj&#39;]</span>
+<span class="s2">name = &quot;mxint&quot;</span>
+<span class="s2">weight_block_size = 32</span>
+<span class="s2">weight_width = 4</span>
+<span class="s2">data_in_block_size = 32</span>
+<span class="s2">data_in_width = 4</span>
+<span class="s2">gptq = true</span>
+
+<span class="s2">[&#39;model\.layers\.\d+\.mlp\.(gate|up|down)_proj&#39;]</span>
+<span class="s2">name = &quot;mxint&quot;</span>
+<span class="s2">weight_block_size = 32</span>
+<span class="s2">weight_width = 4</span>
+<span class="s2">data_in_block_size = 32</span>
+<span class="s2">data_in_width = 4</span>
+<span class="s2">gptq = true</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;wrote </span><span class="si">{</span><span class="n">config_b_toml</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model_b</span> <span class="o">=</span> <span class="n">fresh_model</span><span class="p">(</span><span class="n">attn_implementation</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span><span class="p">)</span>
+<span class="n">pass_args_b</span> <span class="o">=</span> <span class="n">load_quant_config</span><span class="p">(</span><span class="n">config_b_toml</span><span class="p">)</span>
+<span class="n">model_b</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">quantize_module_transform_pass</span><span class="p">(</span><span class="n">model_b</span><span class="p">,</span> <span class="n">pass_args_b</span><span class="p">)</span>
+<span class="n">model_b</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">DEVICE</span><span class="p">)</span>
+<span class="n">ppl_b</span> <span class="o">=</span> <span class="n">evaluate_perplexity</span><span class="p">(</span><span class="n">model_b</span><span class="p">,</span> <span class="n">tokenizer</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Config B ppl = </span><span class="si">{</span><span class="n">ppl_b</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">del</span> <span class="n">model_b</span>
+<span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">empty_cache</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>!!! note “Reference result”
+<code class="docutils literal notranslate"><span class="pre">Config</span> <span class="pre">B</span> <span class="pre">ppl</span> <span class="pre">=</span> <span class="pre">31.0363</span></code> — roughly halves the gap from Config A
+to fp16.  We will target <strong>activation quantization error</strong> next.</p>
+</section>
+<section id="config-c-add-rotation-search">
+<h2>Config C — add <code class="docutils literal notranslate"><span class="pre">[rotation_search]</span></code><a class="headerlink" href="#config-c-add-rotation-search" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">[rotation_search]</span></code> adds <strong>online</strong> Hadamard rotation to a subset of the
+matmuls, following the QuaRot approach
+(<a class="reference external" href="https://arxiv.org/abs/2404.00456">Ashkboos et al., 2024</a>) for outlier-free
+low-bit inference. Unlike a <em>static</em> whole-model rotation, this pass keeps
+the rotation inside each matmul’s forward — so reusing the GPTQ-cached weights
+(which are unrotated) stays correct.</p>
+<p>The greedy forward search walks the matmul types (<code class="docutils literal notranslate"><span class="pre">q_proj</span></code>, <code class="docutils literal notranslate"><span class="pre">k_proj</span></code>, <code class="docutils literal notranslate"><span class="pre">v_proj</span></code>,
+<code class="docutils literal notranslate"><span class="pre">o_proj</span></code>, <code class="docutils literal notranslate"><span class="pre">up_proj</span></code>, <code class="docutils literal notranslate"><span class="pre">gate_proj</span></code>, <code class="docutils literal notranslate"><span class="pre">down_proj</span></code>, plus <code class="docutils literal notranslate"><span class="pre">kv_cache</span></code> since it is
+quantized), tries enabling rotation on each one in turn against a small
+wikitext2 calibration loader, commits the one with the largest perplexity drop,
+and repeats. Winners are written to <code class="docutils literal notranslate"><span class="pre">cache_path</span></code> so subsequent runs skip the
+search entirely.</p>
+<p>The TOML adds a <code class="docutils literal notranslate"><span class="pre">[rotation_search]</span></code> block on top of Config B — same selectors,
+same <code class="docutils literal notranslate"><span class="pre">[gptq]</span></code> block, same <code class="docutils literal notranslate"><span class="pre">checkpoint_dir</span></code> (so GPTQ auto-resumes from
+Config B’s cache).</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">config_c_toml</span> <span class="o">=</span> <span class="n">OUTPUT_DIR</span> <span class="o">/</span> <span class="s2">&quot;config_c_rotsearch.toml&quot;</span>
+<span class="n">config_c_toml</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="sa">rf</span><span class="s2">&quot;&quot;&quot;by = &quot;regex_name&quot;</span>
+
+<span class="s2">[gptq]</span>
+<span class="s2">model_name       = &quot;</span><span class="si">{</span><span class="n">MODEL_NAME</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="s2">format           = &quot;mxint&quot;</span>
+<span class="s2">dataset          = &quot;wikitext2&quot;</span>
+<span class="s2">nsamples         = 32</span>
+<span class="s2">seqlen           = 512</span>
+<span class="s2">cali_batch_size  = 8</span>
+<span class="s2">quantile_search  = true</span>
+<span class="s2">clip_search_y    = true</span>
+<span class="s2">checkpoint_dir   = &quot;</span><span class="si">{</span><span class="n">OUTPUT_DIR</span><span class="si">}</span><span class="s2">/checkpoints/config_b_gptq&quot;</span>
+
+<span class="s2">    [gptq.weight_config]</span>
+<span class="s2">    weight_block_size = 32</span>
+<span class="s2">    weight_width      = 4</span>
+
+<span class="s2">[rotation_search]</span>
+<span class="s2">calib_nsamples  = 32</span>
+<span class="s2">calib_seqlen    = 512</span>
+<span class="s2">improvement_eps = 0.0</span>
+<span class="s2">cache_path      = &quot;</span><span class="si">{</span><span class="n">OUTPUT_DIR</span><span class="si">}</span><span class="s2">/checkpoints/config_c_rotsearch/rotation_decisions.json&quot;</span>
+
+<span class="s2"># Same attention + linear selectors as Config B.</span>
+
+<span class="s2">[&#39;model\.layers\.\d+\.self_attn$&#39;]</span>
+<span class="s2">name = &quot;mxint&quot;</span>
+
+<span class="s2">[&#39;model\.layers\.\d+\.self_attn$&#39;.qk_matmul]</span>
+<span class="s2">bypass = true</span>
+
+<span class="s2">[&#39;model\.layers\.\d+\.self_attn$&#39;.av_matmul]</span>
+<span class="s2">bypass = true</span>
+
+<span class="s2">[&#39;model\.layers\.\d+\.self_attn$&#39;.kv_cache]</span>
+<span class="s2">data_in_block_size = 32</span>
+<span class="s2">data_in_width      = 4</span>
+
+<span class="s2">[&#39;model\.layers\.\d+\.self_attn$&#39;.softmax]</span>
+<span class="s2">bypass = true</span>
+
+<span class="s2">[&#39;model\.layers\.\d+\.self_attn$&#39;.rope]</span>
+<span class="s2">bypass = true</span>
+
+<span class="s2">[&#39;model\.layers\.\d+\.self_attn\.(q|k|v|o)_proj&#39;]</span>
+<span class="s2">name = &quot;mxint&quot;</span>
+<span class="s2">weight_block_size = 32</span>
+<span class="s2">weight_width = 4</span>
+<span class="s2">data_in_block_size = 32</span>
+<span class="s2">data_in_width = 4</span>
+<span class="s2">gptq = true</span>
+
+<span class="s2">[&#39;model\.layers\.\d+\.mlp\.(gate|up|down)_proj&#39;]</span>
+<span class="s2">name = &quot;mxint&quot;</span>
+<span class="s2">weight_block_size = 32</span>
+<span class="s2">weight_width = 4</span>
+<span class="s2">data_in_block_size = 32</span>
+<span class="s2">data_in_width = 4</span>
+<span class="s2">gptq = true</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+
+<span class="n">model_c</span> <span class="o">=</span> <span class="n">fresh_model</span><span class="p">(</span><span class="n">attn_implementation</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">DEVICE</span><span class="p">)</span>
+<span class="n">pass_args_c</span> <span class="o">=</span> <span class="n">load_quant_config</span><span class="p">(</span><span class="n">config_c_toml</span><span class="p">)</span>
+<span class="n">model_c</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">quantize_module_transform_pass</span><span class="p">(</span><span class="n">model_c</span><span class="p">,</span> <span class="n">pass_args_c</span><span class="p">)</span>
+<span class="n">ppl_c</span> <span class="o">=</span> <span class="n">evaluate_perplexity</span><span class="p">(</span><span class="n">model_c</span><span class="p">,</span> <span class="n">tokenizer</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Config C ppl = </span><span class="si">{</span><span class="n">ppl_c</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>!!! note “Reference result”
+<code class="docutils literal notranslate"><span class="pre">Config</span> <span class="pre">C</span> <span class="pre">ppl</span> <span class="pre">=</span> <span class="pre">20.4134</span></code> — lowest perplexity of the three quantized
+configs. rotation_search selects the matmul types whose activations have
+the largest outliers and applies online Hadamard rotation to them.</p>
+</section>
+<section id="recap-the-progressive-cost">
+<h2>Recap — the progressive cost<a class="headerlink" href="#recap-the-progressive-cost" title="Link to this heading">#</a></h2>
+<p>All three configs target the same precision (<strong>W4 A4 KV4</strong>); the config is the
+only thing that changes. Perplexity numbers come from lm-eval-harness’s
+wikitext task (<code class="docutils literal notranslate"><span class="pre">word_perplexity</span></code>).</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Config</p></th>
+<th class="head"><p>What it adds</p></th>
+<th class="head"><p>WikiText word_perplexity</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>fp16</p></td>
+<td><p>(reference)</p></td>
+<td><p>12.8835</p></td>
+</tr>
+<tr class="row-odd"><td><p>A — RTN</p></td>
+<td><p>MXInt4 round-to-nearest</p></td>
+<td><p>54.8872</p></td>
+</tr>
+<tr class="row-even"><td><p>B — +GPTQ</p></td>
+<td><p>Hessian-aware weight calibration</p></td>
+<td><p>31.0363</p></td>
+</tr>
+<tr class="row-odd"><td><p>C — +rotsearch</p></td>
+<td><p>Greedy per-matmul online Hadamard</p></td>
+<td><p>20.4134</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><em>Reference run: Llama-3.2-1B on a single GPU. Results may vary slightly
+across hardware.</em></p>
+</section>
+<section id="going-further">
+<h2>Going further<a class="headerlink" href="#going-further" title="Link to this heading">#</a></h2>
+<p>This tutorial covers Mase’s core MX-PTQ flow end to end. For a broader
+evaluation surface, see
+<strong><a class="reference external" href="https://aicrosssim.github.io/PLENA_Software/">PLENA Software</a></strong>, which
+builds on Mase and adds:</p>
+<ul class="simple">
+<li><p>A unified CLI driving the same TOML config across multiple eval surfaces —
+<code class="docutils literal notranslate"><span class="pre">eval_ppl</span></code>, <code class="docutils literal notranslate"><span class="pre">eval_lm</span></code> (lm-eval-harness), <code class="docutils literal notranslate"><span class="pre">eval_evalplus</span></code> (HumanEval+),
+<code class="docutils literal notranslate"><span class="pre">eval_phase_lm</span></code> (different precision for prefill vs decode), <code class="docutils literal notranslate"><span class="pre">eval_phase_bfcl</span></code>
+(function calling), <code class="docutils literal notranslate"><span class="pre">eval_dllm</span></code> / <code class="docutils literal notranslate"><span class="pre">eval_llada</span></code> (diffusion LMs), <code class="docutils literal notranslate"><span class="pre">eval_osworld</span></code>
+(agentic tasks).</p></li>
+<li><p>Paper-table reproductions for Llama-2 / Llama-3 across model sizes and bit
+configurations.</p></li>
+</ul>
+</section>
+<section id="wrap-up">
+<h2>Wrap-up<a class="headerlink" href="#wrap-up" title="Link to this heading">#</a></h2>
+<p>This tutorial covered:</p>
+<ol class="arabic simple">
+<li><p>Three MX quantization configs targeting W4 A4 KV4, each adding one new
+tool: RTN → <code class="docutils literal notranslate"><span class="pre">[gptq]</span></code> → <code class="docutils literal notranslate"><span class="pre">[rotation_search]</span></code>.</p></li>
+<li><p>Applying them to Llama-3.2-1B via <code class="docutils literal notranslate"><span class="pre">quantize_module_transform_pass</span></code>, with
+perplexity recovering at each step.</p></li>
+<li><p>How the same <code class="docutils literal notranslate"><span class="pre">pass_args</span></code> interface handles plain RTN, weight calibration,
+and per-matmul rotation through a single TOML config.</p></li>
+</ol>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contents">Contents</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#live-execution-timings">Live-execution timings</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mx-quantization-refresher">MX quantization refresher</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-format-tuple">The format tuple</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quantizing-a-block">Quantizing a block</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-toml-exposes">What the TOML exposes</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-ptq-algorithm">The PTQ Algorithm</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fp16-baseline">fp16 baseline</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#config-a-mxint4-rtn-w4-a4-kv4">Config A — MXInt4 RTN (W4 A4 KV4)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#apply-the-config-in-python">Apply the config in Python</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-changed">What changed?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#measure-config-a-perplexity">Measure — Config A perplexity</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#config-b-add-gptq">Config B — add <code class="docutils literal notranslate"><span class="pre">[gptq]</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#config-c-add-rotation-search">Config C — add <code class="docutils literal notranslate"><span class="pre">[rotation_search]</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recap-the-progressive-cost">Recap — the progressive cost</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#going-further">Going further</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wrap-up">Wrap-up</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By DeepWok
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, DeepWok.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
