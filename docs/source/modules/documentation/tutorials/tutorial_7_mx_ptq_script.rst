@@ -62,13 +62,13 @@ Run the full tutorial script
 
 .. code-block:: bash
 
-   uv run python docs/source/modules/documentation/tutorials/tutorial_7_mx_ptq.py
+   uv run python3 docs/source/modules/documentation/tutorials/tutorial_7_mx_ptq.py
 
 **Using Docker:**
 
 .. code-block:: bash
 
-   python docs/source/modules/documentation/tutorials/tutorial_7_mx_ptq.py
+   python3 docs/source/modules/documentation/tutorials/tutorial_7_mx_ptq.py
 
 MX quantization refresher
 -------------------------
