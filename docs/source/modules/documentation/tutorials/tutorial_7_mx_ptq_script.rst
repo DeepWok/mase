@@ -55,18 +55,20 @@ from source, ~2-3 min CUDA compile) and ``lm-eval``.
 
    pip install --no-build-isolation --extra-index-url https://download.pytorch.org/whl/cu128 ".[mx-ptq]"
 
-Verify:
-
-.. code-block:: bash
-
-   uv run python -c "from chop.passes.module.transforms import quantize_module_transform_pass; print('OK')"
-
 Run the full tutorial script
 (:download:`view source <tutorial_7_mx_ptq.py>`):
+
+**Using uv:**
 
 .. code-block:: bash
 
    uv run python docs/source/modules/documentation/tutorials/tutorial_7_mx_ptq.py
+
+**Using Docker:**
+
+.. code-block:: bash
+
+   python docs/source/modules/documentation/tutorials/tutorial_7_mx_ptq.py
 
 MX quantization refresher
 -------------------------
