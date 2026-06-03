@@ -103,6 +103,7 @@ def check_module_instance(module, prefix_map):
 def weight_replacement(x, y):
     target_state_dict = deepcopy(x.state_dict())
     missing_keys, unexpected_keys = y.load_state_dict(target_state_dict, strict=False)
+    _restore_decode_fp_snapshot_if_available(x, y)
     if missing_keys:
         logging.warning(
             f"Missing keys when loading state_dict: {missing_keys} from {x} to {y}"
@@ -112,6 +113,57 @@ def weight_replacement(x, y):
             f"Unexpected keys when loading state_dict: {unexpected_keys} from {x} to {y}"
         )
     return y
+
+
+def _restore_decode_fp_snapshot_if_available(source_module, target_module):
+    """Restore decode FP snapshot onto phase-aware linear targets.
+
+    Why this hook exists:
+    - GPTQ pre-pass rewrites `nn.Linear.weight` in-place before replacement.
+    - In `fp_only` mode, decode needs preserved FP snapshots.
+    - In `quantized` mode, we avoid keeping FP decode banks to save memory.
+    """
+
+    decode_weight = getattr(source_module, "_mase_decode_weight_fp", None)
+    decode_bias = getattr(source_module, "_mase_decode_bias_fp", None)
+
+    target_has_decode_weight = hasattr(target_module, "_decode_weight_fp")
+    target_has_decode_bias = hasattr(target_module, "_decode_bias_fp")
+    if not target_has_decode_weight:
+        return
+
+    decode_policy = getattr(target_module, "decode_policy", None)
+    if decode_policy == "quantized":
+        # Memory policy: quantized decode should not keep an additional FP
+        # decode bank alive after replacement.
+        target_module._decode_weight_fp = torch.empty(
+            0, device=target_module.weight.device
+        )
+        if target_has_decode_bias:
+            target_module._decode_bias_fp = torch.empty(
+                0, device=target_module.weight.device
+            )
+    elif decode_policy == "fp_only":
+        if decode_weight is not None:
+            target_module._decode_weight_fp = decode_weight.to(
+                device=target_module.weight.device,
+                dtype=target_module.weight.dtype,
+            )
+        if (
+            target_has_decode_bias
+            and decode_bias is not None
+            and getattr(target_module, "bias", None) is not None
+        ):
+            target_module._decode_bias_fp = decode_bias.to(
+                device=target_module.weight.device,
+                dtype=target_module.weight.dtype,
+            )
+
+    refresh_decode_runtime_bank = getattr(
+        target_module, "refresh_decode_runtime_bank", None
+    )
+    if callable(refresh_decode_runtime_bank):
+        refresh_decode_runtime_bank()
 
 
 def get_module_by_name(network, name):
@@ -272,6 +324,21 @@ def instantiate_llama_module(
         layer_idx=module.layer_idx if hasattr(module, "layer_idx") else None,
         q_config=module_args,
     )
+    # Keep replacement dtype/device aligned with the original HF module.
+    # Why this is required:
+    # - Llama quantized wrappers (RMS/MLP/Attention) can be constructed with
+    #   default FP32 parameters.
+    # - In mixed replacement flows, downstream quantized linear modules may be
+    #   FP16/BF16, so FP32 activations from wrappers can trigger runtime dtype
+    #   mismatches at F.linear boundaries.
+    # - Aligning here makes replacement behavior consistent with instantiate_linear
+    #   and avoids scattering ad-hoc casts in forward paths.
+    ref_param = next(module.parameters(), None)
+    if ref_param is not None:
+        llama_module = llama_module.to(
+            device=ref_param.device,
+            dtype=ref_param.dtype,
+        )
     return llama_module
 
 

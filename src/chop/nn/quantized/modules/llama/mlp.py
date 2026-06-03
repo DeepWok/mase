@@ -1,8 +1,19 @@
+"""Llama MLP quantization with phase-aware dispatch.
+
+Default policy keeps decode full precision (`fp_only`) for compatibility.
+`quantized` decode is opt-in and consumes decode-phase sub-config directly.
+"""
+
 import torch
 from torch import nn, Tensor
 
 from chop.nn.quantizers.SNN.LSQ import LSQInteger
 from chop.nn.quantized.functional.silu import silu_minifloat
+from chop.nn.quantized.modules.phase_context import get_runtime_phase
+from chop.nn.quantized.modules.phase_config import (
+    get_phase_subconfig,
+    normalize_phase_q_config,
+)
 
 from transformers.models.llama.modeling_llama import LlamaMLP, ACT2FN
 
@@ -51,13 +62,21 @@ class LlamaMLPMXFP(LlamaMLP):
     def __init__(self, config, layer_idx=None, q_config: dict = None):
         super().__init__(config)
         self.layer_idx = layer_idx
-        self.q_config = q_config or {}
-        self.bypass = self.q_config.get("bypass", False)
+        self.phase_q_config = normalize_phase_q_config(q_config)
+        self.decode_policy = self.phase_q_config["decode_policy"]
 
     def forward(self, x: Tensor) -> Tensor:
-        if self.bypass:
+        runtime_phase = get_runtime_phase()
+        phase_subconfig, decode_policy = get_phase_subconfig(
+            self.phase_q_config, runtime_phase
+        )
+        bypass = phase_subconfig.get("bypass", False)
+        if runtime_phase == "decode" and decode_policy == "fp_only":
+            bypass = True
+
+        if bypass:
             return super().forward(x)
-        x = silu_minifloat(self.gate_proj(x), self.q_config) * self.up_proj(x)
+        x = silu_minifloat(self.gate_proj(x), phase_subconfig) * self.up_proj(x)
         return self.down_proj(x)
 
 
@@ -67,11 +86,19 @@ class LlamaMLPMXInt(LlamaMLP):
     def __init__(self, config, layer_idx=None, q_config: dict = None):
         super().__init__(config)
         self.layer_idx = layer_idx
-        self.q_config = q_config or {}
-        self.bypass = self.q_config.get("bypass", False)
+        self.phase_q_config = normalize_phase_q_config(q_config)
+        self.decode_policy = self.phase_q_config["decode_policy"]
 
     def forward(self, x: Tensor) -> Tensor:
-        if self.bypass:
+        runtime_phase = get_runtime_phase()
+        phase_subconfig, decode_policy = get_phase_subconfig(
+            self.phase_q_config, runtime_phase
+        )
+        bypass = phase_subconfig.get("bypass", False)
+        if runtime_phase == "decode" and decode_policy == "fp_only":
+            bypass = True
+
+        if bypass:
             return super().forward(x)
-        x = silu_minifloat(self.gate_proj(x), self.q_config) * self.up_proj(x)
+        x = silu_minifloat(self.gate_proj(x), phase_subconfig) * self.up_proj(x)
         return self.down_proj(x)
