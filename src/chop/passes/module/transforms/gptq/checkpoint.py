@@ -2,6 +2,7 @@ import json
 import logging
 import os
 from pathlib import Path
+import tempfile
 
 from safetensors.torch import save_file, load_file
 
@@ -34,15 +35,29 @@ def save_layer_checkpoint(
         for name, param in model.named_parameters():
             if name.startswith(layer_prefix):
                 relative_name = name[len(layer_prefix) :]
-                layer_state_dict[relative_name] = param.detach().cpu()
+                layer_state_dict[relative_name] = (
+                    param.detach().cpu().contiguous().clone()
+                )
 
         if not layer_state_dict:
-            logging.warning(
+            raise RuntimeError(
                 f"No parameters found for layer {layer_idx} with prefix {layer_prefix}"
             )
-            return
 
-        save_file(layer_state_dict, str(layer_checkpoint_file))
+        with tempfile.NamedTemporaryFile(
+            dir=checkpoint_path,
+            prefix=f"{model_name}_layer_{layer_idx}.",
+            suffix=".safetensors.tmp",
+            delete=False,
+        ) as tmp_file:
+            tmp_checkpoint_file = Path(tmp_file.name)
+
+        try:
+            save_file(layer_state_dict, str(tmp_checkpoint_file))
+            os.replace(tmp_checkpoint_file, layer_checkpoint_file)
+        except Exception:
+            tmp_checkpoint_file.unlink(missing_ok=True)
+            raise
 
         metadata = {
             "layer_idx": layer_idx,
@@ -56,15 +71,18 @@ def save_layer_checkpoint(
         metadata_file = (
             checkpoint_path / f"{model_name}_layer_{layer_idx}_metadata.json"
         )
-        with open(metadata_file, "w") as f:
+        metadata_tmp = metadata_file.with_suffix(metadata_file.suffix + ".tmp")
+        with open(metadata_tmp, "w") as f:
             json.dump(metadata, f, indent=2)
+        os.replace(metadata_tmp, metadata_file)
 
         logging.info(
             f"Layer {layer_idx} checkpoint saved successfully ({len(layer_state_dict)} parameters)"
         )
 
-    except Exception as e:
-        logging.error(f"Failed to save layer {layer_idx} checkpoint: {e}")
+    except Exception:
+        logging.exception("Failed to save layer %s checkpoint", layer_idx)
+        raise
 
 
 def detect_quantized_layers(checkpoint_dir, model_name="quantized_model"):
