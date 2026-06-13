@@ -34,10 +34,73 @@ class _WeightView:
         self.weight = weight
 
 
-def _activation_tensor(chunks: list[torch.Tensor]) -> torch.Tensor | None:
+def _module_device(module: nn.Module, module_name: str) -> torch.device:
+    """Return the single device used by a module.
+
+    The device-map-aware GPTQ path supports layer-level sharding only.  If an
+    individual decoder block is split across devices, GPTQ hooks can no longer
+    safely assume activations and weights are colocated, so fail with a clear
+    error instead of surfacing a later matmul device mismatch.
+    """
+    devices = {param.device for param in module.parameters(recurse=True)}
+    devices.update(buf.device for buf in module.buffers(recurse=True))
+    devices = {device for device in devices if device.type != "meta"}
+    if not devices:
+        return torch.device("cpu")
+    if len(devices) != 1:
+        formatted = ", ".join(sorted(str(device) for device in devices))
+        raise RuntimeError(
+            f"GPTQ device_map_aware requires layer-level sharding, but "
+            f"{module_name} spans multiple devices: {formatted}. "
+            "Adjust the HF device_map/no_split_modules so each decoder layer "
+            "is placed on one device."
+        )
+    return next(iter(devices))
+
+
+def _move_to_device(value, device: torch.device):
+    if value is None:
+        return None
+    if torch.is_tensor(value):
+        return value.to(device)
+    if isinstance(value, tuple):
+        return tuple(_move_to_device(item, device) for item in value)
+    if isinstance(value, list):
+        return [_move_to_device(item, device) for item in value]
+    if isinstance(value, dict):
+        return {key: _move_to_device(item, device) for key, item in value.items()}
+    return value
+
+
+def _store_sample_output(outs: torch.Tensor, sample_idx: int, output: torch.Tensor) -> None:
+    outs[sample_idx].copy_(output.squeeze(0).to(device=outs.device, dtype=outs.dtype))
+
+
+def _run_layer_sample(
+    *,
+    layer,
+    sample: torch.Tensor,
+    outs: torch.Tensor,
+    sample_idx: int,
+    rope,
+    attention_mask,
+    position_ids,
+    layer_device: torch.device,
+) -> None:
+    x = sample.unsqueeze(0).to(layer_device)
+    local_attention_mask = _move_to_device(attention_mask, layer_device)
+    local_position_ids = _move_to_device(position_ids, layer_device)
+    local_rope = rope.to(layer_device)
+    cos, sin = local_rope(x, local_position_ids)
+    out = _run_layer_forward(layer, x, local_attention_mask, (cos, sin))
+    _store_sample_output(outs, sample_idx, out)
+
+
+def _activation_tensor(chunks: list[torch.Tensor], device: torch.device | None = None) -> torch.Tensor | None:
     if not chunks:
         return None
-    return torch.cat(chunks, dim=0).unsqueeze(0)
+    activation = torch.cat(chunks, dim=0).unsqueeze(0)
+    return activation.to(device) if device is not None else activation
 
 
 def _quantize_uncalibrated_weight(
@@ -105,6 +168,7 @@ def _quantize_dense_linears(
     quantile_search: bool,
     clip_search_y: bool,
     cali_batch_size: int,
+    layer_device: torch.device,
 ) -> None:
     full = find_qlayers(layer, layers=[torch.nn.Linear])
 
@@ -122,7 +186,8 @@ def _quantize_dense_linears(
 
         def make_pre_hook():
             def pre_hook(_, inp):
-                pre_act.append(inp[0])
+                if clip_search_y:
+                    pre_act.append(inp[0].detach().cpu())
 
             return pre_hook
 
@@ -139,11 +204,18 @@ def _quantize_dense_linears(
         handles.append(first_module.register_forward_pre_hook(make_pre_hook()))
 
         for j in range(nsamples):
-            x = inps[j].unsqueeze(0)
-            cos, sin = rope(x, position_ids)
-            outs[j] = _run_layer_forward(layer, x, attention_mask, (cos, sin))
+            _run_layer_sample(
+                layer=layer,
+                sample=inps[j],
+                outs=outs,
+                sample_idx=j,
+                rope=rope,
+                attention_mask=attention_mask,
+                position_ids=position_ids,
+                layer_device=layer_device,
+            )
 
-        activation = torch.cat(pre_act, dim=0) if pre_act else None
+        activation = torch.cat(pre_act, dim=0).to(layer_device) if pre_act else None
 
         for h in handles:
             h.remove()
@@ -183,14 +255,13 @@ def _collect_qwen3_moe_expert_batches(
     rope,
     attention_mask,
     position_ids,
-    collect_activations: bool,
     target: str,
+    layer_device: torch.device,
 ):
     if target not in {"gate_up", "down"}:
         raise ValueError(f"Unsupported Qwen3-MoE expert GPTQ target: {target!r}")
 
-    gptq = [None for _ in range(experts.num_experts)]
-    acts = [[] for _ in range(experts.num_experts)]
+    chunks = [[] for _ in range(experts.num_experts)]
     hits = [0 for _ in range(experts.num_experts)]
 
     def hook(_, inp, _out):
@@ -210,34 +281,61 @@ def _collect_qwen3_moe_expert_batches(
 
                 if target == "gate_up":
                     batch = current_state
-                    weight = experts.gate_up_proj[expert_idx]
                 else:
                     gate, up = F.linear(current_state, experts.gate_up_proj[expert_idx]).chunk(2, dim=-1)
                     batch = experts.act_fn(gate) * up
-                    weight = experts.down_proj[expert_idx]
 
-                if gptq[expert_idx] is None:
-                    gptq[expert_idx] = GPTQ(_WeightView(weight))
-                gptq[expert_idx].add_batch(batch.unsqueeze(0).data, None)
+                chunks[expert_idx].append(batch.detach().cpu())
                 hits[expert_idx] += int(batch.shape[0])
-
-                if collect_activations:
-                    acts[expert_idx].append(batch.detach())
 
     handle = experts.register_forward_hook(hook)
     try:
         for j in range(nsamples):
-            x = inps[j].unsqueeze(0)
-            cos, sin = rope(x, position_ids)
-            outs[j] = _run_layer_forward(layer, x, attention_mask, (cos, sin))
+            _run_layer_sample(
+                layer=layer,
+                sample=inps[j],
+                outs=outs,
+                sample_idx=j,
+                rope=rope,
+                attention_mask=attention_mask,
+                position_ids=position_ids,
+                layer_device=layer_device,
+            )
     finally:
         handle.remove()
 
     return {
-        "gptq": gptq,
-        "acts": acts,
+        "chunks": chunks,
         "hits": hits,
     }
+
+
+def _quantize_expert_weight_from_chunks(
+    *,
+    weight: torch.Tensor,
+    chunks: list[torch.Tensor],
+    fmt: str,
+    weight_config: dict,
+    quantile_search: bool,
+    clip_search_y: bool,
+    cali_batch_size: int,
+    layer_name: str,
+) -> torch.Tensor:
+    gptq = GPTQ(_WeightView(weight))
+    for chunk in chunks:
+        gptq.add_batch(chunk.to(weight.device).unsqueeze(0).data, None)
+    activation = _activation_tensor(chunks, device=weight.device) if clip_search_y else None
+    return _quantize_gptq_weight(
+        weight,
+        gptq,
+        activation=activation,
+        fmt=fmt,
+        weight_config=weight_config,
+        quantile_search=quantile_search,
+        clip_search_y=clip_search_y,
+        cali_batch_size=cali_batch_size,
+        layer_name=layer_name,
+    )
 
 
 def _quantize_qwen3_moe_experts(
@@ -255,6 +353,7 @@ def _quantize_qwen3_moe_experts(
     quantile_search: bool,
     clip_search_y: bool,
     cali_batch_size: int,
+    layer_device: torch.device,
 ) -> bool:
     experts = _get_qwen3_moe_experts(layer)
     if experts is None:
@@ -270,17 +369,16 @@ def _quantize_qwen3_moe_experts(
         rope=rope,
         attention_mask=attention_mask,
         position_ids=position_ids,
-        collect_activations=clip_search_y,
         target="gate_up",
+        layer_device=layer_device,
     )
 
     for expert_idx in range(experts.num_experts):
         gate_up_weight = experts.gate_up_proj[expert_idx]
         if gate_up_batches["hits"][expert_idx] > 0:
-            gate_up_quantized = _quantize_gptq_weight(
-                gate_up_weight,
-                gate_up_batches["gptq"][expert_idx],
-                activation=_activation_tensor(gate_up_batches["acts"][expert_idx]),
+            gate_up_quantized = _quantize_expert_weight_from_chunks(
+                weight=gate_up_weight,
+                chunks=gate_up_batches["chunks"][expert_idx],
                 fmt=fmt,
                 weight_config=weight_config,
                 quantile_search=quantile_search,
@@ -312,17 +410,16 @@ def _quantize_qwen3_moe_experts(
         rope=rope,
         attention_mask=attention_mask,
         position_ids=position_ids,
-        collect_activations=clip_search_y,
         target="down",
+        layer_device=layer_device,
     )
 
     for expert_idx in range(experts.num_experts):
         down_weight = experts.down_proj[expert_idx]
         if down_batches["hits"][expert_idx] > 0:
-            down_quantized = _quantize_gptq_weight(
-                down_weight,
-                down_batches["gptq"][expert_idx],
-                activation=_activation_tensor(down_batches["acts"][expert_idx]),
+            down_quantized = _quantize_expert_weight_from_chunks(
+                weight=down_weight,
+                chunks=down_batches["chunks"][expert_idx],
                 fmt=fmt,
                 weight_config=weight_config,
                 quantile_search=quantile_search,
@@ -390,6 +487,7 @@ def run_gptq(network, gptq_config):
     checkpoint_dir = gptq_config.get("checkpoint_dir", None)
     hf_token = gptq_config.get("hf_token", None)
     max_layers = gptq_config.get("max_layers", None)
+    device_map_aware = bool(gptq_config.get("device_map_aware", False))
 
     # Handle checkpoint resuming
     start_layer = 0
@@ -419,16 +517,28 @@ def run_gptq(network, gptq_config):
 
     layers = network.model.layers
 
-    # Move embedding + norm + rope to device
-    network.model.embed_tokens = network.model.embed_tokens.to(dev)
-    network.model.norm = network.model.norm.to(dev)
-    rope = network.model.rotary_emb.to(dev)
-    layers[0] = layers[0].to(dev)
+    if device_map_aware:
+        embed_device = _module_device(network.model.embed_tokens, "model.embed_tokens")
+        first_layer_device = _module_device(layers[0], "model.layers.0")
+        rope = network.model.rotary_emb
+        logging.info(
+            "GPTQ device_map_aware enabled: input_device=%s first_layer_device=%s",
+            embed_device,
+            first_layer_device,
+        )
+    else:
+        embed_device = torch.device(dev)
+        first_layer_device = torch.device(dev)
+        network.model.embed_tokens = network.model.embed_tokens.to(dev)
+        network.model.norm = network.model.norm.to(dev)
+        rope = network.model.rotary_emb.to(dev)
+        layers[0] = layers[0].to(dev)
 
     dtype = next(iter(network.parameters())).dtype
 
+    buffer_device = torch.device("cpu") if device_map_aware else torch.device(dev)
     inps = torch.zeros(
-        (nsamples, seqlen, network.config.hidden_size), dtype=dtype, device=dev
+        (nsamples, seqlen, network.config.hidden_size), dtype=dtype, device=buffer_device
     )
     cache = {"i": 0, "attention_mask": None}
 
@@ -440,10 +550,13 @@ def run_gptq(network, gptq_config):
         def forward(self, inp, **kwargs):
             if cache["i"] >= nsamples:
                 raise ValueError
-            inps[cache["i"]] = inp
+            inps[cache["i"]].copy_(
+                inp.squeeze(0).detach().to(device=inps.device, dtype=inps.dtype)
+            )
             cache["i"] += 1
-            cache["attention_mask"] = kwargs["attention_mask"]
-            cache["position_ids"] = kwargs["position_ids"]
+            mask_device = inps.device if device_map_aware else inp.device
+            cache["attention_mask"] = _move_to_device(kwargs["attention_mask"], mask_device)
+            cache["position_ids"] = _move_to_device(kwargs["position_ids"], mask_device)
             raise ValueError
 
     layers[0] = Catcher(layers[0])
@@ -451,7 +564,7 @@ def run_gptq(network, gptq_config):
         if cache["i"] >= nsamples:
             break
         try:
-            network(batch[0].to(dev))
+            network(batch[0].to(embed_device))
         except ValueError:
             pass
     layers[0] = layers[0].module
@@ -483,7 +596,13 @@ def run_gptq(network, gptq_config):
 
     for i in range(start_layer, end_layer):
         print(f"\nLayer {i}:", flush=True, end=" ")
-        layer = layers[i].to(dev)
+        if device_map_aware:
+            layer = layers[i]
+            layer_device = _module_device(layer, f"model.layers.{i}")
+            logging.info("GPTQ layer %d device_map_aware layer_device=%s", i, layer_device)
+        else:
+            layer = layers[i].to(dev)
+            layer_device = torch.device(dev)
         _quantize_dense_linears(
             layer=layer,
             layer_idx=i,
@@ -498,6 +617,7 @@ def run_gptq(network, gptq_config):
             quantile_search=quantile_search,
             clip_search_y=clip_search_y,
             cali_batch_size=cali_batch_size,
+            layer_device=layer_device,
         )
 
         if getattr(network.config, "model_type", None) == "qwen3_moe":
@@ -515,16 +635,25 @@ def run_gptq(network, gptq_config):
                 quantile_search=quantile_search,
                 clip_search_y=clip_search_y,
                 cali_batch_size=cali_batch_size,
+                layer_device=layer_device,
             )
 
         # Forward pass with quantized weights to get inputs for next layer
         for j in range(nsamples):
-            x = inps[j].unsqueeze(0)
-            cos, sin = network.model.rotary_emb(x, position_ids)
-            outs[j] = _run_layer_forward(layer, x, attention_mask, (cos, sin))
+            _run_layer_sample(
+                layer=layer,
+                sample=inps[j],
+                outs=outs,
+                sample_idx=j,
+                rope=rope,
+                attention_mask=attention_mask,
+                position_ids=position_ids,
+                layer_device=layer_device,
+            )
 
-        layers[i] = layer.cpu()
-        del layer
+        if not device_map_aware:
+            layers[i] = layer.cpu()
+            del layer
         torch.cuda.empty_cache()
 
         inps, outs = outs, inps

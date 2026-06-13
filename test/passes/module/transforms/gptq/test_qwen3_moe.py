@@ -78,6 +78,30 @@ def test_qwen3_moe_gptq_quantizes_sparse_experts(tmp_path):
     assert not torch.equal(model.model.layers[0].mlp.experts.down_proj, down_before)
 
 
+def test_qwen3_moe_gptq_device_map_aware_uses_existing_layer_device(tmp_path):
+    loader_path = tmp_path / "calib.pt"
+    _write_loader(loader_path)
+    model = _tiny_qwen3_moe(num_hidden_layers=1)
+
+    q_proj_before = model.model.layers[0].self_attn.q_proj.weight.detach().clone()
+    gate_up_before = model.model.layers[0].mlp.experts.gate_up_proj.detach().clone()
+    down_before = model.model.layers[0].mlp.experts.down_proj.detach().clone()
+
+    run_gptq(
+        model,
+        _gptq_config(
+            loader_path,
+            device="cuda:0",
+            device_map_aware=True,
+        ),
+    )
+
+    assert model.model.layers[0].self_attn.q_proj.weight.device.type == "cpu"
+    assert not torch.equal(model.model.layers[0].self_attn.q_proj.weight, q_proj_before)
+    assert not torch.equal(model.model.layers[0].mlp.experts.gate_up_proj, gate_up_before)
+    assert not torch.equal(model.model.layers[0].mlp.experts.down_proj, down_before)
+
+
 def test_qwen3_moe_gptq_checkpoint_resume_loads_completed_layer(tmp_path):
     loader_path = tmp_path / "calib.pt"
     checkpoint_dir = tmp_path / "checkpoint"
