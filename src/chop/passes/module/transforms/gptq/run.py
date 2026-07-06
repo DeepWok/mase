@@ -15,6 +15,75 @@ from .gptq import GPTQ
 from .utils import find_qlayers, cleanup_memory
 from .data_utils import get_loaders
 from .checkpoint import save_layer_checkpoint, auto_load_quantized_layers
+from chop.nn.quantized.modules.phase_config import (
+    DECODE_FP_BIAS_ATTR,
+    DECODE_FP_WEIGHT_ATTR,
+    GPTQ_DECODE_WEIGHT_ATTR,
+)
+
+_VALID_GPTQ_PHASES = ("both", "decode", "prefill")
+
+
+def _snapshot_fp_linear_weights(layers) -> None:
+    """Snapshot FP weights of every decoder linear before GPTQ mutates them.
+
+    Snapshots live on CPU (``_mase_fp_weight``) so large models don't hold a
+    second GPU copy. Must run before checkpoint resume, which loads already
+    GPTQ-quantised weights into the network.
+    """
+
+    for layer in layers:
+        for module in layer.modules():
+            if isinstance(module, nn.Linear) and not hasattr(
+                module, "_mase_fp_weight"
+            ):
+                module._mase_fp_weight = module.weight.detach().clone().cpu()
+
+
+def _finalize_gptq_phase(network, phase: str) -> None:
+    """Re-home GPTQ results according to the target phase.
+
+    - ``both`` (legacy): weights stay mutated in place; both phases see them.
+    - ``decode``: the GPTQ result is stashed as ``_mase_gptq_weight_decode``
+      (picked up as the decode weight bank at module replacement) and the FP
+      snapshot is restored into ``weight`` so prefill stays unquantised —
+      the decode-side disaggregated-serving flow.
+    - ``prefill``: weights stay mutated in place (prefill bank) and the FP
+      snapshot is stashed as ``_mase_decode_weight_fp`` for an ``fp_only``
+      decode policy — the prefill-side flow.
+    """
+
+    if phase == "both":
+        return
+    for layer in network.model.layers:
+        for module in layer.modules():
+            if not isinstance(module, nn.Linear):
+                continue
+            fp_weight = getattr(module, "_mase_fp_weight", None)
+            if fp_weight is None:
+                continue
+            if phase == "decode":
+                setattr(
+                    module,
+                    GPTQ_DECODE_WEIGHT_ATTR,
+                    module.weight.detach().clone().cpu(),
+                )
+                module.weight.data.copy_(
+                    fp_weight.to(
+                        device=module.weight.device, dtype=module.weight.dtype
+                    )
+                )
+            else:  # prefill
+                setattr(module, DECODE_FP_WEIGHT_ATTR, fp_weight)
+                if module.bias is not None and not hasattr(
+                    module, DECODE_FP_BIAS_ATTR
+                ):
+                    setattr(
+                        module,
+                        DECODE_FP_BIAS_ATTR,
+                        module.bias.detach().clone().cpu(),
+                    )
+            del module._mase_fp_weight
 
 
 @torch.no_grad()
@@ -36,6 +105,10 @@ def run_gptq(network, gptq_config):
             format: str - "mxfp" | "mxint".
             weight_config: dict - Mase-style weight config, e.g.
                 {"weight_block_size": 32, "weight_exponent_width": 2, "weight_frac_width": 1}
+            phase: str - "both" (default, legacy in-place), "decode"
+                (GPTQ result becomes the decode weight bank, FP restored for
+                prefill), or "prefill" (in-place + FP snapshot for fp-only
+                decode).
             quantile_search: bool (default True).
             clip_search_y: bool (default False).
             cali_batch_size: int (default 32).
@@ -54,12 +127,22 @@ def run_gptq(network, gptq_config):
     seqlen = gptq_config.get("seqlen", 2048)
     fmt = gptq_config["format"]
     weight_config = gptq_config["weight_config"]
+    phase = gptq_config.get("phase", "both")
+    if phase not in _VALID_GPTQ_PHASES:
+        raise ValueError(
+            f"Unsupported gptq phase {phase!r}; expected one of {_VALID_GPTQ_PHASES}."
+        )
     quantile_search = gptq_config.get("quantile_search", True)
     clip_search_y = gptq_config.get("clip_search_y", False)
     cali_batch_size = gptq_config.get("cali_batch_size", 32)
     checkpoint_dir = gptq_config.get("checkpoint_dir", None)
     hf_token = gptq_config.get("hf_token", None)
     max_layers = gptq_config.get("max_layers", None)
+
+    if phase != "both":
+        # FP snapshots must precede checkpoint resume: resume overwrites
+        # network weights with already-quantised checkpoints.
+        _snapshot_fp_linear_weights(network.model.layers)
 
     # Handle checkpoint resuming
     start_layer = 0
@@ -71,6 +154,7 @@ def run_gptq(network, gptq_config):
 
         if start_layer == len(network.model.layers):
             logging.info("All layers already quantized, skipping GPTQ")
+            _finalize_gptq_phase(network, phase)
             return network
 
     # Load calibration data
@@ -241,6 +325,7 @@ def run_gptq(network, gptq_config):
             save_layer_checkpoint(network, i, checkpoint_dir)
 
     network.config.use_cache = use_cache
+    _finalize_gptq_phase(network, phase)
     cleanup_memory(verbos=True)
     logging.info("-----GPTQ Quantization Done-----\n")
 

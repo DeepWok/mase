@@ -35,8 +35,9 @@ def save_layer_checkpoint(
         for name, param in model.named_parameters():
             if name.startswith(layer_prefix):
                 relative_name = name[len(layer_prefix) :]
+                # Single owned CPU copy (contiguous for safetensors).
                 layer_state_dict[relative_name] = (
-                    param.detach().cpu().contiguous().clone()
+                    param.detach().to("cpu", copy=True).contiguous()
                 )
 
         if not layer_state_dict:
