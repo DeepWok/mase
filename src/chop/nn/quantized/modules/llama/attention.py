@@ -1,3 +1,20 @@
+"""Llama attention quantisation modules with phase-aware runtime dispatch.
+
+Phase-split contract (decode-side disaggregated serving, e.g. PLENA):
+1. Runtime phase (``prefill`` / ``decode``) is written by decoder-layer
+   pre-hooks installed by the quantize pass; attention only consumes it.
+2. Every in-attention stage (qk / av / rope / softmax / kv_cache) resolves
+   its config per phase. A decode-only deployment bypasses all prefill
+   stages (FP prefill chip) while decode runs fully quantised.
+3. KV-cache handoff: with ``kv_cache_handoff="decode_format"`` (default)
+   prefill KV writes use the DECODE bucket's kv_cache config — the prefill
+   chip computes in FP but its KV lands in the decode chip's HBM in the
+   decode chip's MX format.
+4. When all in-attention stages are bypassed for the current phase, the
+   forward falls through to HF's configured backend (sdpa / flash / eager),
+   so an FP prefill keeps full-speed attention.
+"""
+
 from typing import Optional, Tuple
 
 import torch
@@ -30,6 +47,12 @@ from chop.nn.quantized.functional.attention import (
     eager_attention_forward_mxint as _eager_attention_forward_mxint,
     eager_attention_forward_mxint_rotate as _eager_attention_forward_mxint_rotate,
 )
+from chop.nn.quantized.modules.phase_context import get_runtime_phase
+from chop.nn.quantized.modules.phase_config import (
+    ATTENTION_STAGES,
+    normalize_phase_q_config,
+    resolve_stage_config,
+)
 
 import logging
 
@@ -61,6 +84,100 @@ def _hf_attention_dispatch(
         attention_mask,
         **kwargs,
     )
+
+
+class _PhaseAwareAttentionMixin:
+    """Per-phase stage-config resolution shared by the MX attention classes.
+
+    Stage configs are resolved once at ``__init__`` (not per forward): during
+    autoregressive decoding the forward runs once per generated token, so
+    per-call dict copies would be pure overhead.
+    """
+
+    _STAGES = ATTENTION_STAGES
+    # Short keys used in the resolved dicts, aligned with ATTENTION_STAGES.
+    _STAGE_KEYS = tuple(s.replace("_matmul", "") for s in ATTENTION_STAGES)
+
+    def _init_phase_attention_config(self, q_config: dict) -> None:
+        self.q_config = q_config or {}
+        self.phase_q_config = normalize_phase_q_config(q_config)
+        self.decode_policy = self.phase_q_config["decode_policy"]
+        self._phase_stage_cfgs = {
+            phase: self._resolve_phase_stage_cfgs(phase)
+            for phase in ("prefill", "decode")
+        }
+        # Legacy flat attributes mirror the decode side (the quantised chip)
+        # so existing tooling that inspects e.g. ``self.qk_config`` still sees
+        # the operative quantisation settings.
+        decode_cfgs = self._phase_stage_cfgs["decode"]
+        self.qk_config = decode_cfgs["qk_config"]
+        self.av_config = decode_cfgs["av_config"]
+        self.rope_config = decode_cfgs["rope_config"]
+        self.softmax_config = decode_cfgs["softmax_config"]
+        self.kv_cache_config = decode_cfgs["kv_cache_config"]
+        self.qk_bypass = decode_cfgs["qk_bypass"]
+        self.av_bypass = decode_cfgs["av_bypass"]
+        self.rope_bypass = decode_cfgs["rope_bypass"]
+        self.softmax_bypass = decode_cfgs["softmax_bypass"]
+        self.kv_cache_bypass = decode_cfgs["kv_cache_bypass"]
+
+    def _resolve_phase_stage_cfgs(self, phase: str) -> dict:
+        cfgs = {}
+        for stage, key in zip(self._STAGES, self._STAGE_KEYS):
+            stage_cfg = resolve_stage_config(self.phase_q_config, phase, stage)
+            cfgs[f"{key}_config"] = stage_cfg
+            cfgs[f"{key}_bypass"] = stage_cfg.get("bypass", False)
+        return cfgs
+
+    def _active_stage_cfgs(self) -> dict:
+        return self._phase_stage_cfgs[get_runtime_phase()]
+
+    def _apply_kv_cache_phase_aware(
+        self,
+        key_states,
+        value_states,
+        past_key_values,
+        cache_kwargs,
+        stage,
+        kv_quantizer,
+    ):
+        """Update the KV cache with quantise-on-write handoff semantics.
+
+        The quantised K/V go into the cache — that is the copy living in the
+        decode chip's HBM. What the current forward computes attention over
+        depends on the phase:
+
+        - decode: the full cache as stored (quantised), including the newly
+          appended entries — the decode chip reads K/V from its HBM.
+        - prefill: the prompt's own K/V stay FP for this forward — the
+          prefill chip computes attention on-chip at full precision and only
+          the handoff copy is quantised.
+
+        With ``kv_cache`` bypassed (or no cache) this is a plain update.
+        """
+
+        if past_key_values is None:
+            return key_states, value_states
+        if stage["kv_cache_bypass"] or kv_quantizer is None:
+            return past_key_values.update(
+                key_states, value_states, self.layer_idx, cache_kwargs
+            )
+
+        k_store, v_store = kv_quantizer(
+            key_states, value_states, stage["kv_cache_config"]
+        )
+        k_all, v_all = past_key_values.update(
+            k_store, v_store, self.layer_idx, cache_kwargs
+        )
+        if get_runtime_phase() == "prefill":
+            q_len = key_states.shape[-2]
+            if k_all.shape[-2] == q_len:
+                return key_states, value_states
+            # Continued prefill: earlier positions come from the cache (in
+            # handoff format), the current chunk stays FP.
+            k_all = torch.cat([k_all[..., :-q_len, :], key_states], dim=-2)
+            v_all = torch.cat([v_all[..., :-q_len, :], value_states], dim=-2)
+        return k_all, v_all
 
 
 class LlamaAttentionLSQInteger(nn.Module):
@@ -183,22 +300,12 @@ class LlamaAttentionLSQInteger(nn.Module):
         return new_attn
 
 
-class LlamaAttentionMXFP(LlamaAttention):
-    """MXFP-quantized LlamaAttention."""
+class LlamaAttentionMXFP(_PhaseAwareAttentionMixin, LlamaAttention):
+    """MXFP-quantized LlamaAttention with per-phase stage dispatch."""
 
     def __init__(self, config, layer_idx, q_config: dict = None):
         super().__init__(config, layer_idx)
-        q_config = q_config or {}
-        self.qk_config = q_config.get("qk_matmul", {})
-        self.av_config = q_config.get("av_matmul", {})
-        self.rope_config = q_config.get("rope", {})
-        self.softmax_config = q_config.get("softmax", {})
-        self.kv_cache_config = q_config.get("kv_cache", {})
-        self.qk_bypass = self.qk_config.get("bypass", False)
-        self.av_bypass = self.av_config.get("bypass", False)
-        self.rope_bypass = self.rope_config.get("bypass", False)
-        self.softmax_bypass = self.softmax_config.get("bypass", False)
-        self.kv_cache_bypass = self.kv_cache_config.get("bypass", False)
+        self._init_phase_attention_config(q_config)
 
     def forward(
         self,
@@ -209,6 +316,10 @@ class LlamaAttentionMXFP(LlamaAttention):
         cache_position: Optional[LongTensor] = None,
         **kwargs,
     ) -> Tuple[Tensor, Optional[Tensor], Optional[Tuple[Tensor]]]:
+        # HF compatibility: tolerate the legacy cache kwarg alias.
+        past_key_values = kwargs.pop("past_key_value", past_key_values)
+        stage = self._active_stage_cfgs()
+
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
 
@@ -217,13 +328,13 @@ class LlamaAttentionMXFP(LlamaAttention):
         value_states = self.v_proj(hidden_states).view(hidden_shape).transpose(1, 2)
 
         cos, sin = position_embeddings
-        if not self.rope_bypass:
+        if not stage["rope_bypass"]:
             query_states, key_states = rope_minifloat(
                 query_states,
                 key_states,
                 cos,
                 sin,
-                self.rope_config,
+                stage["rope_config"],
             )
         else:
             query_states, key_states = apply_rotary_pos_emb(
@@ -233,25 +344,21 @@ class LlamaAttentionMXFP(LlamaAttention):
                 sin,
             )
 
-        if past_key_values is not None:
-            cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
-            if not self.kv_cache_bypass:
-                key_states, value_states = kv_cache_mxfp(
-                    key_states,
-                    value_states,
-                    self.kv_cache_config,
-                )
-            key_states, value_states = past_key_values.update(
-                key_states,
-                value_states,
-                self.layer_idx,
-                cache_kwargs,
-            )
+        cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
+        key_states, value_states = self._apply_kv_cache_phase_aware(
+            key_states,
+            value_states,
+            past_key_values,
+            cache_kwargs,
+            stage,
+            kv_cache_mxfp,
+        )
 
-        # Skip-replace: if no in-attention quant stage is active, fall back to
-        # whatever attention backend HF was configured for (sdpa / fa2 / eager).
-        # KV-cache / RoPE quant happens above and is unaffected.
-        if self.qk_bypass and self.av_bypass and self.softmax_bypass:
+        # Skip-replace: if no in-attention quant stage is active for this
+        # phase, fall back to whatever attention backend HF was configured
+        # for (sdpa / fa2 / eager). KV-cache / RoPE quant happens above and
+        # is unaffected. An FP prefill therefore keeps full-speed attention.
+        if stage["qk_bypass"] and stage["av_bypass"] and stage["softmax_bypass"]:
             attn_output, attn_weights = _hf_attention_dispatch(
                 self,
                 query_states,
@@ -275,12 +382,12 @@ class LlamaAttentionMXFP(LlamaAttention):
                 attention_mask,
                 dropout=0.0 if not self.training else self.attention_dropout,
                 scaling=self.scaling,
-                qk_bypass=self.qk_bypass,
-                qk_config=self.qk_config,
-                av_bypass=self.av_bypass,
-                av_config=self.av_config,
-                softmax_bypass=self.softmax_bypass,
-                softmax_config=self.softmax_config,
+                qk_bypass=stage["qk_bypass"],
+                qk_config=stage["qk_config"],
+                av_bypass=stage["av_bypass"],
+                av_config=stage["av_config"],
+                softmax_bypass=stage["softmax_bypass"],
+                softmax_config=stage["softmax_config"],
                 **kwargs,
             )
 
@@ -304,22 +411,12 @@ class LlamaAttentionMXFP(LlamaAttention):
         return new_attn
 
 
-class LlamaAttentionMXInt(LlamaAttention):
-    """MXInt-quantized LlamaAttention."""
+class LlamaAttentionMXInt(_PhaseAwareAttentionMixin, LlamaAttention):
+    """MXInt-quantized LlamaAttention with per-phase stage dispatch."""
 
     def __init__(self, config, layer_idx, q_config: dict = None):
         super().__init__(config, layer_idx)
-        q_config = q_config or {}
-        self.qk_config = q_config.get("qk_matmul", {})
-        self.av_config = q_config.get("av_matmul", {})
-        self.rope_config = q_config.get("rope", {})
-        self.softmax_config = q_config.get("softmax", {})
-        self.kv_cache_config = q_config.get("kv_cache", {})
-        self.qk_bypass = self.qk_config.get("bypass", False)
-        self.av_bypass = self.av_config.get("bypass", False)
-        self.rope_bypass = self.rope_config.get("bypass", False)
-        self.softmax_bypass = self.softmax_config.get("bypass", False)
-        self.kv_cache_bypass = self.kv_cache_config.get("bypass", False)
+        self._init_phase_attention_config(q_config)
 
     def forward(
         self,
@@ -330,6 +427,9 @@ class LlamaAttentionMXInt(LlamaAttention):
         cache_position: Optional[LongTensor] = None,
         **kwargs,
     ) -> Tuple[Tensor, Optional[Tensor], Optional[Tuple[Tensor]]]:
+        past_key_values = kwargs.pop("past_key_value", past_key_values)
+        stage = self._active_stage_cfgs()
+
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
 
@@ -338,13 +438,13 @@ class LlamaAttentionMXInt(LlamaAttention):
         value_states = self.v_proj(hidden_states).view(hidden_shape).transpose(1, 2)
 
         cos, sin = position_embeddings
-        if not self.rope_bypass:
+        if not stage["rope_bypass"]:
             query_states, key_states = rope_minifloat(
                 query_states,
                 key_states,
                 cos,
                 sin,
-                self.rope_config,
+                stage["rope_config"],
             )
         else:
             query_states, key_states = apply_rotary_pos_emb(
@@ -354,22 +454,17 @@ class LlamaAttentionMXInt(LlamaAttention):
                 sin,
             )
 
-        if past_key_values is not None:
-            cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
-            if not self.kv_cache_bypass:
-                key_states, value_states = kv_cache_mxint(
-                    key_states,
-                    value_states,
-                    self.kv_cache_config,
-                )
-            key_states, value_states = past_key_values.update(
-                key_states,
-                value_states,
-                self.layer_idx,
-                cache_kwargs,
-            )
+        cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
+        key_states, value_states = self._apply_kv_cache_phase_aware(
+            key_states,
+            value_states,
+            past_key_values,
+            cache_kwargs,
+            stage,
+            kv_cache_mxint,
+        )
 
-        if self.qk_bypass and self.av_bypass and self.softmax_bypass:
+        if stage["qk_bypass"] and stage["av_bypass"] and stage["softmax_bypass"]:
             attn_output, attn_weights = _hf_attention_dispatch(
                 self,
                 query_states,
@@ -393,12 +488,12 @@ class LlamaAttentionMXInt(LlamaAttention):
                 attention_mask,
                 dropout=0.0 if not self.training else self.attention_dropout,
                 scaling=self.scaling,
-                qk_bypass=self.qk_bypass,
-                qk_config=self.qk_config,
-                av_bypass=self.av_bypass,
-                av_config=self.av_config,
-                softmax_bypass=self.softmax_bypass,
-                softmax_config=self.softmax_config,
+                qk_bypass=stage["qk_bypass"],
+                qk_config=stage["qk_config"],
+                av_bypass=stage["av_bypass"],
+                av_config=stage["av_config"],
+                softmax_bypass=stage["softmax_bypass"],
+                softmax_config=stage["softmax_config"],
                 **kwargs,
             )
 
@@ -422,7 +517,6 @@ class LlamaAttentionMXInt(LlamaAttention):
         return new_attn
 
 
-
 class LlamaAttentionMXIntRotate(LlamaAttentionMXInt):
     """LlamaAttentionMXInt with online Hadamard rotation around the
     activation quantizers (KV-cache, Q@K, A@V). Mirrors
@@ -431,18 +525,24 @@ class LlamaAttentionMXIntRotate(LlamaAttentionMXInt):
     Per-stage rotate toggles let the rotation search swap stages
     independently. Each defaults True (preserves "all rotated" baseline if
     the user doesn't pre-set them); the search drives them via the matching
-    block in q_config:
+    block in q_config (decode bucket for phase-structured configs — rotation
+    is a property of the quantised decode chip):
 
         q_config["qk_matmul"]["rotate"]   = True | False  (default True)
         q_config["av_matmul"]["rotate"]   = True | False  (default True)
         q_config["kv_cache"]["rotate"]    = True | False  (default True)
+
+    The flags are shared across phases: a prefill KV handoff write in
+    decode_format uses the same rotation decision as decode KV writes, so
+    the cache stays in one consistent basis.
     """
 
     def __init__(self, config, layer_idx, q_config: dict = None):
         super().__init__(config, layer_idx, q_config=q_config)
-        self.qk_use_rotate = self.qk_config.get("rotate", True)
-        self.av_use_rotate = self.av_config.get("rotate", True)
-        self.kv_cache_use_rotate = self.kv_cache_config.get("rotate", True)
+        decode_cfgs = self._phase_stage_cfgs["decode"]
+        self.qk_use_rotate = decode_cfgs["qk_config"].get("rotate", True)
+        self.av_use_rotate = decode_cfgs["av_config"].get("rotate", True)
+        self.kv_cache_use_rotate = decode_cfgs["kv_cache_config"].get("rotate", True)
 
     def forward(
         self,
@@ -453,6 +553,9 @@ class LlamaAttentionMXIntRotate(LlamaAttentionMXInt):
         cache_position: Optional[LongTensor] = None,
         **kwargs,
     ) -> Tuple[Tensor, Optional[Tensor], Optional[Tuple[Tensor]]]:
+        past_key_values = kwargs.pop("past_key_value", past_key_values)
+        stage = self._active_stage_cfgs()
+
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
 
@@ -461,13 +564,13 @@ class LlamaAttentionMXIntRotate(LlamaAttentionMXInt):
         value_states = self.v_proj(hidden_states).view(hidden_shape).transpose(1, 2)
 
         cos, sin = position_embeddings
-        if not self.rope_bypass:
+        if not stage["rope_bypass"]:
             query_states, key_states = rope_minifloat(
                 query_states,
                 key_states,
                 cos,
                 sin,
-                self.rope_config,
+                stage["rope_config"],
             )
         else:
             query_states, key_states = apply_rotary_pos_emb(
@@ -477,29 +580,18 @@ class LlamaAttentionMXIntRotate(LlamaAttentionMXInt):
                 sin,
             )
 
-        if past_key_values is not None:
-            cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
-            if not self.kv_cache_bypass:
-                if self.kv_cache_use_rotate:
-                    key_states, value_states = kv_cache_mxint_rotate(
-                        key_states,
-                        value_states,
-                        self.kv_cache_config,
-                    )
-                else:
-                    key_states, value_states = kv_cache_mxint(
-                        key_states,
-                        value_states,
-                        self.kv_cache_config,
-                    )
-            key_states, value_states = past_key_values.update(
-                key_states,
-                value_states,
-                self.layer_idx,
-                cache_kwargs,
-            )
+        cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
+        kv_quantizer = kv_cache_mxint_rotate if self.kv_cache_use_rotate else kv_cache_mxint
+        key_states, value_states = self._apply_kv_cache_phase_aware(
+            key_states,
+            value_states,
+            past_key_values,
+            cache_kwargs,
+            stage,
+            kv_quantizer,
+        )
 
-        if self.qk_bypass and self.av_bypass and self.softmax_bypass:
+        if stage["qk_bypass"] and stage["av_bypass"] and stage["softmax_bypass"]:
             attn_output, attn_weights = _hf_attention_dispatch(
                 self,
                 query_states,
@@ -523,12 +615,12 @@ class LlamaAttentionMXIntRotate(LlamaAttentionMXInt):
                 attention_mask,
                 dropout=0.0 if not self.training else self.attention_dropout,
                 scaling=self.scaling,
-                qk_bypass=self.qk_bypass,
-                qk_config=self.qk_config,
-                av_bypass=self.av_bypass,
-                av_config=self.av_config,
-                softmax_bypass=self.softmax_bypass,
-                softmax_config=self.softmax_config,
+                qk_bypass=stage["qk_bypass"],
+                qk_config=stage["qk_config"],
+                av_bypass=stage["av_bypass"],
+                av_config=stage["av_config"],
+                softmax_bypass=stage["softmax_bypass"],
+                softmax_config=stage["softmax_config"],
                 qk_use_rotate=self.qk_use_rotate,
                 av_use_rotate=self.av_use_rotate,
                 **kwargs,
@@ -552,9 +644,10 @@ class LlamaAttentionMXFPRotate(LlamaAttentionMXFP):
 
     def __init__(self, config, layer_idx, q_config: dict = None):
         super().__init__(config, layer_idx, q_config=q_config)
-        self.qk_use_rotate = self.qk_config.get("rotate", True)
-        self.av_use_rotate = self.av_config.get("rotate", True)
-        self.kv_cache_use_rotate = self.kv_cache_config.get("rotate", True)
+        decode_cfgs = self._phase_stage_cfgs["decode"]
+        self.qk_use_rotate = decode_cfgs["qk_config"].get("rotate", True)
+        self.av_use_rotate = decode_cfgs["av_config"].get("rotate", True)
+        self.kv_cache_use_rotate = decode_cfgs["kv_cache_config"].get("rotate", True)
 
     def forward(
         self,
@@ -565,6 +658,9 @@ class LlamaAttentionMXFPRotate(LlamaAttentionMXFP):
         cache_position: Optional[LongTensor] = None,
         **kwargs,
     ) -> Tuple[Tensor, Optional[Tensor], Optional[Tuple[Tensor]]]:
+        past_key_values = kwargs.pop("past_key_value", past_key_values)
+        stage = self._active_stage_cfgs()
+
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
 
@@ -573,13 +669,13 @@ class LlamaAttentionMXFPRotate(LlamaAttentionMXFP):
         value_states = self.v_proj(hidden_states).view(hidden_shape).transpose(1, 2)
 
         cos, sin = position_embeddings
-        if not self.rope_bypass:
+        if not stage["rope_bypass"]:
             query_states, key_states = rope_minifloat(
                 query_states,
                 key_states,
                 cos,
                 sin,
-                self.rope_config,
+                stage["rope_config"],
             )
         else:
             query_states, key_states = apply_rotary_pos_emb(
@@ -589,29 +685,18 @@ class LlamaAttentionMXFPRotate(LlamaAttentionMXFP):
                 sin,
             )
 
-        if past_key_values is not None:
-            cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
-            if not self.kv_cache_bypass:
-                if self.kv_cache_use_rotate:
-                    key_states, value_states = kv_cache_mxfp_rotate(
-                        key_states,
-                        value_states,
-                        self.kv_cache_config,
-                    )
-                else:
-                    key_states, value_states = kv_cache_mxfp(
-                        key_states,
-                        value_states,
-                        self.kv_cache_config,
-                    )
-            key_states, value_states = past_key_values.update(
-                key_states,
-                value_states,
-                self.layer_idx,
-                cache_kwargs,
-            )
+        cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
+        kv_quantizer = kv_cache_mxfp_rotate if self.kv_cache_use_rotate else kv_cache_mxfp
+        key_states, value_states = self._apply_kv_cache_phase_aware(
+            key_states,
+            value_states,
+            past_key_values,
+            cache_kwargs,
+            stage,
+            kv_quantizer,
+        )
 
-        if self.qk_bypass and self.av_bypass and self.softmax_bypass:
+        if stage["qk_bypass"] and stage["av_bypass"] and stage["softmax_bypass"]:
             attn_output, attn_weights = _hf_attention_dispatch(
                 self,
                 query_states,
@@ -635,12 +720,12 @@ class LlamaAttentionMXFPRotate(LlamaAttentionMXFP):
                 attention_mask,
                 dropout=0.0 if not self.training else self.attention_dropout,
                 scaling=self.scaling,
-                qk_bypass=self.qk_bypass,
-                qk_config=self.qk_config,
-                av_bypass=self.av_bypass,
-                av_config=self.av_config,
-                softmax_bypass=self.softmax_bypass,
-                softmax_config=self.softmax_config,
+                qk_bypass=stage["qk_bypass"],
+                qk_config=stage["qk_config"],
+                av_bypass=stage["av_bypass"],
+                av_config=stage["av_config"],
+                softmax_bypass=stage["softmax_bypass"],
+                softmax_config=stage["softmax_config"],
                 qk_use_rotate=self.qk_use_rotate,
                 av_use_rotate=self.av_use_rotate,
                 **kwargs,
