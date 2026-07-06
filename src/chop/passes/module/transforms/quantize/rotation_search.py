@@ -54,6 +54,7 @@ from chop.nn.quantized.modules.linear import (
     RotateMXFPLinear,
     RotateMXIntLinear,
 )
+from chop.nn.quantized.modules.phase_context import force_runtime_phase
 from chop.nn.quantized.modules.qwen3.attention import Qwen3AttentionMXIntRotate
 from chop.nn.quantized.modules.llama.attention import (
     LlamaAttentionMXIntRotate,
@@ -116,9 +117,18 @@ def _patch_base_args_for_rotate_class(base_args: dict) -> dict:
     per-stage toggle hooks in place for the search.
 
     Handles both ``name == "mxint"`` and ``name == "mxfp"`` selectors,
-    bumping each to its corresponding ``*_rotate`` registry name.
+    bumping each to its corresponding ``*_rotate`` registry name. Stage
+    blocks are looked up both at the config top level (legacy flat configs)
+    and inside ``prefill`` / ``decode`` phase buckets (phase-split configs).
     """
     args = copy.deepcopy(base_args)
+
+    def _stage_scopes(cfg: dict):
+        """Yield every dict that may hold qk/av/kv stage blocks."""
+        yield cfg
+        for bucket in ("prefill", "decode"):
+            if isinstance(cfg.get(bucket), dict):
+                yield cfg[bucket]
 
     # The selectors live as top-level keys (everything except control keys).
     for key, val in args.items():
@@ -130,9 +140,11 @@ def _patch_base_args_for_rotate_class(base_args: dict) -> dict:
         if not isinstance(cfg, dict):
             continue
         name = cfg.get("name")
-        # Heuristic: an attention selector has nested matmul/cache blocks.
+        # Heuristic: an attention selector has nested matmul/cache blocks
+        # (at top level or inside a phase bucket).
         has_attn_substructure = any(
-            isinstance(cfg.get(stage), dict)
+            isinstance(scope.get(stage), dict)
+            for scope in _stage_scopes(cfg)
             for stage in ("qk_matmul", "av_matmul", "kv_cache")
         )
         if not has_attn_substructure:
@@ -141,10 +153,11 @@ def _patch_base_args_for_rotate_class(base_args: dict) -> dict:
             cfg["name"] = _NAME_TO_ROTATE_NAME[name]
         # Force all three stages OFF in the baseline regardless of whether
         # the user pre-set anything — the search drives them.
-        for stage in ("qk_matmul", "av_matmul", "kv_cache"):
-            stage_cfg = cfg.get(stage)
-            if isinstance(stage_cfg, dict):
-                stage_cfg["rotate"] = False
+        for scope in _stage_scopes(cfg):
+            for stage in ("qk_matmul", "av_matmul", "kv_cache"):
+                stage_cfg = scope.get(stage)
+                if isinstance(stage_cfg, dict):
+                    stage_cfg["rotate"] = False
     return args
 
 
@@ -209,25 +222,38 @@ def _compute_calibration_perplexity(
     loader,
     device: str,
     label: str,
+    score_phase: str = "decode",
 ) -> float:
     """Mean-NLL-based perplexity over a list of ``(input_ids, target)`` tuples
-    (the same shape ``gptq.data_utils.get_loaders`` produces)."""
+    (the same shape ``gptq.data_utils.get_loaders`` produces).
+
+    ``score_phase`` forces the runtime phase during scoring. Cache-free ppl
+    forwards would otherwise register as "prefill" — under a decode-only
+    phase config that bypasses all quantisation, making every candidate look
+    identical. Scoring in "decode" runs every token through the decode
+    chip's numerics, which is what the rotation decisions are for. (For
+    legacy flat configs both phases are identical, so this is a no-op.)
+    """
     model.eval()
     total_nll = 0.0
     total_tokens = 0
     n_batches = len(loader)
-    logger.info("    ppl[%s] forward over %d batches...", label, n_batches)
+    logger.info(
+        "    ppl[%s] forward over %d batches (phase=%s)...",
+        label, n_batches, score_phase,
+    )
     t0 = time.time()
     pbar = tqdm.tqdm(loader, desc=f"ppl[{label}]", total=n_batches, leave=False)
-    for batch in pbar:
-        input_ids = batch[0] if isinstance(batch, (list, tuple)) else batch
-        input_ids = input_ids.to(device)
-        outputs = model(input_ids=input_ids, labels=input_ids)
-        # HF causal-LM loss is mean NLL over the (seqlen-1) predicted positions.
-        n_predicted = input_ids.shape[-1] - 1
-        total_nll += outputs.loss.float().item() * n_predicted
-        total_tokens += n_predicted
-        pbar.set_postfix(running_nll=f"{total_nll/max(total_tokens,1):.4f}")
+    with force_runtime_phase(score_phase):
+        for batch in pbar:
+            input_ids = batch[0] if isinstance(batch, (list, tuple)) else batch
+            input_ids = input_ids.to(device)
+            outputs = model(input_ids=input_ids, labels=input_ids)
+            # HF causal-LM loss is mean NLL over the (seqlen-1) predicted positions.
+            n_predicted = input_ids.shape[-1] - 1
+            total_nll += outputs.loss.float().item() * n_predicted
+            total_tokens += n_predicted
+            pbar.set_postfix(running_nll=f"{total_nll/max(total_tokens,1):.4f}")
     pbar.close()
     if total_tokens == 0:
         raise RuntimeError("Empty calibration loader — cannot compute perplexity.")
@@ -243,7 +269,7 @@ def _compute_calibration_perplexity(
 
 def _search_greedy_forward(
     network, calib_loader, device, matmul_types, baseline_ppl,
-    improvement_eps,
+    improvement_eps, score_phase,
 ) -> dict:
     """Greedy forward selection. Each round: try every remaining matmul on
     top of the currently committed set, pick the one with the largest Δ
@@ -289,6 +315,7 @@ def _search_greedy_forward(
             ppl = _compute_calibration_perplexity(
                 network, calib_loader, device,
                 label=f"r{round_idx}_+{candidate}",
+                score_phase=score_phase,
             )
             round_ppls[candidate] = ppl
             _toggle(network, candidate, enable=False)
@@ -412,6 +439,14 @@ def rotation_search_transform_pass(network, pass_args):
     output_json = pass_args.get("output_json", None)
     improvement_eps = float(pass_args.get("improvement_eps", 0.0))
     cache_winners = bool(pass_args.get("cache_winners", False))
+    # Scoring phase for the cache-free ppl forwards. Default None = infer
+    # from the quantised network after step 1: score in "decode" when any
+    # module quantises decode (decode-side deployments; also a no-op for
+    # legacy flat configs), else in "prefill" (prefill-quantised deployments
+    # with FP decode, where decode scoring would bypass everything).
+    score_phase = pass_args.get("score_phase")
+    if score_phase not in (None, "prefill", "decode"):
+        raise ValueError(f"Unknown score_phase {score_phase!r}")
 
     for t in matmul_types:
         if t not in ALL_MATMUL_TYPES:
@@ -453,6 +488,14 @@ def rotation_search_transform_pass(network, pass_args):
     network.to(device)
     logger.info("  quantization done in %.1fs", time.time() - t0)
 
+    if score_phase is None:
+        from .quantize import _infer_runtime_decode_policy
+
+        policy = _infer_runtime_decode_policy(network)
+        score_phase = "decode" if policy in (None, "quantized") else "prefill"
+        logger.info("  score_phase inferred: %s (decode_policy=%s)",
+                    score_phase, policy)
+
     # Sanity: count how many of each module class we ended up with.
     from collections import Counter
     cls_count = Counter(
@@ -477,13 +520,14 @@ def rotation_search_transform_pass(network, pass_args):
     # Step 2: baseline perplexity (no rotation).
     logger.info("STEP 2/4 — baseline ppl (1 forward pass over calib)")
     baseline_ppl = _compute_calibration_perplexity(
-        network, calib_loader, device, label="baseline_no_rotate"
+        network, calib_loader, device, label="baseline_no_rotate",
+        score_phase=score_phase,
     )
 
     # Steps 3 + 4: greedy forward selection.
     results = _search_greedy_forward(
         network, calib_loader, device, matmul_types, baseline_ppl,
-        improvement_eps,
+        improvement_eps, score_phase,
     )
 
     results["baseline_ppl"] = baseline_ppl
@@ -574,6 +618,7 @@ def dispatch_rotation_search_block(network, base_pass_args: dict, rot_cfg: dict)
         "improvement_eps": float(rot_cfg.get("improvement_eps", 0.0)),
         "output_json": cache_path,
         "cache_winners": bool(rot_cfg.get("cache_winners", True)),
+        "score_phase": rot_cfg.get("score_phase"),
     }
     if "matmul_types" in rot_cfg:
         search_args["matmul_types"] = list(rot_cfg["matmul_types"])
