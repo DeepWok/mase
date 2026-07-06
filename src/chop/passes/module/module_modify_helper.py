@@ -53,6 +53,11 @@ from transformers.models.gpt_oss.modeling_gpt_oss import (
 from chop.nn.quantized.modules.llada.modeling_llada import (
     LLaDALlamaBlock,
 )
+from chop.nn.quantized.modules.phase_config import (
+    DECODE_FP_BIAS_ATTR,
+    DECODE_FP_WEIGHT_ATTR,
+    GPTQ_DECODE_WEIGHT_ATTR,
+)
 
 try:
     from transformers.models.bert.modeling_bert import (
@@ -136,6 +141,7 @@ def check_module_instance(module, prefix_map):
 def weight_replacement(x, y):
     target_state_dict = deepcopy(x.state_dict())
     missing_keys, unexpected_keys = y.load_state_dict(target_state_dict, strict=False)
+    _transfer_phase_weight_banks(x, y)
     if missing_keys:
         logging.warning(
             f"Missing keys when loading state_dict: {missing_keys} from {x} to {y}"
@@ -145,6 +151,45 @@ def weight_replacement(x, y):
             f"Unexpected keys when loading state_dict: {unexpected_keys} from {x} to {y}"
         )
     return y
+
+
+def _transfer_phase_weight_banks(source_module, target_module):
+    """Carry phase-split weight banks across the module-replacement seam.
+
+    The GPTQ pre-pass runs on plain ``nn.Linear`` modules *before*
+    replacement and leaves its results as attributes (they are not part of
+    ``state_dict``), so they must be handed over explicitly:
+
+    - ``_mase_gptq_weight_decode`` (``run_gptq(phase="decode")``): the GPTQ
+      result becomes the target's decode weight bank while the state-dict
+      weights (restored FP) stay as the prefill bank.
+    - ``_mase_decode_weight_fp`` / ``_mase_decode_bias_fp``
+      (``run_gptq(phase="prefill")``): the FP snapshot backs an ``fp_only``
+      decode policy while the GPTQ weights serve prefill.
+    """
+
+    gptq_decode_weight = getattr(source_module, GPTQ_DECODE_WEIGHT_ATTR, None)
+    if gptq_decode_weight is not None and hasattr(
+        target_module, "adopt_decode_gptq_weight"
+    ):
+        target_module.adopt_decode_gptq_weight(gptq_decode_weight)
+
+    fp_weight = getattr(source_module, DECODE_FP_WEIGHT_ATTR, None)
+    if fp_weight is not None and hasattr(target_module, "adopt_decode_fp_snapshot"):
+        if not getattr(target_module, "gptq", False) and not getattr(
+            target_module, "bypass", False
+        ):
+            # The state-dict weights are already GPTQ-quantised; a prefill
+            # bucket without gptq=True has just re-quantised them (RTN on
+            # top of GPTQ), which is almost never intended.
+            logging.warning(
+                "GPTQ(phase='prefill') weights were re-quantised during "
+                "replacement of %s — set 'gptq': True in the prefill bucket.",
+                type(target_module).__name__,
+            )
+        target_module.adopt_decode_fp_snapshot(
+            fp_weight, getattr(source_module, DECODE_FP_BIAS_ATTR, None)
+        )
 
 
 def get_module_by_name(network, name):
@@ -423,6 +468,12 @@ def instantiate_module(module, postfix, module_map, additional_module_args):
     elif is_llama:
         module = instantiate_llama_module(
             module, postfix, llama_layer_name, module_map, module_args, network_args
+        )
+    elif is_qwen3:
+        # Same constructor shape as the Llama modules:
+        # cls(config=..., layer_idx=..., q_config=...)
+        module = instantiate_llama_module(
+            module, postfix, qwen3_layer_name, module_map, module_args, network_args
         )
     elif is_qwen3_moe:
         module = instantiate_qwen3_moe_module(
