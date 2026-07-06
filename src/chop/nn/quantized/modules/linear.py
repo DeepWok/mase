@@ -41,6 +41,13 @@ from chop.nn.quantizers import (
 # at load time. We defer that import to RotateMXIntLinear.forward so users
 # that never touch the rotate path don't need the CUDA extension installed.
 
+from chop.nn.quantized.modules.phase_context import get_runtime_phase
+from chop.nn.quantized.modules.phase_config import (
+    GPTQ_DECODE_WEIGHT_ATTR,
+    normalize_phase_q_config,
+    resolve_module_phase_config,
+)
+
 # LUTNet
 import numpy as np
 from typing import Type
@@ -817,8 +824,34 @@ class LinearMXIntHardware(_LinearBase):
             x, self.weight, self.bias, self.config, self.out_config
         )
 
+class _PhaseAwareMXLinearBase(_LinearBase):
+    """Shared machinery for phase-aware MX-format linear layers.
 
-class LinearMXFP(_LinearBase):
+    Bank layout (decode-side disaggregated serving):
+    - ``self.weight`` is the PREFILL bank. With a bypassed prefill bucket it
+      stays FP (the prefill chip is unquantised); with a quantising prefill
+      bucket it is quantised in place (legacy behaviour).
+    - ``_decode_weight_q`` / ``_decode_bias_q`` hold the DECODE bank when the
+      decode bucket quantises weights differently from prefill. It is built
+      from the FP source weights (never from an already-quantised prefill
+      bank), or installed externally by the GPTQ pre-pass
+      (``gptq_config["phase"] = "decode"``) via ``adopt_decode_gptq_weight``.
+    - ``_decode_weight_fp`` / ``_decode_bias_fp`` hold an FP snapshot for the
+      inverse deployment (quantised prefill + ``fp_only`` decode), where the
+      in-place prefill quantisation would otherwise destroy the FP weights
+      decode needs.
+
+    When both phase buckets are identical (any legacy flat config) no decode
+    bank is allocated and both phases share ``self.weight`` — no extra memory
+    and unchanged single-bank behaviour. With two distinct banks, both are
+    stored at the model dtype (fake quantisation), so weight memory doubles —
+    the cost of emulating two chips in one process.
+
+    Subclasses provide the format-specific ``_quantize_weight_with_config``
+    and ``_quantize_activation_with_config`` hooks; the Rotate variants only
+    override the activation hook.
+    """
+
     # NOTE: backward is not supported — inference only (PTQ)
     def __init__(
         self,
@@ -831,163 +864,189 @@ class LinearMXFP(_LinearBase):
     ) -> None:
         super().__init__(in_features, out_features, bias, device, dtype)
         assert config is not None, "config is None!"
+        self._init_phase_state(config)
+        self._register_phase_bank_buffers()
+
+    def _init_phase_state(self, config: dict) -> None:
+        # Raw config retained for zero-copy class swaps (rotation search).
         self.config = config
-        self.bypass = config.get("bypass", False)
-        self.gptq = config.get("gptq", False)
-        self.clip_search = config.get("clip_search", False)
+        self.phase_q_config = normalize_phase_q_config(config)
+        self.decode_policy = self.phase_q_config["decode_policy"]
+        self.prefill_config = resolve_module_phase_config(self.phase_q_config, "prefill")
+        self.decode_config = resolve_module_phase_config(self.phase_q_config, "decode")
+        # Legacy attribute contract: these mirror the prefill bucket because
+        # ``self.weight`` is the prefill bank.
+        self.bypass = self.prefill_config.get("bypass", False)
+        self.gptq = self.prefill_config.get("gptq", False)
+        self.clip_search = self.prefill_config.get("clip_search", False)
+        self.decode_gptq = self.decode_config.get("gptq", False)
+        # Single-bank fast path: identical buckets share ``self.weight``.
+        self.shared_phase_banks = self.prefill_config == self.decode_config
+        self._validate_phase_weight_configs()
 
-    @classmethod
-    def from_linear(cls, linear: torch.nn.Linear, config: dict) -> "LinearMXFP":
-        """Create a LinearMXFP that REUSES the original Linear's Parameters.
+    def _register_phase_bank_buffers(self) -> None:
+        # Non-persistent: decode banks are runtime state rebuilt from the FP
+        # source, so checkpoints stay upstream-compatible.
+        self.register_buffer("_decode_weight_q", torch.empty(0), persistent=False)
+        self.register_buffer("_decode_bias_q", torch.empty(0), persistent=False)
+        self.register_buffer("_decode_weight_fp", torch.empty(0), persistent=False)
+        self.register_buffer("_decode_bias_fp", torch.empty(0), persistent=False)
 
-        Mirrors ``LinearMXInt.from_linear`` for MXFP: shares the existing
-        ``weight`` / ``bias`` Parameter (preserving DTensor sharding), then
-        quantizes them in place. Used by the rotation-search swap path so
-        ``LinearMXFP`` ↔ ``RotateMXFPLinear`` swaps stay zero-copy.
+    # ---- format-specific hooks -------------------------------------------
+    # Config keys a bucket must fully provide to quantise weights / bias.
+    _WEIGHT_CFG_KEYS: tuple = ()
+    _BIAS_CFG_KEYS: tuple = ()
+
+    def _quantize_weight_with_config(self, w: Tensor, cfg: dict, block_dim: int) -> Tensor:
+        raise NotImplementedError
+
+    def _weight_config_present(self, cfg: dict) -> bool:
+        return all(cfg.get(k) is not None for k in self._WEIGHT_CFG_KEYS)
+
+    def _bias_config_present(self, cfg: dict) -> bool:
+        return all(cfg.get(k) is not None for k in self._BIAS_CFG_KEYS)
+
+    def _quantize_bias_with_config(self, b: Tensor, cfg: dict) -> Tensor:
+        raise NotImplementedError
+
+    def _quantize_activation_with_config(self, x: Tensor, cfg: dict) -> Tensor:
+        raise NotImplementedError
+
+    def _validate_phase_weight_configs(self) -> None:
+        """Reject partial weight configs.
+
+        A bucket may provide all weight keys (quantise) or none (weights stay
+        FP, activation-only quantisation). Anything in between is almost
+        certainly a typo and would otherwise silently skip quantisation.
         """
-        assert config is not None, "config is None!"
-        new = cls.__new__(cls)
-        torch.nn.Module.__init__(new)
 
-        new.in_features = linear.in_features
-        new.out_features = linear.out_features
-        new.weight = linear.weight
-        new.bias = linear.bias
-
-        new.pruning_masks = None
-
-        new.config = config
-        new.bypass = config.get("bypass", False)
-        new.gptq = config.get("gptq", False)
-        new.clip_search = config.get("clip_search", False)
-
-        if not new.bypass and not new.gptq:
-            with torch.no_grad():
-                new.weight.data.copy_(
-                    mxfp_quantizer(
-                        new.weight.data,
-                        block_size=config["weight_block_size"],
-                        element_exp_bits=config["weight_exponent_width"],
-                        element_frac_bits=config["weight_frac_width"],
-                        block_dim=1,
-                    )
+        for phase_name, cfg in (
+            ("prefill", self.prefill_config),
+            ("decode", self.decode_config),
+        ):
+            if cfg.get("bypass", False) or cfg.get("gptq", False):
+                continue
+            present = [k for k in self._WEIGHT_CFG_KEYS if cfg.get(k) is not None]
+            if present and len(present) != len(self._WEIGHT_CFG_KEYS):
+                missing = [k for k in self._WEIGHT_CFG_KEYS if cfg.get(k) is None]
+                raise ValueError(
+                    f"{self.__class__.__name__}: incomplete weight config in "
+                    f"the {phase_name} bucket — found {present}, missing "
+                    f"{missing}. Provide all weight keys, or none for "
+                    "activation-only quantisation."
                 )
 
-                b_block_size = config.get("bias_block_size")
-                b_exp_bits = config.get("bias_exponent_width")
-                b_frac_bits = config.get("bias_frac_width")
-                if (
-                    new.bias is not None
-                    and b_block_size is not None
-                    and b_exp_bits is not None
-                ):
-                    new.bias.data.copy_(
-                        mxfp_quantizer(
-                            new.bias.data,
-                            block_size=b_block_size,
-                            element_exp_bits=b_exp_bits,
-                            element_frac_bits=b_frac_bits,
-                            block_dim=0,
-                        )
-                    )
+    # ---- bank construction ------------------------------------------------
+    @torch.no_grad()
+    def _build_phase_weight_banks(self) -> None:
+        """Build per-phase weight banks from the FP weights in ``self.weight``.
 
-        return new
+        Must run while ``self.weight`` still holds the FP source (i.e. before
+        the in-place prefill quantisation this method performs last).
+        """
 
-    def load_state_dict(self, state_dict, strict=True, assign=False):
-        """Load pretrained weights, then quantize them in place."""
-        result = super().load_state_dict(state_dict, strict=strict, assign=assign)
+        device = self.weight.device
+        self._decode_weight_q = torch.empty(0, device=device)
+        self._decode_bias_q = torch.empty(0, device=device)
+        self._decode_weight_fp = torch.empty(0, device=device)
+        self._decode_bias_fp = torch.empty(0, device=device)
 
-        if self.bypass or self.gptq:
-            return result
-
-        # Quantize weight
-        w_block_size = self.config["weight_block_size"]
-        w_exp_bits = self.config["weight_exponent_width"]
-        w_frac_bits = self.config["weight_frac_width"]
-        self.weight.data.copy_(
-            mxfp_quantizer(
-                self.weight.data,
-                block_size=w_block_size,
-                element_exp_bits=w_exp_bits,
-                element_frac_bits=w_frac_bits,
-                block_dim=1,
-            )
+        prefill_quantises_weight = (
+            not self.bypass and not self.gptq
+            and self._weight_config_present(self.prefill_config)
         )
 
-        # Quantize bias
-        b_block_size = self.config.get("bias_block_size")
-        b_exp_bits = self.config.get("bias_exponent_width")
-        b_frac_bits = self.config.get("bias_frac_width")
-        if (
-            self.bias is not None
-            and b_block_size is not None
-            and b_exp_bits is not None
-        ):
-            self.bias.data.copy_(
-                mxfp_quantizer(
-                    self.bias.data,
-                    block_size=b_block_size,
-                    element_exp_bits=b_exp_bits,
-                    element_frac_bits=b_frac_bits,
-                    block_dim=0,
+        if not self.shared_phase_banks:
+            decode_cfg = self.decode_config
+            if (
+                not decode_cfg.get("bypass", False)
+                and not self.decode_gptq
+                and self._weight_config_present(decode_cfg)
+            ):
+                # Decode bank is quantised from the FP source, NOT from a
+                # (possibly differently) quantised prefill bank.
+                self._decode_weight_q = self._quantize_weight_with_config(
+                    self.weight.data, decode_cfg, block_dim=1
+                )
+                if self.bias is not None and self._bias_config_present(decode_cfg):
+                    self._decode_bias_q = self._quantize_bias_with_config(
+                        self.bias.data, decode_cfg
+                    )
+            elif decode_cfg.get("bypass", False) and prefill_quantises_weight:
+                # Prefill-side flow: prefill quantises ``self.weight`` in
+                # place below, so FP decode needs a pristine snapshot.
+                self._decode_weight_fp = self.weight.data.detach().clone()
+                if self.bias is not None:
+                    self._decode_bias_fp = self.bias.data.detach().clone()
+
+        if prefill_quantises_weight:
+            self.weight.data.copy_(
+                self._quantize_weight_with_config(
+                    self.weight.data, self.prefill_config, block_dim=1
                 )
             )
-
-        return result
+            if self.bias is not None and self._bias_config_present(self.prefill_config):
+                self.bias.data.copy_(
+                    self._quantize_bias_with_config(self.bias.data, self.prefill_config)
+                )
 
     @torch.no_grad()
-    def forward(self, x):
-        if self.bypass:
-            return F.linear(x, self.weight, self.bias)
+    def adopt_decode_gptq_weight(self, weight: Tensor) -> None:
+        """Install a GPTQ-calibrated decode weight bank.
 
-        # Only quantize activations; weights/bias already quantized in load_state_dict
-        x_block_size = self.config.get("data_in_block_size")
-        x_exp_bits = self.config.get("data_in_exponent_width")
-        x_frac_bits = self.config.get("data_in_frac_width")
-        if x_block_size is not None and x_exp_bits is not None:
-            x = mxfp_quantizer(
-                x,
-                block_size=x_block_size,
-                element_exp_bits=x_exp_bits,
-                element_frac_bits=x_frac_bits,
-                block_dim=-1,
+        Called at module-replacement time when the GPTQ pre-pass ran with
+        ``phase="decode"`` (GPTQ output stashed on the source ``nn.Linear``
+        while ``weight`` itself was restored to FP for the prefill bank).
+        """
+
+        self._decode_weight_q = weight.detach().to(
+            device=self.weight.device, dtype=self.weight.dtype, copy=True
+        )
+
+    @torch.no_grad()
+    def adopt_decode_fp_snapshot(self, weight: Tensor, bias: Tensor | None = None) -> None:
+        """Install an FP decode snapshot (prefill-side ``fp_only`` flow)."""
+
+        self._decode_weight_fp = weight.detach().to(
+            device=self.weight.device, dtype=self.weight.dtype, copy=True
+        )
+        if bias is not None and self.bias is not None:
+            self._decode_bias_fp = bias.detach().to(
+                device=self.bias.device, dtype=self.bias.dtype, copy=True
             )
 
-        return F.linear(x, self.weight, self.bias)
+    def _select_decode_bank(self) -> tuple[Tensor, Tensor | None]:
+        if self._decode_weight_q.numel() > 0:
+            bias = (
+                self._decode_bias_q
+                if self.bias is not None and self._decode_bias_q.numel() > 0
+                else self.bias
+            )
+            return self._decode_weight_q, bias
+        if self._decode_weight_fp.numel() > 0:
+            bias = (
+                self._decode_bias_fp
+                if self.bias is not None and self._decode_bias_fp.numel() > 0
+                else self.bias
+            )
+            return self._decode_weight_fp, bias
+        return self.weight, self.bias
 
-
-class LinearMXInt(_LinearBase):
-    # NOTE: backward is not supported — inference only (PTQ)
-    def __init__(
-        self,
-        in_features: int,
-        out_features: int,
-        bias: bool = True,
-        device=None,
-        dtype=None,
-        config=None,
-    ) -> None:
-        super().__init__(in_features, out_features, bias, device, dtype)
-        assert config is not None, "config is None!"
-        self.config = config
-        self.bypass = config.get("bypass", False)
-        self.gptq = config.get("gptq", False)
-        self.clip_search = config.get("clip_search", False)
-
+    # ---- construction seams -----------------------------------------------
     @classmethod
-    def from_linear(cls, linear: torch.nn.Linear, config: dict) -> "LinearMXInt":
-        """Create a LinearMXInt that REUSES the original Linear's Parameters.
+    def from_linear(cls, linear: torch.nn.Linear, config: dict):
+        """Create a phase-aware MX linear that REUSES the original Parameters.
 
-        Unlike ``__init__`` which allocates a fresh weight tensor via
-        ``torch.nn.Linear.__init__``, this classmethod shares the original
-        module's ``weight`` and ``bias`` Parameters directly. This is
-        critical for tensor-parallel models: if ``linear.weight`` is a
-        DTensor shard (from HF's ``tp_plan="auto"``), re-allocating would
-        lose the sharding and fail the state-dict copy. By sharing the
-        Parameter, the DTensor is preserved and TP dispatch keeps working.
+        Unlike ``__init__`` which allocates fresh weights, this shares the
+        original module's ``weight`` / ``bias`` Parameters directly. This is
+        critical for tensor-parallel models (DTensor shards survive) and for
+        the rotation-search swap path (plain <-> rotate swaps stay zero-copy).
 
-        The weight is then quantized in place. ``mxint_quantizer`` handles
-        DTensor inputs transparently (each rank quantizes its local shard).
+        When ``linear`` is itself a phase-aware MX linear (rotation-search
+        toggling), its banks are adopted as-is and nothing is requantised.
+        When ``linear`` is a plain ``nn.Linear`` holding FP source weights,
+        banks are built exactly as in ``load_state_dict``, including pickup
+        of a GPTQ decode stash left by ``run_gptq(phase="decode")``.
         """
         assert config is not None, "config is None!"
         new = cls.__new__(cls)
@@ -996,99 +1055,123 @@ class LinearMXInt(_LinearBase):
         # nn.Linear attributes
         new.in_features = linear.in_features
         new.out_features = linear.out_features
-        new.weight = linear.weight          # share Parameter (may be DTensor)
-        new.bias = linear.bias              # share Parameter (may be DTensor)
+        new.weight = linear.weight  # share Parameter (may be DTensor)
+        new.bias = linear.bias  # share Parameter (may be DTensor)
 
         # _LinearBase attributes
         new.pruning_masks = None
 
-        # LinearMXInt attributes
-        new.config = config
-        new.bypass = config.get("bypass", False)
-        new.gptq = config.get("gptq", False)
-        new.clip_search = config.get("clip_search", False)
+        new._init_phase_state(config)
+        new._register_phase_bank_buffers()
 
-        # Quantize weight (and optionally bias) in place. This mirrors the
-        # logic in load_state_dict() but skips the state-dict copy.
-        if not new.bypass and not new.gptq:
-            with torch.no_grad():
-                new.weight.data.copy_(
-                    mxint_quantizer(
-                        new.weight.data,
-                        block_size=config["weight_block_size"],
-                        element_bits=config["weight_width"],
-                        block_dim=1,
-                        quantile_search=new.clip_search,
-                    )
-                )
+        if isinstance(linear, _PhaseAwareMXLinearBase):
+            # Zero-copy class swap: weights/banks already quantised — adopt.
+            new._decode_weight_q = linear._decode_weight_q
+            new._decode_bias_q = linear._decode_bias_q
+            new._decode_weight_fp = linear._decode_weight_fp
+            new._decode_bias_fp = linear._decode_bias_fp
+            return new
 
-                b_block_size = config.get("bias_block_size")
-                b_element_bits = config.get("bias_width")
-                if (
-                    new.bias is not None
-                    and b_block_size is not None
-                    and b_element_bits is not None
-                ):
-                    new.bias.data.copy_(
-                        mxint_quantizer(
-                            new.bias.data,
-                            block_size=b_block_size,
-                            element_bits=b_element_bits,
-                            block_dim=0,
-                            quantile_search=new.clip_search,
-                        )
-                    )
-
+        new._build_phase_weight_banks()
+        gptq_stash = getattr(linear, GPTQ_DECODE_WEIGHT_ATTR, None)
+        if gptq_stash is not None:
+            new.adopt_decode_gptq_weight(gptq_stash)
         return new
 
     def load_state_dict(self, state_dict, strict=True, assign=False):
-        """Load pretrained weights, then quantize them in place."""
+        """Load pretrained (FP source) weights, then build per-phase banks."""
         result = super().load_state_dict(state_dict, strict=strict, assign=assign)
-
-        if self.bypass or self.gptq:
-            return result
-
-        # Quantize weight
-        w_block_size = self.config["weight_block_size"]
-        w_element_bits = self.config["weight_width"]
-        self.weight.data.copy_(
-            mxint_quantizer(
-                self.weight.data,
-                block_size=w_block_size,
-                element_bits=w_element_bits,
-                block_dim=1,
-                quantile_search=self.clip_search,
-            )
-        )
-
-        # Quantize bias
-        b_block_size = self.config.get("bias_block_size")
-        b_element_bits = self.config.get("bias_width")
-        if (
-            self.bias is not None
-            and b_block_size is not None
-            and b_element_bits is not None
-        ):
-            self.bias.data.copy_(
-                mxint_quantizer(
-                    self.bias.data,
-                    block_size=b_block_size,
-                    element_bits=b_element_bits,
-                    block_dim=0,
-                    quantile_search=self.clip_search,
-                )
-            )
-
+        self._build_phase_weight_banks()
         return result
 
+    # ---- runtime ------------------------------------------------------------
     @torch.no_grad()
     def forward(self, x):
-        if self.bypass:
-            return F.linear(x, self.weight, self.bias)
+        runtime_phase = get_runtime_phase()
+        if runtime_phase == "decode" and not self.shared_phase_banks:
+            cfg = self.decode_config
+            weight, bias = self._select_decode_bank()
+        else:
+            cfg = self.prefill_config
+            weight, bias = self.weight, self.bias
 
-        # Only quantize activations; weights/bias already quantized in load_state_dict
-        x_block_size = self.config.get("data_in_block_size")
-        x_element_bits = self.config.get("data_in_width")
+        if cfg.get("bypass", False):
+            return F.linear(x, weight, bias)
+
+        x = self._quantize_activation_with_config(x, cfg)
+        return F.linear(x, weight, bias)
+
+
+class LinearMXFP(_PhaseAwareMXLinearBase):
+    """MXFP linear with prefill/decode phase-aware execution."""
+
+    _WEIGHT_CFG_KEYS = (
+        "weight_block_size",
+        "weight_exponent_width",
+        "weight_frac_width",
+    )
+    _BIAS_CFG_KEYS = ("bias_block_size", "bias_exponent_width")
+
+    def _quantize_weight_with_config(self, w: Tensor, cfg: dict, block_dim: int) -> Tensor:
+        return mxfp_quantizer(
+            w,
+            block_size=cfg["weight_block_size"],
+            element_exp_bits=cfg["weight_exponent_width"],
+            element_frac_bits=cfg["weight_frac_width"],
+            block_dim=block_dim,
+        )
+
+    def _quantize_bias_with_config(self, b: Tensor, cfg: dict) -> Tensor:
+        return mxfp_quantizer(
+            b,
+            block_size=cfg["bias_block_size"],
+            element_exp_bits=cfg["bias_exponent_width"],
+            element_frac_bits=cfg.get("bias_frac_width"),
+            block_dim=0,
+        )
+
+    def _quantize_activation_with_config(self, x: Tensor, cfg: dict) -> Tensor:
+        x_block_size = cfg.get("data_in_block_size")
+        x_exp_bits = cfg.get("data_in_exponent_width")
+        x_frac_bits = cfg.get("data_in_frac_width")
+        if x_block_size is not None and x_exp_bits is not None:
+            x = mxfp_quantizer(
+                x,
+                block_size=x_block_size,
+                element_exp_bits=x_exp_bits,
+                element_frac_bits=x_frac_bits,
+                block_dim=-1,
+            )
+        return x
+
+
+class LinearMXInt(_PhaseAwareMXLinearBase):
+    """MXInt linear with prefill/decode phase-aware execution."""
+
+    _WEIGHT_CFG_KEYS = ("weight_block_size", "weight_width")
+    _BIAS_CFG_KEYS = ("bias_block_size", "bias_width")
+
+    def _quantize_weight_with_config(self, w: Tensor, cfg: dict, block_dim: int) -> Tensor:
+        return mxint_quantizer(
+            w,
+            block_size=cfg["weight_block_size"],
+            element_bits=cfg["weight_width"],
+            block_dim=block_dim,
+            quantile_search=cfg.get("clip_search", False),
+        )
+
+    def _quantize_bias_with_config(self, b: Tensor, cfg: dict) -> Tensor:
+        return mxint_quantizer(
+            b,
+            block_size=cfg["bias_block_size"],
+            element_bits=cfg["bias_width"],
+            block_dim=0,
+            quantile_search=cfg.get("clip_search", False),
+        )
+
+    def _quantize_activation_with_config(self, x: Tensor, cfg: dict) -> Tensor:
+        x_block_size = cfg.get("data_in_block_size")
+        x_element_bits = cfg.get("data_in_width")
         if x_block_size is not None and x_element_bits is not None:
             # mxint_quantizer natively handles DTensor inputs (TP-compatible).
             x = mxint_quantizer(
@@ -1097,108 +1180,27 @@ class LinearMXInt(_LinearBase):
                 element_bits=x_element_bits,
                 block_dim=-1,
             )
-
-        return F.linear(x, self.weight, self.bias)
-
-
-class RotateMXFPLinear(LinearMXFP):
-    """LinearMXFP + exact Hadamard rotation around the activation quantizer.
-
-    MXFP equivalent of ``RotateMXIntLinear``: identical weight/bias quantize
-    pipeline (inherits ``__init__`` / ``from_linear`` / ``load_state_dict``),
-    only the forward swaps the plain MXFP activation quantize for
-    ``mxfp_rotate_quantizer``.
-
-    Extra config keys (optional):
-        force_fp32_had: run the Hadamard multiplications in fp32.
-    """
-
-    @torch.no_grad()
-    def forward(self, x):
-        if self.bypass:
-            return F.linear(x, self.weight, self.bias)
-
-        x_block_size = self.config.get("data_in_block_size")
-        x_exp_bits = self.config.get("data_in_exponent_width")
-        x_frac_bits = self.config.get("data_in_frac_width")
-        if x_block_size is not None and x_exp_bits is not None:
-            from chop.nn.quantizers.rotation import mxfp_rotate_quantizer
-
-            x = mxfp_rotate_quantizer(
-                x,
-                hadamard_dim=self.in_features,
-                block_size=x_block_size,
-                element_exp_bits=x_exp_bits,
-                element_frac_bits=x_frac_bits,
-                block_dim=-1,
-                quantile_search=self.clip_search,
-                force_fp32=self.config.get("force_fp32_had", False),
-            )
-
-        return F.linear(x, self.weight, self.bias)
-
-
-class RotateMXIntLinear(LinearMXInt):
-    """LinearMXInt + exact Hadamard rotation around the activation quantizer.
-
-    Identical to ``LinearMXInt`` for weight/bias quantization (and reuses its
-    ``__init__`` / ``from_linear`` / ``load_state_dict``). The forward path
-    differs by replacing the plain MXINT activation quantize with
-    ``mxint_rotate_quantizer``: the input is rotated by an exact Hadamard,
-    quantized, and rotated back.
-
-    The rotation pair is mathematically a no-op in fp; for the round trip to
-    cancel correctly under the surrounding linears, the upstream weights must
-    be offline-rotated to match (run the rotate pass with
-    ``online_rotate=True``). Typical use: layers whose inputs feed
-    ``o_proj`` / ``down_proj``.
-
-    Extra config keys (optional):
-        force_fp32_had: run the Hadamard multiplications in fp32.
-    """
-
-    @torch.no_grad()
-    def forward(self, x):
-        if self.bypass:
-            return F.linear(x, self.weight, self.bias)
-
-        x_block_size = self.config.get("data_in_block_size")
-        x_element_bits = self.config.get("data_in_width")
-        if x_block_size is not None and x_element_bits is not None:
-            from chop.nn.quantizers.rotation import mxint_rotate_quantizer
-
-            x = mxint_rotate_quantizer(
-                x,
-                hadamard_dim=self.in_features,
-                block_size=x_block_size,
-                element_bits=x_element_bits,
-                block_dim=-1,
-                quantile_search=self.clip_search,
-                force_fp32=self.config.get("force_fp32_had", False),
-            )
-
-        return F.linear(x, self.weight, self.bias)
+        return x
 
 
 class RotateMXFPLinear(LinearMXFP):
     """LinearMXFP + exact Hadamard rotation around the activation quantizer.
 
-    Mirrors ``RotateMXIntLinear`` for MXFP. Reuses ``LinearMXFP`` for weight
-    quantization (and its ``__init__`` / ``from_linear`` / ``load_state_dict``);
-    only the forward activation quantize swaps to ``mxfp_rotate_quantizer``.
+    Mirrors ``RotateMXIntLinear`` for MXFP. Reuses ``LinearMXFP`` for the
+    weight-bank pipeline (``__init__`` / ``from_linear`` / ``load_state_dict``
+    and phase dispatch); only the activation quantize swaps to
+    ``mxfp_rotate_quantizer``. In a bypassed phase (e.g. FP prefill) the
+    rotation round-trip is skipped entirely — it is a mathematical no-op in
+    fp, so skipping preserves exact FP semantics.
 
     Extra config keys (optional):
         force_fp32_had: run the Hadamard multiplications in fp32.
     """
 
-    @torch.no_grad()
-    def forward(self, x):
-        if self.bypass:
-            return F.linear(x, self.weight, self.bias)
-
-        x_block_size = self.config.get("data_in_block_size")
-        x_exp_bits = self.config.get("data_in_exponent_width")
-        x_frac_bits = self.config.get("data_in_frac_width")
+    def _quantize_activation_with_config(self, x: Tensor, cfg: dict) -> Tensor:
+        x_block_size = cfg.get("data_in_block_size")
+        x_exp_bits = cfg.get("data_in_exponent_width")
+        x_frac_bits = cfg.get("data_in_frac_width")
         if (
             x_block_size is not None
             and x_exp_bits is not None
@@ -1213,8 +1215,37 @@ class RotateMXFPLinear(LinearMXFP):
                 element_exp_bits=x_exp_bits,
                 element_frac_bits=x_frac_bits,
                 block_dim=-1,
-                quantile_search=self.clip_search,
-                force_fp32=self.config.get("force_fp32_had", False),
+                quantile_search=cfg.get("clip_search", False),
+                force_fp32=cfg.get("force_fp32_had", False),
             )
+        return x
 
-        return F.linear(x, self.weight, self.bias)
+
+class RotateMXIntLinear(LinearMXInt):
+    """LinearMXInt + exact Hadamard rotation around the activation quantizer.
+
+    Identical to ``LinearMXInt`` for the weight-bank pipeline; the activation
+    quantize is replaced with ``mxint_rotate_quantizer``: the input is rotated
+    by an exact Hadamard, quantised, and rotated back. In a bypassed phase the
+    round-trip is skipped (exact fp no-op), so FP prefill stays untouched.
+
+    Extra config keys (optional):
+        force_fp32_had: run the Hadamard multiplications in fp32.
+    """
+
+    def _quantize_activation_with_config(self, x: Tensor, cfg: dict) -> Tensor:
+        x_block_size = cfg.get("data_in_block_size")
+        x_element_bits = cfg.get("data_in_width")
+        if x_block_size is not None and x_element_bits is not None:
+            from chop.nn.quantizers.rotation import mxint_rotate_quantizer
+
+            x = mxint_rotate_quantizer(
+                x,
+                hadamard_dim=self.in_features,
+                block_size=x_block_size,
+                element_bits=x_element_bits,
+                block_dim=-1,
+                quantile_search=cfg.get("clip_search", False),
+                force_fp32=cfg.get("force_fp32_had", False),
+            )
+        return x
