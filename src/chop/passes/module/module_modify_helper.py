@@ -142,6 +142,7 @@ def weight_replacement(x, y):
     target_state_dict = deepcopy(x.state_dict())
     missing_keys, unexpected_keys = y.load_state_dict(target_state_dict, strict=False)
     _transfer_phase_weight_banks(x, y)
+    _restash_child_weight_banks(x, y)
     if missing_keys:
         logging.warning(
             f"Missing keys when loading state_dict: {missing_keys} from {x} to {y}"
@@ -190,6 +191,31 @@ def _transfer_phase_weight_banks(source_module, target_module):
         target_module.adopt_decode_fp_snapshot(
             fp_weight, getattr(source_module, DECODE_FP_BIAS_ATTR, None)
         )
+
+
+def _restash_child_weight_banks(source_module, target_module):
+    """Carry per-child phase-bank stashes across a WHOLESALE module replacement.
+
+    When a container (e.g. LlamaMLP) is replaced, its fresh children are plain
+    ``nn.Linear``s: ``load_state_dict`` restores their weights but the GPTQ /
+    FP-snapshot stash *attributes* on the old children are not state_dict
+    entries and would be silently lost — the later per-linear replacement would
+    then fall back to FP decode weights. Re-stash them on the same-named child
+    so ``_transfer_phase_weight_banks`` finds them at that replacement.
+    """
+
+    stash_attrs = (GPTQ_DECODE_WEIGHT_ATTR, DECODE_FP_WEIGHT_ATTR, DECODE_FP_BIAS_ATTR)
+    target_children = dict(target_module.named_modules())
+    for name, src_child in source_module.named_modules():
+        if not name or name not in target_children:
+            continue
+        tgt_child = target_children[name]
+        if tgt_child is src_child:
+            continue
+        for attr in stash_attrs:
+            val = getattr(src_child, attr, None)
+            if val is not None and getattr(tgt_child, attr, None) is None:
+                setattr(tgt_child, attr, val)
 
 
 def get_module_by_name(network, name):
