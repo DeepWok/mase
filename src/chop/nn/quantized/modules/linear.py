@@ -910,7 +910,38 @@ class _PhaseAwareMXLinearBase(_LinearBase):
         raise NotImplementedError
 
     def _quantize_activation_with_config(self, x: Tensor, cfg: dict) -> Tensor:
-        raise NotImplementedError
+        """Quantise the activation by the keys PRESENT, not the weight format.
+
+        The module class is chosen by the WEIGHT format, but mixed-format
+        deployments (MXINT weights + MXFP activations and vice versa) put the
+        other format's ``data_in_*`` keys in the config. Dispatching on the
+        keys keeps that legal; a class that only read its own format's keys
+        would silently skip activation quantisation. No ``data_in`` keys at
+        all means the activation is intentionally unquantised.
+        """
+        block_size = cfg.get("data_in_block_size")
+        if block_size is None:
+            return x
+        if cfg.get("data_in_width") is not None:
+            return self._quantize_activation_mxint(x, block_size, cfg)
+        if (cfg.get("data_in_exponent_width") is not None
+                and cfg.get("data_in_frac_width") is not None):
+            return self._quantize_activation_mxfp(x, block_size, cfg)
+        return x
+
+    def _quantize_activation_mxint(self, x: Tensor, block_size: int, cfg: dict) -> Tensor:
+        # mxint_quantizer natively handles DTensor inputs (TP-compatible).
+        return mxint_quantizer(
+            x, block_size=block_size, element_bits=cfg["data_in_width"], block_dim=-1,
+        )
+
+    def _quantize_activation_mxfp(self, x: Tensor, block_size: int, cfg: dict) -> Tensor:
+        return mxfp_quantizer(
+            x, block_size=block_size,
+            element_exp_bits=cfg["data_in_exponent_width"],
+            element_frac_bits=cfg["data_in_frac_width"],
+            block_dim=-1,
+        )
 
     def _validate_phase_weight_configs(self) -> None:
         """Reject partial weight configs.
@@ -1130,19 +1161,8 @@ class LinearMXFP(_PhaseAwareMXLinearBase):
             block_dim=0,
         )
 
-    def _quantize_activation_with_config(self, x: Tensor, cfg: dict) -> Tensor:
-        x_block_size = cfg.get("data_in_block_size")
-        x_exp_bits = cfg.get("data_in_exponent_width")
-        x_frac_bits = cfg.get("data_in_frac_width")
-        if x_block_size is not None and x_exp_bits is not None:
-            x = mxfp_quantizer(
-                x,
-                block_size=x_block_size,
-                element_exp_bits=x_exp_bits,
-                element_frac_bits=x_frac_bits,
-                block_dim=-1,
-            )
-        return x
+    # Activation quantisation: inherited key-dispatching base implementation
+    # (supports MXINT and MXFP activations regardless of the weight format).
 
 
 class LinearMXInt(_PhaseAwareMXLinearBase):
@@ -1169,18 +1189,8 @@ class LinearMXInt(_PhaseAwareMXLinearBase):
             quantile_search=cfg.get("clip_search", False),
         )
 
-    def _quantize_activation_with_config(self, x: Tensor, cfg: dict) -> Tensor:
-        x_block_size = cfg.get("data_in_block_size")
-        x_element_bits = cfg.get("data_in_width")
-        if x_block_size is not None and x_element_bits is not None:
-            # mxint_quantizer natively handles DTensor inputs (TP-compatible).
-            x = mxint_quantizer(
-                x,
-                block_size=x_block_size,
-                element_bits=x_element_bits,
-                block_dim=-1,
-            )
-        return x
+    # Activation quantisation: inherited key-dispatching base implementation
+    # (supports MXINT and MXFP activations regardless of the weight format).
 
 
 class RotateMXFPLinear(LinearMXFP):
@@ -1197,28 +1207,32 @@ class RotateMXFPLinear(LinearMXFP):
         force_fp32_had: run the Hadamard multiplications in fp32.
     """
 
-    def _quantize_activation_with_config(self, x: Tensor, cfg: dict) -> Tensor:
-        x_block_size = cfg.get("data_in_block_size")
-        x_exp_bits = cfg.get("data_in_exponent_width")
-        x_frac_bits = cfg.get("data_in_frac_width")
-        if (
-            x_block_size is not None
-            and x_exp_bits is not None
-            and x_frac_bits is not None
-        ):
-            from chop.nn.quantizers.rotation import mxfp_rotate_quantizer
+    def _quantize_activation_mxfp(self, x: Tensor, block_size: int, cfg: dict) -> Tensor:
+        from chop.nn.quantizers.rotation import mxfp_rotate_quantizer
 
-            x = mxfp_rotate_quantizer(
-                x,
-                hadamard_dim=self.in_features,
-                block_size=x_block_size,
-                element_exp_bits=x_exp_bits,
-                element_frac_bits=x_frac_bits,
-                block_dim=-1,
-                quantile_search=cfg.get("clip_search", False),
-                force_fp32=cfg.get("force_fp32_had", False),
-            )
-        return x
+        return mxfp_rotate_quantizer(
+            x,
+            hadamard_dim=self.in_features,
+            block_size=block_size,
+            element_exp_bits=cfg["data_in_exponent_width"],
+            element_frac_bits=cfg["data_in_frac_width"],
+            block_dim=-1,
+            quantile_search=cfg.get("clip_search", False),
+            force_fp32=cfg.get("force_fp32_had", False),
+        )
+
+    def _quantize_activation_mxint(self, x: Tensor, block_size: int, cfg: dict) -> Tensor:
+        from chop.nn.quantizers.rotation import mxint_rotate_quantizer
+
+        return mxint_rotate_quantizer(
+            x,
+            hadamard_dim=self.in_features,
+            block_size=block_size,
+            element_bits=cfg["data_in_width"],
+            block_dim=-1,
+            quantile_search=cfg.get("clip_search", False),
+            force_fp32=cfg.get("force_fp32_had", False),
+        )
 
 
 class RotateMXIntLinear(LinearMXInt):
@@ -1233,19 +1247,15 @@ class RotateMXIntLinear(LinearMXInt):
         force_fp32_had: run the Hadamard multiplications in fp32.
     """
 
-    def _quantize_activation_with_config(self, x: Tensor, cfg: dict) -> Tensor:
-        x_block_size = cfg.get("data_in_block_size")
-        x_element_bits = cfg.get("data_in_width")
-        if x_block_size is not None and x_element_bits is not None:
-            from chop.nn.quantizers.rotation import mxint_rotate_quantizer
+    def _quantize_activation_mxint(self, x: Tensor, block_size: int, cfg: dict) -> Tensor:
+        from chop.nn.quantizers.rotation import mxint_rotate_quantizer
 
-            x = mxint_rotate_quantizer(
-                x,
-                hadamard_dim=self.in_features,
-                block_size=x_block_size,
-                element_bits=x_element_bits,
-                block_dim=-1,
-                quantile_search=cfg.get("clip_search", False),
-                force_fp32=cfg.get("force_fp32_had", False),
-            )
-        return x
+        return mxint_rotate_quantizer(
+            x,
+            hadamard_dim=self.in_features,
+            block_size=block_size,
+            element_bits=cfg["data_in_width"],
+            block_dim=-1,
+            quantile_search=cfg.get("clip_search", False),
+            force_fp32=cfg.get("force_fp32_had", False),
+        )
