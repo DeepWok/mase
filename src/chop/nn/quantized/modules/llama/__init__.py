@@ -6,4 +6,4 @@ from .attention import (
     LlamaAttentionMXIntRotate,
 )
 from .rms_norm import LlamaRMSNormLSQInteger, LlamaRMSNormMinifloat
-from .mlp import LlamaMLPLSQInteger, LlamaMLPMXFP, LlamaMLPMXInt
+from .mlp import LlamaMLPLSQInteger, LlamaMLPMXFP, LlamaMLPMXInt, LlamaMLPMinifloat

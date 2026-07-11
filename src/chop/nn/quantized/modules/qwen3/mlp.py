@@ -17,3 +17,11 @@ class Qwen3MLPMXFP(_PhaseAwareQwen3MLP):
 
 class Qwen3MLPMXInt(_PhaseAwareQwen3MLP):
     """MXInt-quantized Qwen3MLP. SiLU uses minifloat quantization."""
+
+
+class Qwen3MLPMinifloat(_PhaseAwareQwen3MLP):
+    """FP_SETTING vector-unit minifloat on the SiLU stage.
+
+    The gate/up/down linears are replaced separately (they carry their own
+    weight/activation config); this class only quantises the SiLU input to
+    the plain-minifloat FP_SETTING width, mirroring Qwen3RMSNormMinifloat."""

@@ -22,6 +22,7 @@ from .llama import (
     LlamaAttentionMXFPRotate,
     LlamaMLPMXFP,
     LlamaMLPMXInt,
+    LlamaMLPMinifloat,
     LlamaRMSNormMinifloat,
 )
 
@@ -31,6 +32,7 @@ from .qwen3 import (
     Qwen3AttentionMXIntRotate,
     Qwen3MLPMXFP,
     Qwen3MLPMXInt,
+    Qwen3MLPMinifloat,
     Qwen3RMSNormMinifloat,
 )
 
@@ -379,6 +381,7 @@ quantized_llama_module_map = {
     "llama_mlp_lsqinteger": LlamaMLPLSQInteger,
     "llama_mlp_mxfp": LlamaMLPMXFP,
     "llama_mlp_mxint": LlamaMLPMXInt,
+    "llama_mlp_minifloat": LlamaMLPMinifloat,
 }
 
 quantized_qwen3_module_map = {
@@ -388,6 +391,7 @@ quantized_qwen3_module_map = {
     "qwen3_rms_norm_minifloat": Qwen3RMSNormMinifloat,
     "qwen3_mlp_mxfp": Qwen3MLPMXFP,
     "qwen3_mlp_mxint": Qwen3MLPMXInt,
+    "qwen3_mlp_minifloat": Qwen3MLPMinifloat,
 }
 
 quantized_qwen3_moe_module_map = {

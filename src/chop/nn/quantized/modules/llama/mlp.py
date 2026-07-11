@@ -91,3 +91,11 @@ class LlamaMLPMXFP(_PhaseAwareLlamaMLP):
 
 class LlamaMLPMXInt(_PhaseAwareLlamaMLP):
     """MXInt-quantized LlamaMLP. SiLU uses minifloat quantization."""
+
+
+class LlamaMLPMinifloat(_PhaseAwareLlamaMLP):
+    """FP_SETTING vector-unit minifloat on the SiLU stage.
+
+    The gate/up/down linears are replaced separately (they carry their own
+    weight/activation config); this class only quantises the SiLU input to
+    the plain-minifloat FP_SETTING width, mirroring LlamaRMSNormMinifloat."""
