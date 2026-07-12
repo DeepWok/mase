@@ -139,7 +139,7 @@ def check_module_instance(module, prefix_map):
 
 
 def weight_replacement(x, y):
-    target_state_dict = deepcopy(x.state_dict())
+    target_state_dict = x.state_dict()
     missing_keys, unexpected_keys = y.load_state_dict(target_state_dict, strict=False)
     _transfer_phase_weight_banks(x, y)
     _restash_child_weight_banks(x, y)
