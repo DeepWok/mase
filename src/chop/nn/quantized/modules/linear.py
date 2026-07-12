@@ -1,3 +1,4 @@
+import os
 from functools import partial
 
 from chop.nn.quantized.functional.linear import (
@@ -969,6 +970,27 @@ class _PhaseAwareMXLinearBase(_LinearBase):
 
     # ---- bank construction ------------------------------------------------
     @torch.no_grad()
+    def _quantize_weight_banked(self, w: Tensor, cfg: dict, block_dim: int) -> Tensor:
+        """Chunked (and optionally offloaded) weight quantisation for bank builds
+        """
+        if w.ndim != 2 or block_dim not in (1, -1):
+            return self._quantize_weight_with_config(w, cfg, block_dim)
+        route = os.environ.get("MASE_PHASE_BANK_DEVICE") or None
+        if route is not None and str(w.device) == route:
+            route = None  # already there — routing would be a no-op copy
+        chunk = int(os.environ.get("MASE_PHASE_BANK_CHUNK_ROWS", "4096"))
+        if route is None and w.shape[0] <= chunk:
+            return self._quantize_weight_with_config(w, cfg, block_dim)
+        out = torch.empty_like(w)
+        for i in range(0, w.shape[0], chunk):
+            src = w[i : i + chunk]
+            q = self._quantize_weight_with_config(
+                src.to(route) if route else src, cfg, block_dim
+            )
+            out[i : i + chunk].copy_(q.to(w.device) if route else q)
+        return out
+
+    @torch.no_grad()
     def _build_phase_weight_banks(self) -> None:
         """Build per-phase weight banks from the FP weights in ``self.weight``.
 
@@ -996,7 +1018,7 @@ class _PhaseAwareMXLinearBase(_LinearBase):
             ):
                 # Decode bank is quantised from the FP source, NOT from a
                 # (possibly differently) quantised prefill bank.
-                self._decode_weight_q = self._quantize_weight_with_config(
+                self._decode_weight_q = self._quantize_weight_banked(
                     self.weight.data, decode_cfg, block_dim=1
                 )
                 if self.bias is not None and self._bias_config_present(decode_cfg):
@@ -1012,7 +1034,7 @@ class _PhaseAwareMXLinearBase(_LinearBase):
 
         if prefill_quantises_weight:
             self.weight.data.copy_(
-                self._quantize_weight_with_config(
+                self._quantize_weight_banked(
                     self.weight.data, self.prefill_config, block_dim=1
                 )
             )
@@ -1045,6 +1067,24 @@ class _PhaseAwareMXLinearBase(_LinearBase):
             self._decode_bias_fp = bias.detach().to(
                 device=self.bias.device, dtype=self.bias.dtype, copy=True
             )
+
+    @torch.no_grad()
+    def collapse_to_decode_bank(self) -> None:
+        """Fold the decode bank into ``self.weight`` and drop the FP copy.
+
+        Halves resident memory when only decode-phase numerics will ever be
+        scored (e.g. decode-perplexity-only evaluation). After this, prefill
+        forwards see the decode-quantised weights too, so callers that need a
+        faithful FP prefill (task generation, prefill scoring) must NOT call
+        this. No-op when there is no quantised decode bank.
+        """
+        if self._decode_weight_q.numel() == 0:
+            return
+        self.weight.data.copy_(self._decode_weight_q.to(self.weight.dtype))
+        self._decode_weight_q = torch.empty(0, device=self.weight.device)
+        if self.bias is not None and self._decode_bias_q.numel() > 0:
+            self.bias.data.copy_(self._decode_bias_q.to(self.bias.dtype))
+        self._decode_bias_q = torch.empty(0, device=self.weight.device)
 
     def _select_decode_bank(self) -> tuple[Tensor, Tensor | None]:
         if self._decode_weight_q.numel() > 0:
