@@ -108,4 +108,8 @@ class LlamaRMSNormMinifloat(LlamaRMSNorm):
         variance = hidden_states.pow(2).mean(-1, keepdim=True)
         hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)
         weight = w_quantizer(self.weight) if w_quantizer is not None else self.weight
-        return weight * hidden_states.to(input_dtype)
+        # Cast the whole product: module replacement can leave ``self.weight`` in
+        # float32 (constructed before the bf16 model context), and multiplying a
+        # float32 weight by a bf16 tensor promotes the result back to float32 —
+        # which then breaks the next linear (float32 act vs bf16 weight).
+        return (weight * hidden_states.to(input_dtype)).to(input_dtype)
