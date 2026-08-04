@@ -2,7 +2,7 @@ import torch
 from torch import nn, Tensor
 
 from chop.nn.quantizers.SNN.LSQ import LSQInteger
-from chop.nn.quantized.functional.silu import silu_minifloat
+from chop.nn.quantized.functional.silu import silu_gate_minifloat
 from chop.nn.quantized.modules.phase_context import get_runtime_phase
 from chop.nn.quantized.modules.phase_config import (
     normalize_phase_q_config,
@@ -75,7 +75,7 @@ class _PhaseAwareGLUMLPMixin:
         cfg = self._phase_cfgs[get_runtime_phase()]
         if cfg.get("bypass", False):
             return super().forward(x)
-        x = silu_minifloat(self.gate_proj(x), cfg) * self.up_proj(x)
+        x = silu_gate_minifloat(self.gate_proj(x), self.up_proj(x), cfg)
         return self.down_proj(x)
 
 

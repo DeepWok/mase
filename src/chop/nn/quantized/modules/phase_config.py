@@ -13,7 +13,7 @@ A phase-structured q_config looks like::
 
     {
         "name": "mxint",                    # consumed by the quantize pass
-        "kv_cache_handoff": "decode_format",  # or "fp" (attention only)
+        "kv_cache_handoff": "fp",  # or explicit legacy "decode_format"
         "prefill": { ... flat sub-config ... },
         "decode":  { ... flat sub-config ... },
         "decode_policy": "quantized",       # optional; inferred if omitted
@@ -34,13 +34,10 @@ Normalization rules (``normalize_phase_q_config``):
 
 KV-cache handoff semantics (``kv_cache_handoff``):
 
-- ``"decode_format"`` (default): KV vectors written during *prefill* are
+- ``"decode_format"``: KV vectors written during *prefill* are
   quantised with the DECODE bucket's ``kv_cache`` config even when the rest
-  of prefill is bypassed. This models disaggregated serving faithfully: the
-  prefill chip computes in FP, but its KV output is stored into the decode
-  chip's HBM in the decode chip's MX format (quantise-on-write at handoff).
-- ``"fp"``: prefill-produced KV stays FP (models an FP16 KV transfer where
-  only decode-generated KV entries are quantised).
+  of prefill is bypassed.
+- ``"fp"`` (default): prefill-produced KV stays in the prefill dtype.
 - An explicit ``kv_cache`` entry in the prefill bucket always overrides the
   handoff rule.
 """
@@ -64,7 +61,14 @@ _VALID_DECODE_POLICIES = ("fp_only", "quantized")
 _VALID_KV_HANDOFFS = ("decode_format", "fp")
 
 # Attention sub-stages that carry their own nested config dicts.
-ATTENTION_STAGES = ("qk_matmul", "av_matmul", "rope", "softmax", "kv_cache")
+ATTENTION_STAGES = (
+    "qk_norm",
+    "qk_matmul",
+    "av_matmul",
+    "rope",
+    "softmax",
+    "kv_cache",
+)
 
 _BYPASS = {"bypass": True}
 
@@ -103,7 +107,7 @@ def normalize_phase_q_config(q_config: dict[str, Any] | None) -> dict[str, Any]:
 
     cfg = deepcopy(q_config or {})
 
-    kv_cache_handoff = cfg.get("kv_cache_handoff", "decode_format")
+    kv_cache_handoff = cfg.get("kv_cache_handoff", "fp")
     if kv_cache_handoff not in _VALID_KV_HANDOFFS:
         raise ValueError(
             f"Unsupported kv_cache_handoff {kv_cache_handoff!r}; "

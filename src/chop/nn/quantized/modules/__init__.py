@@ -34,6 +34,7 @@ from .qwen3 import (
     Qwen3MLPMXInt,
     Qwen3MLPMinifloat,
     Qwen3RMSNormMinifloat,
+    Qwen3DecoderLayerMinifloat,
 )
 
 from .qwen3_moe import (
@@ -385,6 +386,7 @@ quantized_llama_module_map = {
 }
 
 quantized_qwen3_module_map = {
+    "qwen3_decoder_layer_minifloat": Qwen3DecoderLayerMinifloat,
     "qwen3_self_attention_mxfp": Qwen3AttentionMXFP,
     "qwen3_self_attention_mxint": Qwen3AttentionMXInt,
     "qwen3_self_attention_mxint_rotate": Qwen3AttentionMXIntRotate,

@@ -5,6 +5,7 @@ from torch import Tensor
 
 from chop.nn.quantizers import mxfp_quantizer, mxint_quantizer
 from chop.nn.quantizers._minifloat_mx import MinifloatMeta, minifloat_quantizer_sim
+from .vector import VectorRoundingPolicy
 
 
 def silu_mxfp(x: Tensor, config: dict = None) -> Tensor:
@@ -40,18 +41,14 @@ def silu_mxint(x: Tensor, config: dict = None) -> Tensor:
 
 
 def silu_minifloat(x: Tensor, config: dict = None) -> Tensor:
-    x_exp_bits = config["data_in_exponent_width"]
-    x_frac_bits = config["data_in_frac_width"]
+    policy = VectorRoundingPolicy.from_config(config)
+    return policy.silu(x)
 
-    x_quantizer = partial(
-        minifloat_quantizer_sim,
-        minifloat_meta=MinifloatMeta(
-            exp_bits=x_exp_bits,
-            frac_bits=x_frac_bits,
-            is_finite=config.get("data_in_is_finite", True),
-            round_mode=config.get("data_in_round_mode", "rn"),
-        ),
-    )
 
-    x = x_quantizer(x)
-    return torch.nn.functional.silu(x)
+def silu_gate_minifloat(
+    activation: Tensor,
+    gate: Tensor,
+    config: dict = None,
+) -> Tensor:
+    policy = VectorRoundingPolicy.from_config(config)
+    return policy.silu_gate(activation, gate)

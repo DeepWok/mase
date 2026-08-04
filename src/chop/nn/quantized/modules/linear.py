@@ -14,6 +14,8 @@ from chop.nn.quantized.functional.linear import (
     linearMinifloatIEEE,
     linearTernary,
 )
+from chop.nn.quantized.functional.matrix import plena_matrix_product
+from chop.nn.quantized.functional.vector import VectorRoundingPolicy
 import torch
 from torch import Tensor
 from torch.nn import functional as F
@@ -892,6 +894,9 @@ class _PhaseAwareMXLinearBase(_LinearBase):
         self.register_buffer("_decode_bias_q", torch.empty(0), persistent=False)
         self.register_buffer("_decode_weight_fp", torch.empty(0), persistent=False)
         self.register_buffer("_decode_bias_fp", torch.empty(0), persistent=False)
+        self._weight_quantization_events = 0
+        self._decode_bank_collapsed = False
+        self._decode_bank_sealed = False
 
     # ---- format-specific hooks -------------------------------------------
     # Config keys a bucket must fully provide to quantise weights / bias.
@@ -973,6 +978,9 @@ class _PhaseAwareMXLinearBase(_LinearBase):
     def _quantize_weight_banked(self, w: Tensor, cfg: dict, block_dim: int) -> Tensor:
         """Chunked (and optionally offloaded) weight quantisation for bank builds
         """
+        if self._decode_bank_sealed:
+            raise RuntimeError("a sealed decode weight bank cannot be requantized")
+        self._weight_quantization_events += 1
         if w.ndim != 2 or block_dim not in (1, -1):
             return self._quantize_weight_with_config(w, cfg, block_dim)
         route = os.environ.get("MASE_PHASE_BANK_DEVICE") or None
@@ -998,6 +1006,8 @@ class _PhaseAwareMXLinearBase(_LinearBase):
         the in-place prefill quantisation this method performs last).
         """
 
+        if self._decode_bank_sealed:
+            raise RuntimeError("a sealed decode weight bank cannot be rebuilt")
         device = self.weight.device
         self._decode_weight_q = torch.empty(0, device=device)
         self._decode_bias_q = torch.empty(0, device=device)
@@ -1069,7 +1079,7 @@ class _PhaseAwareMXLinearBase(_LinearBase):
             )
 
     @torch.no_grad()
-    def collapse_to_decode_bank(self) -> None:
+    def collapse_to_decode_bank(self) -> bool:
         """Fold the decode bank into ``self.weight`` and drop the FP copy.
 
         Halves resident memory when only decode-phase numerics will ever be
@@ -1079,12 +1089,24 @@ class _PhaseAwareMXLinearBase(_LinearBase):
         this. No-op when there is no quantised decode bank.
         """
         if self._decode_weight_q.numel() == 0:
-            return
+            return False
         self.weight.data.copy_(self._decode_weight_q.to(self.weight.dtype))
         self._decode_weight_q = torch.empty(0, device=self.weight.device)
         if self.bias is not None and self._decode_bias_q.numel() > 0:
             self.bias.data.copy_(self._decode_bias_q.to(self.bias.dtype))
         self._decode_bias_q = torch.empty(0, device=self.weight.device)
+        self._decode_bank_collapsed = True
+        return True
+
+    def seal_decode_weight_bank(self) -> int:
+        """Prevent reconstruction after a decode-only bank is finalized."""
+
+        if not self._decode_bank_collapsed:
+            raise RuntimeError("decode weight bank was not collapsed")
+        if self._decode_weight_q.numel() or self._decode_bias_q.numel():
+            raise RuntimeError("decode weight bank still has an auxiliary copy")
+        self._decode_bank_sealed = True
+        return int(self._weight_quantization_events)
 
     def _select_decode_bank(self) -> tuple[Tensor, Tensor | None]:
         if self._decode_weight_q.numel() > 0:
@@ -1141,6 +1163,9 @@ class _PhaseAwareMXLinearBase(_LinearBase):
             new._decode_bias_q = linear._decode_bias_q
             new._decode_weight_fp = linear._decode_weight_fp
             new._decode_bias_fp = linear._decode_bias_fp
+            new._weight_quantization_events = linear._weight_quantization_events
+            new._decode_bank_collapsed = linear._decode_bank_collapsed
+            new._decode_bank_sealed = linear._decode_bank_sealed
             return new
 
         new._build_phase_weight_banks()
@@ -1170,7 +1195,14 @@ class _PhaseAwareMXLinearBase(_LinearBase):
             return F.linear(x, weight, bias)
 
         x = self._quantize_activation_with_config(x, cfg)
-        return F.linear(x, weight, bias)
+        output = plena_matrix_product(x, weight.transpose(-1, -2), cfg)
+        if bias is None:
+            return output
+        if "output_format" not in cfg:
+            return output + bias
+        return VectorRoundingPolicy.from_token(
+            cfg["output_format"],
+        ).add(output, bias).to(output.dtype)
 
 
 class LinearMXFP(_PhaseAwareMXLinearBase):

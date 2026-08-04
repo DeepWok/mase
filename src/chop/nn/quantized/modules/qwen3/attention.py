@@ -3,8 +3,7 @@
 Shares the phase-split contract of the Llama modules (see
 ``llama/attention.py``): decoder-layer pre-hooks write the runtime phase,
 every in-attention stage resolves its config per phase, and the KV-cache
-handoff rule lets an FP prefill still write KV into the decode chip's MX
-format for disaggregated serving.
+handoff defaults to preserving the prefill dtype until decode admission.
 """
 
 from typing import Optional, Tuple
@@ -20,10 +19,9 @@ from transformers.models.qwen3.modeling_qwen3 import (
 from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS
 
 from chop.nn.quantized.functional.rope import rope_minifloat
+from chop.nn.quantized.functional.vector import VectorRoundingPolicy
 from chop.nn.quantized.functional.kvcache import (
-    kv_cache_mxfp,
-    kv_cache_mxint,
-    kv_cache_mxint_rotate,
+    kv_cache_mx,
 )
 from chop.nn.quantized.functional.attention import (
     eager_attention_forward_mxfp as _eager_attention_forward_mxfp,
@@ -35,6 +33,24 @@ from chop.nn.quantized.modules.llama.attention import _PhaseAwareAttentionMixin
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def _apply_qk_norm(module, query_states, key_states, stage):
+    if stage["qk_norm_bypass"]:
+        return module.q_norm(query_states), module.k_norm(key_states)
+
+    policy = VectorRoundingPolicy.from_config(stage["qk_norm_config"])
+    query_states = policy.rms_norm(
+        query_states,
+        module.q_norm.weight,
+        module.q_norm.variance_epsilon,
+    )
+    key_states = policy.rms_norm(
+        key_states,
+        module.k_norm.weight,
+        module.k_norm.variance_epsilon,
+    )
+    return query_states, key_states
 
 
 def _hf_attention_dispatch(
@@ -86,13 +102,13 @@ class Qwen3AttentionMXFP(_PhaseAwareAttentionMixin, Qwen3Attention):
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
 
-        # Qwen3-specific: q_norm/k_norm applied after projection, before transpose
-        query_states = self.q_norm(
-            self.q_proj(hidden_states).view(hidden_shape)
-        ).transpose(1, 2)
-        key_states = self.k_norm(
-            self.k_proj(hidden_states).view(hidden_shape)
-        ).transpose(1, 2)
+        query_states = self.q_proj(hidden_states).view(hidden_shape)
+        key_states = self.k_proj(hidden_states).view(hidden_shape)
+        query_states, key_states = _apply_qk_norm(
+            self, query_states, key_states, stage
+        )
+        query_states = query_states.transpose(1, 2)
+        key_states = key_states.transpose(1, 2)
         value_states = self.v_proj(hidden_states).view(hidden_shape).transpose(1, 2)
 
         cos, sin = position_embeddings
@@ -119,7 +135,7 @@ class Qwen3AttentionMXFP(_PhaseAwareAttentionMixin, Qwen3Attention):
             past_key_values,
             cache_kwargs,
             stage,
-            kv_cache_mxfp,
+            kv_cache_mx,
         )
 
         if stage["qk_bypass"] and stage["av_bypass"] and stage["softmax_bypass"]:
@@ -197,13 +213,13 @@ class Qwen3AttentionMXInt(_PhaseAwareAttentionMixin, Qwen3Attention):
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
 
-        # Qwen3-specific: q_norm/k_norm applied after projection, before transpose
-        query_states = self.q_norm(
-            self.q_proj(hidden_states).view(hidden_shape)
-        ).transpose(1, 2)
-        key_states = self.k_norm(
-            self.k_proj(hidden_states).view(hidden_shape)
-        ).transpose(1, 2)
+        query_states = self.q_proj(hidden_states).view(hidden_shape)
+        key_states = self.k_proj(hidden_states).view(hidden_shape)
+        query_states, key_states = _apply_qk_norm(
+            self, query_states, key_states, stage
+        )
+        query_states = query_states.transpose(1, 2)
+        key_states = key_states.transpose(1, 2)
         value_states = self.v_proj(hidden_states).view(hidden_shape).transpose(1, 2)
 
         cos, sin = position_embeddings
@@ -230,7 +246,7 @@ class Qwen3AttentionMXInt(_PhaseAwareAttentionMixin, Qwen3Attention):
             past_key_values,
             cache_kwargs,
             stage,
-            kv_cache_mxint,
+            kv_cache_mx,
         )
 
         if stage["qk_bypass"] and stage["av_bypass"] and stage["softmax_bypass"]:
@@ -301,9 +317,8 @@ class Qwen3AttentionMXIntRotate(Qwen3AttentionMXInt):
         q_config["av_matmul"]["rotate"]   = True | False  (default True)
         q_config["kv_cache"]["rotate"]    = True | False  (default True)
 
-    The flags are shared across phases: a prefill KV handoff write in
-    decode_format uses the same rotation decision as decode KV writes, so
-    the cache stays in one consistent basis.
+    Explicit decode-format handoff uses the decode rotation decision for both
+    prefill and decode cache writes.
 
     Note on ``hadamard_dim``: the rotation runs along the last dim of each
     tensor — head_dim for Q (always supported) and seq_len for the A-side
@@ -335,12 +350,13 @@ class Qwen3AttentionMXIntRotate(Qwen3AttentionMXInt):
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
 
-        query_states = self.q_norm(
-            self.q_proj(hidden_states).view(hidden_shape)
-        ).transpose(1, 2)
-        key_states = self.k_norm(
-            self.k_proj(hidden_states).view(hidden_shape)
-        ).transpose(1, 2)
+        query_states = self.q_proj(hidden_states).view(hidden_shape)
+        key_states = self.k_proj(hidden_states).view(hidden_shape)
+        query_states, key_states = _apply_qk_norm(
+            self, query_states, key_states, stage
+        )
+        query_states = query_states.transpose(1, 2)
+        key_states = key_states.transpose(1, 2)
         value_states = self.v_proj(hidden_states).view(hidden_shape).transpose(1, 2)
 
         cos, sin = position_embeddings
@@ -361,7 +377,14 @@ class Qwen3AttentionMXIntRotate(Qwen3AttentionMXInt):
             )
 
         cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
-        kv_quantizer = kv_cache_mxint_rotate if self.kv_cache_use_rotate else kv_cache_mxint
+        def kv_quantizer(key, value, config):
+            return kv_cache_mx(
+                key,
+                value,
+                config,
+                rotate=self.kv_cache_use_rotate,
+            )
+
         key_states, value_states = self._apply_kv_cache_phase_aware(
             key_states,
             value_states,

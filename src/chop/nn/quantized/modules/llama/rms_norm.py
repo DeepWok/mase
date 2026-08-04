@@ -1,10 +1,8 @@
-from functools import partial
-
 import torch
-from torch import Tensor, nn
+from torch import nn
 
 from chop.nn.quantizers.SNN.LSQ import LSQInteger
-from chop.nn.quantizers._minifloat_mx import MinifloatMeta, minifloat_quantizer_sim
+from chop.nn.quantized.functional.vector import VectorRoundingPolicy
 from chop.nn.quantized.modules.phase_context import get_runtime_phase
 from chop.nn.quantized.modules.phase_config import (
     normalize_phase_q_config,
@@ -36,41 +34,34 @@ class LlamaRMSNormLSQInteger(LlamaRMSNorm):
         return f"{tuple(self.weight.shape)}, eps={self.variance_epsilon}"
 
 
-def build_minifloat_phase_quantizers(cfg: dict):
-    """Return (w_quantizer, x_quantizer) for one phase sub-config.
+def build_vector_phase_policies(
+    cfg: dict,
+) -> tuple[VectorRoundingPolicy, VectorRoundingPolicy]:
+    """Build weight and activation policies for one RMSNorm phase."""
 
-    Shared by the Llama and Qwen3 minifloat RMSNorm modules so the config-key
-    handling cannot drift between architectures.
-    """
-    bypass = cfg.get("bypass", False)
+    if cfg.get("bypass", False):
+        disabled = VectorRoundingPolicy.disabled()
+        return disabled, disabled
 
-    if not bypass and not cfg.get("weight_bypass", False):
-        w_quantizer = partial(
-            minifloat_quantizer_sim,
-            minifloat_meta=MinifloatMeta(
-                exp_bits=cfg["weight_exponent_width"],
-                frac_bits=cfg["weight_frac_width"],
-                is_finite=cfg.get("weight_is_finite", True),
-                round_mode=cfg.get("weight_round_mode", "rn"),
-            ),
+    x_policy = (
+        VectorRoundingPolicy.disabled()
+        if cfg.get("data_in_bypass", False)
+        else VectorRoundingPolicy.from_config(cfg)
+    )
+    if cfg.get("weight_bypass", False):
+        weight_policy = VectorRoundingPolicy.disabled()
+    elif "weight_exponent_width" in cfg and "weight_frac_width" in cfg:
+        weight_policy = VectorRoundingPolicy.from_config(
+            {
+                "data_in_exponent_width": cfg["weight_exponent_width"],
+                "data_in_frac_width": cfg["weight_frac_width"],
+                "data_in_is_finite": cfg.get("weight_is_finite", False),
+                "data_in_round_mode": cfg.get("weight_round_mode", "rn"),
+            }
         )
     else:
-        w_quantizer = None
-
-    if not bypass and not cfg.get("data_in_bypass", False):
-        x_quantizer = partial(
-            minifloat_quantizer_sim,
-            minifloat_meta=MinifloatMeta(
-                exp_bits=cfg["data_in_exponent_width"],
-                frac_bits=cfg["data_in_frac_width"],
-                is_finite=cfg.get("data_in_is_finite", True),
-                round_mode=cfg.get("data_in_round_mode", "rn"),
-            ),
-        )
-    else:
-        x_quantizer = None
-
-    return w_quantizer, x_quantizer
+        weight_policy = x_policy
+    return weight_policy, x_policy
 
 
 class LlamaRMSNormMinifloat(LlamaRMSNorm):
@@ -88,8 +79,8 @@ class LlamaRMSNormMinifloat(LlamaRMSNorm):
         self.variance_epsilon = config.rms_norm_eps
         self.phase_q_config = normalize_phase_q_config(q_config)
         self.decode_policy = self.phase_q_config["decode_policy"]
-        self._phase_quantizers = {
-            phase: build_minifloat_phase_quantizers(
+        self._phase_policies = {
+            phase: build_vector_phase_policies(
                 resolve_module_phase_config(self.phase_q_config, phase)
             )
             for phase in ("prefill", "decode")
@@ -100,16 +91,12 @@ class LlamaRMSNormMinifloat(LlamaRMSNorm):
         )
 
     def forward(self, hidden_states):
-        w_quantizer, x_quantizer = self._phase_quantizers[get_runtime_phase()]
-        input_dtype = hidden_states.dtype
-        if x_quantizer is not None:
-            hidden_states = x_quantizer(hidden_states)
-        hidden_states = hidden_states.to(torch.float32)
-        variance = hidden_states.pow(2).mean(-1, keepdim=True)
-        hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)
-        weight = w_quantizer(self.weight) if w_quantizer is not None else self.weight
-        # Cast the whole product: module replacement can leave ``self.weight`` in
-        # float32 (constructed before the bf16 model context), and multiplying a
-        # float32 weight by a bf16 tensor promotes the result back to float32 —
-        # which then breaks the next linear (float32 act vs bf16 weight).
-        return (weight * hidden_states.to(input_dtype)).to(input_dtype)
+        weight_policy, input_policy = self._phase_policies[get_runtime_phase()]
+        if not weight_policy.enabled and not input_policy.enabled:
+            return super().forward(hidden_states)
+        return input_policy.rms_norm(
+            hidden_states,
+            self.weight,
+            self.variance_epsilon,
+            weight_policy=weight_policy,
+        )

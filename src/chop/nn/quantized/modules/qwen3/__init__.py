@@ -5,3 +5,4 @@ from .attention import (
 )
 from .rms_norm import Qwen3RMSNormMinifloat
 from .mlp import Qwen3MLPMXFP, Qwen3MLPMXInt, Qwen3MLPMinifloat
+from .decoder_layer import Qwen3DecoderLayerMinifloat

@@ -6,10 +6,10 @@ Phase-split contract (decode-side disaggregated serving, e.g. PLENA):
 2. Every in-attention stage (qk / av / rope / softmax / kv_cache) resolves
    its config per phase. A decode-only deployment bypasses all prefill
    stages (FP prefill chip) while decode runs fully quantised.
-3. KV-cache handoff: with ``kv_cache_handoff="decode_format"`` (default)
+3. KV-cache handoff: with explicit ``kv_cache_handoff="decode_format"``
    prefill KV writes use the DECODE bucket's kv_cache config — the prefill
    chip computes in FP but its KV lands in the decode chip's HBM in the
-   decode chip's MX format.
+   decode chip's MX format. The default ``"fp"`` preserves prefill KV.
 4. When all in-attention stages are bypassed for the current phase, the
    forward falls through to HF's configured backend (sdpa / flash / eager),
    so an FP prefill keeps full-speed attention.
@@ -157,6 +157,16 @@ class _PhaseAwareAttentionMixin:
         """
 
         if past_key_values is None:
+            if (
+                get_runtime_phase() == "decode"
+                and not stage["kv_cache_bypass"]
+                and kv_quantizer is not None
+            ):
+                return kv_quantizer(
+                    key_states,
+                    value_states,
+                    stage["kv_cache_config"],
+                )
             return key_states, value_states
         if stage["kv_cache_bypass"] or kv_quantizer is None:
             return past_key_values.update(
@@ -532,9 +542,8 @@ class LlamaAttentionMXIntRotate(LlamaAttentionMXInt):
         q_config["av_matmul"]["rotate"]   = True | False  (default True)
         q_config["kv_cache"]["rotate"]    = True | False  (default True)
 
-    The flags are shared across phases: a prefill KV handoff write in
-    decode_format uses the same rotation decision as decode KV writes, so
-    the cache stays in one consistent basis.
+    Explicit decode-format handoff uses the decode rotation decision for both
+    prefill and decode cache writes.
     """
 
     def __init__(self, config, layer_idx, q_config: dict = None):

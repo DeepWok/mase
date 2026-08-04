@@ -24,6 +24,10 @@ from torch import Tensor, nn
 from transformers.models.llama.modeling_llama import repeat_kv
 
 from chop.nn.quantizers import mxfp_quantizer, mxint_quantizer
+from .matrix import (
+    plena_matrix_product as _plena_matrix_product,
+    scale_matrix_output as _scale_matrix_output,
+)
 from .softmax import softmax_minifloat
 
 
@@ -56,7 +60,12 @@ def eager_attention_forward_mxfp(
         )
         query = q_quantizer(query)
 
-    attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling
+    attn_weights = _plena_matrix_product(
+        query,
+        key_states.transpose(2, 3),
+        qk_config,
+    )
+    attn_weights = _scale_matrix_output(attn_weights, scaling, qk_config)
 
     if attention_mask is not None:
         causal_mask = attention_mask[:, :, :, : key_states.shape[-2]]
@@ -86,7 +95,7 @@ def eager_attention_forward_mxfp(
         )
         attn_weights = a_quantizer(attn_weights)
 
-    attn_output = torch.matmul(attn_weights, value_states)
+    attn_output = _plena_matrix_product(attn_weights, value_states, av_config)
     attn_output = attn_output.transpose(1, 2).contiguous()
     return attn_output, attn_weights
 
@@ -119,7 +128,12 @@ def eager_attention_forward_mxint(
         )
         query = q_quantizer(query)
 
-    attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling
+    attn_weights = _plena_matrix_product(
+        query,
+        key_states.transpose(2, 3),
+        qk_config,
+    )
+    attn_weights = _scale_matrix_output(attn_weights, scaling, qk_config)
 
     if attention_mask is not None:
         causal_mask = attention_mask[:, :, :, : key_states.shape[-2]]
@@ -148,7 +162,7 @@ def eager_attention_forward_mxint(
         )
         attn_weights = a_quantizer(attn_weights)
 
-    attn_output = torch.matmul(attn_weights, value_states)
+    attn_output = _plena_matrix_product(attn_weights, value_states, av_config)
     attn_output = attn_output.transpose(1, 2).contiguous()
     return attn_output, attn_weights
 
@@ -203,7 +217,12 @@ def eager_attention_forward_mxfp_rotate(
                 block_dim=-1,
             )
 
-    attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling
+    attn_weights = _plena_matrix_product(
+        query,
+        key_states.transpose(2, 3),
+        qk_config,
+    )
+    attn_weights = _scale_matrix_output(attn_weights, scaling, qk_config)
 
     if attention_mask is not None:
         causal_mask = attention_mask[:, :, :, : key_states.shape[-2]]
@@ -244,7 +263,7 @@ def eager_attention_forward_mxfp_rotate(
                 block_dim=-1,
             )
 
-    attn_output = torch.matmul(attn_weights, value_states)
+    attn_output = _plena_matrix_product(attn_weights, value_states, av_config)
     attn_output = attn_output.transpose(1, 2).contiguous()
     return attn_output, attn_weights
 
@@ -309,7 +328,12 @@ def eager_attention_forward_mxint_rotate(
                 block_dim=-1,
             )
 
-    attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling
+    attn_weights = _plena_matrix_product(
+        query,
+        key_states.transpose(2, 3),
+        qk_config,
+    )
+    attn_weights = _scale_matrix_output(attn_weights, scaling, qk_config)
 
     if attention_mask is not None:
         causal_mask = attention_mask[:, :, :, : key_states.shape[-2]]
@@ -348,8 +372,6 @@ def eager_attention_forward_mxint_rotate(
                 block_dim=-1,
             )
 
-    attn_output = torch.matmul(attn_weights, value_states)
+    attn_output = _plena_matrix_product(attn_weights, value_states, av_config)
     attn_output = attn_output.transpose(1, 2).contiguous()
     return attn_output, attn_weights
-
-

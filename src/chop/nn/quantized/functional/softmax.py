@@ -5,6 +5,7 @@ from torch import Tensor
 
 from chop.nn.quantizers import mxfp_quantizer, mxint_quantizer
 from chop.nn.quantizers._minifloat_mx import MinifloatMeta, minifloat_quantizer_sim
+from .vector import VectorRoundingPolicy
 
 
 def softmax_mxfp(x: Tensor, config: dict = None, dim: int = -1) -> Tensor:
@@ -40,18 +41,5 @@ def softmax_mxint(x: Tensor, config: dict = None, dim: int = -1) -> Tensor:
 
 
 def softmax_minifloat(x: Tensor, config: dict = None, dim: int = -1) -> Tensor:
-    x_exp_bits = config["data_in_exponent_width"]
-    x_frac_bits = config["data_in_frac_width"]
-
-    x_quantizer = partial(
-        minifloat_quantizer_sim,
-        minifloat_meta=MinifloatMeta(
-            exp_bits=x_exp_bits,
-            frac_bits=x_frac_bits,
-            is_finite=config.get("data_in_is_finite", True),
-            round_mode=config.get("data_in_round_mode", "rn"),
-        ),
-    )
-
-    x = x_quantizer(x)
-    return torch.nn.functional.softmax(x.to(torch.float32), dim=dim).to(x.dtype)
+    policy = VectorRoundingPolicy.from_config(config)
+    return policy.softmax(x, dim=dim)
