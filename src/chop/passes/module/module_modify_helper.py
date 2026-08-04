@@ -34,6 +34,7 @@ from transformers.models.llama.modeling_llama import (
 
 from transformers.models.qwen3.modeling_qwen3 import (
     Qwen3Attention,
+    Qwen3DecoderLayer,
     Qwen3MLP,
     Qwen3RMSNorm,
 )
@@ -84,6 +85,7 @@ llama_prefix_map = {
 }
 
 qwen3_prefix_map = {
+    Qwen3DecoderLayer: "qwen3_decoder_layer",
     Qwen3Attention: "qwen3_self_attention",
     Qwen3MLP: "qwen3_mlp",
     Qwen3RMSNorm: "qwen3_rms_norm",
@@ -115,7 +117,9 @@ bert_prefix_map = {
 # classmethod. These go through the generic `instantiate_from_self` helper,
 # skipping family-specific instantiation logic.
 from_self_prefix_map = {
+    Qwen3DecoderLayer: "qwen3_decoder_layer",
     Qwen3Attention: "qwen3_self_attention",
+    Qwen3RMSNorm: "qwen3_rms_norm",
     LlamaAttention: "llama_self_attention",
 }
 

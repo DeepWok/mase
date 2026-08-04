@@ -39,6 +39,16 @@ def get_config(config: dict, name: str):
         return config["default"]["config"]
 
 
+def _validate_decode_quantizer_route(name: str | None, config: dict) -> None:
+    """Reject the legacy MXINT entry point in phase-aware decode configs."""
+    if name == "mxint_hardware" and "decode" in config:
+        raise ValueError(
+            "decode quantization must select 'mxint', which uses "
+            "chop.nn.quantizers.mxint.fake; 'mxint_hardware' is a legacy "
+            "compatibility entry point"
+        )
+
+
 def _iter_phase_aware_modules(network):
     """Yield modules that resolve their quantisation config per phase.
 
@@ -127,7 +137,7 @@ def install_phase_context_pre_hooks(network) -> None:
         )
 
 
-def quantize_by_type(network, pass_args):
+def quantize_by_type(network, pass_args, collapse_decode_banks=False):
     for type_name, config in pass_args.items():
         n_m = {}
         for n, m in network.named_modules():
@@ -140,6 +150,7 @@ def quantize_by_type(network, pass_args):
         else:
             raise ValueError(f"{type_name} is not supported!")
         config = config["config"]
+        _validate_decode_quantizer_route(config.get("name"), config)
         postfix = config.pop("name")
         for n, m in n_m.items():
             if isinstance(m, module):
@@ -147,21 +158,30 @@ def quantize_by_type(network, pass_args):
                     m, postfix, quantized_module_map, {"config": config}
                 )
                 network = replace_by_name(network, n, new_m)
+                _collapse_decode_bank(new_m, collapse_decode_banks)
     return network
 
 
-def quantize_by_name(network, pass_args):
+def _collapse_decode_bank(module, enabled):
+    if not enabled:
+        return
+    collapse = getattr(module, "collapse_to_decode_bank", None)
+    if callable(collapse):
+        collapse()
+
+
+def quantize_by_name(network, pass_args, collapse_decode_banks=False):
     is_huggingface_model = check_is_huggingface_model(network)
 
     quantize_names = pass_args.keys()
-    n_m = {}
-    for n, m in network.named_modules():
-        n_m[n] = m
-    for n, m in n_m.items():
+    module_names = tuple(n for n, _ in network.named_modules())
+    for n in module_names:
         if n in quantize_names:
+            m = network.get_submodule(n)
             quan_config = pass_args[n]
 
             quan_config = quan_config["config"]
+            _validate_decode_quantizer_route(quan_config.get("name"), quan_config)
             postfix = quan_config.pop("name")
 
             additional_module_args = (
@@ -174,23 +194,24 @@ def quantize_by_name(network, pass_args):
                 m, postfix, quantized_module_map, additional_module_args
             )
             network = replace_by_name(network, n, new_m)
+            _collapse_decode_bank(new_m, collapse_decode_banks)
+            del m, new_m
     return network
 
 
-def quantize_by_regex_name(network, pass_args):
+def quantize_by_regex_name(network, pass_args, collapse_decode_banks=False):
     is_huggingface_model = check_is_huggingface_model(network)
 
     patterns = list(pass_args.keys())
-    n_m = {}
-    for n, m in network.named_modules():
-        n_m[n] = m
-
-    for n, m in n_m.items():
+    module_names = tuple(n for n, _ in network.named_modules())
+    for n in module_names:
         matched_pattern = match_a_pattern(n, patterns)
         if not matched_pattern:
             continue
+        m = network.get_submodule(n)
 
         quan_config = pass_args[matched_pattern]["config"]
+        _validate_decode_quantizer_route(quan_config.get("name"), quan_config)
         postfix = quan_config["name"]
 
         additional_module_args = (
@@ -203,6 +224,8 @@ def quantize_by_regex_name(network, pass_args):
             m, postfix, quantized_module_map, additional_module_args
         )
         network = replace_by_name(network, n, new_m)
+        _collapse_decode_bank(new_m, collapse_decode_banks)
+        del m, new_m
 
     return network
 
@@ -252,8 +275,8 @@ def quantize_module_transform_pass(network, pass_args):
                 "name": "mxint",
                 "prefill": {"bypass": True},
                 "decode": {
-                    "weight_block_size": 32, "weight_width": 4,
-                    "data_in_block_size": 32, "data_in_width": 8,
+                    "weight_block_size": 8, "weight_width": 4,
+                    "data_in_block_size": 8, "data_in_width": 8,
                 },
             }
         }
@@ -272,6 +295,9 @@ def quantize_module_transform_pass(network, pass_args):
         key: (value if key in _by_reference_keys else deepcopy(value))
         for key, value in pass_args.items()
     }
+    collapse_decode_banks = pass_args.pop("collapse_decode_banks", False)
+    if not isinstance(collapse_decode_banks, bool):
+        raise TypeError("collapse_decode_banks must be a boolean")
 
     # If TOML has a [rotation_search] block, route the WHOLE quantize step
     # through the rotation search pass — it handles GPTQ, baseline module
@@ -280,6 +306,10 @@ def quantize_module_transform_pass(network, pass_args):
     # so a re-run skips the calib forwards entirely (mirrors GPTQ's
     # checkpoint resume).
     if "rotation_search" in pass_args:
+        if collapse_decode_banks:
+            raise ValueError(
+                "rotation search must finalize its bank before decode-only collapse"
+            )
         from .rotation_search import dispatch_rotation_search_block
 
         rot_cfg = pass_args.pop("rotation_search")
@@ -297,11 +327,23 @@ def quantize_module_transform_pass(network, pass_args):
     by = pass_args.pop("by")
     match by:
         case "type":
-            network = quantize_by_type(network, pass_args)
+            network = quantize_by_type(
+                network,
+                pass_args,
+                collapse_decode_banks=collapse_decode_banks,
+            )
         case "name":
-            network = quantize_by_name(network, pass_args)
+            network = quantize_by_name(
+                network,
+                pass_args,
+                collapse_decode_banks=collapse_decode_banks,
+            )
         case "regex_name":
-            network = quantize_by_regex_name(network, pass_args)
+            network = quantize_by_regex_name(
+                network,
+                pass_args,
+                collapse_decode_banks=collapse_decode_banks,
+            )
         case _:
             raise ValueError(f'Unsupported quantize "by": {by}')
 
