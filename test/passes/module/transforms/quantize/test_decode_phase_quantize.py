@@ -102,20 +102,47 @@ def test_normalization_is_idempotent():
     assert normalize_phase_q_config(once) == once
 
 
+def test_decode_quantization_rejects_legacy_mxint_route():
+    model = nn.Sequential(nn.Linear(8, 8, bias=False))
+    pass_args = {
+        "by": "type",
+        "linear": {
+            "config": {
+                "name": "mxint_hardware",
+                "prefill": {"bypass": True},
+                "decode": dict(MXINT_LINEAR_DECODE),
+            }
+        },
+    }
+    with pytest.raises(
+        ValueError,
+        match=r"decode quantization must select 'mxint'.*mxint\.fake",
+    ):
+        quantize_module_transform_pass(model, pass_args)
+
+
 def test_kv_handoff_decode_format_mirrors_decode_kv_into_prefill():
     kv = {"data_in_block_size": 8, "data_in_width": 4}
     n = normalize_phase_q_config(
-        {"prefill": {"bypass": True}, "decode": {"kv_cache": dict(kv)}}
+        {
+            "kv_cache_handoff": "decode_format",
+            "prefill": {"bypass": True},
+            "decode": {"kv_cache": dict(kv)},
+        }
     )
     assert resolve_stage_config(n, "prefill", "kv_cache") == kv
     # every other prefill stage stays bypassed
     assert resolve_stage_config(n, "prefill", "qk_matmul") == {"bypass": True}
 
 
-def test_kv_handoff_fp_keeps_prefill_kv_unquantised():
+def test_kv_handoff_defaults_to_fp_and_keeps_prefill_kv_unquantised():
+    """The prefill cache crosses the chip boundary in the prefill dtype.
+
+    Decode admission is what quantizes it, so the default handoff must leave
+    prefill KV untouched.
+    """
     n = normalize_phase_q_config(
         {
-            "kv_cache_handoff": "fp",
             "prefill": {"bypass": True},
             "decode": {"kv_cache": {"data_in_block_size": 8, "data_in_width": 4}},
         }
@@ -406,23 +433,29 @@ def _tiny_llama():
     return LlamaForCausalLM(cfg).eval()
 
 
-def _llama_decode_only_pass_args():
+def _cache_keys(cache):
+    """Read layer-0 keys from either DynamicCache layout."""
+    return cache.layers[0].keys if hasattr(cache, "layers") else cache.key_cache[0]
+
+
+def _llama_decode_only_pass_args(kv_cache_handoff: str | None = None):
     mx = {"data_in_block_size": 16, "data_in_width": 4}
+    attention = {
+        "name": "mxint",
+        "prefill": {"bypass": True},
+        "decode": {
+            "qk_matmul": dict(mx),
+            "av_matmul": dict(mx),
+            "rope": {"bypass": True},
+            "softmax": {"bypass": True},
+            "kv_cache": {"data_in_block_size": 16, "data_in_width": 4},
+        },
+    }
+    if kv_cache_handoff is not None:
+        attention["kv_cache_handoff"] = kv_cache_handoff
     return {
         "by": "regex_name",
-        r"model\.layers\.\d+\.self_attn$": {
-            "config": {
-                "name": "mxint",
-                "prefill": {"bypass": True},
-                "decode": {
-                    "qk_matmul": dict(mx),
-                    "av_matmul": dict(mx),
-                    "rope": {"bypass": True},
-                    "softmax": {"bypass": True},
-                    "kv_cache": {"data_in_block_size": 16, "data_in_width": 4},
-                },
-            }
-        },
+        r"model\.layers\.\d+\.self_attn$": {"config": attention},
         r"model\.layers\.\d+\.(self_attn\.(q_proj|k_proj|v_proj|o_proj)"
         r"|mlp\.(gate_proj|up_proj|down_proj))$": {
             "config": {
@@ -456,15 +489,16 @@ def test_llama_decode_only_end_to_end():
     # Cache-free forward = pure prefill = must be EXACTLY the FP reference.
     assert torch.allclose(out_q, out_ref, atol=1e-6)
 
-    # Prefill with cache: KV handoff must have written decode-format KV.
+    # Prefill with cache: the prompt cache crosses the boundary unquantised.
     from transformers import DynamicCache
 
     with torch.no_grad():
         cache = DynamicCache()
         model(ids, past_key_values=cache, use_cache=True)
-    k0 = cache.layers[0].keys if hasattr(cache, "layers") else cache.key_cache[0]
+    k0 = _cache_keys(cache)
+    assert not torch.equal(k0, torch.zeros_like(k0))
     k0_requant = mxint_quantizer(k0, block_size=16, element_bits=4, block_dim=-1)
-    assert torch.allclose(k0, k0_requant, atol=1e-6)
+    assert not torch.allclose(k0, k0_requant, atol=1e-6)
 
     # Greedy decode runs through the quantised decode path without error.
     with torch.no_grad():
@@ -535,14 +569,38 @@ def test_llama_cached_prefill_is_bit_identical_fp():
         out_ref = ref(ids, use_cache=False).logits
     assert torch.equal(out_q, out_ref)
 
-    # The cache itself still holds the quantised handoff copy.
+    # The prompt cache stays in the prefill dtype under the default handoff.
     with torch.no_grad():
         cache = DynamicCache()
         model(ids, past_key_values=cache, use_cache=True)
-    k0 = cache.layers[0].keys if hasattr(cache, "layers") else cache.key_cache[0]
+    k0 = _cache_keys(cache)
+    assert not torch.equal(k0, torch.zeros_like(k0))
+    k0_requant = mxint_quantizer(k0, block_size=16, element_bits=4, block_dim=-1)
+    assert not torch.allclose(k0, k0_requant, atol=1e-6)
+
+
+def test_kv_handoff_decode_format_writes_quantised_prefill_cache():
+    """Opting into decode_format quantises the prompt cache on write.
+
+    This models a prefill chip that emits KV already in the decode chip's MX
+    format, instead of quantising at decode admission.
+    """
+    ref = _tiny_llama()
+    model = copy.deepcopy(ref)
+    model, _ = quantize_module_transform_pass(
+        model, _llama_decode_only_pass_args(kv_cache_handoff="decode_format")
+    )
+
+    from transformers import DynamicCache
+
+    ids = torch.randint(0, 128, (1, 12))
+    with torch.no_grad():
+        cache = DynamicCache()
+        model(ids, past_key_values=cache, use_cache=True)
+    k0 = _cache_keys(cache)
+    assert not torch.equal(k0, torch.zeros_like(k0))
     k0_requant = mxint_quantizer(k0, block_size=16, element_bits=4, block_dim=-1)
     assert torch.allclose(k0, k0_requant, atol=1e-6)
-    assert not torch.equal(k0, torch.zeros_like(k0))
 
 
 def test_linear_partial_weight_config_raises():
@@ -658,7 +716,7 @@ def test_qwen3_decode_only_end_to_end_sdpa():
 # DSE sweep format coverage
 # ---------------------------------------------------------------------------
 
-MXINT_SWEEP_WIDTHS = (2, 3, 4, 8)
+MXINT_SWEEP_WIDTHS = (2, 4, 8)
 MXFP_SWEEP_FORMATS = {
     "E1M2": (1, 2),
     "E2M1": (2, 1),
