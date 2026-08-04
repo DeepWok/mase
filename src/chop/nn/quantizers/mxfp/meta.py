@@ -21,7 +21,7 @@ class MXFPMeta:
         scale_exp_bits: Bits for shared scale exponent (typically 8)
         element_exp_bits: Exponent bits per element (e.g., 4 for E4M3)
         element_frac_bits: Fraction bits per element (e.g., 3 for E4M3)
-        element_is_finite: Whether elements support inf/nan
+        element_is_finite: Whether every element exponent code is finite
         round_mode: Rounding mode
     """
 
@@ -64,6 +64,14 @@ class MXFPMeta:
             is_finite=self.element_is_finite,
             round_mode=self.round_mode,
         )
+
+    @functools.cached_property
+    def element_max_exponent(self) -> int:
+        """Largest unbiased exponent the element format can represent."""
+        exp_bits = self.element_exp_bits
+        bias = 1 if exp_bits == 1 else (1 << (exp_bits - 1)) - 1
+        max_code = (1 << exp_bits) - (1 if self.element_is_finite else 2)
+        return max_code - bias
 
 
 @dataclass(frozen=True)
