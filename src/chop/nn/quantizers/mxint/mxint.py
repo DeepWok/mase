@@ -7,8 +7,12 @@ from torch import Tensor
 from tqdm import tqdm
 
 from .meta import MXIntMeta, MXIntTensorMeta
-from .fake import extract_mxint_components, compose_mxint_tensor
-from ..mxfp.helpers import flatten_for_quantize, permute_for_dequantize
+from .fake import (
+    compose_mxint_tensor,
+    extract_mxint_components,
+    mxint_shared_exponent,
+)
+from ..mxfp.helpers import block_rows_for_quantize, restore_quantized_rows
 
 
 def mxint_quantizer_sim(
@@ -38,10 +42,8 @@ def mxint_quantizer_sim(
     tensor_dtype = tensor.dtype
 
     if quantile_search:
-        qtensor = tensor.flatten()
         B = mxint_meta.block_size
-
-        qtensor = qtensor.reshape(-1, B)
+        qtensor, padded_axis_size = block_rows_for_quantize(tensor, block_dim, B)
 
         percentiles = torch.tensor(
             [1.0, 0.995, 0.99, 0.97, 0.95, 0.93, 0.90, 0.80, 0.70, 0.60, 0.50],
@@ -55,13 +57,8 @@ def mxint_quantizer_sim(
         ndim = len(ori_shape)
         assert block_dim < ndim and block_dim >= -ndim
 
-        tensor_flat = flatten_for_quantize(tensor, block_dim)
-
-        x = tensor_flat
-        n_blocks = x.numel() // B
-
-        x = x.flatten()
-        x = x.reshape(n_blocks, B)
+        x = qtensor
+        n_blocks = x.shape[0]
 
         tem_dtype = x.dtype
         x_max = (
@@ -71,18 +68,23 @@ def mxint_quantizer_sim(
             .to(tem_dtype)
         )
 
-        # Clamp to avoid log2(0) = -inf for all-zero blocks
-        x_max = x_max.clamp(min=torch.finfo(x_max.dtype).tiny)
-        scale = x_max.log2().ceil()
+        zero_blocks = x_max == 0
         scale_bias = 2 ** (mxint_meta.scale_bits - 1) - 1
+        scale_min = -scale_bias
+        scale_max = 2**mxint_meta.scale_bits - 1 - scale_bias
+        unit_max = torch.where(zero_blocks, torch.ones_like(x_max), x_max)
+        scale = mxint_shared_exponent(
+            unit_max,
+            mxint_meta.element_bits,
+        ).clamp(min=scale_min, max=scale_max)
         x = x / 2**scale
         x_mant = x * 2 ** (mxint_meta.element_bits - 1)
-        scale = scale + scale_bias
-        scale = scale.clamp(min=0, max=2**mxint_meta.scale_bits - 1)
+        magnitude_max = 2 ** (mxint_meta.element_bits - 1) - 1
         x_mant = x_mant.round().clamp(
-            min=-(2 ** (mxint_meta.element_bits - 1)),
-            max=2 ** (mxint_meta.element_bits - 1) - 1,
+            min=-magnitude_max,
+            max=magnitude_max,
         )
+        scale = scale + scale_bias
 
         quant_tensor = (
             x_mant / 2 ** (mxint_meta.element_bits - 1) * 2 ** (scale - scale_bias)
@@ -137,8 +139,11 @@ def mxint_quantizer_sim(
             meta=mxint_meta,
         )
 
-        tensor_out = permute_for_dequantize(
-            quant_tensor, ori_shape=tensor_meta.shape, block_dim=tensor_meta.block_dim
+        tensor_out = restore_quantized_rows(
+            quant_tensor,
+            ori_shape=tensor_meta.shape,
+            block_dim=tensor_meta.block_dim,
+            padded_axis_size=padded_axis_size,
         )
         out_dq = tensor_out.to(tensor_dtype)
 
@@ -149,9 +154,11 @@ def mxint_quantizer_sim(
         ndim = len(ori_shape)
         assert block_dim < ndim and block_dim >= -ndim
 
-        tensor_flat = flatten_for_quantize(tensor, block_dim)
+        tensor_blocks, padded_axis_size = block_rows_for_quantize(
+            tensor, block_dim, mxint_meta.block_size
+        )
         scales, elements = extract_mxint_components(
-            tensor_flat, mxint_meta, percentile=1.0
+            tensor_blocks, mxint_meta, percentile=1.0
         )
 
         tensor_meta = MXIntTensorMeta(
@@ -163,8 +170,11 @@ def mxint_quantizer_sim(
         )
 
         dequant = compose_mxint_tensor(scales, elements, mxint_meta)
-        out_dq = permute_for_dequantize(
-            dequant, tensor_meta.shape, tensor_meta.block_dim
+        out_dq = restore_quantized_rows(
+            dequant,
+            tensor_meta.shape,
+            tensor_meta.block_dim,
+            padded_axis_size,
         )
         out_dq = out_dq.to(tensor_dtype)
 
@@ -224,8 +234,8 @@ def mxint_quantizer(
 
     Handles DTensor inputs transparently (unwraps, quantizes local shard,
     re-wraps with the same placement). MX is a pointwise-on-blocks operation,
-    so each rank can quantize its own shard independently as long as
-    shard_size is divisible by block_size along ``block_dim``.
+    so each rank quantizes its own shard with row-local tail padding along
+    ``block_dim``.
 
     Args:
         x: Input tensor to quantize (torch.Tensor or DTensor)
@@ -259,24 +269,20 @@ def mxint_quantizer(
         mesh = x.device_mesh
         local = x.to_local()
         local_q = mxint_quantizer(
-            local, block_size, element_bits, block_dim, scale_bits, quantile_search,
+            local,
+            block_size,
+            element_bits,
+            block_dim,
+            scale_bits,
+            quantile_search,
         )
         return DTensor.from_local(local_q, mesh, placements)
 
-    # Handle tensors whose total element count isn't a multiple of block_size
-    # (common in MoE expert forwards where n_matched_tokens is arbitrary).
-    # Pad with zeros at the end, quantize as 1D, then trim + reshape back.
-    if x.numel() % block_size != 0:
-        import torch.nn.functional as F
-        orig_shape = x.shape
-        orig_numel = x.numel()
-        pad = block_size - (orig_numel % block_size)
-        x_padded = F.pad(x.reshape(-1), (0, pad))
-        q_padded = MXIntQuantize.apply(
-            x_padded, block_size, element_bits, -1, scale_bits, quantile_search,
-        )
-        return q_padded[:orig_numel].reshape(orig_shape)
-
     return MXIntQuantize.apply(
-        x, block_size, element_bits, block_dim, scale_bits, quantile_search,
+        x,
+        block_size,
+        element_bits,
+        block_dim,
+        scale_bits,
+        quantile_search,
     )
