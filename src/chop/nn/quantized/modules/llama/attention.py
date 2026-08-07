@@ -36,6 +36,7 @@ from chop.nn.quantizers import mxfp_quantizer, mxint_quantizer
 from chop.nn.quantized.functional.rope import rope_minifloat
 from chop.nn.quantized.functional.softmax import softmax_minifloat
 from chop.nn.quantized.functional.kvcache import (
+    kv_cache_mx,
     kv_cache_mxfp,
     kv_cache_mxfp_rotate,
     kv_cache_mxint,
@@ -361,7 +362,7 @@ class LlamaAttentionMXFP(_PhaseAwareAttentionMixin, LlamaAttention):
             past_key_values,
             cache_kwargs,
             stage,
-            kv_cache_mxfp,
+            kv_cache_mx,
         )
 
         # Skip-replace: if no in-attention quant stage is active for this
@@ -471,7 +472,7 @@ class LlamaAttentionMXInt(_PhaseAwareAttentionMixin, LlamaAttention):
             past_key_values,
             cache_kwargs,
             stage,
-            kv_cache_mxint,
+            kv_cache_mx,
         )
 
         if stage["qk_bypass"] and stage["av_bypass"] and stage["softmax_bypass"]:
@@ -590,7 +591,13 @@ class LlamaAttentionMXIntRotate(LlamaAttentionMXInt):
             )
 
         cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
-        kv_quantizer = kv_cache_mxint_rotate if self.kv_cache_use_rotate else kv_cache_mxint
+        def kv_quantizer(key, value, config):
+            return kv_cache_mx(
+                key,
+                value,
+                config,
+                rotate=self.kv_cache_use_rotate,
+            )
         key_states, value_states = self._apply_kv_cache_phase_aware(
             key_states,
             value_states,
@@ -695,7 +702,13 @@ class LlamaAttentionMXFPRotate(LlamaAttentionMXFP):
             )
 
         cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
-        kv_quantizer = kv_cache_mxfp_rotate if self.kv_cache_use_rotate else kv_cache_mxfp
+        def kv_quantizer(key, value, config):
+            return kv_cache_mx(
+                key,
+                value,
+                config,
+                rotate=self.kv_cache_use_rotate,
+            )
         key_states, value_states = self._apply_kv_cache_phase_aware(
             key_states,
             value_states,
