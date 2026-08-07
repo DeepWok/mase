@@ -28,6 +28,7 @@ except ImportError:
 
 from transformers.models.llama.modeling_llama import (
     LlamaAttention,
+    LlamaDecoderLayer,
     LlamaMLP,
     LlamaRMSNorm,
 )
@@ -79,6 +80,7 @@ roberta_prefix_map = {
 }
 
 llama_prefix_map = {
+    LlamaDecoderLayer: "llama_decoder_layer",
     LlamaAttention: "llama_self_attention",
     LlamaMLP: "llama_mlp",
     LlamaRMSNorm: "llama_rms_norm",
@@ -120,6 +122,7 @@ from_self_prefix_map = {
     Qwen3DecoderLayer: "qwen3_decoder_layer",
     Qwen3Attention: "qwen3_self_attention",
     Qwen3RMSNorm: "qwen3_rms_norm",
+    LlamaDecoderLayer: "llama_decoder_layer",
     LlamaAttention: "llama_self_attention",
 }
 

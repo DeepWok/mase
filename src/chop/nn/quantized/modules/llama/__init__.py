@@ -7,3 +7,4 @@ from .attention import (
 )
 from .rms_norm import LlamaRMSNormLSQInteger, LlamaRMSNormMinifloat
 from .mlp import LlamaMLPLSQInteger, LlamaMLPMXFP, LlamaMLPMXInt, LlamaMLPMinifloat
+from .decoder_layer import LlamaDecoderLayerMinifloat

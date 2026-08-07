@@ -12,6 +12,7 @@ from .roberta import (
 from .embedding import EmbeddingMXFP, EmbeddingMXInt
 
 from .llama import (
+    LlamaDecoderLayerMinifloat,
     LlamaAttentionLSQInteger,
     LlamaRMSNormLSQInteger,
     LlamaMLPLSQInteger,
@@ -372,6 +373,7 @@ quantized_roberta_module_map = {
 }
 
 quantized_llama_module_map = {
+    "llama_decoder_layer_minifloat": LlamaDecoderLayerMinifloat,
     "llama_self_attention_lsqinteger": LlamaAttentionLSQInteger,
     "llama_self_attention_mxfp": LlamaAttentionMXFP,
     "llama_self_attention_mxfp_rotate": LlamaAttentionMXFPRotate,
