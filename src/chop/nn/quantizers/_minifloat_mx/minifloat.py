@@ -6,7 +6,7 @@ import torch
 from torch import Tensor
 
 from .meta import MinifloatMeta, MinifloatTensorMeta
-from .fake import extract_minifloat_component, compose_minifloat_component
+from .fake import quantize_minifloat_value
 
 
 def minifloat_quantizer_sim(
@@ -25,9 +25,5 @@ def minifloat_quantizer_sim(
     Returns:
         Dequantized tensor
     """
-    ori_dtype = tensor.dtype
-    element = extract_minifloat_component(tensor, minifloat_meta)
-
-    return compose_minifloat_component(
-        element, minifloat_meta, output_dtype=output_dtype or ori_dtype
-    )
+    value = quantize_minifloat_value(tensor, minifloat_meta)
+    return value.to(output_dtype or tensor.dtype)
