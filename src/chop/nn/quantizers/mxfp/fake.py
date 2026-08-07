@@ -19,9 +19,9 @@ def extract_mxfp_components(
                   shape ``[n_blocks, B]``.
     """
     B = mxfp_meta.block_size
-    assert x.numel() % B == 0, (
-        f"Input tensor size {x.numel()} is not divisible by block size {B}."
-    )
+    assert (
+        x.numel() % B == 0
+    ), f"Input tensor size {x.numel()} is not divisible by block size {B}."
     n_blocks = x.numel() // B
 
     x = x.flatten().reshape(n_blocks, B)

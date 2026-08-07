@@ -47,8 +47,8 @@ def mxfp_quantizer_sim(
 
         percentiles = [1.0, 0.995, 0.99, 0.97, 0.95, 0.93, 0.90, 0.80, 0.70, 0.60, 0.50]
         for percentile in percentiles:
-            scales, elements, tensor_meta, candidate_padded_axis_size = _extract_with_meta(
-                tensor, block_dim, mxfp_meta, percentile=percentile
+            scales, elements, tensor_meta, candidate_padded_axis_size = (
+                _extract_with_meta(tensor, block_dim, mxfp_meta, percentile=percentile)
             )
             if candidate_padded_axis_size != padded_axis_size:
                 raise RuntimeError("MXFP row padding changed during quantile search")

@@ -13,7 +13,7 @@ def test_blocks_do_not_straddle_rows():
     """A block axis that is not a multiple of the block size must still
     keep each row independent: perturbing one row cannot change another."""
     torch.manual_seed(0)
-    block_size, rows, axis = 32, 4, 80          # 80 % 32 != 0
+    block_size, rows, axis = 32, 4, 80  # 80 % 32 != 0
     x = torch.randn(rows, axis)
     kwargs = dict(
         block_size=block_size,
@@ -26,9 +26,9 @@ def test_blocks_do_not_straddle_rows():
     perturbed[0] *= 100.0
     result = mxfp_quantizer(perturbed, **kwargs)
     for row in range(1, rows):
-        assert torch.equal(baseline[row], result[row]), (
-            f"row {row} changed when only row 0 was perturbed"
-        )
+        assert torch.equal(
+            baseline[row], result[row]
+        ), f"row {row} changed when only row 0 was perturbed"
 
 
 def test_mxfp_requantization_is_idempotent():

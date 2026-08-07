@@ -269,10 +269,20 @@ def mxint_quantizer(
         mesh = x.device_mesh
         local = x.to_local()
         local_q = mxint_quantizer(
-            local, block_size, element_bits, block_dim, scale_bits, quantile_search,
+            local,
+            block_size,
+            element_bits,
+            block_dim,
+            scale_bits,
+            quantile_search,
         )
         return DTensor.from_local(local_q, mesh, placements)
 
     return MXIntQuantize.apply(
-        x, block_size, element_bits, block_dim, scale_bits, quantile_search,
+        x,
+        block_size,
+        element_bits,
+        block_dim,
+        scale_bits,
+        quantile_search,
     )

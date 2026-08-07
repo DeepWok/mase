@@ -57,9 +57,7 @@ def _minifloat_fields(
         min=y_exp_min_biased,
         max=y_exp_max_biased,
     )
-    normal_fraction = (
-        safe_magnitude / torch.exp2(clamped_exp) - 1.0
-    ) * y_frac_levels
+    normal_fraction = (safe_magnitude / torch.exp2(clamped_exp) - 1.0) * y_frac_levels
     y_frac = round_magnitude(normal_fraction).to(torch.int32)
     y_exp = (clamped_exp + y_exp_bias).to(torch.int32)
 
@@ -67,9 +65,7 @@ def _minifloat_fields(
     y_frac = torch.where(carry, 0, y_frac)
     y_exp = torch.where(carry, y_exp + 1, y_exp)
 
-    subnormal_fraction = round_magnitude(
-        magnitude / subnormal_step
-    ).to(torch.int32)
+    subnormal_fraction = round_magnitude(magnitude / subnormal_step).to(torch.int32)
     subnormal_carry = subnormal_fraction >= y_frac_levels
     y_frac = torch.where(
         is_subnormal,
@@ -116,8 +112,10 @@ def quantize_minifloat_value(x: Tensor, minifloat_meta: MinifloatMeta) -> Tensor
     exponent code, so the decoder's special-value branches cannot apply here.
     """
     y_sign, y_exp, y_frac = _minifloat_fields(x, minifloat_meta)
-    y_exp_bias = 1 if minifloat_meta.exp_bits == 1 else (
-        (1 << (minifloat_meta.exp_bits - 1)) - 1
+    y_exp_bias = (
+        1
+        if minifloat_meta.exp_bits == 1
+        else ((1 << (minifloat_meta.exp_bits - 1)) - 1)
     )
     frac_levels = 1 << minifloat_meta.frac_bits
     subnormal_step = float(2 ** (1 - y_exp_bias)) / frac_levels
