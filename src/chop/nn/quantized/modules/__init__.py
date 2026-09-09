@@ -40,10 +40,22 @@ from .qwen3 import (
 
 from .qwen3_moe import (
     Qwen3MoeAttentionMXFP,
+    Qwen3MoeAttentionMXFPRotate,
     Qwen3MoeAttentionMXInt,
     Qwen3MoeAttentionMXIntRotate,
     Qwen3MoeMLPMXFP,
     Qwen3MoeMLPMXInt,
+    Qwen3MoeExpertsMXFP,
+    Qwen3MoeExpertsMXInt,
+    Qwen3MoeSparseMoeBlockBF16Router,
+    Qwen3MoeSparseMoeBlockMinifloat,
+    Qwen3MoeTopKRouterBF16,
+    Qwen3MoeTopKRouterMX,
+    Qwen3MoeTopKRouterMXInt8,
+    Qwen3MoeTopKRouterE4M3,
+    Qwen3MoeTopKRouterE5M2,
+    Qwen3MoeRMSNormMinifloat,
+    Qwen3MoeDecoderLayerMinifloat,
 )
 
 from .glm4_moe import (
@@ -399,11 +411,23 @@ quantized_qwen3_module_map = {
 }
 
 quantized_qwen3_moe_module_map = {
+    "qwen3_moe_decoder_layer_minifloat": Qwen3MoeDecoderLayerMinifloat,
     "qwen3_moe_self_attention_mxfp": Qwen3MoeAttentionMXFP,
+    "qwen3_moe_self_attention_mxfp_rotate": Qwen3MoeAttentionMXFPRotate,
     "qwen3_moe_self_attention_mxint": Qwen3MoeAttentionMXInt,
     "qwen3_moe_self_attention_mxint_rotate": Qwen3MoeAttentionMXIntRotate,
     "qwen3_moe_mlp_mxfp": Qwen3MoeMLPMXFP,
     "qwen3_moe_mlp_mxint": Qwen3MoeMLPMXInt,
+    "qwen3_moe_experts_mxfp": Qwen3MoeExpertsMXFP,
+    "qwen3_moe_experts_mxint": Qwen3MoeExpertsMXInt,
+    "qwen3_moe_sparse_block_bf16_router": Qwen3MoeSparseMoeBlockBF16Router,
+    "qwen3_moe_sparse_block_minifloat": Qwen3MoeSparseMoeBlockMinifloat,
+    "qwen3_moe_router_bf16": Qwen3MoeTopKRouterBF16,
+    "qwen3_moe_router_mx": Qwen3MoeTopKRouterMX,
+    "qwen3_moe_router_mxint8": Qwen3MoeTopKRouterMXInt8,
+    "qwen3_moe_router_e4m3": Qwen3MoeTopKRouterE4M3,
+    "qwen3_moe_router_e5m2": Qwen3MoeTopKRouterE5M2,
+    "qwen3_moe_rms_norm_minifloat": Qwen3MoeRMSNormMinifloat,
 }
 
 quantized_glm4_moe_module_map = {
