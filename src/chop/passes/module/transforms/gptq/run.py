@@ -10,22 +10,102 @@ import logging
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from .gptq import GPTQ
+from .quantize_dispatch import quantize_tensor
 from .utils import find_qlayers, cleanup_memory
 from .data_utils import get_loaders
 from .checkpoint import save_layer_checkpoint, auto_load_quantized_layers
 from chop.nn.quantized.modules.phase_config import (
+    DECODE_FP_EXPERT_DOWN_ATTR,
+    DECODE_FP_EXPERT_GATE_UP_ATTR,
     DECODE_FP_BIAS_ATTR,
     DECODE_FP_WEIGHT_ATTR,
+    GPTQ_DECODE_EXPERT_DOWN_ATTR,
+    GPTQ_DECODE_EXPERT_GATE_UP_ATTR,
     GPTQ_DECODE_WEIGHT_ATTR,
 )
 
 _VALID_GPTQ_PHASES = ("both", "decode", "prefill")
+_DENSE_SEQUENTIAL = (
+    ("self_attn.k_proj", "self_attn.v_proj", "self_attn.q_proj"),
+    ("self_attn.o_proj",),
+    ("mlp.up_proj", "mlp.gate_proj"),
+    ("mlp.down_proj",),
+)
+
+
+class _WeightView:
+    """Minimal GPTQ adapter for one expert's fused weight slice."""
+
+    def __init__(self, weight: torch.Tensor):
+        self.weight = weight
+
+
+class _CalibrationCaptureComplete(RuntimeError):
+    pass
+
+
+def _module_device(module: nn.Module, module_name: str) -> torch.device:
+    devices = {param.device for param in module.parameters(recurse=True)}
+    devices.update(buffer.device for buffer in module.buffers(recurse=True))
+    devices = {device for device in devices if device.type != "meta"}
+    if not devices:
+        return torch.device("cpu")
+    if len(devices) != 1:
+        formatted = ", ".join(sorted(str(device) for device in devices))
+        raise RuntimeError(
+            "GPTQ device_map_aware requires layer-level sharding, but "
+            f"{module_name} spans multiple devices: {formatted}"
+        )
+    return next(iter(devices))
+
+
+def _move_to_device(value, device: torch.device):
+    if value is None:
+        return None
+    if torch.is_tensor(value):
+        return value.to(device)
+    if isinstance(value, tuple):
+        return tuple(_move_to_device(item, device) for item in value)
+    if isinstance(value, list):
+        return [_move_to_device(item, device) for item in value]
+    if isinstance(value, dict):
+        return {key: _move_to_device(item, device) for key, item in value.items()}
+    return value
+
+
+def _run_layer_sample(
+    *,
+    layer,
+    sample,
+    outs,
+    sample_idx,
+    rope,
+    attention_mask,
+    position_ids,
+    layer_device,
+):
+    x = sample.unsqueeze(0).to(layer_device)
+    local_mask = _move_to_device(attention_mask, layer_device)
+    local_positions = _move_to_device(position_ids, layer_device)
+    local_rope = rope.to(layer_device)
+    cos, sin = local_rope(x, local_positions)
+    output = layer(
+        x,
+        attention_mask=local_mask,
+        position_embeddings=(cos, sin),
+    )
+    if isinstance(output, (tuple, list)):
+        output = output[0]
+    outs[sample_idx].copy_(
+        output.squeeze(0).to(device=outs.device, dtype=outs.dtype)
+    )
 
 
 def _snapshot_fp_linear_weights(layers) -> None:
-    """Snapshot FP weights of every decoder linear before GPTQ mutates them.
+    """Snapshot FP decoder weights before GPTQ mutates them.
 
     Snapshots live on CPU (``_mase_fp_weight``) so large models don't hold a
     second GPU copy. Must run before checkpoint resume, which loads already
@@ -38,6 +118,20 @@ def _snapshot_fp_linear_weights(layers) -> None:
                 module, "_mase_fp_weight"
             ):
                 module._mase_fp_weight = module.weight.detach().clone().cpu()
+            if (
+                hasattr(module, "gate_up_proj")
+                and isinstance(module.gate_up_proj, nn.Parameter)
+                and module.gate_up_proj.ndim == 3
+                and hasattr(module, "down_proj")
+                and isinstance(module.down_proj, nn.Parameter)
+            ):
+                if not hasattr(module, "_mase_fp_gate_up_proj"):
+                    module._mase_fp_gate_up_proj = (
+                        module.gate_up_proj.detach().clone().cpu()
+                    )
+                    module._mase_fp_down_proj = (
+                        module.down_proj.detach().clone().cpu()
+                    )
 
 
 def _finalize_gptq_phase(network, phase: str) -> None:
@@ -57,33 +151,251 @@ def _finalize_gptq_phase(network, phase: str) -> None:
         return
     for layer in network.model.layers:
         for module in layer.modules():
-            if not isinstance(module, nn.Linear):
+            if isinstance(module, nn.Linear):
+                fp_weight = getattr(module, "_mase_fp_weight", None)
+                if fp_weight is None:
+                    continue
+                if phase == "decode":
+                    setattr(
+                        module,
+                        GPTQ_DECODE_WEIGHT_ATTR,
+                        module.weight.detach().clone().cpu(),
+                    )
+                    module.weight.data.copy_(
+                        fp_weight.to(
+                            device=module.weight.device, dtype=module.weight.dtype
+                        )
+                    )
+                else:  # prefill
+                    setattr(module, DECODE_FP_WEIGHT_ATTR, fp_weight)
+                    if module.bias is not None and not hasattr(
+                        module, DECODE_FP_BIAS_ATTR
+                    ):
+                        setattr(
+                            module,
+                            DECODE_FP_BIAS_ATTR,
+                            module.bias.detach().clone().cpu(),
+                        )
+                del module._mase_fp_weight
                 continue
-            fp_weight = getattr(module, "_mase_fp_weight", None)
-            if fp_weight is None:
+
+            fp_gate_up = getattr(module, "_mase_fp_gate_up_proj", None)
+            fp_down = getattr(module, "_mase_fp_down_proj", None)
+            if fp_gate_up is None and fp_down is None:
                 continue
+            if fp_gate_up is None or fp_down is None:
+                raise RuntimeError("incomplete Qwen3-MoE FP expert snapshot")
             if phase == "decode":
                 setattr(
                     module,
-                    GPTQ_DECODE_WEIGHT_ATTR,
-                    module.weight.detach().clone().cpu(),
+                    GPTQ_DECODE_EXPERT_GATE_UP_ATTR,
+                    module.gate_up_proj.detach().clone().cpu(),
                 )
-                module.weight.data.copy_(
-                    fp_weight.to(
-                        device=module.weight.device, dtype=module.weight.dtype
+                setattr(
+                    module,
+                    GPTQ_DECODE_EXPERT_DOWN_ATTR,
+                    module.down_proj.detach().clone().cpu(),
+                )
+                module.gate_up_proj.data.copy_(
+                    fp_gate_up.to(
+                        device=module.gate_up_proj.device,
+                        dtype=module.gate_up_proj.dtype,
                     )
                 )
-            else:  # prefill
-                setattr(module, DECODE_FP_WEIGHT_ATTR, fp_weight)
-                if module.bias is not None and not hasattr(
-                    module, DECODE_FP_BIAS_ATTR
-                ):
-                    setattr(
-                        module,
-                        DECODE_FP_BIAS_ATTR,
-                        module.bias.detach().clone().cpu(),
+                module.down_proj.data.copy_(
+                    fp_down.to(
+                        device=module.down_proj.device,
+                        dtype=module.down_proj.dtype,
                     )
-            del module._mase_fp_weight
+                )
+            else:
+                setattr(module, DECODE_FP_EXPERT_GATE_UP_ATTR, fp_gate_up)
+                setattr(module, DECODE_FP_EXPERT_DOWN_ATTR, fp_down)
+            del module._mase_fp_gate_up_proj
+            del module._mase_fp_down_proj
+
+
+def _get_qwen3_moe_experts(layer):
+    experts = getattr(getattr(layer, "mlp", None), "experts", None)
+    if experts is None:
+        return None
+    gate_up = getattr(experts, "gate_up_proj", None)
+    down = getattr(experts, "down_proj", None)
+    if not isinstance(gate_up, nn.Parameter) or not isinstance(down, nn.Parameter):
+        return None
+    if gate_up.ndim != 3 or down.ndim != 3:
+        return None
+    return experts
+
+
+def _collect_expert_inputs(
+    *,
+    layer,
+    experts,
+    inps,
+    outs,
+    nsamples,
+    rope,
+    attention_mask,
+    position_ids,
+    layer_device,
+    target,
+):
+    if target not in {"gate_up", "down"}:
+        raise ValueError(f"unknown expert GPTQ target {target!r}")
+    chunks = [[] for _ in range(experts.num_experts)]
+    hits = [0 for _ in range(experts.num_experts)]
+
+    def hook(_, inputs, _output):
+        hidden_states, top_k_index, _top_k_weights = inputs
+        with torch.no_grad():
+            expert_mask = F.one_hot(
+                top_k_index, num_classes=experts.num_experts
+            ).permute(2, 1, 0)
+            for hit in torch.greater(
+                expert_mask.sum(dim=(-1, -2)), 0
+            ).nonzero():
+                expert_idx = int(hit[0].item())
+                _, token_idx = torch.where(expert_mask[expert_idx])
+                current = hidden_states[token_idx]
+                if current.numel() == 0:
+                    continue
+                if target == "down":
+                    gate, up = F.linear(
+                        current, experts.gate_up_proj[expert_idx]
+                    ).chunk(2, dim=-1)
+                    current = experts.act_fn(gate) * up
+                chunks[expert_idx].append(current.detach().cpu())
+                hits[expert_idx] += int(current.shape[0])
+
+    handle = experts.register_forward_hook(hook)
+    try:
+        for sample_idx in range(nsamples):
+            _run_layer_sample(
+                layer=layer,
+                sample=inps[sample_idx],
+                outs=outs,
+                sample_idx=sample_idx,
+                rope=rope,
+                attention_mask=attention_mask,
+                position_ids=position_ids,
+                layer_device=layer_device,
+            )
+    finally:
+        handle.remove()
+    return chunks, hits
+
+
+def _quantize_expert_slice(
+    *,
+    weight,
+    chunks,
+    fmt,
+    weight_config,
+    quantile_search,
+    clip_search_y,
+    cali_batch_size,
+    layer_name,
+):
+    if not chunks:
+        return quantize_tensor(
+            weight.data,
+            block_dim=1,
+            fmt=fmt,
+            config=weight_config,
+            quantile_search=quantile_search,
+        )
+    gptq = GPTQ(_WeightView(weight))
+    for chunk in chunks:
+        gptq.add_batch(chunk.to(weight.device).unsqueeze(0).data, None)
+    activation = None
+    if clip_search_y:
+        activation = torch.cat(chunks, dim=0).unsqueeze(0).to(weight.device)
+    quantized = gptq.fasterquant(
+        activation=activation,
+        fmt=fmt,
+        weight_config=weight_config,
+        percdamp=0.01,
+        cali_batch_size=cali_batch_size,
+        layer_name=layer_name,
+        quant_search=quantile_search,
+    )
+    if quantized.shape != weight.shape:
+        raise RuntimeError(
+            f"GPTQ returned {tuple(quantized.shape)} for {tuple(weight.shape)}"
+        )
+    gptq.free()
+    return quantized
+
+
+def _quantize_qwen3_moe_experts(
+    *,
+    layer,
+    layer_idx,
+    inps,
+    outs,
+    nsamples,
+    rope,
+    attention_mask,
+    position_ids,
+    fmt,
+    weight_config,
+    quantile_search,
+    clip_search_y,
+    cali_batch_size,
+    layer_device,
+    min_expert_calibration_hits,
+):
+    experts = _get_qwen3_moe_experts(layer)
+    if experts is None:
+        return None
+
+    coverage = {"layer": layer_idx, "gate_up": [], "down": []}
+    for target, weight_name in (
+        ("gate_up", "gate_up_proj"),
+        ("down", "down_proj"),
+    ):
+        chunks, hits = _collect_expert_inputs(
+            layer=layer,
+            experts=experts,
+            inps=inps,
+            outs=outs,
+            nsamples=nsamples,
+            rope=rope,
+            attention_mask=attention_mask,
+            position_ids=position_ids,
+            layer_device=layer_device,
+            target=target,
+        )
+        weight_bank = getattr(experts, weight_name)
+        for expert_idx in range(experts.num_experts):
+            n_hits = hits[expert_idx]
+            used_gptq = n_hits >= min_expert_calibration_hits
+            if not used_gptq:
+                logging.warning(
+                    "layer %d expert %d %s has %d calibration hits; using RTN",
+                    layer_idx,
+                    expert_idx,
+                    weight_name,
+                    n_hits,
+                )
+            quantized = _quantize_expert_slice(
+                weight=weight_bank[expert_idx],
+                chunks=chunks[expert_idx] if used_gptq else [],
+                fmt=fmt,
+                weight_config=weight_config,
+                quantile_search=quantile_search,
+                clip_search_y=clip_search_y,
+                cali_batch_size=cali_batch_size,
+                layer_name=(
+                    f"layers{layer_idx}.mlp.experts.{expert_idx}.{weight_name}"
+                ),
+            )
+            weight_bank.data[expert_idx].copy_(quantized)
+            coverage[target].append(
+                {"expert": expert_idx, "hits": n_hits, "gptq": used_gptq}
+            )
+    return coverage
 
 
 @torch.no_grad()
@@ -138,6 +450,12 @@ def run_gptq(network, gptq_config):
     checkpoint_dir = gptq_config.get("checkpoint_dir", None)
     hf_token = gptq_config.get("hf_token", None)
     max_layers = gptq_config.get("max_layers", None)
+    device_map_aware = bool(gptq_config.get("device_map_aware", False))
+    min_expert_calibration_hits = int(
+        gptq_config.get("min_expert_calibration_hits", 1)
+    )
+    if min_expert_calibration_hits < 1:
+        raise ValueError("min_expert_calibration_hits must be positive")
 
     if phase != "both":
         # FP snapshots must precede checkpoint resume: resume overwrites
@@ -173,16 +491,26 @@ def run_gptq(network, gptq_config):
 
     layers = network.model.layers
 
-    # Move embedding + norm + rope to device
-    network.model.embed_tokens = network.model.embed_tokens.to(dev)
-    network.model.norm = network.model.norm.to(dev)
-    rope = network.model.rotary_emb.to(dev)
-    layers[0] = layers[0].to(dev)
+    if device_map_aware:
+        embed_device = _module_device(
+            network.model.embed_tokens, "model.embed_tokens"
+        )
+        _module_device(layers[0], "model.layers.0")
+        rope = network.model.rotary_emb
+    else:
+        embed_device = torch.device(dev)
+        network.model.embed_tokens = network.model.embed_tokens.to(dev)
+        network.model.norm = network.model.norm.to(dev)
+        rope = network.model.rotary_emb.to(dev)
+        layers[0] = layers[0].to(dev)
 
     dtype = next(iter(network.parameters())).dtype
 
+    buffer_device = torch.device("cpu") if device_map_aware else torch.device(dev)
     inps = torch.zeros(
-        (nsamples, seqlen, network.config.hidden_size), dtype=dtype, device=dev
+        (nsamples, seqlen, network.config.hidden_size),
+        dtype=dtype,
+        device=buffer_device,
     )
     cache = {"i": 0, "attention_mask": None}
 
@@ -193,22 +521,31 @@ def run_gptq(network, gptq_config):
 
         def forward(self, inp, **kwargs):
             if cache["i"] >= nsamples:
-                raise ValueError
-            inps[cache["i"]] = inp
+                raise _CalibrationCaptureComplete
+            inps[cache["i"]].copy_(
+                inp.squeeze(0).detach().to(device=inps.device, dtype=inps.dtype)
+            )
             cache["i"] += 1
-            cache["attention_mask"] = kwargs["attention_mask"]
-            cache["position_ids"] = kwargs["position_ids"]
-            raise ValueError
+            cache["attention_mask"] = _move_to_device(
+                kwargs.get("attention_mask"), inps.device
+            )
+            cache["position_ids"] = _move_to_device(
+                kwargs.get("position_ids"), inps.device
+            )
+            raise _CalibrationCaptureComplete
 
-    layers[0] = Catcher(layers[0])
-    for batch in dataloader:
-        if cache["i"] >= nsamples:
-            break
-        try:
-            network(batch[0].to(dev))
-        except ValueError:
-            pass
-    layers[0] = layers[0].module
+    original_first_layer = layers[0]
+    layers[0] = Catcher(original_first_layer)
+    try:
+        for batch in dataloader:
+            if cache["i"] >= nsamples:
+                break
+            try:
+                network(batch[0].to(embed_device))
+            except _CalibrationCaptureComplete:
+                pass
+    finally:
+        layers[0] = original_first_layer
     torch.cuda.empty_cache()
 
     collected = int(cache["i"])
@@ -226,13 +563,6 @@ def run_gptq(network, gptq_config):
     attention_mask = cache["attention_mask"]
     position_ids = cache["position_ids"]
 
-    sequential = [
-        ["self_attn.k_proj", "self_attn.v_proj", "self_attn.q_proj"],
-        ["self_attn.o_proj"],
-        ["mlp.up_proj", "mlp.gate_proj"],
-        ["mlp.down_proj"],
-    ]
-
     end_layer = (
         len(layers)
         if max_layers is None
@@ -242,13 +572,21 @@ def run_gptq(network, gptq_config):
         f"GPTQ: quantizing layers {start_layer} to {end_layer - 1} (of {len(layers)} total)"
     )
 
+    expert_coverage = []
     for i in range(start_layer, end_layer):
         print(f"\nLayer {i}:", flush=True, end=" ")
-        layer = layers[i].to(dev)
+        if device_map_aware:
+            layer = layers[i]
+            layer_device = _module_device(layer, f"model.layers.{i}")
+        else:
+            layer = layers[i].to(dev)
+            layer_device = torch.device(dev)
         full = find_qlayers(layer, layers=[torch.nn.Linear])
 
-        for names in sequential:
-            subset = {n: full[n] for n in names}
+        for names in _DENSE_SEQUENTIAL:
+            subset = {name: full[name] for name in names if name in full}
+            if not subset:
+                continue
 
             gptq = {}
             for name in subset:
@@ -259,7 +597,8 @@ def run_gptq(network, gptq_config):
 
             def make_pre_hook():
                 def pre_hook(_, inp):
-                    pre_act.append(inp[0])
+                    if clip_search_y:
+                        pre_act.append(inp[0].detach().cpu())
 
                 return pre_hook
 
@@ -272,25 +611,31 @@ def run_gptq(network, gptq_config):
             handles = []
             for name in subset:
                 handles.append(subset[name].register_forward_hook(add_batch(name)))
-            handles.append(subset[name].register_forward_pre_hook(make_pre_hook()))
+            first_module = next(iter(subset.values()))
+            handles.append(first_module.register_forward_pre_hook(make_pre_hook()))
 
             for j in range(nsamples):
-                x = inps[j].unsqueeze(0)
-                cos, sin = rope(x, position_ids)
-                outs[j] = layer(
-                    x,
+                _run_layer_sample(
+                    layer=layer,
+                    sample=inps[j],
+                    outs=outs,
+                    sample_idx=j,
+                    rope=rope,
                     attention_mask=attention_mask,
-                    position_embeddings=(cos, sin),
-                )[0]
+                    position_ids=position_ids,
+                    layer_device=layer_device,
+                )
 
-            pre_act = torch.cat(pre_act, dim=0)
+            activation = (
+                torch.cat(pre_act, dim=0).to(layer_device) if pre_act else None
+            )
 
             for h in handles:
                 h.remove()
 
             for name in subset:
                 quantized_w = gptq[name].fasterquant(
-                    activation=pre_act if clip_search_y else None,
+                    activation=activation,
                     fmt=fmt,
                     weight_config=weight_config,
                     percdamp=0.01,
@@ -304,19 +649,43 @@ def run_gptq(network, gptq_config):
                 gptq[name].layer.weight.data.copy_(quantized_w)
                 gptq[name].free()
 
+        if getattr(network.config, "model_type", None) == "qwen3_moe":
+            coverage = _quantize_qwen3_moe_experts(
+                layer=layer,
+                layer_idx=i,
+                inps=inps,
+                outs=outs,
+                nsamples=nsamples,
+                rope=rope,
+                attention_mask=attention_mask,
+                position_ids=position_ids,
+                fmt=fmt,
+                weight_config=weight_config,
+                quantile_search=quantile_search,
+                clip_search_y=clip_search_y,
+                cali_batch_size=cali_batch_size,
+                layer_device=layer_device,
+                min_expert_calibration_hits=min_expert_calibration_hits,
+            )
+            if coverage is not None:
+                expert_coverage.append(coverage)
+
         # Forward pass with quantized weights to get inputs for next layer
         for j in range(nsamples):
-            x = inps[j].unsqueeze(0)
-            cos, sin = network.model.rotary_emb(x, position_ids)
-            outs[j] = layer(
-                x,
+            _run_layer_sample(
+                layer=layer,
+                sample=inps[j],
+                outs=outs,
+                sample_idx=j,
+                rope=rope,
                 attention_mask=attention_mask,
-                position_embeddings=(cos, sin),
-            )[0]
+                position_ids=position_ids,
+                layer_device=layer_device,
+            )
 
-        layers[i] = layer.cpu()
-        del layer
-        del gptq
+        if not device_map_aware:
+            layers[i] = layer.cpu()
+            del layer
         torch.cuda.empty_cache()
 
         inps, outs = outs, inps
@@ -325,6 +694,7 @@ def run_gptq(network, gptq_config):
             save_layer_checkpoint(network, i, checkpoint_dir)
 
     network.config.use_cache = use_cache
+    network._mase_gptq_expert_coverage = expert_coverage
     _finalize_gptq_phase(network, phase)
     cleanup_memory(verbos=True)
     logging.info("-----GPTQ Quantization Done-----\n")
