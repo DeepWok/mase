@@ -16,6 +16,7 @@ from functools import partial
 import torch
 from transformers.models.llama.modeling_llama import LlamaDecoderLayer
 from transformers.models.qwen3.modeling_qwen3 import Qwen3DecoderLayer
+from transformers.models.qwen3_moe.modeling_qwen3_moe import Qwen3MoeDecoderLayer
 
 from chop.nn.quantized.modules import quantized_module_map
 from chop.nn.quantized.modules.phase_context import (
@@ -29,7 +30,11 @@ from ...state_dict_map import match_a_pattern, check_is_huggingface_model
 # Decoder-layer classes that get runtime phase pre-hooks. Extending phase
 # support to a new architecture only requires phase-aware modules plus an
 # entry here.
-_PHASE_HOOKED_DECODER_LAYERS = (LlamaDecoderLayer, Qwen3DecoderLayer)
+_PHASE_HOOKED_DECODER_LAYERS = (
+    LlamaDecoderLayer,
+    Qwen3DecoderLayer,
+    Qwen3MoeDecoderLayer,
+)
 
 
 def get_config(config: dict, name: str):

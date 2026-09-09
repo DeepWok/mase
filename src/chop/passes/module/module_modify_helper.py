@@ -42,7 +42,12 @@ from transformers.models.qwen3.modeling_qwen3 import (
 
 from transformers.models.qwen3_moe.modeling_qwen3_moe import (
     Qwen3MoeAttention,
+    Qwen3MoeDecoderLayer,
+    Qwen3MoeExperts,
     Qwen3MoeMLP,
+    Qwen3MoeRMSNorm,
+    Qwen3MoeSparseMoeBlock,
+    Qwen3MoeTopKRouter,
 )
 
 from transformers.models.glm4_moe.modeling_glm4_moe import (
@@ -56,8 +61,12 @@ from chop.nn.quantized.modules.llada.modeling_llada import (
     LLaDALlamaBlock,
 )
 from chop.nn.quantized.modules.phase_config import (
+    DECODE_FP_EXPERT_DOWN_ATTR,
+    DECODE_FP_EXPERT_GATE_UP_ATTR,
     DECODE_FP_BIAS_ATTR,
     DECODE_FP_WEIGHT_ATTR,
+    GPTQ_DECODE_EXPERT_DOWN_ATTR,
+    GPTQ_DECODE_EXPERT_GATE_UP_ATTR,
     GPTQ_DECODE_WEIGHT_ATTR,
 )
 
@@ -94,8 +103,13 @@ qwen3_prefix_map = {
 }
 
 qwen3_moe_prefix_map = {
+    Qwen3MoeDecoderLayer: "qwen3_moe_decoder_layer",
     Qwen3MoeAttention: "qwen3_moe_self_attention",
+    Qwen3MoeExperts: "qwen3_moe_experts",
     Qwen3MoeMLP: "qwen3_moe_mlp",
+    Qwen3MoeRMSNorm: "qwen3_moe_rms_norm",
+    Qwen3MoeSparseMoeBlock: "qwen3_moe_sparse_block",
+    Qwen3MoeTopKRouter: "qwen3_moe_router",
 }
 
 glm4_moe_prefix_map = {
@@ -124,6 +138,12 @@ from_self_prefix_map = {
     Qwen3RMSNorm: "qwen3_rms_norm",
     LlamaDecoderLayer: "llama_decoder_layer",
     LlamaAttention: "llama_self_attention",
+    Qwen3MoeAttention: "qwen3_moe_self_attention",
+    Qwen3MoeDecoderLayer: "qwen3_moe_decoder_layer",
+    Qwen3MoeExperts: "qwen3_moe_experts",
+    Qwen3MoeRMSNorm: "qwen3_moe_rms_norm",
+    Qwen3MoeSparseMoeBlock: "qwen3_moe_sparse_block",
+    Qwen3MoeTopKRouter: "qwen3_moe_router",
 }
 
 
@@ -199,6 +219,24 @@ def _transfer_phase_weight_banks(source_module, target_module):
             fp_weight, getattr(source_module, DECODE_FP_BIAS_ATTR, None)
         )
 
+    gate_up_gptq = getattr(source_module, GPTQ_DECODE_EXPERT_GATE_UP_ATTR, None)
+    down_gptq = getattr(source_module, GPTQ_DECODE_EXPERT_DOWN_ATTR, None)
+    if gate_up_gptq is not None or down_gptq is not None:
+        if gate_up_gptq is None or down_gptq is None:
+            raise RuntimeError("incomplete Qwen3-MoE GPTQ decode bank")
+        adopt = getattr(target_module, "adopt_decode_gptq_expert_weights", None)
+        if callable(adopt):
+            adopt(gate_up_gptq, down_gptq)
+
+    gate_up_fp = getattr(source_module, DECODE_FP_EXPERT_GATE_UP_ATTR, None)
+    down_fp = getattr(source_module, DECODE_FP_EXPERT_DOWN_ATTR, None)
+    if gate_up_fp is not None or down_fp is not None:
+        if gate_up_fp is None or down_fp is None:
+            raise RuntimeError("incomplete Qwen3-MoE FP decode snapshot")
+        adopt = getattr(target_module, "adopt_decode_fp_expert_weights", None)
+        if callable(adopt):
+            adopt(gate_up_fp, down_fp)
+
 
 def _restash_child_weight_banks(source_module, target_module):
     """Carry per-child phase-bank stashes across a WHOLESALE module replacement.
@@ -211,7 +249,15 @@ def _restash_child_weight_banks(source_module, target_module):
     so ``_transfer_phase_weight_banks`` finds them at that replacement.
     """
 
-    stash_attrs = (GPTQ_DECODE_WEIGHT_ATTR, DECODE_FP_WEIGHT_ATTR, DECODE_FP_BIAS_ATTR)
+    stash_attrs = (
+        GPTQ_DECODE_WEIGHT_ATTR,
+        DECODE_FP_WEIGHT_ATTR,
+        DECODE_FP_BIAS_ATTR,
+        GPTQ_DECODE_EXPERT_GATE_UP_ATTR,
+        GPTQ_DECODE_EXPERT_DOWN_ATTR,
+        DECODE_FP_EXPERT_GATE_UP_ATTR,
+        DECODE_FP_EXPERT_DOWN_ATTR,
+    )
     target_children = dict(target_module.named_modules())
     for name, src_child in source_module.named_modules():
         if not name or name not in target_children:
