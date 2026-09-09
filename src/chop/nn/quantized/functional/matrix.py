@@ -11,13 +11,14 @@ import torch
 from torch import Tensor
 
 from .vector import VectorRoundingPolicy, parse_vector_format
+from chop.nn.quantizers._compile import maybe_compile
 
 # Signed fixed-point accumulator geometry of the MX systolic PE.
 ACCUMULATOR_INTEGER_BITS = 16
 ACCUMULATOR_FRACTION_BITS = 16
 
 
-def truncate_to_accumulator(tensor: Tensor) -> Tensor:
+def _truncate_to_accumulator(tensor: Tensor) -> Tensor:
     """Truncate toward zero into the signed 16.16 bank, wrapping on overflow."""
     work = tensor.to(torch.float32)
     finite = torch.isfinite(work)
@@ -31,7 +32,7 @@ def truncate_to_accumulator(tensor: Tensor) -> Tensor:
     return torch.where(finite, fixed.to(torch.float32) / scale, work)
 
 
-def truncate_to_vector_format(tensor: Tensor, token: str) -> Tensor:
+def _truncate_to_vector_format(tensor: Tensor, token: str) -> Tensor:
     """Truncate magnitude to the representable grid of one vector format."""
     vector_format = parse_vector_format(token)
     work = tensor.to(torch.float32)
@@ -59,6 +60,10 @@ def truncate_to_vector_format(tensor: Tensor, token: str) -> Tensor:
     truncated = torch.where(nonzero_finite, truncated, magnitude)
     truncated = torch.where(finite, truncated, work)
     return torch.copysign(truncated, work)
+
+
+truncate_to_accumulator = maybe_compile(_truncate_to_accumulator)
+truncate_to_vector_format = maybe_compile(_truncate_to_vector_format)
 
 
 def _matrix_config(config: dict | None) -> tuple[str, int] | None:

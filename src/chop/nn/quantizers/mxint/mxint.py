@@ -273,6 +273,22 @@ def mxint_quantizer(
         )
         return DTensor.from_local(local_q, mesh, placements)
 
+    if not quantile_search:
+        return _mxint_quantize_fused(x, block_size, element_bits, block_dim, scale_bits)
     return MXIntQuantize.apply(
         x, block_size, element_bits, block_dim, scale_bits, quantile_search,
     )
+
+
+from chop.nn.quantizers._compile import ENABLED as _COMPILE_ENABLED  # noqa: E402
+from chop.nn.quantizers._compile import compiled_variant  # noqa: E402
+
+
+def _mxint_quantize_fused(x, block_size, element_bits, block_dim, scale_bits):
+    if not _COMPILE_ENABLED:
+        return MXIntQuantize.apply(x, block_size, element_bits, block_dim, scale_bits, False)
+    key = ("mxint", block_size, element_bits, block_dim, scale_bits)
+    return compiled_variant(
+        key,
+        lambda: (lambda t: MXIntQuantize.apply(t, block_size, element_bits, block_dim, scale_bits, False)),
+    )(x)

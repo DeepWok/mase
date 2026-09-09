@@ -108,7 +108,7 @@ def extract_minifloat_component(x: Tensor, minifloat_meta: MinifloatMeta) -> Ten
     return y.to(torch.uint16)
 
 
-def quantize_minifloat_value(x: Tensor, minifloat_meta: MinifloatMeta) -> Tensor:
+def _quantize_minifloat_value(x: Tensor, minifloat_meta: MinifloatMeta) -> Tensor:
     """Round to the minifloat grid and return the value, skipping the encoding.
 
     Equivalent to ``compose_minifloat_component(extract_minifloat_component(x))``
@@ -129,6 +129,20 @@ def quantize_minifloat_value(x: Tensor, minifloat_meta: MinifloatMeta) -> Tensor
         * torch.exp2((y_exp - y_exp_bias).to(torch.float32)),
     )
     return torch.where(y_sign, -magnitude, magnitude)
+
+
+from chop.nn.quantizers._compile import ENABLED as _COMPILE_ENABLED  # noqa: E402
+from chop.nn.quantizers._compile import compiled_variant  # noqa: E402
+
+
+def quantize_minifloat_value(x, minifloat_meta):
+    """Compiled per-format variant; constants live in the closure."""
+
+    if not _COMPILE_ENABLED:
+        return _quantize_minifloat_value(x, minifloat_meta)
+    meta = minifloat_meta
+    key = ("minifloat", meta.exp_bits, meta.frac_bits, meta.is_finite, meta.round_mode)
+    return compiled_variant(key, lambda: (lambda t: _quantize_minifloat_value(t, meta)))(x)
 
 
 def compose_minifloat_component(

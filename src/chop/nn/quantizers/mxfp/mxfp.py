@@ -219,6 +219,10 @@ def mxfp_quantizer(
         - E4M3: element_exp_bits=4, element_frac_bits=3 (8-bit element)
         - E5M2: element_exp_bits=5, element_frac_bits=2 (8-bit element)
     """
+    if not quantile_search:
+        return _mxfp_quantize_fused(
+            x, block_size, element_exp_bits, element_frac_bits, block_dim, scale_exp_bits
+        )
     return MXFPQuantize.apply(
         x,
         block_size,
@@ -228,3 +232,23 @@ def mxfp_quantizer(
         scale_exp_bits,
         quantile_search,
     )
+
+
+from chop.nn.quantizers._compile import ENABLED as _COMPILE_ENABLED  # noqa: E402
+from chop.nn.quantizers._compile import compiled_variant  # noqa: E402
+
+
+def _mxfp_quantize_fused(x, block_size, element_exp_bits, element_frac_bits, block_dim, scale_exp_bits):
+    if not _COMPILE_ENABLED:
+        return MXFPQuantize.apply(
+            x, block_size, element_exp_bits, element_frac_bits, block_dim, scale_exp_bits, False
+        )
+    key = ("mxfp", block_size, element_exp_bits, element_frac_bits, block_dim, scale_exp_bits)
+    return compiled_variant(
+        key,
+        lambda: (
+            lambda t: MXFPQuantize.apply(
+                t, block_size, element_exp_bits, element_frac_bits, block_dim, scale_exp_bits, False
+            )
+        ),
+    )(x)
