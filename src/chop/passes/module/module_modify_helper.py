@@ -1,7 +1,6 @@
 import torch
 
 from functools import reduce, partial
-from copy import deepcopy
 import logging
 import inspect
 
@@ -101,7 +100,7 @@ def check_module_instance(module, prefix_map):
 
 
 def weight_replacement(x, y):
-    target_state_dict = deepcopy(x.state_dict())
+    target_state_dict = x.state_dict()
     missing_keys, unexpected_keys = y.load_state_dict(target_state_dict, strict=False)
     if missing_keys:
         logging.warning(
