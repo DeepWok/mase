@@ -57,6 +57,14 @@ GPTQ_DECODE_WEIGHT_ATTR = "_mase_gptq_weight_decode"
 DECODE_FP_WEIGHT_ATTR = "_mase_decode_weight_fp"
 DECODE_FP_BIAS_ATTR = "_mase_decode_bias_fp"
 
+# Qwen3-MoE stores all routed experts in two fused Parameters rather than
+# child Linear modules.  These attributes mirror the linear handoff contract
+# for the fused gate/up and down tensors.
+GPTQ_DECODE_EXPERT_GATE_UP_ATTR = "_mase_gptq_gate_up_proj_decode"
+GPTQ_DECODE_EXPERT_DOWN_ATTR = "_mase_gptq_down_proj_decode"
+DECODE_FP_EXPERT_GATE_UP_ATTR = "_mase_decode_gate_up_proj_fp"
+DECODE_FP_EXPERT_DOWN_ATTR = "_mase_decode_down_proj_fp"
+
 _VALID_DECODE_POLICIES = ("fp_only", "quantized")
 _VALID_KV_HANDOFFS = ("decode_format", "fp")
 
