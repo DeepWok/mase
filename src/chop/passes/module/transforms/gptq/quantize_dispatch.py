@@ -18,7 +18,7 @@ def _build_mxfp_meta(config: dict) -> MXFPMeta:
         scale_exp_bits=8,
         element_exp_bits=config["weight_exponent_width"],
         element_frac_bits=config["weight_frac_width"],
-        element_is_finite=True,
+        element_is_finite=(config["weight_exponent_width"] == 1),
         round_mode="rn",
     )
 

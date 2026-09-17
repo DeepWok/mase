@@ -1,61 +1,66 @@
-from functools import partial
-
-import torch
-from torch import Tensor, nn
-
-from chop.nn.quantizers._minifloat_mx import MinifloatMeta, minifloat_quantizer_sim
+from chop.nn.quantized.modules.phase_context import get_runtime_phase
+from chop.nn.quantized.modules.phase_config import (
+    normalize_phase_q_config,
+    resolve_module_phase_config,
+)
+from chop.nn.quantized.modules.llama.rms_norm import build_vector_phase_policies
 
 from transformers.models.qwen3.modeling_qwen3 import Qwen3RMSNorm
 
 
 class Qwen3RMSNormMinifloat(Qwen3RMSNorm):
-    """Minifloat-quantized Qwen3RMSNorm."""
+    """Minifloat-quantized Qwen3RMSNorm with per-phase quantizers.
 
-    def __init__(self, config=None, layer_idx=None, q_config: dict = None):
-        super().__init__(hidden_size=config.hidden_size, eps=config.rms_norm_eps)
+    Quantizers are built once per phase at construction (not per forward
+    call, which matters during token-by-token decoding).
+    """
+
+    def __init__(
+        self,
+        config=None,
+        layer_idx=None,
+        q_config: dict = None,
+        *,
+        hidden_size: int | None = None,
+        eps: float | None = None,
+    ):
+        hidden_size = hidden_size if hidden_size is not None else config.hidden_size
+        eps = eps if eps is not None else config.rms_norm_eps
+        super().__init__(hidden_size=hidden_size, eps=eps)
         self.layer_idx = layer_idx
         self.q_config = q_config or {}
-        self.variance_epsilon = config.rms_norm_eps
-        self.bypass = self.q_config.get("bypass", False)
-        self.weight_bypass = self.q_config.get("weight_bypass", False)
-        self.data_in_bypass = self.q_config.get("data_in_bypass", False)
-
-        if not self.bypass and not self.weight_bypass:
-            self.w_quantizer = partial(
-                minifloat_quantizer_sim,
-                minifloat_meta=MinifloatMeta(
-                    exp_bits=self.q_config["weight_exponent_width"],
-                    frac_bits=self.q_config["weight_frac_width"],
-                    is_finite=self.q_config.get("weight_is_finite", True),
-                    round_mode=self.q_config.get("weight_round_mode", "rn"),
-                ),
+        self.variance_epsilon = eps
+        self.phase_q_config = normalize_phase_q_config(q_config)
+        self.decode_policy = self.phase_q_config["decode_policy"]
+        self._phase_policies = {
+            phase: build_vector_phase_policies(
+                resolve_module_phase_config(self.phase_q_config, phase)
             )
-        else:
-            self.w_quantizer = None
-
-        if not self.bypass and not self.data_in_bypass:
-            self.x_quantizer = partial(
-                minifloat_quantizer_sim,
-                minifloat_meta=MinifloatMeta(
-                    exp_bits=self.q_config["data_in_exponent_width"],
-                    frac_bits=self.q_config["data_in_frac_width"],
-                    is_finite=self.q_config.get("data_in_is_finite", True),
-                    round_mode=self.q_config.get("data_in_round_mode", "rn"),
-                ),
-            )
-        else:
-            self.x_quantizer = None
+            for phase in ("prefill", "decode")
+        }
+        # Legacy attr mirrors the decode side (the quantised chip).
+        self.bypass = resolve_module_phase_config(self.phase_q_config, "decode").get(
+            "bypass", False
+        )
 
     def forward(self, hidden_states):
-        input_dtype = hidden_states.dtype
-        if self.x_quantizer is not None:
-            hidden_states = self.x_quantizer(hidden_states)
-        hidden_states = hidden_states.to(torch.float32)
-        variance = hidden_states.pow(2).mean(-1, keepdim=True)
-        hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)
-        weight = (
-            self.w_quantizer(self.weight)
-            if self.w_quantizer is not None
-            else self.weight
+        weight_policy, input_policy = self._phase_policies[get_runtime_phase()]
+        if not weight_policy.enabled and not input_policy.enabled:
+            return super().forward(hidden_states)
+        return input_policy.rms_norm(
+            hidden_states,
+            self.weight,
+            self.variance_epsilon,
+            weight_policy=weight_policy,
         )
-        return weight * hidden_states.to(input_dtype)
+
+    @classmethod
+    def from_self(cls, norm: Qwen3RMSNorm, q_config: dict = None):
+        new_norm = cls(
+            q_config=q_config,
+            hidden_size=norm.weight.numel(),
+            eps=norm.variance_epsilon,
+        )
+        new_norm = new_norm.to(device=norm.weight.device, dtype=norm.weight.dtype)
+        new_norm.load_state_dict(norm.state_dict(), strict=True)
+        return new_norm

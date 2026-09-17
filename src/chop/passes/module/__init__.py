@@ -1,8 +1,9 @@
 from .analysis import calculate_avg_bits_module_analysis_pass
 from .analysis.report import report_trainable_parameters_analysis_pass
 from .transforms import (
-    quantize_module_transform_pass,
     attention_swap_transform_pass,
+    quantize_module_transform_pass,
+    rotation_search_transform_pass,
 )
 
 ANALYSIS_PASSES = [
@@ -12,6 +13,7 @@ ANALYSIS_PASSES = [
 
 TRANSFORM_PASSES = [
     "quantize_module_transform_pass",
+    "rotation_search_transform_pass",
     "attention_swap_transform_pass",
 ]
 

@@ -12,6 +12,7 @@ from .roberta import (
 from .embedding import EmbeddingMXFP, EmbeddingMXInt
 
 from .llama import (
+    LlamaDecoderLayerMinifloat,
     LlamaAttentionLSQInteger,
     LlamaRMSNormLSQInteger,
     LlamaMLPLSQInteger,
@@ -22,6 +23,7 @@ from .llama import (
     LlamaAttentionMXFPRotate,
     LlamaMLPMXFP,
     LlamaMLPMXInt,
+    LlamaMLPMinifloat,
     LlamaRMSNormMinifloat,
 )
 
@@ -31,7 +33,9 @@ from .qwen3 import (
     Qwen3AttentionMXIntRotate,
     Qwen3MLPMXFP,
     Qwen3MLPMXInt,
+    Qwen3MLPMinifloat,
     Qwen3RMSNormMinifloat,
+    Qwen3DecoderLayerMinifloat,
 )
 
 from .qwen3_moe import (
@@ -259,7 +263,6 @@ quantized_basic_module_map = {
     "linear_mxfp_rotate": RotateMXFPLinear,
     "linear_mxint": LinearMXInt,
     "linear_mxint_rotate": RotateMXIntLinear,
-    "linear_mxfp_rotate": RotateMXFPLinear,
     "linear_block_log": LinearBlockLog,
     "linear_minifloat_ieee": LinearMinifloatIEEE,
     "linear_minifloat_denorm": LinearMinifloatDenorm,
@@ -370,26 +373,29 @@ quantized_roberta_module_map = {
 }
 
 quantized_llama_module_map = {
+    "llama_decoder_layer_minifloat": LlamaDecoderLayerMinifloat,
     "llama_self_attention_lsqinteger": LlamaAttentionLSQInteger,
     "llama_self_attention_mxfp": LlamaAttentionMXFP,
     "llama_self_attention_mxfp_rotate": LlamaAttentionMXFPRotate,
     "llama_self_attention_mxint": LlamaAttentionMXInt,
     "llama_self_attention_mxint_rotate": LlamaAttentionMXIntRotate,
-    "llama_self_attention_mxfp_rotate": LlamaAttentionMXFPRotate,
     "llama_rms_norm_lsqinteger": LlamaRMSNormLSQInteger,
     "llama_rms_norm_minifloat": LlamaRMSNormMinifloat,
     "llama_mlp_lsqinteger": LlamaMLPLSQInteger,
     "llama_mlp_mxfp": LlamaMLPMXFP,
     "llama_mlp_mxint": LlamaMLPMXInt,
+    "llama_mlp_minifloat": LlamaMLPMinifloat,
 }
 
 quantized_qwen3_module_map = {
+    "qwen3_decoder_layer_minifloat": Qwen3DecoderLayerMinifloat,
     "qwen3_self_attention_mxfp": Qwen3AttentionMXFP,
     "qwen3_self_attention_mxint": Qwen3AttentionMXInt,
     "qwen3_self_attention_mxint_rotate": Qwen3AttentionMXIntRotate,
     "qwen3_rms_norm_minifloat": Qwen3RMSNormMinifloat,
     "qwen3_mlp_mxfp": Qwen3MLPMXFP,
     "qwen3_mlp_mxint": Qwen3MLPMXInt,
+    "qwen3_mlp_minifloat": Qwen3MLPMinifloat,
 }
 
 quantized_qwen3_moe_module_map = {

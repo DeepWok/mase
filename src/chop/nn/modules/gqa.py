@@ -159,21 +159,3 @@ class GroupedQueryAttention(nn.Module):
         out = self._attention_mechanism(query, key, value, batch_size, seq_len)
 
         return out
-
-
-if __name__ == "__main__":
-    BATCH = 10
-    SEQ_LEN = 16
-    EMBED_DIM = 256
-    NUM_HEADS = 8
-    GROUPS = 4
-
-    gqa_module = GroupedQueryAttention(
-        embed_dim=EMBED_DIM,
-        num_heads=NUM_HEADS,
-        num_kv_heads=GROUPS,
-    )
-
-    x_in = torch.rand(BATCH, SEQ_LEN, EMBED_DIM)
-    y_out = gqa_module(x_in)
-    print(y_out)

@@ -28,12 +28,14 @@ except ImportError:
 
 from transformers.models.llama.modeling_llama import (
     LlamaAttention,
+    LlamaDecoderLayer,
     LlamaMLP,
     LlamaRMSNorm,
 )
 
 from transformers.models.qwen3.modeling_qwen3 import (
     Qwen3Attention,
+    Qwen3DecoderLayer,
     Qwen3MLP,
     Qwen3RMSNorm,
 )
@@ -52,6 +54,11 @@ from transformers.models.gpt_oss.modeling_gpt_oss import (
 
 from chop.nn.quantized.modules.llada.modeling_llada import (
     LLaDALlamaBlock,
+)
+from chop.nn.quantized.modules.phase_config import (
+    DECODE_FP_BIAS_ATTR,
+    DECODE_FP_WEIGHT_ATTR,
+    GPTQ_DECODE_WEIGHT_ATTR,
 )
 
 try:
@@ -73,12 +80,14 @@ roberta_prefix_map = {
 }
 
 llama_prefix_map = {
+    LlamaDecoderLayer: "llama_decoder_layer",
     LlamaAttention: "llama_self_attention",
     LlamaMLP: "llama_mlp",
     LlamaRMSNorm: "llama_rms_norm",
 }
 
 qwen3_prefix_map = {
+    Qwen3DecoderLayer: "qwen3_decoder_layer",
     Qwen3Attention: "qwen3_self_attention",
     Qwen3MLP: "qwen3_mlp",
     Qwen3RMSNorm: "qwen3_rms_norm",
@@ -110,7 +119,10 @@ bert_prefix_map = {
 # classmethod. These go through the generic `instantiate_from_self` helper,
 # skipping family-specific instantiation logic.
 from_self_prefix_map = {
+    Qwen3DecoderLayer: "qwen3_decoder_layer",
     Qwen3Attention: "qwen3_self_attention",
+    Qwen3RMSNorm: "qwen3_rms_norm",
+    LlamaDecoderLayer: "llama_decoder_layer",
     LlamaAttention: "llama_self_attention",
 }
 
@@ -134,8 +146,10 @@ def check_module_instance(module, prefix_map):
 
 
 def weight_replacement(x, y):
-    target_state_dict = deepcopy(x.state_dict())
+    target_state_dict = x.state_dict()
     missing_keys, unexpected_keys = y.load_state_dict(target_state_dict, strict=False)
+    _transfer_phase_weight_banks(x, y)
+    _restash_child_weight_banks(x, y)
     if missing_keys:
         logging.warning(
             f"Missing keys when loading state_dict: {missing_keys} from {x} to {y}"
@@ -145,6 +159,70 @@ def weight_replacement(x, y):
             f"Unexpected keys when loading state_dict: {unexpected_keys} from {x} to {y}"
         )
     return y
+
+
+def _transfer_phase_weight_banks(source_module, target_module):
+    """Carry phase-split weight banks across the module-replacement seam.
+
+    The GPTQ pre-pass runs on plain ``nn.Linear`` modules *before*
+    replacement and leaves its results as attributes (they are not part of
+    ``state_dict``), so they must be handed over explicitly:
+
+    - ``_mase_gptq_weight_decode`` (``run_gptq(phase="decode")``): the GPTQ
+      result becomes the target's decode weight bank while the state-dict
+      weights (restored FP) stay as the prefill bank.
+    - ``_mase_decode_weight_fp`` / ``_mase_decode_bias_fp``
+      (``run_gptq(phase="prefill")``): the FP snapshot backs an ``fp_only``
+      decode policy while the GPTQ weights serve prefill.
+    """
+
+    gptq_decode_weight = getattr(source_module, GPTQ_DECODE_WEIGHT_ATTR, None)
+    if gptq_decode_weight is not None and hasattr(
+        target_module, "adopt_decode_gptq_weight"
+    ):
+        target_module.adopt_decode_gptq_weight(gptq_decode_weight)
+
+    fp_weight = getattr(source_module, DECODE_FP_WEIGHT_ATTR, None)
+    if fp_weight is not None and hasattr(target_module, "adopt_decode_fp_snapshot"):
+        if not getattr(target_module, "gptq", False) and not getattr(
+            target_module, "bypass", False
+        ):
+            # The state-dict weights are already GPTQ-quantised; a prefill
+            # bucket without gptq=True has just re-quantised them (RTN on
+            # top of GPTQ), which is almost never intended.
+            logging.warning(
+                "GPTQ(phase='prefill') weights were re-quantised during "
+                "replacement of %s — set 'gptq': True in the prefill bucket.",
+                type(target_module).__name__,
+            )
+        target_module.adopt_decode_fp_snapshot(
+            fp_weight, getattr(source_module, DECODE_FP_BIAS_ATTR, None)
+        )
+
+
+def _restash_child_weight_banks(source_module, target_module):
+    """Carry per-child phase-bank stashes across a WHOLESALE module replacement.
+
+    When a container (e.g. LlamaMLP) is replaced, its fresh children are plain
+    ``nn.Linear``s: ``load_state_dict`` restores their weights but the GPTQ /
+    FP-snapshot stash *attributes* on the old children are not state_dict
+    entries and would be silently lost — the later per-linear replacement would
+    then fall back to FP decode weights. Re-stash them on the same-named child
+    so ``_transfer_phase_weight_banks`` finds them at that replacement.
+    """
+
+    stash_attrs = (GPTQ_DECODE_WEIGHT_ATTR, DECODE_FP_WEIGHT_ATTR, DECODE_FP_BIAS_ATTR)
+    target_children = dict(target_module.named_modules())
+    for name, src_child in source_module.named_modules():
+        if not name or name not in target_children:
+            continue
+        tgt_child = target_children[name]
+        if tgt_child is src_child:
+            continue
+        for attr in stash_attrs:
+            val = getattr(src_child, attr, None)
+            if val is not None and getattr(tgt_child, attr, None) is None:
+                setattr(tgt_child, attr, val)
 
 
 def get_module_by_name(network, name):
@@ -423,6 +501,12 @@ def instantiate_module(module, postfix, module_map, additional_module_args):
     elif is_llama:
         module = instantiate_llama_module(
             module, postfix, llama_layer_name, module_map, module_args, network_args
+        )
+    elif is_qwen3:
+        # Same constructor shape as the Llama modules:
+        # cls(config=..., layer_idx=..., q_config=...)
+        module = instantiate_llama_module(
+            module, postfix, qwen3_layer_name, module_map, module_args, network_args
         )
     elif is_qwen3_moe:
         module = instantiate_qwen3_moe_module(

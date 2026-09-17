@@ -5,6 +5,65 @@ from torch import Tensor
 from chop.nn.quantizers import mxfp_quantizer, mxint_quantizer
 
 
+def _mx_tensor(
+    tensor: Tensor,
+    config: dict,
+    *,
+    rotate: bool = False,
+) -> Tensor:
+    """Quantize one cache operand from its role-specific MX config."""
+
+    cfg = config or {}
+    has_int = "data_in_width" in cfg
+    has_fp = (
+        "data_in_exponent_width" in cfg and "data_in_frac_width" in cfg
+    )
+    if has_int == has_fp:
+        raise ValueError(
+            "KV precision must define exactly one MXINT or MXFP element format"
+        )
+    block_size = cfg["data_in_block_size"]
+    if has_int:
+        if rotate:
+            from chop.nn.quantizers.rotation import mxint_rotate_quantizer
+
+            return mxint_rotate_quantizer(
+                tensor,
+                hadamard_dim=tensor.shape[-1],
+                block_size=block_size,
+                element_bits=cfg["data_in_width"],
+                block_dim=-1,
+                quantile_search=cfg.get("clip_search", False),
+                force_fp32=cfg.get("force_fp32_had", False),
+            )
+        return mxint_quantizer(
+            tensor,
+            block_size=block_size,
+            element_bits=cfg["data_in_width"],
+            block_dim=-1,
+        )
+    if rotate:
+        from chop.nn.quantizers.rotation import mxfp_rotate_quantizer
+
+        return mxfp_rotate_quantizer(
+            tensor,
+            hadamard_dim=tensor.shape[-1],
+            block_size=block_size,
+            element_exp_bits=cfg["data_in_exponent_width"],
+            element_frac_bits=cfg["data_in_frac_width"],
+            block_dim=-1,
+            quantile_search=cfg.get("clip_search", False),
+            force_fp32=cfg.get("force_fp32_had", False),
+        )
+    return mxfp_quantizer(
+        tensor,
+        block_size=block_size,
+        element_exp_bits=cfg["data_in_exponent_width"],
+        element_frac_bits=cfg["data_in_frac_width"],
+        block_dim=-1,
+    )
+
+
 def kv_cache_mxfp(
     key_states: Tensor,
     value_states: Tensor,
@@ -41,6 +100,59 @@ def kv_cache_mxint(
     )
 
     return x_quantizer(key_states), x_quantizer(value_states)
+
+
+def kv_cache_mx(
+    key_states: Tensor,
+    value_states: Tensor,
+    config: dict = None,
+    *,
+    rotate: bool = False,
+) -> tuple[Tensor, Tensor]:
+    """Dispatch KV storage independently from the attention A-side format."""
+
+    cfg = config or {}
+    if "key" in cfg or "value" in cfg:
+        if set(cfg) != {"key", "value"}:
+            raise ValueError(
+                "split KV precision requires exactly key and value configs"
+            )
+        return kv_cache_mx_split(
+            key_states,
+            value_states,
+            key_config=cfg["key"],
+            value_config=cfg["value"],
+            rotate=rotate,
+        )
+    has_int = "data_in_width" in cfg
+    has_fp = (
+        "data_in_exponent_width" in cfg and "data_in_frac_width" in cfg
+    )
+    if has_int == has_fp:
+        raise ValueError(
+            "KV precision must define exactly one MXINT or MXFP element format"
+        )
+    if has_int:
+        quantizer = kv_cache_mxint_rotate if rotate else kv_cache_mxint
+    else:
+        quantizer = kv_cache_mxfp_rotate if rotate else kv_cache_mxfp
+    return quantizer(key_states, value_states, cfg)
+
+
+def kv_cache_mx_split(
+    key_states: Tensor,
+    value_states: Tensor,
+    *,
+    key_config: dict,
+    value_config: dict,
+    rotate: bool = False,
+) -> tuple[Tensor, Tensor]:
+    """Quantize K and V independently while preserving their tensor roles."""
+
+    return (
+        _mx_tensor(key_states, key_config, rotate=rotate),
+        _mx_tensor(value_states, value_config, rotate=rotate),
+    )
 
 
 def kv_cache_mxint_rotate(

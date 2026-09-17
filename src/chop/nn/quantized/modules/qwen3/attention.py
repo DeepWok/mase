@@ -1,3 +1,11 @@
+"""Qwen3 attention quantisation modules with phase-aware runtime dispatch.
+
+Shares the phase-split contract of the Llama modules (see
+``llama/attention.py``): decoder-layer pre-hooks write the runtime phase,
+every in-attention stage resolves its config per phase, and the KV-cache
+handoff defaults to preserving the prefill dtype until decode admission.
+"""
+
 from typing import Optional, Tuple
 
 import torch
@@ -11,20 +19,38 @@ from transformers.models.qwen3.modeling_qwen3 import (
 from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS
 
 from chop.nn.quantized.functional.rope import rope_minifloat
+from chop.nn.quantized.functional.vector import VectorRoundingPolicy
 from chop.nn.quantized.functional.kvcache import (
-    kv_cache_mxfp,
-    kv_cache_mxint,
-    kv_cache_mxint_rotate,
+    kv_cache_mx,
 )
 from chop.nn.quantized.functional.attention import (
     eager_attention_forward_mxfp as _eager_attention_forward_mxfp,
     eager_attention_forward_mxint as _eager_attention_forward_mxint,
     eager_attention_forward_mxint_rotate as _eager_attention_forward_mxint_rotate,
 )
+from chop.nn.quantized.modules.llama.attention import _PhaseAwareAttentionMixin
 
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def _apply_qk_norm(module, query_states, key_states, stage):
+    if stage["qk_norm_bypass"]:
+        return module.q_norm(query_states), module.k_norm(key_states)
+
+    policy = VectorRoundingPolicy.from_config(stage["qk_norm_config"])
+    query_states = policy.rms_norm(
+        query_states,
+        module.q_norm.weight,
+        module.q_norm.variance_epsilon,
+    )
+    key_states = policy.rms_norm(
+        key_states,
+        module.k_norm.weight,
+        module.k_norm.variance_epsilon,
+    )
+    return query_states, key_states
 
 
 def _hf_attention_dispatch(
@@ -54,22 +80,12 @@ def _hf_attention_dispatch(
     )
 
 
-class Qwen3AttentionMXFP(Qwen3Attention):
-    """MXFP-quantized Qwen3Attention."""
+class Qwen3AttentionMXFP(_PhaseAwareAttentionMixin, Qwen3Attention):
+    """MXFP-quantized Qwen3Attention with per-phase stage dispatch."""
 
     def __init__(self, config, layer_idx, q_config: dict = None):
         super().__init__(config, layer_idx)
-        q_config = q_config or {}
-        self.qk_config = q_config.get("qk_matmul", {})
-        self.av_config = q_config.get("av_matmul", {})
-        self.rope_config = q_config.get("rope", {})
-        self.softmax_config = q_config.get("softmax", {})
-        self.kv_cache_config = q_config.get("kv_cache", {})
-        self.qk_bypass = self.qk_config.get("bypass", False)
-        self.av_bypass = self.av_config.get("bypass", False)
-        self.rope_bypass = self.rope_config.get("bypass", False)
-        self.softmax_bypass = self.softmax_config.get("bypass", False)
-        self.kv_cache_bypass = self.kv_cache_config.get("bypass", False)
+        self._init_phase_attention_config(q_config)
 
     def forward(
         self,
@@ -80,26 +96,29 @@ class Qwen3AttentionMXFP(Qwen3Attention):
         cache_position: Optional[LongTensor] = None,
         **kwargs,
     ) -> Tuple[Tensor, Optional[Tensor], Optional[Tuple[Tensor]]]:
+        past_key_values = kwargs.pop("past_key_value", past_key_values)
+        stage = self._active_stage_cfgs()
+
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
 
-        # Qwen3-specific: q_norm/k_norm applied after projection, before transpose
-        query_states = self.q_norm(
-            self.q_proj(hidden_states).view(hidden_shape)
-        ).transpose(1, 2)
-        key_states = self.k_norm(
-            self.k_proj(hidden_states).view(hidden_shape)
-        ).transpose(1, 2)
+        query_states = self.q_proj(hidden_states).view(hidden_shape)
+        key_states = self.k_proj(hidden_states).view(hidden_shape)
+        query_states, key_states = _apply_qk_norm(
+            self, query_states, key_states, stage
+        )
+        query_states = query_states.transpose(1, 2)
+        key_states = key_states.transpose(1, 2)
         value_states = self.v_proj(hidden_states).view(hidden_shape).transpose(1, 2)
 
         cos, sin = position_embeddings
-        if not self.rope_bypass:
+        if not stage["rope_bypass"]:
             query_states, key_states = rope_minifloat(
                 query_states,
                 key_states,
                 cos,
                 sin,
-                self.rope_config,
+                stage["rope_config"],
             )
         else:
             query_states, key_states = apply_rotary_pos_emb(
@@ -109,22 +128,17 @@ class Qwen3AttentionMXFP(Qwen3Attention):
                 sin,
             )
 
-        if past_key_values is not None:
-            cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
-            if not self.kv_cache_bypass:
-                key_states, value_states = kv_cache_mxfp(
-                    key_states,
-                    value_states,
-                    self.kv_cache_config,
-                )
-            key_states, value_states = past_key_values.update(
-                key_states,
-                value_states,
-                self.layer_idx,
-                cache_kwargs,
-            )
+        cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
+        key_states, value_states = self._apply_kv_cache_phase_aware(
+            key_states,
+            value_states,
+            past_key_values,
+            cache_kwargs,
+            stage,
+            kv_cache_mx,
+        )
 
-        if self.qk_bypass and self.av_bypass and self.softmax_bypass:
+        if stage["qk_bypass"] and stage["av_bypass"] and stage["softmax_bypass"]:
             attn_output, attn_weights = _hf_attention_dispatch(
                 self,
                 query_states,
@@ -148,12 +162,12 @@ class Qwen3AttentionMXFP(Qwen3Attention):
                 attention_mask,
                 dropout=0.0 if not self.training else self.attention_dropout,
                 scaling=self.scaling,
-                qk_bypass=self.qk_bypass,
-                qk_config=self.qk_config,
-                av_bypass=self.av_bypass,
-                av_config=self.av_config,
-                softmax_bypass=self.softmax_bypass,
-                softmax_config=self.softmax_config,
+                qk_bypass=stage["qk_bypass"],
+                qk_config=stage["qk_config"],
+                av_bypass=stage["av_bypass"],
+                av_config=stage["av_config"],
+                softmax_bypass=stage["softmax_bypass"],
+                softmax_config=stage["softmax_config"],
                 **kwargs,
             )
 
@@ -177,22 +191,12 @@ class Qwen3AttentionMXFP(Qwen3Attention):
         return new_attn
 
 
-class Qwen3AttentionMXInt(Qwen3Attention):
-    """MXInt-quantized Qwen3Attention."""
+class Qwen3AttentionMXInt(_PhaseAwareAttentionMixin, Qwen3Attention):
+    """MXInt-quantized Qwen3Attention with per-phase stage dispatch."""
 
     def __init__(self, config, layer_idx, q_config: dict = None):
         super().__init__(config, layer_idx)
-        q_config = q_config or {}
-        self.qk_config = q_config.get("qk_matmul", {})
-        self.av_config = q_config.get("av_matmul", {})
-        self.rope_config = q_config.get("rope", {})
-        self.softmax_config = q_config.get("softmax", {})
-        self.kv_cache_config = q_config.get("kv_cache", {})
-        self.qk_bypass = self.qk_config.get("bypass", False)
-        self.av_bypass = self.av_config.get("bypass", False)
-        self.rope_bypass = self.rope_config.get("bypass", False)
-        self.softmax_bypass = self.softmax_config.get("bypass", False)
-        self.kv_cache_bypass = self.kv_cache_config.get("bypass", False)
+        self._init_phase_attention_config(q_config)
 
     def forward(
         self,
@@ -203,26 +207,29 @@ class Qwen3AttentionMXInt(Qwen3Attention):
         cache_position: Optional[LongTensor] = None,
         **kwargs,
     ) -> Tuple[Tensor, Optional[Tensor], Optional[Tuple[Tensor]]]:
+        past_key_values = kwargs.pop("past_key_value", past_key_values)
+        stage = self._active_stage_cfgs()
+
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
 
-        # Qwen3-specific: q_norm/k_norm applied after projection, before transpose
-        query_states = self.q_norm(
-            self.q_proj(hidden_states).view(hidden_shape)
-        ).transpose(1, 2)
-        key_states = self.k_norm(
-            self.k_proj(hidden_states).view(hidden_shape)
-        ).transpose(1, 2)
+        query_states = self.q_proj(hidden_states).view(hidden_shape)
+        key_states = self.k_proj(hidden_states).view(hidden_shape)
+        query_states, key_states = _apply_qk_norm(
+            self, query_states, key_states, stage
+        )
+        query_states = query_states.transpose(1, 2)
+        key_states = key_states.transpose(1, 2)
         value_states = self.v_proj(hidden_states).view(hidden_shape).transpose(1, 2)
 
         cos, sin = position_embeddings
-        if not self.rope_bypass:
+        if not stage["rope_bypass"]:
             query_states, key_states = rope_minifloat(
                 query_states,
                 key_states,
                 cos,
                 sin,
-                self.rope_config,
+                stage["rope_config"],
             )
         else:
             query_states, key_states = apply_rotary_pos_emb(
@@ -232,22 +239,17 @@ class Qwen3AttentionMXInt(Qwen3Attention):
                 sin,
             )
 
-        if past_key_values is not None:
-            cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
-            if not self.kv_cache_bypass:
-                key_states, value_states = kv_cache_mxint(
-                    key_states,
-                    value_states,
-                    self.kv_cache_config,
-                )
-            key_states, value_states = past_key_values.update(
-                key_states,
-                value_states,
-                self.layer_idx,
-                cache_kwargs,
-            )
+        cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
+        key_states, value_states = self._apply_kv_cache_phase_aware(
+            key_states,
+            value_states,
+            past_key_values,
+            cache_kwargs,
+            stage,
+            kv_cache_mx,
+        )
 
-        if self.qk_bypass and self.av_bypass and self.softmax_bypass:
+        if stage["qk_bypass"] and stage["av_bypass"] and stage["softmax_bypass"]:
             attn_output, attn_weights = _hf_attention_dispatch(
                 self,
                 query_states,
@@ -271,12 +273,12 @@ class Qwen3AttentionMXInt(Qwen3Attention):
                 attention_mask,
                 dropout=0.0 if not self.training else self.attention_dropout,
                 scaling=self.scaling,
-                qk_bypass=self.qk_bypass,
-                qk_config=self.qk_config,
-                av_bypass=self.av_bypass,
-                av_config=self.av_config,
-                softmax_bypass=self.softmax_bypass,
-                softmax_config=self.softmax_config,
+                qk_bypass=stage["qk_bypass"],
+                qk_config=stage["qk_config"],
+                av_bypass=stage["av_bypass"],
+                av_config=stage["av_config"],
+                softmax_bypass=stage["softmax_bypass"],
+                softmax_config=stage["softmax_config"],
                 **kwargs,
             )
         attn_output = attn_output.reshape(*input_shape, -1).contiguous()
@@ -308,11 +310,15 @@ class Qwen3AttentionMXIntRotate(Qwen3AttentionMXInt):
     Per-stage toggles let the rotation search evaluate qk_matmul / av_matmul /
     kv_cache rotations independently within a single attention class. Each
     flag defaults to True so an unmodified rotate config keeps the original
-    "all three rotated" behavior. Toggle via the matching block in q_config:
+    "all three rotated" behavior. Toggle via the matching block in q_config
+    (decode bucket for phase-structured configs):
 
         q_config["qk_matmul"]["rotate"]   = True | False  (default True)
         q_config["av_matmul"]["rotate"]   = True | False  (default True)
         q_config["kv_cache"]["rotate"]    = True | False  (default True)
+
+    Explicit decode-format handoff uses the decode rotation decision for both
+    prefill and decode cache writes.
 
     Note on ``hadamard_dim``: the rotation runs along the last dim of each
     tensor — head_dim for Q (always supported) and seq_len for the A-side
@@ -324,9 +330,10 @@ class Qwen3AttentionMXIntRotate(Qwen3AttentionMXInt):
         super().__init__(config, layer_idx, q_config=q_config)
         # Per-stage rotate toggles (default True = original "all rotated"
         # behavior). The rotation search flips these per trial.
-        self.qk_use_rotate = self.qk_config.get("rotate", True)
-        self.av_use_rotate = self.av_config.get("rotate", True)
-        self.kv_cache_use_rotate = self.kv_cache_config.get("rotate", True)
+        decode_cfgs = self._phase_stage_cfgs["decode"]
+        self.qk_use_rotate = decode_cfgs["qk_config"].get("rotate", True)
+        self.av_use_rotate = decode_cfgs["av_config"].get("rotate", True)
+        self.kv_cache_use_rotate = decode_cfgs["kv_cache_config"].get("rotate", True)
 
     def forward(
         self,
@@ -337,25 +344,29 @@ class Qwen3AttentionMXIntRotate(Qwen3AttentionMXInt):
         cache_position: Optional[LongTensor] = None,
         **kwargs,
     ) -> Tuple[Tensor, Optional[Tensor], Optional[Tuple[Tensor]]]:
+        past_key_values = kwargs.pop("past_key_value", past_key_values)
+        stage = self._active_stage_cfgs()
+
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
 
-        query_states = self.q_norm(
-            self.q_proj(hidden_states).view(hidden_shape)
-        ).transpose(1, 2)
-        key_states = self.k_norm(
-            self.k_proj(hidden_states).view(hidden_shape)
-        ).transpose(1, 2)
+        query_states = self.q_proj(hidden_states).view(hidden_shape)
+        key_states = self.k_proj(hidden_states).view(hidden_shape)
+        query_states, key_states = _apply_qk_norm(
+            self, query_states, key_states, stage
+        )
+        query_states = query_states.transpose(1, 2)
+        key_states = key_states.transpose(1, 2)
         value_states = self.v_proj(hidden_states).view(hidden_shape).transpose(1, 2)
 
         cos, sin = position_embeddings
-        if not self.rope_bypass:
+        if not stage["rope_bypass"]:
             query_states, key_states = rope_minifloat(
                 query_states,
                 key_states,
                 cos,
                 sin,
-                self.rope_config,
+                stage["rope_config"],
             )
         else:
             query_states, key_states = apply_rotary_pos_emb(
@@ -365,29 +376,25 @@ class Qwen3AttentionMXIntRotate(Qwen3AttentionMXInt):
                 sin,
             )
 
-        if past_key_values is not None:
-            cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
-            if not self.kv_cache_bypass:
-                if self.kv_cache_use_rotate:
-                    key_states, value_states = kv_cache_mxint_rotate(
-                        key_states,
-                        value_states,
-                        self.kv_cache_config,
-                    )
-                else:
-                    key_states, value_states = kv_cache_mxint(
-                        key_states,
-                        value_states,
-                        self.kv_cache_config,
-                    )
-            key_states, value_states = past_key_values.update(
-                key_states,
-                value_states,
-                self.layer_idx,
-                cache_kwargs,
+        cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
+        def kv_quantizer(key, value, config):
+            return kv_cache_mx(
+                key,
+                value,
+                config,
+                rotate=self.kv_cache_use_rotate,
             )
 
-        if self.qk_bypass and self.av_bypass and self.softmax_bypass:
+        key_states, value_states = self._apply_kv_cache_phase_aware(
+            key_states,
+            value_states,
+            past_key_values,
+            cache_kwargs,
+            stage,
+            kv_quantizer,
+        )
+
+        if stage["qk_bypass"] and stage["av_bypass"] and stage["softmax_bypass"]:
             attn_output, attn_weights = _hf_attention_dispatch(
                 self,
                 query_states,
@@ -411,12 +418,12 @@ class Qwen3AttentionMXIntRotate(Qwen3AttentionMXInt):
                 attention_mask,
                 dropout=0.0 if not self.training else self.attention_dropout,
                 scaling=self.scaling,
-                qk_bypass=self.qk_bypass,
-                qk_config=self.qk_config,
-                av_bypass=self.av_bypass,
-                av_config=self.av_config,
-                softmax_bypass=self.softmax_bypass,
-                softmax_config=self.softmax_config,
+                qk_bypass=stage["qk_bypass"],
+                qk_config=stage["qk_config"],
+                av_bypass=stage["av_bypass"],
+                av_config=stage["av_config"],
+                softmax_bypass=stage["softmax_bypass"],
+                softmax_config=stage["softmax_config"],
                 qk_use_rotate=self.qk_use_rotate,
                 av_use_rotate=self.av_use_rotate,
                 **kwargs,
@@ -424,4 +431,3 @@ class Qwen3AttentionMXIntRotate(Qwen3AttentionMXInt):
         attn_output = attn_output.reshape(*input_shape, -1).contiguous()
         attn_output = self.o_proj(attn_output)
         return attn_output, attn_weights
-

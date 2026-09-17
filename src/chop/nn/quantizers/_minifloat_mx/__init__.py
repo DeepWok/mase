@@ -5,7 +5,11 @@ This is used internally by MXFP and by quantized functions (softmax, silu, rope)
 """
 
 from .meta import MinifloatMeta, MinifloatTensorMeta
-from .fake import extract_minifloat_component, compose_minifloat_component
+from .fake import (
+    compose_minifloat_component,
+    extract_minifloat_component,
+    quantize_minifloat_value,
+)
 from .minifloat import minifloat_quantizer_sim
 
 __all__ = [
@@ -13,5 +17,6 @@ __all__ = [
     "MinifloatTensorMeta",
     "extract_minifloat_component",
     "compose_minifloat_component",
+    "quantize_minifloat_value",
     "minifloat_quantizer_sim",
 ]

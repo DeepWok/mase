@@ -15,7 +15,7 @@ class MinifloatMeta:
     Args:
         exp_bits: Number of exponent bits
         frac_bits: Number of fraction bits
-        is_finite: Whether the minifloat type supports inf/nan
+        is_finite: Whether every exponent code represents a finite value
         round_mode: Rounding mode - "rn" (nearest), "rd" (down), "ru" (up), "rz" (truncate)
     """
 

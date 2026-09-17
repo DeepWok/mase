@@ -5,6 +5,7 @@ from torch import Tensor
 
 from chop.nn.quantizers import mxfp_quantizer, mxint_quantizer
 from chop.nn.quantizers._minifloat_mx import MinifloatMeta, minifloat_quantizer_sim
+from .vector import VectorRoundingPolicy
 
 
 def rotate_half(x: Tensor) -> Tensor:
@@ -83,19 +84,5 @@ def rope_minifloat(
     config: dict = None,
     unsqueeze_dim: int = 1,
 ) -> tuple[Tensor, Tensor]:
-    x_exp_bits = config["data_in_exponent_width"]
-    x_frac_bits = config["data_in_frac_width"]
-
-    x_quantizer = partial(
-        minifloat_quantizer_sim,
-        minifloat_meta=MinifloatMeta(
-            exp_bits=x_exp_bits,
-            frac_bits=x_frac_bits,
-            is_finite=config.get("data_in_is_finite", True),
-            round_mode=config.get("data_in_round_mode", "rn"),
-        ),
-    )
-
-    cos = x_quantizer(cos)
-    sin = x_quantizer(sin)
-    return _apply_rope(q, k, cos, sin, unsqueeze_dim)
+    policy = VectorRoundingPolicy.from_config(config)
+    return policy.rope(q, k, cos, sin, unsqueeze_dim=unsqueeze_dim)

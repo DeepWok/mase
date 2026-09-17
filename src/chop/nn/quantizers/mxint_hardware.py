@@ -1,55 +1,56 @@
+"""Compatibility entry points for the legacy hardware-shaped MXINT API."""
+
 import torch
-from functools import partial
-import torch.nn.functional as F
-from torch import Tensor
+
+from .mxint.mxint import mxint_quantizer
 
 
 def mxint_quant_block(
     x, width: int = 12, exponent_width: int = 6, exponent: int = None
 ):
+    """Quantize one block using the canonical MXINT implementation.
+
+    ``exponent`` is retained for callers that supply an explicit integer
+    quantum. Normal scale selection delegates to :func:`mxint_quantizer`, so
+    rounding, signed range, E8M0 bias, and zero-block behavior cannot drift
+    from the decode quantizer.
     """
-    - Idea from https://arxiv.org/pdf/2310.10537
-    - Convert IEEE FP32/64 to Integer with sharing scale
-    - The main difference between is the sharing scale do not support NAN representation
-    ---
-    - `width`: The number of mantissa bits + 1 (the sign bit)
-    - `exponent_width`: the number of exponent bits, which is shared over a block
-    - `exponent_bias`: the exponent bias, if None, `2**(exponent_bits-1)-1` will be used
+    if not isinstance(x, torch.Tensor):
+        x = torch.as_tensor(x)
+    if x.numel() == 0:
+        raise ValueError("MXINT blocks must contain at least one element")
 
-    """
-    exponent_bias = 2 ** (exponent_width - 1)
+    if exponent is None:
+        return mxint_quantizer(
+            x,
+            block_size=x.numel(),
+            element_bits=width,
+            block_dim=-1,
+            scale_bits=exponent_width,
+        )
 
-    exponent_max = 2**exponent_width - 1 - exponent_bias
-    exponent_min = -exponent_bias
-
-    # exponent
-    if exponent == None:
-        exponent = torch.ceil(torch.log2(x.abs().max())) - exponent_bias
-        exponent = torch.clamp(exponent, exponent_min, exponent_max)
-    # mantissa
-    int_min = -(2 ** (width - 1))
-    int_max = 2 ** (width - 1) - 1
-    mantissa = x / 2**exponent
-    mantissa = torch.clamp(mantissa.floor(), int_min, int_max)
-    q_x = (2**exponent) * mantissa
-    return q_x
+    scale_bias = 2 ** (exponent_width - 1) - 1
+    scale_min = -scale_bias
+    scale_max = 2**exponent_width - 1 - scale_bias
+    exponent_value = int(exponent)
+    if not scale_min <= exponent_value <= scale_max:
+        raise ValueError(
+            f"MXINT exponent {exponent_value} is outside "
+            f"[{scale_min}, {scale_max}]"
+        )
+    magnitude_max = 2 ** (width - 1) - 1
+    elements = (x / 2**exponent_value).round().clamp(
+        min=-magnitude_max,
+        max=magnitude_max,
+    )
+    return elements * 2**exponent_value
 
 
 def mxint_hardware(tensor, q_config, parallelism):
-    """
-    - For hardware efficiency, the block will be set based on parallelism
-    - This will reshape all the input to a 3D matrix (other dimension will be packed into the first dimension)
-    - Then will quantize every block of the 2D matrix in the reshaped input tensor.
-    - The block size will be [parallelism[0], parallelism[1]]
-    ---
-    - q_config: assume to be a dict, for example
-    {
-        "width": 8,
-        "exponent_width": 4,
-    }
-    - parallelism: assume to be [tensor.shape[-2],tensor.shape[-1]]
-    - `exponent_width`: the number of exponent bits, which is shared over a block
-    - `exponent_bias`: the exponent bias, if None, `2**(exponent_bits-1)-1` will be used
+    """Quantize blocks selected by the legacy two-dimensional API.
+
+    The reshape only selects blocks. Arithmetic is delegated to canonical
+    MXINT, preserving the input dtype, device, and autograd path.
     """
     original_shape = tensor.shape
     if len(tensor.shape) == 1:
@@ -61,21 +62,31 @@ def mxint_hardware(tensor, q_config, parallelism):
     p0 = parallelism[1]
     t1 = tensor.shape[-2]
     t0 = tensor.shape[-1]
-    assert (
-        t1 % p1 == 0 and t0 % p0 == 0
-    ), f"""The Block should be able to completely segment the tensor size, 
-    t1 = {t1}, p1 = {p1}, t0 = {t0}, p0 = {p0}"""
+    if t1 % p1 != 0 or t0 % p0 != 0:
+        raise ValueError(
+            "MXINT parallelism must divide the final two tensor dimensions: "
+            f"shape=({t1}, {t0}), parallelism=({p1}, {p0})"
+        )
     reshaped_tensor = tensor.reshape(-1, t1 // p1, p1, t0 // p0, p0).permute(
         0, 1, 3, 2, 4
     )
 
-    # Quantize
-    quantizer = partial(mxint_quant_block, **q_config)
-    reshaped_tensor = torch.tensor(reshaped_tensor.reshape(-1, p1 * p0))
-    for i in range(reshaped_tensor.shape[0]):
-        reshaped_tensor[i] = quantizer(reshaped_tensor[i])
+    blocked_tensor = reshaped_tensor.reshape(-1, p1 * p0)
+    exponent = q_config.get("exponent")
+    if exponent is None:
+        blocked_tensor = mxint_quantizer(
+            blocked_tensor,
+            block_size=p1 * p0,
+            element_bits=q_config.get("width", 12),
+            block_dim=-1,
+            scale_bits=q_config.get("exponent_width", 6),
+        )
+    else:
+        blocked_tensor = torch.stack(
+            [mxint_quant_block(block, **q_config) for block in blocked_tensor]
+        )
     qtensor = (
-        reshaped_tensor.reshape(-1, t1 // p1, t0 // p0, p1, p0)
+        blocked_tensor.reshape(-1, t1 // p1, t0 // p0, p1, p0)
         .permute(0, 1, 3, 2, 4)
         .reshape(original_shape)
     )

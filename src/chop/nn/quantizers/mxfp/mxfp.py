@@ -7,7 +7,7 @@ from torch import Tensor
 from tqdm import tqdm
 
 from .meta import MXFPMeta, MXFPTensorMeta
-from .helpers import flatten_for_quantize, permute_for_dequantize
+from .helpers import block_rows_for_quantize, restore_quantized_rows
 from .fake import extract_mxfp_components, compose_mxfp_tensor
 
 
@@ -35,27 +35,24 @@ def mxfp_quantizer_sim(
     Returns:
         Dequantized tensor
     """
-    out_dq = torch.zeros_like(tensor)
-
     if quantile_search:
-        qtensor = tensor.flatten()
         B = mxfp_meta.block_size
-
-        qtensor = qtensor.reshape(-1, B)
+        qtensor, padded_axis_size = block_rows_for_quantize(tensor, block_dim, B)
         best = torch.full(
             [qtensor.shape[0]], float("inf"), device=tensor.device, dtype=tensor.dtype
         )
-        best_scales, best_elements, tensor_meta = _extract_with_meta(
+        best_scales, best_elements, tensor_meta, padded_axis_size = _extract_with_meta(
             tensor, block_dim, mxfp_meta, percentile=1.0
         )
 
         percentiles = [1.0, 0.995, 0.99, 0.97, 0.95, 0.93, 0.90, 0.80, 0.70, 0.60, 0.50]
         for percentile in percentiles:
-            scales, elements, tensor_meta = _extract_with_meta(
+            scales, elements, tensor_meta, candidate_padded_axis_size = _extract_with_meta(
                 tensor, block_dim, mxfp_meta, percentile=percentile
             )
-            # Plena: elements are already block-relative minifloat values,
-            # scales are raw log2-domain exponents — dequant is just scale-back.
+            if candidate_padded_axis_size != padded_axis_size:
+                raise RuntimeError("MXFP row padding changed during quantile search")
+            # Elements are block-relative; dequant is a plain scale-back.
             q = (elements * 2**scales).to(dtype=qtensor.dtype)
 
             if act_tensor is not None:
@@ -100,14 +97,19 @@ def mxfp_quantizer_sim(
                 best_elements[tmp] = elements[tmp]
 
     else:
-        best_scales, best_elements, tensor_meta = _extract_with_meta(
+        best_scales, best_elements, tensor_meta, padded_axis_size = _extract_with_meta(
             tensor, block_dim, mxfp_meta, percentile=1.0
         )
 
     out_dq = compose_mxfp_tensor(
         best_scales, best_elements, tensor_meta.meta, output_dtype=dtype or tensor.dtype
     )
-    out_dq = permute_for_dequantize(out_dq, tensor_meta.shape, tensor_meta.block_dim)
+    out_dq = restore_quantized_rows(
+        out_dq,
+        tensor_meta.shape,
+        tensor_meta.block_dim,
+        padded_axis_size,
+    )
     return out_dq
 
 
@@ -116,7 +118,7 @@ def _extract_with_meta(
     block_dim: int,
     mxfp_meta: MXFPMeta,
     percentile: float = 1.0,
-) -> tuple[Tensor, Tensor, MXFPTensorMeta]:
+) -> tuple[Tensor, Tensor, MXFPTensorMeta, int]:
     """Extract MXFP components with tensor metadata."""
     device = str(tensor.device)
     ori_shape = tuple(tensor.shape)
@@ -124,9 +126,11 @@ def _extract_with_meta(
     ndim = len(ori_shape)
     assert block_dim < ndim and block_dim >= -ndim
 
-    tensor_flat = flatten_for_quantize(tensor, block_dim)
+    tensor_blocks, padded_axis_size = block_rows_for_quantize(
+        tensor, block_dim, mxfp_meta.block_size
+    )
     scales, elements = extract_mxfp_components(
-        tensor_flat, mxfp_meta, percentile=percentile
+        tensor_blocks, mxfp_meta, percentile=percentile
     )
 
     tensor_meta = MXFPTensorMeta(
@@ -136,7 +140,7 @@ def _extract_with_meta(
         block_dim=block_dim,
         meta=mxfp_meta,
     )
-    return scales, elements, tensor_meta
+    return scales, elements, tensor_meta, padded_axis_size
 
 
 # =============================================================================
@@ -163,7 +167,7 @@ class MXFPQuantize(torch.autograd.Function):
             scale_exp_bits=scale_exp_bits,
             element_exp_bits=element_exp_bits,
             element_frac_bits=element_frac_bits,
-            element_is_finite=True,
+            element_is_finite=(element_exp_bits == 1),
             round_mode="rn",
         )
         return mxfp_quantizer_sim(
@@ -215,6 +219,10 @@ def mxfp_quantizer(
         - E4M3: element_exp_bits=4, element_frac_bits=3 (8-bit element)
         - E5M2: element_exp_bits=5, element_frac_bits=2 (8-bit element)
     """
+    if not quantile_search:
+        return _mxfp_quantize_fused(
+            x, block_size, element_exp_bits, element_frac_bits, block_dim, scale_exp_bits
+        )
     return MXFPQuantize.apply(
         x,
         block_size,
@@ -224,3 +232,23 @@ def mxfp_quantizer(
         scale_exp_bits,
         quantile_search,
     )
+
+
+from chop.nn.quantizers._compile import ENABLED as _COMPILE_ENABLED  # noqa: E402
+from chop.nn.quantizers._compile import compiled_variant  # noqa: E402
+
+
+def _mxfp_quantize_fused(x, block_size, element_exp_bits, element_frac_bits, block_dim, scale_exp_bits):
+    if not _COMPILE_ENABLED:
+        return MXFPQuantize.apply(
+            x, block_size, element_exp_bits, element_frac_bits, block_dim, scale_exp_bits, False
+        )
+    key = ("mxfp", block_size, element_exp_bits, element_frac_bits, block_dim, scale_exp_bits)
+    return compiled_variant(
+        key,
+        lambda: (
+            lambda t: MXFPQuantize.apply(
+                t, block_size, element_exp_bits, element_frac_bits, block_dim, scale_exp_bits, False
+            )
+        ),
+    )(x)
