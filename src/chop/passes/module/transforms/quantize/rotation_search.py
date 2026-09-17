@@ -9,7 +9,7 @@ this pass:
    class but with all per-stage rotate flags set to False — this gives the
    same numerics as plain mx{int,fp} while making per-trial flag-flipping cheap.
 2. Computes baseline perplexity on a calibration loader.
-3. For each of the 9 matmul types per decoder layer
+3. For each supported matmul type per decoder layer
    (q_proj / k_proj / v_proj / o_proj / qk_matmul / av_matmul /
     up_proj / gate_proj / down_proj),
    toggles online Hadamard rotation ON for that type uniformly across all
@@ -27,8 +27,10 @@ Parameter via ``from_linear``), and attention stages flip the
 attrs on the rotate attention class (Qwen3AttentionMXIntRotate /
 LlamaAttentionMXIntRotate / LlamaAttentionMXFPRotate).
 
-Coverage today: MXInt rotate exists for Qwen3 + Llama; MXFP rotate is
-Llama-only. Adding a new arch only requires (a) implementing
+Coverage today includes MXInt and MXFP attention rotation for fused Qwen3-MoE.
+Its fused expert tensors are deliberately outside rotation search; only the
+four attention projections and three attention stages are eligible. Adding a
+new architecture requires (a) implementing
 ``<Arch>AttentionMX{Int,FP}Rotate`` with the per-stage flag attrs and
 (b) appending it to ``_ROTATE_ATTENTION_CLASSES`` below. Linear-side wiring
 is shared and needs no changes.
@@ -56,6 +58,10 @@ from chop.nn.quantized.modules.linear import (
 )
 from chop.nn.quantized.modules.phase_context import force_runtime_phase
 from chop.nn.quantized.modules.qwen3.attention import Qwen3AttentionMXIntRotate
+from chop.nn.quantized.modules.qwen3_moe.attention import (
+    Qwen3MoeAttentionMXFPRotate,
+    Qwen3MoeAttentionMXIntRotate,
+)
 from chop.nn.quantized.modules.llama.attention import (
     LlamaAttentionMXIntRotate,
     LlamaAttentionMXFPRotate,
@@ -79,6 +85,8 @@ _LINEAR_ROTATE_TO_PLAIN = {v: k for k, v in _LINEAR_PLAIN_TO_ROTATE.items()}
 # All rotate attention classes the search can flip per-stage flags on.
 _ROTATE_ATTENTION_CLASSES = (
     Qwen3AttentionMXIntRotate,
+    Qwen3MoeAttentionMXFPRotate,
+    Qwen3MoeAttentionMXIntRotate,
     LlamaAttentionMXIntRotate,
     LlamaAttentionMXFPRotate,
 )
@@ -102,6 +110,9 @@ LINEAR_MATMUL_TYPES = (
 )
 ATTENTION_MATMUL_TYPES = ("qk_matmul", "av_matmul", "kv_cache")
 ALL_MATMUL_TYPES = LINEAR_MATMUL_TYPES + ATTENTION_MATMUL_TYPES
+_FUSED_EXPERT_MATMUL_TYPES = frozenset(
+    {"up_proj", "gate_proj", "down_proj"}
+)
 
 # Map attention stage name -> instance attr on the rotate attention classes.
 _ATTN_STAGE_TO_FLAG = {
@@ -109,6 +120,45 @@ _ATTN_STAGE_TO_FLAG = {
     "av_matmul": "av_use_rotate",
     "kv_cache": "kv_cache_use_rotate",
 }
+
+
+def _has_fused_qwen3_moe_experts(network: torch.nn.Module) -> bool:
+    return any(
+        hasattr(module, "gate_up_proj")
+        and hasattr(module, "down_proj")
+        and type(module).__name__.startswith("Qwen3MoeExperts")
+        for module in network.modules()
+    )
+
+
+def _resolve_rotation_scope(
+    network: torch.nn.Module,
+    requested: tuple[str, ...],
+    *,
+    explicitly_requested: bool,
+) -> tuple[tuple[str, ...], dict]:
+    if not _has_fused_qwen3_moe_experts(network):
+        return requested, {
+            "architecture": "generic",
+            "excluded_matmul_types": [],
+        }
+    unsupported = tuple(
+        matmul for matmul in requested if matmul in _FUSED_EXPERT_MATMUL_TYPES
+    )
+    if unsupported and explicitly_requested:
+        raise ValueError(
+            "selective rotation does not support fused Qwen3-MoE expert "
+            f"tensors: {unsupported}; search attention projections/stages only"
+        )
+    eligible = tuple(
+        matmul for matmul in requested if matmul not in _FUSED_EXPERT_MATMUL_TYPES
+    )
+    return eligible, {
+        "architecture": "qwen3_moe_fused",
+        "eligible_matmul_types": list(eligible),
+        "excluded_matmul_types": sorted(_FUSED_EXPERT_MATMUL_TYPES),
+        "excluded_reason": "fused expert tensors have no rotation lowerer",
+    }
 
 
 def _patch_base_args_for_rotate_class(base_args: dict) -> dict:
@@ -403,7 +453,8 @@ def rotation_search_transform_pass(network, pass_args):
         device (str, default "cuda:0"):
             Where the perplexity forwards run. The model is moved here.
         matmul_types (Iterable[str], default ALL_MATMUL_TYPES):
-            Subset of the 9 matmul types to search over.
+            Subset of the 10 generic matmul types to search over. Fused
+            Qwen3-MoE automatically narrows the default to 7 attention types.
         output_json (str | None):
             If given, write a JSON summary (winners, per-round history,
             final ppl) to this path. Also acts as the cache file when
@@ -435,6 +486,7 @@ def rotation_search_transform_pass(network, pass_args):
     base_args = pass_args["base_quantize_args"]
     calib_loader = pass_args["calib_loader"]
     device = pass_args.get("device", "cuda:0")
+    explicit_matmul_types = "matmul_types" in pass_args
     matmul_types = tuple(pass_args.get("matmul_types", ALL_MATMUL_TYPES))
     output_json = pass_args.get("output_json", None)
     improvement_eps = float(pass_args.get("improvement_eps", 0.0))
@@ -453,12 +505,22 @@ def rotation_search_transform_pass(network, pass_args):
             raise ValueError(
                 f"Unknown matmul_type {t!r}; valid types: {ALL_MATMUL_TYPES}"
             )
+    matmul_types, rotation_scope = _resolve_rotation_scope(
+        network,
+        matmul_types,
+        explicitly_requested=explicit_matmul_types,
+    )
 
     # Cache check: if a saved decisions file exists, load and apply — skip
     # the whole search. Same spirit as GPTQ's auto_load_quantized_layers.
     cached = None
     if cache_winners and output_json and Path(output_json).exists():
         cached = json.loads(Path(output_json).read_text())
+        if cached.get("rotation_scope") != rotation_scope:
+            raise ValueError(
+                "cached rotation scope does not match this model; invalidate "
+                f"{output_json} and rerun calibration"
+            )
         logger.info("=" * 64)
         logger.info("CACHE HIT — loading rotation decisions from %s", output_json)
         logger.info(
@@ -514,6 +576,7 @@ def rotation_search_transform_pass(network, pass_args):
         results = dict(cached)
         results["from_cache"] = True
         results["matmul_types_searched"] = list(matmul_types)
+        results["rotation_scope"] = rotation_scope
         logger.info("-----Rotation Search (cached) Done-----")
         return network, results
 
@@ -533,6 +596,7 @@ def rotation_search_transform_pass(network, pass_args):
     results["baseline_ppl"] = baseline_ppl
     results["improvement_eps"] = improvement_eps
     results["matmul_types_searched"] = list(matmul_types)
+    results["rotation_scope"] = rotation_scope
 
     if output_json:
         out_path = Path(output_json)
@@ -566,7 +630,7 @@ def dispatch_rotation_search_block(network, base_pass_args: dict, rot_cfg: dict)
         calib_nsamples (default 32),
         calib_seqlen   (default 1024),
         improvement_eps (default 0.0),
-        matmul_types   (default = all 9),
+        matmul_types   (default = all 10 generic types; 7 for fused Qwen3-MoE),
         cache_path     (default = <gptq.checkpoint_dir>/rotation_decisions.json),
         cache_winners  (default True — set False to force a re-search).
 
