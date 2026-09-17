@@ -58,4 +58,7 @@ class Qwen3RMSNormMinifloat(Qwen3RMSNorm):
             if self.w_quantizer is not None
             else self.weight
         )
-        return weight * hidden_states.to(input_dtype)
+        # Cast the product, not just hidden_states: after module replacement
+        # self.weight may still be float32 while the activations are bf16, and
+        # float32 * bf16 promotes the output back to float32.
+        return (weight * hidden_states.to(input_dtype)).to(input_dtype)
